@@ -16,9 +16,9 @@
   "tasks": {
     "check": "deno check *",
 
-    "test": "deno test -A",
-    "test:unit": "deno test -A --ignore=.integration.test.ts",
-    "test:integration": "deno test -A --ignore=.unit.test.ts"
+    "test": "deno test -A --parallel --clean --coverage",
+    "test:unit": "deno task test --ignore=.integration.test.ts",
+    "test:integration": "deno task test --ignore=.unit.test.ts"
   },
   "lint": {
     "plugins": []
