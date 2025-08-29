@@ -1,7 +1,12 @@
 {
   "name": "@colibri/core",
   "version": "0.1.0",
-  "exports": "./mod.ts",
+  "exports": {
+    ".": "./mod.ts"
+  },
+  "lint": {
+    "plugins": ["../_tools/lint/enum-requires-own-file.ts"]
+  },
   "publish": {
     "include": ["mod.ts", "src/**/*.ts", "README.md", "LICENSE"]
   }
