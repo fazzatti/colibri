@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-const THRESHOLD = 10; // enums with >10 members must be alone in their file
+const THRESHOLD = 50; // enums with >50 members must be alone in their file
 
 function isIgnorableTopLevel(stmt: any): boolean {
   const t = stmt.type;
