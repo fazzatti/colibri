@@ -81,21 +81,4 @@ export class ColibriError<
     }
     return ColibriError.unexpected({ cause: error, ...ctx });
   }
-
-  //   static create<C extends string = string, M extends BaseMeta = BaseMeta>(
-  //     className: string,
-  //     basePayload: ColibriErrorShape<C, M>
-  //   ) {
-  //     // Create and return a class constructor, not an instance
-  //     return class extends ColibriError<C, M> {
-  //       constructor(overrides?: Partial<ColibriErrorShape<C, M>>) {
-  //         super({
-  //           ...basePayload,
-  //           ...overrides,
-  //         } as ColibriErrorShape<C, M>);
-  //         this.name = `Colibri${className}`;
-  //       }
-  //     };
-  //   }
-  // }
 }
