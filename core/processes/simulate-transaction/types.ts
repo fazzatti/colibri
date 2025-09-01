@@ -1,9 +1,11 @@
 import type { Transaction } from "stellar-sdk";
-import type { Server } from "stellar-sdk/rpc";
+import type { Api, Server } from "stellar-sdk/rpc";
 
 export type SimulateTransactionInput = {
   transaction: Transaction;
   rpc: Server;
 };
 
-export type SimulateTransactionOutput = {};
+export type SimulateTransactionOutput =
+  | Api.SimulateTransactionRestoreResponse
+  | Api.SimulateTransactionSuccessResponse;
