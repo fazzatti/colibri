@@ -5,6 +5,8 @@ export type TransactionXDRBase64 = string;
 export type Ed25519SecretKey = `S${string}`;
 export type Ed25519PublicKey = `G${string}`;
 export type MuxedAddress = `M${string}`;
+
+export type StellarNativeAddress = Ed25519PublicKey | MuxedAddress;
 export type SmartContractId = `C${string}`;
 
 export type TransactionSigner = {
