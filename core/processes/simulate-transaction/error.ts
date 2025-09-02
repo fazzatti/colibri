@@ -2,6 +2,7 @@ import type { Api } from "stellar-sdk/rpc";
 import { ColibriError } from "../../error/index.ts";
 import type { Diagnostic } from "../../error/types.ts";
 import type { SimulateTransactionInput } from "./types.ts";
+import { ProcessError } from "../error.ts";
 
 export enum Code {
   UNEXPECTED_ERROR = "SIM_000",
@@ -10,44 +11,11 @@ export enum Code {
   SIMULATION_RESULT_NOT_VERIFIED = "SIM_003",
 }
 
-export type Meta = {
-  cause: Error | null;
-  data: {
-    input: SimulateTransactionInput;
-  };
-};
-
-export abstract class SimulateTransactionError extends ColibriError<
+export abstract class SimulateTransactionError extends ProcessError<
   Code,
-  Meta
+  SimulateTransactionInput
 > {
-  override readonly meta: Meta;
-
-  constructor(args: {
-    code: Code;
-    message: string;
-    input: SimulateTransactionInput;
-    details?: string;
-    diagnostic?: Diagnostic;
-    cause?: Error;
-  }) {
-    const meta = {
-      cause: args.cause || null,
-      data: { input: args.input },
-    };
-
-    super({
-      domain: "processes" as const,
-      source: "@colibri/core/processes/build-transaction",
-      code: args.code,
-      message: args.message,
-      details: args.details || args.message,
-      diagnostic: args.diagnostic || undefined,
-      meta,
-    });
-
-    this.meta = meta;
-  }
+  override readonly source = "@colibri/core/processes/simulate-transaction";
 }
 
 export class UNEXPECTED_ERROR extends SimulateTransactionError {
