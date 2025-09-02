@@ -94,13 +94,7 @@ describe("SimulateTransaction", () => {
         rpc: mockRpc,
       };
 
-      const result = await SimulateTransaction.run(input).catch((e) => {
-        if (e instanceof E.SimulateTransactionError) {
-          console.error(e);
-        }
-
-        throw e;
-      });
+      const result = await SimulateTransaction.run(input);
       assertEquals(result.id, "mock-id");
     });
   });
