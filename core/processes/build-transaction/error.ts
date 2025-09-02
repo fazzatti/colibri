@@ -1,6 +1,7 @@
 import { ColibriError } from "../../mod.ts";
 import type { BuildTransactionInput } from "./types.ts";
 import type { Diagnostic } from "../../error/types.ts";
+import { ProcessError } from "../error.ts";
 
 export enum Code {
   UNEXPECTED_ERROR = "BTX_000",
@@ -17,41 +18,11 @@ export enum Code {
   RPC_REQUIRED_TO_LOAD_ACCOUNT = "BTX_011",
 }
 
-export type Meta = {
-  cause: Error | null;
-  data: {
-    input: BuildTransactionInput;
-  };
-};
-
-export abstract class BuildTransactionError extends ColibriError<Code, Meta> {
-  override readonly meta: Meta;
-
-  constructor(args: {
-    code: Code;
-    message: string;
-    input: BuildTransactionInput;
-    details?: string;
-    diagnostic?: Diagnostic;
-    cause?: Error;
-  }) {
-    const meta = {
-      cause: args.cause || null,
-      data: { input: args.input },
-    };
-
-    super({
-      domain: "processes" as const,
-      source: "@colibri/core/processes/build-transaction",
-      code: args.code,
-      message: args.message,
-      details: args.details || args.message,
-      diagnostic: args.diagnostic || undefined,
-      meta,
-    });
-
-    this.meta = meta;
-  }
+export abstract class BuildTransactionError extends ProcessError<
+  Code,
+  BuildTransactionInput
+> {
+  override readonly source = "@colibri/core/processes/build-transaction";
 }
 
 export class UNEXPECTED_ERROR extends BuildTransactionError {
@@ -156,7 +127,8 @@ export class COULD_NOT_BUILD_TRANSACTION_ERROR extends BuildTransactionError {
       code: Code.COULD_NOT_BUILD_TRANSACTION,
       message: "Could not build transaction!",
       input,
-      details: "The transaction could not be built.",
+      details:
+        "The transaction could not be built. This indicates that some inner parameters of the transaction could be invalid.",
       cause,
     });
   }
