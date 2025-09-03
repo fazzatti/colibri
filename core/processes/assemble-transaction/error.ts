@@ -1,8 +1,5 @@
-import type { Api } from "stellar-sdk/rpc";
-import { ColibriError } from "../../error/index.ts";
-import type { Diagnostic } from "../../error/types.ts";
 import type { AssembleTransactionInput } from "./types.ts";
-import { ProcessError, ProcessErrorShape } from "../error.ts";
+import { ProcessError } from "../error.ts";
 
 export enum Code {
   UNEXPECTED_ERROR = "ASM_000",

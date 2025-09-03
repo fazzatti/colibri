@@ -1,6 +1,4 @@
-import { ColibriError } from "../../mod.ts";
 import type { BuildTransactionInput } from "./types.ts";
-import type { Diagnostic } from "../../error/types.ts";
 import { ProcessError } from "../error.ts";
 
 export enum Code {

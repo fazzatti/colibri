@@ -1,4 +1,4 @@
-import { FeeBumpTransaction, Transaction, xdr } from "stellar-sdk";
+import type { FeeBumpTransaction, Transaction, xdr } from "stellar-sdk";
 
 export type TransactionXDRBase64 = string;
 
@@ -20,6 +20,17 @@ export type TransactionSigner = {
     networkPassphrase: string
   ): Promise<xdr.SorobanAuthorizationEntry>;
 };
+
+export type SignatureRequirement = {
+  signer: Ed25519PublicKey | "source-account";
+  thresholdLevel: OperationThreshold;
+};
+
+export enum OperationThreshold {
+  low = 1,
+  medium = 2,
+  high = 3,
+}
 
 // export type TransactionInvocation = {
 //   signers: AccountHandler[];

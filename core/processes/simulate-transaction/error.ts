@@ -1,6 +1,4 @@
 import type { Api } from "stellar-sdk/rpc";
-import { ColibriError } from "../../error/index.ts";
-import type { Diagnostic } from "../../error/types.ts";
 import type { SimulateTransactionInput } from "./types.ts";
 import { ProcessError } from "../error.ts";
 
