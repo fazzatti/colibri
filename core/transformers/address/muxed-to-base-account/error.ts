@@ -16,7 +16,8 @@ export abstract class MuxedAddressToBaseAccountError extends TransformerError<
   Code,
   MetaData
 > {
-  override readonly source = "@colibri/core/processes/assemble-transaction";
+  override readonly source =
+    "@colibri/core/transformers/address/muxed-to-base-account";
 }
 
 export class INVALID_MUXED_ADDRESS extends MuxedAddressToBaseAccountError {
