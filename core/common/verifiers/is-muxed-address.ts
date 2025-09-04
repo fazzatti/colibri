@@ -1,5 +1,6 @@
 import { regex } from "../../mod.ts";
+import type { MuxedAddress } from "../types.ts";
 
-export const isMuxedAddress = (value: string): boolean => {
-  return typeof value === "string" && regex.muxedAddress.test(value);
+export const isMuxedAddress = (address: string): address is MuxedAddress => {
+  return typeof address === "string" && regex.muxedAddress.test(address);
 };
