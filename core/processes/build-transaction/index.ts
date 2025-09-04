@@ -166,10 +166,12 @@ const appendPreconditions = (
   return tx;
 };
 
-export const BuildTransaction = ProcessEngine.create<
+const BuildTransaction = ProcessEngine.create<
   BuildTransactionInput,
   BuildTransactionOutput,
   E.BuildTransactionError
 >(buildTransactionProcess, {
   name: "BuildTransaction",
 });
+
+export { BuildTransaction };

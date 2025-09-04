@@ -49,10 +49,12 @@ const simulateTransactionProcess = async (
   }
 };
 
-export const SimulateTransaction = ProcessEngine.create<
+const SimulateTransaction = ProcessEngine.create<
   SimulateTransactionInput,
   SimulateTransactionOutput,
   E.SimulateTransactionError
 >(simulateTransactionProcess, {
   name: "SimulateTransaction",
 });
+
+export { SimulateTransaction };
