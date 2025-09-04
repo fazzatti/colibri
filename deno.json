@@ -23,7 +23,7 @@
   "lint": {
     "plugins": [],
     "rules": {
-      "exclude": ["no-slow-types"]
+      "exclude": ["no-slow-types", "explicit-function-return-type"]
     }
   }
 }
