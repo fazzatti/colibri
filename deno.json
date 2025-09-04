@@ -18,7 +18,8 @@
 
     "test": "deno test -A --parallel --clean --coverage=coverage && deno coverage coverage",
     "test:unit": "deno task test --ignore=.integration.test.ts",
-    "test:integration": "deno task test --ignore=.unit.test.ts"
+    "test:integration": "deno task test --ignore=.unit.test.ts",
+    "coverage:report": "deno coverage --html"
   },
   "lint": {
     "plugins": [],
