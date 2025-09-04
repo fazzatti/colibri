@@ -39,9 +39,10 @@ const assembleTransactionProcess = async (
   }
 };
 
-export const AssembleTransaction = ProcessEngine.create(
-  assembleTransactionProcess,
-  {
-    name: "AssembleTransaction",
-  }
-);
+export const AssembleTransaction = ProcessEngine.create<
+  AssembleTransactionInput,
+  AssembleTransactionOutput,
+  E.AssembleTransactionError
+>(assembleTransactionProcess, {
+  name: "AssembleTransaction",
+});
