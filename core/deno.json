@@ -9,6 +9,6 @@
     "plugins": ["../_tools/lint/enum-requires-own-file.ts"]
   },
   "publish": {
-    "include": ["mod.ts", "src/**/*.ts", "README.md", "LICENSE"]
+    "include": ["mod.ts", "./**/*.ts", "README.md", "LICENSE"]
   }
 }
