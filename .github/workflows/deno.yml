@@ -51,7 +51,4 @@ jobs:
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: true
-          # Enforce a minimum coverage threshold (e.g., 80%). Adjust as needed.
-          # If coverage is below this, the job will fail, preventing PR merge.
-          # Codecov will also post a comment on the PR with results.
           token: ${{ secrets.CODECOV_TOKEN }}
