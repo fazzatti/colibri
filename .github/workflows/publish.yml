@@ -17,4 +17,4 @@ jobs:
         with:
           deno-version: 2.2.2
       - name: Publish package
-        run: deno publish
+        run: deno publish --allow-slow-types
