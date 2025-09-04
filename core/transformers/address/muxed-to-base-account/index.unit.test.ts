@@ -1,11 +1,13 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
-
+import { stub } from "@std/testing/mock"; // Add this import
 import { describe, it } from "@std/testing/bdd";
 import { muxedAddressToBaseAccount } from "./index.ts";
 
 import * as E from "./error.ts";
 import type { MuxedAddress } from "../../../common/types.ts";
 import { isEd25519PublicKey } from "../../../common/verifiers/is-ed25519-public-key.ts";
+import { MuxedAccount } from "stellar-sdk";
+
 
 describe("Transformer muxedAddressToBaseAccount", () => {
   it("converts a valid muxed address to a valid Ed25519 Public Key", async () => {
@@ -89,6 +91,24 @@ describe("Transformer muxedAddressToBaseAccount", () => {
     );
   });
   it(" throws FAILED_TO_RETRIEVE_THE_BASE_ACCOUNT_ID if the base account ID cannot be retrieved from the muxed account", async () => {
-    // TODO: No simple effective way of mocking the underlying function.
+    const validMuxedAddress = "MCOMD7XJTA3JMRH3I4WQP4RUMS7VWFSW6GBM2R7COWGFBPEWNVRUWDOAWUHEJP5MVZQYI";
+
+    // Mock MuxedAccount.fromAddress to return a fake instance
+    const mockMuxedAccount = {
+      baseAccount: () => ({
+        accountId: () => {
+          throw new Error("Simulated accountId failure");  // Force the throw
+        }
+      })
+    };
+
+    // deno-lint-ignore no-unused-vars
+    using fromAddressStub = stub(MuxedAccount, "fromAddress", () => mockMuxedAccount as unknown as MuxedAccount);
+
+    await assertRejects(
+      async () => await muxedAddressToBaseAccount(validMuxedAddress),
+      E.FAILED_TO_RETRIEVE_THE_BASE_ACCOUNT_ID
+    );
   });
+
 });
