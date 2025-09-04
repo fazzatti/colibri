@@ -3,7 +3,7 @@ import { type Operation, xdr } from "stellar-sdk";
 import {
   type Ed25519PublicKey,
   type MuxedAddress,
-  type SignatureRequirement,
+  type SignatureRequirementRaw,
   OperationThreshold,
 } from "../../../common/types.ts";
 import { isMuxedAddress } from "../../../common/verifiers/is-muxed-address.ts";
@@ -13,7 +13,9 @@ import type { TransformerSync } from "convee";
 import * as E from "./error.ts";
 import { ColibriError } from "../../../mod.ts";
 
-const setSourceSigner = (source?: string): SignatureRequirement["signer"] => {
+const setSourceSigner = (
+  source?: string
+): SignatureRequirementRaw["signer"] => {
   if (!source) {
     return "source-account";
   }
@@ -35,8 +37,8 @@ const setSourceSigner = (source?: string): SignatureRequirement["signer"] => {
 
 export const getRequiredOperationThresholdForClassicOperation: TransformerSync<
   Operation,
-  SignatureRequirement | void
-> = (operation: Operation): SignatureRequirement | void => {
+  SignatureRequirementRaw | void
+> = (operation: Operation): SignatureRequirementRaw | void => {
   try {
     let thresholdLevel = OperationThreshold.medium;
     let source;
