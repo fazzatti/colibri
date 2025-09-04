@@ -21,7 +21,11 @@ export type TransactionSigner = {
   ): Promise<xdr.SorobanAuthorizationEntry>;
 };
 
-export type SignatureRequirement = {
+export type SignatureRequirement = SignatureRequirementRaw & {
+  signer: Ed25519PublicKey;
+};
+
+export type SignatureRequirementRaw = {
   signer: Ed25519PublicKey | "source-account";
   thresholdLevel: OperationThreshold;
 };
