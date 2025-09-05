@@ -16,6 +16,7 @@ import { TestNet } from "../../network/index.ts";
 
 import { type MuxedAddress, OperationThreshold } from "../../common/types.ts";
 import { muxedAddressToBaseAccount } from "../../transformers/address/index.ts";
+import { EnvelopeSigningRequirementsInput } from "./types.ts";
 
 describe("EnvelopeSigningRequirements", () => {
   const { networkPassphrase } = TestNet();
@@ -304,6 +305,15 @@ describe("EnvelopeSigningRequirements", () => {
   });
 
   describe("Errors", () => {
+    it("throws UNEXPECTED_ERROR if an untracked error happens", async () => {
+      const faultyInput = null as unknown as EnvelopeSigningRequirementsInput;
+
+      await assertRejects(
+        async () => await EnvelopeSigningRequirements.run(faultyInput),
+        E.UNEXPECTED_ERROR
+      );
+    });
+
     it("throws INVALID_TRANSACTION_TYPE if the  transaction type is not supported", async () => {
       const transaction = null as unknown as Transaction;
 

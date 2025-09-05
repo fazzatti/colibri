@@ -24,7 +24,7 @@ export class UNEXPECTED_ERROR extends EnvelopeSigningRequirementsError {
       code: Code.UNEXPECTED_ERROR,
       message: "An unexpected error occurred!",
       input,
-      details: cause ? cause.message : "No additional details",
+      details: "See the 'cause' for more details",
       cause,
     });
   }
