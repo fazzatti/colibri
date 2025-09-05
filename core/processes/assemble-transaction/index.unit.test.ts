@@ -83,6 +83,15 @@ describe("AssembleTransaction", () => {
   });
 
   describe("Errors", () => {
+    it("throws UNEXPECTED_ERROR if an untracked error happens", async () => {
+      const faultyInput = null as unknown as AssembleTransactionInput;
+
+      await assertRejects(
+        async () => await AssembleTransaction.run(faultyInput),
+        E.UNEXPECTED_ERROR
+      );
+    });
+
     it(" throws FAILED_TO_ASSEMBLE_TRANSACTION_ERROR if the assembly fails", async () => {
       const transaction = createTestTransaction();
 

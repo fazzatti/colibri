@@ -20,7 +20,7 @@ export class UNEXPECTED_ERROR extends AssembleTransactionError {
       code: Code.UNEXPECTED_ERROR,
       message: "An unexpected error occurred!",
       input,
-      details: cause ? cause.message : "No additional details",
+      details: "See the underlying cause for additional details",
       cause,
     });
   }
