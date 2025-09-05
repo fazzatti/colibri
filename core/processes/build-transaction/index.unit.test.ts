@@ -1,8 +1,4 @@
-import {
-  assertEquals,
-  assertInstanceOf,
-  assertStrictEquals,
-} from "@std/assert";
+import { assertEquals, assertInstanceOf } from "@std/assert";
 
 import { describe, it, beforeEach } from "@std/testing/bdd";
 import {
@@ -14,15 +10,11 @@ import {
   Transaction,
   xdr,
   Address,
-  Keypair,
-  SignerKey,
 } from "stellar-sdk";
 import { BuildTransaction } from "./index.ts";
 import { TestNet } from "../../network/index.ts";
 import type { BuildTransactionInput } from "./types.ts";
 import type { Server } from "stellar-sdk/rpc";
-import { text } from "node:stream/consumers";
-import { Buffer } from "node:buffer";
 
 let isGetAccountCalled = false;
 const mockSequence = "100";
