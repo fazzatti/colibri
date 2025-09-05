@@ -22,7 +22,7 @@ export class UNEXPECTED_ERROR extends SimulateTransactionError {
       code: Code.UNEXPECTED_ERROR,
       message: "An unexpected error occurred!",
       input,
-      details: cause ? cause.message : "No additional details",
+      details: "See the 'cause' for additional details",
       cause,
     });
   }
