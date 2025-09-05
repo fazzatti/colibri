@@ -21,7 +21,6 @@ import {
   OperationThreshold,
   type SignatureRequirement,
 } from "../../../common/types.ts";
-import { stub } from "@std/testing/mock";
 
 const helperGetOpObj = (op: xdr.Operation) => {
   return Operation.fromXDRObject(op);
