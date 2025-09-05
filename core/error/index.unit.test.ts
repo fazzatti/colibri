@@ -105,6 +105,16 @@ describe("ColibriError", () => {
       assertStrictEquals(e.meta?.cause, cause);
       assertObjectMatch(e.meta!.data as Record<string, unknown>, { id: 7 });
     });
+
+    it("returns an error instance for minimal info", () => {
+      const out = ColibriError.unexpected();
+      assert(out instanceof ColibriError);
+      assertEquals(out.domain, "core");
+      assertEquals(out.source, "colibri");
+      assertEquals(out.code, "GEN_000");
+      assertEquals(out.message, "Unexpected error");
+      assertStrictEquals(out.details, "An unexpected error occurred");
+    });
   });
 
   describe("fromUnknown", () => {
@@ -117,6 +127,19 @@ describe("ColibriError", () => {
       });
       const out = ColibriError.fromUnknown(original);
       assertStrictEquals(out, original);
+    });
+
+    it("returns an error instance for minimal info", () => {
+      const error = new Error("mock error");
+
+      const out = ColibriError.fromUnknown(error);
+      assert(out instanceof ColibriError);
+      assertEquals(out.domain, "core");
+      assertEquals(out.source, "colibri");
+      assertEquals(out.code, "GEN_000");
+      assertEquals(out.message, "mock error");
+      assertStrictEquals(out.details, error.stack);
+      assert(typeof out.details === "string"); // stack string
     });
 
     it("wraps native Error and keeps stack in details and cause in meta", () => {
