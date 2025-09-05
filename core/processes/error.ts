@@ -34,8 +34,8 @@ export abstract class ProcessError<
       source: "@colibri/core/processes/*",
       code: args.code,
       message: args.message,
-      details: args.details || args.message,
-      diagnostic: args.diagnostic || undefined,
+      details: args.message,
+      diagnostic: args.diagnostic,
       meta,
     });
 
