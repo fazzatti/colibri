@@ -20,6 +20,15 @@ const mockRpc = {
 } as unknown as Server;
 
 describe("BuildTransactionErrors", () => {
+  it("throws UNEXPECTED_ERROR if an untracked error happens", async () => {
+    const faultyInput = null as unknown as BuildTransactionInput;
+
+    await assertRejects(
+      async () => await BuildTransaction.run(faultyInput),
+      E.UNEXPECTED_ERROR
+    );
+  });
+
   describe("Invalid base fee", () => {
     it("throws when base fee is NaN", async () => {
       const input: BuildTransactionInput = {
