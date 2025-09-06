@@ -1,8 +1,15 @@
 {
-  "workspace": ["./core", "./rpc-streamer", "./sep10", "./plugins/*"],
+  "workspace": [
+    "./core",
+    "./rpc-streamer",
+    "./sep10",
+    "./plugins/*",
+    "./test-tooling"
+  ],
   "nodeModulesDir": "auto",
   "imports": {
     "jsr:@colibri/core": "./core",
+    "jsr:@colibri/test-tooling": "./test-tooling",
     "colibri-internal/": "./_internal/",
     "colibri-tools/": "./_tools/",
     "stellar-sdk": "npm:@stellar/stellar-sdk@^14.6.1",
