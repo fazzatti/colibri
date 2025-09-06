@@ -10,15 +10,15 @@ export type NetworkConfig = {
 };
 
 export enum NetworkType {
-  testnet = "testnet",
-  futurenet = "futurenet",
-  mainnet = "mainnet",
-  custom = "custom",
+  TESTNET = "testnet",
+  FUTURENET = "futurenet",
+  MAINNET = "mainnet",
+  CUSTOM = "custom",
 }
 
 export const TestNet = (): NetworkConfig => {
   return {
-    type: NetworkType.testnet,
+    type: NetworkType.TESTNET,
     networkPassphrase: Networks.TESTNET,
     rpcUrl: "https://soroban-testnet.stellar.org:443",
     friendbotUrl: "https://friendbot.stellar.org",
@@ -29,7 +29,7 @@ export const TestNet = (): NetworkConfig => {
 
 export const FutureNet = (): NetworkConfig => {
   return {
-    type: NetworkType.futurenet,
+    type: NetworkType.FUTURENET,
     networkPassphrase: Networks.FUTURENET,
     rpcUrl: "https://rpc-futurenet.stellar.org:443",
     friendbotUrl: "https://friendbot-futurenet.stellar.org",
@@ -40,7 +40,7 @@ export const FutureNet = (): NetworkConfig => {
 
 export const MainNet = (): NetworkConfig => {
   return {
-    type: NetworkType.mainnet,
+    type: NetworkType.MAINNET,
     networkPassphrase: Networks.PUBLIC,
     rpcUrl: "",
     horizonUrl: "https://horizon.stellar.org",
@@ -60,6 +60,6 @@ export type CustomNetworkPayload = {
 export const CustomNet = (payload: CustomNetworkPayload): NetworkConfig => {
   return {
     ...payload,
-    type: payload.type || NetworkType.custom,
+    type: payload.type || NetworkType.CUSTOM,
   };
 };
