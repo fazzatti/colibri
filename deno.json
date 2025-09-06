@@ -1,8 +1,9 @@
 {
-  "workspace": ["./core"],
+  "workspace": ["./core", "./test-tooling"],
 
   "imports": {
     "jsr:@colibri/core": "./core",
+    "jsr:@colibri/test-tooling": "./test-tooling",
     "colibri-internal/": "./_internal/",
     "colibri-tools/": "./_tools/",
 
