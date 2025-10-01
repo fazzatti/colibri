@@ -6,6 +6,17 @@ export type Ed25519SecretKey = `S${string}`;
 export type Ed25519PublicKey = `G${string}`;
 export type MuxedAddress = `M${string}`;
 
+export type Signer<PK, SignIn, SignOut> = {
+  publicKey: PK;
+  sign: (data: SignIn) => Promise<SignOut> | SignOut;
+};
+
+export type Ed25519Signer = Signer<
+  Ed25519PublicKey,
+  Transaction | FeeBumpTransaction,
+  TransactionXDRBase64
+>;
+
 export type StellarNativeAddress = Ed25519PublicKey | MuxedAddress;
 export type SmartContractId = `C${string}`;
 
