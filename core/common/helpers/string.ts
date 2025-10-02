@@ -8,6 +8,8 @@ enum ErrorCode {
   IS_BLANK_STRING = "HLP_STR_00",
 }
 
+const baseErrorSource = "@colibri/core/helpers";
+
 export const isString = (val: unknown): val is string => {
   return typeof val === "string" || val instanceof String;
 };
@@ -36,7 +38,7 @@ export const nonBlankString = (
     const message = `"${subject}" is a blank string. Need non-blank.`;
     throw ColibriError.unexpected({
       domain: "helpers",
-      source: "@colibri/core/helpers/string",
+      source: baseErrorSource + "/string",
       message,
       code: ErrorCode.IS_BLANK_STRING,
     });
