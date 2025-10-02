@@ -11,85 +11,85 @@ import type { TransactionSigner } from "../../common/types.ts";
 import type { Ed25519PublicKey } from "@colibri/core";
 import { Buffer } from "node:buffer";
 
-type MockSigner = TransactionSigner & {
-  calls: number;
-  lastEntry?: xdr.SorobanAuthorizationEntry;
-  lastValidUntil?: number;
-};
-
-const makeInvocation = () =>
-  new xdr.SorobanAuthorizedInvocation({
-    function:
-      xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
-        new xdr.InvokeContractArgs({
-          contractAddress: Address.contract(Buffer.alloc(32)).toScAddress(),
-          functionName: "noop",
-          args: [],
-        })
-      ),
-    subInvocations: [],
-  });
-
-const makeAccountAuthEntry = (account: Address) =>
-  new xdr.SorobanAuthorizationEntry({
-    credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
-      new xdr.SorobanAddressCredentials({
-        address: account.toScAddress(),
-        nonce: new xdr.Int64(0),
-        signatureExpirationLedger: 0,
-        signature: xdr.ScVal.scvVec([]),
-      })
-    ),
-    rootInvocation: makeInvocation(),
-  });
-
-const makeSigner = (
-  publicKey: string,
-  behavior?: (
-    entry: xdr.SorobanAuthorizationEntry,
-    validUntil: number,
-    passphrase: string
-  ) => Promise<xdr.SorobanAuthorizationEntry>
-): MockSigner => {
-  const sign: TransactionSigner["sign"] = async (
-    ..._args: Parameters<TransactionSigner["sign"]>
-  ) => {
-    return await Promise.resolve(
-      undefined as unknown as Awaited<ReturnType<TransactionSigner["sign"]>>
-    );
-  };
-
-  const signer: MockSigner = {
-    calls: 0,
-    getPublicKey: () => publicKey as Ed25519PublicKey,
-    sign,
-    async signSorobanAuthEntry(entry, validUntil, passphrase) {
-      signer.calls++;
-      signer.lastEntry = entry;
-      signer.lastValidUntil = validUntil;
-      if (behavior) return await behavior(entry, validUntil, passphrase);
-      return entry;
-    },
-  };
-  return signer;
-};
-
-const makeRpc = (sequence = 1000): Server =>
-  ({
-    async getLatestLedger() {
-      return await { sequence, id: "mock", protocolVersion: 20 };
-    },
-  } as unknown as Server);
-
-const makeFailingRpc = (): Server =>
-  ({
-    async getLatestLedger() {
-      await new Promise((_resolve, reject) => reject(new Error("rpc down")));
-    },
-  } as unknown as Server);
-
 describe("SignAuthEntries", () => {
   const { networkPassphrase } = TestNet();
+
+  type MockSigner = TransactionSigner & {
+    calls: number;
+    lastEntry?: xdr.SorobanAuthorizationEntry;
+    lastValidUntil?: number;
+  };
+
+  const makeInvocation = () =>
+    new xdr.SorobanAuthorizedInvocation({
+      function:
+        xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
+          new xdr.InvokeContractArgs({
+            contractAddress: Address.contract(Buffer.alloc(32)).toScAddress(),
+            functionName: "noop",
+            args: [],
+          })
+        ),
+      subInvocations: [],
+    });
+
+  const makeAccountAuthEntry = (account: Address) =>
+    new xdr.SorobanAuthorizationEntry({
+      credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
+        new xdr.SorobanAddressCredentials({
+          address: account.toScAddress(),
+          nonce: new xdr.Int64(0),
+          signatureExpirationLedger: 0,
+          signature: xdr.ScVal.scvVec([]),
+        })
+      ),
+      rootInvocation: makeInvocation(),
+    });
+
+  const makeSigner = (
+    publicKey: string,
+    behavior?: (
+      entry: xdr.SorobanAuthorizationEntry,
+      validUntil: number,
+      passphrase: string
+    ) => Promise<xdr.SorobanAuthorizationEntry>
+  ): MockSigner => {
+    const sign: TransactionSigner["sign"] = async (
+      ..._args: Parameters<TransactionSigner["sign"]>
+    ) => {
+      return await Promise.resolve(
+        undefined as unknown as Awaited<ReturnType<TransactionSigner["sign"]>>
+      );
+    };
+
+    const signer: MockSigner = {
+      calls: 0,
+      getPublicKey: () => publicKey as Ed25519PublicKey,
+      sign,
+      async signSorobanAuthEntry(entry, validUntil, passphrase) {
+        signer.calls++;
+        signer.lastEntry = entry;
+        signer.lastValidUntil = validUntil;
+        if (behavior) return await behavior(entry, validUntil, passphrase);
+        return entry;
+      },
+    };
+    return signer;
+  };
+
+  const makeRpc = (sequence = 1000): Server =>
+    ({
+      async getLatestLedger() {
+        return await { sequence, id: "mock", protocolVersion: 20 };
+      },
+    } as unknown as Server);
+
+  const makeFailingRpc = (): Server =>
+    ({
+      async getLatestLedger() {
+        await new Promise((_resolve, reject) => reject(new Error("rpc down")));
+      },
+    } as unknown as Server);
 
   describe("errors", () => {
     it("requires auth array", async () => {
