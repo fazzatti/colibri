@@ -1,4 +1,4 @@
-import { Address, type xdr } from "stellar-sdk";
+import { Address, humanizeEvents, type xdr } from "stellar-sdk";
 import { ColibriError } from "../../error/index.ts";
 import type { Ed25519PublicKey } from "../types.ts";
 
@@ -75,4 +75,29 @@ export const getAddressSignerFromAuthEntry = (
   );
 
   return signer as Ed25519PublicKey;
+};
+
+export const softTryToXDR = (fnToXDR: () => string) => {
+  try {
+    return fnToXDR();
+  } catch {
+    return "Failed to convert to XDR";
+  }
+};
+
+export const parseEvents = (
+  events?: xdr.DiagnosticEvent[] | xdr.ContractEvent[]
+): ReturnType<typeof humanizeEvents> | null => {
+  return events ? humanizeEvents(events) : null;
+};
+
+export const parseErrorResult = (
+  errorResult?: xdr.TransactionResult
+): string[] | null => {
+  return errorResult
+    ? errorResult
+        .result()
+        .results()
+        .map((r) => r.toString())
+    : null;
 };
