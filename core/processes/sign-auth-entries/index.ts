@@ -9,13 +9,13 @@ import * as E from "./error.ts";
 import { assert } from "../../common/assert/assert.ts";
 import { xdr } from "stellar-sdk";
 import { assertRequiredArgs } from "../../common/assert/assert-args.ts";
-import type { DeferredInputError } from "../error.ts";
 import type { Api, Server } from "stellar-sdk/rpc";
 import {
   getAddressSignerFromAuthEntry,
   getAddressTypeFromAuthEntry,
 } from "../../common/helpers/xdr.ts";
 import type { TransactionSigner } from "../../common/types.ts";
+import { ResultOrError } from "../../common/deferred/result-or-error.ts";
 
 const signAuthEntriesProcess = async (
   input: SignAuthEntriesInput
@@ -29,12 +29,9 @@ const signAuthEntriesProcess = async (
       (argName: string) => new E.MISSING_ARG(input, argName)
     );
 
-    const validUntilLedgerSeq = await getValidUntilLedgerSeq(validity, rpc);
-
-    if (E.SignAuthEntriesError.isDeferredInput(validUntilLedgerSeq))
-      throw validUntilLedgerSeq(input);
-
-    validUntilLedgerSeq;
+    const validUntilLedgerSeq = (
+      await getValidUntilLedgerSeq(validity, rpc)
+    ).unwrap(input);
 
     const sourceAccountEntries = includeUnsigned
       ? getSourceCredentialAuth(auth)
@@ -106,14 +103,14 @@ const getValidUntilLedgerSeq = async (
   validity: LedgerValidity | undefined,
   rpc: Server
 ): Promise<
-  number | DeferredInputError<SignAuthEntriesInput, E.SignAuthEntriesError>
+  ResultOrError<number, SignAuthEntriesInput, E.SignAuthEntriesError>
 > => {
   if (validity && "validUntilLedgerSeq" in validity) {
     const { validUntilLedgerSeq } = validity;
     if (validUntilLedgerSeq <= 0)
       return E.VALID_UNTIL_LEDGER_SEQ_TOO_LOW.deferInput(validUntilLedgerSeq);
 
-    return validUntilLedgerSeq;
+    return ResultOrError.wrapVal(validUntilLedgerSeq);
   }
 
   let nOfLedgersToSignFor = 120; // default to ˜10min if no value is informed
@@ -144,7 +141,7 @@ const getValidUntilLedgerSeq = async (
   const latestLedgerSeq = latestLedger.sequence;
   const validUntilLedgerSeq = latestLedgerSeq + nOfLedgersToSignFor;
 
-  return validUntilLedgerSeq;
+  return ResultOrError.wrapVal(validUntilLedgerSeq);
 };
 
 const getSourceCredentialAuth = (
