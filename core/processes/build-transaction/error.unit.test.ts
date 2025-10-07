@@ -12,6 +12,7 @@ import type { Server } from "stellar-sdk/rpc";
 import type { Ed25519PublicKey } from "../../common/types.ts";
 
 import * as E from "./error.ts";
+import type { BaseFee } from "../../common/types/transaction-config/types.ts";
 
 const mockRpc = {
   getAccount: (address: string) => {
@@ -35,7 +36,7 @@ describe("BuildTransactionErrors", () => {
         rpc: mockRpc,
         operations: [Operation.setOptions({})],
         source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
-        baseFee: "not-a-number",
+        baseFee: "not-a-number" as unknown as BaseFee,
         networkPassphrase: TestNet().networkPassphrase,
       };
 
