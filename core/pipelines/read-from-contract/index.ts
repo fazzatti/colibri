@@ -1,12 +1,15 @@
 import { Pipeline } from "convee";
 import { BuildTransaction } from "../../processes/build-transaction/index.ts";
 import { SimulateTransaction } from "../../processes/simulate-transaction/index.ts";
-import type { CreateTransactionPipelineArgs } from "../transaction/types.ts";
+
 import { Server } from "stellar-sdk/rpc";
 import { ColibriError } from "../../error/index.ts";
 import { buildToSimulate } from "../../transformers/pipeline-connectors/build-to-simulate.ts";
 import type { BuildTransactionInput } from "../../processes/build-transaction/types.ts";
-import type { ReadFromContractInput } from "./types.ts";
+import type {
+  ReadFromContractInput,
+  CreateReadFromContractPipelineArgs,
+} from "./types.ts";
 import { assertRequiredArgs } from "../../common/assert/assert-args.ts";
 import { simulateToRetval } from "../../transformers/pipeline-connectors/simulate-to-retval/index.ts";
 import { Keypair } from "stellar-sdk";
@@ -31,7 +34,7 @@ const inputToBuild = (networkPassphrase: string) => {
 
 const createReadFromContractPipeline = ({
   networkConfig,
-}: CreateTransactionPipelineArgs) => {
+}: CreateReadFromContractPipelineArgs) => {
   try {
     assertRequiredArgs(
       {

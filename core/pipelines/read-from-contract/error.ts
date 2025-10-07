@@ -26,7 +26,7 @@ export class MISSING_ARG extends ReadFromContractError {
     super({
       code: Code.MISSING_ARG,
       message: `Missing required argument: ${argName}`,
-      details: `The argument '${argName}' is required but was not provided in the input.`,
+      details: `The argument '${argName}' is required but was not provided in the pipeline creation.`,
       cause: undefined,
     });
   }
