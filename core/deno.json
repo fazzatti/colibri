@@ -5,6 +5,7 @@
   "exports": {
     ".": "./mod.ts"
   },
+
   "lint": {
     "plugins": ["../_tools/lint/enum-requires-own-file.ts"]
   },
