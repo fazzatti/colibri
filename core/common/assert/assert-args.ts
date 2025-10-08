@@ -7,6 +7,7 @@ export function assertRequiredArgs(
   errorFn: (argName: string) => ColibriError
 ): asserts args is Record<string, unknown> {
   for (const argName of Object.keys(args)) {
-    if (!args[argName]) throw errorFn(argName);
+    if (!(argName in args) || args[argName] === undefined)
+      throw errorFn(argName);
   }
 }

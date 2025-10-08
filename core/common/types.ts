@@ -21,7 +21,7 @@ export type StellarNativeAddress = Ed25519PublicKey | MuxedAddress;
 export type SmartContractId = `C${string}`;
 
 export type TransactionSigner = {
-  getPublicKey(): Ed25519PublicKey;
+  publicKey(): Ed25519PublicKey;
   sign(
     tx: Transaction | FeeBumpTransaction
   ): Promise<TransactionXDRBase64> | TransactionXDRBase64;
