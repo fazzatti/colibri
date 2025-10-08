@@ -14,8 +14,8 @@ import { SignEnvelope } from "./index.ts";
 import * as E from "./error.ts";
 import { TestNet } from "../../network/index.ts";
 import { OperationThreshold } from "../../common/types.ts";
-import type { Ed25519Signer } from "../../common/types.ts";
-import { Ed25519PublicKey } from "@colibri/core";
+import type { Ed25519Signer, TransactionSigner } from "../../common/types.ts";
+import type { Ed25519PublicKey } from "@colibri/core";
 
 describe("SignEnvelope", () => {
   const { networkPassphrase } = TestNet();
@@ -56,15 +56,18 @@ describe("SignEnvelope", () => {
     );
   };
 
-  type MockSigner = Ed25519Signer & {
+  type MockSigner = TransactionSigner & {
     calls: number;
     lastType?: "tx" | "feeBump";
   };
 
   const createSigner = (kp: Keypair): MockSigner => {
     return {
-      publicKey: kp.publicKey() as Ed25519PublicKey,
+      publicKey: () => kp.publicKey() as Ed25519PublicKey,
       calls: 0,
+      async signSorobanAuthEntry(e, _vu, _np) {
+        return e;
+      },
       async sign(tx: Transaction | FeeBumpTransaction): Promise<string> {
         this.calls++;
         if (tx instanceof FeeBumpTransaction) {
@@ -85,8 +88,11 @@ describe("SignEnvelope", () => {
     mode: "throw" | "invalidXDR"
   ): MockSigner => {
     return {
-      publicKey: publicKey as Ed25519PublicKey,
+      publicKey: () => publicKey as Ed25519PublicKey,
       calls: 0,
+      async signSorobanAuthEntry(e, _vu, _np) {
+        return e;
+      },
       async sign(): Promise<string> {
         this.calls++;
         if (mode === "throw") {
@@ -113,7 +119,10 @@ describe("SignEnvelope", () => {
       const out = await SignEnvelope.run({
         transaction: tx,
         signatureRequirements: [
-          { signer: signer.publicKey, thresholdLevel: OperationThreshold.low },
+          {
+            signer: signer.publicKey(),
+            thresholdLevel: OperationThreshold.low,
+          },
         ],
         signers: [signer],
       });
@@ -132,7 +141,10 @@ describe("SignEnvelope", () => {
       const out = await SignEnvelope.run({
         transaction: tx,
         signatureRequirements: [
-          { signer: signer0.publicKey, thresholdLevel: OperationThreshold.low },
+          {
+            signer: signer0.publicKey(),
+            thresholdLevel: OperationThreshold.low,
+          },
         ],
         signers: [signer0, signer1, signer2],
       });
@@ -153,9 +165,18 @@ describe("SignEnvelope", () => {
       const out = await SignEnvelope.run({
         transaction: tx,
         signatureRequirements: [
-          { signer: signer0.publicKey, thresholdLevel: OperationThreshold.low },
-          { signer: signer1.publicKey, thresholdLevel: OperationThreshold.low },
-          { signer: signer2.publicKey, thresholdLevel: OperationThreshold.low },
+          {
+            signer: signer0.publicKey(),
+            thresholdLevel: OperationThreshold.low,
+          },
+          {
+            signer: signer1.publicKey(),
+            thresholdLevel: OperationThreshold.low,
+          },
+          {
+            signer: signer2.publicKey(),
+            thresholdLevel: OperationThreshold.low,
+          },
         ],
         signers: [signer0, signer1, signer2],
       });
@@ -174,9 +195,18 @@ describe("SignEnvelope", () => {
       const out = await SignEnvelope.run({
         transaction: tx,
         signatureRequirements: [
-          { signer: signer.publicKey, thresholdLevel: OperationThreshold.low },
-          { signer: signer.publicKey, thresholdLevel: OperationThreshold.low },
-          { signer: signer.publicKey, thresholdLevel: OperationThreshold.low },
+          {
+            signer: signer.publicKey(),
+            thresholdLevel: OperationThreshold.low,
+          },
+          {
+            signer: signer.publicKey(),
+            thresholdLevel: OperationThreshold.low,
+          },
+          {
+            signer: signer.publicKey(),
+            thresholdLevel: OperationThreshold.low,
+          },
         ],
         signers: [signer],
       });
@@ -194,7 +224,10 @@ describe("SignEnvelope", () => {
       const out = await SignEnvelope.run({
         transaction: feeBump,
         signatureRequirements: [
-          { signer: signer.publicKey, thresholdLevel: OperationThreshold.low },
+          {
+            signer: signer.publicKey(),
+            thresholdLevel: OperationThreshold.low,
+          },
         ],
         signers: [signer],
       });
@@ -271,7 +304,7 @@ describe("SignEnvelope", () => {
             transaction: tx,
             signatureRequirements: [
               {
-                signer: badSigner.publicKey,
+                signer: badSigner.publicKey(),
                 thresholdLevel: OperationThreshold.low,
               },
             ],
@@ -291,7 +324,7 @@ describe("SignEnvelope", () => {
             transaction: tx,
             signatureRequirements: [
               {
-                signer: badSigner.publicKey,
+                signer: badSigner.publicKey(),
                 thresholdLevel: OperationThreshold.low,
               },
             ],

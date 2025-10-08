@@ -1,6 +1,6 @@
 import type { SignEnvelopeInput } from "./types.ts";
 import { ProcessError } from "../error.ts";
-import type { Ed25519Signer } from "../../common/types.ts";
+import type { TransactionSigner } from "../../common/types.ts";
 
 export enum Code {
   UNEXPECTED_ERROR = "SEN_000",
@@ -18,7 +18,7 @@ export abstract class SignEnvelopeError extends ProcessError<
 }
 
 export class UNEXPECTED_ERROR extends SignEnvelopeError {
-  constructor(input: SignEnvelopeInput, cause?: Error) {
+  constructor(input: SignEnvelopeInput, cause: Error) {
     super({
       code: Code.UNEXPECTED_ERROR,
       message: "An unexpected error occurred!",
@@ -56,7 +56,7 @@ export class SIGNER_NOT_FOUND extends SignEnvelopeError {
   constructor(
     input: SignEnvelopeInput,
     publicKey: string,
-    availableSigners: Ed25519Signer[]
+    availableSigners: TransactionSigner[]
   ) {
     const availableSignersList = availableSigners
       .map((s) => s.publicKey)
