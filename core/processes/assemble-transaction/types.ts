@@ -1,9 +1,9 @@
-import type { Transaction } from "stellar-sdk";
-import type { Api } from "stellar-sdk/rpc";
+import type { SorobanDataBuilder, Transaction, xdr } from "stellar-sdk";
 
 export type AssembleTransactionInput = {
-  simulationResponse: Api.SimulateTransactionSuccessResponse;
+  sorobanData?: SorobanDataBuilder;
   transaction: Transaction;
+  authEntries?: xdr.SorobanAuthorizationEntry[];
 };
 
 export type AssembleTransactionOutput = Transaction;
