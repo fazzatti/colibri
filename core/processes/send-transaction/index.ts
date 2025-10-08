@@ -17,7 +17,7 @@ const sendTransactionProcess = async (
   input: SendTransactionInput
 ): Promise<SendTransactionOutput> => {
   try {
-    const { tx, rpc, options } = input;
+    const { transaction, rpc, options } = input;
     const {
       timeoutInSeconds,
       waitIntervalInMs,
@@ -25,7 +25,7 @@ const sendTransactionProcess = async (
     } = { ...DEFAULT_OPTIONS, ...options };
 
     assertRequiredArgs(
-      { tx, rpc },
+      { transaction, rpc },
       (argName: string) => new E.MISSING_ARG(input, argName)
     );
 
@@ -42,7 +42,7 @@ const sendTransactionProcess = async (
     let sendResponse: Api.SendTransactionResponse;
 
     try {
-      sendResponse = await rpc.sendTransaction(tx);
+      sendResponse = await rpc.sendTransaction(transaction);
     } catch (e) {
       throw new E.FAIL_TO_SEND_TRANSACTION(input, e as Error);
     }
@@ -68,7 +68,7 @@ const sendTransactionProcess = async (
     }
 
     const secondsToWait = useTransactionTimeoutIfAvailable
-      ? getTransactionTimeout(tx) || timeoutInSeconds
+      ? getTransactionTimeout(transaction) || timeoutInSeconds
       : timeoutInSeconds;
 
     const waitUntil = Date.now() + secondsToWait * 1000;

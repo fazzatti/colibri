@@ -2,7 +2,7 @@ import type { FeeBumpTransaction, Transaction, xdr } from "stellar-sdk";
 import type { Api, Server } from "stellar-sdk/rpc";
 
 export type SendTransactionInput = {
-  tx: Transaction | FeeBumpTransaction;
+  transaction: Transaction | FeeBumpTransaction;
   rpc: Server;
   options?: Partial<SendTransactionOptions>;
 };

@@ -76,7 +76,7 @@ describe("SendTransaction", () => {
 
   describe("Success", () => {
     it("returns successful response when transaction completes", async () => {
-      const tx = mockTransaction;
+      const transaction = mockTransaction;
       const hash = "hash-success";
       const returnValue = xdr.ScVal.scvBool(true);
       let sendCalls = 0;
@@ -87,7 +87,7 @@ describe("SendTransaction", () => {
       const rpc = {
         async sendTransaction(sentTx: Transaction) {
           sendCalls++;
-          assertEquals(sentTx, tx);
+          assertEquals(sentTx, transaction);
           return {
             status: SendTransactionStatus.PENDING,
             hash,
@@ -100,7 +100,7 @@ describe("SendTransaction", () => {
         },
       } as unknown as Server;
 
-      const result = await SendTransaction.run({ tx, rpc });
+      const result = await SendTransaction.run({ transaction, rpc });
 
       assertEquals(result.hash, hash);
       assertEquals(result.returnValue, returnValue);
@@ -110,8 +110,8 @@ describe("SendTransaction", () => {
     });
 
     it("polls using provided timeout when transaction timeout is disabled", async () => {
-      const tx = {} as unknown as Transaction;
-      Object.setPrototypeOf(tx, Transaction.prototype);
+      const transaction = {} as unknown as Transaction;
+      Object.setPrototypeOf(transaction, Transaction.prototype);
 
       const hash = "hash-provided-timeout";
       const returnValue = xdr.ScVal.scvU32(42);
@@ -128,7 +128,7 @@ describe("SendTransaction", () => {
 
       const rpc = {
         async sendTransaction(sentTx: Transaction) {
-          assertEquals(sentTx, tx);
+          assertEquals(sentTx, transaction);
           return {
             status: SendTransactionStatus.PENDING,
             hash,
@@ -146,7 +146,7 @@ describe("SendTransaction", () => {
         [0, 400, 800, 1200, 1600],
         async () =>
           await SendTransaction.run({
-            tx,
+            transaction,
             rpc,
             options: {
               timeoutInSeconds: 1,
@@ -166,7 +166,7 @@ describe("SendTransaction", () => {
         const err = await assertRejects(
           async () =>
             await SendTransaction.run({
-              tx: undefined as unknown as Transaction,
+              transaction: undefined as unknown as Transaction,
               rpc: {} as Server,
             }),
           E.MISSING_ARG
@@ -178,7 +178,7 @@ describe("SendTransaction", () => {
         const err = await assertRejects(
           async () =>
             await SendTransaction.run({
-              tx: mockTransaction,
+              transaction: mockTransaction,
               rpc: {} as Server,
               options: { timeoutInSeconds: 0 },
             }),
@@ -191,7 +191,7 @@ describe("SendTransaction", () => {
         const err = await assertRejects(
           async () =>
             await SendTransaction.run({
-              tx: mockTransaction,
+              transaction: mockTransaction,
               rpc: {} as Server,
               options: { waitIntervalInMs: 50 },
             }),
@@ -213,7 +213,7 @@ describe("SendTransaction", () => {
         const err = await assertRejects(
           async () =>
             await SendTransaction.run({
-              tx: mockTransaction,
+              transaction: mockTransaction,
               rpc,
             }),
           E.FAIL_TO_SEND_TRANSACTION
@@ -240,7 +240,7 @@ describe("SendTransaction", () => {
         const err = await assertRejects(
           async () =>
             await SendTransaction.run({
-              tx: mockTransaction,
+              transaction: mockTransaction,
               rpc,
             }),
           E.DUPLICATE_TRANSACTION
@@ -266,7 +266,7 @@ describe("SendTransaction", () => {
         const err = await assertRejects(
           async () =>
             await SendTransaction.run({
-              tx: mockTransaction,
+              transaction: mockTransaction,
               rpc,
             }),
           E.TRY_AGAIN_LATER
@@ -293,7 +293,7 @@ describe("SendTransaction", () => {
         const err = await assertRejects(
           async () =>
             await SendTransaction.run({
-              tx: mockTransaction,
+              transaction: mockTransaction,
               rpc,
             }),
           E.ERROR_STATUS
@@ -318,7 +318,7 @@ describe("SendTransaction", () => {
         const err = await assertRejects(
           async () =>
             await SendTransaction.run({
-              tx: mockTransaction,
+              transaction: mockTransaction,
               rpc,
             }),
           E.UNEXPECTED_STATUS
@@ -345,7 +345,7 @@ describe("SendTransaction", () => {
         const err = await assertRejects(
           async () =>
             await SendTransaction.run({
-              tx: mockTransaction,
+              transaction: mockTransaction,
               rpc,
             }),
           E.UNEXPECTED_STATUS
@@ -369,7 +369,7 @@ describe("SendTransaction", () => {
         const err = await assertRejects(
           async () =>
             await SendTransaction.run({
-              tx: mockTransaction,
+              transaction: mockTransaction,
               rpc,
             }),
           E.FAILED_TO_GET_TRANSACTION_STATUS
@@ -403,7 +403,7 @@ describe("SendTransaction", () => {
         const err = await assertRejects(
           async () =>
             await SendTransaction.run({
-              tx: mockTransaction,
+              transaction: mockTransaction,
               rpc,
             }),
           E.TRANSACTION_FAILED
@@ -434,7 +434,7 @@ describe("SendTransaction", () => {
             await assertRejects(
               async () =>
                 await SendTransaction.run({
-                  tx: mockTransaction,
+                  transaction: mockTransaction,
                   rpc,
                   options: {
                     timeoutInSeconds: 1,
@@ -474,7 +474,7 @@ describe("SendTransaction", () => {
           await assertRejects(
             async () =>
               await SendTransaction.run({
-                tx: mockTransaction,
+                transaction: mockTransaction,
                 rpc,
                 options: {
                   timeoutInSeconds: 1,
@@ -503,7 +503,7 @@ describe("SendTransaction", () => {
       const err = await assertRejects(
         async () =>
           await SendTransaction.run({
-            tx: {} as Transaction,
+            transaction: {} as Transaction,
             rpc: rpc,
           }),
         E.UNEXPECTED_ERROR
