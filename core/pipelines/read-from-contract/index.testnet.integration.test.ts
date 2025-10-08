@@ -5,7 +5,9 @@ import { TestNet } from "../../network/index.ts";
 import { Asset, nativeToScVal, Operation, xdr } from "stellar-sdk";
 import { createReadFromContractPipeline } from "./index.ts";
 
-describe("[Testnet] ReadFromContract Pipeline", () => {
+import { disableSanitizeConfig } from "colibri-internal/tests/index.ts";
+
+describe("[Testnet] ReadFromContract Pipeline", disableSanitizeConfig, () => {
   const networkConfig = TestNet();
   const xlmContractId = Asset.native().contractId(
     networkConfig.networkPassphrase
@@ -42,14 +44,9 @@ describe("[Testnet] ReadFromContract Pipeline", () => {
         nativeToScVal("0", { type: "i128" }),
       ],
     });
-    const resultVal = await readPipe
-      .run({
-        operations: [decimalsOp],
-      })
-      .catch((e) => {
-        console.log("Error:", e);
-        throw e;
-      });
+    const resultVal = await readPipe.run({
+      operations: [decimalsOp],
+    });
 
     assertExists(resultVal);
     assertEquals(resultVal, xdr.ScVal.scvVoid());
