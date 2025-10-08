@@ -4,11 +4,13 @@ import { getOperationTypesFromTransaction } from "../../common/helpers/transacti
 
 export enum Code {
   UNEXPECTED_ERROR = "ASM_000",
-  NOT_SMART_CONTRACT_TRANSACTION = "ASM_001",
-  UNSUPPORTED_OPERATION = "ASM_002",
-  FAILED_TO_ASSEMBLE_TRANSACTION = "ASM_003",
-  FAILED_TO_BUILD_TRANSACTION = "ASM_004",
-  FAILED_TO_BUILD_SOROBAN_DATA = "ASM_005",
+
+  MISSING_ARG = "ASM_001",
+  NOT_SMART_CONTRACT_TRANSACTION = "ASM_002",
+  UNSUPPORTED_OPERATION = "ASM_003",
+  FAILED_TO_ASSEMBLE_TRANSACTION = "ASM_004",
+  FAILED_TO_BUILD_TRANSACTION = "ASM_005",
+  FAILED_TO_BUILD_SOROBAN_DATA = "ASM_006",
 }
 
 export abstract class AssembleTransactionError extends ProcessError<
@@ -26,6 +28,18 @@ export class UNEXPECTED_ERROR extends AssembleTransactionError {
       input,
       details: "See the underlying cause for additional details",
       cause,
+    });
+  }
+}
+
+export class MISSING_ARG extends AssembleTransactionError {
+  constructor(input: AssembleTransactionInput, argName: string) {
+    super({
+      code: Code.MISSING_ARG,
+      message: `Missing required argument: ${argName}`,
+      details: `The argument '${argName}' is required but was not provided in the pipeline creation.`,
+      input,
+      cause: undefined,
     });
   }
 }
@@ -110,6 +124,7 @@ export class FAILED_TO_BUILD_SOROBAN_DATA_ERROR extends AssembleTransactionError
 
 export const ERROR_ASM = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
+  [Code.MISSING_ARG]: MISSING_ARG,
   [Code.NOT_SMART_CONTRACT_TRANSACTION]: NOT_SMART_CONTRACT_TRANSACTION_ERROR,
   [Code.UNSUPPORTED_OPERATION]: UNSUPPORTED_OPERATION_ERROR,
   [Code.FAILED_TO_ASSEMBLE_TRANSACTION]: FAILED_TO_ASSEMBLE_TRANSACTION_ERROR,

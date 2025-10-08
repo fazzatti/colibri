@@ -16,16 +16,18 @@ import type { AssembleTransactionInput } from "./types.ts";
 
 import * as E from "./error.ts";
 import { stub } from "@std/testing/mock";
+import { BaseFee } from "../../common/types/transaction-config/types.ts";
+import { text } from "node:stream/consumers";
 
 // Helper function to create a test transaction
-const createTestTransaction = () => {
+const createTestTransaction = (fee: BaseFee = "100") => {
   const account = new Account(
     "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
     "100"
   );
 
   return new TransactionBuilder(account, {
-    fee: "100",
+    fee: fee,
     networkPassphrase: TestNet().networkPassphrase,
   })
     .addOperation(
@@ -54,11 +56,30 @@ describe("AssembleTransaction", () => {
         transaction,
         sorobanData: new SorobanDataBuilder(),
         authEntries: [],
+        resourceFee: 0,
       };
 
       const result = await AssembleTransaction.run(input);
 
       assertInstanceOf(result, Transaction);
+    });
+
+    it("executes with resourceFee and add it to the total fee", async () => {
+      const inclusionFee = "10";
+      const transaction = createTestTransaction(inclusionFee);
+      const sorobanData = new SorobanDataBuilder();
+      sorobanData.setResourceFee(1);
+
+      const input: AssembleTransactionInput = {
+        transaction,
+        sorobanData,
+        authEntries: [],
+        resourceFee: 5,
+      };
+
+      const result = await AssembleTransaction.run(input);
+      assertInstanceOf(result, Transaction);
+      assertEquals(result.fee, "15");
     });
 
     it("executes with soroban data and auth entries", async () => {
@@ -70,10 +91,10 @@ describe("AssembleTransaction", () => {
         transaction,
         sorobanData,
         authEntries: [],
+        resourceFee: 0,
       };
 
       const result = await AssembleTransaction.run(input);
-
       assertInstanceOf(result, Transaction);
     });
   });
@@ -113,6 +134,7 @@ describe("AssembleTransaction", () => {
         transaction: nonSmartContractTx,
         sorobanData: new SorobanDataBuilder(),
         authEntries: [],
+        resourceFee: 0,
       };
 
       await assertRejects(
@@ -130,6 +152,7 @@ describe("AssembleTransaction", () => {
         transaction,
         sorobanData: corruptedSorobanData,
         authEntries: [],
+        resourceFee: 0,
       };
 
       await assertRejects(
@@ -153,14 +176,11 @@ describe("AssembleTransaction", () => {
         transaction: transaction,
         sorobanData: new SorobanDataBuilder(),
         authEntries: [],
+        resourceFee: 0,
       };
 
       await assertRejects(
-        async () =>
-          await AssembleTransaction.run(input).catch((e) => {
-            console.log(e);
-            throw e;
-          }),
+        async () => await AssembleTransaction.run(input),
         E.FAILED_TO_ASSEMBLE_TRANSACTION_ERROR
       );
 
@@ -199,11 +219,28 @@ describe("AssembleTransaction", () => {
         transaction: createFaultyTestTransaction(),
         sorobanData: new SorobanDataBuilder(),
         authEntries: [],
+        resourceFee: 0,
       };
 
       await assertRejects(
         async () => await AssembleTransaction.run(input),
         E.FAILED_TO_BUILD_TRANSACTION_ERROR
+      );
+    });
+
+    it("throws MISSING_ARG if the transaction input lacks a required arg", async () => {
+      const tx = undefined as unknown as Transaction;
+
+      const input: AssembleTransactionInput = {
+        transaction: tx,
+        sorobanData: new SorobanDataBuilder(),
+        authEntries: [],
+        resourceFee: 0,
+      };
+
+      await assertRejects(
+        async () => await AssembleTransaction.run(input),
+        E.MISSING_ARG
       );
     });
   });

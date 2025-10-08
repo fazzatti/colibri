@@ -12,12 +12,18 @@ import {
   getOperationType,
 } from "../../common/helpers/transaction.ts";
 import { Account, Operation, TransactionBuilder, type xdr } from "stellar-sdk";
+import { assertRequiredArgs } from "../../common/assert/assert-args.ts";
 
 const assembleTransactionProcess = async (
   input: AssembleTransactionInput
 ): Promise<AssembleTransactionOutput> => {
   try {
-    const { transaction, sorobanData, authEntries } = input;
+    const { transaction, sorobanData, authEntries, resourceFee } = input;
+
+    assertRequiredArgs(
+      { transaction, resourceFee },
+      (argName: string) => new E.MISSING_ARG(input, argName)
+    );
 
     assert(
       isSmartContractTransaction(transaction),
@@ -51,8 +57,11 @@ const assembleTransactionProcess = async (
 
     let assembledTransaction;
     try {
+      const inclusionFee = parseInt(transaction.fee) || 0;
+      const updatedFee = inclusionFee + resourceFee;
+
       assembledTransaction = new TransactionBuilder(sourceAccount, {
-        fee: transaction.fee,
+        fee: updatedFee.toString(),
         memo: transaction.memo,
         networkPassphrase: transaction.networkPassphrase,
         timebounds: transaction.timeBounds,
