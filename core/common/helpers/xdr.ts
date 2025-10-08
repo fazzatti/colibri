@@ -9,6 +9,7 @@ enum ErrorCode {
   FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE = "HLP_XDR_01",
   FAILED_TO_GET_AUTH_ENTRY_SIGNER = "HLP_XDR_02",
   INVALID_AUTH_ENTRY_SIGNER_ADDRESS = "HLP_XDR_03",
+  FAILED_TO_PARSE_ERROR_RESULT = "HLP_XDR_04",
 }
 
 const baseErrorSource = "@colibri/core/helpers/xdr";
@@ -94,10 +95,37 @@ export const parseEvents = (
 export const parseErrorResult = (
   errorResult?: xdr.TransactionResult
 ): string[] | null => {
-  return errorResult
-    ? errorResult
-        .result()
-        .results()
-        .map((r) => r.toString())
-    : null;
+  if (!errorResult) return null;
+
+  if (
+    errorResult.result &&
+    errorResult.result().switch &&
+    errorResult.result().switch().name
+  ) {
+    return [errorResult.result().switch().name];
+  }
+
+  if (
+    errorResult.result &&
+    errorResult.result().results &&
+    errorResult.result().results().flatMap
+  ) {
+    return errorResult
+      .result()
+      .results()
+      .flatMap((r) => r.toString());
+  }
+
+  throw ColibriError.unexpected({
+    domain: "helpers",
+    source: baseErrorSource + "/parseErrorResult",
+    message: "Unexpected format of TransactionResult XDR!",
+    details: `The TransactionResult XDR does not match the expected format. See the meta section for the XDR provided.`,
+    code: ErrorCode.FAILED_TO_PARSE_ERROR_RESULT,
+    meta: {
+      data: {
+        errorResultXDR: softTryToXDR(() => errorResult.toXDR("base64")),
+      },
+    },
+  });
 };
