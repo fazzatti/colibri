@@ -1,9 +1,10 @@
-import { FeeBumpTransaction, Transaction } from "stellar-sdk";
+import { FeeBumpTransaction, Transaction, xdr } from "stellar-sdk";
 import { ColibriError } from "../../error/index.ts";
 import { softTryToXDR } from "./xdr.ts";
 
 enum ErrorCode {
   FAILED_TO_GET_TRANSACTION_TIMEOUT = "HLP_TX_01",
+  FAILED_TO_GET_OPERATIONS_FROM_TRANSACTION = "HLP_TX_02",
 }
 
 const baseErrorSource = "@colibri/core/helpers/transaction";
@@ -40,4 +41,34 @@ export const getTransactionTimeout = (
       },
     });
   }
+};
+
+export const getOperationsFromTransaction = (
+  transaction: Transaction
+): xdr.Operation[] => {
+  try {
+    return transaction.toEnvelope().v1().tx().operations();
+  } catch (e) {
+    throw ColibriError.fromUnknown(e, {
+      domain: "helpers",
+      source: baseErrorSource + "/getOperationsFromTransaction",
+      message: "Failed to get operations from Transaction!",
+      code: ErrorCode.FAILED_TO_GET_OPERATIONS_FROM_TRANSACTION,
+      meta: {
+        data: {
+          txXDR: softTryToXDR(() => transaction.toXDR()),
+        },
+      },
+    });
+  }
+};
+
+export const getOperationType = (op: xdr.Operation): string => {
+  return op.body().switch().name;
+};
+
+export const getOperationTypesFromTransaction = (
+  transaction: Transaction
+): string[] => {
+  return getOperationsFromTransaction(transaction).map(getOperationType);
 };
