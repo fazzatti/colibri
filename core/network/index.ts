@@ -9,6 +9,14 @@ export type NetworkConfig = {
   allowHttp?: boolean;
 };
 
+export type TestNetConfig = NetworkConfig & {
+  type: NetworkType.TESTNET;
+  rpcUrl: string;
+  friendbotUrl: string;
+  horizonUrl: string;
+  allowHttp: false;
+};
+
 export enum NetworkType {
   TESTNET = "testnet",
   FUTURENET = "futurenet",
@@ -16,7 +24,7 @@ export enum NetworkType {
   CUSTOM = "custom",
 }
 
-export const TestNet = (): NetworkConfig => {
+export const TestNet = (): TestNetConfig => {
   return {
     type: NetworkType.TESTNET,
     networkPassphrase: Networks.TESTNET,
