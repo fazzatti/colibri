@@ -69,7 +69,7 @@ const signAuthEntriesProcess = async (
         const requiredSigner = getAddressSignerFromAuthEntry(authEntry);
 
         const signer = signers.find(
-          (s) => s.getPublicKey() === requiredSigner
+          (s) => s.publicKey() === requiredSigner
         ) as TransactionSigner;
 
         assert(signer, new E.MISSING_SIGNER(input, requiredSigner, authEntry));

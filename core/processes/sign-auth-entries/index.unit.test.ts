@@ -91,7 +91,7 @@ const makeSigner = (
 
   const signer: MockSigner = {
     calls: 0,
-    getPublicKey: () => publicKey as Ed25519PublicKey,
+    publicKey: () => publicKey as Ed25519PublicKey,
     sign,
     async signSorobanAuthEntry(entry, validUntil, passphrase) {
       signer.calls++;
