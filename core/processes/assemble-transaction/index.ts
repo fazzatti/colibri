@@ -57,7 +57,7 @@ const assembleTransactionProcess = async (
 
     let assembledTransaction;
     try {
-      const inclusionFee = parseInt(transaction.fee) || 0;
+      const inclusionFee = parseInt(transaction.fee);
       const updatedFee = inclusionFee + resourceFee;
 
       assembledTransaction = new TransactionBuilder(sourceAccount, {
