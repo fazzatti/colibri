@@ -1,5 +1,6 @@
 export type ErrorDomain =
   | "transformers"
+  | "tools"
   | "processes"
   | "verifiers"
   | "helpers"
