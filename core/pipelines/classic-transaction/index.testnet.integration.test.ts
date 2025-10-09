@@ -11,7 +11,7 @@ import type {
   TransactionSigner,
 } from "../../common/types.ts";
 import type { TransactionConfig } from "../../common/types/transaction-config/types.ts";
-import { disableSanitizeConfig } from "colibri-internal/tests/index.ts";
+import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 
 describe(
   "[Testnet] ClassicTransaction Pipeline",
