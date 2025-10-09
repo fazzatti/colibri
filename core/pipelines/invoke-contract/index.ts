@@ -22,7 +22,7 @@ import {
 } from "./connectors.ts";
 import { SignAuthEntries } from "../../processes/sign-auth-entries/index.ts";
 import { EnvelopeSigningRequirements } from "../../processes/index.ts";
-import { assembleToEnvelopeSigningRequirements } from "../../transformers/pipeline-connectors/assemble-to-envelope-signing-req";
+import { assembleToEnvelopeSigningRequirements } from "../../transformers/pipeline-connectors/assemble-to-envelope-signing-req.ts";
 import { SignEnvelope } from "../../processes/sign-envelope/index.ts";
 import { SendTransaction } from "../../processes/send-transaction/index.ts";
 
