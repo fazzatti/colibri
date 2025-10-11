@@ -283,6 +283,46 @@ describe("StrKey", () => {
       });
     });
 
+    describe("isPreAuthTx", () => {
+      it("accepts valid T addresses", () => {
+        assertEquals(
+          StrKey.isPreAuthTx(
+            "TBU2RRGLXH3E5CQHTD3ODLDF2BWDCYUSSBLLZ5GNW7JXHDIYKXZWHXL7"
+          ),
+          true
+        );
+      });
+
+      it("rejects wrong prefix", () => {
+        assertEquals(
+          StrKey.isPreAuthTx(
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+          ),
+          false
+        );
+      });
+    });
+
+    describe("isSha256Hash", () => {
+      it("accepts valid X addresses", () => {
+        assertEquals(
+          StrKey.isSha256Hash(
+            "XBU2RRGLXH3E5CQHTD3ODLDF2BWDCYUSSBLLZ5GNW7JXHDIYKXZWGTOG"
+          ),
+          true
+        );
+      });
+
+      it("rejects wrong prefix", () => {
+        assertEquals(
+          StrKey.isSha256Hash(
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+          ),
+          false
+        );
+      });
+    });
+
     describe("isLiquidityPoolId", () => {
       it("accepts valid L addresses", () => {
         assertEquals(
@@ -307,8 +347,8 @@ describe("StrKey", () => {
   });
 
   describe("Tier 2: Full validation (checksum & structure)", () => {
-    describe("Valid addresses from SEP-23 & Stellar SDK", () => {
-      it("validates Ed25519 public keys", () => {
+    describe("isValidEd25519PublicKey", () => {
+      it("validates valid Ed25519 public keys", () => {
         assertEquals(
           StrKey.isValidEd25519PublicKey(
             "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
@@ -320,89 +360,6 @@ describe("StrKey", () => {
             "GBBM6BKZPEHWYO3E3YKREDPQXMS4VK35YLNU7NFBRI26RAN7GI5POFBB"
           ),
           true
-        );
-      });
-
-      it("validates Ed25519 secret keys", () => {
-        assertEquals(
-          StrKey.isValidEd25519SecretSeed(
-            "SBU2RRGLXH3E5CQHTD3ODLDF2BWDCYUSSBLLZ5GNW7JXHDIYKXZWHOKR"
-          ),
-          true
-        );
-        assertEquals(
-          StrKey.isValidEd25519SecretSeed(
-            "SAB5556L5AN5KSR5WF7UOEFDCIODEWEO7H2UR4S5R62DFTQOGLKOVZDY"
-          ),
-          true
-        );
-      });
-
-      it("validates muxed addresses", () => {
-        assertEquals(
-          StrKey.isValidMuxedAddress(
-            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUQ"
-          ),
-          true
-        );
-        assertEquals(
-          StrKey.isValidMuxedAddress(
-            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVAAAAAAAAAAAAAJLK"
-          ),
-          true
-        );
-      });
-
-      it("validates signed payloads", () => {
-        assertEquals(
-          StrKey.isValidSignedPayload(
-            "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAQACAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUPB6IBZGM"
-          ),
-          true
-        );
-        assertEquals(
-          StrKey.isValidSignedPayload(
-            "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAOQCAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUAAAAFGBU"
-          ),
-          true
-        );
-      });
-
-      it("validates contracts", () => {
-        assertEquals(
-          StrKey.isValidContractId(
-            "CA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQGAXE"
-          ),
-          true
-        );
-      });
-
-      it("validates liquidity pools", () => {
-        assertEquals(
-          StrKey.isValidLiquidityPoolId(
-            "LA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUPJN"
-          ),
-          true
-        );
-      });
-
-      it("validates claimable balances", () => {
-        assertEquals(
-          StrKey.isValidClaimableBalanceId(
-            "BAAD6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGR4TU"
-          ),
-          true
-        );
-      });
-    });
-
-    describe("Invalid addresses from SEP-23 (covered by Stellar SDK)", () => {
-      it("rejects unused trailing bit not zero", () => {
-        assertEquals(
-          StrKey.isValidMuxedAddress(
-            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUR"
-          ),
-          false
         );
       });
 
@@ -422,6 +379,102 @@ describe("StrKey", () => {
           ),
           false
         );
+      });
+
+      it("rejects invalid checksum", () => {
+        assertEquals(
+          StrKey.isValidEd25519PublicKey(
+            "GBPXXOA5N4JYPESHAADMQKBPWZWQDQ64ZV6ZL2S3LAGW4SY7NTCMWIVT"
+          ),
+          false
+        );
+      });
+
+      it("rejects Ed25519 with invalid decoded length (5 bytes not 32)", () => {
+        assertEquals(StrKey.isValidEd25519PublicKey("GAAAAAAAACGC6"), false);
+      });
+
+      it("rejects base-32 yielding wrong byte count (36 not 35)", () => {
+        assertEquals(
+          StrKey.isValidEd25519PublicKey(
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUACUSI"
+          ),
+          false
+        );
+      });
+
+      it("rejects when decoded data encodes to different string", () => {
+        assertEquals(
+          StrKey.isValidEd25519PublicKey(
+            "GBPXX0A5N4JYPESHAADMQKBPWZWQDQ64ZV6ZL2S3LAGW4SY7NTCMWIVL"
+            //    ^ note the '0' (zero) instead of 'O' (letter O)
+            // This might decode, but re-encoding produces a different string
+          ),
+          false
+        );
+        assertEquals(
+          StrKey.isValidEd25519PublicKey(
+            "GCFZB6L25D26RQFDWSSBDEYQ32JHLRMTT44ZYE3DZQUTYOL7WY43PLBG++"
+            //                                                              ^^ invalid chars
+            // The ++ is clearly not valid base32
+          ),
+          false
+        );
+      });
+    });
+
+    describe("isValidEd25519SecretSeed", () => {
+      it("validates valid Ed25519 secret keys", () => {
+        assertEquals(
+          StrKey.isValidEd25519SecretSeed(
+            "SBU2RRGLXH3E5CQHTD3ODLDF2BWDCYUSSBLLZ5GNW7JXHDIYKXZWHOKR"
+          ),
+          true
+        );
+        assertEquals(
+          StrKey.isValidEd25519SecretSeed(
+            "SAB5556L5AN5KSR5WF7UOEFDCIODEWEO7H2UR4S5R62DFTQOGLKOVZDY"
+          ),
+          true
+        );
+      });
+
+      it("rejects when format check fails (wrong prefix)", () => {
+        assertEquals(
+          StrKey.isValidEd25519SecretSeed(
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+          ),
+          false
+        );
+      });
+    });
+
+    describe("isValidMuxedAddress", () => {
+      it("validates valid muxed addresses", () => {
+        assertEquals(
+          StrKey.isValidMuxedAddress(
+            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUQ"
+          ),
+          true
+        );
+        assertEquals(
+          StrKey.isValidMuxedAddress(
+            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVAAAAAAAAAAAAAJLK"
+          ),
+          true
+        );
+      });
+
+      it("rejects unused trailing bit not zero", () => {
+        assertEquals(
+          StrKey.isValidMuxedAddress(
+            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUR"
+          ),
+          false
+        );
+      });
+
+      it("rejects invalid algorithm (low 3 bits are 7)", () => {
         assertEquals(
           StrKey.isValidMuxedAddress(
             "M47QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUQ"
@@ -446,15 +499,95 @@ describe("StrKey", () => {
           ),
           false
         );
+      });
+
+      it("rejects muxed with wrong decoded byte count (44 not 43)", () => {
         assertEquals(
-          StrKey.isValidEd25519PublicKey(
-            "GBPXXOA5N4JYPESHAADMQKBPWZWQDQ64ZV6ZL2S3LAGW4SY7NTCMWIVT"
+          StrKey.isValidMuxedAddress(
+            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVAAAAAAAAAAAAAAV75I"
           ),
           false
         );
       });
+    });
 
-      it("rejects trailing bits not zero for claimable balance", () => {
+    describe("isValidSignedPayload", () => {
+      it("validates valid signed payloads", () => {
+        assertEquals(
+          StrKey.isValidSignedPayload(
+            "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAQACAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUPB6IBZGM"
+          ),
+          true
+        );
+        assertEquals(
+          StrKey.isValidSignedPayload(
+            "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAOQCAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUAAAAFGBU"
+          ),
+          true
+        );
+      });
+
+      it("rejects when format check fails (wrong prefix)", () => {
+        assertEquals(
+          StrKey.isValidSignedPayload(
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+          ),
+          false
+        );
+      });
+    });
+
+    describe("isValidContractId", () => {
+      it("validates valid contracts", () => {
+        assertEquals(
+          StrKey.isValidContractId(
+            "CA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQGAXE"
+          ),
+          true
+        );
+      });
+
+      it("rejects when format check fails (wrong prefix)", () => {
+        assertEquals(
+          StrKey.isValidContractId(
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+          ),
+          false
+        );
+      });
+    });
+
+    describe("isValidLiquidityPoolId", () => {
+      it("validates valid liquidity pools", () => {
+        assertEquals(
+          StrKey.isValidLiquidityPoolId(
+            "LA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUPJN"
+          ),
+          true
+        );
+      });
+
+      it("rejects when format check fails (wrong prefix)", () => {
+        assertEquals(
+          StrKey.isValidLiquidityPoolId(
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+          ),
+          false
+        );
+      });
+    });
+
+    describe("isValidClaimableBalanceId", () => {
+      it("validates valid claimable balances", () => {
+        assertEquals(
+          StrKey.isValidClaimableBalanceId(
+            "BAAD6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGR4TU"
+          ),
+          true
+        );
+      });
+
+      it("rejects trailing bits not zero", () => {
         assertEquals(
           StrKey.isValidClaimableBalanceId(
             "BAAD6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGR4TV"
@@ -462,97 +595,63 @@ describe("StrKey", () => {
           false
         );
       });
-    });
 
-    it("rejects Ed25519 with invalid decoded length (5 bytes not 32)", () => {
-      assertEquals(StrKey.isValidEd25519PublicKey("GAAAAAAAACGC6"), false);
-    });
-
-    it("rejects base-32 yielding wrong byte count (36 not 35)", () => {
-      assertEquals(
-        StrKey.isValidEd25519PublicKey(
-          "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUACUSI"
-        ),
-        false
-      );
-    });
-
-    it("rejects muxed with wrong decoded byte count (44 not 43)", () => {
-      assertEquals(
-        StrKey.isValidMuxedAddress(
-          "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVAAAAAAAAAAAAAAV75I"
-        ),
-        false
-      );
-    });
-
-    describe("Invalid addresses from SEP-23 (NOT covered by Stellar SDK)", () => {
-      // ⚠️ The following tests document known limitations in the Stellar SDK's validation.
-      // Tests prefixed with [KNOWN-ISSUE] expect the buggy behavior (returns true when it should return false).
-      // The correct expected behavior is commented above each assertion.
-      // TODO: Update these tests when Stellar SDK fixes these validation gaps.
-      // Refer to : https://github.com/stellar/js-stellar-base/blob/5bac0b60bcd01794bb0b11fd8b6a45e486c28626/test/unit/strkey_test.js#L471
-
-      it("[KNOWN-ISSUE] reject signed payload with length prefix shorter than payload", () => {
-        // Expected: false (length prefix declares fewer bytes than actual payload)
-        assertEquals(
-          StrKey.isValidSignedPayload(
-            "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAQACAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUPB6IAAAAAAAAPM"
-          ),
-          true // <- KNOWN-ISSUE
-        );
-      });
-
-      it("[KNOWN-ISSUE] reject signed payload with length prefix longer than payload", () => {
-        // Expected: false (length prefix declares more bytes than actual payload)
-        assertEquals(
-          StrKey.isValidSignedPayload(
-            "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAOQCAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4Z2PQ"
-          ),
-          true // <- KNOWN-ISSUE
-        );
-      });
-
-      it("[KNOWN-ISSUE] reject signed payload without zero padding", () => {
-        // Expected: false (payloads < 64 bytes must be zero-padded to 64 bytes)
-        assertEquals(
-          StrKey.isValidSignedPayload(
-            "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAOQCAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DXFH6"
-          ),
-          true // <- KNOWN-ISSUE
-        );
-      });
-
-      it("[KNOWN-ISSUE]  reject claimable balance with invalid type byte (not 0)", () => {
-        // Expected: false (first byte should be 0x00 for CLAIMABLE_BALANCE_ID_TYPE_V0)
+      it("rejects when format check fails (wrong prefix)", () => {
         assertEquals(
           StrKey.isValidClaimableBalanceId(
-            "BAAT6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGXACA"
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
           ),
-          true // <- KNOWN-ISSUE
+          false
         );
       });
     });
+  });
 
-    describe("Decode error cases from Stellar SDK", () => {
-      it("rejects when decoded data encodes to different string", () => {
-        assertEquals(
-          StrKey.isValidEd25519PublicKey(
-            "GBPXX0A5N4JYPESHAADMQKBPWZWQDQ64ZV6ZL2S3LAGW4SY7NTCMWIVL"
-            //    ^ note the '0' (zero) instead of 'O' (letter O)
-            // This might decode, but re-encoding produces a different string
-          ),
-          false
-        );
-        assertEquals(
-          StrKey.isValidEd25519PublicKey(
-            "GCFZB6L25D26RQFDWSSBDEYQ32JHLRMTT44ZYE3DZQUTYOL7WY43PLBG++"
-            //                                                              ^^ invalid chars
-            // The ++ is clearly not valid base32
-          ),
-          false
-        );
-      });
+  describe("Known issues", () => {
+    // ⚠️ The following tests document known limitations in the Stellar SDK's validation.
+    // Tests prefixed with [KNOWN-ISSUE] expect the buggy behavior (returns true when it should return false).
+    // The correct expected behavior is commented above each assertion.
+    // TODO: Update these tests when Stellar SDK fixes these validation gaps.
+    // Refer to : https://github.com/stellar/js-stellar-base/blob/5bac0b60bcd01794bb0b11fd8b6a45e486c28626/test/unit/strkey_test.js#L471
+
+    it("[KNOWN-ISSUE] reject signed payload with length prefix shorter than payload", () => {
+      // Expected: false (length prefix declares fewer bytes than actual payload)
+      assertEquals(
+        StrKey.isValidSignedPayload(
+          "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAQACAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUPB6IAAAAAAAAPM"
+        ),
+        true // <- KNOWN-ISSUE
+      );
+    });
+
+    it("[KNOWN-ISSUE] reject signed payload with length prefix longer than payload", () => {
+      // Expected: false (length prefix declares more bytes than actual payload)
+      assertEquals(
+        StrKey.isValidSignedPayload(
+          "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAOQCAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4Z2PQ"
+        ),
+        true // <- KNOWN-ISSUE
+      );
+    });
+
+    it("[KNOWN-ISSUE] reject signed payload without zero padding", () => {
+      // Expected: false (payloads < 64 bytes must be zero-padded to 64 bytes)
+      assertEquals(
+        StrKey.isValidSignedPayload(
+          "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAOQCAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DXFH6"
+        ),
+        true // <- KNOWN-ISSUE
+      );
+    });
+
+    it("[KNOWN-ISSUE]  reject claimable balance with invalid type byte (not 0)", () => {
+      // Expected: false (first byte should be 0x00 for CLAIMABLE_BALANCE_ID_TYPE_V0)
+      assertEquals(
+        StrKey.isValidClaimableBalanceId(
+          "BAAT6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGXACA"
+        ),
+        true // <- KNOWN-ISSUE
+      );
     });
   });
 });
