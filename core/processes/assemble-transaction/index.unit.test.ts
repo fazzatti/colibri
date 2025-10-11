@@ -16,8 +16,7 @@ import type { AssembleTransactionInput } from "./types.ts";
 
 import * as E from "./error.ts";
 import { stub } from "@std/testing/mock";
-import { BaseFee } from "../../common/types/transaction-config/types.ts";
-import { text } from "node:stream/consumers";
+import type { BaseFee } from "../../common/types/transaction-config/types.ts";
 
 // Helper function to create a test transaction
 const createTestTransaction = (fee: BaseFee = "100") => {

@@ -1,4 +1,4 @@
-import { FeeBumpTransaction, Transaction, xdr } from "stellar-sdk";
+import { FeeBumpTransaction, Transaction, type xdr } from "stellar-sdk";
 import { ColibriError } from "../../error/index.ts";
 import { softTryToXDR } from "./xdr.ts";
 

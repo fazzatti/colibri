@@ -1,6 +1,6 @@
 import type { SignEnvelopeInput } from "./types.ts";
 import { ProcessError } from "../error.ts";
-import { TransactionSigner } from "../../signer/types.ts";
+import type { TransactionSigner } from "../../signer/types.ts";
 
 export enum Code {
   UNEXPECTED_ERROR = "SEN_000",

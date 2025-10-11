@@ -1,4 +1,3 @@
-import { ResultOrError } from "../common/deferred/result-or-error.ts";
 import { ColibriError } from "../error/index.ts";
 import type { Diagnostic } from "../error/types.ts";
 
