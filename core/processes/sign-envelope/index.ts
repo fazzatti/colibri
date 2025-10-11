@@ -3,7 +3,7 @@ import type { SignEnvelopeInput, SignEnvelopeOutput } from "./types.ts";
 import * as E from "./error.ts";
 
 import { assert } from "../../common/assert/assert.ts";
-import { Keypair, TransactionBuilder } from "stellar-sdk";
+import { TransactionBuilder } from "stellar-sdk";
 
 const signEnvelopeProcess = async (
   input: SignEnvelopeInput
@@ -22,8 +22,6 @@ const signEnvelopeProcess = async (
       const signer = signers.find((s) => s.publicKey() === requiredSigner);
 
       assert(signer, new E.SIGNER_NOT_FOUND(input, requiredSigner, signers));
-
-      Keypair.random().sign;
 
       try {
         signedTransaction = TransactionBuilder.fromXDR(
