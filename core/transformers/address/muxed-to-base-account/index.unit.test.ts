@@ -4,15 +4,17 @@ import { describe, it } from "@std/testing/bdd";
 import { muxedAddressToBaseAccount } from "./index.ts";
 
 import * as E from "./error.ts";
-import type { MuxedAddress } from "../../../common/types.ts";
-import { isEd25519PublicKey } from "../../../common/verifiers/is-ed25519-public-key.ts";
+
+
 import { MuxedAccount } from "stellar-sdk";
+import type { MuxedAddress } from "../../../strkeys/types.ts";
+import { StrKey } from "../../../strkeys/index.ts";
 
 
 describe("Transformer muxedAddressToBaseAccount", () => {
   it("converts a valid muxed address to a valid Ed25519 Public Key", async () => {
     assert(
-      isEd25519PublicKey(
+      StrKey.isEd25519PublicKey(
         await muxedAddressToBaseAccount(
           "MCOMD7XJTA3JMRH3I4WQP4RUMS7VWFSW6GBM2R7COWGFBPEWNVRUWDOAWUHEJP5MVZQYI"
         )

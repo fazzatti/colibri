@@ -13,8 +13,9 @@ import type {
 import { assertRequiredArgs } from "../../common/assert/assert-args.ts";
 import { simulateToRetval } from "../../transformers/pipeline-connectors/simulate-to-retval/index.ts";
 import { Keypair } from "stellar-sdk";
-import type { Ed25519PublicKey } from "../../common/types.ts";
+
 import * as E from "./error.ts";
+import type { Ed25519PublicKey } from "../../strkeys/types.ts";
 
 const inputToBuild = (networkPassphrase: string) => {
   return (input: ReadFromContractInput): BuildTransactionInput => {

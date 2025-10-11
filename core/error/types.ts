@@ -1,4 +1,5 @@
 export type ErrorDomain =
+  | "account"
   | "transformers"
   | "tools"
   | "processes"

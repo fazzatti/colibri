@@ -7,9 +7,10 @@ import { SignAuthEntries } from "./index.ts";
 import * as E from "./error.ts";
 import type { SignAuthEntriesInput } from "./types.ts";
 import { TestNet } from "../../network/index.ts";
-import type { TransactionSigner } from "../../common/types.ts";
-import type { Ed25519PublicKey } from "@colibri/core";
+
 import { Buffer } from "node:buffer";
+import type { TransactionSigner } from "../../signer/types.ts";
+import type { Ed25519PublicKey } from "../../strkeys/types.ts";
 
 describe("SignAuthEntries", () => {
   const { networkPassphrase } = TestNet();

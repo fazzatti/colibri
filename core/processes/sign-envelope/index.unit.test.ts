@@ -13,9 +13,11 @@ import {
 import { SignEnvelope } from "./index.ts";
 import * as E from "./error.ts";
 import { TestNet } from "../../network/index.ts";
-import { OperationThreshold } from "../../common/types.ts";
-import type { Ed25519Signer, TransactionSigner } from "../../common/types.ts";
-import type { Ed25519PublicKey } from "@colibri/core";
+import {
+  OperationThreshold,
+  type TransactionSigner,
+} from "../../signer/types.ts";
+import type { Ed25519PublicKey } from "../../strkeys/types.ts";
 
 describe("SignEnvelope", () => {
   const { networkPassphrase } = TestNet();
@@ -90,7 +92,7 @@ describe("SignEnvelope", () => {
     return {
       publicKey: () => publicKey as Ed25519PublicKey,
       calls: 0,
-      async signSorobanAuthEntry(e, _vu, _np) {
+      async signSorobanAuthEntry(e, _vu: unknown, _np: unknown) {
         return e;
       },
       async sign(): Promise<string> {
@@ -120,7 +122,7 @@ describe("SignEnvelope", () => {
         transaction: tx,
         signatureRequirements: [
           {
-            signer: signer.publicKey(),
+            address: signer.publicKey(),
             thresholdLevel: OperationThreshold.low,
           },
         ],
@@ -142,7 +144,7 @@ describe("SignEnvelope", () => {
         transaction: tx,
         signatureRequirements: [
           {
-            signer: signer0.publicKey(),
+            address: signer0.publicKey(),
             thresholdLevel: OperationThreshold.low,
           },
         ],
@@ -166,15 +168,15 @@ describe("SignEnvelope", () => {
         transaction: tx,
         signatureRequirements: [
           {
-            signer: signer0.publicKey(),
+            address: signer0.publicKey(),
             thresholdLevel: OperationThreshold.low,
           },
           {
-            signer: signer1.publicKey(),
+            address: signer1.publicKey(),
             thresholdLevel: OperationThreshold.low,
           },
           {
-            signer: signer2.publicKey(),
+            address: signer2.publicKey(),
             thresholdLevel: OperationThreshold.low,
           },
         ],
@@ -196,15 +198,15 @@ describe("SignEnvelope", () => {
         transaction: tx,
         signatureRequirements: [
           {
-            signer: signer.publicKey(),
+            address: signer.publicKey(),
             thresholdLevel: OperationThreshold.low,
           },
           {
-            signer: signer.publicKey(),
+            address: signer.publicKey(),
             thresholdLevel: OperationThreshold.low,
           },
           {
-            signer: signer.publicKey(),
+            address: signer.publicKey(),
             thresholdLevel: OperationThreshold.low,
           },
         ],
@@ -225,7 +227,7 @@ describe("SignEnvelope", () => {
         transaction: feeBump,
         signatureRequirements: [
           {
-            signer: signer.publicKey(),
+            address: signer.publicKey(),
             thresholdLevel: OperationThreshold.low,
           },
         ],
@@ -264,7 +266,7 @@ describe("SignEnvelope", () => {
             transaction: tx,
             signatureRequirements: [
               {
-                signer: KPS[0].publicKey() as Ed25519PublicKey,
+                address: KPS[0].publicKey() as Ed25519PublicKey,
                 thresholdLevel: OperationThreshold.low,
               },
             ],
@@ -284,7 +286,7 @@ describe("SignEnvelope", () => {
             transaction: tx,
             signatureRequirements: [
               {
-                signer: KPS[0].publicKey() as Ed25519PublicKey,
+                address: KPS[0].publicKey() as Ed25519PublicKey,
                 thresholdLevel: OperationThreshold.low,
               },
             ],
@@ -304,7 +306,7 @@ describe("SignEnvelope", () => {
             transaction: tx,
             signatureRequirements: [
               {
-                signer: badSigner.publicKey(),
+                address: badSigner.publicKey(),
                 thresholdLevel: OperationThreshold.low,
               },
             ],
@@ -324,7 +326,7 @@ describe("SignEnvelope", () => {
             transaction: tx,
             signatureRequirements: [
               {
-                signer: badSigner.publicKey(),
+                address: badSigner.publicKey(),
                 thresholdLevel: OperationThreshold.low,
               },
             ],

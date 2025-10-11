@@ -1,7 +1,6 @@
 import type { xdr } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
-
-import type { TransactionSigner } from "../../common/types.ts";
+import type { TransactionSigner } from "../../signer/types.ts";
 
 export type SignAuthEntriesInput = {
   auth: xdr.SorobanAuthorizationEntry[];

@@ -14,8 +14,9 @@ import {
   getAddressSignerFromAuthEntry,
   getAddressTypeFromAuthEntry,
 } from "../../common/helpers/xdr.ts";
-import type { TransactionSigner } from "../../common/types.ts";
+
 import { ResultOrError } from "../../common/deferred/result-or-error.ts";
+import type { TransactionSigner } from "../../signer/types.ts";
 
 const signAuthEntriesProcess = async (
   input: SignAuthEntriesInput

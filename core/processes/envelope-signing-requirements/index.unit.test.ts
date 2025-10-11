@@ -14,9 +14,10 @@ import { EnvelopeSigningRequirements } from "./index.ts";
 import * as E from "./error.ts";
 import { TestNet } from "../../network/index.ts";
 
-import { type MuxedAddress, OperationThreshold } from "../../common/types.ts";
 import { muxedAddressToBaseAccount } from "../../transformers/address/index.ts";
-import { EnvelopeSigningRequirementsInput } from "./types.ts";
+import type { EnvelopeSigningRequirementsInput } from "./types.ts";
+import type { MuxedAddress } from "../../strkeys/types.ts";
+import { OperationThreshold } from "../../signer/types.ts";
 
 describe("EnvelopeSigningRequirements", () => {
   const { networkPassphrase } = TestNet();
@@ -81,7 +82,7 @@ describe("EnvelopeSigningRequirements", () => {
       assert(result.length);
       assertEquals(result.length, 1);
       assertEquals(result[0], {
-        signer: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
+        address: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         thresholdLevel: OperationThreshold.medium,
       });
     });
@@ -107,7 +108,7 @@ describe("EnvelopeSigningRequirements", () => {
       assert(result.length);
       assertEquals(result.length, 1);
       assertEquals(result[0], {
-        signer: "GDMZZQ62ZEO4B7YMBHPJ3LHCLIYOG7JE4XCHEGHV4MINCN6O3WFA4MVQ",
+        address: "GDMZZQ62ZEO4B7YMBHPJ3LHCLIYOG7JE4XCHEGHV4MINCN6O3WFA4MVQ",
         thresholdLevel: OperationThreshold.low,
       });
     });
@@ -124,7 +125,7 @@ describe("EnvelopeSigningRequirements", () => {
       assert(result.length);
       assertEquals(result.length, 1);
       assertEquals(result[0], {
-        signer: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
+        address: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         thresholdLevel: OperationThreshold.medium,
       });
     });
@@ -150,7 +151,7 @@ describe("EnvelopeSigningRequirements", () => {
       assert(result.length);
       assertEquals(result.length, 1);
       assertEquals(result[0], {
-        signer: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
+        address: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         thresholdLevel: OperationThreshold.low,
       });
     });
@@ -194,28 +195,30 @@ describe("EnvelopeSigningRequirements", () => {
       const hasMedAlice =
         result.filter(
           (r) =>
-            r.signer === alice && r.thresholdLevel === OperationThreshold.medium
+            r.address === alice &&
+            r.thresholdLevel === OperationThreshold.medium
         ).length === 1;
       const hasHighAlice =
         result.filter(
           (r) =>
-            r.signer === alice && r.thresholdLevel === OperationThreshold.high
+            r.address === alice && r.thresholdLevel === OperationThreshold.high
         ).length === 1;
 
       const hasLowBob =
         result.filter(
-          (r) => r.signer === bob && r.thresholdLevel === OperationThreshold.low
+          (r) =>
+            r.address === bob && r.thresholdLevel === OperationThreshold.low
         ).length === 1;
       const hasLowCharlie =
         result.filter(
           (r) =>
-            r.signer === charlie && r.thresholdLevel === OperationThreshold.low
+            r.address === charlie && r.thresholdLevel === OperationThreshold.low
         ).length === 1;
 
       const hasMedCharlie =
         result.filter(
           (r) =>
-            r.signer === charlie &&
+            r.address === charlie &&
             r.thresholdLevel === OperationThreshold.medium
         ).length === 1;
 
@@ -271,28 +274,30 @@ describe("EnvelopeSigningRequirements", () => {
       const hasMedAlice =
         result.filter(
           (r) =>
-            r.signer === alice && r.thresholdLevel === OperationThreshold.medium
+            r.address === alice &&
+            r.thresholdLevel === OperationThreshold.medium
         ).length === 1;
       const hasHighAlice =
         result.filter(
           (r) =>
-            r.signer === alice && r.thresholdLevel === OperationThreshold.high
+            r.address === alice && r.thresholdLevel === OperationThreshold.high
         ).length === 1;
 
       const hasLowBob =
         result.filter(
-          (r) => r.signer === bob && r.thresholdLevel === OperationThreshold.low
+          (r) =>
+            r.address === bob && r.thresholdLevel === OperationThreshold.low
         ).length === 1;
       const hasLowCharlie =
         result.filter(
           (r) =>
-            r.signer === charlie && r.thresholdLevel === OperationThreshold.low
+            r.address === charlie && r.thresholdLevel === OperationThreshold.low
         ).length === 1;
 
       const hasMedCharlie =
         result.filter(
           (r) =>
-            r.signer === charlie &&
+            r.address === charlie &&
             r.thresholdLevel === OperationThreshold.medium
         ).length === 1;
 

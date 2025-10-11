@@ -9,10 +9,10 @@ import type {
   TransactionPreconditions,
 } from "./types.ts";
 import type { Server } from "stellar-sdk/rpc";
-import type { Ed25519PublicKey } from "../../common/types.ts";
 
 import * as E from "./error.ts";
 import type { BaseFee } from "../../common/types/transaction-config/types.ts";
+import type { Ed25519PublicKey } from "../../strkeys/types.ts";
 
 const mockRpc = {
   getAccount: (address: string) => {

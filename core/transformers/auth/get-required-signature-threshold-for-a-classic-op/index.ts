@@ -1,30 +1,27 @@
 import { type Operation, xdr } from "stellar-sdk";
-
-import {
-  type Ed25519PublicKey,
-  type MuxedAddress,
-  type SignatureRequirementRaw,
-  OperationThreshold,
-} from "../../../common/types.ts";
-import { isMuxedAddress } from "../../../common/verifiers/is-muxed-address.ts";
 import { muxedAddressToBaseAccount } from "../../address/index.ts";
-import { isEd25519PublicKey } from "../../../common/verifiers/is-ed25519-public-key.ts";
 import type { TransformerSync } from "convee";
 import * as E from "./error.ts";
 import { ColibriError } from "../../../mod.ts";
+import {
+  OperationThreshold,
+  type SignatureRequirementRaw,
+} from "../../../signer/types.ts";
+import type { Ed25519PublicKey, MuxedAddress } from "../../../strkeys/types.ts";
+import { StrKey } from "../../../strkeys/index.ts";
 
 const setSourceSigner = (
   source?: string
-): SignatureRequirementRaw["signer"] => {
+): SignatureRequirementRaw["address"] => {
   if (!source) {
     return "source-account";
   }
 
-  if (source && isEd25519PublicKey(source)) {
+  if (source && StrKey.isEd25519PublicKey(source)) {
     return source as Ed25519PublicKey;
   }
 
-  if (source && isMuxedAddress(source)) {
+  if (source && StrKey.isMuxedAddress(source)) {
     return muxedAddressToBaseAccount(
       source as MuxedAddress
     ) as Ed25519PublicKey;
@@ -102,8 +99,8 @@ export const getRequiredOperationThresholdForClassicOperation: TransformerSync<
     }
 
     try {
-      const signer = setSourceSigner(source);
-      return { signer, thresholdLevel };
+      const address = setSourceSigner(source);
+      return { address, thresholdLevel };
     } catch (e) {
       throw new E.FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE(
         operation,

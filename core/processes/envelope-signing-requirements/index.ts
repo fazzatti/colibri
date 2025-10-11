@@ -5,19 +5,20 @@ import type {
 } from "./types.ts";
 import * as E from "./error.ts";
 
+import { isFeeBumpTransaction } from "../../common/verifiers/is-fee-bump-transaction.ts";
+import { isTransaction } from "../../common/verifiers/is-transaction.ts";
+
+import { muxedAddressToBaseAccount } from "../../transformers/address/index.ts";
+
+import { ColibriError } from "../../error/index.ts";
+import { getRequiredOperationThresholdForClassicOperation } from "../../transformers/auth/index.ts";
 import {
-  type Ed25519PublicKey,
   OperationThreshold,
   type SignatureRequirement,
   type SignatureRequirementRaw,
-} from "../../common/types.ts";
-import { isFeeBumpTransaction } from "../../common/verifiers/is-fee-bump-transaction.ts";
-import { isTransaction } from "../../common/verifiers/is-transaction.ts";
-import { isMuxedAddress } from "../../common/verifiers/is-muxed-address.ts";
-import { muxedAddressToBaseAccount } from "../../transformers/address/index.ts";
-import { isEd25519PublicKey } from "../../common/verifiers/is-ed25519-public-key.ts";
-import { ColibriError } from "../../error/index.ts";
-import { getRequiredOperationThresholdForClassicOperation } from "../../transformers/auth/index.ts";
+} from "../../signer/types.ts";
+import type { Ed25519PublicKey, MuxedAddress } from "../../strkeys/types.ts";
+import { StrKey } from "../../strkeys/index.ts";
 
 const envelopeSigningRequirementsProcess = (
   input: EnvelopeSigningRequirementsInput
@@ -27,10 +28,10 @@ const envelopeSigningRequirementsProcess = (
 
     try {
       if (isFeeBumpTransaction(transaction)) {
-        const signer = sourceToSigner(transaction.feeSource);
+        const address = sourceToAddress(transaction.feeSource);
 
         const sourceRequirement = {
-          signer,
+          address,
           thresholdLevel: OperationThreshold.low,
         };
 
@@ -45,10 +46,10 @@ const envelopeSigningRequirementsProcess = (
 
     try {
       if (isTransaction(transaction)) {
-        const signer = sourceToSigner(transaction.source);
+        const address = sourceToAddress(transaction.source);
 
         const sourceRequirement = {
-          signer,
+          address,
           thresholdLevel: OperationThreshold.medium,
         };
 
@@ -83,12 +84,12 @@ const envelopeSigningRequirementsProcess = (
   }
 };
 
-const sourceToSigner = (source: string): Ed25519PublicKey => {
-  if (isMuxedAddress(source)) {
-    return muxedAddressToBaseAccount(source);
+const sourceToAddress = (source: string): Ed25519PublicKey => {
+  if (StrKey.isMuxedAddress(source)) {
+    return muxedAddressToBaseAccount(source as MuxedAddress);
   }
 
-  if (isEd25519PublicKey(source)) {
+  if (StrKey.isEd25519PublicKey(source)) {
     return source;
   }
 
@@ -105,14 +106,14 @@ const removeConflictingRequirements = (
 
   for (const requirement of operationRequirements) {
     const publicKey =
-      requirement.signer === "source-account"
-        ? sourceRequirement.signer
-        : requirement.signer;
+      requirement.address === "source-account"
+        ? sourceRequirement.address
+        : requirement.address;
 
-    const index = requirementsBundle.findIndex((r) => r.signer === publicKey);
+    const index = requirementsBundle.findIndex((r) => r.address === publicKey);
     if (index === -1) {
       requirementsBundle.push({
-        signer: publicKey,
+        address: publicKey,
         thresholdLevel: requirement.thresholdLevel,
       });
     } else {

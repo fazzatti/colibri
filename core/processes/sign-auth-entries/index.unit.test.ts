@@ -5,9 +5,10 @@ import type { Server } from "stellar-sdk/rpc";
 
 import { SignAuthEntries } from "./index.ts";
 import { TestNet } from "../../network/index.ts";
-import type { TransactionSigner } from "../../common/types.ts";
-import type { Ed25519PublicKey } from "@colibri/core";
+
 import { Buffer } from "node:buffer";
+import type { TransactionSigner } from "../../signer/types.ts";
+import type { Ed25519PublicKey } from "../../strkeys/types.ts";
 
 type MockSigner = TransactionSigner & {
   calls: number;

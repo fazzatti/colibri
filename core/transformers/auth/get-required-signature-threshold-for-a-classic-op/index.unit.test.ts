@@ -20,7 +20,7 @@ import {
 import {
   OperationThreshold,
   type SignatureRequirement,
-} from "../../../common/types.ts";
+} from "../../../signer/types.ts";
 
 const helperGetOpObj = (op: xdr.Operation) => {
   return Operation.fromXDRObject(op);
@@ -41,8 +41,8 @@ describe("Transformer getRequiredOperationThresholdForClassicOperation", () => {
     const requirements = getRequirements(op) as SignatureRequirement;
     assertExists(requirements);
     assertExists(requirements.thresholdLevel);
-    assertExists(requirements.signer);
-    assertEquals(requirements.signer, "source-account");
+    assertExists(requirements.address);
+    assertEquals(requirements.address, "source-account");
     assertEquals(requirements.thresholdLevel, OperationThreshold.medium);
   });
 
@@ -56,9 +56,9 @@ describe("Transformer getRequiredOperationThresholdForClassicOperation", () => {
     const requirements = getRequirements(op) as SignatureRequirement;
     assertExists(requirements);
     assertExists(requirements.thresholdLevel);
-    assertExists(requirements.signer);
+    assertExists(requirements.address);
     assertEquals(
-      requirements.signer,
+      requirements.address,
       "GAKT7G5CXB4DVUAUOJXY7KLN6UFZLICTNCKHH6HOOOZC3HDA2YDNURJR"
     );
     assertEquals(requirements.thresholdLevel, OperationThreshold.medium);
@@ -75,9 +75,9 @@ describe("Transformer getRequiredOperationThresholdForClassicOperation", () => {
     const requirements = getRequirements(op) as SignatureRequirement;
     assertExists(requirements);
     assertExists(requirements.thresholdLevel);
-    assertExists(requirements.signer);
+    assertExists(requirements.address);
     assertEquals(
-      requirements.signer,
+      requirements.address,
       "GAKT7G5CXB4DVUAUOJXY7KLN6UFZLICTNCKHH6HOOOZC3HDA2YDNURJR"
     );
     assertEquals(requirements.thresholdLevel, OperationThreshold.medium);
@@ -109,7 +109,7 @@ describe("Transformer getRequiredOperationThresholdForClassicOperation", () => {
       assertEquals(
         getRequirements(helperGetOpObj(op)) as SignatureRequirement,
         {
-          signer: "source-account",
+          address: "source-account",
           thresholdLevel: OperationThreshold.low,
         }
       );
@@ -310,7 +310,7 @@ describe("Transformer getRequiredOperationThresholdForClassicOperation", () => {
       assertEquals(
         getRequirements(helperGetOpObj(op)) as SignatureRequirement,
         {
-          signer: "source-account",
+          address: "source-account",
           thresholdLevel: OperationThreshold.medium,
         }
       );
@@ -354,7 +354,7 @@ describe("Transformer getRequiredOperationThresholdForClassicOperation", () => {
       assertEquals(
         getRequirements(helperGetOpObj(op)) as SignatureRequirement,
         {
-          signer: "source-account",
+          address: "source-account",
           thresholdLevel: OperationThreshold.high,
         }
       );
