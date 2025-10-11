@@ -1,6 +1,7 @@
 import { TransformerError } from "../../error.ts";
-import type { MuxedAddress } from "../../../common/types.ts";
+
 import { regex } from "../../../common/index.ts";
+import type { MuxedAddress } from "../../../strkeys/types.ts";
 
 export enum Code {
   INVALID_MUXED_ADDRESS = "TRN_MTBA_001",

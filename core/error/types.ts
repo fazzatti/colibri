@@ -1,6 +1,10 @@
 export type ErrorDomain =
+  | "account"
   | "transformers"
+  | "tools"
   | "processes"
+  | "verifiers"
+  | "helpers"
   | "core"
   | "accounts"
   | "pipelines"

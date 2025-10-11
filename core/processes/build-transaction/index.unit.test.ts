@@ -9,6 +9,7 @@ import {
   MemoText,
   Transaction,
   xdr,
+  Address,
 } from "stellar-sdk";
 import { BuildTransaction } from "./index.ts";
 import { TestNet } from "../../network/index.ts";
@@ -170,6 +171,48 @@ describe("BuildTransaction", () => {
 
         const tx = await BuildTransaction.run(input);
         assertInstanceOf(tx, Transaction);
+        assertEquals(tx.timeBounds?.minTime, "1000");
+        assertEquals(tx.timeBounds?.maxTime, "2000");
+      });
+
+      it("sets time bounds with only max", async () => {
+        const input: BuildTransactionInput = {
+          rpc: mockRpc,
+          operations: [Operation.setOptions({})],
+          source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
+          baseFee: "100",
+          networkPassphrase: TestNet().networkPassphrase,
+          preconditions: {
+            timeBounds: {
+              maxTime: 2000,
+            },
+          },
+        };
+
+        const tx = await BuildTransaction.run(input);
+        assertInstanceOf(tx, Transaction);
+        assertEquals(tx.timeBounds?.minTime, "0");
+        assertEquals(tx.timeBounds?.maxTime, "2000");
+      });
+
+      it("sets time bounds with only min", async () => {
+        const input: BuildTransactionInput = {
+          rpc: mockRpc,
+          operations: [Operation.setOptions({})],
+          source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
+          baseFee: "100",
+          networkPassphrase: TestNet().networkPassphrase,
+          preconditions: {
+            timeBounds: {
+              minTime: 1000,
+            },
+          },
+        };
+
+        const tx = await BuildTransaction.run(input);
+        assertInstanceOf(tx, Transaction);
+        assertEquals(tx.timeBounds?.minTime, "1000");
+        assertEquals(tx.timeBounds?.maxTime, "0");
       });
 
       it("sets ledger bounds", async () => {
@@ -189,7 +232,131 @@ describe("BuildTransaction", () => {
 
         const tx = await BuildTransaction.run(input);
         assertInstanceOf(tx, Transaction);
+        assertEquals(tx.ledgerBounds?.minLedger, 100);
+        assertEquals(tx.ledgerBounds?.maxLedger, 200);
       });
+
+      it("sets ledger bounds with only max", async () => {
+        const input: BuildTransactionInput = {
+          rpc: mockRpc,
+          operations: [Operation.setOptions({})],
+          source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
+          baseFee: "100",
+          networkPassphrase: TestNet().networkPassphrase,
+          preconditions: {
+            ledgerBounds: {
+              maxLedger: 200,
+            },
+          },
+        };
+
+        const tx = await BuildTransaction.run(input);
+        assertInstanceOf(tx, Transaction);
+        assertEquals(tx.ledgerBounds?.minLedger, 0);
+        assertEquals(tx.ledgerBounds?.maxLedger, 200);
+      });
+
+      it("sets ledger bounds with only min", async () => {
+        const input: BuildTransactionInput = {
+          rpc: mockRpc,
+          operations: [Operation.setOptions({})],
+          source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
+          baseFee: "100",
+          networkPassphrase: TestNet().networkPassphrase,
+          preconditions: {
+            ledgerBounds: {
+              minLedger: 100,
+            },
+          },
+        };
+
+        const tx = await BuildTransaction.run(input);
+        assertInstanceOf(tx, Transaction);
+        assertEquals(tx.ledgerBounds?.minLedger, 100);
+        assertEquals(tx.ledgerBounds?.maxLedger, 0);
+      });
+    });
+
+    it("sets minAccountSequence", async () => {
+      const input: BuildTransactionInput = {
+        rpc: mockRpc,
+        operations: [Operation.setOptions({})],
+        source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
+        baseFee: "100",
+        networkPassphrase: TestNet().networkPassphrase,
+        preconditions: {
+          minAccountSequence: "100",
+        },
+      };
+
+      const tx = await BuildTransaction.run(input);
+      assertInstanceOf(tx, Transaction);
+      assertEquals(tx.minAccountSequence, "100");
+    });
+
+    it("sets minAccountSequenceAge", async () => {
+      const input: BuildTransactionInput = {
+        rpc: mockRpc,
+        operations: [Operation.setOptions({})],
+        source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
+        baseFee: "100",
+        networkPassphrase: TestNet().networkPassphrase,
+        preconditions: {
+          minAccountSequenceAge: 100,
+        },
+      };
+
+      const tx = await BuildTransaction.run(input);
+      assertInstanceOf(tx, Transaction);
+      assertEquals(tx.minAccountSequenceAge?.toString(), "100");
+    });
+
+    it("sets minAccountSequenceLedgerGap", async () => {
+      const input: BuildTransactionInput = {
+        rpc: mockRpc,
+        operations: [Operation.setOptions({})],
+        source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
+        baseFee: "100",
+        networkPassphrase: TestNet().networkPassphrase,
+        preconditions: {
+          minAccountSequenceLedgerGap: 100,
+        },
+      };
+
+      const tx = await BuildTransaction.run(input);
+      assertInstanceOf(tx, Transaction);
+      assertEquals(tx.minAccountSequenceLedgerGap, 100);
+    });
+
+    it("sets extraSigners", async () => {
+      const input: BuildTransactionInput = {
+        rpc: mockRpc,
+        operations: [Operation.setOptions({})],
+        source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
+        baseFee: "100",
+        networkPassphrase: TestNet().networkPassphrase,
+        preconditions: {
+          extraSigners: [
+            "GD5PUITTMNVKWHSLXIWU732MOSEONSMYCXU3A5KS2USRWQONMYO5TTFN",
+            "GCYBQHY7TX6FIDSIN4HY5TVNDJ5OQJWSD3SY3LW6BIZ64MZGKQTAWDZ3",
+          ],
+        },
+      };
+
+      const tx = await BuildTransaction.run(input);
+      assertInstanceOf(tx, Transaction);
+      assertEquals(tx.extraSigners, [
+        xdr.SignerKey.signerKeyTypeEd25519(
+          Address.fromString(
+            "GD5PUITTMNVKWHSLXIWU732MOSEONSMYCXU3A5KS2USRWQONMYO5TTFN"
+          ).toBuffer()
+        ),
+        xdr.SignerKey.signerKeyTypeEd25519(
+          Address.fromString(
+            "GCYBQHY7TX6FIDSIN4HY5TVNDJ5OQJWSD3SY3LW6BIZ64MZGKQTAWDZ3"
+          ).toBuffer()
+        ),
+      ] as unknown);
     });
 
     describe("Memo", () => {

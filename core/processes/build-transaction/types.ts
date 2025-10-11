@@ -1,13 +1,15 @@
 import type { Server } from "stellar-sdk/rpc";
-import type { Memo, Transaction, xdr } from "stellar-sdk";
-import type { Ed25519PublicKey } from "../../common/types.ts";
+
 import type { BeltPlugin } from "convee";
 import type { ColibriError } from "../../mod.ts";
+import type { BaseFee } from "../../common/types/transaction-config/types.ts";
+import type { Memo, Transaction, xdr } from "stellar-sdk";
+import type { Ed25519PublicKey } from "../../strkeys/types.ts";
 
 export type BuildTransactionInput = {
   operations: xdr.Operation[];
   source: Ed25519PublicKey;
-  baseFee: string;
+  baseFee: BaseFee;
   networkPassphrase: string;
   sorobanData?: string | xdr.SorobanTransactionData;
   memo?: Memo;
@@ -27,11 +29,11 @@ export type RpcVariants =
   | WithRpc
   | WithoutRpc;
 
-type WithRpc = {
+export type WithRpc = {
   rpc: Server;
   sequence?: never;
 };
-type WithoutRpc = {
+export type WithoutRpc = {
   rpc?: never;
   sequence: string;
 };

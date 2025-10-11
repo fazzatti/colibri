@@ -1,16 +1,16 @@
 import type { TransformerSync } from "convee";
-import type { Ed25519PublicKey, MuxedAddress } from "../../../common/types.ts";
 import { MuxedAccount } from "stellar-sdk";
 import { assert } from "../../../common/assert/assert.ts";
-import { isMuxedAddress } from "../../../common/verifiers/is-muxed-address.ts";
 import * as E from "./error.ts";
+import type { Ed25519PublicKey, MuxedAddress } from "../../../strkeys/types.ts";
+import { StrKey } from "../../../strkeys/index.ts";
 
 export const muxedAddressToBaseAccount: TransformerSync<
   MuxedAddress,
   Ed25519PublicKey
 > = (muxedAddress: MuxedAddress): Ed25519PublicKey => {
   assert(
-    isMuxedAddress(muxedAddress),
+    StrKey.isMuxedAddress(muxedAddress),
     new E.INVALID_MUXED_ADDRESS(muxedAddress)
   );
 

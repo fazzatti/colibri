@@ -15,7 +15,7 @@ describe("Network", () => {
     it("should return the TestNet configuration", () => {
       const testNet = TestNet();
       assertEquals(testNet, {
-        type: NetworkType.testnet,
+        type: NetworkType.TESTNET,
         networkPassphrase: Networks.TESTNET,
         rpcUrl: "https://soroban-testnet.stellar.org:443",
         friendbotUrl: "https://friendbot.stellar.org",
@@ -27,7 +27,7 @@ describe("Network", () => {
     it("should return the FutureNet configuration", () => {
       const futureNet = FutureNet();
       assertEquals(futureNet, {
-        type: NetworkType.futurenet,
+        type: NetworkType.FUTURENET,
         networkPassphrase: Networks.FUTURENET,
         rpcUrl: "https://rpc-futurenet.stellar.org:443",
         friendbotUrl: "https://friendbot-futurenet.stellar.org",
@@ -39,7 +39,7 @@ describe("Network", () => {
     it("should return the MainNet configuration", () => {
       const mainNet = MainNet();
       assertEquals(mainNet, {
-        type: NetworkType.mainnet,
+        type: NetworkType.MAINNET,
         networkPassphrase: Networks.PUBLIC,
         rpcUrl: "",
         horizonUrl: "https://horizon.stellar.org",
@@ -60,7 +60,7 @@ describe("Network", () => {
 
       const customNet = CustomNet(payload);
       assertEquals(customNet, {
-        type: NetworkType.custom,
+        type: NetworkType.CUSTOM,
         networkPassphrase: "Custom Network",
         rpcUrl: "https://rpc.custom.com",
         friendbotUrl: "https://friendbot.custom.com",
@@ -76,7 +76,7 @@ describe("Network", () => {
 
       const customNet = CustomNet(payload);
       assertEquals(customNet, {
-        type: NetworkType.custom,
+        type: NetworkType.CUSTOM,
         networkPassphrase: "Minimal Custom Network",
       });
     });
@@ -84,10 +84,10 @@ describe("Network", () => {
 
   describe("NetworkType enum", () => {
     it("should have correct enum values", () => {
-      assertEquals(NetworkType.testnet, "testnet");
-      assertEquals(NetworkType.futurenet, "futurenet");
-      assertEquals(NetworkType.mainnet, "mainnet");
-      assertEquals(NetworkType.custom, "custom");
+      assertEquals(NetworkType.TESTNET, "testnet");
+      assertEquals(NetworkType.FUTURENET, "futurenet");
+      assertEquals(NetworkType.MAINNET, "mainnet");
+      assertEquals(NetworkType.CUSTOM, "custom");
     });
   });
 });

@@ -9,9 +9,10 @@ import type {
   TransactionPreconditions,
 } from "./types.ts";
 import type { Server } from "stellar-sdk/rpc";
-import type { Ed25519PublicKey } from "../../common/types.ts";
 
 import * as E from "./error.ts";
+import type { BaseFee } from "../../common/types/transaction-config/types.ts";
+import type { Ed25519PublicKey } from "../../strkeys/types.ts";
 
 const mockRpc = {
   getAccount: (address: string) => {
@@ -20,13 +21,22 @@ const mockRpc = {
 } as unknown as Server;
 
 describe("BuildTransactionErrors", () => {
+  it("throws UNEXPECTED_ERROR if an untracked error happens", async () => {
+    const faultyInput = null as unknown as BuildTransactionInput;
+
+    await assertRejects(
+      async () => await BuildTransaction.run(faultyInput),
+      E.UNEXPECTED_ERROR
+    );
+  });
+
   describe("Invalid base fee", () => {
     it("throws when base fee is NaN", async () => {
       const input: BuildTransactionInput = {
         rpc: mockRpc,
         operations: [Operation.setOptions({})],
         source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
-        baseFee: "not-a-number",
+        baseFee: "not-a-number" as unknown as BaseFee,
         networkPassphrase: TestNet().networkPassphrase,
       };
 

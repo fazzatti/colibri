@@ -1,3 +1,4 @@
+import { ResultOrError } from "../common/deferred/result-or-error.ts";
 import { ColibriError } from "../error/index.ts";
 import type { Diagnostic } from "../error/types.ts";
 
@@ -34,11 +35,23 @@ export abstract class ProcessError<
       source: "@colibri/core/processes/*",
       code: args.code,
       message: args.message,
-      details: args.details || args.message,
-      diagnostic: args.diagnostic || undefined,
+      details: args.details,
+      diagnostic: args.diagnostic,
       meta,
     });
 
     this.meta = meta;
+  }
+
+  // Returns a ResultOrError that can be unwrapped with the Input args.
+  // useful when raising the error with args in a contained context and unwrapping
+  // the error on an outer context or different input.
+  static deferInput<I, P extends unknown[], E extends ProcessError<string, I>>(
+    this: new (input: I, ...params: P) => E,
+    ...params: P
+  ): ResultOrError<never, I, E> {
+    return ResultOrError.wrapError<I, E>(
+      (input: I) => new this(input, ...params)
+    );
   }
 }

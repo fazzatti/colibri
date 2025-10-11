@@ -1,10 +1,11 @@
 {
   "name": "@colibri/core",
-  "version": "0.1.0-alpha",
+  "version": "0.1.0",
   "license": "MIT",
   "exports": {
     ".": "./mod.ts"
   },
+
   "lint": {
     "plugins": ["../_tools/lint/enum-requires-own-file.ts"]
   },

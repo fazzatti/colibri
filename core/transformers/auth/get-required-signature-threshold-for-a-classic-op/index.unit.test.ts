@@ -20,7 +20,7 @@ import {
 import {
   OperationThreshold,
   type SignatureRequirement,
-} from "../../../common/types.ts";
+} from "../../../signer/types.ts";
 
 const helperGetOpObj = (op: xdr.Operation) => {
   return Operation.fromXDRObject(op);
@@ -41,8 +41,8 @@ describe("Transformer getRequiredOperationThresholdForClassicOperation", () => {
     const requirements = getRequirements(op) as SignatureRequirement;
     assertExists(requirements);
     assertExists(requirements.thresholdLevel);
-    assertExists(requirements.signer);
-    assertEquals(requirements.signer, "source-account");
+    assertExists(requirements.address);
+    assertEquals(requirements.address, "source-account");
     assertEquals(requirements.thresholdLevel, OperationThreshold.medium);
   });
 
@@ -56,9 +56,9 @@ describe("Transformer getRequiredOperationThresholdForClassicOperation", () => {
     const requirements = getRequirements(op) as SignatureRequirement;
     assertExists(requirements);
     assertExists(requirements.thresholdLevel);
-    assertExists(requirements.signer);
+    assertExists(requirements.address);
     assertEquals(
-      requirements.signer,
+      requirements.address,
       "GAKT7G5CXB4DVUAUOJXY7KLN6UFZLICTNCKHH6HOOOZC3HDA2YDNURJR"
     );
     assertEquals(requirements.thresholdLevel, OperationThreshold.medium);
@@ -75,9 +75,9 @@ describe("Transformer getRequiredOperationThresholdForClassicOperation", () => {
     const requirements = getRequirements(op) as SignatureRequirement;
     assertExists(requirements);
     assertExists(requirements.thresholdLevel);
-    assertExists(requirements.signer);
+    assertExists(requirements.address);
     assertEquals(
-      requirements.signer,
+      requirements.address,
       "GAKT7G5CXB4DVUAUOJXY7KLN6UFZLICTNCKHH6HOOOZC3HDA2YDNURJR"
     );
     assertEquals(requirements.thresholdLevel, OperationThreshold.medium);
@@ -109,7 +109,7 @@ describe("Transformer getRequiredOperationThresholdForClassicOperation", () => {
       assertEquals(
         getRequirements(helperGetOpObj(op)) as SignatureRequirement,
         {
-          signer: "source-account",
+          address: "source-account",
           thresholdLevel: OperationThreshold.low,
         }
       );
@@ -310,7 +310,7 @@ describe("Transformer getRequiredOperationThresholdForClassicOperation", () => {
       assertEquals(
         getRequirements(helperGetOpObj(op)) as SignatureRequirement,
         {
-          signer: "source-account",
+          address: "source-account",
           thresholdLevel: OperationThreshold.medium,
         }
       );
@@ -354,7 +354,7 @@ describe("Transformer getRequiredOperationThresholdForClassicOperation", () => {
       assertEquals(
         getRequirements(helperGetOpObj(op)) as SignatureRequirement,
         {
-          signer: "source-account",
+          address: "source-account",
           thresholdLevel: OperationThreshold.high,
         }
       );
@@ -362,10 +362,12 @@ describe("Transformer getRequiredOperationThresholdForClassicOperation", () => {
   });
 
   it("throws FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE if the source account is invalid", async () => {
-    const opXdr = Operation.setOptions({
-      homeDomain: "mock",
-    });
-    const op = Operation.fromXDRObject(opXdr);
+    const op = helperGetOpObj(
+      Operation.setOptions({
+        homeDomain: "mock",
+      })
+    );
+
     op.source = "invalid-source" as unknown as string; // Force invalid source
 
     await assertRejects(
@@ -374,6 +376,28 @@ describe("Transformer getRequiredOperationThresholdForClassicOperation", () => {
     );
   });
   it("throws UNEXPECTED_ERROR if an unexpected error occurs", async () => {
-    // TODO: This is a bit tricky to simulate without mocking the inner behaviours.
+    const op = helperGetOpObj(
+      Operation.setOptions({
+        homeDomain: "mock",
+      })
+    );
+
+    // Stub OperationThreshold.medium to throw when accessed
+    // deno-lint-ignore no-unused-vars
+    const originalMedium = Object.getOwnPropertyDescriptor(
+      OperationThreshold,
+      "medium"
+    );
+    Object.defineProperty(OperationThreshold, "medium", {
+      get: () => {
+        throw new Error("Forced failure");
+      },
+      configurable: true,
+    });
+
+    await assertRejects(
+      async () => await getRequirements(op),
+      E.UNEXPECTED_ERROR
+    );
   });
 });
