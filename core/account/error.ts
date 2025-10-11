@@ -32,7 +32,7 @@ export abstract class AccountError<
       source: "@colibri/core/account/*",
       code: args.code,
       message: args.message,
-      details: args.details || args.message,
+      details: args.details, // || args.message, all details handled by now
       diagnostic: args.diagnostic || undefined,
       meta,
     });

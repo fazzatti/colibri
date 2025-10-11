@@ -11,6 +11,10 @@ export type NativeAccount = {
   getTrustlineLedgerKey(asset: Asset): xdr.LedgerKey;
 };
 
+export type WithoutSigner<AccountType> = AccountType & {
+  withMasterSigner(signer: TransactionSigner): WithSigner<NativeAccount>;
+};
+
 export type WithSigner<AccountType> = AccountType & {
   signer(): TransactionSigner;
 };

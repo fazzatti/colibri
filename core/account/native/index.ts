@@ -2,17 +2,21 @@ import { Account, type Asset, Keypair, MuxedAccount, xdr } from "stellar-sdk";
 import { assert } from "../../common/assert/assert.ts";
 import { StrKey } from "../../strkeys/index.ts";
 import { isMuxedId } from "../../common/verifiers/is-muxed-id.ts";
-import type { MuxedId } from "./types.ts";
+import type { MuxedId, WithoutSigner } from "./types.ts";
 import type { Ed25519PublicKey, MuxedAddress } from "../../strkeys/types.ts";
 
 import * as E from "./error.ts";
 import type { TransactionSigner } from "../../signer/types.ts";
-import type { WithSigner } from "./types.ts";
-export class NativeAccount {
+import type {
+  WithSigner,
+  NativeAccount as BaseNativeAccount,
+} from "./types.ts";
+
+export class NativeAccount implements BaseNativeAccount {
   protected _address: Ed25519PublicKey;
   protected _masterSigner?: TransactionSigner;
 
-  constructor(address: Ed25519PublicKey) {
+  private constructor(address: Ed25519PublicKey) {
     assert(
       StrKey.isValidEd25519PublicKey(address),
       new E.INVALID_ED25519_PUBLIC_KEY(address)
@@ -21,13 +25,18 @@ export class NativeAccount {
     this._address = address;
   }
 
-  static fromAddress(address: Ed25519PublicKey): NativeAccount {
-    return new NativeAccount(address);
+  static fromAddress(address: Ed25519PublicKey) {
+    return new NativeAccount(address) as WithoutSigner<BaseNativeAccount>;
   }
 
   // ----------------
   // Base methods
   // ----------------
+
+  address(): Ed25519PublicKey {
+    return this._address;
+  }
+
   muxedAddress(id: MuxedId): MuxedAddress {
     assert(isMuxedId(id), new E.INVALID_MUXED_ID(id));
 
@@ -68,8 +77,10 @@ export class NativeAccount {
   // WithSigner methods
   // ----------------
 
-  static fromMasterSigner(signer: TransactionSigner): NativeAccount {
-    return new NativeAccount(signer.publicKey());
+  static fromMasterSigner(signer: TransactionSigner) {
+    return NativeAccount.fromAddress(signer.publicKey()).withMasterSigner(
+      signer
+    );
   }
 
   withMasterSigner(signer: TransactionSigner): WithSigner<this> {

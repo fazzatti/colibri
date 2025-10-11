@@ -1,7 +1,7 @@
 import { AccountError } from "../error.ts";
 
 export enum Code {
-  UNEXPECTED = "ACC_NAT_000",
+  // UNEXPECTED = "ACC_NAT_000", // Reserved for unexpected errors - not currently used in NativeAccount
   INVALID_ED25519_PUBLIC_KEY = "ACC_NAT_001",
   INVALID_MUXED_ID = "ACC_NAT_002",
 
@@ -14,17 +14,21 @@ export abstract class NativeAccountError extends AccountError<Code, MetaData> {
   override readonly source = "@colibri/core/account/native";
 }
 
-export class UNEXPECTED extends NativeAccountError {
-  constructor(cause: Error) {
-    super({
-      code: Code.UNEXPECTED,
-      message: "An unexpected error occurred when using Friendbot!",
-      data: null,
-      details: "See the 'cause' for more details",
-      cause,
-    });
-  }
-}
+// Reserved for unexpected errors - not currently used in NativeAccount
+// All error cases in NativeAccount are expected/recoverable user input errors
+// for now
+//
+// export class UNEXPECTED extends NativeAccountError {
+//   constructor(cause: Error) {
+//     super({
+//       code: Code.UNEXPECTED,
+//       message: "An unexpected error occurred when using Friendbot!",
+//       data: null,
+//       details: "See the 'cause' for more details",
+//       cause,
+//     });
+//   }
+// }
 
 export class INVALID_ED25519_PUBLIC_KEY extends NativeAccountError {
   constructor(address: string) {
@@ -110,7 +114,7 @@ export class MISSING_MASTER_SIGNER extends NativeAccountError {
 }
 
 export const ERROR_ACC_NAT = {
-  [Code.UNEXPECTED]: UNEXPECTED,
+  // [Code.UNEXPECTED]: UNEXPECTED,
   [Code.INVALID_ED25519_PUBLIC_KEY]: INVALID_ED25519_PUBLIC_KEY,
   [Code.INVALID_MUXED_ID]: INVALID_MUXED_ID,
   [Code.INVALID_MUXED_ADDRESS_GENERATED]: INVALID_MUXED_ADDRESS_GENERATED,
