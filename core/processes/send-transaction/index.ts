@@ -128,9 +128,10 @@ const getTransactionRecursively = async (
   const hasTxAchievedFinalStatus =
     getTxResponse.status !== Api.GetTransactionStatus.NOT_FOUND;
 
-  if (!hasTimedOut && !hasTxAchievedFinalStatus)
+  if (!hasTimedOut && !hasTxAchievedFinalStatus) {
+    await new Promise((resolve) => setTimeout(resolve, waitIntervalInMs));
     return getTransactionRecursively(rpc, hash, waitUntil, waitIntervalInMs);
-
+  }
   return ResultOrError.wrapVal(getTxResponse);
 };
 
