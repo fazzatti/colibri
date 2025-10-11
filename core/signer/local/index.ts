@@ -126,5 +126,3 @@ export class LocalSigner implements TransactionSigner {
     this.destroy();
   }
 }
-
-const sig = LocalSigner.generateRandom();
