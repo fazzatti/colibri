@@ -1,7 +1,6 @@
 import { assert, assertFalse } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { isEd25519PublicKey } from "./is-ed25519-public-key.ts";
-import { isMuxedAddress } from "./is-muxed-address.ts";
+
 import {
   type FeeBumpTransaction,
   type Transaction,
@@ -10,6 +9,7 @@ import {
 import { TestNet } from "../../network/index.ts";
 import { isTransaction } from "./is-transaction.ts";
 import { isFeeBumpTransaction } from "./is-fee-bump-transaction.ts";
+import { StrKey } from "../../strkeys/index.ts";
 
 describe("Verifiers", () => {
   describe("isEd25519PublicKey", () => {
@@ -22,7 +22,7 @@ describe("Verifiers", () => {
       ];
 
       for (const address of correctAddresses) {
-        assert(isEd25519PublicKey(address));
+        assert(StrKey.isEd25519PublicKey(address));
       }
     });
 
@@ -42,7 +42,7 @@ describe("Verifiers", () => {
       ];
 
       for (const address of incorrectAddresses) {
-        assertFalse(isEd25519PublicKey(address));
+        assertFalse(StrKey.isEd25519PublicKey(address));
       }
     });
   });
@@ -57,7 +57,7 @@ describe("Verifiers", () => {
       ];
 
       for (const address of correctAddresses) {
-        assert(isMuxedAddress(address));
+        assert(StrKey.isMuxedAddress(address));
       }
     });
 
@@ -76,7 +76,7 @@ describe("Verifiers", () => {
       ];
 
       for (const address of incorrectAddresses) {
-        assertFalse(isMuxedAddress(address));
+        assertFalse(StrKey.isMuxedAddress(address));
       }
     });
   });
