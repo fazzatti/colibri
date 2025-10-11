@@ -1,13 +1,14 @@
 import { assert } from "../../common/assert/assert.ts";
-import type { Ed25519PublicKey } from "../../common/types.ts";
-import { isEd25519PublicKey } from "../../common/verifiers/index.ts";
+import { StrKey } from "../../strkeys/index.ts";
+import type { Ed25519PublicKey } from "../../strkeys/types.ts";
+
 import * as E from "./error.ts";
 export const initializeWithFriendbot = async (
   friendbotUrl: string,
   publicKey: Ed25519PublicKey
 ): Promise<void> => {
   assert(
-    isEd25519PublicKey(publicKey),
+    StrKey.isEd25519PublicKey(publicKey),
     new E.INVALID_ADDRESS(friendbotUrl, publicKey)
   );
 

@@ -6,12 +6,11 @@ import { Operation, Keypair } from "stellar-sdk";
 import type { FeeBumpTransaction, Transaction, xdr } from "stellar-sdk";
 import { createClassicTransactionPipeline } from "./index.ts";
 import { initializeWithFriendbot } from "../../tools/friendbot/initialize-with-friendbot.ts";
-import type {
-  Ed25519PublicKey,
-  TransactionSigner,
-} from "../../common/types.ts";
+
 import type { TransactionConfig } from "../../common/types/transaction-config/types.ts";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
+import type { TransactionSigner } from "../../signer/types.ts";
+import type { Ed25519PublicKey } from "../../strkeys/types.ts";
 
 describe(
   "[Testnet] ClassicTransaction Pipeline",

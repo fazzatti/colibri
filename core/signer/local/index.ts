@@ -5,7 +5,7 @@ import {
   Keypair,
   type xdr,
 } from "stellar-sdk";
-import type { TransactionXDRBase64 } from "../../common/types.ts";
+import type { TransactionXDRBase64 } from "../../common/types/index.ts";
 import type {
   Ed25519PublicKey,
   Ed25519SecretKey,
