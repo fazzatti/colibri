@@ -29,11 +29,7 @@ export const dropNonPrintable = (val: string): string => {
 
 // Verifies that a string is indeed not a blank string.
 // Blank string can be one that only has whitespace characters for example.
-export const nonBlankString = (
-  value: unknown,
-  subject = "variable",
-  code = "-1"
-): void => {
+export const nonBlankString = (value: unknown, subject = "variable"): void => {
   if (typeof value !== "string" || value.trim().length === 0) {
     const message = `"${subject}" is a blank string. Need non-blank.`;
     throw ColibriError.unexpected({
