@@ -10,9 +10,9 @@ export { EnvelopeSigningRequirements } from "./envelope-signing-requirements/ind
 export * as envelopeSigningRequirementsError from "./envelope-signing-requirements/error.ts";
 export * as envelopeSigningRequirementsTypes from "./envelope-signing-requirements/types.ts";
 
-export { SimulateTransaction } from "./simulate-transaction/index.ts";
-export * as simulateTransactionError from "./simulate-transaction/error.ts";
-export * as simulateTransactionTypes from "./simulate-transaction/types.ts";
+export { SendTransaction } from "./send-transaction/index.ts";
+export * as sendTransactionError from "./send-transaction/error.ts";
+export * as sendTransactionTypes from "./send-transaction/types.ts";
 
 export { SignAuthEntries } from "./sign-auth-entries/index.ts";
 export * as signAuthEntriesError from "./sign-auth-entries/error.ts";
@@ -22,6 +22,10 @@ export { SignEnvelope } from "./sign-envelope/index.ts";
 export * as signEnvelopeError from "./sign-envelope/error.ts";
 export * as signEnvelopeTypes from "./sign-envelope/types.ts";
 
-export { SendTransaction } from "./send-transaction/index.ts";
-export * as sendTransactionError from "./send-transaction/error.ts";
-export * as sendTransactionTypes from "./send-transaction/types.ts";
+export { SimulateTransaction } from "./simulate-transaction/index.ts";
+export * as simulateTransactionError from "./simulate-transaction/error.ts";
+export * as simulateTransactionTypes from "./simulate-transaction/types.ts";
+
+export { WrapFeeBump } from "./wrap-fee-bump/index.ts";
+export * as wrapFeeBumpError from "./wrap-fee-bump/error.ts";
+export * as wrapFeeBumpTypes from "./wrap-fee-bump/types.ts";
