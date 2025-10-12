@@ -10,7 +10,7 @@ export type ToolsErrorShape<Code extends string, DataType> = {
   code: Code;
   message: string;
   data: DataType;
-  details?: string;
+  details: string;
   diagnostic?: Diagnostic;
   cause?: Error;
 };
@@ -32,7 +32,7 @@ export abstract class ToolsError<
       source: "@colibri/core/tools/*",
       code: args.code,
       message: args.message,
-      details: args.details || args.message,
+      details: args.details,
       diagnostic: args.diagnostic || undefined,
       meta,
     });

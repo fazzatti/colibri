@@ -1,9 +1,16 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 
-import { type NetworkConfig, NetworkType } from "../../network/index.ts";
+import {
+  type NetworkConfig,
+  NetworkType,
+  TestNet,
+} from "../../network/index.ts";
 import * as E from "./error.ts";
 import { createReadFromContractPipeline } from "./index.ts";
+import { inputToBuild } from "./connectors.ts";
+import type { ReadFromContractInput } from "./types.ts";
+import { Operation } from "stellar-sdk";
 
 describe("createReadFromContractPipeline", () => {
   describe("Construction", () => {
@@ -18,8 +25,26 @@ describe("createReadFromContractPipeline", () => {
 
       assertEquals(pipeline.name, "ReadFromContractPipeline");
     });
-  });
 
+    it("inputToBuild: converts input to BuildTransactionInput", () => {
+      const networkConfig: NetworkConfig = TestNet();
+      const input: ReadFromContractInput = {
+        operations: [Operation.setOptions({})],
+      };
+
+      const connector = inputToBuild(networkConfig.networkPassphrase);
+      assertEquals(typeof connector, "function");
+
+      const result = connector(input);
+
+      assertEquals(result.networkPassphrase, networkConfig.networkPassphrase);
+      assertEquals(result.baseFee, "10000000");
+      assertEquals(result.sequence, "1");
+      assertExists(result.source);
+      assertEquals(result.operations.length, 1);
+      assertEquals(result.operations, input.operations);
+    });
+  });
   describe("Errors", () => {
     it("throws MISSING_ARG when networkConfig is missing", () => {
       assertThrows(
