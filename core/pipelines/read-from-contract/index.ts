@@ -5,33 +5,11 @@ import { SimulateTransaction } from "../../processes/simulate-transaction/index.
 import { Server } from "stellar-sdk/rpc";
 import { ColibriError } from "../../error/index.ts";
 import { buildToSimulate } from "../../transformers/pipeline-connectors/build-to-simulate.ts";
-import type { BuildTransactionInput } from "../../processes/build-transaction/types.ts";
-import type {
-  ReadFromContractInput,
-  CreateReadFromContractPipelineArgs,
-} from "./types.ts";
+import type { CreateReadFromContractPipelineArgs } from "./types.ts";
 import { assertRequiredArgs } from "../../common/assert/assert-args.ts";
 import { simulateToRetval } from "../../transformers/pipeline-connectors/simulate-to-retval/index.ts";
-import { Keypair } from "stellar-sdk";
-
 import * as E from "./error.ts";
-import type { Ed25519PublicKey } from "../../strkeys/types.ts";
-
-const inputToBuild = (networkPassphrase: string) => {
-  return (input: ReadFromContractInput): BuildTransactionInput => {
-    const { operations } = input;
-
-    const source = Keypair.random().publicKey() as Ed25519PublicKey;
-
-    return {
-      baseFee: "10000000",
-      source,
-      networkPassphrase,
-      operations,
-      sequence: "1",
-    };
-  };
-};
+import { inputToBuild } from "./connectors.ts";
 
 const createReadFromContractPipeline = ({
   networkConfig,

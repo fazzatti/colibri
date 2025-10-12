@@ -67,7 +67,6 @@ export const getRequiredOperationThresholdForClassicOperation: TransformerSync<
       case xdr.OperationType.liquidityPoolWithdraw().name:
         source = operation.source;
         break;
-      case xdr.OperationType.revokeSponsorship().name:
       case "revokeAccountSponsorship":
       case "revokeTrustlineSponsorship":
       case "revokeOfferSponsorship":
@@ -75,6 +74,7 @@ export const getRequiredOperationThresholdForClassicOperation: TransformerSync<
       case "revokeClaimableBalanceSponsorship":
       case "revokeLiquidityPoolSponsorship":
       case "revokeSignerSponsorship":
+      case xdr.OperationType.revokeSponsorship().name:
         source = operation.source;
         break;
       case xdr.OperationType.setOptions().name:

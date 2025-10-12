@@ -10,6 +10,8 @@ import { TestNet } from "../../network/index.ts";
 import { isTransaction } from "./is-transaction.ts";
 import { isFeeBumpTransaction } from "./is-fee-bump-transaction.ts";
 import { StrKey } from "../../strkeys/index.ts";
+import { isSigningThreshold } from "./is-signing-threshold.ts";
+import { isSmartContractTransaction } from "./is-smart-contract-transaction.ts";
 
 describe("Verifiers", () => {
   describe("isEd25519PublicKey", () => {
@@ -196,6 +198,110 @@ describe("Verifiers", () => {
         assertFalse(
           isFeeBumpTransaction(tx as Transaction | FeeBumpTransaction)
         );
+      }
+    });
+  });
+
+  describe("isSigningThreshold", () => {
+    it("should verify valid signing thresholds", () => {
+      const validThresholds = [0, 1, 2, 3, 127, 128, 254, 255];
+
+      for (const threshold of validThresholds) {
+        assert(isSigningThreshold(threshold));
+      }
+    });
+
+    it("should verify invalid signing thresholds", () => {
+      const invalidThresholds = [
+        -1,
+        256,
+        1000,
+        -100,
+        1.5,
+        NaN,
+        Infinity,
+        -Infinity,
+        "0" as unknown as number,
+        null as unknown as number,
+        undefined as unknown as number,
+        {} as unknown as number,
+        [] as unknown as number,
+      ];
+
+      for (const threshold of invalidThresholds) {
+        assertFalse(isSigningThreshold(threshold));
+      }
+    });
+  });
+
+  describe("isSmartContractTransaction", () => {
+    const { networkPassphrase } = TestNet();
+
+    it("should verify valid smart contract transactions (invokeHostFunction)", () => {
+      const invokeHostFunctionTx = TransactionBuilder.fromXDR(
+        "AAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAwBgAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAGAAAAAAAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAIZGVjaW1hbHMAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAAYAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAUAAAAAQAAAAAAAfIlAAAAAAAAAAAAAAAAAAC/UAAAAAA=",
+        networkPassphrase
+      );
+
+      assert(isSmartContractTransaction(invokeHostFunctionTx));
+    });
+
+    it("should return false for non-smart contract transactions", () => {
+      const regularTx = TransactionBuilder.fromXDR(
+        "AAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAGQAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAABy6rRnxRIjFIzSAmV8BbmxVVc8gijT2oAluc+FcWUDFAAAAAAAAAAAAJiWgAAAAAAAAAAA",
+        networkPassphrase
+      );
+
+      assertFalse(isSmartContractTransaction(regularTx));
+    });
+
+    it("should return false for transactions with multiple operations", () => {
+      const multiOpTx = TransactionBuilder.fromXDR(
+        "AAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAASwAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+        networkPassphrase
+      );
+
+      assertFalse(isSmartContractTransaction(multiOpTx));
+    });
+
+    it("should return false for transactions with zero operations", () => {
+      const emptyOpTx = TransactionBuilder.fromXDR(
+        "AAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAGQAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        networkPassphrase
+      );
+
+      assertFalse(isSmartContractTransaction(emptyOpTx));
+    });
+
+    it("should return false for fee bump transactions by default", () => {
+      const feeBumpTx = TransactionBuilder.fromXDR(
+        "AAAABQAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAAAAAw1AAAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAwBgAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAGAAAAAAAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAIZGVjaW1hbHMAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAAYAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAUAAAAAQAAAAAAAfIlAAAAAAAAAAAAAAAAAAC/UAAAAAAAAAAAAAAAAA==",
+        networkPassphrase
+      );
+
+      assertFalse(isSmartContractTransaction(feeBumpTx));
+    });
+
+    it("should check inner transaction when softCheckFeebump is true", () => {
+      const feeBumpTx = TransactionBuilder.fromXDR(
+        "AAAABQAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAAAAAw1AAAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAwBgAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAGAAAAAAAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAIZGVjaW1hbHMAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAAYAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAUAAAAAQAAAAAAAfIlAAAAAAAAAAAAAAAAAAC/UAAAAAAAAAAAAAAAAA==",
+        networkPassphrase
+      );
+
+      assert(isSmartContractTransaction(feeBumpTx, true));
+    });
+
+    it("should return false for invalid transaction types", () => {
+      const invalidTransactions = [
+        1 as unknown as Transaction,
+        null as unknown as Transaction,
+        undefined as unknown as Transaction,
+        {} as unknown as Transaction,
+        [] as unknown as Transaction,
+      ];
+
+      for (const tx of invalidTransactions) {
+        assertFalse(isSmartContractTransaction(tx));
       }
     });
   });
