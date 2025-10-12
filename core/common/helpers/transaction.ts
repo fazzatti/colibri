@@ -18,7 +18,7 @@ export const getTransactionTimeout = (
       tx = tx.innerTransaction;
 
     if (tx instanceof Transaction) {
-      const txTimeout = Number(tx.timeBounds?.maxTime) ?? 0;
+      const txTimeout = Number(tx.timeBounds?.maxTime || 0);
       return txTimeout > 0
         ? unit === "milliseconds"
           ? (txTimeout - Math.floor(Date.now() / 1000)) * 1000
