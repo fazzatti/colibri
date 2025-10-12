@@ -32,7 +32,7 @@ export abstract class TransformerError<
       source: "@colibri/core/transformers/*",
       code: args.code,
       message: args.message,
-      details: args.details || args.message,
+      details: args.details,
       diagnostic: args.diagnostic || undefined,
       meta,
     });
