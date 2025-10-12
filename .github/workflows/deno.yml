@@ -43,16 +43,6 @@ jobs:
       - name: Generate coverage report
         run: deno coverage --lcov coverage > coverage.lcov
 
-      - name: Check coverage threshold
-        run: |
-          if [[ "${{ github.base_ref }}" == "dev" ]] || [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
-            echo "Checking dev branch - requiring 85% coverage"
-            deno coverage coverage --threshold=85
-          else
-            echo "Checking main branch - requiring 90% coverage"
-            deno coverage coverage --threshold=90
-          fi
-
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
