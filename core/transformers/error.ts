@@ -10,7 +10,7 @@ export type TransformerErrorShape<Code extends string, DataType> = {
   code: Code;
   message: string;
   data: DataType;
-  details?: string;
+  details: string;
   diagnostic?: Diagnostic;
   cause?: Error;
 };
