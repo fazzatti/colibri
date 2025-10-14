@@ -156,7 +156,7 @@ export class FAILED_TO_SIGN_AUTH_ENTRY extends SignAuthEntriesError {
   }
 }
 
-export const ERROR_SEN = {
+export const ERROR_BY_CODE = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.MISSING_ARG]: MISSING_ARG,
   [Code.VALID_UNTIL_LEDGER_SEQ_TOO_LOW]: VALID_UNTIL_LEDGER_SEQ_TOO_LOW,

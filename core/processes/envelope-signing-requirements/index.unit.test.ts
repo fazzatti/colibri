@@ -10,7 +10,7 @@ import {
   TransactionBuilder,
   type xdr,
 } from "stellar-sdk";
-import { EnvelopeSigningRequirements } from "./index.ts";
+import { P_EnvelopeSigningRequirements } from "./index.ts";
 import * as E from "./error.ts";
 import { TestNet } from "../../network/index.ts";
 
@@ -63,7 +63,7 @@ describe("EnvelopeSigningRequirements", () => {
   describe("Construction", () => {
     it("creates process with proper name", () => {
       assertEquals(
-        EnvelopeSigningRequirements.name,
+        P_EnvelopeSigningRequirements().name,
         "EnvelopeSigningRequirements"
       );
     });
@@ -76,7 +76,7 @@ describe("EnvelopeSigningRequirements", () => {
         [Operation.setOptions({})]
       );
 
-      const result = await EnvelopeSigningRequirements.run({ transaction });
+      const result = await P_EnvelopeSigningRequirements().run({ transaction });
 
       assert(result);
       assert(result.length);
@@ -100,7 +100,7 @@ describe("EnvelopeSigningRequirements", () => {
         networkPassphrase
       );
 
-      const result = await EnvelopeSigningRequirements.run({
+      const result = await P_EnvelopeSigningRequirements().run({
         transaction: feebump,
       });
 
@@ -119,7 +119,7 @@ describe("EnvelopeSigningRequirements", () => {
         [Operation.setOptions({})]
       );
 
-      const result = await EnvelopeSigningRequirements.run({ transaction });
+      const result = await P_EnvelopeSigningRequirements().run({ transaction });
 
       assert(result);
       assert(result.length);
@@ -143,7 +143,7 @@ describe("EnvelopeSigningRequirements", () => {
         networkPassphrase
       );
 
-      const result = await EnvelopeSigningRequirements.run({
+      const result = await P_EnvelopeSigningRequirements().run({
         transaction: feebump,
       });
 
@@ -184,7 +184,7 @@ describe("EnvelopeSigningRequirements", () => {
         opLowCharlie,
       ]);
 
-      const result = await EnvelopeSigningRequirements.run({
+      const result = await P_EnvelopeSigningRequirements().run({
         transaction,
       });
 
@@ -263,7 +263,7 @@ describe("EnvelopeSigningRequirements", () => {
         opLowCharlie,
       ]);
 
-      const result = await EnvelopeSigningRequirements.run({
+      const result = await P_EnvelopeSigningRequirements().run({
         transaction,
       });
 
@@ -314,7 +314,7 @@ describe("EnvelopeSigningRequirements", () => {
       const faultyInput = null as unknown as EnvelopeSigningRequirementsInput;
 
       await assertRejects(
-        async () => await EnvelopeSigningRequirements.run(faultyInput),
+        async () => await P_EnvelopeSigningRequirements().run(faultyInput),
         E.UNEXPECTED_ERROR
       );
     });
@@ -323,7 +323,7 @@ describe("EnvelopeSigningRequirements", () => {
       const transaction = null as unknown as Transaction;
 
       await assertRejects(
-        async () => await EnvelopeSigningRequirements.run({ transaction }),
+        async () => await P_EnvelopeSigningRequirements().run({ transaction }),
         E.INVALID_TRANSACTION_TYPE
       );
     });
@@ -349,7 +349,7 @@ describe("EnvelopeSigningRequirements", () => {
 
       await assertRejects(
         async () =>
-          await EnvelopeSigningRequirements.run({ transaction: faultyTx }),
+          await P_EnvelopeSigningRequirements().run({ transaction: faultyTx }),
         E.FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX
       );
     });
@@ -369,7 +369,7 @@ describe("EnvelopeSigningRequirements", () => {
 
       await assertRejects(
         async () =>
-          await EnvelopeSigningRequirements.run({
+          await P_EnvelopeSigningRequirements().run({
             transaction: faultyTx,
           }),
         E.FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION

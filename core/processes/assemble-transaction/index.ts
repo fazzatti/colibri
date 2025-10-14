@@ -94,12 +94,18 @@ const assembleTransactionProcess = async (
   }
 };
 
-const AssembleTransaction = ProcessEngine.create<
-  AssembleTransactionInput,
-  AssembleTransactionOutput,
-  E.AssembleTransactionError
->(assembleTransactionProcess, {
-  name: "AssembleTransaction",
-});
+const PROCESS_NAME = "AssembleTransaction" as const;
 
-export { AssembleTransaction };
+const P_AssembleTransaction = () =>
+  ProcessEngine.create<
+    AssembleTransactionInput,
+    AssembleTransactionOutput,
+    E.AssembleTransactionError,
+    typeof PROCESS_NAME
+  >(assembleTransactionProcess, {
+    name: PROCESS_NAME,
+  });
+
+const P_AssembleTransactionErrors = E;
+
+export { P_AssembleTransaction, P_AssembleTransactionErrors };

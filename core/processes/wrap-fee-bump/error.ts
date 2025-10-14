@@ -9,6 +9,8 @@ export enum Code {
 
   NOT_A_TRANSACTION = "WFB_003",
   FAILED_TO_BUILD_FEE_BUMP = "WFB_004",
+
+  FEE_TOO_LOW = "WFB_005",
 }
 
 export abstract class WrapFeeBumpError extends ProcessError<
@@ -78,9 +80,22 @@ export class FAILED_TO_BUILD_FEE_BUMP extends WrapFeeBumpError {
   }
 }
 
-export const ERROR_WFB = {
+export class FEE_TOO_LOW extends WrapFeeBumpError {
+  constructor(input: WrapFeeBumpInput) {
+    super({
+      code: Code.FEE_TOO_LOW,
+      message: "The fee for the fee bump transaction is too low!",
+      input,
+      details: `The fee provided(${input.config.fee}) for the fee bump transaction is not sufficient. It must be higher than the inner transaction fee(${input.transaction.fee}).`,
+    });
+  }
+}
+
+export const ERROR_BY_CODE = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.ALREADY_FEE_BUMP]: ALREADY_FEE_BUMP,
   [Code.NOT_A_TRANSACTION]: NOT_A_TRANSACTION,
   [Code.FAILED_TO_BUILD_FEE_BUMP]: FAILED_TO_BUILD_FEE_BUMP,
+  [Code.MISSING_ARG]: MISSING_ARG,
+  [Code.FEE_TOO_LOW]: FEE_TOO_LOW,
 };

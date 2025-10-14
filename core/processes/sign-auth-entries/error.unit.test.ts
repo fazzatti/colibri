@@ -3,7 +3,7 @@ import { describe, it } from "@std/testing/bdd";
 import { Address, xdr } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
 
-import { SignAuthEntries } from "./index.ts";
+import { P_SignAuthEntries } from "./index.ts";
 import * as E from "./error.ts";
 import type { SignAuthEntriesInput } from "./types.ts";
 import { TestNet } from "../../network/index.ts";
@@ -99,7 +99,7 @@ describe("SignAuthEntries", () => {
       );
       await assertRejects(
         () =>
-          SignAuthEntries.run({
+          P_SignAuthEntries().run({
             auth: undefined as unknown as xdr.SorobanAuthorizationEntry[],
             signers: [signer],
             rpc: makeRpc(),
@@ -116,7 +116,7 @@ describe("SignAuthEntries", () => {
 
       await assertRejects(
         () =>
-          SignAuthEntries.run({
+          P_SignAuthEntries().run({
             auth: [entry],
             signers: [signer],
             rpc: undefined as unknown as Server,
@@ -132,7 +132,7 @@ describe("SignAuthEntries", () => {
 
       await assertRejects(
         () =>
-          SignAuthEntries.run({
+          P_SignAuthEntries().run({
             auth: [entry],
             signers: undefined as unknown as TransactionSigner[],
             rpc: makeRpc(),
@@ -149,7 +149,7 @@ describe("SignAuthEntries", () => {
 
       await assertRejects(
         () =>
-          SignAuthEntries.run({
+          P_SignAuthEntries().run({
             auth: [entry],
             signers: [signer],
             rpc: makeRpc(),
@@ -166,7 +166,7 @@ describe("SignAuthEntries", () => {
 
       await assertRejects(
         () =>
-          SignAuthEntries.run({
+          P_SignAuthEntries().run({
             auth: [entry],
             signers: [signer],
             rpc: makeRpc(),
@@ -184,7 +184,7 @@ describe("SignAuthEntries", () => {
 
       await assertRejects(
         () =>
-          SignAuthEntries.run({
+          P_SignAuthEntries().run({
             auth: [entry],
             signers: [signer],
             rpc: makeRpc(),
@@ -202,7 +202,7 @@ describe("SignAuthEntries", () => {
 
       await assertRejects(
         () =>
-          SignAuthEntries.run({
+          P_SignAuthEntries().run({
             auth: [entry],
             signers: [signer],
             rpc: makeRpc(),
@@ -220,7 +220,7 @@ describe("SignAuthEntries", () => {
 
       await assertRejects(
         () =>
-          SignAuthEntries.run({
+          P_SignAuthEntries().run({
             auth: [entry],
             signers: [signer],
             rpc: makeFailingRpc(),
@@ -236,7 +236,7 @@ describe("SignAuthEntries", () => {
 
       await assertRejects(
         () =>
-          SignAuthEntries.run({
+          P_SignAuthEntries().run({
             auth: [entry],
             signers: [],
             rpc: makeRpc(),
@@ -255,7 +255,7 @@ describe("SignAuthEntries", () => {
 
       await assertRejects(
         () =>
-          SignAuthEntries.run({
+          P_SignAuthEntries().run({
             auth: [entry],
             signers: [signer],
             rpc: makeRpc(),
@@ -267,7 +267,7 @@ describe("SignAuthEntries", () => {
 
     it("wraps unexpected errors", async () => {
       await assertRejects(
-        () => SignAuthEntries.run(null as unknown as SignAuthEntriesInput),
+        () => P_SignAuthEntries().run(null as unknown as SignAuthEntriesInput),
         E.UNEXPECTED_ERROR
       );
     });

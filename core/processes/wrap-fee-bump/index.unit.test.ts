@@ -9,7 +9,7 @@ import {
   type Transaction,
 } from "stellar-sdk";
 
-import { WrapFeeBump } from "./index.ts";
+import { P_WrapFeeBump } from "./index.ts";
 import * as E from "./error.ts";
 import { TestNet } from "../../network/index.ts";
 import { isFeeBumpTransaction } from "../../common/verifiers/is-fee-bump-transaction.ts";
@@ -39,7 +39,7 @@ describe("WrapFeeBump", () => {
   describe("Construction", () => {
     it("creates process with proper name", () => {
       // This will fail until you change the name in index.ts to "WrapFeeBump"
-      assertEquals(WrapFeeBump.name, "WrapFeeBump");
+      assertEquals(P_WrapFeeBump().name, "WrapFeeBump");
     });
   });
 
@@ -49,9 +49,9 @@ describe("WrapFeeBump", () => {
         Operation.setOptions({}),
       ]);
 
-      const result = await WrapFeeBump.run({
+      const result = await P_WrapFeeBump().run({
         transaction,
-        config: { source: bob, fee: "100", signers: [] },
+        config: { source: bob, fee: "101", signers: [] },
         networkPassphrase,
       });
 
@@ -70,7 +70,7 @@ describe("WrapFeeBump", () => {
 
       await assertRejects(
         () =>
-          WrapFeeBump.run({
+          P_WrapFeeBump().run({
             transaction: feebump as unknown as Transaction, // run expects Transaction | FeeBumpTransaction
             config: null as unknown as FeeBumpConfig,
             networkPassphrase,
@@ -90,7 +90,7 @@ describe("WrapFeeBump", () => {
 
       await assertRejects(
         () =>
-          WrapFeeBump.run({
+          P_WrapFeeBump().run({
             transaction: feebump as unknown as Transaction, // run expects Transaction | FeeBumpTransaction
             config: { source: bob, fee: "100", signers: [] },
             networkPassphrase,
@@ -104,7 +104,7 @@ describe("WrapFeeBump", () => {
     it("throws NOT_A_TRANSACTION for invalid input", async () => {
       await assertRejects(
         () =>
-          WrapFeeBump.run({
+          P_WrapFeeBump().run({
             transaction: null as unknown as Transaction,
             config: { source: bob, fee: "100", signers: [] },
             networkPassphrase,
@@ -120,7 +120,7 @@ describe("WrapFeeBump", () => {
 
       await assertRejects(
         () =>
-          WrapFeeBump.run({
+          P_WrapFeeBump().run({
             transaction,
             // missing fee
             config: {
@@ -135,7 +135,7 @@ describe("WrapFeeBump", () => {
 
       await assertRejects(
         () =>
-          WrapFeeBump.run({
+          P_WrapFeeBump().run({
             transaction,
             // missing source
             config: {
@@ -163,9 +163,9 @@ describe("WrapFeeBump", () => {
 
         await assertRejects(
           () =>
-            WrapFeeBump.run({
+            P_WrapFeeBump().run({
               transaction,
-              config: { source: bob, fee: "100", signers: [] },
+              config: { source: bob, fee: "101", signers: [] },
               networkPassphrase,
             }),
           E.FAILED_TO_BUILD_FEE_BUMP
@@ -173,6 +173,22 @@ describe("WrapFeeBump", () => {
       } finally {
         (TransactionBuilder as any).buildFeeBumpTransaction = original;
       }
+    });
+
+    it("throws FEE_TOO_LOW when the fee for the outter envelope is lower than the inner transaction fee", async () => {
+      const transaction = assembleTransaction(alice, [
+        Operation.setOptions({}),
+      ]);
+
+      await assertRejects(
+        () =>
+          P_WrapFeeBump().run({
+            transaction,
+            config: { source: bob, fee: "100", signers: [] },
+            networkPassphrase,
+          }),
+        E.FEE_TOO_LOW
+      );
     });
   });
 });

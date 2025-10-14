@@ -29,6 +29,11 @@ const wrapFeeBumpProcess = (input: WrapFeeBumpInput): WrapFeeBumpOutput => {
     assert(!isFeeBumpTransaction(transaction), new E.ALREADY_FEE_BUMP(input));
     assert(isTransaction(transaction), new E.NOT_A_TRANSACTION(input));
 
+    assert(
+      parseInt(config.fee) > parseInt(transaction.fee),
+      new E.FEE_TOO_LOW(input)
+    );
+
     try {
       const feeBumpTransaction = TransactionBuilder.buildFeeBumpTransaction(
         config.source,
@@ -36,6 +41,7 @@ const wrapFeeBumpProcess = (input: WrapFeeBumpInput): WrapFeeBumpOutput => {
         transaction,
         networkPassphrase
       );
+
       return feeBumpTransaction;
     } catch (e) {
       throw new E.FAILED_TO_BUILD_FEE_BUMP(input, e as Error);
@@ -48,12 +54,18 @@ const wrapFeeBumpProcess = (input: WrapFeeBumpInput): WrapFeeBumpOutput => {
   }
 };
 
-const WrapFeeBump = ProcessEngine.create<
-  WrapFeeBumpInput,
-  WrapFeeBumpOutput,
-  E.WrapFeeBumpError
->(wrapFeeBumpProcess, {
-  name: "WrapFeeBump",
-});
+const PROCESS_NAME = "WrapFeeBump" as const;
 
-export { WrapFeeBump };
+const P_WrapFeeBump = () =>
+  ProcessEngine.create<
+    WrapFeeBumpInput,
+    WrapFeeBumpOutput,
+    E.WrapFeeBumpError,
+    typeof PROCESS_NAME
+  >(wrapFeeBumpProcess, {
+    name: PROCESS_NAME,
+  });
+
+const P_WrapFeeBumpErrors = E;
+
+export { P_WrapFeeBump, P_WrapFeeBumpErrors };

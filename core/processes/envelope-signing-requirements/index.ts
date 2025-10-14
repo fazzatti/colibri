@@ -127,12 +127,18 @@ const removeConflictingRequirements = (
   return requirementsBundle;
 };
 
-const EnvelopeSigningRequirements = ProcessEngine.create<
-  EnvelopeSigningRequirementsInput,
-  EnvelopeSigningRequirementsOutput,
-  E.EnvelopeSigningRequirementsError
->(envelopeSigningRequirementsProcess, {
-  name: "EnvelopeSigningRequirements",
-});
+const PROCESS_NAME = "EnvelopeSigningRequirements" as const;
 
-export { EnvelopeSigningRequirements };
+const P_EnvelopeSigningRequirements = () =>
+  ProcessEngine.create<
+    EnvelopeSigningRequirementsInput,
+    EnvelopeSigningRequirementsOutput,
+    E.EnvelopeSigningRequirementsError,
+    typeof PROCESS_NAME
+  >(envelopeSigningRequirementsProcess, {
+    name: PROCESS_NAME,
+  });
+
+const P_EnvelopeSigningRequirementsErrors = E;
+
+export { P_EnvelopeSigningRequirements, P_EnvelopeSigningRequirementsErrors };

@@ -10,7 +10,7 @@ import {
   Transaction,
   TransactionBuilder,
 } from "stellar-sdk";
-import { AssembleTransaction } from "./index.ts";
+import { P_AssembleTransaction } from "./index.ts";
 import { TestNet } from "../../network/index.ts";
 import type { AssembleTransactionInput } from "./types.ts";
 
@@ -43,7 +43,7 @@ const createTestTransaction = (fee: BaseFee = "100") => {
 describe("AssembleTransaction", () => {
   describe("Construction", () => {
     it("creates process with proper name", () => {
-      assertEquals(AssembleTransaction.name, "AssembleTransaction");
+      assertEquals(P_AssembleTransaction().name, "AssembleTransaction");
     });
   });
 
@@ -58,7 +58,7 @@ describe("AssembleTransaction", () => {
         resourceFee: 0,
       };
 
-      const result = await AssembleTransaction.run(input);
+      const result = await P_AssembleTransaction().run(input);
 
       assertInstanceOf(result, Transaction);
     });
@@ -76,7 +76,7 @@ describe("AssembleTransaction", () => {
         resourceFee: 5,
       };
 
-      const result = await AssembleTransaction.run(input);
+      const result = await P_AssembleTransaction().run(input);
       assertInstanceOf(result, Transaction);
       assertEquals(result.fee, "15");
     });
@@ -93,7 +93,7 @@ describe("AssembleTransaction", () => {
         resourceFee: 0,
       };
 
-      const result = await AssembleTransaction.run(input);
+      const result = await P_AssembleTransaction().run(input);
       assertInstanceOf(result, Transaction);
     });
   });
@@ -103,7 +103,7 @@ describe("AssembleTransaction", () => {
       const faultyInput = null as unknown as AssembleTransactionInput;
 
       await assertRejects(
-        async () => await AssembleTransaction.run(faultyInput),
+        async () => await P_AssembleTransaction().run(faultyInput),
         E.UNEXPECTED_ERROR
       );
     });
@@ -137,7 +137,7 @@ describe("AssembleTransaction", () => {
       };
 
       await assertRejects(
-        async () => await AssembleTransaction.run(input),
+        async () => await P_AssembleTransaction().run(input),
         E.NOT_SMART_CONTRACT_TRANSACTION_ERROR
       );
     });
@@ -155,7 +155,7 @@ describe("AssembleTransaction", () => {
       };
 
       await assertRejects(
-        async () => await AssembleTransaction.run(input),
+        async () => await P_AssembleTransaction().run(input),
         E.FAILED_TO_BUILD_SOROBAN_DATA_ERROR
       );
     });
@@ -179,7 +179,7 @@ describe("AssembleTransaction", () => {
       };
 
       await assertRejects(
-        async () => await AssembleTransaction.run(input),
+        async () => await P_AssembleTransaction().run(input),
         E.FAILED_TO_ASSEMBLE_TRANSACTION_ERROR
       );
 
@@ -222,7 +222,7 @@ describe("AssembleTransaction", () => {
       };
 
       await assertRejects(
-        async () => await AssembleTransaction.run(input),
+        async () => await P_AssembleTransaction().run(input),
         E.FAILED_TO_BUILD_TRANSACTION_ERROR
       );
     });
@@ -238,7 +238,7 @@ describe("AssembleTransaction", () => {
       };
 
       await assertRejects(
-        async () => await AssembleTransaction.run(input),
+        async () => await P_AssembleTransaction().run(input),
         E.MISSING_ARG
       );
     });
