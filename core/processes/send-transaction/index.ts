@@ -135,10 +135,16 @@ const getTransactionRecursively = async (
   return ResultOrError.wrapVal(getTxResponse);
 };
 
-const SendTransaction = ProcessEngine.create<
-  SendTransactionInput,
-  SendTransactionOutput,
-  E.SendTransactionError
->(sendTransactionProcess, { name: "SendTransaction" });
+const PROCESS_NAME = "SendTransaction" as const;
 
-export { SendTransaction };
+const P_SendTransaction = () =>
+  ProcessEngine.create<
+    SendTransactionInput,
+    SendTransactionOutput,
+    E.SendTransactionError,
+    typeof PROCESS_NAME
+  >(sendTransactionProcess, { name: PROCESS_NAME });
+
+const P_SendTransactionErrors = E;
+
+export { P_SendTransaction, P_SendTransactionErrors };

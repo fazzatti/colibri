@@ -8,6 +8,7 @@ export type ErrorDomain =
   | "core"
   | "accounts"
   | "pipelines"
+  | "plugins"
   | "rpc"
   | "contracts";
 

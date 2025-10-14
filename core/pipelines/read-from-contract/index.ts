@@ -1,6 +1,6 @@
 import { Pipeline } from "convee";
-import { BuildTransaction } from "../../processes/build-transaction/index.ts";
-import { SimulateTransaction } from "../../processes/simulate-transaction/index.ts";
+import { P_BuildTransaction } from "../../processes/build-transaction/index.ts";
+import { P_SimulateTransaction } from "../../processes/simulate-transaction/index.ts";
 
 import { Server } from "stellar-sdk/rpc";
 import { ColibriError } from "../../error/index.ts";
@@ -10,6 +10,8 @@ import { assertRequiredArgs } from "../../common/assert/assert-args.ts";
 import { simulateToRetval } from "../../transformers/pipeline-connectors/simulate-to-retval/index.ts";
 import * as E from "./error.ts";
 import { inputToBuild } from "./connectors.ts";
+
+export const PIPELINE_NAME = "ReadFromContractPipeline";
 
 const createReadFromContractPipeline = ({
   networkConfig,
@@ -26,6 +28,9 @@ const createReadFromContractPipeline = ({
 
     const rpc = new Server(networkConfig.rpcUrl!); // already asserted above
 
+    const BuildTransaction = P_BuildTransaction();
+    const SimulateTransaction = P_SimulateTransaction();
+
     const pipelineSteps = [
       inputToBuild(networkConfig.networkPassphrase),
       BuildTransaction,
@@ -35,7 +40,7 @@ const createReadFromContractPipeline = ({
     ] as const;
 
     const pipe = Pipeline.create([...pipelineSteps], {
-      name: "ReadFromContractPipeline",
+      name: PIPELINE_NAME,
     });
 
     return pipe;
@@ -48,3 +53,11 @@ const createReadFromContractPipeline = ({
 };
 
 export { createReadFromContractPipeline };
+
+const PIPE_ReadFromContract = {
+  create: createReadFromContractPipeline,
+  name: PIPELINE_NAME,
+  errors: E,
+};
+
+export { PIPE_ReadFromContract };

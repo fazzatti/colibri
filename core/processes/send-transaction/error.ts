@@ -267,7 +267,7 @@ export class TRANSACTION_NOT_FOUND extends SendTransactionError {
   }
 }
 
-export const ERROR_STX = {
+export const ERROR_BY_CODE = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.MISSING_ARG]: MISSING_ARG,
   [Code.FAIL_TO_SEND_TRANSACTION]: FAIL_TO_SEND_TRANSACTION,

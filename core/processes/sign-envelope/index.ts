@@ -46,10 +46,16 @@ const signEnvelopeProcess = async (
   }
 };
 
-const SignEnvelope = ProcessEngine.create<
-  SignEnvelopeInput,
-  SignEnvelopeOutput,
-  E.SignEnvelopeError
->(signEnvelopeProcess, { name: "SignEnvelope" });
+const PROCESS_NAME = "SignEnvelope" as const;
 
-export { SignEnvelope };
+const P_SignEnvelope = () =>
+  ProcessEngine.create<
+    SignEnvelopeInput,
+    SignEnvelopeOutput,
+    E.SignEnvelopeError,
+    typeof PROCESS_NAME
+  >(signEnvelopeProcess, { name: PROCESS_NAME });
+
+const P_SignEnvelopeErrors = E;
+
+export { P_SignEnvelope, P_SignEnvelopeErrors };

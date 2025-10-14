@@ -4,7 +4,7 @@ import { assert, assertEquals, assertRejects } from "@std/assert";
 
 import { xdr, Transaction } from "stellar-sdk";
 import { Api, type Server } from "stellar-sdk/rpc";
-import { SendTransaction } from "./index.ts";
+import { P_SendTransaction } from "./index.ts";
 import { SendTransactionStatus } from "./types.ts";
 import * as E from "./error.ts";
 
@@ -70,7 +70,7 @@ describe("SendTransaction", () => {
 
   describe("Construction", () => {
     it("creates process with proper name", () => {
-      assertEquals(SendTransaction.name, "SendTransaction");
+      assertEquals(P_SendTransaction().name, "SendTransaction");
     });
   });
 
@@ -100,7 +100,7 @@ describe("SendTransaction", () => {
         },
       } as unknown as Server;
 
-      const result = await SendTransaction.run({ transaction, rpc });
+      const result = await P_SendTransaction().run({ transaction, rpc });
 
       assertEquals(result.hash, hash);
       assertEquals(result.returnValue, returnValue);
@@ -145,7 +145,7 @@ describe("SendTransaction", () => {
       const result = await withMockedDateNow(
         [0, 400, 800, 1200, 1600],
         async () =>
-          await SendTransaction.run({
+          await P_SendTransaction().run({
             transaction,
             rpc,
             options: {
@@ -165,7 +165,7 @@ describe("SendTransaction", () => {
       it("throws MISSING_ARG when tx is missing", async () => {
         const err = await assertRejects(
           async () =>
-            await SendTransaction.run({
+            await P_SendTransaction().run({
               transaction: undefined as unknown as Transaction,
               rpc: {} as Server,
             }),
@@ -177,7 +177,7 @@ describe("SendTransaction", () => {
       it("throws TIMEOUT_TOO_LOW when timeout is below minimum", async () => {
         const err = await assertRejects(
           async () =>
-            await SendTransaction.run({
+            await P_SendTransaction().run({
               transaction: mockTransaction,
               rpc: {} as Server,
               options: { timeoutInSeconds: 0 },
@@ -190,7 +190,7 @@ describe("SendTransaction", () => {
       it("throws WAIT_INTERVAL_TOO_LOW when wait interval is below minimum", async () => {
         const err = await assertRejects(
           async () =>
-            await SendTransaction.run({
+            await P_SendTransaction().run({
               transaction: mockTransaction,
               rpc: {} as Server,
               options: { waitIntervalInMs: 50 },
@@ -212,7 +212,7 @@ describe("SendTransaction", () => {
 
         const err = await assertRejects(
           async () =>
-            await SendTransaction.run({
+            await P_SendTransaction().run({
               transaction: mockTransaction,
               rpc,
             }),
@@ -239,7 +239,7 @@ describe("SendTransaction", () => {
 
         const err = await assertRejects(
           async () =>
-            await SendTransaction.run({
+            await P_SendTransaction().run({
               transaction: mockTransaction,
               rpc,
             }),
@@ -265,7 +265,7 @@ describe("SendTransaction", () => {
 
         const err = await assertRejects(
           async () =>
-            await SendTransaction.run({
+            await P_SendTransaction().run({
               transaction: mockTransaction,
               rpc,
             }),
@@ -292,7 +292,7 @@ describe("SendTransaction", () => {
 
         const err = await assertRejects(
           async () =>
-            await SendTransaction.run({
+            await P_SendTransaction().run({
               transaction: mockTransaction,
               rpc,
             }),
@@ -317,7 +317,7 @@ describe("SendTransaction", () => {
 
         const err = await assertRejects(
           async () =>
-            await SendTransaction.run({
+            await P_SendTransaction().run({
               transaction: mockTransaction,
               rpc,
             }),
@@ -344,7 +344,7 @@ describe("SendTransaction", () => {
 
         const err = await assertRejects(
           async () =>
-            await SendTransaction.run({
+            await P_SendTransaction().run({
               transaction: mockTransaction,
               rpc,
             }),
@@ -368,7 +368,7 @@ describe("SendTransaction", () => {
 
         const err = await assertRejects(
           async () =>
-            await SendTransaction.run({
+            await P_SendTransaction().run({
               transaction: mockTransaction,
               rpc,
             }),
@@ -402,7 +402,7 @@ describe("SendTransaction", () => {
 
         const err = await assertRejects(
           async () =>
-            await SendTransaction.run({
+            await P_SendTransaction().run({
               transaction: mockTransaction,
               rpc,
             }),
@@ -433,7 +433,7 @@ describe("SendTransaction", () => {
           async () =>
             await assertRejects(
               async () =>
-                await SendTransaction.run({
+                await P_SendTransaction().run({
                   transaction: mockTransaction,
                   rpc,
                   options: {
@@ -473,7 +473,7 @@ describe("SendTransaction", () => {
         async () =>
           await assertRejects(
             async () =>
-              await SendTransaction.run({
+              await P_SendTransaction().run({
                 transaction: mockTransaction,
                 rpc,
                 options: {
@@ -502,7 +502,7 @@ describe("SendTransaction", () => {
 
       const err = await assertRejects(
         async () =>
-          await SendTransaction.run({
+          await P_SendTransaction().run({
             transaction: {} as Transaction,
             rpc: rpc,
           }),

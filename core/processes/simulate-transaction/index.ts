@@ -48,13 +48,18 @@ const simulateTransactionProcess = async (
     throw new E.UNEXPECTED_ERROR(input, e as Error);
   }
 };
+const PROCESS_NAME = "SimulateTransaction" as const;
 
-const SimulateTransaction = ProcessEngine.create<
-  SimulateTransactionInput,
-  SimulateTransactionOutput,
-  E.SimulateTransactionError
->(simulateTransactionProcess, {
-  name: "SimulateTransaction",
-});
+const P_SimulateTransaction = () =>
+  ProcessEngine.create<
+    SimulateTransactionInput,
+    SimulateTransactionOutput,
+    E.SimulateTransactionError,
+    typeof PROCESS_NAME
+  >(simulateTransactionProcess, {
+    name: PROCESS_NAME,
+  });
 
-export { SimulateTransaction };
+const P_SimulateTransactionErrors = E;
+
+export { P_SimulateTransaction, P_SimulateTransactionErrors };
