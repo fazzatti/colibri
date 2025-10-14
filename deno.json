@@ -17,6 +17,7 @@
     "test": "deno test -A --parallel --clean --coverage=coverage && deno coverage coverage && deno task coverage:report",
     "test:unit": "deno test -A --parallel --clean --ignore='**/*.integration.test.ts' --coverage=coverage && deno coverage coverage && deno task coverage:report",
     "test:integration": "deno test -A --parallel --clean --ignore='**/*.unit.test.ts' --coverage=coverage && deno coverage coverage && deno task coverage:report",
+    "test:file": "deno test -A --parallel --clean --ignore='**/*.unit.test.ts'",
     "coverage:report": "deno coverage --html"
   },
   "lint": {
