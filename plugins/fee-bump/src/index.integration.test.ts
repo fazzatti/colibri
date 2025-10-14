@@ -115,7 +115,7 @@ describe(
       });
     });
     describe("Execute", () => {
-      it("should wrap and run a successfull fee bump transaction", async () => {
+      it("should wrap and run a successful fee bump transaction", async () => {
         const plugin = PLG_FeeBump.create({
           networkConfig,
           feeBumpConfig: {
