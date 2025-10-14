@@ -1,4 +1,5 @@
 import { ColibriError, type Diagnostic } from "@colibri/core";
+import { Asset } from "stellar-sdk";
 
 export type Meta = {
   cause: Error | null;
@@ -46,6 +47,11 @@ export enum Code {
   MISSING_RPC_URL = "CONTR_002",
   INVALID_CONTRACT_CONFIG = "CONTR_003",
   FAILED_TO_UPLOAD_WASM = "CONTR_004",
+  MISSING_REQUIRED_PROPERTY = "CONTR_005",
+  PROPERTY_ALREADY_SET = "CONTR_006",
+  MISSING_SPEC_IN_WASM = "CONTR_007",
+  FAILED_TO_DEPLOY_CONTRACT = "CONTR_008",
+  FAILED_TO_WRAP_ASSET = "CONTR_009",
 }
 
 export class UNEXPECTED_ERROR extends ContractError<Code> {
@@ -111,10 +117,89 @@ export class FAILED_TO_UPLOAD_WASM extends ContractError<Code> {
   }
 }
 
+export class MISSING_REQUIRED_PROPERTY extends ContractError<Code> {
+  constructor(propertyName: string) {
+    super({
+      code: Code.MISSING_REQUIRED_PROPERTY,
+      message: `Missing required contract property: ${propertyName}`,
+      details: `The contract property '${propertyName}' is required but was not set.`,
+      diagnostic: {
+        suggestion: `Ensure that the contract is initialized and configured to include the required property.`,
+        rootCause: `The contract cannot execute the function called properly without the required property '${propertyName}'.`,
+      },
+      data: { propertyName },
+    });
+  }
+}
+
+export class MISSING_SPEC_IN_WASM extends ContractError<Code> {
+  constructor() {
+    super({
+      code: Code.MISSING_SPEC_IN_WASM,
+      message: `Missing spec in WASM`,
+      details: `The provided WASM does not contain a valid spec.`,
+      diagnostic: {
+        suggestion: `Ensure that the WASM file is correctly compiled and includes the necessary spec information.`,
+        rootCause: `The contract could not load a 'Spec' from the WASM binaries. These are included in the 'contractspecv0' section of the compiled file.`,
+      },
+      data: {},
+    });
+  }
+}
+
+export class FAILED_TO_DEPLOY_CONTRACT extends ContractError<Code> {
+  constructor(cause: Error) {
+    super({
+      code: Code.FAILED_TO_DEPLOY_CONTRACT,
+      message: `Failed to deploy contract to the network`,
+      details: `An error occurred while attempting to deploy the contract to the Stellar network. See the 'cause' for more details.`,
+      cause,
+      data: {},
+    });
+  }
+}
+
+export class PROPERTY_ALREADY_SET extends ContractError<Code> {
+  constructor(propertyName: string) {
+    super({
+      code: Code.PROPERTY_ALREADY_SET,
+      message: `Property already set: ${propertyName}`,
+      details: `The contract property '${propertyName}' has already been set and cannot be modified.`,
+      diagnostic: {
+        suggestion: `If you need to change the value of '${propertyName}', consider creating a new Contract instance.`,
+        rootCause: `To maintain the integrity and consistency of the contract, certain properties are immutable once set. The function called attempted to modify such a property.`,
+      },
+      data: { propertyName },
+    });
+  }
+}
+
+export class FAILED_TO_WRAP_ASSET extends ContractError<Code> {
+  constructor(asset: Asset, cause: Error) {
+    super({
+      code: Code.FAILED_TO_WRAP_ASSET,
+      message: `Failed to wrap asset`,
+      details: `An error occurred while attempting to wrap the asset. See the 'cause' for more details.`,
+      cause,
+      data: {
+        asset: {
+          code: asset.code,
+          issuer: asset.issuer,
+        },
+      },
+    });
+  }
+}
+
 export const ERROR_CONTR = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.MISSING_ARG]: MISSING_ARG,
   [Code.MISSING_RPC_URL]: MISSING_RPC_URL,
   [Code.INVALID_CONTRACT_CONFIG]: INVALID_CONTRACT_CONFIG,
   [Code.FAILED_TO_UPLOAD_WASM]: FAILED_TO_UPLOAD_WASM,
+  [Code.MISSING_REQUIRED_PROPERTY]: MISSING_REQUIRED_PROPERTY,
+  [Code.MISSING_SPEC_IN_WASM]: MISSING_SPEC_IN_WASM,
+  [Code.FAILED_TO_DEPLOY_CONTRACT]: FAILED_TO_DEPLOY_CONTRACT,
+  [Code.PROPERTY_ALREADY_SET]: PROPERTY_ALREADY_SET,
+  [Code.FAILED_TO_WRAP_ASSET]: FAILED_TO_WRAP_ASSET,
 };

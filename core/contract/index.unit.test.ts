@@ -1,5 +1,4 @@
 import {
-  assert,
   assertEquals,
   assertExists,
   assertInstanceOf,
@@ -7,12 +6,12 @@ import {
 } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Buffer } from "node:buffer";
-import type { Asset, Keypair, xdr } from "stellar-sdk";
 import { Contract } from "./index.ts";
-import { NetworkConfig, NetworkType } from "../network/index.ts";
-import { Server } from "stellar-sdk/rpc";
+import { type NetworkConfig, NetworkType } from "../network/index.ts";
+import type { Server } from "stellar-sdk/rpc";
 import * as E from "./error.ts";
-import { ContractConfig } from "./types.ts";
+import type { ContractConfig } from "./types.ts";
+import { Spec } from "stellar-sdk/contract";
 describe("Contract", () => {
   describe("construction", () => {
     it("instantiates a contract without rpc", () => {
@@ -101,6 +100,67 @@ describe("Contract", () => {
             },
           }),
         E.MISSING_RPC_URL
+      );
+    });
+
+    it("throws INVALID_CONTRACT_CONFIG if contractConfig doesn't match the required shape", () => {
+      assertThrows(
+        () =>
+          new Contract({
+            networkConfig: {
+              type: NetworkType.TESTNET,
+              networkPassphrase: "Test Network",
+              rpcUrl: "https://rpc.testnet.stellar.org",
+            },
+            contractConfig: {} as unknown as ContractConfig,
+          }),
+        E.INVALID_CONTRACT_CONFIG
+      );
+    });
+
+    it("throws MISSING_REQUIRED_PROPERTY if contract is missing required properties", () => {
+      const mockWasm = Buffer.from("mock");
+      const mockRpc = {} as unknown as Server;
+      const contractWithWasm = new Contract({
+        networkConfig: {
+          type: NetworkType.TESTNET,
+          networkPassphrase: "Test Network",
+        },
+        contractConfig: {
+          wasm: mockWasm,
+        },
+        rpc: mockRpc,
+      });
+
+      const contractWithWasmHash = new Contract({
+        networkConfig: {
+          type: NetworkType.TESTNET,
+          networkPassphrase: "Test Network",
+        },
+        contractConfig: {
+          wasmHash: "mockHash",
+        },
+        rpc: mockRpc,
+      });
+
+      assertThrows(
+        () => contractWithWasm.getWasmHash(),
+        E.MISSING_REQUIRED_PROPERTY
+      );
+
+      assertThrows(
+        () => contractWithWasm.getSpec(),
+        E.MISSING_REQUIRED_PROPERTY
+      );
+
+      assertThrows(
+        () => contractWithWasm.getContractId(),
+        E.MISSING_REQUIRED_PROPERTY
+      );
+
+      assertThrows(
+        () => contractWithWasmHash.getWasm(),
+        E.MISSING_REQUIRED_PROPERTY
       );
     });
   });
