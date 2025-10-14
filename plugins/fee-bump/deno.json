@@ -7,6 +7,6 @@
     "include": ["./**/*.ts", "./README.md", "./LICENSE", "./deno.json"]
   },
   "imports": {
-    "jsr:@colibri/core": "jsr:@colibri/core@^0.1.0"
+    "jsr:@colibri/core": "jsr:@colibri/core@^0.2.0"
   }
 }
