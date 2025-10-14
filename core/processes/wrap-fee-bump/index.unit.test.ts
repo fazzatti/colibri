@@ -175,7 +175,7 @@ describe("WrapFeeBump", () => {
       }
     });
 
-    it("throws FEE_TOO_LOW when the fee for the outter envelope is lower than the inner transaction fee", async () => {
+    it("throws FEE_TOO_LOW when the fee for the outer envelope is lower than the inner transaction fee", async () => {
       const transaction = assembleTransaction(alice, [
         Operation.setOptions({}),
       ]);
