@@ -9,3 +9,9 @@ export type TransactionConfig = {
 };
 
 export type BaseFee = `${number}`;
+
+export type FeeBumpConfig = {
+  fee: TransactionConfig["fee"];
+  source: TransactionConfig["source"];
+  signers: TransactionConfig["signers"];
+};

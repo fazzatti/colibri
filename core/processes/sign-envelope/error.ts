@@ -94,7 +94,7 @@ export class FAILED_TO_SIGN_TRANSACTION extends SignEnvelopeError {
 //   }
 // }
 
-export const ERROR_SEN = {
+export const ERROR_BY_CODE = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.NO_REQUIREMENTS]: NO_REQUIREMENTS,
   [Code.NO_SIGNERS]: NO_SIGNERS,

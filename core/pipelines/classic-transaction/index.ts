@@ -1,5 +1,5 @@
 import { Pipeline, PipelineConnectors } from "convee";
-import { BuildTransaction } from "../../processes/build-transaction/index.ts";
+import { P_BuildTransaction } from "../../processes/build-transaction/index.ts";
 import type {
   CreateClassicTransactionPipelineArgs,
   ClassicTransactionInput,
@@ -14,12 +14,14 @@ import {
   sendTransactionToPipeOutput,
   signEnvelopeToSendTransaction,
 } from "./connectors.ts";
-import { EnvelopeSigningRequirements } from "../../processes/index.ts";
+import { P_EnvelopeSigningRequirements } from "../../processes/index.ts";
 import { buildToEnvelopeSigningRequirements } from "../../transformers/pipeline-connectors/build-to-envelope-signing-req.ts";
-import { SignEnvelope } from "../../processes/sign-envelope/index.ts";
-import { SendTransaction } from "../../processes/send-transaction/index.ts";
+import { P_SignEnvelope } from "../../processes/sign-envelope/index.ts";
+import { P_SendTransaction } from "../../processes/send-transaction/index.ts";
 
 const { storeMetadata } = PipelineConnectors;
+
+const PIPELINE_NAME = "ClassicTransactionPipeline";
 
 const createClassicTransactionPipeline = ({
   networkConfig,
@@ -37,8 +39,12 @@ const createClassicTransactionPipeline = ({
     const rpc = new Server(networkConfig.rpcUrl!); // already asserted above
 
     const inputStep = inputToBuild(rpc, networkConfig.networkPassphrase);
-
     const connectSignEnvelopeToSend = signEnvelopeToSendTransaction(rpc);
+
+    const BuildTransaction = P_BuildTransaction();
+    const EnvelopeSigningRequirements = P_EnvelopeSigningRequirements();
+    const SignEnvelope = P_SignEnvelope();
+    const SendTransaction = P_SendTransaction();
 
     const pipelineSteps = [
       storeMetadata<ClassicTransactionInput>("pipeInput"),
@@ -55,7 +61,7 @@ const createClassicTransactionPipeline = ({
     ] as const;
 
     const pipe = Pipeline.create([...pipelineSteps], {
-      name: "ClassicTransactionPipeline",
+      name: PIPELINE_NAME,
     });
 
     return pipe;
@@ -68,3 +74,11 @@ const createClassicTransactionPipeline = ({
 };
 
 export { createClassicTransactionPipeline };
+
+const PIPE_ClassicTransaction = {
+  create: createClassicTransactionPipeline,
+  name: PIPELINE_NAME,
+  errors: E,
+};
+
+export { PIPE_ClassicTransaction };

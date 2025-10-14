@@ -169,10 +169,16 @@ const getAddressCredentialAuth = (
   });
 };
 
-const SignAuthEntries = ProcessEngine.create<
-  SignAuthEntriesInput,
-  SignAuthEntriesOutput,
-  E.SignAuthEntriesError
->(signAuthEntriesProcess, { name: "SignAuthEntries" });
+const PROCESS_NAME = "SignAuthEntries" as const;
 
-export { SignAuthEntries };
+const P_SignAuthEntries = () =>
+  ProcessEngine.create<
+    SignAuthEntriesInput,
+    SignAuthEntriesOutput,
+    E.SignAuthEntriesError,
+    typeof PROCESS_NAME
+  >(signAuthEntriesProcess, { name: PROCESS_NAME });
+
+const P_SignAuthEntriesErrors = E;
+
+export { P_SignAuthEntries, P_SignAuthEntriesErrors };

@@ -1,6 +1,6 @@
 import { Pipeline, PipelineConnectors } from "convee";
-import { BuildTransaction } from "../../processes/build-transaction/index.ts";
-import { SimulateTransaction } from "../../processes/simulate-transaction/index.ts";
+import { P_BuildTransaction } from "../../processes/build-transaction/index.ts";
+import { P_SimulateTransaction } from "../../processes/simulate-transaction/index.ts";
 import type {
   CreateInvokeContractPipelineArgs,
   InvokeContractInput,
@@ -12,7 +12,7 @@ import { ColibriError } from "../../error/index.ts";
 
 import { buildToSimulate } from "../../transformers/pipeline-connectors/build-to-simulate.ts";
 import { assertRequiredArgs } from "../../common/assert/assert-args.ts";
-import { AssembleTransaction } from "../../processes/assemble-transaction/index.ts";
+import { P_AssembleTransaction } from "../../processes/assemble-transaction/index.ts";
 import {
   envSignReqToSignEnvelope,
   inputToBuild,
@@ -20,13 +20,15 @@ import {
   signEnvelopeToSendTransaction,
   simulateToSignAuthEntries,
 } from "./connectors.ts";
-import { SignAuthEntries } from "../../processes/sign-auth-entries/index.ts";
-import { EnvelopeSigningRequirements } from "../../processes/index.ts";
+import { P_SignAuthEntries } from "../../processes/sign-auth-entries/index.ts";
+import { P_EnvelopeSigningRequirements } from "../../processes/index.ts";
 import { assembleToEnvelopeSigningRequirements } from "../../transformers/pipeline-connectors/assemble-to-envelope-signing-req.ts";
-import { SignEnvelope } from "../../processes/sign-envelope/index.ts";
-import { SendTransaction } from "../../processes/send-transaction/index.ts";
+import { P_SignEnvelope } from "../../processes/sign-envelope/index.ts";
+import { P_SendTransaction } from "../../processes/send-transaction/index.ts";
 
 const { storeMetadata } = PipelineConnectors;
+
+export const PIPELINE_NAME = "InvokeContractPipeline";
 
 const createInvokeContractPipeline = ({
   networkConfig,
@@ -52,6 +54,14 @@ const createInvokeContractPipeline = ({
     );
     const connectSignEnvelopeToSend = signEnvelopeToSendTransaction(rpc);
 
+    const BuildTransaction = P_BuildTransaction();
+    const SimulateTransaction = P_SimulateTransaction();
+    const SignAuthEntries = P_SignAuthEntries();
+    const AssembleTransaction = P_AssembleTransaction();
+    const EnvelopeSigningRequirements = P_EnvelopeSigningRequirements();
+    const SignEnvelope = P_SignEnvelope();
+    const SendTransaction = P_SendTransaction();
+
     const pipelineSteps = [
       storeMetadata<InvokeContractInput>("pipeInput"),
       inputStep,
@@ -74,7 +84,7 @@ const createInvokeContractPipeline = ({
     ] as const;
 
     const pipe = Pipeline.create([...pipelineSteps], {
-      name: "InvokeContractPipeline",
+      name: PIPELINE_NAME,
     });
 
     return pipe;
@@ -87,3 +97,11 @@ const createInvokeContractPipeline = ({
 };
 
 export { createInvokeContractPipeline };
+
+const PIPE_InvokeContract = {
+  create: createInvokeContractPipeline,
+  name: PIPELINE_NAME,
+  errors: E,
+};
+
+export { PIPE_InvokeContract };

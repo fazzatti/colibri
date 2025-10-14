@@ -2,7 +2,7 @@ import { assertRejects } from "@std/assert";
 
 import { describe, it } from "@std/testing/bdd";
 import { Account, Operation, type xdr } from "stellar-sdk";
-import { BuildTransaction } from "./index.ts";
+import { P_BuildTransaction } from "./index.ts";
 import { TestNet } from "../../network/index.ts";
 import type {
   BuildTransactionInput,
@@ -25,7 +25,7 @@ describe("BuildTransactionErrors", () => {
     const faultyInput = null as unknown as BuildTransactionInput;
 
     await assertRejects(
-      async () => await BuildTransaction.run(faultyInput),
+      async () => await P_BuildTransaction().run(faultyInput),
       E.UNEXPECTED_ERROR
     );
   });
@@ -41,7 +41,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await BuildTransaction.run(input),
+        async () => await P_BuildTransaction().run(input),
         E.INVALID_BASE_FEE_ERROR
       );
     });
@@ -56,7 +56,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await BuildTransaction.run(input),
+        async () => await P_BuildTransaction().run(input),
         E.BASE_FEE_TOO_LOW_ERROR
       );
     });
@@ -71,7 +71,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await BuildTransaction.run(input),
+        async () => await P_BuildTransaction().run(input),
         E.BASE_FEE_TOO_LOW_ERROR
       );
     });
@@ -94,7 +94,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await BuildTransaction.run(input),
+        async () => await P_BuildTransaction().run(input),
         E.COULD_NOT_LOAD_ACCOUNT_ERROR
       );
     });
@@ -109,7 +109,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await BuildTransaction.run(input),
+        async () => await P_BuildTransaction().run(input),
         E.COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE_ERROR
       );
     });
@@ -130,7 +130,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await BuildTransaction.run(input),
+        async () => await P_BuildTransaction().run(input),
         E.CONFLICTING_TIME_CONSTRAINTS_ERROR
       );
     });
@@ -146,7 +146,10 @@ describe("BuildTransactionErrors", () => {
         networkPassphrase: TestNet().networkPassphrase,
       };
 
-      await assertRejects(async () => await BuildTransaction.run(input), Error);
+      await assertRejects(
+        async () => await P_BuildTransaction().run(input),
+        Error
+      );
     });
   });
 
@@ -161,7 +164,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await BuildTransaction.run(input),
+        async () => await P_BuildTransaction().run(input),
         E.NO_OPERATIONS_PROVIDED_ERROR
       );
     });
@@ -184,7 +187,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await BuildTransaction.run(input),
+        async () => await P_BuildTransaction().run(input),
         E.COULD_NOT_CREATE_TRANSACTION_BUILDER_ERROR
       );
     });
@@ -202,7 +205,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await BuildTransaction.run(input),
+        async () => await P_BuildTransaction().run(input),
         E.COULD_NOT_BUILD_TRANSACTION_ERROR
       );
     });
@@ -222,7 +225,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await BuildTransaction.run(input),
+        async () => await P_BuildTransaction().run(input),
         E.FAILED_TO_SET_PRECONDITIONS_ERROR
       );
     });
@@ -241,7 +244,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await BuildTransaction.run(input),
+        async () => await P_BuildTransaction().run(input),
         E.COULD_NOT_SET_SOROBAN_DATA_ERROR
       );
     });

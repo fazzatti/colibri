@@ -10,7 +10,7 @@ import {
   TransactionBuilder,
 } from "stellar-sdk";
 
-import { SignEnvelope } from "./index.ts";
+import { P_SignEnvelope } from "./index.ts";
 import * as E from "./error.ts";
 import { TestNet } from "../../network/index.ts";
 import {
@@ -109,7 +109,7 @@ describe("SignEnvelope", () => {
 
   describe("Construction", () => {
     it("creates process with proper name", () => {
-      assertEquals(SignEnvelope.name, "SignEnvelope");
+      assertEquals(P_SignEnvelope().name, "SignEnvelope");
     });
   });
 
@@ -118,7 +118,7 @@ describe("SignEnvelope", () => {
       const tx = buildTx(KPS[1].publicKey());
       const signer = createSigner(KPS[0]);
 
-      const out = await SignEnvelope.run({
+      const out = await P_SignEnvelope().run({
         transaction: tx,
         signatureRequirements: [
           {
@@ -140,7 +140,7 @@ describe("SignEnvelope", () => {
       const signer1 = createSigner(KPS[1]);
       const signer2 = createSigner(KPS[2]);
 
-      const out = await SignEnvelope.run({
+      const out = await P_SignEnvelope().run({
         transaction: tx,
         signatureRequirements: [
           {
@@ -164,7 +164,7 @@ describe("SignEnvelope", () => {
       const signer1 = createSigner(KPS[1]);
       const signer2 = createSigner(KPS[2]);
 
-      const out = await SignEnvelope.run({
+      const out = await P_SignEnvelope().run({
         transaction: tx,
         signatureRequirements: [
           {
@@ -194,7 +194,7 @@ describe("SignEnvelope", () => {
       const tx = buildTx(KPS[0].publicKey());
       const signer = createSigner(KPS[0]);
 
-      const out = await SignEnvelope.run({
+      const out = await P_SignEnvelope().run({
         transaction: tx,
         signatureRequirements: [
           {
@@ -223,7 +223,7 @@ describe("SignEnvelope", () => {
       const feeBump = buildFeeBump(KPS[0].publicKey(), inner);
       const signer = createSigner(KPS[0]);
 
-      const out = await SignEnvelope.run({
+      const out = await P_SignEnvelope().run({
         transaction: feeBump,
         signatureRequirements: [
           {
@@ -248,7 +248,7 @@ describe("SignEnvelope", () => {
 
       await assertRejects(
         async () =>
-          await SignEnvelope.run({
+          await P_SignEnvelope().run({
             transaction: tx,
             signatureRequirements: [],
             signers: [signer],
@@ -262,7 +262,7 @@ describe("SignEnvelope", () => {
 
       await assertRejects(
         async () =>
-          await SignEnvelope.run({
+          await P_SignEnvelope().run({
             transaction: tx,
             signatureRequirements: [
               {
@@ -282,7 +282,7 @@ describe("SignEnvelope", () => {
 
       await assertRejects(
         async () =>
-          await SignEnvelope.run({
+          await P_SignEnvelope().run({
             transaction: tx,
             signatureRequirements: [
               {
@@ -302,7 +302,7 @@ describe("SignEnvelope", () => {
 
       await assertRejects(
         async () =>
-          await SignEnvelope.run({
+          await P_SignEnvelope().run({
             transaction: tx,
             signatureRequirements: [
               {
@@ -322,7 +322,7 @@ describe("SignEnvelope", () => {
 
       await assertRejects(
         async () =>
-          await SignEnvelope.run({
+          await P_SignEnvelope().run({
             transaction: tx,
             signatureRequirements: [
               {
@@ -337,12 +337,14 @@ describe("SignEnvelope", () => {
     });
 
     it("throws UNEXPECTED_ERROR on malformed input", async () => {
+      const SignEnvelope = P_SignEnvelope();
+
       const faultyInput = null as unknown as Parameters<
         typeof SignEnvelope.run
       >[0];
 
       await assertRejects(
-        async () => await SignEnvelope.run(faultyInput),
+        async () => await P_SignEnvelope().run(faultyInput),
         E.UNEXPECTED_ERROR
       );
     });

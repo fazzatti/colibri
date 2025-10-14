@@ -221,7 +221,7 @@ export class RPC_REQUIRED_TO_LOAD_ACCOUNT_ERROR extends BuildTransactionError {
   }
 }
 
-export const ERROR_BTX = {
+export const ERROR_BY_CODE = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.INVALID_BASE_FEE]: INVALID_BASE_FEE_ERROR,
   [Code.BASE_FEE_TOO_LOW]: BASE_FEE_TOO_LOW_ERROR,
