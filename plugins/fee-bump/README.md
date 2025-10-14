@@ -83,7 +83,7 @@ For concrete examples, refer to the unit and integration tests in `src/`.
   - `fee` (string, required) — Fee amount in stroops to set on the FeeBumpTransaction as base fee\* (e.g. `"10000000"` equals 1 XLM).
   - `signers` (array, optional) — Array of signer objects (e.g., `NativeAccount.signer()` or `LocalSigner`) used to authorize the fee bump transaction.
 
-_\*Since this value defines a base fee, the total amout set as max network fee will be this value multiplied by the number of operations in the inner envelope plus one(the fee bump wrap). So, for contract invocations for example this will be 2 times the value set as it only contains one operation plus the wrapper._
+_\*Since this value defines a base fee, the total amount set as max network fee will be this value multiplied by the number of operations in the inner envelope plus one(the fee bump wrap). So, for contract invocations for example this will be 2 times the value set as it only contains one operation plus the wrapper._
 
 `Example:`
 
