@@ -58,7 +58,7 @@ describe(
     });
 
     describe("Construction", () => {
-      it("should intialize the plugin", () => {
+      it("should initialize the plugin", () => {
         const plugin = PLG_FeeBump.create({
           networkConfig,
           feeBumpConfig: {
