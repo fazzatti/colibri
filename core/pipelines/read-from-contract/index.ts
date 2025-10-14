@@ -10,24 +10,27 @@ import { assertRequiredArgs } from "../../common/assert/assert-args.ts";
 import { simulateToRetval } from "../../transformers/pipeline-connectors/simulate-to-retval/index.ts";
 import * as E from "./error.ts";
 import { inputToBuild } from "./connectors.ts";
+import { assert } from "../../common/assert/assert.ts";
 
 export const PIPELINE_NAME = "ReadFromContractPipeline";
 
 const createReadFromContractPipeline = ({
   networkConfig,
+  rpc,
 }: CreateReadFromContractPipelineArgs) => {
   try {
     assertRequiredArgs(
       {
         networkConfig,
         networkPassphrase: networkConfig && networkConfig.networkPassphrase,
-        rpcUrl: networkConfig && networkConfig.rpcUrl,
       },
       (argName: string) => new E.MISSING_ARG(argName)
     );
 
-    const rpc = new Server(networkConfig.rpcUrl!); // already asserted above
-
+    if (!rpc) {
+      assert(networkConfig && networkConfig.rpcUrl, new E.MISSING_RPC_URL());
+      rpc = new Server(networkConfig.rpcUrl!);
+    }
     const BuildTransaction = P_BuildTransaction();
     const SimulateTransaction = P_SimulateTransaction();
 
@@ -61,3 +64,6 @@ const PIPE_ReadFromContract = {
 };
 
 export { PIPE_ReadFromContract };
+export type ReadFromContractPipeline = ReturnType<
+  typeof PIPE_ReadFromContract.create
+>;

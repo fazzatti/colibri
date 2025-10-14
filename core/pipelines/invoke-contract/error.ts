@@ -3,6 +3,8 @@ import { PipelineError } from "../error.ts";
 export enum Code {
   UNEXPECTED_ERROR = "PIPE_INVC_000",
   MISSING_ARG = "PIPE_INVC_001",
+
+  MISSING_RPC_URL = "PIPE_INVC_002",
 }
 
 export abstract class InvokeContractError extends PipelineError<Code> {
@@ -32,7 +34,25 @@ export class MISSING_ARG extends InvokeContractError {
   }
 }
 
+export class MISSING_RPC_URL extends InvokeContractError {
+  constructor() {
+    super({
+      code: Code.MISSING_RPC_URL,
+      message: "Missing RPC URL in network configuration",
+      details: `The argument 'rpcUrl' is required in the provided 'networkConfig'.`,
+      diagnostic: {
+        suggestion:
+          "Either provide a 'rpc' instance or a valid 'rpcUrl' in the 'networkConfig'.",
+        rootCause:
+          "The 'rpcUrl' is necessary for the Contract to communicate with the Stellar network. When no 'rpc' instance is provided, the Pipeline needs the 'rpcUrl' to create its own Server instance.",
+      },
+      cause: undefined,
+    });
+  }
+}
+
 export const ERROR_PIPE_INVC = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.MISSING_ARG]: MISSING_ARG,
+  [Code.MISSING_RPC_URL]: MISSING_RPC_URL,
 };
