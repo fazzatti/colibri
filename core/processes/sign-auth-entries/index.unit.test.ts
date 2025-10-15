@@ -212,7 +212,7 @@ describe("SignAuthEntries", () => {
       signers: [signer],
       rpc: makeRpc(),
       networkPassphrase,
-      includeUnsigned: true,
+      removeUnsigned: false,
     });
 
     assertEquals(out.length, 2);
@@ -230,7 +230,7 @@ describe("SignAuthEntries", () => {
       signers: [signer],
       rpc: makeRpc(),
       networkPassphrase,
-      includeUnsigned: false,
+      removeUnsigned: true,
     });
 
     assertEquals(out.length, 1);
@@ -248,7 +248,7 @@ describe("SignAuthEntries", () => {
       signers: [signer],
       rpc: makeRpc(),
       networkPassphrase,
-      includeUnsigned: true,
+      removeUnsigned: false,
     });
 
     assertEquals(out.length, 2);
@@ -281,7 +281,7 @@ describe("SignAuthEntries", () => {
       signers: [signer],
       rpc: makeRpc(),
       networkPassphrase,
-      includeUnsigned: true,
+      removeUnsigned: false,
     });
 
     assertEquals(out.length, 3);
@@ -314,7 +314,7 @@ describe("SignAuthEntries", () => {
       signers: [signer],
       rpc: makeRpc(),
       networkPassphrase,
-      includeUnsigned: false,
+      removeUnsigned: true,
     });
 
     assertEquals(out.length, 0);

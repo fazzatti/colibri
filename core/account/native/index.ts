@@ -7,12 +7,9 @@ import type { Ed25519PublicKey, MuxedAddress } from "../../strkeys/types.ts";
 
 import * as E from "./error.ts";
 import type { TransactionSigner } from "../../signer/types.ts";
-import type {
-  WithSigner,
-  NativeAccount as BaseNativeAccount,
-} from "./types.ts";
+import type { WithSigner, NativeAccountType } from "./types.ts";
 
-export class NativeAccount implements BaseNativeAccount {
+export class NativeAccount implements NativeAccountType {
   protected _address: Ed25519PublicKey;
   protected _masterSigner?: TransactionSigner;
 
@@ -26,7 +23,7 @@ export class NativeAccount implements BaseNativeAccount {
   }
 
   static fromAddress(address: Ed25519PublicKey) {
-    return new NativeAccount(address) as WithoutSigner<BaseNativeAccount>;
+    return new NativeAccount(address) as WithoutSigner<NativeAccountType>;
   }
 
   // ----------------

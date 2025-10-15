@@ -8,7 +8,7 @@ export type SignAuthEntriesInput = {
   rpc: Server;
   networkPassphrase: string;
   validity?: LedgerValidity; // optional validity to add to the signature, defaults to 120 ledgers(~10 min)
-  includeUnsigned?: boolean; // optional flag to include unsigned entries in the auth array, defaults to false
+  removeUnsigned?: boolean; // optional flag to remove unsigned entries in the auth array, defaults to false
 };
 
 export type LedgerValidity =
