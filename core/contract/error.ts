@@ -29,7 +29,7 @@ export abstract class ContractError<Code extends string> extends ColibriError<
     };
 
     super({
-      domain: "plugins" as const,
+      domain: "contract" as const,
       source: "@colibri/contract",
       code: args.code,
       message: args.message,

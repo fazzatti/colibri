@@ -1,5 +1,6 @@
 export type ErrorDomain =
   | "account"
+  | "contract"
   | "transformers"
   | "tools"
   | "processes"
@@ -9,8 +10,7 @@ export type ErrorDomain =
   | "accounts"
   | "pipelines"
   | "plugins"
-  | "rpc"
-  | "contracts";
+  | "rpc";
 
 export type BaseMeta = {
   cause?: unknown; // chained errors
