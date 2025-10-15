@@ -111,7 +111,7 @@ export const paramsToAuthEntry = (
         signatureExpirationLedger: credParams.signatureExpirationLedger,
         signature: !credParams.signature
           ? xdr.ScVal.scvVoid()
-          : xdr.ScVal.fromXDR(credParams.signature!, "base64"),
+          : xdr.ScVal.fromXDR(credParams.signature, "base64"),
       })
     ),
   });
