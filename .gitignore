@@ -10,3 +10,5 @@ coverage.lcov
 target/
 
 **/.bindings/
+
+**/test_snapshots/

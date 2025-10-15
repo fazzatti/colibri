@@ -1,11 +1,15 @@
 [workspace]
 resolver = "2"
 members = [
-  "_internal/contracts/*",
+  "_internal/contracts/*"
 ]
 
 [workspace.dependencies]
-soroban-sdk = "=23.0.2"
+soroban-sdk = "22.0.8"
+stellar-tokens = "=0.4.1"
+stellar-access = "=0.4.1"
+stellar-contract-utils = "=0.4.1"
+stellar-macros = "=0.4.1"
 
 [profile.release]
 opt-level = "z"
