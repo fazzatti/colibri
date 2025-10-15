@@ -40,6 +40,7 @@ export const TYPES_HARNESS_SPEC = new Spec([
 ]);
 
 export enum TYPES_HARNESS_METHOD {
+  VOID = "void",
   BOOL = "bool",
   U32 = "u32",
   I32 = "i32",
