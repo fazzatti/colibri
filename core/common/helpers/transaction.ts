@@ -1,6 +1,6 @@
 import { FeeBumpTransaction, Transaction, type xdr } from "stellar-sdk";
 import { ColibriError } from "../../error/index.ts";
-import { softTryToXDR } from "./xdr.ts";
+import { softTryToXDR } from "./xdr/general.ts";
 
 enum ErrorCode {
   FAILED_TO_GET_TRANSACTION_TIMEOUT = "HLP_TX_01",
