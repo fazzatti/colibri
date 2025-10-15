@@ -1,7 +1,7 @@
 import type { Buffer } from "node:buffer";
 import type { Api } from "stellar-sdk/rpc";
 import { ColibriError } from "../../error/index.ts";
-import { softTryToXDR } from "./xdr.ts";
+import { softTryToXDR } from "./xdr/general.ts";
 import { Address, type xdr } from "stellar-sdk";
 import type { ContractId } from "../../strkeys/types.ts";
 import { assert } from "../index.ts";

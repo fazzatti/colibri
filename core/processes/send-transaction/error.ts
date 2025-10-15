@@ -6,7 +6,7 @@ import {
   parseErrorResult,
   parseEvents,
   softTryToXDR,
-} from "../../common/helpers/xdr.ts";
+} from "../../common/helpers/xdr/general.ts";
 import type { xdr } from "stellar-sdk";
 
 export enum Code {

@@ -13,7 +13,7 @@ import type { Api, Server } from "stellar-sdk/rpc";
 import {
   getAddressSignerFromAuthEntry,
   getAddressTypeFromAuthEntry,
-} from "../../common/helpers/xdr.ts";
+} from "../../common/helpers/xdr/general.ts";
 
 import { ResultOrError } from "../../common/deferred/result-or-error.ts";
 import type { TransactionSigner } from "../../signer/types.ts";

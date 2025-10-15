@@ -1,9 +1,9 @@
 import { Address, humanizeEvents, type xdr } from "stellar-sdk";
-import { ColibriError } from "../../error/index.ts";
+import { ColibriError } from "../../../error/index.ts";
 
-import { assert } from "../assert/assert.ts";
-import type { Ed25519PublicKey } from "../../strkeys/types.ts";
-import { StrKey } from "../../strkeys/index.ts";
+import { assert } from "../../assert/assert.ts";
+import type { Ed25519PublicKey } from "../../../strkeys/types.ts";
+import { StrKey } from "../../../strkeys/index.ts";
 
 enum ErrorCode {
   FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE = "HLP_XDR_01",
