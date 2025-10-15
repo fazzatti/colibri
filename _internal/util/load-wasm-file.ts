@@ -1,5 +1,5 @@
-import { Buffer } from "buffer";
 import { readFile } from "node:fs/promises";
+import type { Buffer } from "buffer";
 
 export const loadWasmFile = async (wasmFilePath: string): Promise<Buffer> => {
   try {
