@@ -1,5 +1,5 @@
 import { Spec } from "stellar-sdk/contract";
-import { Api, Server } from "stellar-sdk/rpc";
+import { type Api, Server } from "stellar-sdk/rpc";
 import { Contract as StellarContract } from "stellar-sdk";
 import type { ContractConfig, ContractConstructorArgs } from "./types.ts";
 import { Buffer } from "node:buffer";
@@ -33,7 +33,6 @@ import { processSpecEntryStream } from "../common/helpers/wasm.ts";
 import { generateRandomSalt } from "../common/helpers/generate-random-salt.ts";
 import { SIMULATION_FAILED } from "../processes/simulate-transaction/error.ts";
 import { getStellarAssetContractIdFromFailedSimulationResponse } from "../common/helpers/failed-simulation-response.ts";
-import { ReadFromContractOutput } from "../pipelines/read-from-contract/types.ts";
 export class Contract {
   private rpc: Server;
   private networkConfig: NetworkConfig;

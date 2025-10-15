@@ -1,5 +1,5 @@
 import { ColibriError, type Diagnostic } from "@colibri/core";
-import { Asset } from "stellar-sdk";
+import type { Asset } from "stellar-sdk";
 
 export type Meta = {
   cause: Error | null;

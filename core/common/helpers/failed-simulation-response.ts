@@ -1,6 +1,6 @@
-import { Api } from "stellar-sdk/rpc";
-import { ContractId } from "../../strkeys/types.ts";
-import { Address, xdr } from "stellar-sdk";
+import type { Api } from "stellar-sdk/rpc";
+import type { ContractId } from "../../strkeys/types.ts";
+import { Address, type xdr } from "stellar-sdk";
 import { ColibriError } from "../../error/index.ts";
 
 enum ErrorCode {
