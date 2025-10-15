@@ -52,6 +52,8 @@ export enum Code {
   MISSING_SPEC_IN_WASM = "CONTR_007",
   FAILED_TO_DEPLOY_CONTRACT = "CONTR_008",
   FAILED_TO_WRAP_ASSET = "CONTR_009",
+  CONTRACT_INSTANCE_NOT_FOUND = "CONTR_010",
+  CONTRACT_CODE_NOT_FOUND = "CONTR_011",
 }
 
 export class UNEXPECTED_ERROR extends ContractError<Code> {
@@ -191,6 +193,36 @@ export class FAILED_TO_WRAP_ASSET extends ContractError<Code> {
   }
 }
 
+export class CONTRACT_INSTANCE_NOT_FOUND extends ContractError<Code> {
+  constructor(contractId: string) {
+    super({
+      code: Code.CONTRACT_INSTANCE_NOT_FOUND,
+      message: `Contract instance not found: ${contractId}`,
+      details: `The contract instance with ID '${contractId}' was not found on the Stellar network.`,
+      diagnostic: {
+        suggestion: `Verify that the contract ID is correct and that the contract has been deployed to the network.`,
+        rootCause: `The contract ID provided does not correspond to any existing contract instance on the network. This could be due to a typo in the ID or because the contract has not been deployed yet.`,
+      },
+      data: { contractId },
+    });
+  }
+}
+
+export class CONTRACT_CODE_NOT_FOUND extends ContractError<Code> {
+  constructor(wasmHash: string) {
+    super({
+      code: Code.CONTRACT_CODE_NOT_FOUND,
+      message: `Contract code not found for WASM hash: ${wasmHash}`,
+      details: `No contract code was found on the Stellar network for the provided WASM hash '${wasmHash}'.`,
+      diagnostic: {
+        suggestion: `Ensure that the WASM hash is correct and that the corresponding contract code has been uploaded to the network.`,
+        rootCause: `The WASM hash provided does not match any contract code stored on the network. This could be due to an incorrect hash or because the contract code has not been uploaded yet.`,
+      },
+      data: { wasmHash },
+    });
+  }
+}
+
 export const ERROR_CONTR = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.MISSING_ARG]: MISSING_ARG,
@@ -202,4 +234,6 @@ export const ERROR_CONTR = {
   [Code.FAILED_TO_DEPLOY_CONTRACT]: FAILED_TO_DEPLOY_CONTRACT,
   [Code.PROPERTY_ALREADY_SET]: PROPERTY_ALREADY_SET,
   [Code.FAILED_TO_WRAP_ASSET]: FAILED_TO_WRAP_ASSET,
+  [Code.CONTRACT_INSTANCE_NOT_FOUND]: CONTRACT_INSTANCE_NOT_FOUND,
+  [Code.CONTRACT_CODE_NOT_FOUND]: CONTRACT_CODE_NOT_FOUND,
 };
