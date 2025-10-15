@@ -165,7 +165,7 @@ export class Contract {
   //
   //
 
-  public getContractId(): string {
+  public getContractId(): ContractId {
     return this.require("contractId");
   }
 
