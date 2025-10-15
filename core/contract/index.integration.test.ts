@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertExists, assertRejects } from "@std/assert";
 import { beforeAll, describe, it } from "@std/testing/bdd";
 import { Buffer } from "node:buffer";
-import { Asset, nativeToScVal } from "stellar-sdk";
+import { Asset, nativeToScVal, xdr } from "stellar-sdk";
 import { Contract } from "./index.ts";
 import { TestNet } from "../network/index.ts";
 import { NativeAccount } from "../account/native/index.ts";
@@ -13,16 +13,25 @@ import {
   SEP41_SPEC,
   SEP41_METHOD,
 } from "colibri-internal/tests/specs/sep41.ts";
+import { FT_SPEC } from "colibri-internal/tests/specs/fungible-token.ts";
 import {
   TYPES_HARNESS_SPEC,
   TYPES_HARNESS_METHOD,
 } from "colibri-internal/tests/specs/types-harness.ts";
 import { StrKey } from "../strkeys/index.ts";
 import * as E from "./error.ts";
+import type { TransactionConfig } from "../common/types/transaction-config/types.ts";
 describe("[Testnet] Contract", disableSanitizeConfig, () => {
   const networkConfig = TestNet();
 
   const admin = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
+
+  const config: TransactionConfig = {
+    fee: "10000000", // 1 XLM
+    timeout: 30,
+    source: admin.address(),
+    signers: [admin.signer()],
+  };
 
   beforeAll(async () => {
     await initializeWithFriendbot(networkConfig.friendbotUrl, admin.address());
@@ -30,14 +39,19 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
 
   describe("Core features and initialization", () => {
     let wasm: Buffer;
+    let wasmFt: Buffer;
     let wasmHash: string;
-    let contractId: string;
-    let assetContractId: string;
+    let typesHarnessContractId: string;
+    let xlmWrappedContractId: string;
     const xlm = Asset.native();
 
     beforeAll(async () => {
       wasm = await loadWasmFile(
         "./_internal/tests/compiled-contracts/types_harness.wasm"
+      );
+
+      wasmFt = await loadWasmFile(
+        "./_internal/tests/compiled-contracts/fungible_token_contract.wasm"
       );
     });
     it("Initializes with WASM and upload binaries", async () => {
@@ -48,12 +62,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
         },
       });
 
-      await contract.uploadWasm({
-        fee: "10000000", // 1 XLM
-        timeout: 30,
-        source: admin.address(),
-        signers: [admin.signer()],
-      });
+      await contract.uploadWasm(config);
       assertExists(contract);
       assertExists(contract.getWasmHash());
 
@@ -69,25 +78,49 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       });
 
       await contract.deploy({
-        config: {
-          fee: "10000000", // 1 XLM
-          timeout: 30,
-          source: admin.address(),
-          signers: [admin.signer()],
-        },
+        config: config,
       });
       assertExists(contract);
       assertExists(contract.getContractId());
       assert(StrKey.isContractId(contract.getContractId()));
 
-      contractId = contract.getContractId() as string;
+      typesHarnessContractId = contract.getContractId() as string;
+    });
+
+    it("Deploys a contract with constructor args", async () => {
+      const contract = Contract.create({
+        networkConfig,
+        contractConfig: {
+          wasm: wasmFt,
+          spec: FT_SPEC,
+        },
+      });
+
+      await contract.uploadWasm(config);
+
+      await contract
+        .deploy({
+          config: config,
+          constructorArgs: {
+            recipient: admin.address(),
+            owner: admin.address(),
+          },
+        })
+        .catch((e) => {
+          console.error("Deployment failed:", e);
+          throw e;
+        });
+
+      assertExists(contract);
+      assertExists(contract.getContractId());
+      assert(StrKey.isContractId(contract.getContractId()));
     });
 
     it("Initializes with contract Id and reads from the contract functions", async () => {
       const contract = Contract.create({
         networkConfig,
         contractConfig: {
-          contractId: contractId,
+          contractId: typesHarnessContractId,
           spec: TYPES_HARNESS_SPEC,
         },
       });
@@ -109,7 +142,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       const contract = Contract.create({
         networkConfig,
         contractConfig: {
-          contractId: contractId,
+          contractId: typesHarnessContractId,
           spec: TYPES_HARNESS_SPEC,
         },
       });
@@ -122,12 +155,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
         methodArgs: {
           v: "test",
         },
-        config: {
-          fee: "10000000", // 1 XLM
-          timeout: 30,
-          source: admin.address(),
-          signers: [admin.signer()],
-        },
+        config: config,
       });
 
       assertExists(result);
@@ -136,6 +164,32 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       assertEquals(
         result.returnValue?.toXDR("base64"),
         nativeToScVal("test", { type: "string" }).toXDR("base64")
+      );
+    });
+
+    it("Initializes with  contract Id and invokes functions from the contract without args", async () => {
+      const contract = Contract.create({
+        networkConfig,
+        contractConfig: {
+          contractId: typesHarnessContractId,
+          spec: TYPES_HARNESS_SPEC,
+        },
+      });
+
+      assertExists(contract);
+      assertExists(contract.getContractId());
+
+      const result = await contract.invoke({
+        method: TYPES_HARNESS_METHOD.VOID,
+        config: config,
+      });
+
+      assertExists(result);
+      assertExists(result.hash);
+      assertExists(result.response);
+      assertEquals(
+        result.returnValue?.toXDR("base64"),
+        xdr.ScVal.scvVoid().toXDR("base64")
       );
     });
 
@@ -159,7 +213,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       const contract = Contract.create({
         networkConfig,
         contractConfig: {
-          contractId: contractId,
+          contractId: typesHarnessContractId,
         },
       });
 
@@ -182,16 +236,11 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       assertExists(contract.getSpec());
     });
 
-    it("Initializes wrapping an asset", async () => {
+    it("Initializes wrapping an existing asset (XLM)", async () => {
       const contract = await Contract.wrapAssetAndInitialize({
         networkConfig,
         asset: xlm,
-        config: {
-          fee: "10000000", // 1 XLM
-          timeout: 30,
-          source: admin.address(),
-          signers: [admin.signer()],
-        },
+        config: config,
       });
 
       assertExists(contract);
@@ -201,14 +250,34 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
         contract.getContractId(),
         xlm.contractId(networkConfig.networkPassphrase)
       );
-      assetContractId = contract.getContractId() as string;
+      xlmWrappedContractId = contract.getContractId() as string;
+    });
+
+    it("Initializes wrapping a fresh new asset", async () => {
+      const issuer = NativeAccount.fromMasterSigner(
+        LocalSigner.generateRandom()
+      );
+      const testAsset = new Asset("COLIBRITEST", issuer.address() as string);
+      const contract = await Contract.wrapAssetAndInitialize({
+        networkConfig,
+        asset: testAsset,
+        config: config,
+      });
+
+      assertExists(contract);
+      assertExists(contract.getContractId());
+      assert(StrKey.isContractId(contract.getContractId() as string));
+      assertEquals(
+        contract.getContractId(),
+        testAsset.contractId(networkConfig.networkPassphrase)
+      );
     });
 
     it("Initializes with SAC contract Id and reads from the contract functions", async () => {
       const contract = Contract.create({
         networkConfig,
         contractConfig: {
-          contractId: assetContractId,
+          contractId: xlmWrappedContractId,
           spec: SEP41_SPEC,
         },
       });
@@ -229,7 +298,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       const contract = Contract.create({
         networkConfig,
         contractConfig: {
-          contractId: assetContractId,
+          contractId: xlmWrappedContractId,
           spec: SEP41_SPEC,
         },
       });
@@ -244,12 +313,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
           to: admin.address(),
           amount: 10000000, // 1 XLM
         },
-        config: {
-          fee: "10000000", // 1 XLM
-          timeout: 30,
-          source: admin.address(),
-          signers: [admin.signer()],
-        },
+        config: config,
       });
 
       assertExists(result);
@@ -259,7 +323,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
   });
 
   describe("Errors", () => {
-    it("throws FAILED_TO_UPLOAD_WASM for an invalid WASM buffer", () => {
+    it("throws FAILED_TO_UPLOAD_WASM for an invalid WASM buffer", async () => {
       const invalidWasm = Buffer.from("invalid wasm");
       const contract = Contract.create({
         networkConfig,
@@ -270,7 +334,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
 
       assertExists(contract);
 
-      assertRejects(
+      await assertRejects(
         async () =>
           await contract.uploadWasm({
             fee: "10000000", // 1 XLM
@@ -282,7 +346,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       );
     });
 
-    it("throws FAILED_TO_DEPLOY_CONTRACT for an invalid wasmhash buffer", () => {
+    it("throws FAILED_TO_DEPLOY_CONTRACT for an invalid wasmhash buffer", async () => {
       const invalidWasmHash = "invalidwasmhash";
       const contract = Contract.create({
         networkConfig,
@@ -293,7 +357,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
 
       assertExists(contract);
 
-      assertRejects(
+      await assertRejects(
         async () =>
           await contract.deploy({
             config: {
@@ -307,7 +371,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       );
     });
 
-    it("throws FAILED_TO_WRAP_ASSET for an invalid asset", () => {
+    it("throws FAILED_TO_WRAP_ASSET for an invalid asset", async () => {
       const contract = Contract.create({
         networkConfig,
         contractConfig: {
@@ -317,7 +381,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
 
       assertExists(contract);
 
-      assertRejects(
+      await assertRejects(
         async () =>
           await contract.wrapAndDeployClassicAsset({
             config: {

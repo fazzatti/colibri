@@ -484,7 +484,7 @@ export class Contract {
     config,
   }: {
     method: string;
-    methodArgs: object;
+    methodArgs?: object;
     config: TransactionConfig;
   }): Promise<InvokeContractOutput> {
     const contractId = this.getContractId();

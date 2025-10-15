@@ -57,17 +57,19 @@ export enum Code {
   CONTRACT_CODE_NOT_FOUND = "CONTR_011",
 }
 
-export class UNEXPECTED_ERROR extends ContractError<Code> {
-  constructor(cause: Error) {
-    super({
-      code: Code.UNEXPECTED_ERROR,
-      message: "An unexpected error occurred in the Contract module!",
-      details: "See the 'cause' for more details",
-      cause,
-      data: {},
-    });
-  }
-}
+// Currently unused, reserving
+//
+// export class UNEXPECTED_ERROR extends ContractError<Code> {
+//   constructor(cause: Error) {
+//     super({
+//       code: Code.UNEXPECTED_ERROR,
+//       message: "An unexpected error occurred in the Contract module!",
+//       details: "See the 'cause' for more details",
+//       cause,
+//       data: {},
+//     });
+//   }
+// }
 
 export class MISSING_ARG extends ContractError<Code> {
   constructor(argName: string) {
@@ -225,7 +227,7 @@ export class CONTRACT_CODE_NOT_FOUND extends ContractError<Code> {
 }
 
 export const ERROR_CONTR = {
-  [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
+  // [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.MISSING_ARG]: MISSING_ARG,
   [Code.MISSING_RPC_URL]: MISSING_RPC_URL,
   [Code.INVALID_CONTRACT_CONFIG]: INVALID_CONTRACT_CONFIG,
