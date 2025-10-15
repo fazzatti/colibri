@@ -8,3 +8,5 @@ coverage/
 coverage.lcov
 
 target/
+
+**/.bindings/
