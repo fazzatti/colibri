@@ -1,8 +1,9 @@
 import { Spec } from "stellar-sdk/contract";
+import { Api, Server } from "stellar-sdk/rpc";
+import { Contract as StellarContract } from "stellar-sdk";
 import type { ContractConfig, ContractConstructorArgs } from "./types.ts";
 import { Buffer } from "node:buffer";
 import type { NetworkConfig } from "../network/index.ts";
-import { Server } from "stellar-sdk/rpc";
 import {
   type InvokeContractPipeline,
   PIPE_InvokeContract,
@@ -34,7 +35,7 @@ import { SIMULATION_FAILED } from "../processes/simulate-transaction/error.ts";
 import { getStellarAssetContractIdFromFailedSimulationResponse } from "../common/helpers/failed-simulation-response.ts";
 import { ReadFromContractOutput } from "../pipelines/read-from-contract/types.ts";
 export class Contract {
-  private rpcHandler: Server;
+  private rpc: Server;
   private networkConfig: NetworkConfig;
   private readPipe: ReadFromContractPipeline;
   private invokePipe: InvokeContractPipeline;
@@ -64,7 +65,7 @@ export class Contract {
       rpc = new Server(networkConfig.rpcUrl);
     }
 
-    this.rpcHandler = rpc;
+    this.rpc = rpc;
     this.invokePipe = PIPE_InvokeContract.create({
       networkConfig,
       rpc,
@@ -155,6 +156,10 @@ export class Contract {
     this.requireNo("contractId");
   }
 
+  private requireNoSpec(): void {
+    this.requireNo("spec");
+  }
+
   //==========================================
   // Public Getter Methods
   //==========================================
@@ -175,6 +180,46 @@ export class Contract {
 
   public getWasmHash(): string {
     return this.require("wasmHash");
+  }
+
+  public getContractFootprint(): xdr.LedgerKey {
+    return new StellarContract(this.getContractId()).getFootprint();
+  }
+
+  public async getContractCodeLedgerEntry(): Promise<Api.LedgerEntryResult> {
+    const ledgerEntries = (await this.rpc.getLedgerEntries(
+      xdr.LedgerKey.contractCode(
+        new xdr.LedgerKeyContractCode({
+          hash: Buffer.from(this.getWasmHash(), "hex"),
+        })
+      )
+    )) as Api.GetLedgerEntriesResponse;
+
+    const contractCode = ledgerEntries.entries.find(
+      (entry) => entry.key.switch().name === "contractCode"
+    );
+
+    assert(contractCode, new E.CONTRACT_CODE_NOT_FOUND(this.getWasmHash()));
+
+    return contractCode as Api.LedgerEntryResult;
+  }
+
+  public async getContractInstanceLedgerEntry(): Promise<Api.LedgerEntryResult> {
+    const footprint = this.getContractFootprint();
+
+    const ledgerEntries = (await this.rpc.getLedgerEntries(
+      footprint
+    )) as Api.GetLedgerEntriesResponse;
+
+    const contractInstance = ledgerEntries.entries.find(
+      (entry) => entry.key.switch().name === "contractData"
+    );
+
+    assert(
+      contractInstance,
+      new E.CONTRACT_INSTANCE_NOT_FOUND(this.getContractId())
+    );
+    return contractInstance as Api.LedgerEntryResult;
   }
 
   //==========================================
@@ -330,6 +375,54 @@ export class Contract {
     const specEntryArray = processSpecEntryStream(bufferSection);
     const spec = new Spec(specEntryArray);
     this.spec = spec;
+  }
+
+  /**
+   *
+   * @param {void} args - No arguments.
+   *
+   * @returns {Promise<void>} - The output of the invocation.
+   *
+   * @description - Loads the contract specification from the wasm binaries deployed on-chain and stores it in the contract instance.
+   *
+   * @requires - The wasm hash or the contract id to be set in the contract instance.
+   */
+  public async loadSpecFromDeployedContract(): Promise<void> {
+    this.requireNoSpec();
+
+    if (!this.wasmHash) await this.loadWasmHashFromContractInstance();
+
+    const contractCodeEntry = await this.getContractCodeLedgerEntry();
+
+    const wasm = contractCodeEntry.val.contractCode().code();
+
+    this.wasm = wasm;
+
+    await this.loadSpecFromWasm();
+  }
+
+  /**
+   *
+   * @param {void} args - No arguments.
+   *
+   * @returns {Promise<void>} - The output of the invocation.
+   *
+   * @description - Loads the code wasm hash from the network and stores it in the contract instance.
+   *
+   * @requires - The the contract id to be set in the contract instance.
+   */
+  public async loadWasmHashFromContractInstance(): Promise<void> {
+    this.requireNo("wasmHash");
+    const contractInstanceEntry = await this.getContractInstanceLedgerEntry();
+
+    const wasmHash = contractInstanceEntry.val
+      .contractData()
+      .val()
+      .instance()
+      .executable()
+      .wasmHash();
+
+    this.wasmHash = wasmHash.toString("hex");
   }
 
   //==========================================

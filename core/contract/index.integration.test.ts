@@ -1,12 +1,7 @@
-import {
-  assert,
-  assertEquals,
-  assertExists,
-  assertInstanceOf,
-} from "@std/assert";
+import { assert, assertEquals, assertExists, assertRejects } from "@std/assert";
 import { beforeAll, describe, it } from "@std/testing/bdd";
 import type { Buffer } from "node:buffer";
-import { Asset } from "stellar-sdk";
+import { Asset, nativeToScVal } from "stellar-sdk";
 import { Contract } from "./index.ts";
 import { TestNet } from "../network/index.ts";
 import { NativeAccount } from "../account/native/index.ts";
@@ -14,7 +9,16 @@ import { LocalSigner } from "../signer/local/index.ts";
 import { initializeWithFriendbot } from "../tools/friendbot/initialize-with-friendbot.ts";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";
+import {
+  SEP41_SPEC,
+  SEP41_METHOD,
+} from "colibri-internal/tests/specs/sep41.ts";
+import {
+  TYPES_HARNESS_SPEC,
+  TYPES_HARNESS_METHOD,
+} from "colibri-internal/tests/specs/types-harness.ts";
 import { StrKey } from "../strkeys/index.ts";
+import * as E from "./error.ts";
 describe("[Testnet] Contract", disableSanitizeConfig, () => {
   const networkConfig = TestNet();
 
@@ -57,8 +61,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       wasmHash = contract.getWasmHash() as string;
     });
 
-    // failling for p24 update
-    it.skip("⚠️ Initializes with wasm hash and deploys new instance without constructor args", async () => {
+    it("Initializes with wasm hash and deploys new instance without constructor args", async () => {
       const contract = Contract.create({
         networkConfig,
         contractConfig: {
@@ -67,24 +70,118 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       });
 
       assert;
-      await contract
-        .deploy({
-          config: {
-            fee: "10000000", // 1 XLM
-            timeout: 30,
-            source: admin.address(),
-            signers: [admin.signer()],
-          },
-        })
-        .catch((error) => {
-          console.error(error);
-          throw error;
-        });
+      await contract.deploy({
+        config: {
+          fee: "10000000", // 1 XLM
+          timeout: 30,
+          source: admin.address(),
+          signers: [admin.signer()],
+        },
+      });
       assertExists(contract);
       assertExists(contract.getContractId());
       assert(StrKey.isContractId(contract.getContractId()));
 
       contractId = contract.getContractId() as string;
+    });
+
+    it("Initializes with contract Id and reads from the contract functions", async () => {
+      const contract = Contract.create({
+        networkConfig,
+        contractConfig: {
+          contractId: contractId,
+          spec: TYPES_HARNESS_SPEC,
+        },
+      });
+
+      assertExists(contract);
+      assertExists(contract.getContractId());
+
+      const boolValue = await contract.read({
+        method: TYPES_HARNESS_METHOD.BOOL,
+        methodArgs: { v: true },
+      });
+
+      assertExists(boolValue);
+      assert(typeof boolValue === "boolean");
+      assertEquals(boolValue, true);
+    });
+
+    it("Initializes with  contract Id and invokes functions from the contract", async () => {
+      const contract = Contract.create({
+        networkConfig,
+        contractConfig: {
+          contractId: contractId,
+          spec: TYPES_HARNESS_SPEC,
+        },
+      });
+
+      assertExists(contract);
+      assertExists(contract.getContractId());
+
+      const result = await contract.invoke({
+        method: TYPES_HARNESS_METHOD.STRING,
+        methodArgs: {
+          v: "test",
+        },
+        config: {
+          fee: "10000000", // 1 XLM
+          timeout: 30,
+          source: admin.address(),
+          signers: [admin.signer()],
+        },
+      });
+
+      assertExists(result);
+      assertExists(result.hash);
+      assertExists(result.response);
+      assertEquals(
+        result.returnValue?.toXDR("base64"),
+        nativeToScVal("test", { type: "string" }).toXDR("base64")
+      );
+    });
+
+    it("Initializes with  contract wasmhash and loads spec the deployed contract", async () => {
+      const contract = Contract.create({
+        networkConfig,
+        contractConfig: {
+          wasmHash: wasmHash,
+        },
+      });
+
+      assertExists(contract);
+      assertExists(contract.getWasmHash());
+
+      await contract.loadSpecFromDeployedContract();
+
+      assertExists(contract.getSpec());
+    });
+
+    it("Initializes with  contract id, loads the wasmhash and loads spec from the deployed contract, then interacts with it", async () => {
+      const contract = Contract.create({
+        networkConfig,
+        contractConfig: {
+          contractId: contractId,
+        },
+      });
+
+      assertExists(contract);
+      assertExists(contract.getContractId());
+
+      await assertRejects(
+        async () => await contract.getWasmHash(),
+        E.MISSING_REQUIRED_PROPERTY
+      );
+
+      await assertRejects(
+        async () => await contract.getSpec(),
+        E.MISSING_REQUIRED_PROPERTY
+      );
+
+      await contract.loadSpecFromDeployedContract();
+
+      assertExists(contract.getWasmHash());
+      assertExists(contract.getSpec());
     });
 
     it("Initializes wrapping an asset", async () => {
@@ -109,11 +206,12 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       assetContractId = contract.getContractId() as string;
     });
 
-    it("Initializes with contract Id and reads from the contract functions", async () => {
+    it("Initializes with SAC contract Id and reads from the contract functions", async () => {
       const contract = Contract.create({
         networkConfig,
         contractConfig: {
           contractId: assetContractId,
+          spec: SEP41_SPEC,
         },
       });
 
@@ -121,19 +219,20 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       assertExists(contract.getContractId());
 
       const decimals = await contract.read({
-        method: "decimals",
+        method: SEP41_METHOD.decimals,
       });
 
       assertExists(decimals);
-      assertInstanceOf(decimals, Number);
+      assert(Number.isInteger(decimals));
       assertEquals(decimals, 7);
     });
 
-    it("Initializes with contract Id and invokes functions from the contract", async () => {
+    it("Initializes with SAC  contract Id and invokes functions from the contract", async () => {
       const contract = Contract.create({
         networkConfig,
         contractConfig: {
           contractId: assetContractId,
+          spec: SEP41_SPEC,
         },
       });
 
@@ -141,7 +240,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       assertExists(contract.getContractId());
 
       const result = await contract.invoke({
-        method: "transfer",
+        method: SEP41_METHOD.transfer,
         methodArgs: {
           from: admin.address(),
           to: admin.address(),
