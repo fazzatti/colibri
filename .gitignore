@@ -6,3 +6,7 @@ node_modules/
 deno.lock
 coverage/
 coverage.lcov
+
+target/
+
+**/.bindings/

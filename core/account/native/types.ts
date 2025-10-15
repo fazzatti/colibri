@@ -4,7 +4,7 @@ import type { MultiSigSchema, TransactionSigner } from "../../signer/types.ts";
 
 export type MuxedId = `${number}`;
 
-export type NativeAccount = {
+export type NativeAccountType = {
   address(): Ed25519PublicKey;
   muxedAddress(id: MuxedId): MuxedAddress;
   getAccountLedgerKey(): xdr.LedgerKey;
@@ -12,7 +12,7 @@ export type NativeAccount = {
 };
 
 export type WithoutSigner<AccountType> = AccountType & {
-  withMasterSigner(signer: TransactionSigner): WithSigner<NativeAccount>;
+  withMasterSigner(signer: TransactionSigner): WithSigner<NativeAccountType>;
 };
 
 export type WithSigner<AccountType> = AccountType & {

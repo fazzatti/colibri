@@ -161,14 +161,14 @@ describe("createClassicTransactionPipeline", () => {
       );
     });
 
-    it("throws MISSING_ARG when rpcUrl is missing", () => {
+    it("throws MISSING_RPC_URL when rpc and rpcUrl are missing", () => {
       const networkConfig = {
         networkPassphrase: "Test SDF Network ; September 2015",
       } as NetworkConfig;
 
       assertThrows(
         () => createClassicTransactionPipeline({ networkConfig }),
-        E.MISSING_ARG
+        E.MISSING_RPC_URL
       );
     });
 

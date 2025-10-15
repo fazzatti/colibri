@@ -25,6 +25,7 @@ import { P_EnvelopeSigningRequirements } from "../../processes/index.ts";
 import { assembleToEnvelopeSigningRequirements } from "../../transformers/pipeline-connectors/assemble-to-envelope-signing-req.ts";
 import { P_SignEnvelope } from "../../processes/sign-envelope/index.ts";
 import { P_SendTransaction } from "../../processes/send-transaction/index.ts";
+import { assert } from "../../common/assert/assert.ts";
 
 const { storeMetadata } = PipelineConnectors;
 
@@ -32,18 +33,21 @@ export const PIPELINE_NAME = "InvokeContractPipeline";
 
 const createInvokeContractPipeline = ({
   networkConfig,
+  rpc,
 }: CreateInvokeContractPipelineArgs) => {
   try {
     assertRequiredArgs(
       {
         networkConfig,
         networkPassphrase: networkConfig && networkConfig.networkPassphrase,
-        rpcUrl: networkConfig && networkConfig.rpcUrl,
       },
       (argName: string) => new E.MISSING_ARG(argName)
     );
 
-    const rpc = new Server(networkConfig.rpcUrl!); // already asserted above
+    if (!rpc) {
+      assert(networkConfig && networkConfig.rpcUrl, new E.MISSING_RPC_URL());
+      rpc = new Server(networkConfig.rpcUrl!);
+    }
 
     const inputStep = inputToBuild(rpc, networkConfig.networkPassphrase);
     const connectBuildToSimulate = buildToSimulate(rpc);
@@ -105,3 +109,6 @@ const PIPE_InvokeContract = {
 };
 
 export { PIPE_InvokeContract };
+export type InvokeContractPipeline = ReturnType<
+  typeof PIPE_InvokeContract.create
+>;

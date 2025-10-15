@@ -22,7 +22,7 @@ const signAuthEntriesProcess = async (
   input: SignAuthEntriesInput
 ): Promise<SignAuthEntriesOutput> => {
   try {
-    const { auth, rpc, signers, networkPassphrase, validity, includeUnsigned } =
+    const { auth, rpc, signers, networkPassphrase, validity, removeUnsigned } =
       input;
 
     assertRequiredArgs(
@@ -34,7 +34,7 @@ const signAuthEntriesProcess = async (
       await getValidUntilLedgerSeq(validity, rpc)
     ).unwrap(input);
 
-    const sourceAccountEntries = includeUnsigned
+    const sourceAccountEntries = !removeUnsigned
       ? getSourceCredentialAuth(auth)
       : [];
 
@@ -47,22 +47,22 @@ const signAuthEntriesProcess = async (
 
       // Unsupported addresses are not signed
       if (addressType === "scAddressTypeContract") {
-        if (includeUnsigned) signedEntries.push(authEntry);
+        if (!removeUnsigned) signedEntries.push(authEntry);
         continue;
       }
 
       if (addressType === "scAddressTypeClaimableBalance") {
-        if (includeUnsigned) signedEntries.push(authEntry);
+        if (!removeUnsigned) signedEntries.push(authEntry);
         continue;
       }
 
       if (addressType === "scAddressTypeLiquidityPool") {
-        if (includeUnsigned) signedEntries.push(authEntry);
+        if (!removeUnsigned) signedEntries.push(authEntry);
         continue;
       }
 
       if (addressType === "scAddressTypeMuxedAccount") {
-        if (includeUnsigned) signedEntries.push(authEntry);
+        if (!removeUnsigned) signedEntries.push(authEntry);
         continue;
       }
 
