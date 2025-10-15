@@ -48,7 +48,6 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
         },
       });
 
-      assert;
       await contract.uploadWasm({
         fee: "10000000", // 1 XLM
         timeout: 30,
@@ -69,7 +68,6 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
         },
       });
 
-      assert;
       await contract.deploy({
         config: {
           fee: "10000000", // 1 XLM
