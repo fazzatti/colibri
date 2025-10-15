@@ -1,6 +1,6 @@
 import { assert, assertEquals, assertExists, assertRejects } from "@std/assert";
 import { beforeAll, describe, it } from "@std/testing/bdd";
-import type { Buffer } from "node:buffer";
+import { Buffer } from "node:buffer";
 import { Asset, nativeToScVal } from "stellar-sdk";
 import { Contract } from "./index.ts";
 import { TestNet } from "../network/index.ts";
@@ -28,7 +28,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
     await initializeWithFriendbot(networkConfig.friendbotUrl, admin.address());
   });
 
-  describe("Initialization", () => {
+  describe("Core features and initialization", () => {
     let wasm: Buffer;
     let wasmHash: string;
     let contractId: string;
@@ -255,6 +255,81 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       assertExists(result);
       assertExists(result.hash);
       assertExists(result.response);
+    });
+  });
+
+  describe("Errors", () => {
+    it("throws FAILED_TO_UPLOAD_WASM for an invalid WASM buffer", () => {
+      const invalidWasm = Buffer.from("invalid wasm");
+      const contract = Contract.create({
+        networkConfig,
+        contractConfig: {
+          wasm: invalidWasm,
+        },
+      });
+
+      assertExists(contract);
+
+      assertRejects(
+        async () =>
+          await contract.uploadWasm({
+            fee: "10000000", // 1 XLM
+            timeout: 30,
+            source: admin.address(),
+            signers: [admin.signer()],
+          }),
+        E.FAILED_TO_UPLOAD_WASM
+      );
+    });
+
+    it("throws FAILED_TO_DEPLOY_CONTRACT for an invalid wasmhash buffer", () => {
+      const invalidWasmHash = "invalidwasmhash";
+      const contract = Contract.create({
+        networkConfig,
+        contractConfig: {
+          wasmHash: invalidWasmHash,
+        },
+      });
+
+      assertExists(contract);
+
+      assertRejects(
+        async () =>
+          await contract.deploy({
+            config: {
+              fee: "10000000", // 1 XLM
+              timeout: 30,
+              source: admin.address(),
+              signers: [admin.signer()],
+            },
+          }),
+        E.FAILED_TO_DEPLOY_CONTRACT
+      );
+    });
+
+    it("throws FAILED_TO_WRAP_ASSET for an invalid asset", () => {
+      const contract = Contract.create({
+        networkConfig,
+        contractConfig: {
+          wasmHash: "mocked",
+        },
+      });
+
+      assertExists(contract);
+
+      assertRejects(
+        async () =>
+          await contract.wrapAndDeployClassicAsset({
+            config: {
+              fee: "10000000", // 1 XLM
+              timeout: 30,
+              source: admin.address(),
+              signers: [admin.signer()],
+            },
+            asset: {} as unknown as Asset,
+          }),
+        E.FAILED_TO_WRAP_ASSET
+      );
     });
   });
 });
