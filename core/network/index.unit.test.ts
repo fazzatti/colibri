@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Networks } from "stellar-sdk";
 import {
@@ -8,6 +8,9 @@ import {
   NetworkType,
   TestNet,
   type CustomNetworkPayload,
+  isFutureNet,
+  isMainNet,
+  isTestNet,
 } from "./index.ts";
 
 describe("Network", () => {
@@ -70,15 +73,42 @@ describe("Network", () => {
     });
 
     it("should return a custom network configuration with minimal fields", () => {
-      const payload: CustomNetworkPayload = {
+      const payloadWithHorizon: CustomNetworkPayload = {
         networkPassphrase: "Minimal Custom Network",
+        horizonUrl: "https://horizon.minimal.com",
       };
 
-      const customNet = CustomNet(payload);
+      const customNet = CustomNet(payloadWithHorizon);
       assertEquals(customNet, {
         type: NetworkType.CUSTOM,
         networkPassphrase: "Minimal Custom Network",
+        horizonUrl: "https://horizon.minimal.com",
       });
+
+      const payloadWithRpc: CustomNetworkPayload = {
+        networkPassphrase: "Minimal Custom Network",
+        rpcUrl: "https://rpc.minimal.com",
+      };
+
+      const customNetRpc = CustomNet(payloadWithRpc);
+      assertEquals(customNetRpc, {
+        type: NetworkType.CUSTOM,
+        networkPassphrase: "Minimal Custom Network",
+        rpcUrl: "https://rpc.minimal.com",
+      });
+    });
+
+    it("should respect explicitly provided type overrides", () => {
+      const customNet = CustomNet({
+        type: NetworkType.TESTNET,
+        networkPassphrase: "Override",
+        rpcUrl: "http://localhost:8000",
+        allowHttp: true,
+      });
+
+      assertEquals(customNet.type, NetworkType.TESTNET);
+      assertEquals(customNet.rpcUrl, "http://localhost:8000");
+      assertEquals(customNet.allowHttp, true);
     });
   });
 
@@ -88,6 +118,23 @@ describe("Network", () => {
       assertEquals(NetworkType.FUTURENET, "futurenet");
       assertEquals(NetworkType.MAINNET, "mainnet");
       assertEquals(NetworkType.CUSTOM, "custom");
+    });
+  });
+
+  describe("Type guard helpers", () => {
+    it("should identify TestNet configuration", () => {
+      assert(isTestNet(TestNet()));
+      assert(!isTestNet(MainNet()));
+    });
+
+    it("should identify FutureNet configuration", () => {
+      assert(isFutureNet(FutureNet()));
+      assert(!isFutureNet(TestNet()));
+    });
+
+    it("should identify MainNet configuration", () => {
+      assert(isMainNet(MainNet()));
+      assert(!isMainNet(FutureNet()));
     });
   });
 });

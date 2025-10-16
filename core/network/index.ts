@@ -9,13 +9,28 @@ export type NetworkConfig = {
   allowHttp?: boolean;
 };
 
+export type MainNetConfig = {
+  type: NetworkType.MAINNET;
+  networkPassphrase: Networks.PUBLIC;
+} & (RPCConfig | HorizonConfig);
+
 export type TestNetConfig = NetworkConfig & {
   type: NetworkType.TESTNET;
-  rpcUrl: string;
+  networkPassphrase: Networks.TESTNET;
   friendbotUrl: string;
-  horizonUrl: string;
-  allowHttp: false;
-};
+} & (RPCConfig | HorizonConfig);
+
+export type FutureNetConfig = NetworkConfig & {
+  type: NetworkType.FUTURENET;
+  networkPassphrase: Networks.FUTURENET;
+  friendbotUrl: string;
+} & (RPCConfig | HorizonConfig);
+
+export type CustomNetworkPayload = {
+  networkPassphrase: string;
+  type?: NetworkType;
+  friendbotUrl?: string;
+} & (RPCConfig | HorizonConfig);
 
 export enum NetworkType {
   TESTNET = "testnet",
@@ -35,7 +50,7 @@ export const TestNet = (): TestNetConfig => {
   };
 };
 
-export const FutureNet = (): NetworkConfig => {
+export const FutureNet = (): FutureNetConfig => {
   return {
     type: NetworkType.FUTURENET,
     networkPassphrase: Networks.FUTURENET,
@@ -46,7 +61,7 @@ export const FutureNet = (): NetworkConfig => {
   };
 };
 
-export const MainNet = (): NetworkConfig => {
+export const MainNet = (): MainNetConfig => {
   return {
     type: NetworkType.MAINNET,
     networkPassphrase: Networks.PUBLIC,
@@ -56,18 +71,31 @@ export const MainNet = (): NetworkConfig => {
   };
 };
 
-export type CustomNetworkPayload = {
-  networkPassphrase: string;
-  type?: NetworkType;
-  rpcUrl?: string;
-  horizonUrl?: string;
-  friendbotUrl?: string;
-  allowHttp?: boolean;
-};
-
 export const CustomNet = (payload: CustomNetworkPayload): NetworkConfig => {
   return {
     ...payload,
     type: payload.type || NetworkType.CUSTOM,
   };
 };
+
+type RPCConfig = {
+  rpcUrl: string;
+  allowHttp?: boolean;
+};
+
+type HorizonConfig = {
+  horizonUrl: string;
+  allowHttp?: boolean;
+};
+
+export const isTestNet = (config: NetworkConfig): config is TestNetConfig =>
+  config.type === NetworkType.TESTNET &&
+  config.networkPassphrase === Networks.TESTNET;
+
+export const isFutureNet = (config: NetworkConfig): config is FutureNetConfig =>
+  config.type === NetworkType.FUTURENET &&
+  config.networkPassphrase === Networks.FUTURENET;
+
+export const isMainNet = (config: NetworkConfig): config is MainNetConfig =>
+  config.type === NetworkType.MAINNET &&
+  config.networkPassphrase === Networks.PUBLIC;
