@@ -1,5 +1,11 @@
 import { Networks } from "stellar-sdk";
 
+export enum NetworkPassphrase {
+  MAINNET = Networks.PUBLIC,
+  TESTNET = Networks.TESTNET,
+  FUTURENET = Networks.FUTURENET,
+}
+
 export type NetworkConfig = {
   type: NetworkType;
   networkPassphrase: string;
@@ -11,18 +17,18 @@ export type NetworkConfig = {
 
 export type MainNetConfig = {
   type: NetworkType.MAINNET;
-  networkPassphrase: Networks.PUBLIC;
+  networkPassphrase: NetworkPassphrase.MAINNET;
 } & (RPCConfig | HorizonConfig);
 
 export type TestNetConfig = NetworkConfig & {
   type: NetworkType.TESTNET;
-  networkPassphrase: Networks.TESTNET;
+  networkPassphrase: NetworkPassphrase.TESTNET;
   friendbotUrl: string;
 } & (RPCConfig | HorizonConfig);
 
 export type FutureNetConfig = NetworkConfig & {
   type: NetworkType.FUTURENET;
-  networkPassphrase: Networks.FUTURENET;
+  networkPassphrase: NetworkPassphrase.FUTURENET;
   friendbotUrl: string;
 } & (RPCConfig | HorizonConfig);
 
@@ -42,7 +48,7 @@ export enum NetworkType {
 export const TestNet = (): TestNetConfig => {
   return {
     type: NetworkType.TESTNET,
-    networkPassphrase: Networks.TESTNET,
+    networkPassphrase: NetworkPassphrase.TESTNET,
     rpcUrl: "https://soroban-testnet.stellar.org:443",
     friendbotUrl: "https://friendbot.stellar.org",
     horizonUrl: "https://horizon-testnet.stellar.org",
@@ -53,7 +59,7 @@ export const TestNet = (): TestNetConfig => {
 export const FutureNet = (): FutureNetConfig => {
   return {
     type: NetworkType.FUTURENET,
-    networkPassphrase: Networks.FUTURENET,
+    networkPassphrase: NetworkPassphrase.FUTURENET,
     rpcUrl: "https://rpc-futurenet.stellar.org:443",
     friendbotUrl: "https://friendbot-futurenet.stellar.org",
     horizonUrl: "https://horizon-futurenet.stellar.org",
@@ -64,7 +70,7 @@ export const FutureNet = (): FutureNetConfig => {
 export const MainNet = (): MainNetConfig => {
   return {
     type: NetworkType.MAINNET,
-    networkPassphrase: Networks.PUBLIC,
+    networkPassphrase: NetworkPassphrase.MAINNET,
     rpcUrl: "",
     horizonUrl: "https://horizon.stellar.org",
     allowHttp: false,
@@ -90,12 +96,12 @@ type HorizonConfig = {
 
 export const isTestNet = (config: NetworkConfig): config is TestNetConfig =>
   config.type === NetworkType.TESTNET &&
-  config.networkPassphrase === Networks.TESTNET;
+  config.networkPassphrase === NetworkPassphrase.TESTNET;
 
 export const isFutureNet = (config: NetworkConfig): config is FutureNetConfig =>
   config.type === NetworkType.FUTURENET &&
-  config.networkPassphrase === Networks.FUTURENET;
+  config.networkPassphrase === NetworkPassphrase.FUTURENET;
 
 export const isMainNet = (config: NetworkConfig): config is MainNetConfig =>
   config.type === NetworkType.MAINNET &&
-  config.networkPassphrase === Networks.PUBLIC;
+  config.networkPassphrase === NetworkPassphrase.MAINNET;

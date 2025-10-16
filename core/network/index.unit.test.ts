@@ -1,12 +1,13 @@
 import { assert, assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Networks } from "stellar-sdk";
+
 import {
   CustomNet,
   FutureNet,
   MainNet,
   NetworkType,
   TestNet,
+  NetworkPassphrase,
   type CustomNetworkPayload,
   isFutureNet,
   isMainNet,
@@ -19,7 +20,7 @@ describe("Network", () => {
       const testNet = TestNet();
       assertEquals(testNet, {
         type: NetworkType.TESTNET,
-        networkPassphrase: Networks.TESTNET,
+        networkPassphrase: NetworkPassphrase.TESTNET,
         rpcUrl: "https://soroban-testnet.stellar.org:443",
         friendbotUrl: "https://friendbot.stellar.org",
         horizonUrl: "https://horizon-testnet.stellar.org",
@@ -31,7 +32,7 @@ describe("Network", () => {
       const futureNet = FutureNet();
       assertEquals(futureNet, {
         type: NetworkType.FUTURENET,
-        networkPassphrase: Networks.FUTURENET,
+        networkPassphrase: NetworkPassphrase.FUTURENET,
         rpcUrl: "https://rpc-futurenet.stellar.org:443",
         friendbotUrl: "https://friendbot-futurenet.stellar.org",
         horizonUrl: "https://horizon-futurenet.stellar.org",
@@ -43,7 +44,7 @@ describe("Network", () => {
       const mainNet = MainNet();
       assertEquals(mainNet, {
         type: NetworkType.MAINNET,
-        networkPassphrase: Networks.PUBLIC,
+        networkPassphrase: NetworkPassphrase.MAINNET,
         rpcUrl: "",
         horizonUrl: "https://horizon.stellar.org",
         allowHttp: false,
