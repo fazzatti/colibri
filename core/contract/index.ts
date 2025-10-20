@@ -504,4 +504,39 @@ export class Contract {
 
     return await this.invokePipe.run({ config, operations: [operation] });
   }
+
+  /**
+   *
+   * @param {object} operationArgs - The raw arguments for the operation.
+   * @param {string} operationArgs.function - The function name to invoke.
+   * @param {xdr.ScVal[]} operationArgs.args - The arguments for the function invocation as ScVal array.
+   * @param {xdr.SorobanAuthorizationEntry[]} [operationArgs.auth] - Optional authorization entries for the invocation.
+   * @param {TransactionConfig} config - The transaction configuration object to use in this transaction.
+   *
+   * @returns {Promise<unknown>} The output of the invocation.
+   *
+   * @description - Invokes a contract method that alters the state of the contract.
+   * This function requires signers. It builds a transaction, simulates it, signs it, submits it to the network, and extracts the output of the invocation from the processed transaction.
+   *
+   */
+  public async invokeRaw({
+    operationArgs,
+    config,
+  }: {
+    operationArgs: {
+      function: string;
+      args: xdr.ScVal[];
+      auth?: xdr.SorobanAuthorizationEntry[];
+    };
+    config: TransactionConfig;
+  }): Promise<InvokeContractOutput> {
+    const contractId = this.getContractId();
+
+    const operation = Operation.invokeContractFunction({
+      ...operationArgs,
+      contract: contractId,
+    });
+
+    return await this.invokePipe.run({ config, operations: [operation] });
+  }
 }
