@@ -82,17 +82,23 @@ const makeSigner = (
     passphrase: string
   ) => Promise<xdr.SorobanAuthorizationEntry>
 ): MockSigner => {
-  const sign: TransactionSigner["sign"] = async (
-    ..._args: Parameters<TransactionSigner["sign"]>
+  const sign: TransactionSigner["sign"] = (b: Buffer): Buffer => {
+    return b;
+  };
+  const signTransaction: TransactionSigner["signTransaction"] = async (
+    ..._args: Parameters<TransactionSigner["signTransaction"]>
   ) => {
     return await Promise.resolve(
-      undefined as unknown as Awaited<ReturnType<TransactionSigner["sign"]>>
+      undefined as unknown as Awaited<
+        ReturnType<TransactionSigner["signTransaction"]>
+      >
     );
   };
 
   const signer: MockSigner = {
     calls: 0,
     publicKey: () => publicKey as Ed25519PublicKey,
+    signTransaction,
     sign,
     async signSorobanAuthEntry(entry, validUntil, passphrase) {
       signer.calls++;

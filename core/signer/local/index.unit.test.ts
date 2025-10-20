@@ -89,7 +89,7 @@ describe("LocalSigner", () => {
         .setTimeout(30)
         .build();
 
-      const xdr = signer.sign(tx);
+      const xdr = signer.signTransaction(tx);
 
       assertExists(xdr);
       assert(typeof xdr === "string");
@@ -119,7 +119,7 @@ describe("LocalSigner", () => {
         .build();
 
       assertThrows(
-        () => signer.sign(tx),
+        () => signer.signTransaction(tx),
         Error,
         "Signer destroyed"
       );
@@ -213,7 +213,7 @@ describe("LocalSigner", () => {
         .setTimeout(30)
         .build();
 
-      assertThrows(() => signer.sign(tx));
+      assertThrows(() => signer.signTransaction(tx));
     });
 
     it("is idempotent", () => {
@@ -244,7 +244,7 @@ describe("LocalSigner", () => {
         .build();
 
       assertThrows(
-        () => signer.sign(tx),
+        () => signer.signTransaction(tx),
         Error,
         "Signer destroyed"
       );

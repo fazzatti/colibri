@@ -25,7 +25,7 @@ const signEnvelopeProcess = async (
 
       try {
         signedTransaction = TransactionBuilder.fromXDR(
-          await signer.sign(signedTransaction),
+          await signer.signTransaction(signedTransaction),
           passphrase
         ) as typeof transaction;
       } catch (error) {
