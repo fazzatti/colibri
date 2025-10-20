@@ -98,18 +98,13 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
 
       await contract.uploadWasm(config);
 
-      await contract
-        .deploy({
-          config: config,
-          constructorArgs: {
-            recipient: admin.address(),
-            owner: admin.address(),
-          },
-        })
-        .catch((e) => {
-          console.error("Deployment failed:", e);
-          throw e;
-        });
+      await contract.deploy({
+        config: config,
+        constructorArgs: {
+          recipient: admin.address(),
+          owner: admin.address(),
+        },
+      });
 
       assertExists(contract);
       assertExists(contract.getContractId());

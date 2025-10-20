@@ -38,9 +38,12 @@ const signAuthEntriesProcess = async (
       ? getSourceCredentialAuth(auth)
       : [];
 
-    const entriesToSign = getAddressCredentialAuth(auth);
+    const { signed: originalSigned, unsigned: originalUnsigned } =
+      separateSignedAndUnsignedAuthEntries(auth);
 
-    const signedEntries = [];
+    const signedEntries = [...originalSigned];
+
+    const entriesToSign = getAddressCredentialAuth(originalUnsigned);
 
     for (const authEntry of entriesToSign) {
       const addressType = getAddressTypeFromAuthEntry(authEntry);
@@ -167,6 +170,41 @@ const getAddressCredentialAuth = (
       xdr.SorobanCredentialsType.sorobanCredentialsAddress()
     );
   });
+};
+
+const separateSignedAndUnsignedAuthEntries = (
+  authEntries: xdr.SorobanAuthorizationEntry[]
+): {
+  signed: xdr.SorobanAuthorizationEntry[];
+  unsigned: xdr.SorobanAuthorizationEntry[];
+} => {
+  const signed: xdr.SorobanAuthorizationEntry[] = [];
+  const unsigned: xdr.SorobanAuthorizationEntry[] = [];
+
+  for (const entry of authEntries) {
+    const credentials = entry.credentials();
+
+    const isSourceAccount =
+      credentials.switch() ===
+      xdr.SorobanCredentialsType.sorobanCredentialsSourceAccount();
+
+    // An entry is considered unsigned if it's not a source account and its signature is empty
+    // A signature can be empty if it's either an empty vector or a void ScVal
+    const isSignatureEmpty =
+      !isSourceAccount &&
+      (credentials.address().signature().toXDR("base64") ===
+        xdr.ScVal.scvVec([]).toXDR("base64") ||
+        credentials.address().signature().toXDR("base64") ===
+          xdr.ScVal.scvVoid().toXDR("base64"));
+
+    if (isSourceAccount || isSignatureEmpty) {
+      unsigned.push(entry);
+    } else {
+      signed.push(entry);
+    }
+  }
+
+  return { signed, unsigned };
 };
 
 const PROCESS_NAME = "SignAuthEntries" as const;

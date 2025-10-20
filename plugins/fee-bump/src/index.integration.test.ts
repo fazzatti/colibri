@@ -154,16 +154,10 @@ describe(
           args: [],
         });
 
-        const res = await invokePipe
-          .run({
-            operations: [decimalsOp],
-            config: innerConfig,
-          })
-          .catch((error) => {
-            console.error("Error during pipeline execution:", error);
-            throw error;
-          });
-
+        const res = await invokePipe.run({
+          operations: [decimalsOp],
+          config: innerConfig,
+        });
         assertExists(res);
         assertExists(res.hash);
         assertExists(res.response);
