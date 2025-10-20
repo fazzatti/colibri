@@ -18,6 +18,7 @@ import {
   type TransactionSigner,
 } from "../../signer/types.ts";
 import type { Ed25519PublicKey } from "../../strkeys/types.ts";
+import type { Buffer } from "buffer";
 
 describe("SignEnvelope", () => {
   const { networkPassphrase } = TestNet();
@@ -70,7 +71,13 @@ describe("SignEnvelope", () => {
       async signSorobanAuthEntry(e, _vu, _np) {
         return e;
       },
-      async sign(tx: Transaction | FeeBumpTransaction): Promise<string> {
+      sign(b: Buffer): Buffer {
+        this.calls++;
+        return b;
+      },
+      async signTransaction(
+        tx: Transaction | FeeBumpTransaction
+      ): Promise<string> {
         this.calls++;
         if (tx instanceof FeeBumpTransaction) {
           this.lastType = "feeBump";
@@ -95,7 +102,12 @@ describe("SignEnvelope", () => {
       async signSorobanAuthEntry(e, _vu: unknown, _np: unknown) {
         return e;
       },
-      async sign(): Promise<string> {
+      sign(b: Buffer): Buffer {
+        this.calls++;
+        return b;
+      },
+
+      async signTransaction(): Promise<string> {
         this.calls++;
         if (mode === "throw") {
           throw new Error("boom");

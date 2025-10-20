@@ -11,6 +11,7 @@ import type {
   Ed25519SecretKey,
 } from "../../strkeys/types.ts";
 import type { TransactionSigner } from "../types.ts";
+import type { Buffer } from "buffer";
 
 /**
  * LocalSigner
@@ -30,10 +31,18 @@ export class LocalSigner implements TransactionSigner {
   publicKey: () => Ed25519PublicKey;
 
   /**
+   * Signs arbitrary data and returns the signature as a Buffer.
+   * This method allows signing of data outside of transactions, such as challenges.
+   */
+  sign: (data: Buffer) => Buffer;
+
+  /**
    * Signs a classic or fee-bump transaction and returns its XDR (string).
    * The secret key never touches object properties; it is used only within the closure.
    */
-  sign: (tx: Transaction | FeeBumpTransaction) => TransactionXDRBase64;
+  signTransaction: (
+    tx: Transaction | FeeBumpTransaction
+  ) => TransactionXDRBase64;
 
   /**
    * Signs a Soroban authorization entry (SAC-style), returning the signed entry.
@@ -65,7 +74,12 @@ export class LocalSigner implements TransactionSigner {
 
     this.publicKey = () => pub as Ed25519PublicKey;
 
-    this.sign = (
+    this.sign = (data: Buffer): Buffer => {
+      if (!kp) throw new Error("Signer destroyed");
+      return kp.sign(data);
+    };
+
+    this.signTransaction = (
       tx: Transaction | FeeBumpTransaction
     ): TransactionXDRBase64 => {
       if (!kp) throw new Error("Signer destroyed");

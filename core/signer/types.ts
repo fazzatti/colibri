@@ -1,10 +1,12 @@
 import type { FeeBumpTransaction, Transaction, xdr } from "stellar-sdk";
 import type { Ed25519PublicKey } from "../strkeys/types.ts";
 import type { TransactionXDRBase64 } from "../mod.ts";
+import type { Buffer } from "buffer";
 
 export type TransactionSigner = {
   publicKey(): Ed25519PublicKey;
-  sign(
+  sign(data: Buffer): Buffer;
+  signTransaction(
     tx: Transaction | FeeBumpTransaction
   ): Promise<TransactionXDRBase64> | TransactionXDRBase64;
   signSorobanAuthEntry(
