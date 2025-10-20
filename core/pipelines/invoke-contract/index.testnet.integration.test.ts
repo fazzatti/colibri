@@ -103,10 +103,15 @@ describe(
           signers: [john.signer(), bob.signer()],
         };
 
-        const result = await invokePipe.run({
-          operations: [transferOp],
-          config: txConfig,
-        });
+        const result = await invokePipe
+          .run({
+            operations: [transferOp],
+            config: txConfig,
+          })
+          .catch((err) => {
+            console.error("Error during invoke pipe run:", err);
+            throw err;
+          });
 
         assertExists(result);
         assertExists(result.hash);
