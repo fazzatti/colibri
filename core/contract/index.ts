@@ -481,10 +481,12 @@ export class Contract {
   public async invoke({
     method,
     methodArgs,
+    auth,
     config,
   }: {
     method: string;
     methodArgs?: object;
+    auth?: xdr.SorobanAuthorizationEntry[];
     config: TransactionConfig;
   }): Promise<InvokeContractOutput> {
     const contractId = this.getContractId();
@@ -497,6 +499,7 @@ export class Contract {
       function: method,
       contract: contractId,
       args: encodedArgs || [],
+      auth: auth,
     });
 
     return await this.invokePipe.run({ config, operations: [operation] });
