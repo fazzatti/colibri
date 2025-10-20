@@ -18,7 +18,7 @@ import {
   type TransactionSigner,
 } from "../../signer/types.ts";
 import type { Ed25519PublicKey } from "../../strkeys/types.ts";
-import { Buffer } from "buffer";
+import type { Buffer } from "buffer";
 
 describe("SignEnvelope", () => {
   const { networkPassphrase } = TestNet();
