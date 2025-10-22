@@ -10,7 +10,7 @@ import type {
   Ed25519PublicKey,
   Ed25519SecretKey,
 } from "../../strkeys/types.ts";
-import type { TransactionSigner } from "../types.ts";
+import type { LocalSigner as LocalSignerType } from "./types.ts";
 import type { Buffer } from "buffer";
 
 /**
@@ -24,7 +24,7 @@ import type { Buffer } from "buffer";
  * - `destroy()` best-effort zeroizes internal buffers (`_secretSeed`, `_secretKey`) and nulls the handle.
  * - Also implements `[Symbol.dispose]()` so you can use TS 5.2 `using` to auto-clean on scope exit.
  */
-export class LocalSigner implements TransactionSigner {
+export class LocalSigner implements LocalSignerType {
   /**
    * Returns the public key for this signer. Public info is OK to expose.
    */

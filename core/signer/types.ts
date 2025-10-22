@@ -14,7 +14,6 @@ export type TransactionSigner = {
     validUntilLedgerSeq: number,
     networkPassphrase: string
   ): Promise<xdr.SorobanAuthorizationEntry>;
-  verifySignature(data: Buffer, signature: Buffer): boolean;
 };
 
 export type MultiSigSchema = {
