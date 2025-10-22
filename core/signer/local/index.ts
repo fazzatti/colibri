@@ -54,6 +54,14 @@ export class LocalSigner implements TransactionSigner {
   ) => Promise<xdr.SorobanAuthorizationEntry>;
 
   /**
+   *
+   * @param {Buffer} data - The data to sign.
+   * @param {Buffer} signature - The signature to verify.
+   * @returns {boolean} True if the signature is valid, false otherwise.
+   */
+  verifySignature: (data: Buffer, signature: Buffer) => boolean;
+
+  /**
    * Best-effort zeroization and invalidation of the internal keypair handle.
    * Safe to call multiple times (idempotent).
    */
@@ -77,6 +85,11 @@ export class LocalSigner implements TransactionSigner {
     this.sign = (data: Buffer): Buffer => {
       if (!kp) throw new Error("Signer destroyed");
       return kp.sign(data);
+    };
+
+    this.verifySignature = (data: Buffer, signature: Buffer): boolean => {
+      const keypair = Keypair.fromPublicKey(this.publicKey());
+      return keypair.verify(data, signature);
     };
 
     this.signTransaction = (
