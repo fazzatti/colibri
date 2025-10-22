@@ -10,7 +10,7 @@ import type {
   Ed25519PublicKey,
   Ed25519SecretKey,
 } from "../../strkeys/types.ts";
-import type { TransactionSigner } from "../types.ts";
+import type { LocalSigner as LocalSignerType } from "./types.ts";
 import type { Buffer } from "buffer";
 
 /**
@@ -24,7 +24,7 @@ import type { Buffer } from "buffer";
  * - `destroy()` best-effort zeroizes internal buffers (`_secretSeed`, `_secretKey`) and nulls the handle.
  * - Also implements `[Symbol.dispose]()` so you can use TS 5.2 `using` to auto-clean on scope exit.
  */
-export class LocalSigner implements TransactionSigner {
+export class LocalSigner implements LocalSignerType {
   /**
    * Returns the public key for this signer. Public info is OK to expose.
    */
@@ -54,6 +54,14 @@ export class LocalSigner implements TransactionSigner {
   ) => Promise<xdr.SorobanAuthorizationEntry>;
 
   /**
+   *
+   * @param {Buffer} data - The data to sign.
+   * @param {Buffer} signature - The signature to verify.
+   * @returns {boolean} True if the signature is valid, false otherwise.
+   */
+  verifySignature: (data: Buffer, signature: Buffer) => boolean;
+
+  /**
    * Best-effort zeroization and invalidation of the internal keypair handle.
    * Safe to call multiple times (idempotent).
    */
@@ -77,6 +85,11 @@ export class LocalSigner implements TransactionSigner {
     this.sign = (data: Buffer): Buffer => {
       if (!kp) throw new Error("Signer destroyed");
       return kp.sign(data);
+    };
+
+    this.verifySignature = (data: Buffer, signature: Buffer): boolean => {
+      const keypair = Keypair.fromPublicKey(this.publicKey());
+      return keypair.verify(data, signature);
     };
 
     this.signTransaction = (
