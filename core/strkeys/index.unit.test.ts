@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { StrKey } from "./index.ts";
-import { StrkeyPrefix, StrkeyName } from "./types.ts";
+import { StrKey } from "@/strkeys/index.ts";
+import { StrkeyPrefix, StrkeyName } from "@/strkeys/types.ts";
 
 describe("StrKey", () => {
   describe("getStrkeyTypeName", () => {

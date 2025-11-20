@@ -1,7 +1,7 @@
-import type { FeeBumpTransaction, Transaction, xdr } from "stellar-sdk";
-import type { Ed25519PublicKey } from "../strkeys/types.ts";
-import type { TransactionXDRBase64 } from "../mod.ts";
 import type { Buffer } from "buffer";
+import type { FeeBumpTransaction, Transaction, xdr } from "stellar-sdk";
+import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+import type { TransactionXDRBase64 } from "@/common/types/index.ts";
 
 export type TransactionSigner = {
   publicKey(): Ed25519PublicKey;

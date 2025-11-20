@@ -8,11 +8,11 @@ import {
   Operation,
   TransactionBuilder,
 } from "stellar-sdk";
-import { buildToSimulate } from "./build-to-simulate.ts";
-import { buildToEnvelopeSigningRequirements } from "./build-to-envelope-signing-req.ts";
-import { assembleToEnvelopeSigningRequirements } from "./assemble-to-envelope-signing-req.ts";
-import { isTransaction } from "../../common/verifiers/is-transaction.ts";
 import type { Server } from "stellar-sdk/rpc";
+import { buildToSimulate } from "@/transformers/pipeline-connectors/build-to-simulate.ts";
+import { buildToEnvelopeSigningRequirements } from "@/transformers/pipeline-connectors/build-to-envelope-signing-req.ts";
+import { assembleToEnvelopeSigningRequirements } from "@/transformers/pipeline-connectors/assemble-to-envelope-signing-req.ts";
+import { isTransaction } from "@/common/verifiers/is-transaction.ts";
 
 describe("pipeline-connectors", () => {
   const sourceKp = Keypair.random();

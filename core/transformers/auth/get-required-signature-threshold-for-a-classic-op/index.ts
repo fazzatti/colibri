@@ -1,14 +1,14 @@
 import { type Operation, xdr } from "stellar-sdk";
-import { muxedAddressToBaseAccount } from "../../address/index.ts";
+import { muxedAddressToBaseAccount } from "@/transformers/address/index.ts";
 import type { TransformerSync } from "convee";
-import * as E from "./error.ts";
-import { ColibriError } from "../../../mod.ts";
+import * as E from "@/transformers/auth/get-required-signature-threshold-for-a-classic-op/error.ts";
+import { ColibriError } from "@/error/index.ts";
 import {
   OperationThreshold,
   type SignatureRequirementRaw,
-} from "../../../signer/types.ts";
-import type { Ed25519PublicKey, MuxedAddress } from "../../../strkeys/types.ts";
-import { StrKey } from "../../../strkeys/index.ts";
+} from "@/signer/types.ts";
+import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
+import { StrKey } from "@/strkeys/index.ts";
 
 const setSourceSigner = (
   source?: string

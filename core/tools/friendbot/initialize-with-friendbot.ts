@@ -1,8 +1,7 @@
-import { assert } from "../../common/assert/assert.ts";
-import { StrKey } from "../../strkeys/index.ts";
-import type { Ed25519PublicKey } from "../../strkeys/types.ts";
-
-import * as E from "./error.ts";
+import { assert } from "@/common/assert/assert.ts";
+import { StrKey } from "@/strkeys/index.ts";
+import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+import * as E from "@/tools/friendbot/error.ts";
 export const initializeWithFriendbot = async (
   friendbotUrl: string,
   publicKey: Ed25519PublicKey

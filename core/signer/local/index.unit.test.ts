@@ -16,8 +16,8 @@ import {
   Account,
   Contract,
 } from "stellar-sdk";
-import { LocalSigner } from "./index.ts";
-import type { Ed25519PublicKey, Ed25519SecretKey } from "../../strkeys/types.ts";
+import { LocalSigner } from "@/signer/local/index.ts";
+import type { Ed25519PublicKey, Ed25519SecretKey } from "@/strkeys/types.ts";
 
 
 describe("LocalSigner", () => {

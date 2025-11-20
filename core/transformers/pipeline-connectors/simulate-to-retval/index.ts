@@ -1,8 +1,8 @@
 import type { xdr } from "stellar-sdk";
 import type { Transformer } from "convee";
-import type { SimulateTransactionOutput } from "../../../processes/simulate-transaction/types.ts";
-import { assert } from "../../../common/assert/assert.ts";
-import * as E from "./error.ts";
+import type { SimulateTransactionOutput } from "@/processes/simulate-transaction/types.ts";
+import { assert } from "@/common/assert/assert.ts";
+import * as E from "@/transformers/pipeline-connectors/simulate-to-retval/error.ts";
 
 export const simulateToRetval: Transformer<
   SimulateTransactionOutput,

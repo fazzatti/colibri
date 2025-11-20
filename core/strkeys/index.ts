@@ -2,7 +2,8 @@
  * Helpers to facilitate handling the Strkeys specified in SEP-23
  * https://github.com/stellar-protocol/blob/master/ecosystem/sep-0023.md
  */
-import { regex } from "../common/regex/index.ts";
+import { StrKey as StellarSdkStrKey } from "stellar-sdk";
+import { regex } from "@/common/regex/index.ts";
 import type {
   ClaimableBalanceId,
   ContractId,
@@ -13,9 +14,8 @@ import type {
   PreAuthTx,
   Sha256Hash,
   SignedPayload,
-} from "./types.ts";
-import { StrkeyPrefix, StrkeyName } from "./types.ts";
-import { StrKey as StellarSdkStrKey } from "stellar-sdk";
+} from "@/strkeys/types.ts";
+import { StrkeyPrefix, StrkeyName } from "@/strkeys/types.ts";
 
 const StrkeyRegex: Record<StrkeyPrefix, RegExp> = {} as Record<
   StrkeyPrefix,

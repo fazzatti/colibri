@@ -1,3 +1,4 @@
+import type { Buffer } from "buffer";
 import {
   type Transaction,
   type FeeBumpTransaction,
@@ -5,13 +6,9 @@ import {
   Keypair,
   type xdr,
 } from "stellar-sdk";
-import type { TransactionXDRBase64 } from "../../common/types/index.ts";
-import type {
-  Ed25519PublicKey,
-  Ed25519SecretKey,
-} from "../../strkeys/types.ts";
-import type { LocalSigner as LocalSignerType } from "./types.ts";
-import type { Buffer } from "buffer";
+import type { TransactionXDRBase64 } from "@/common/types/index.ts";
+import type { Ed25519PublicKey, Ed25519SecretKey } from "@/strkeys/types.ts";
+import type { LocalSigner as LocalSignerType } from "@/signer/local/types.ts";
 
 /**
  * LocalSigner

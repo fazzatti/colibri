@@ -1,11 +1,9 @@
 import { assertEquals, assertRejects } from "@std/assert";
-
 import { describe, it } from "@std/testing/bdd";
-import { simulateToRetval } from "./index.ts";
-
-import * as E from "./error.ts";
 import { type SorobanDataBuilder, xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
+import { simulateToRetval } from "@/transformers/pipeline-connectors/simulate-to-retval/index.ts";
+import * as E from "@/transformers/pipeline-connectors/simulate-to-retval/error.ts";
 
 describe("Pipeline Connector simulateToRetval", () => {
   it("extracts the return value from a simulation output", async () => {
