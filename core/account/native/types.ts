@@ -1,6 +1,6 @@
 import type { Asset, xdr } from "stellar-sdk";
-import type { Ed25519PublicKey, MuxedAddress } from "../../strkeys/types.ts";
-import type { MultiSigSchema, TransactionSigner } from "../../signer/types.ts";
+import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
+import type { MultiSigSchema, TransactionSigner } from "@/signer/types.ts";
 
 export type MuxedId = `${number}`;
 

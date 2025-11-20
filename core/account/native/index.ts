@@ -1,13 +1,16 @@
 import { Account, type Asset, Keypair, MuxedAccount, xdr } from "stellar-sdk";
-import { assert } from "../../common/assert/assert.ts";
-import { StrKey } from "../../strkeys/index.ts";
-import { isMuxedId } from "../../common/verifiers/is-muxed-id.ts";
-import type { MuxedId, WithoutSigner } from "./types.ts";
-import type { Ed25519PublicKey, MuxedAddress } from "../../strkeys/types.ts";
-
+import { assert } from "@/common/assert/assert.ts";
+import { StrKey } from "@/strkeys/index.ts";
+import { isMuxedId } from "@/common/verifiers/is-muxed-id.ts";
+import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
 import * as E from "./error.ts";
-import type { TransactionSigner } from "../../signer/types.ts";
-import type { WithSigner, NativeAccountType } from "./types.ts";
+import type { TransactionSigner } from "@/signer/types.ts";
+import type {
+  WithSigner,
+  NativeAccountType,
+  MuxedId,
+  WithoutSigner,
+} from "@/account/native/types.ts";
 
 export class NativeAccount implements NativeAccountType {
   protected _address: Ed25519PublicKey;
