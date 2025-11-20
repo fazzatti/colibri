@@ -1,14 +1,12 @@
 // deno-lint-ignore-file require-await
 import { describe, it, beforeEach, afterEach } from "@std/testing/bdd";
 import { assert, assertEquals, assertRejects } from "@std/assert";
-
+import { stub, type Stub } from "@std/testing/mock";
 import { xdr, Transaction } from "stellar-sdk";
 import { Api, type Server } from "stellar-sdk/rpc";
-import { P_SendTransaction } from "./index.ts";
-import { SendTransactionStatus } from "./types.ts";
-import * as E from "./error.ts";
-
-import { stub, type Stub } from "@std/testing/mock";
+import { P_SendTransaction } from "@/processes/send-transaction/index.ts";
+import { SendTransactionStatus } from "@/processes/send-transaction/types.ts";
+import * as E from "@/processes/send-transaction/error.ts";
 
 const withMockedDateNow = async <T>(
   values: number[],

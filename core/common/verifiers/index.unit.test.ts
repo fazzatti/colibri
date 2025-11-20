@@ -1,17 +1,16 @@
 import { assert, assertFalse } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-
 import {
   type FeeBumpTransaction,
   type Transaction,
   TransactionBuilder,
 } from "stellar-sdk";
-import { TestNet } from "../../network/index.ts";
-import { isTransaction } from "./is-transaction.ts";
-import { isFeeBumpTransaction } from "./is-fee-bump-transaction.ts";
-import { StrKey } from "../../strkeys/index.ts";
-import { isSigningThreshold } from "./is-signing-threshold.ts";
-import { isSmartContractTransaction } from "./is-smart-contract-transaction.ts";
+import { TestNet } from "@/network/index.ts";
+import { StrKey } from "@/strkeys/index.ts";
+import { isTransaction } from "@/common/verifiers/is-transaction.ts";
+import { isFeeBumpTransaction } from "@/common/verifiers/is-fee-bump-transaction.ts";
+import { isSigningThreshold } from "@/common/verifiers/is-signing-threshold.ts";
+import { isSmartContractTransaction } from "@/common/verifiers/is-smart-contract-transaction.ts";
 
 describe("Verifiers", () => {
   describe("isEd25519PublicKey", () => {

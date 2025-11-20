@@ -1,26 +1,22 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-
-import {
-  type NetworkConfig,
-  NetworkType,
-  TestNet,
-} from "../../network/index.ts";
-import * as E from "./error.ts";
-import { createClassicTransactionPipeline } from "./index.ts";
-import type { Api, Server } from "stellar-sdk/rpc";
-import type { ClassicTransactionInput } from "./types.ts";
 import { Operation, xdr } from "stellar-sdk";
+import type { Api, Server } from "stellar-sdk/rpc";
+
+import { type NetworkConfig, NetworkType, TestNet } from "@/network/index.ts";
+import * as E from "@/pipelines/classic-transaction/error.ts";
+import { createClassicTransactionPipeline } from "@/pipelines/classic-transaction/index.ts";
+import type { ClassicTransactionInput } from "@/pipelines/classic-transaction/types.ts";
 import {
   envSignReqToSignEnvelope,
   inputToBuild,
   sendTransactionToPipeOutput,
   signEnvelopeToSendTransaction,
-} from "./connectors.ts";
-import type { EnvelopeSigningRequirementsOutput } from "../../processes/envelope-signing-requirements/types.ts";
+} from "@/pipelines/classic-transaction/connectors.ts";
+import type { EnvelopeSigningRequirementsOutput } from "@/processes/envelope-signing-requirements/types.ts";
 import { MetadataHelper } from "convee";
-import type { SignEnvelopeOutput } from "../../processes/sign-envelope/types.ts";
-import type { SendTransactionOutput } from "../../processes/send-transaction/types.ts";
+import type { SignEnvelopeOutput } from "@/processes/sign-envelope/types.ts";
+import type { SendTransactionOutput } from "@/processes/send-transaction/types.ts";
 
 describe("createClassicTransactionPipeline", () => {
   describe("Construction", () => {

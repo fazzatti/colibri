@@ -1,5 +1,4 @@
 import { Pipeline, PipelineConnectors } from "convee";
-import { type CreateFeeBumpPipelineArgs, PIPELINE_NAME } from "./types.ts";
 import {
   ColibriError,
   P_EnvelopeSigningRequirements,
@@ -8,11 +7,15 @@ import {
   assertRequiredArgs,
 } from "@colibri/core";
 import {
+  type CreateFeeBumpPipelineArgs,
+  PIPELINE_NAME,
+} from "@/pipeline/types.ts";
+import {
   envSignReqToSignEnvelope,
   inputToBuild,
   wrapFeeBumpToEnvelopeSigningRequirements,
-} from "../pipeline/connectors.ts";
-import * as E from "../error.ts";
+} from "@/pipeline/connectors.ts";
+import * as E from "@/error.ts";
 
 const { storeMetadata } = PipelineConnectors;
 const createFeeBumpPipeline = ({

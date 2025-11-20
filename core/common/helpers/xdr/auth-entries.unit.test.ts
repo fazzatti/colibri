@@ -7,8 +7,12 @@ import {
   authEntryToParams,
   paramsToAuthEntry,
   paramsToAuthEntries,
-} from "./auth-entries.ts";
-import type { AuthEntryParams, FnArg, InvocationParams } from "./types.ts";
+} from "@/common/helpers/xdr/auth-entries.ts";
+import type {
+  AuthEntryParams,
+  FnArg,
+  InvocationParams,
+} from "@/common/helpers/xdr/types.ts";
 
 describe("Auth entry helpers", () => {
   describe("paramsToInvocation", () => {

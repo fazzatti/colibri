@@ -5,8 +5,8 @@ import {
   assertStrictEquals,
 } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { ColibriError } from "./index.ts";
-import type { BaseMeta, ColibriErrorShape, Diagnostic } from "./types.ts";
+import { ColibriError } from "@/error/index.ts";
+import type { BaseMeta, ColibriErrorShape, Diagnostic } from "@/error/types.ts";
 
 describe("ColibriError", () => {
   describe("constructor", () => {

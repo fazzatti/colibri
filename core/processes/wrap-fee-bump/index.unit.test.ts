@@ -8,16 +8,15 @@ import {
   type xdr,
   type Transaction,
 } from "stellar-sdk";
-
-import { P_WrapFeeBump } from "./index.ts";
-import * as E from "./error.ts";
-import { TestNet } from "../../network/index.ts";
-import { isFeeBumpTransaction } from "../../common/verifiers/is-fee-bump-transaction.ts";
+import { P_WrapFeeBump } from "@/processes/wrap-fee-bump/index.ts";
+import * as E from "@/processes/wrap-fee-bump/error.ts";
+import { TestNet } from "@/network/index.ts";
+import { isFeeBumpTransaction } from "@/common/verifiers/is-fee-bump-transaction.ts";
 import type {
   BaseFee,
   FeeBumpConfig,
-} from "../../common/types/transaction-config/types.ts";
-import type { Ed25519PublicKey } from "../../strkeys/types.ts";
+} from "@/common/types/transaction-config/types.ts";
+import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 
 describe("WrapFeeBump", () => {
   const { networkPassphrase } = TestNet();

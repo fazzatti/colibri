@@ -1,5 +1,5 @@
-import { TransformerError } from "../../error.ts";
-import type { SimulateTransactionOutput } from "../../../processes/simulate-transaction/types.ts";
+import { TransformerError } from "@/transformers/error.ts";
+import type { SimulateTransactionOutput } from "@/processes/simulate-transaction/types.ts";
 
 export enum Code {
   NO_RETURN_VALUE = "TRN_SIMTRV_001",

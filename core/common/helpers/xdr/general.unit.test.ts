@@ -7,8 +7,8 @@ import {
   softTryToXDR,
   parseEvents,
   parseErrorResult,
-} from "./general.ts";
-import { StrKey } from "../../../strkeys/index.ts";
+} from "@/common/helpers/xdr/general.ts";
+import { StrKey } from "@/strkeys/index.ts";
 
 describe("XDR Helpers", () => {
   describe("getAddressTypeFromAuthEntry", () => {

@@ -1,11 +1,11 @@
-import type { Buffer } from "node:buffer";
-import type { Api } from "stellar-sdk/rpc";
-import { ColibriError } from "../../error/index.ts";
-import { softTryToXDR } from "./xdr/general.ts";
+import type { Buffer } from "buffer";
 import { Address, type xdr } from "stellar-sdk";
-import type { ContractId } from "../../strkeys/types.ts";
-import { assert } from "../index.ts";
-import { StrKey } from "../../strkeys/index.ts";
+import type { Api } from "stellar-sdk/rpc";
+import { ColibriError } from "@/error/index.ts";
+import { softTryToXDR } from "@/common/helpers/xdr/general.ts";
+import type { ContractId } from "@/strkeys/types.ts";
+import { assert } from "@/common/assert/assert.ts";
+import { StrKey } from "@/strkeys/index.ts";
 
 enum ErrorCode {
   FAILED_TO_GET_WASM_HASH = "HLP_GTR_01",

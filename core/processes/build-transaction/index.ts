@@ -4,10 +4,10 @@ import {
   type BuildTransactionInput,
   type BuildTransactionOutput,
   type TransactionPreconditions,
-} from "./types.ts";
-import * as E from "./error.ts";
+} from "@/processes/build-transaction/types.ts";
+import * as E from "@/processes/build-transaction/error.ts";
 import { Account, TransactionBuilder } from "stellar-sdk";
-import { assert } from "../../common/assert/assert.ts";
+import { assert } from "@/common/assert/assert.ts";
 
 const buildTransactionProcess = async (
   input: BuildTransactionInput

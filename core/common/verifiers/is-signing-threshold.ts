@@ -1,4 +1,4 @@
-import type { SigningThreshold } from "../../signer/types.ts";
+import type { SigningThreshold } from "@/signer/types.ts";
 
 export const isSigningThreshold = (
   value: number

@@ -15,21 +15,30 @@ export type NetworkConfig = {
   allowHttp?: boolean;
 };
 
-export type MainNetConfig = {
+export type MainNetConfig = Omit<NetworkConfig, "friendbotUrl"> & {
   type: NetworkType.MAINNET;
   networkPassphrase: NetworkPassphrase.MAINNET;
+  horizonUrl: string;
+  rpcUrl: string;
+  allowHttp: false;
 } & (RPCConfig | HorizonConfig);
 
 export type TestNetConfig = NetworkConfig & {
   type: NetworkType.TESTNET;
   networkPassphrase: NetworkPassphrase.TESTNET;
+  horizonUrl: string;
+  rpcUrl: string;
   friendbotUrl: string;
+  allowHttp: false;
 } & (RPCConfig | HorizonConfig);
 
 export type FutureNetConfig = NetworkConfig & {
   type: NetworkType.FUTURENET;
   networkPassphrase: NetworkPassphrase.FUTURENET;
+  horizonUrl: string;
+  rpcUrl: string;
   friendbotUrl: string;
+  allowHttp: false;
 } & (RPCConfig | HorizonConfig);
 
 export type CustomNetworkPayload = {
@@ -71,7 +80,7 @@ export const MainNet = (): MainNetConfig => {
   return {
     type: NetworkType.MAINNET,
     networkPassphrase: NetworkPassphrase.MAINNET,
-    rpcUrl: "",
+    rpcUrl: "https://mainnet.sorobanrpc.com",
     horizonUrl: "https://horizon.stellar.org",
     allowHttp: false,
   };
@@ -94,14 +103,27 @@ type HorizonConfig = {
   allowHttp?: boolean;
 };
 
+export const isNetworkConfig = (obj: unknown): obj is NetworkConfig => {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    "type" in obj &&
+    Object.values(NetworkType).includes((obj as NetworkConfig).type) &&
+    "networkPassphrase" in obj
+  );
+};
+
 export const isTestNet = (config: NetworkConfig): config is TestNetConfig =>
+  isNetworkConfig(config) &&
   config.type === NetworkType.TESTNET &&
   config.networkPassphrase === NetworkPassphrase.TESTNET;
 
 export const isFutureNet = (config: NetworkConfig): config is FutureNetConfig =>
+  isNetworkConfig(config) &&
   config.type === NetworkType.FUTURENET &&
   config.networkPassphrase === NetworkPassphrase.FUTURENET;
 
 export const isMainNet = (config: NetworkConfig): config is MainNetConfig =>
+  isNetworkConfig(config) &&
   config.type === NetworkType.MAINNET &&
   config.networkPassphrase === NetworkPassphrase.MAINNET;

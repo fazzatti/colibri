@@ -1,7 +1,7 @@
 import { Keypair } from "stellar-sdk";
-import type { BuildTransactionInput } from "../../processes/build-transaction/types.ts";
-import type { Ed25519PublicKey } from "../../strkeys/types.ts";
-import type { ReadFromContractInput } from "./types.ts";
+import type { BuildTransactionInput } from "@/processes/build-transaction/types.ts";
+import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+import type { ReadFromContractInput } from "@/pipelines/read-from-contract/types.ts";
 
 export const inputToBuild = (networkPassphrase: string) => {
   return (input: ReadFromContractInput): BuildTransactionInput => {

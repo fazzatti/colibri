@@ -1,6 +1,6 @@
 import { assertEquals, assertRejects } from "@std/assert";
-
 import { describe, it } from "@std/testing/bdd";
+import type { Server, Api } from "stellar-sdk/rpc";
 import {
   Account,
   nativeToScVal,
@@ -9,11 +9,10 @@ import {
   type Transaction,
   TransactionBuilder,
 } from "stellar-sdk";
-import { P_SimulateTransaction } from "./index.ts";
-import { TestNet } from "../../network/index.ts";
-import type { SimulateTransactionInput } from "./types.ts";
-import type { Server, Api } from "stellar-sdk/rpc";
-import * as E from "./error.ts";
+import { P_SimulateTransaction } from "@/processes/simulate-transaction/index.ts";
+import { TestNet } from "@/network/index.ts";
+import type { SimulateTransactionInput } from "@/processes/simulate-transaction/types.ts";
+import * as E from "@/processes/simulate-transaction/error.ts";
 
 // Helper function to create a test transaction
 const createTestTransaction = () => {

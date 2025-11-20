@@ -1,14 +1,11 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import { stub } from "@std/testing/mock"; // Add this import
 import { describe, it } from "@std/testing/bdd";
-import { muxedAddressToBaseAccount } from "./index.ts";
-
-import * as E from "./error.ts";
-
-
 import { MuxedAccount } from "stellar-sdk";
-import type { MuxedAddress } from "../../../strkeys/types.ts";
-import { StrKey } from "../../../strkeys/index.ts";
+import { muxedAddressToBaseAccount } from "@/transformers/address/muxed-to-base-account/index.ts";
+import * as E from "@/transformers/address/muxed-to-base-account/error.ts";
+import type { MuxedAddress } from "@/strkeys/types.ts";
+import { StrKey } from "@/strkeys/index.ts";
 
 
 describe("Transformer muxedAddressToBaseAccount", () => {

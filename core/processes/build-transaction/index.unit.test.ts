@@ -1,6 +1,6 @@
 import { assertEquals, assertInstanceOf } from "@std/assert";
-
 import { describe, it, beforeEach } from "@std/testing/bdd";
+import type { Server } from "stellar-sdk/rpc";
 import {
   Account,
   Operation,
@@ -11,10 +11,9 @@ import {
   xdr,
   Address,
 } from "stellar-sdk";
-import { P_BuildTransaction } from "./index.ts";
-import { TestNet } from "../../network/index.ts";
-import type { BuildTransactionInput } from "./types.ts";
-import type { Server } from "stellar-sdk/rpc";
+import { P_BuildTransaction } from "@/processes/build-transaction/index.ts";
+import { TestNet } from "@/network/index.ts";
+import type { BuildTransactionInput } from "@/processes/build-transaction/types.ts";
 
 let isGetAccountCalled = false;
 const mockSequence = "100";

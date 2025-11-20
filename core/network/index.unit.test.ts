@@ -1,6 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-
 import {
   CustomNet,
   FutureNet,
@@ -12,7 +11,8 @@ import {
   isFutureNet,
   isMainNet,
   isTestNet,
-} from "./index.ts";
+  isNetworkConfig,
+} from "@/network/index.ts";
 
 describe("Network", () => {
   describe("Default Network Configurations", () => {
@@ -45,7 +45,7 @@ describe("Network", () => {
       assertEquals(mainNet, {
         type: NetworkType.MAINNET,
         networkPassphrase: NetworkPassphrase.MAINNET,
-        rpcUrl: "",
+        rpcUrl: "https://mainnet.sorobanrpc.com",
         horizonUrl: "https://horizon.stellar.org",
         allowHttp: false,
       });
@@ -123,6 +123,34 @@ describe("Network", () => {
   });
 
   describe("Type guard helpers", () => {
+    it("should identify various configurations of NetworkConfig", () => {
+      assert(isNetworkConfig(TestNet()));
+      assert(isNetworkConfig(FutureNet()));
+      assert(isNetworkConfig(MainNet()));
+      assert(
+        isNetworkConfig(
+          CustomNet({
+            networkPassphrase: "Some Custom Network",
+            rpcUrl: "https://rpc.custom.com",
+          })
+        )
+      );
+
+      assert(
+        !isNetworkConfig({
+          rpcUrl: "https://rpc.missingtype.com",
+        })
+      );
+
+      assert(
+        !isNetworkConfig({
+          type: "invalidtype" as NetworkType,
+          networkPassphrase: "Invalid Type Network",
+          rpcUrl: "https://rpc.invalid.com",
+        })
+      );
+    });
+
     it("should identify TestNet configuration", () => {
       assert(isTestNet(TestNet()));
       assert(!isTestNet(MainNet()));

@@ -1,11 +1,11 @@
 import { assert, assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Asset, Keypair, xdr } from "stellar-sdk";
-import { NativeAccount } from "./index.ts";
-import { LocalSigner } from "../../signer/local/index.ts";
-import type { Ed25519PublicKey } from "../../strkeys/types.ts";
-import type { MuxedId, WithSigner } from "./types.ts";
-import * as E from "./error.ts";
+import { NativeAccount } from "@/account/native/index.ts";
+import { LocalSigner } from "@/signer/local/index.ts";
+import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+import type { MuxedId, WithSigner } from "@/account/native/types.ts";
+import * as E from "@/account/native/error.ts";
 
 describe("NativeAccount", () => {
   const TEST_ADDRESS =

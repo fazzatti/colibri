@@ -5,7 +5,7 @@ import {
   isNonBlank,
   dropNonPrintable,
   nonBlankString,
-} from "./string.ts";
+} from "@/common/helpers/string.ts";
 
 describe("String Helpers", () => {
   describe("isString", () => {

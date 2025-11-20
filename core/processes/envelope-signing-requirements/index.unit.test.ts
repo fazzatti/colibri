@@ -1,6 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
 import { assert, assertEquals, assertRejects } from "@std/assert";
-
 import { describe, it } from "@std/testing/bdd";
 import {
   Account,
@@ -10,14 +9,13 @@ import {
   TransactionBuilder,
   type xdr,
 } from "stellar-sdk";
-import { P_EnvelopeSigningRequirements } from "./index.ts";
-import * as E from "./error.ts";
-import { TestNet } from "../../network/index.ts";
-
-import { muxedAddressToBaseAccount } from "../../transformers/address/index.ts";
-import type { EnvelopeSigningRequirementsInput } from "./types.ts";
-import type { MuxedAddress } from "../../strkeys/types.ts";
-import { OperationThreshold } from "../../signer/types.ts";
+import { P_EnvelopeSigningRequirements } from "@/processes/envelope-signing-requirements/index.ts";
+import * as E from "@/processes/envelope-signing-requirements/error.ts";
+import { TestNet } from "@/network/index.ts";
+import { muxedAddressToBaseAccount } from "@/transformers/address/index.ts";
+import type { EnvelopeSigningRequirementsInput } from "@/processes/envelope-signing-requirements/types.ts";
+import type { MuxedAddress } from "@/strkeys/types.ts";
+import { OperationThreshold } from "@/signer/types.ts";
 
 describe("EnvelopeSigningRequirements", () => {
   const { networkPassphrase } = TestNet();

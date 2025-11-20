@@ -1,14 +1,14 @@
-import { assert, assertEquals, assertExists, assertRejects } from "@std/assert";
-import { beforeAll, describe, it } from "@std/testing/bdd";
-import { Buffer } from "node:buffer";
-import { Asset, nativeToScVal, xdr } from "stellar-sdk";
-import { Contract } from "./index.ts";
-import { TestNet } from "../network/index.ts";
-import { NativeAccount } from "../account/native/index.ts";
-import { LocalSigner } from "../signer/local/index.ts";
-import { initializeWithFriendbot } from "../tools/friendbot/initialize-with-friendbot.ts";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";
+import { assert, assertEquals, assertExists, assertRejects } from "@std/assert";
+import { beforeAll, describe, it } from "@std/testing/bdd";
+import { Buffer } from "buffer";
+import { Asset, nativeToScVal, xdr } from "stellar-sdk";
+import { Contract } from "@/contract/index.ts";
+import { TestNet } from "@/network/index.ts";
+import { NativeAccount } from "@/account/native/index.ts";
+import { LocalSigner } from "@/signer/local/index.ts";
+import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
 import {
   SEP41_SPEC,
   SEP41_METHOD,
@@ -18,9 +18,10 @@ import {
   TYPES_HARNESS_SPEC,
   TYPES_HARNESS_METHOD,
 } from "colibri-internal/tests/specs/types-harness.ts";
-import { StrKey } from "../strkeys/index.ts";
-import * as E from "./error.ts";
-import type { TransactionConfig } from "../common/types/transaction-config/types.ts";
+import { StrKey } from "@/strkeys/index.ts";
+import * as E from "@/contract/error.ts";
+import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
+
 describe("[Testnet] Contract", disableSanitizeConfig, () => {
   const networkConfig = TestNet();
 

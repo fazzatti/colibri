@@ -1,5 +1,5 @@
-import { TransformerError } from "../../error.ts";
 import type { Operation } from "stellar-sdk";
+import { TransformerError } from "@/transformers/error.ts";
 
 export enum Code {
   UNEXPECTED_ERROR = "TRN_GRST_000",

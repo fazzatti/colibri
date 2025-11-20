@@ -3,7 +3,7 @@ import type {
   ColibriErrorShape,
   Diagnostic,
   ErrorDomain,
-} from "./types.ts";
+} from "@/error/types.ts";
 
 export class ColibriError<
   C extends string = string,

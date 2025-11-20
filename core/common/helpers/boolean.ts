@@ -1,4 +1,4 @@
-import { ColibriError } from "../../error/index.ts";
+import { ColibriError } from "@/error/index.ts";
 
 enum ErrorCode {
   IS_FALSY = "HLP_BOOL_00",

@@ -1,5 +1,5 @@
 import type { FeeBumpTransaction, Transaction } from "stellar-sdk";
-import type { FeeBumpConfig } from "../../common/types/index.ts";
+import type { FeeBumpConfig } from "@/common/types/index.ts";
 
 export type WrapFeeBumpInput = {
   transaction: Transaction;

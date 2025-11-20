@@ -1,18 +1,14 @@
 import { assertEquals, assertExists, assertInstanceOf } from "@std/assert";
 import { beforeAll, describe, it } from "@std/testing/bdd";
-
-import { TestNet } from "../../network/index.ts";
-import { Asset, Operation, nativeToScVal, xdr } from "stellar-sdk";
-
-import { createInvokeContractPipeline } from "./index.ts";
-import { initializeWithFriendbot } from "../../tools/friendbot/initialize-with-friendbot.ts";
-
-import type { TransactionConfig } from "../../common/types/transaction-config/types.ts";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
-
-import type { Ed25519PublicKey } from "../../strkeys/types.ts";
-import { NativeAccount } from "../../account/native/index.ts";
-import { LocalSigner } from "../../signer/local/index.ts";
+import { Asset, Operation, nativeToScVal, xdr } from "stellar-sdk";
+import { TestNet } from "@/network/index.ts";
+import { createInvokeContractPipeline } from "@/pipelines/invoke-contract/index.ts";
+import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
+import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
+import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+import { NativeAccount } from "@/account/native/index.ts";
+import { LocalSigner } from "@/signer/local/index.ts";
 
 describe(
   "[Testnet] InvokeContract Pipeline",

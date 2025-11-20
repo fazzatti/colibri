@@ -1,6 +1,6 @@
 import { assert, assertFalse, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { isBooleanStrict, isTruthy } from "./boolean.ts";
+import { isBooleanStrict, isTruthy } from "@/common/helpers/boolean.ts";
 
 describe("Boolean Helpers", () => {
   describe("isBooleanStrict", () => {

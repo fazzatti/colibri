@@ -1,3 +1,3 @@
-export * from "./auth-entries.ts";
-export * from "./general.ts";
-export type * from "./types.ts";
+export * from "@/common/helpers/xdr/auth-entries.ts";
+export * from "@/common/helpers/xdr/general.ts";
+export type * from "@/common/helpers/xdr/types.ts";

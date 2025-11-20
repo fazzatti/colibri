@@ -1,9 +1,9 @@
 import type { TransformerSync } from "convee";
 import { MuxedAccount } from "stellar-sdk";
-import { assert } from "../../../common/assert/assert.ts";
-import * as E from "./error.ts";
-import type { Ed25519PublicKey, MuxedAddress } from "../../../strkeys/types.ts";
-import { StrKey } from "../../../strkeys/index.ts";
+import { assert } from "@/common/assert/assert.ts";
+import * as E from "@/transformers/address/muxed-to-base-account/error.ts";
+import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
+import { StrKey } from "@/strkeys/index.ts";
 
 export const muxedAddressToBaseAccount: TransformerSync<
   MuxedAddress,

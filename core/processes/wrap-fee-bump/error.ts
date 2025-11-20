@@ -1,5 +1,5 @@
-import type { WrapFeeBumpInput } from "./types.ts";
-import { ProcessError } from "../error.ts";
+import type { WrapFeeBumpInput } from "@/processes/wrap-fee-bump/types.ts";
+import { ProcessError } from "@/processes/error.ts";
 
 export enum Code {
   UNEXPECTED_ERROR = "WFB_000",

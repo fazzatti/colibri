@@ -1,25 +1,25 @@
 import type { Server } from "stellar-sdk/rpc";
-import type { InvokeContractInput } from "./types.ts";
+import type { MetadataHelper, Transformer } from "convee";
+import type { InvokeContractInput } from "@/pipelines/invoke-contract/types.ts";
 import type {
   BuildTransactionInput,
   BuildTransactionOutput,
-} from "../../processes/build-transaction/types.ts";
-import type { SimulateTransactionOutput } from "../../processes/simulate-transaction/types.ts";
+} from "@/processes/build-transaction/types.ts";
+import type { SimulateTransactionOutput } from "@/processes/simulate-transaction/types.ts";
 import type {
   AssembleTransactionInput,
   AssembleTransactionOutput,
-} from "../../processes/assemble-transaction/types.ts";
-import type { MetadataHelper, Transformer } from "convee";
+} from "@/processes/assemble-transaction/types.ts";
 import type {
   SignAuthEntriesInput,
   SignAuthEntriesOutput,
-} from "../../processes/sign-auth-entries/types.ts";
-import type { EnvelopeSigningRequirementsOutput } from "../../processes/envelope-signing-requirements/types.ts";
+} from "@/processes/sign-auth-entries/types.ts";
+import type { EnvelopeSigningRequirementsOutput } from "@/processes/envelope-signing-requirements/types.ts";
 import type {
   SignEnvelopeInput,
   SignEnvelopeOutput,
-} from "../../processes/sign-envelope/types.ts";
-import type { SendTransactionInput } from "../../processes/send-transaction/types.ts";
+} from "@/processes/sign-envelope/types.ts";
+import type { SendTransactionInput } from "@/processes/send-transaction/types.ts";
 
 export const inputToBuild = (rpc: Server, networkPassphrase: string) => {
   return (input: InvokeContractInput): BuildTransactionInput => {

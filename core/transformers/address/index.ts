@@ -1,1 +1,1 @@
-export * from "./muxed-to-base-account/index.ts";
+export * from "@/transformers/address/muxed-to-base-account/index.ts";

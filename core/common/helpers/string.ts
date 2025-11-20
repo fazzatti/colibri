@@ -1,8 +1,8 @@
 // Refer to: https://github.com/hyperledger-cacti/cacti/blob/main/packages/cactus-common/src/main/typescript/strings.ts
 // Refer to: https://github.com/hyperledger-cacti/cacti/blob/main/packages/cactus-common/src/main/typescript/checks.ts
 
-import { ColibriError } from "../../mod.ts";
-import { isTruthy } from "./boolean.ts";
+import { ColibriError } from "@/error/index.ts";
+import { isTruthy } from "@/common/helpers/boolean.ts";
 
 enum ErrorCode {
   IS_BLANK_STRING = "HLP_STR_00",

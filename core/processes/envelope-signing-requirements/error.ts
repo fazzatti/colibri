@@ -1,5 +1,5 @@
-import type { EnvelopeSigningRequirementsInput } from "./types.ts";
-import { ProcessError } from "../error.ts";
+import type { EnvelopeSigningRequirementsInput } from "@/processes/envelope-signing-requirements/types.ts";
+import { ProcessError } from "@/processes/error.ts";
 
 export enum Code {
   UNEXPECTED_ERROR = "ESR_000",

@@ -1,3 +1,3 @@
-export * as address from "./address/index.ts";
-export * as auth from "./auth/index.ts";
-export * as pipelineConnectors from "./pipeline-connectors/index.ts";
+export * as address from "@/transformers/address/index.ts";
+export * as auth from "@/transformers/auth/index.ts";
+export * as pipelineConnectors from "@/transformers/pipeline-connectors/index.ts";

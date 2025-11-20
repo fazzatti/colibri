@@ -1,24 +1,24 @@
 import { Pipeline, PipelineConnectors } from "convee";
-import { P_BuildTransaction } from "../../processes/build-transaction/index.ts";
+import { Server } from "stellar-sdk/rpc";
+import { P_BuildTransaction } from "@/processes/build-transaction/index.ts";
 import type {
   CreateClassicTransactionPipelineArgs,
   ClassicTransactionInput,
-} from "./types.ts";
-import * as E from "./error.ts";
-import { Server } from "stellar-sdk/rpc";
-import { ColibriError } from "../../error/index.ts";
-import { assertRequiredArgs } from "../../common/assert/assert-args.ts";
+} from "@/pipelines/classic-transaction/types.ts";
+import * as E from "@/pipelines/classic-transaction/error.ts";
+import { ColibriError } from "@/error/index.ts";
+import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 import {
   envSignReqToSignEnvelope,
   inputToBuild,
   sendTransactionToPipeOutput,
   signEnvelopeToSendTransaction,
-} from "./connectors.ts";
-import { P_EnvelopeSigningRequirements } from "../../processes/index.ts";
-import { buildToEnvelopeSigningRequirements } from "../../transformers/pipeline-connectors/build-to-envelope-signing-req.ts";
-import { P_SignEnvelope } from "../../processes/sign-envelope/index.ts";
-import { P_SendTransaction } from "../../processes/send-transaction/index.ts";
-import { assert } from "../../common/assert/assert.ts";
+} from "@/pipelines/classic-transaction/connectors.ts";
+import { P_EnvelopeSigningRequirements } from "@/processes/index.ts";
+import { buildToEnvelopeSigningRequirements } from "@/transformers/pipeline-connectors/build-to-envelope-signing-req.ts";
+import { P_SignEnvelope } from "@/processes/sign-envelope/index.ts";
+import { P_SendTransaction } from "@/processes/send-transaction/index.ts";
+import { assert } from "@/common/assert/assert.ts";
 
 const { storeMetadata } = PipelineConnectors;
 

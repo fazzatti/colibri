@@ -1,9 +1,9 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { stub } from "@std/testing/mock";
-import { initializeWithFriendbot } from "./initialize-with-friendbot.ts";
-import * as E from "./error.ts";
-import type { Ed25519PublicKey } from "../../strkeys/types.ts";
+import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
+import * as E from "@/tools/friendbot/error.ts";
+import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 
 describe("initializeWithFriendbot", () => {
   const TEST_PUBLIC =

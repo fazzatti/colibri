@@ -1,11 +1,11 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Buffer } from "node:buffer";
-import { Contract } from "./index.ts";
-import { type NetworkConfig, NetworkType } from "../network/index.ts";
+import { Buffer } from "buffer";
+import { Contract } from "@/contract/index.ts";
+import * as E from "@/contract/error.ts";
 import type { Server } from "stellar-sdk/rpc";
-import * as E from "./error.ts";
-import type { ContractConfig } from "./types.ts";
+import type { ContractConfig } from "@/contract/types.ts";
+import { type NetworkConfig, NetworkType } from "@/network/index.ts";
 
 describe("Contract", () => {
   describe("construction", () => {

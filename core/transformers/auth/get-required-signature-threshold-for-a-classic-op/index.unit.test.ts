@@ -1,26 +1,22 @@
 import { assertEquals, assertExists, assertRejects } from "@std/assert";
-
 import { describe, it } from "@std/testing/bdd";
-import { getRequiredOperationThresholdForClassicOperation as getRequirements } from "./index.ts";
-
-import * as E from "./error.ts";
-
 import {
   Asset,
   AuthClawbackEnabledFlag,
-  type AuthFlag,
   AuthImmutableFlag,
   AuthRequiredFlag,
   AuthRevocableFlag,
   Claimant,
   Operation,
-  type SignerKeyOptions,
-  type xdr,
 } from "stellar-sdk";
+import type { AuthFlag, SignerKeyOptions, xdr } from "stellar-sdk";
+import * as E from "@/transformers/auth/get-required-signature-threshold-for-a-classic-op/error.ts";
+import { getRequiredOperationThresholdForClassicOperation as getRequirements } from "@/transformers/auth/get-required-signature-threshold-for-a-classic-op/index.ts";
+
 import {
   OperationThreshold,
   type SignatureRequirement,
-} from "../../../signer/types.ts";
+} from "@/signer/types.ts";
 
 const helperGetOpObj = (op: xdr.Operation) => {
   return Operation.fromXDRObject(op);

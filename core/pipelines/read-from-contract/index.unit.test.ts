@@ -1,16 +1,11 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-
-import {
-  type NetworkConfig,
-  NetworkType,
-  TestNet,
-} from "../../network/index.ts";
-import * as E from "./error.ts";
-import { createReadFromContractPipeline } from "./index.ts";
-import { inputToBuild } from "./connectors.ts";
-import type { ReadFromContractInput } from "./types.ts";
 import { Operation } from "stellar-sdk";
+import { type NetworkConfig, NetworkType, TestNet } from "@/network/index.ts";
+import * as E from "@/pipelines/read-from-contract/error.ts";
+import { createReadFromContractPipeline } from "@/pipelines/read-from-contract/index.ts";
+import { inputToBuild } from "@/pipelines/read-from-contract/connectors.ts";
+import type { ReadFromContractInput } from "@/pipelines/read-from-contract/types.ts";
 
 describe("createReadFromContractPipeline", () => {
   describe("Construction", () => {

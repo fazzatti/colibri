@@ -3,6 +3,7 @@ import type {
   NetworkConfig,
   SendTransactionInput,
 } from "@colibri/core";
+export * from "@/pipeline/types.ts";
 
 export const PLUGIN_NAME = "FeeBumpPlugin";
 

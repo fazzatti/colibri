@@ -1,4 +1,4 @@
-import { AccountError } from "../error.ts";
+import { AccountError } from "@/account/error.ts";
 
 export enum Code {
   // UNEXPECTED = "ACC_NAT_000", // Reserved for unexpected errors - not currently used in NativeAccount

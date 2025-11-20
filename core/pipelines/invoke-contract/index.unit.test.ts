@@ -1,27 +1,22 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-
-import {
-  type NetworkConfig,
-  NetworkType,
-  TestNet,
-} from "../../network/index.ts";
-import * as E from "./error.ts";
-import { createInvokeContractPipeline } from "./index.ts";
-import type { SimulateTransactionOutput } from "../../processes/simulate-transaction/types.ts";
+import { MetadataHelper } from "convee";
+import { Operation, SorobanDataBuilder, xdr } from "stellar-sdk";
+import type { Server } from "stellar-sdk/rpc";
+import { type NetworkConfig, NetworkType, TestNet } from "@/network/index.ts";
+import * as E from "@/pipelines/invoke-contract/error.ts";
+import { createInvokeContractPipeline } from "@/pipelines/invoke-contract/index.ts";
+import type { SimulateTransactionOutput } from "@/processes/simulate-transaction/types.ts";
 import {
   inputToBuild,
   signAuthEntriesToAssemble,
   simulateToSignAuthEntries,
   envSignReqToSignEnvelope,
   signEnvelopeToSendTransaction,
-} from "./connectors.ts";
-import type { Server } from "stellar-sdk/rpc";
-import { MetadataHelper } from "convee";
-import { Operation, SorobanDataBuilder, xdr } from "stellar-sdk";
-import type { InvokeContractInput } from "./types.ts";
-import type { EnvelopeSigningRequirementsOutput } from "../../processes/envelope-signing-requirements/types.ts";
-import type { SignEnvelopeOutput } from "../../processes/sign-envelope/types.ts";
+} from "@/pipelines/invoke-contract/connectors.ts";
+import type { InvokeContractInput } from "@/pipelines/invoke-contract/types.ts";
+import type { EnvelopeSigningRequirementsOutput } from "@/processes/envelope-signing-requirements/types.ts";
+import type { SignEnvelopeOutput } from "@/processes/sign-envelope/types.ts";
 
 describe("createInvokeContractPipeline", () => {
   describe("Construction", () => {

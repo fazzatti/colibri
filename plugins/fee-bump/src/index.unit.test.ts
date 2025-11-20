@@ -1,20 +1,18 @@
 // deno-lint-ignore-file no-explicit-any
 import { assertEquals, assertExists } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-
-import { PLG_FeeBump } from "./index.ts";
-import * as E from "./error.ts";
-
+import type { Server } from "stellar-sdk/rpc";
 import {
   TestNet,
   PIPE_InvokeContract,
   P_SendTransaction,
   isFeeBumpTransaction,
+  NativeAccount,
+  LocalSigner,
   type NetworkConfig,
 } from "@colibri/core";
-import { NativeAccount } from "../../../core/account/native/index.ts";
-import { LocalSigner } from "../../../core/signer/local/index.ts";
-
+import { PLG_FeeBump } from "@/index.ts";
+import * as E from "@/error.ts";
 import {
   Operation,
   TransactionBuilder,
@@ -23,8 +21,7 @@ import {
   type Transaction,
 } from "stellar-sdk";
 import { assertRejects } from "@std/assert";
-import type { PluginInput } from "./types.ts";
-import type { Server } from "stellar-sdk/rpc";
+import type { PluginInput } from "@/types.ts";
 
 describe("FeeBump Plugin", () => {
   const networkConfig = TestNet();

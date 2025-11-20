@@ -1,38 +1,41 @@
+import {
+  Contract as StellarContract,
+  Address,
+  Operation,
+  xdr,
+} from "stellar-sdk";
+import { Server } from "stellar-sdk/rpc";
 import { Spec } from "stellar-sdk/contract";
-import { type Api, Server } from "stellar-sdk/rpc";
-import { Contract as StellarContract } from "stellar-sdk";
-import type { ContractConfig, ContractConstructorArgs } from "./types.ts";
-import { Buffer } from "node:buffer";
-import type { NetworkConfig } from "../network/index.ts";
+import { Buffer } from "buffer";
 import {
   type InvokeContractPipeline,
   PIPE_InvokeContract,
-} from "../pipelines/invoke-contract/index.ts";
+} from "@/pipelines/invoke-contract/index.ts";
 import {
   type ReadFromContractPipeline,
   PIPE_ReadFromContract,
-} from "../pipelines/read-from-contract/index.ts";
-import { assertRequiredArgs } from "../common/assert/assert-args.ts";
-import { assert } from "../common/assert/assert.ts";
-import type { ContractId } from "../strkeys/types.ts";
-import {
-  Address,
-  type Asset,
-  Operation,
-  type OperationOptions,
-  xdr,
-} from "stellar-sdk";
-import type { TransactionConfig } from "../common/types/transaction-config/types.ts";
-import type { InvokeContractOutput } from "../pipelines/invoke-contract/types.ts";
-import * as E from "./error.ts";
+} from "@/pipelines/read-from-contract/index.ts";
+import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
+import { assert } from "@/common/assert/assert.ts";
 import {
   getContractIdFromGetTransactionResponse,
   getWasmHashFromGetTransactionResponse,
-} from "../common/helpers/get-transaction-response.ts";
-import { processSpecEntryStream } from "../common/helpers/wasm.ts";
-import { generateRandomSalt } from "../common/helpers/generate-random-salt.ts";
-import { SIMULATION_FAILED } from "../processes/simulate-transaction/error.ts";
-import { getStellarAssetContractIdFromFailedSimulationResponse } from "../common/helpers/failed-simulation-response.ts";
+} from "@/common/helpers/get-transaction-response.ts";
+import { processSpecEntryStream } from "@/common/helpers/wasm.ts";
+import { generateRandomSalt } from "@/common/helpers/generate-random-salt.ts";
+import { SIMULATION_FAILED } from "@/processes/simulate-transaction/error.ts";
+import { getStellarAssetContractIdFromFailedSimulationResponse } from "@/common/helpers/failed-simulation-response.ts";
+import * as E from "@/contract/error.ts";
+import type {
+  ContractConfig,
+  ContractConstructorArgs,
+} from "@/contract/types.ts";
+import type { Api } from "stellar-sdk/rpc";
+import type { Asset, OperationOptions } from "stellar-sdk";
+import type { ContractId } from "@/strkeys/types.ts";
+import type { NetworkConfig } from "@/network/index.ts";
+import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
+import type { InvokeContractOutput } from "@/pipelines/invoke-contract/types.ts";
 export class Contract {
   private rpc: Server;
   private networkConfig: NetworkConfig;
