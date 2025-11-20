@@ -4,7 +4,7 @@ import type { Api } from "stellar-sdk/rpc";
 import { ColibriError } from "@/error/index.ts";
 import { softTryToXDR } from "@/common/helpers/xdr/general.ts";
 import type { ContractId } from "@/strkeys/types.ts";
-import { assert } from "@/common//assert/assert.ts";
+import { assert } from "@/common/assert/assert.ts";
 import { StrKey } from "@/strkeys/index.ts";
 
 enum ErrorCode {

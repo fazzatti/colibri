@@ -4,7 +4,7 @@ import { MetadataHelper } from "convee";
 import { Operation, SorobanDataBuilder, xdr } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
 import { type NetworkConfig, NetworkType, TestNet } from "@/network/index.ts";
-import * as E from "./error.ts";
+import * as E from "@/pipelines/invoke-contract/error.ts";
 import { createInvokeContractPipeline } from "@/pipelines/invoke-contract/index.ts";
 import type { SimulateTransactionOutput } from "@/processes/simulate-transaction/types.ts";
 import {

@@ -13,7 +13,7 @@ import { P_EnvelopeSigningRequirements } from "@/processes/envelope-signing-requ
 import * as E from "@/processes/envelope-signing-requirements/error.ts";
 import { TestNet } from "@/network/index.ts";
 import { muxedAddressToBaseAccount } from "@/transformers/address/index.ts";
-import type { EnvelopeSigningRequirementsInput } from "./types.ts";
+import type { EnvelopeSigningRequirementsInput } from "@/processes/envelope-signing-requirements/types.ts";
 import type { MuxedAddress } from "@/strkeys/types.ts";
 import { OperationThreshold } from "@/signer/types.ts";
 

@@ -3,8 +3,8 @@ import { assert } from "@/common/assert/assert.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import { isMuxedId } from "@/common/verifiers/is-muxed-id.ts";
 import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
-import * as E from "./error.ts";
 import type { TransactionSigner } from "@/signer/types.ts";
+import * as E from "@/account/native//error.ts";
 import type {
   WithSigner,
   NativeAccountType,
