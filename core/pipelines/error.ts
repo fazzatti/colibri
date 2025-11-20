@@ -1,5 +1,5 @@
-import { ColibriError } from "../error/index.ts";
-import type { Diagnostic } from "../error/types.ts";
+import { ColibriError } from "@/error/index.ts";
+import type { Diagnostic } from "@/error/types.ts";
 
 export type Meta = {
   cause: Error | null;

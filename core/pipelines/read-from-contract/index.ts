@@ -1,16 +1,15 @@
 import { Pipeline } from "convee";
-import { P_BuildTransaction } from "../../processes/build-transaction/index.ts";
-import { P_SimulateTransaction } from "../../processes/simulate-transaction/index.ts";
-
 import { Server } from "stellar-sdk/rpc";
-import { ColibriError } from "../../error/index.ts";
-import { buildToSimulate } from "../../transformers/pipeline-connectors/build-to-simulate.ts";
-import type { CreateReadFromContractPipelineArgs } from "./types.ts";
-import { assertRequiredArgs } from "../../common/assert/assert-args.ts";
-import { simulateToRetval } from "../../transformers/pipeline-connectors/simulate-to-retval/index.ts";
-import * as E from "./error.ts";
-import { inputToBuild } from "./connectors.ts";
-import { assert } from "../../common/assert/assert.ts";
+import { P_BuildTransaction } from "@/processes/build-transaction/index.ts";
+import { P_SimulateTransaction } from "@/processes/simulate-transaction/index.ts";
+import { ColibriError } from "@/error/index.ts";
+import { buildToSimulate } from "@/transformers/pipeline-connectors/build-to-simulate.ts";
+import type { CreateReadFromContractPipelineArgs } from "@/pipelines/read-from-contract/types.ts";
+import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
+import { simulateToRetval } from "@/transformers/pipeline-connectors/simulate-to-retval/index.ts";
+import * as E from "@/pipelines/read-from-contract/error.ts";
+import { inputToBuild } from "@/pipelines/read-from-contract/connectors.ts";
+import { assert } from "@/common/assert/assert.ts";
 
 export const PIPELINE_NAME = "ReadFromContractPipeline";
 

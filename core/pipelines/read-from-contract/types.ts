@@ -1,6 +1,6 @@
 import type { xdr } from "stellar-sdk";
-import type { NetworkConfig } from "../../network/index.ts";
 import type { Server } from "stellar-sdk/rpc";
+import type { NetworkConfig } from "@/network/index.ts";
 
 export type ReadFromContractInput = {
   operations: xdr.Operation[];
