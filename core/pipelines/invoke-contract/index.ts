@@ -1,31 +1,29 @@
 import { Pipeline, PipelineConnectors } from "convee";
-import { P_BuildTransaction } from "../../processes/build-transaction/index.ts";
-import { P_SimulateTransaction } from "../../processes/simulate-transaction/index.ts";
+import { Server } from "stellar-sdk/rpc";
+import { P_BuildTransaction } from "@/processes/build-transaction/index.ts";
+import { P_SimulateTransaction } from "@/processes/simulate-transaction/index.ts";
 import type {
   CreateInvokeContractPipelineArgs,
   InvokeContractInput,
-} from "./types.ts";
-import * as E from "./error.ts";
-
-import { Server } from "stellar-sdk/rpc";
-import { ColibriError } from "../../error/index.ts";
-
-import { buildToSimulate } from "../../transformers/pipeline-connectors/build-to-simulate.ts";
-import { assertRequiredArgs } from "../../common/assert/assert-args.ts";
-import { P_AssembleTransaction } from "../../processes/assemble-transaction/index.ts";
+} from "@/pipelines/invoke-contract/types.ts";
+import * as E from "@/pipelines/invoke-contract/error.ts";
+import { ColibriError } from "@/error/index.ts";
+import { buildToSimulate } from "@/transformers/pipeline-connectors/build-to-simulate.ts";
+import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
+import { P_AssembleTransaction } from "@/processes/assemble-transaction/index.ts";
 import {
   envSignReqToSignEnvelope,
   inputToBuild,
   signAuthEntriesToAssemble,
   signEnvelopeToSendTransaction,
   simulateToSignAuthEntries,
-} from "./connectors.ts";
-import { P_SignAuthEntries } from "../../processes/sign-auth-entries/index.ts";
-import { P_EnvelopeSigningRequirements } from "../../processes/index.ts";
-import { assembleToEnvelopeSigningRequirements } from "../../transformers/pipeline-connectors/assemble-to-envelope-signing-req.ts";
-import { P_SignEnvelope } from "../../processes/sign-envelope/index.ts";
-import { P_SendTransaction } from "../../processes/send-transaction/index.ts";
-import { assert } from "../../common/assert/assert.ts";
+} from "@/pipelines/invoke-contract/connectors.ts";
+import { P_SignAuthEntries } from "@/processes/sign-auth-entries/index.ts";
+import { P_EnvelopeSigningRequirements } from "@/processes/index.ts";
+import { assembleToEnvelopeSigningRequirements } from "@/transformers/pipeline-connectors/assemble-to-envelope-signing-req.ts";
+import { P_SignEnvelope } from "@/processes/sign-envelope/index.ts";
+import { P_SendTransaction } from "@/processes/send-transaction/index.ts";
+import { assert } from "@/common/assert/assert.ts";
 
 const { storeMetadata } = PipelineConnectors;
 
