@@ -1,5 +1,5 @@
-import type { Buffer } from "node:buffer";
-import type { NetworkConfig } from "../network/index.ts";
+import type { Buffer } from "buffer";
+import type { NetworkConfig } from "@/network/index.ts";
 import type { Spec } from "stellar-sdk/contract";
 import type { Server } from "stellar-sdk/rpc";
 
