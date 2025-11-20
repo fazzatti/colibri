@@ -14,25 +14,18 @@ const create = ({ networkConfig, feeBumpConfig }: FeeBumpPluginArgs) => {
     feeBumpConfig,
   });
 
-  const plugin = Plugin.create(
-    {
-      processInput: async (input: PluginInput): Promise<PluginInput> => {
-        const { transaction } = input;
+  const plugin = Plugin.create({
+    name: PLUGIN_NAME,
+    processInput: async (input: PluginInput): Promise<PluginInput> => {
+      const { transaction } = input;
 
-        assert(
-          isTransaction(transaction),
-          new E.NOT_A_TRANSACTION(transaction)
-        );
+      assert(isTransaction(transaction), new E.NOT_A_TRANSACTION(transaction));
 
-        const feeBumpTransaction = await wrapperPipeline.run({ transaction });
+      const feeBumpTransaction = await wrapperPipeline.run({ transaction });
 
-        return { ...input, transaction: feeBumpTransaction };
-      },
+      return { ...input, transaction: feeBumpTransaction };
     },
-    {
-      name: PLUGIN_NAME,
-    }
-  );
+  });
   return plugin;
 };
 
