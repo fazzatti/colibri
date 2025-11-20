@@ -1,4 +1,4 @@
-import { PipelineError } from "../error.ts";
+import { PipelineError } from "@/pipelines/error.ts";
 
 export enum Code {
   UNEXPECTED_ERROR = "PIPE_CLTX_000",

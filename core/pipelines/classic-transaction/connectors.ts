@@ -1,22 +1,20 @@
 import type { Server } from "stellar-sdk/rpc";
+import type { MetadataHelper, Transformer } from "convee";
 import type {
   ClassicTransactionInput,
   ClassicTransactionOutput,
-} from "./types.ts";
-import type { BuildTransactionInput } from "../../processes/build-transaction/types.ts";
-
-import type { AssembleTransactionOutput } from "../../processes/assemble-transaction/types.ts";
-import type { MetadataHelper, Transformer } from "convee";
-
-import type { EnvelopeSigningRequirementsOutput } from "../../processes/envelope-signing-requirements/types.ts";
+} from "@/pipelines/classic-transaction/types.ts";
+import type { BuildTransactionInput } from "@/processes/build-transaction/types.ts";
+import type { AssembleTransactionOutput } from "@/processes/assemble-transaction/types.ts";
+import type { EnvelopeSigningRequirementsOutput } from "@/processes/envelope-signing-requirements/types.ts";
 import type {
   SignEnvelopeInput,
   SignEnvelopeOutput,
-} from "../../processes/sign-envelope/types.ts";
+} from "@/processes/sign-envelope/types.ts";
 import type {
   SendTransactionInput,
   SendTransactionOutput,
-} from "../../processes/send-transaction/types.ts";
+} from "@/processes/send-transaction/types.ts";
 
 export const inputToBuild = (rpc: Server, networkPassphrase: string) => {
   return (input: ClassicTransactionInput): BuildTransactionInput => {

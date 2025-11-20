@@ -1,6 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-
 import {
   CustomNet,
   FutureNet,
@@ -13,7 +12,7 @@ import {
   isMainNet,
   isTestNet,
   isNetworkConfig,
-} from "./index.ts";
+} from "@/network/index.ts";
 
 describe("Network", () => {
   describe("Default Network Configurations", () => {

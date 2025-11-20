@@ -1,16 +1,13 @@
+import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { assertEquals, assertExists, assertInstanceOf } from "@std/assert";
 import { beforeAll, describe, it } from "@std/testing/bdd";
-
-import { TestNet } from "../../network/index.ts";
 import { Operation } from "stellar-sdk";
-import { createClassicTransactionPipeline } from "./index.ts";
-import { initializeWithFriendbot } from "../../tools/friendbot/initialize-with-friendbot.ts";
-
-import type { TransactionConfig } from "../../common/types/transaction-config/types.ts";
-import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
-
-import { LocalSigner } from "../../signer/local/index.ts";
-import { NativeAccount } from "../../account/native/index.ts";
+import { TestNet } from "@/network/index.ts";
+import { createClassicTransactionPipeline } from "@/pipelines/classic-transaction/index.ts";
+import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
+import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
+import { LocalSigner } from "@/signer/local/index.ts";
+import { NativeAccount } from "@/account/native/index.ts";
 
 describe(
   "[Testnet] ClassicTransaction Pipeline",
