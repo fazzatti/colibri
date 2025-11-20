@@ -1,9 +1,11 @@
 import { ProcessEngine } from "convee";
-import type { SignEnvelopeInput, SignEnvelopeOutput } from "./types.ts";
-import * as E from "./error.ts";
-
-import { assert } from "../../common/assert/assert.ts";
 import { TransactionBuilder } from "stellar-sdk";
+import type {
+  SignEnvelopeInput,
+  SignEnvelopeOutput,
+} from "@/processes/sign-envelope/types.ts";
+import * as E from "@/processes/sign-envelope/error.ts";
+import { assert } from "@/common/assert/assert.ts";
 
 const signEnvelopeProcess = async (
   input: SignEnvelopeInput

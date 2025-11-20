@@ -1,6 +1,6 @@
-import type { SignAuthEntriesInput } from "./types.ts";
-import { ProcessError } from "../error.ts";
 import type { xdr } from "stellar-sdk";
+import type { SignAuthEntriesInput } from "@/processes/sign-auth-entries/types.ts";
+import { ProcessError } from "@/processes/error.ts";
 
 export enum Code {
   UNEXPECTED_ERROR = "SAE_000",

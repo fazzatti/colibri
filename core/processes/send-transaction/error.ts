@@ -1,13 +1,12 @@
-import type { SendTransactionInput } from "./types.ts";
-import { ProcessError } from "../error.ts";
-
+import type { xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
+import { ProcessError } from "@/processes/error.ts";
 import {
   parseErrorResult,
   parseEvents,
   softTryToXDR,
-} from "../../common/helpers/xdr/general.ts";
-import type { xdr } from "stellar-sdk";
+} from "@/common/helpers/xdr/general.ts";
+import type { SendTransactionInput } from "@/processes/send-transaction/types.ts";
 
 export enum Code {
   UNEXPECTED_ERROR = "STX_000",

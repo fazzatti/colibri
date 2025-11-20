@@ -10,13 +10,13 @@ import {
   Transaction,
   TransactionBuilder,
 } from "stellar-sdk";
-import { P_AssembleTransaction } from "./index.ts";
-import { TestNet } from "../../network/index.ts";
-import type { AssembleTransactionInput } from "./types.ts";
+import { P_AssembleTransaction } from "@/processes/assemble-transaction/index.ts";
+import { TestNet } from "@/network/index.ts";
+import type { AssembleTransactionInput } from "@/processes/assemble-transaction/types.ts";
 
-import * as E from "./error.ts";
+import * as E from "@/processes/assemble-transaction/error.ts";
 import { stub } from "@std/testing/mock";
-import type { BaseFee } from "../../common/types/transaction-config/types.ts";
+import type { BaseFee } from "@/common/types/transaction-config/types.ts";
 
 // Helper function to create a test transaction
 const createTestTransaction = (fee: BaseFee = "100") => {

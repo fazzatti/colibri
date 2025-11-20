@@ -1,10 +1,9 @@
-import type { Server } from "stellar-sdk/rpc";
-
 import type { BeltPlugin } from "convee";
-import type { ColibriError } from "../../mod.ts";
-import type { BaseFee } from "../../common/types/transaction-config/types.ts";
+import type { Server } from "stellar-sdk/rpc";
 import type { Memo, Transaction, xdr } from "stellar-sdk";
-import type { Ed25519PublicKey } from "../../strkeys/types.ts";
+import type { ColibriError } from "@/error/index.ts";
+import type { BaseFee } from "@/common/types/transaction-config/types.ts";
+import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 
 export type BuildTransactionInput = {
   operations: xdr.Operation[];

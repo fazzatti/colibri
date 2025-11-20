@@ -1,4 +1,5 @@
-import { ColibriError, type Diagnostic } from "@colibri/core";
+import { ColibriError } from "@/error/index.ts";
+import type { Diagnostic } from "@/error/types.ts";
 
 export type Meta<Data> = {
   cause: Error | null;

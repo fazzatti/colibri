@@ -1,13 +1,14 @@
 import { ProcessEngine } from "convee";
-import type { WrapFeeBumpInput, WrapFeeBumpOutput } from "./types.ts";
-import * as E from "./error.ts";
-
-import { isFeeBumpTransaction } from "../../common/verifiers/is-fee-bump-transaction.ts";
-import { isTransaction } from "../../common/verifiers/is-transaction.ts";
-
-import { assert } from "../../common/assert/assert.ts";
 import { TransactionBuilder } from "stellar-sdk";
-import { assertRequiredArgs } from "../../common/assert/assert-args.ts";
+import type {
+  WrapFeeBumpInput,
+  WrapFeeBumpOutput,
+} from "@/processes/wrap-fee-bump/types.ts";
+import * as E from "@/processes/wrap-fee-bump/error.ts";
+import { isFeeBumpTransaction } from "@/common/verifiers/is-fee-bump-transaction.ts";
+import { isTransaction } from "@/common/verifiers/is-transaction.ts";
+import { assert } from "@/common/assert/assert.ts";
+import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 
 const wrapFeeBumpProcess = (input: WrapFeeBumpInput): WrapFeeBumpOutput => {
   try {

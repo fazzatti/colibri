@@ -1,17 +1,16 @@
 import { ProcessEngine } from "convee";
+import { Api, type Server } from "stellar-sdk/rpc";
 import {
   DEFAULT_OPTIONS,
   SendTransactionStatus,
   type SendTransactionInput,
   type SendTransactionOutput,
-} from "./types.ts";
-import * as E from "./error.ts";
-
-import { assertRequiredArgs } from "../../common/assert/assert-args.ts";
-import { Api, type Server } from "stellar-sdk/rpc";
-import { assert } from "../../common/assert/assert.ts";
-import { getTransactionTimeout } from "../../common/helpers/transaction.ts";
-import { ResultOrError } from "../../common/deferred/result-or-error.ts";
+} from "@/processes/send-transaction/types.ts";
+import * as E from "@/processes/send-transaction/error.ts";
+import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
+import { assert } from "@/common/assert/assert.ts";
+import { getTransactionTimeout } from "@/common/helpers/transaction.ts";
+import { ResultOrError } from "@/common/deferred/result-or-error.ts";
 
 const sendTransactionProcess = async (
   input: SendTransactionInput

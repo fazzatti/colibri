@@ -1,5 +1,5 @@
-import type { BuildTransactionInput } from "./types.ts";
-import { ProcessError } from "../error.ts";
+import type { BuildTransactionInput } from "@/processes/build-transaction/types.ts";
+import { ProcessError } from "@/processes/error.ts";
 
 export enum Code {
   UNEXPECTED_ERROR = "BTX_000",

@@ -1,22 +1,20 @@
 import { ProcessEngine } from "convee";
+import { xdr } from "stellar-sdk";
+import type { Api, Server } from "stellar-sdk/rpc";
 import type {
   SignAuthEntriesInput,
   SignAuthEntriesOutput,
   LedgerValidity,
-} from "./types.ts";
-import * as E from "./error.ts";
-
-import { assert } from "../../common/assert/assert.ts";
-import { xdr } from "stellar-sdk";
-import { assertRequiredArgs } from "../../common/assert/assert-args.ts";
-import type { Api, Server } from "stellar-sdk/rpc";
+} from "@/processes/sign-auth-entries/types.ts";
+import * as E from "@/processes/sign-auth-entries/error.ts";
+import { assert } from "@/common/assert/assert.ts";
+import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 import {
   getAddressSignerFromAuthEntry,
   getAddressTypeFromAuthEntry,
-} from "../../common/helpers/xdr/general.ts";
-
-import { ResultOrError } from "../../common/deferred/result-or-error.ts";
-import type { TransactionSigner } from "../../signer/types.ts";
+} from "@/common/helpers/xdr/general.ts";
+import { ResultOrError } from "@/common/deferred/result-or-error.ts";
+import type { TransactionSigner } from "@/signer/types.ts";
 
 const signAuthEntriesProcess = async (
   input: SignAuthEntriesInput

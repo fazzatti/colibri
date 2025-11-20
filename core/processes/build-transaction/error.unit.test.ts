@@ -2,17 +2,16 @@ import { assertRejects } from "@std/assert";
 
 import { describe, it } from "@std/testing/bdd";
 import { Account, Operation, type xdr } from "stellar-sdk";
-import { P_BuildTransaction } from "./index.ts";
-import { TestNet } from "../../network/index.ts";
+import { P_BuildTransaction } from "@/processes/build-transaction/index.ts";
+import { TestNet } from "@/network/index.ts";
 import type {
   BuildTransactionInput,
   TransactionPreconditions,
-} from "./types.ts";
+} from "@/processes/build-transaction/types.ts";
 import type { Server } from "stellar-sdk/rpc";
-
-import * as E from "./error.ts";
-import type { BaseFee } from "../../common/types/transaction-config/types.ts";
-import type { Ed25519PublicKey } from "../../strkeys/types.ts";
+import * as E from "@/processes/build-transaction/error.ts";
+import type { BaseFee } from "@/common/types/transaction-config/types.ts";
+import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 
 const mockRpc = {
   getAccount: (address: string) => {

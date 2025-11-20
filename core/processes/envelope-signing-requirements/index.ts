@@ -2,23 +2,20 @@ import { ProcessEngine } from "convee";
 import type {
   EnvelopeSigningRequirementsInput,
   EnvelopeSigningRequirementsOutput,
-} from "./types.ts";
-import * as E from "./error.ts";
-
-import { isFeeBumpTransaction } from "../../common/verifiers/is-fee-bump-transaction.ts";
-import { isTransaction } from "../../common/verifiers/is-transaction.ts";
-
-import { muxedAddressToBaseAccount } from "../../transformers/address/index.ts";
-
-import { ColibriError } from "../../error/index.ts";
-import { getRequiredOperationThresholdForClassicOperation } from "../../transformers/auth/index.ts";
+} from "@/processes/envelope-signing-requirements/types.ts";
+import * as E from "@/processes/envelope-signing-requirements/error.ts";
+import { isFeeBumpTransaction } from "@/common/verifiers/is-fee-bump-transaction.ts";
+import { isTransaction } from "@/common/verifiers/is-transaction.ts";
+import { muxedAddressToBaseAccount } from "@/transformers/address/index.ts";
+import { ColibriError } from "@/error/index.ts";
+import { getRequiredOperationThresholdForClassicOperation } from "@/transformers/auth/index.ts";
 import {
   OperationThreshold,
   type SignatureRequirement,
   type SignatureRequirementRaw,
-} from "../../signer/types.ts";
-import type { Ed25519PublicKey, MuxedAddress } from "../../strkeys/types.ts";
-import { StrKey } from "../../strkeys/index.ts";
+} from "@/signer/types.ts";
+import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
+import { StrKey } from "@/strkeys/index.ts";
 
 const envelopeSigningRequirementsProcess = (
   input: EnvelopeSigningRequirementsInput

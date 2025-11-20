@@ -1,6 +1,6 @@
-import type { AssembleTransactionInput } from "./types.ts";
-import { ProcessError } from "../error.ts";
-import { getOperationTypesFromTransaction } from "../../common/helpers/transaction.ts";
+import type { AssembleTransactionInput } from "@/processes/assemble-transaction/types.ts";
+import { ProcessError } from "@/processes/error.ts";
+import { getOperationTypesFromTransaction } from "@/common/helpers/transaction.ts";
 
 export enum Code {
   UNEXPECTED_ERROR = "ASM_000",

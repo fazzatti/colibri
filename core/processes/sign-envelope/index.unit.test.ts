@@ -1,6 +1,7 @@
 // deno-lint-ignore-file require-await
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import { describe, it, beforeEach } from "@std/testing/bdd";
+import type { Buffer } from "buffer";
 import {
   Account,
   FeeBumpTransaction,
@@ -9,16 +10,11 @@ import {
   Transaction,
   TransactionBuilder,
 } from "stellar-sdk";
-
-import { P_SignEnvelope } from "./index.ts";
-import * as E from "./error.ts";
-import { TestNet } from "../../network/index.ts";
-import {
-  OperationThreshold,
-  type TransactionSigner,
-} from "../../signer/types.ts";
-import type { Ed25519PublicKey } from "../../strkeys/types.ts";
-import type { Buffer } from "buffer";
+import { P_SignEnvelope } from "@/processes/sign-envelope/index.ts";
+import * as E from "@/processes/sign-envelope/error.ts";
+import { TestNet } from "@/network/index.ts";
+import { OperationThreshold, type TransactionSigner } from "@/signer/types.ts";
+import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 
 describe("SignEnvelope", () => {
   const { networkPassphrase } = TestNet();

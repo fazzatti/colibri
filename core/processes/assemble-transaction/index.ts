@@ -1,18 +1,18 @@
 import { ProcessEngine } from "convee";
+import { Account, Operation, TransactionBuilder, type xdr } from "stellar-sdk";
 import type {
   AssembleTransactionInput,
   AssembleTransactionOutput,
-} from "./types.ts";
-import * as E from "./error.ts";
+} from "@/processes/assemble-transaction/types.ts";
+import * as E from "@/processes/assemble-transaction/error.ts";
 
-import { assert } from "../../common/assert/assert.ts";
-import { isSmartContractTransaction } from "../../common/verifiers/is-smart-contract-transaction.ts";
+import { assert } from "@/common/assert/assert.ts";
+import { isSmartContractTransaction } from "@/common/verifiers/is-smart-contract-transaction.ts";
 import {
   getOperationsFromTransaction,
   getOperationType,
-} from "../../common/helpers/transaction.ts";
-import { Account, Operation, TransactionBuilder, type xdr } from "stellar-sdk";
-import { assertRequiredArgs } from "../../common/assert/assert-args.ts";
+} from "@/common/helpers/transaction.ts";
+import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 
 const assembleTransactionProcess = async (
   input: AssembleTransactionInput

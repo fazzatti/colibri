@@ -2,8 +2,8 @@ import { ProcessEngine } from "convee";
 import type {
   SimulateTransactionInput,
   SimulateTransactionOutput,
-} from "./types.ts";
-import * as E from "./error.ts";
+} from "@/processes/simulate-transaction/types.ts";
+import * as E from "@/processes/simulate-transaction/error.ts";
 
 import { Api } from "stellar-sdk/rpc";
 

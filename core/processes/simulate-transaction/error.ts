@@ -1,6 +1,6 @@
 import type { Api } from "stellar-sdk/rpc";
-import type { SimulateTransactionInput } from "./types.ts";
-import { ProcessError } from "../error.ts";
+import type { SimulateTransactionInput } from "@/processes/simulate-transaction/types.ts";
+import { ProcessError } from "@/processes/error.ts";
 
 export enum Code {
   UNEXPECTED_ERROR = "SIM_000",
