@@ -1,2 +1,2 @@
-export * from "./assert-args.ts";
-export * from "./assert.ts";
+export * from "@/common/assert/assert-args.ts";
+export * from "@/common/assert/assert.ts";

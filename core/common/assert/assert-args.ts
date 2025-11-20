@@ -1,4 +1,4 @@
-import type { ColibriError } from "../../mod.ts";
+import type { ColibriError } from "@/error/index.ts";
 
 // Asserts that all provided arguments are neither null nor undefined.
 // Throws the provided error if any argument is invalid.

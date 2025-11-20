@@ -1,4 +1,4 @@
-import type { TransactionSigner } from "../../signer/types.ts";
+import type { TransactionSigner } from "@/signer/types.ts";
 
 export const isTransactionSigner = (
   signer: unknown

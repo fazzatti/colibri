@@ -1,7 +1,7 @@
-import type { Api } from "stellar-sdk/rpc";
-import type { ContractId } from "../../strkeys/types.ts";
 import { Address, type xdr } from "stellar-sdk";
-import { ColibriError } from "../../error/index.ts";
+import type { Api } from "stellar-sdk/rpc";
+import type { ContractId } from "@/strkeys/types.ts";
+import { ColibriError } from "@/error/index.ts";
 
 enum ErrorCode {
   FAILED_TO_GET_ASSET_CONTRACT_ID = "HLP_FSR_01",

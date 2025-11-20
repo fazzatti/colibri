@@ -1,5 +1,9 @@
 import { Address, nativeToScVal, scValToNative, xdr } from "stellar-sdk";
-import type { AuthEntryParams, FnArg, InvocationParams } from "./types.ts";
+import type {
+  AuthEntryParams,
+  FnArg,
+  InvocationParams,
+} from "@/common/helpers/xdr/types.ts";
 
 const invocationToParams = (
   invocation: xdr.SorobanAuthorizedInvocation

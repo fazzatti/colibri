@@ -15,7 +15,7 @@ import {
   getOperationsFromTransaction,
   getOperationType,
   getOperationTypesFromTransaction,
-} from "./transaction.ts";
+} from "@/common/helpers/transaction.ts";
 
 describe("Transaction Helpers", () => {
   const sourceKp = Keypair.random();
