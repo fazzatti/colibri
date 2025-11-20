@@ -7,7 +7,7 @@ import type {
   EnvelopeSigningRequirementsOutput,
   SignEnvelopeInput,
 } from "@colibri/core";
-import type { FeeBumpPipelineInput } from "./types.ts";
+import type { FeeBumpPipelineInput } from "@/pipeline/types.ts";
 
 export const inputToBuild = (
   networkPassphrase: string,

@@ -1,21 +1,21 @@
+import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { assertEquals, assertExists } from "@std/assert";
 import { afterEach, beforeAll, describe, it } from "@std/testing/bdd";
-
-import { PLG_FeeBump } from "./index.ts";
-
+import { Asset, Operation } from "stellar-sdk";
+import { Api } from "stellar-sdk/rpc";
+import {
+  initializeWithFriendbot,
+  NativeAccount,
+  LocalSigner,
+  type Ed25519PublicKey,
+} from "@colibri/core/";
+import { PLG_FeeBump } from "@/index.ts";
 import {
   P_SendTransaction,
   TestNet,
   PIPE_InvokeContract,
   type TransactionConfig,
 } from "@colibri/core";
-import { initializeWithFriendbot } from "../../../core/tools/friendbot/initialize-with-friendbot.ts";
-import { NativeAccount } from "../../../core/account/native/index.ts";
-import { LocalSigner } from "../../../core/signer/local/index.ts";
-import type { Ed25519PublicKey } from "../../../core/strkeys/types.ts";
-import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
-import { Asset, Operation } from "stellar-sdk";
-import { Api } from "stellar-sdk/rpc";
 
 describe(
   "[Testnet] FeeBump Plugin",

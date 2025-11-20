@@ -3,10 +3,10 @@ import {
   type FeeBumpPluginArgs,
   PLUGIN_NAME,
   type PluginInput,
-} from "./types.ts";
-import { PIPE_FeeBump } from "./pipeline/pipeline.ts";
+} from "@/types.ts";
+import { PIPE_FeeBump } from "@/pipeline/pipeline.ts";
 import { assert, isTransaction, P_SendTransaction } from "@colibri/core";
-import * as E from "./error.ts";
+import * as E from "@/error.ts";
 
 const create = ({ networkConfig, feeBumpConfig }: FeeBumpPluginArgs) => {
   const wrapperPipeline = PIPE_FeeBump.create({
