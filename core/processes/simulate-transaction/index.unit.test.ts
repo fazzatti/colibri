@@ -10,7 +10,7 @@ import {
   TransactionBuilder,
 } from "stellar-sdk";
 import { P_SimulateTransaction } from "@/processes/simulate-transaction/index.ts";
-import { TestNet } from "@/network/index.ts";
+import { NetworkConfig } from "@/network/index.ts";
 import type { SimulateTransactionInput } from "@/processes/simulate-transaction/types.ts";
 import * as E from "@/processes/simulate-transaction/error.ts";
 
@@ -23,7 +23,7 @@ const createTestTransaction = () => {
 
   return new TransactionBuilder(account, {
     fee: "100",
-    networkPassphrase: TestNet().networkPassphrase,
+    networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
   })
     .addOperation(Operation.setOptions({}))
     .setTimeout(300)

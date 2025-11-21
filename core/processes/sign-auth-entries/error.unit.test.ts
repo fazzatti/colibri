@@ -6,12 +6,12 @@ import type { Server } from "stellar-sdk/rpc";
 import { P_SignAuthEntries } from "@/processes/sign-auth-entries/index.ts";
 import * as E from "@/processes/sign-auth-entries/error.ts";
 import type { SignAuthEntriesInput } from "@/processes/sign-auth-entries/types.ts";
-import { TestNet } from "@/network/index.ts";
+import { NetworkConfig } from "@/network/index.ts";
 import type { TransactionSigner } from "@/signer/types.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 
 describe("SignAuthEntries", () => {
-  const { networkPassphrase } = TestNet();
+  const { networkPassphrase } = NetworkConfig.TestNet();
 
   type MockSigner = TransactionSigner & {
     calls: number;

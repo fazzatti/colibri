@@ -3,7 +3,7 @@ import { assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Account, Operation, type xdr } from "stellar-sdk";
 import { P_BuildTransaction } from "@/processes/build-transaction/index.ts";
-import { TestNet } from "@/network/index.ts";
+import { NetworkConfig } from "@/network/index.ts";
 import type {
   BuildTransactionInput,
   TransactionPreconditions,
@@ -36,7 +36,7 @@ describe("BuildTransactionErrors", () => {
         operations: [Operation.setOptions({})],
         source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         baseFee: "not-a-number" as unknown as BaseFee,
-        networkPassphrase: TestNet().networkPassphrase,
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
       };
 
       await assertRejects(
@@ -51,7 +51,7 @@ describe("BuildTransactionErrors", () => {
         operations: [Operation.setOptions({})],
         source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         baseFee: "0",
-        networkPassphrase: TestNet().networkPassphrase,
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
       };
 
       await assertRejects(
@@ -66,7 +66,7 @@ describe("BuildTransactionErrors", () => {
         operations: [Operation.setOptions({})],
         source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         baseFee: "-100",
-        networkPassphrase: TestNet().networkPassphrase,
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
       };
 
       await assertRejects(
@@ -89,7 +89,7 @@ describe("BuildTransactionErrors", () => {
         operations: [Operation.setOptions({})],
         source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         baseFee: "100",
-        networkPassphrase: TestNet().networkPassphrase,
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
       };
 
       await assertRejects(
@@ -103,7 +103,7 @@ describe("BuildTransactionErrors", () => {
         operations: [Operation.setOptions({})],
         source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         baseFee: "100",
-        networkPassphrase: TestNet().networkPassphrase,
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
         sequence: "invalid-sequence",
       };
 
@@ -121,7 +121,7 @@ describe("BuildTransactionErrors", () => {
         operations: [Operation.setOptions({})],
         source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         baseFee: "100",
-        networkPassphrase: TestNet().networkPassphrase,
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
         preconditions: {
           timeBounds: { minTime: 1000, maxTime: 2000 },
           timeoutSeconds: 300,
@@ -142,7 +142,7 @@ describe("BuildTransactionErrors", () => {
         operations: [Operation.setOptions({})],
         source: "INVALID_ACCOUNT_ID" as unknown as Ed25519PublicKey, // Force faulty type
         baseFee: "100",
-        networkPassphrase: TestNet().networkPassphrase,
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
       };
 
       await assertRejects(
@@ -159,7 +159,7 @@ describe("BuildTransactionErrors", () => {
         operations: [],
         source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         baseFee: "100",
-        networkPassphrase: TestNet().networkPassphrase,
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
       };
 
       await assertRejects(
@@ -182,7 +182,7 @@ describe("BuildTransactionErrors", () => {
         operations: [Operation.setOptions({})],
         source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         baseFee: "100",
-        networkPassphrase: TestNet().networkPassphrase,
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
       };
 
       await assertRejects(
@@ -217,7 +217,7 @@ describe("BuildTransactionErrors", () => {
         operations: [Operation.setOptions({})],
         source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         baseFee: "100",
-        networkPassphrase: TestNet().networkPassphrase,
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
         preconditions: {
           timeBounds: { minTime: -1, maxTime: -2 }, // Invalid time bounds
         } as unknown as TransactionPreconditions,
@@ -237,7 +237,7 @@ describe("BuildTransactionErrors", () => {
         operations: [Operation.setOptions({})],
         source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         baseFee: "100",
-        networkPassphrase: TestNet().networkPassphrase,
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
         sorobanData:
           "invalid-soroban-data" as unknown as xdr.SorobanTransactionData,
       };

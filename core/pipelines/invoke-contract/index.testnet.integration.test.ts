@@ -2,7 +2,7 @@ import { assertEquals, assertExists, assertInstanceOf } from "@std/assert";
 import { beforeAll, describe, it } from "@std/testing/bdd";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { Asset, Operation, nativeToScVal, xdr } from "stellar-sdk";
-import { TestNet } from "@/network/index.ts";
+import { NetworkConfig } from "@/network/index.ts";
 import { createInvokeContractPipeline } from "@/pipelines/invoke-contract/index.ts";
 import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
@@ -15,7 +15,7 @@ describe(
   disableSanitizeConfig,
 
   () => {
-    const networkConfig = TestNet();
+    const networkConfig = NetworkConfig.TestNet();
     const xlmContractId = Asset.native().contractId(
       networkConfig.networkPassphrase
     );

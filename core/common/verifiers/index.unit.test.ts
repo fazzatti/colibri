@@ -5,7 +5,7 @@ import {
   type Transaction,
   TransactionBuilder,
 } from "stellar-sdk";
-import { TestNet } from "@/network/index.ts";
+import { NetworkConfig } from "@/network/index.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import { isTransaction } from "@/common/verifiers/is-transaction.ts";
 import { isFeeBumpTransaction } from "@/common/verifiers/is-fee-bump-transaction.ts";
@@ -83,7 +83,7 @@ describe("Verifiers", () => {
   });
 
   describe("isTransaction", () => {
-    const { networkPassphrase } = TestNet();
+    const { networkPassphrase } = NetworkConfig.TestNet();
     it("should verify valid Transaction objects as true", () => {
       const mockTransactions = [
         TransactionBuilder.fromXDR(
@@ -141,7 +141,7 @@ describe("Verifiers", () => {
   });
 
   describe("isFeeBumpTransaction", () => {
-    const { networkPassphrase } = TestNet();
+    const { networkPassphrase } = NetworkConfig.TestNet();
     it("should verify valid isFeeBumpTransaction objects as true", () => {
       const mockFeeBumpTransactions = [
         TransactionBuilder.fromXDR(
@@ -234,7 +234,7 @@ describe("Verifiers", () => {
   });
 
   describe("isSmartContractTransaction", () => {
-    const { networkPassphrase } = TestNet();
+    const { networkPassphrase } = NetworkConfig.TestNet();
 
     it("should verify valid smart contract transactions (invokeHostFunction)", () => {
       const invokeHostFunctionTx = TransactionBuilder.fromXDR(

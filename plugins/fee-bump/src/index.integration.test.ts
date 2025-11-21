@@ -12,7 +12,7 @@ import {
 import { PLG_FeeBump } from "@/index.ts";
 import {
   P_SendTransaction,
-  TestNet,
+  NetworkConfig,
   PIPE_InvokeContract,
   type TransactionConfig,
 } from "@colibri/core";
@@ -22,7 +22,7 @@ describe(
   disableSanitizeConfig,
 
   () => {
-    const networkConfig = TestNet();
+    const networkConfig = NetworkConfig.TestNet();
 
     const xlmContractId = Asset.native().contractId(
       networkConfig.networkPassphrase

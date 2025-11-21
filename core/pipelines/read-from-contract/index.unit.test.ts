@@ -1,20 +1,21 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Operation } from "stellar-sdk";
-import { type NetworkConfig, NetworkType, TestNet } from "@/network/index.ts";
+import { NetworkConfig } from "@/network/index.ts";
 import * as E from "@/pipelines/read-from-contract/error.ts";
 import { createReadFromContractPipeline } from "@/pipelines/read-from-contract/index.ts";
 import { inputToBuild } from "@/pipelines/read-from-contract/connectors.ts";
 import type { ReadFromContractInput } from "@/pipelines/read-from-contract/types.ts";
+import { NetworkType } from "@/network/types.ts";
 
 describe("createReadFromContractPipeline", () => {
   describe("Construction", () => {
     it("creates pipeline with proper name when valid config is provided", () => {
-      const networkConfig: NetworkConfig = {
+      const networkConfig: NetworkConfig = NetworkConfig.CustomNet({
         networkPassphrase: "Test SDF Network ; September 2015",
         rpcUrl: "https://soroban-testnet.stellar.org",
         type: NetworkType.TESTNET,
-      };
+      });
 
       const pipeline = createReadFromContractPipeline({ networkConfig });
 
@@ -22,7 +23,7 @@ describe("createReadFromContractPipeline", () => {
     });
 
     it("inputToBuild: converts input to BuildTransactionInput", () => {
-      const networkConfig: NetworkConfig = TestNet();
+      const networkConfig: NetworkConfig = NetworkConfig.TestNet();
       const input: ReadFromContractInput = {
         operations: [Operation.setOptions({})],
       };
@@ -83,11 +84,11 @@ describe("createReadFromContractPipeline", () => {
     });
 
     it("throws UNEXPECTED_ERROR when an unknown error occurs", () => {
-      const networkConfig: NetworkConfig = {
+      const networkConfig: NetworkConfig = NetworkConfig.CustomNet({
         networkPassphrase: "Test SDF Network ; September 2015",
         rpcUrl: "a", // invalid URL to trigger error
         type: NetworkType.TESTNET,
-      };
+      });
       assertThrows(
         () => createReadFromContractPipeline({ networkConfig }),
         E.UNEXPECTED_ERROR
