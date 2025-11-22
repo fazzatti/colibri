@@ -10,7 +10,7 @@ import {
 } from "stellar-sdk";
 import { P_WrapFeeBump } from "@/processes/wrap-fee-bump/index.ts";
 import * as E from "@/processes/wrap-fee-bump/error.ts";
-import { TestNet } from "@/network/index.ts";
+import { NetworkConfig } from "@/network/index.ts";
 import { isFeeBumpTransaction } from "@/common/verifiers/is-fee-bump-transaction.ts";
 import type {
   BaseFee,
@@ -19,7 +19,7 @@ import type {
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 
 describe("WrapFeeBump", () => {
-  const { networkPassphrase } = TestNet();
+  const { networkPassphrase } = NetworkConfig.TestNet();
 
   const assembleTransaction = (source: string, ops: xdr.Operation[]) => {
     const sourceAcc = new Account(source, "100");

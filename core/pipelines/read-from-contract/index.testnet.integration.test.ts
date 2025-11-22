@@ -2,11 +2,11 @@ import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-c
 import { assertEquals, assertExists, assertInstanceOf } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Asset, nativeToScVal, Operation, xdr } from "stellar-sdk";
-import { TestNet } from "@/network/index.ts";
+import { NetworkConfig } from "@/network/index.ts";
 import { createReadFromContractPipeline } from "@/pipelines/read-from-contract/index.ts";
 
 describe("[Testnet] ReadFromContract Pipeline", disableSanitizeConfig, () => {
-  const networkConfig = TestNet();
+  const networkConfig = NetworkConfig.TestNet();
   const xlmContractId = Asset.native().contractId(
     networkConfig.networkPassphrase
   );

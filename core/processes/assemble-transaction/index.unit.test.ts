@@ -11,7 +11,7 @@ import {
   TransactionBuilder,
 } from "stellar-sdk";
 import { P_AssembleTransaction } from "@/processes/assemble-transaction/index.ts";
-import { TestNet } from "@/network/index.ts";
+import { NetworkConfig } from "@/network/index.ts";
 import type { AssembleTransactionInput } from "@/processes/assemble-transaction/types.ts";
 
 import * as E from "@/processes/assemble-transaction/error.ts";
@@ -27,7 +27,7 @@ const createTestTransaction = (fee: BaseFee = "100") => {
 
   return new TransactionBuilder(account, {
     fee: fee,
-    networkPassphrase: TestNet().networkPassphrase,
+    networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
   })
     .addOperation(
       Operation.invokeContractFunction({
@@ -116,7 +116,7 @@ describe("AssembleTransaction", () => {
 
       const nonSmartContractTx = new TransactionBuilder(account, {
         fee: "100",
-        networkPassphrase: TestNet().networkPassphrase,
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
       })
         .addOperation(
           Operation.payment({
@@ -195,7 +195,7 @@ describe("AssembleTransaction", () => {
 
         const tx = new TransactionBuilder(account, {
           fee: "100",
-          networkPassphrase: TestNet().networkPassphrase,
+          networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
         })
           .addOperation(
             Operation.invokeContractFunction({

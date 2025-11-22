@@ -13,6 +13,7 @@ export * from "@/error/index.ts";
 export * from "@/error/types.ts";
 
 export * from "@/network/index.ts";
+export * from "@/network/types.ts";
 
 export * from "@/processes/index.ts";
 export * as transformers from "@/transformers/index.ts";

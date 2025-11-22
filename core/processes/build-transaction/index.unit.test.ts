@@ -12,7 +12,7 @@ import {
   Address,
 } from "stellar-sdk";
 import { P_BuildTransaction } from "@/processes/build-transaction/index.ts";
-import { TestNet } from "@/network/index.ts";
+import { NetworkConfig } from "@/network/index.ts";
 import type { BuildTransactionInput } from "@/processes/build-transaction/types.ts";
 
 let isGetAccountCalled = false;
@@ -36,7 +36,7 @@ describe("BuildTransaction", () => {
         operations: [Operation.setOptions({})],
         source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         baseFee: "100",
-        networkPassphrase: TestNet().networkPassphrase,
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
       };
 
       const tx = await P_BuildTransaction().run(input);
@@ -56,7 +56,7 @@ describe("BuildTransaction", () => {
           operations: [Operation.setOptions({})],
           source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
           baseFee: "100",
-          networkPassphrase: TestNet().networkPassphrase,
+          networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
         };
 
         await P_BuildTransaction().run(input);
@@ -68,7 +68,7 @@ describe("BuildTransaction", () => {
           operations: [Operation.setOptions({})],
           source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
           baseFee: "100",
-          networkPassphrase: TestNet().networkPassphrase,
+          networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
           sequence: "500",
         };
 
@@ -93,7 +93,7 @@ describe("BuildTransaction", () => {
           operations: [operation],
           source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
           baseFee: "100",
-          networkPassphrase: TestNet().networkPassphrase,
+          networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
         };
 
         const tx = await P_BuildTransaction().run(input);
@@ -127,7 +127,7 @@ describe("BuildTransaction", () => {
           operations,
           source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
           baseFee: "100",
-          networkPassphrase: TestNet().networkPassphrase,
+          networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
         };
 
         const tx = await P_BuildTransaction().run(input);
@@ -143,7 +143,7 @@ describe("BuildTransaction", () => {
           operations: [Operation.setOptions({})],
           source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
           baseFee: "100",
-          networkPassphrase: TestNet().networkPassphrase,
+          networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
           preconditions: {
             timeoutSeconds: 300,
           },
@@ -159,7 +159,7 @@ describe("BuildTransaction", () => {
           operations: [Operation.setOptions({})],
           source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
           baseFee: "100",
-          networkPassphrase: TestNet().networkPassphrase,
+          networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
           preconditions: {
             timeBounds: {
               minTime: 1000,
@@ -180,7 +180,7 @@ describe("BuildTransaction", () => {
           operations: [Operation.setOptions({})],
           source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
           baseFee: "100",
-          networkPassphrase: TestNet().networkPassphrase,
+          networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
           preconditions: {
             timeBounds: {
               maxTime: 2000,
@@ -200,7 +200,7 @@ describe("BuildTransaction", () => {
           operations: [Operation.setOptions({})],
           source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
           baseFee: "100",
-          networkPassphrase: TestNet().networkPassphrase,
+          networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
           preconditions: {
             timeBounds: {
               minTime: 1000,
@@ -220,7 +220,7 @@ describe("BuildTransaction", () => {
           operations: [Operation.setOptions({})],
           source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
           baseFee: "100",
-          networkPassphrase: TestNet().networkPassphrase,
+          networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
           preconditions: {
             ledgerBounds: {
               minLedger: 100,
@@ -241,7 +241,7 @@ describe("BuildTransaction", () => {
           operations: [Operation.setOptions({})],
           source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
           baseFee: "100",
-          networkPassphrase: TestNet().networkPassphrase,
+          networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
           preconditions: {
             ledgerBounds: {
               maxLedger: 200,
@@ -261,7 +261,7 @@ describe("BuildTransaction", () => {
           operations: [Operation.setOptions({})],
           source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
           baseFee: "100",
-          networkPassphrase: TestNet().networkPassphrase,
+          networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
           preconditions: {
             ledgerBounds: {
               minLedger: 100,
@@ -282,7 +282,7 @@ describe("BuildTransaction", () => {
         operations: [Operation.setOptions({})],
         source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         baseFee: "100",
-        networkPassphrase: TestNet().networkPassphrase,
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
         preconditions: {
           minAccountSequence: "100",
         },
@@ -299,7 +299,7 @@ describe("BuildTransaction", () => {
         operations: [Operation.setOptions({})],
         source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         baseFee: "100",
-        networkPassphrase: TestNet().networkPassphrase,
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
         preconditions: {
           minAccountSequenceAge: 100,
         },
@@ -316,7 +316,7 @@ describe("BuildTransaction", () => {
         operations: [Operation.setOptions({})],
         source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         baseFee: "100",
-        networkPassphrase: TestNet().networkPassphrase,
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
         preconditions: {
           minAccountSequenceLedgerGap: 100,
         },
@@ -333,7 +333,7 @@ describe("BuildTransaction", () => {
         operations: [Operation.setOptions({})],
         source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         baseFee: "100",
-        networkPassphrase: TestNet().networkPassphrase,
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
         preconditions: {
           extraSigners: [
             "GD5PUITTMNVKWHSLXIWU732MOSEONSMYCXU3A5KS2USRWQONMYO5TTFN",
@@ -365,7 +365,7 @@ describe("BuildTransaction", () => {
           operations: [Operation.setOptions({})],
           source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
           baseFee: "100",
-          networkPassphrase: TestNet().networkPassphrase,
+          networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
           memo: new Memo(MemoText, "test memo"),
         };
 
@@ -387,7 +387,7 @@ describe("BuildTransaction", () => {
           operations: [Operation.setOptions({})],
           source: "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
           baseFee: "100",
-          networkPassphrase: TestNet().networkPassphrase,
+          networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
           sorobanData,
         };
 

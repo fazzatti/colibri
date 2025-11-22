@@ -4,7 +4,7 @@ import { Buffer } from "buffer";
 import { xdr, Address } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
 import { P_SignAuthEntries } from "@/processes/sign-auth-entries/index.ts";
-import { TestNet } from "@/network/index.ts";
+import { NetworkConfig } from "@/network/index.ts";
 import type { TransactionSigner } from "@/signer/types.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 
@@ -117,7 +117,7 @@ const makeRpc = (sequence = 1000): Server =>
   } as unknown as Server);
 
 describe("SignAuthEntries", () => {
-  const { networkPassphrase } = TestNet();
+  const { networkPassphrase } = NetworkConfig.TestNet();
 
   it("signs a single account entry", async () => {
     const account = Address.account(Buffer.alloc(32, 1));

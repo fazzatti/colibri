@@ -5,18 +5,19 @@ import { Contract } from "@/contract/index.ts";
 import * as E from "@/contract/error.ts";
 import type { Server } from "stellar-sdk/rpc";
 import type { ContractConfig } from "@/contract/types.ts";
-import { type NetworkConfig, NetworkType } from "@/network/index.ts";
+import { NetworkConfig } from "@/network/index.ts";
+import { NetworkType } from "@/network/types.ts";
 
 describe("Contract", () => {
   describe("construction", () => {
     it("instantiates a contract without rpc", () => {
       const mockWasm = Buffer.from("mock");
       const contract = Contract.create({
-        networkConfig: {
+        networkConfig: NetworkConfig.CustomNet({
           type: NetworkType.TESTNET,
           networkPassphrase: "Test Network",
           rpcUrl: "https://rpc.testnet.stellar.org",
-        },
+        }),
         contractConfig: {
           wasm: mockWasm,
         },
@@ -28,10 +29,10 @@ describe("Contract", () => {
       const mockWasm = Buffer.from("mock");
       const mockRpc = {} as unknown as Server;
       const contract = Contract.create({
-        networkConfig: {
+        networkConfig: NetworkConfig.CustomNet({
           type: NetworkType.TESTNET,
           networkPassphrase: "Test Network",
-        },
+        }),
         contractConfig: {
           wasm: mockWasm,
         },
@@ -85,10 +86,10 @@ describe("Contract", () => {
       assertThrows(
         () =>
           Contract.create({
-            networkConfig: {
+            networkConfig: NetworkConfig.CustomNet({
               type: NetworkType.TESTNET,
               networkPassphrase: "Test Network",
-            },
+            }),
             contractConfig: {
               wasm: mockWasm,
             },
@@ -101,11 +102,11 @@ describe("Contract", () => {
       assertThrows(
         () =>
           Contract.create({
-            networkConfig: {
+            networkConfig: NetworkConfig.CustomNet({
               type: NetworkType.TESTNET,
               networkPassphrase: "Test Network",
               rpcUrl: "https://rpc.testnet.stellar.org",
-            },
+            }),
             contractConfig: {} as unknown as ContractConfig,
           }),
         E.INVALID_CONTRACT_CONFIG
@@ -116,10 +117,10 @@ describe("Contract", () => {
       const mockWasm = Buffer.from("mock");
       const mockRpc = {} as unknown as Server;
       const contractWithWasm = Contract.create({
-        networkConfig: {
+        networkConfig: NetworkConfig.CustomNet({
           type: NetworkType.TESTNET,
           networkPassphrase: "Test Network",
-        },
+        }),
         contractConfig: {
           wasm: mockWasm,
         },
@@ -127,10 +128,10 @@ describe("Contract", () => {
       });
 
       const contractWithWasmHash = Contract.create({
-        networkConfig: {
+        networkConfig: NetworkConfig.CustomNet({
           type: NetworkType.TESTNET,
           networkPassphrase: "Test Network",
-        },
+        }),
         contractConfig: {
           wasmHash: "mockHash",
         },
