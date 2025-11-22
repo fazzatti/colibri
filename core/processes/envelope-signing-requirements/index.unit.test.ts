@@ -11,14 +11,14 @@ import {
 } from "stellar-sdk";
 import { P_EnvelopeSigningRequirements } from "@/processes/envelope-signing-requirements/index.ts";
 import * as E from "@/processes/envelope-signing-requirements/error.ts";
-import { TestNet } from "@/network/index.ts";
+import { NetworkConfig } from "@/network/index.ts";
 import { muxedAddressToBaseAccount } from "@/transformers/address/index.ts";
 import type { EnvelopeSigningRequirementsInput } from "@/processes/envelope-signing-requirements/types.ts";
 import type { MuxedAddress } from "@/strkeys/types.ts";
 import { OperationThreshold } from "@/signer/types.ts";
 
 describe("EnvelopeSigningRequirements", () => {
-  const { networkPassphrase } = TestNet();
+  const { networkPassphrase } = NetworkConfig.TestNet();
 
   const assembleTransactionWithMuxed = (
     muxed: MuxedAddress,

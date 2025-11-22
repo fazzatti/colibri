@@ -3,13 +3,12 @@ import { assertEquals, assertExists } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import type { Server } from "stellar-sdk/rpc";
 import {
-  TestNet,
   PIPE_InvokeContract,
   P_SendTransaction,
   isFeeBumpTransaction,
   NativeAccount,
   LocalSigner,
-  type NetworkConfig,
+  NetworkConfig,
 } from "@colibri/core";
 import { PLG_FeeBump } from "@/index.ts";
 import * as E from "@/error.ts";
@@ -24,7 +23,7 @@ import { assertRejects } from "@std/assert";
 import type { PluginInput } from "@/types.ts";
 
 describe("FeeBump Plugin", () => {
-  const networkConfig = TestNet();
+  const networkConfig = NetworkConfig.TestNet();
 
   // Use the same account pattern as the integration test
   const innerSource = NativeAccount.fromMasterSigner(

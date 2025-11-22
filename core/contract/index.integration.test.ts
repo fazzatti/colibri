@@ -5,7 +5,7 @@ import { beforeAll, describe, it } from "@std/testing/bdd";
 import { Buffer } from "buffer";
 import { Asset, nativeToScVal, xdr } from "stellar-sdk";
 import { Contract } from "@/contract/index.ts";
-import { TestNet } from "@/network/index.ts";
+import { NetworkConfig } from "@/network/index.ts";
 import { NativeAccount } from "@/account/native/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
@@ -23,7 +23,7 @@ import * as E from "@/contract/error.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 
 describe("[Testnet] Contract", disableSanitizeConfig, () => {
-  const networkConfig = TestNet();
+  const networkConfig = NetworkConfig.TestNet();
 
   const admin = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
 

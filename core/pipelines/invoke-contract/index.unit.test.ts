@@ -3,7 +3,7 @@ import { describe, it } from "@std/testing/bdd";
 import { MetadataHelper } from "convee";
 import { Operation, SorobanDataBuilder, xdr } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
-import { type NetworkConfig, NetworkType, TestNet } from "@/network/index.ts";
+import { NetworkConfig } from "@/network/index.ts";
 import * as E from "@/pipelines/invoke-contract/error.ts";
 import { createInvokeContractPipeline } from "@/pipelines/invoke-contract/index.ts";
 import type { SimulateTransactionOutput } from "@/processes/simulate-transaction/types.ts";
@@ -17,15 +17,16 @@ import {
 import type { InvokeContractInput } from "@/pipelines/invoke-contract/types.ts";
 import type { EnvelopeSigningRequirementsOutput } from "@/processes/envelope-signing-requirements/types.ts";
 import type { SignEnvelopeOutput } from "@/processes/sign-envelope/types.ts";
+import { NetworkType } from "@/network/types.ts";
 
 describe("createInvokeContractPipeline", () => {
   describe("Construction", () => {
     it("creates pipeline with proper name when valid config is provided", () => {
-      const networkConfig: NetworkConfig = {
+      const networkConfig: NetworkConfig = NetworkConfig.CustomNet({
         networkPassphrase: "Test SDF Network ; September 2015",
         rpcUrl: "https://soroban-testnet.stellar.org",
         type: NetworkType.TESTNET,
-      };
+      });
 
       const pipeline = createInvokeContractPipeline({ networkConfig });
 
@@ -36,7 +37,7 @@ describe("createInvokeContractPipeline", () => {
   describe("Connectors", () => {
     describe("inputToBuild", () => {
       it("transforms input to BuildTransactionInput", () => {
-        const networkConfig = TestNet();
+        const networkConfig = NetworkConfig.TestNet();
         const mockRpc = {} as unknown as Server;
         const input: InvokeContractInput = {
           operations: [Operation.setOptions({})],
@@ -289,11 +290,11 @@ describe("createInvokeContractPipeline", () => {
     });
 
     it("throws UNEXPECTED_ERROR when an unknown error occurs", () => {
-      const networkConfig: NetworkConfig = {
+      const networkConfig: NetworkConfig = NetworkConfig.CustomNet({
         networkPassphrase: "Test SDF Network ; September 2015",
         rpcUrl: "a", // invalid URL to trigger error
         type: NetworkType.TESTNET,
-      };
+      });
       assertThrows(
         () => createInvokeContractPipeline({ networkConfig }),
         E.UNEXPECTED_ERROR

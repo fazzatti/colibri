@@ -1,6 +1,6 @@
 # @colibri/core
 
-Colibri Core supplies pipelines, processes, and utilities for Stellar and Soroban workflows. Version `0.1.0` marks the first stable release with hardened error handling, transaction orchestration, account primitives, and typed helpers ready for production pipelines.
+Colibri Core supplies pipelines, processes, and utilities for Stellar and Soroban workflows. Currently in beta release with hardened error handling, transaction orchestration, account primitives, and typed helpers ready for integrated pipelines.
 
 ## Installation
 
