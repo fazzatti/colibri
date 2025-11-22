@@ -1,86 +1,11 @@
-// export const TestNet = (): TestNetConfig => {
-//   return {
-//     type: NetworkType.TESTNET,
-//     networkPassphrase: NetworkPassphrase.TESTNET,
-//     rpcUrl: "https://soroban-testnet.stellar.org:443",
-//     friendbotUrl: "https://friendbot.stellar.org",
-//     horizonUrl: "https://horizon-testnet.stellar.org",
-//     allowHttp: false,
-//   };
-// };
-
-import { NetworkType, NetworkPassphrase } from "./types.ts";
-
+import { NetworkType, NetworkPassphrase } from "@/network/types.ts";
 import type {
   TestNetConfig,
   CustomNetworkConfig,
   MainNetConfig,
   FutureNetConfig,
   INetworkConfig,
-} from "./types.ts";
-
-// export const FutureNet = (): FutureNetConfig => {
-//   return {
-//     type: NetworkType.FUTURENET,
-//     networkPassphrase: NetworkPassphrase.FUTURENET,
-//     rpcUrl: "https://rpc-futurenet.stellar.org:443",
-//     friendbotUrl: "https://friendbot-futurenet.stellar.org",
-//     horizonUrl: "https://horizon-futurenet.stellar.org",
-//     allowHttp: false,
-//   };
-// };
-
-// export const MainNet = (): MainNetConfig => {
-//   return {
-//     type: NetworkType.MAINNET,
-//     networkPassphrase: NetworkPassphrase.MAINNET,
-//     rpcUrl: "https://mainnet.sorobanrpc.com",
-//     horizonUrl: "https://horizon.stellar.org",
-//     allowHttp: false,
-//   };
-// };
-
-// export const CustomNet = (payload: CustomNetworkPayload): NetworkConfig => {
-//   return {
-//     ...payload,
-//     type: payload.type || NetworkType.CUSTOM,
-//   };
-// };
-
-// type RPCConfig = {
-//   rpcUrl: string;
-//   allowHttp?: boolean;
-// };
-
-// type HorizonConfig = {
-//   horizonUrl: string;
-//   allowHttp?: boolean;
-// };
-
-// export const isNetworkConfig = (obj: unknown): obj is NetworkConfig => {
-//   return (
-//     typeof obj === "object" &&
-//     obj !== null &&
-//     "type" in obj &&
-//     Object.values(NetworkType).includes((obj as NetworkConfig).type) &&
-//     "networkPassphrase" in obj
-//   );
-// };
-
-// export const isTestNet = (config: NetworkConfig): config is TestNetConfig =>
-//   isNetworkConfig(config) &&
-//   config.type === NetworkType.TESTNET &&
-//   config.networkPassphrase === NetworkPassphrase.TESTNET;
-
-// export const isFutureNet = (config: NetworkConfig): config is FutureNetConfig =>
-//   isNetworkConfig(config) &&
-//   config.type === NetworkType.FUTURENET &&
-//   config.networkPassphrase === NetworkPassphrase.FUTURENET;
-
-// export const isMainNet = (config: NetworkConfig): config is MainNetConfig =>
-//   isNetworkConfig(config) &&
-//   config.type === NetworkType.MAINNET &&
-//   config.networkPassphrase === NetworkPassphrase.MAINNET;
+} from "@/network/types.ts";
 
 export class NetworkConfig implements INetworkConfig {
   private _type: NetworkType;
@@ -210,21 +135,12 @@ export class NetworkConfig implements INetworkConfig {
       | "_friendbotUrl"
       | "_allowHttp"
   ): void {
-    // assert(!this[arg], new E.PROPERTY_ALREADY_SET(arg));
     if (this[arg] !== undefined) {
       throw new Error(
         `Property ${arg} is already set in the Network Config instance`
       );
     }
   }
-
-  // private requireNoContractId(): void {
-  //   this.requireNo("contractId");
-  // }
-
-  // private requireNoSpec(): void {
-  //   this.requireNo("spec");
-  // }
 
   //==========================================
   // Getter and Setter Methods
@@ -324,18 +240,3 @@ export const isNetworkConfig = (obj: unknown): obj is NetworkConfig => {
     "networkPassphrase" in obj
   );
 };
-
-// export const isTestNet = (config: NetworkConfig): config is TestNetConfig =>
-//   isNetworkConfig(config) &&
-//   config.type === NetworkType.TESTNET &&
-//   config.networkPassphrase === NetworkPassphrase.TESTNET;
-
-// export const isFutureNet = (config: NetworkConfig): config is FutureNetConfig =>
-//   isNetworkConfig(config) &&
-//   config.type === NetworkType.FUTURENET &&
-//   config.networkPassphrase === NetworkPassphrase.FUTURENET;
-
-// export const isMainNet = (config: NetworkConfig): config is MainNetConfig =>
-//   isNetworkConfig(config) &&
-//   config.type === NetworkType.MAINNET &&
-//   config.networkPassphrase === NetworkPassphrase.MAINNET;
