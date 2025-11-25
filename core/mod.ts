@@ -28,4 +28,7 @@ export * from "@/signer/local/index.ts";
 export * from "@/strkeys/index.ts";
 export type * from "@/strkeys/types.ts";
 
+export * from "@/toid/index.ts";
+export type * from "@/toid/types.ts";
+
 export * from "@/tools/index.ts";
