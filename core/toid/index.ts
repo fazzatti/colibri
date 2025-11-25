@@ -1,4 +1,6 @@
 import type { TOID } from "@/toid/types.ts";
+import * as E from "@/toid/error.ts";
+import { assert } from "@/common/assert/assert.ts";
 
 /**
  * Checks if a string is a valid SEP-0035 Operation ID (TOID).
@@ -47,21 +49,20 @@ export function createTOID(
   operationIndex: number
 ): TOID {
   // Validate bounds
-  if (ledgerSequence < 0 || ledgerSequence > 2147483647) {
-    throw new Error(
-      `Ledger sequence out of range: ${ledgerSequence} (max 2,147,483,647)`
-    );
-  }
-  if (transactionOrder < 1 || transactionOrder > 1048575) {
-    throw new Error(
-      `Transaction order out of range: ${transactionOrder} (1-1,048,575)`
-    );
-  }
-  if (operationIndex < 1 || operationIndex > 4095) {
-    throw new Error(
-      `Operation index out of range: ${operationIndex} (1-4,095)`
-    );
-  }
+  assert(
+    ledgerSequence >= 0 && ledgerSequence <= 2147483647,
+    new E.LEDGER_OUT_OF_RANGE(ledgerSequence)
+  );
+
+  assert(
+    transactionOrder >= 1 && transactionOrder <= 1048575,
+    new E.TX_ORDER_OUT_OF_RANGE(transactionOrder)
+  );
+
+  assert(
+    operationIndex >= 1 && operationIndex <= 4095,
+    new E.OP_INDEX_OUT_OF_RANGE(operationIndex)
+  );
 
   // Shift operation index to 0-based for bit packing (matches RPC behavior)
   // Transaction order stays as-is (1-based in both input and packing)
@@ -94,9 +95,7 @@ export function parseTOID(toid: string): {
   transactionOrder: number;
   operationIndex: number;
 } {
-  if (!isTOID(toid)) {
-    throw new Error(`Invalid TOID: ${toid}`);
-  }
+  assert(isTOID(toid), new E.INVALID_TOID(toid));
 
   const val = BigInt(toid);
 
