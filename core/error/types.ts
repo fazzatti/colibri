@@ -11,6 +11,7 @@ export type ErrorDomain =
   | "pipelines"
   | "plugins"
   | "rpc"
+  | "events"
   | "toid";
 
 export type BaseMeta = {

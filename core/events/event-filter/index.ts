@@ -7,7 +7,8 @@ import type {
 } from "@/events/event-filter/types.ts";
 import type { BoundedArray } from "@/common/helpers/bounded-array.ts";
 import type { ContractId } from "@/strkeys/types.ts";
-
+import { assert } from "@/common/assert/assert.ts";
+import * as E from "@/events/event-filter/error.ts";
 export class EventFilter {
   private _type?: EventType;
   private _contractIds?: BoundedArray<ContractId, 0, 5>;
@@ -78,8 +79,7 @@ const eventTopicsMatchFilterTopic = (
   topicFilter: TopicFilter,
   eventTopics: xdr.ScVal[]
 ): boolean => {
-  if (eventTopics.length < 1)
-    throw new Error("Event has no topics to match against");
+  assert(eventTopics.length > 0, new E.EVENT_HAS_NO_TOPICS());
 
   for (let i = 0; i < eventTopics.length; i++) {
     const eventSegment = eventTopics[i];
@@ -90,15 +90,20 @@ const eventTopicsMatchFilterTopic = (
     if (filterSegment === "**") return true; // Matches this segment and all remaining
     if (filterSegment === "*") continue; // Wildcard matches any single segment
 
-    // Specific value match
-    // Checks for the exact segment value
-    // Specific value match
-    if (
-      filterSegment instanceof xdr.ScVal &&
-      filterSegment.toXDR("base64") === eventSegment.toXDR("base64")
-    )
-      continue; // Matched this segment, continue to next
-
+    try {
+      // Checks for the exact segment value
+      if (
+        filterSegment instanceof xdr.ScVal &&
+        filterSegment.toXDR("base64") === eventSegment.toXDR("base64")
+      )
+        continue; // Matched this segment, continue to next
+    } catch (e) {
+      throw new E.FAILED_TO_CHECK_FILTER_SEGMENT(
+        filterSegment,
+        eventSegment,
+        e as Error
+      );
+    }
     return false; // No match for this segment
   }
 

@@ -55,7 +55,7 @@ export type TopicFilter =
   | [Segment, Segment, Segment, Segment]
   | [Segment, Segment, Segment, DoubleWildcard];
 
-type Segment = "*" | xdr.ScVal;
-type DoubleWildcard = "**";
+export type Segment = "*" | xdr.ScVal;
+export type DoubleWildcard = "**";
 
 export type EventHandler = (event: Api.EventResponse) => Promise<void> | void;
