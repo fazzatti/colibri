@@ -1,5 +1,5 @@
 {
-  "workspace": ["./core", "./plugins/*"],
+  "workspace": ["./core", "./event-streamer", "./plugins/*"],
 
   "imports": {
     "jsr:@colibri/core": "./core",

@@ -1,0 +1,13 @@
+{
+  "name": "@colibri/event-streamer",
+  "version": "0.1.0",
+  "exports": "./mod.ts",
+  "license": "MIT",
+  "publish": {
+    "include": ["./**/*.ts", "./README.md", "./LICENSE", "./deno.json"]
+  },
+  "imports": {
+    "@/": "./src/",
+    "jsr:@colibri/core": "jsr:@colibri/core@^0.7.0"
+  }
+}
