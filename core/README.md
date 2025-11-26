@@ -22,7 +22,10 @@ After installation, import from the root (`jsr:@colibri/core`) or from specific 
 - **Pipelines** – High-level orchestrators built with `convee`, wiring processes and transformers into repeatable flows for Soroban contract invocation, read-only simulations, and classic transactions. See [Pipelines](#pipelines).
 - **Processes** – Focused `ProcessEngine` units (build, simulate, authorize, assemble, sign, send) you can run individually or plug into your own pipelines. See [Processes](#processes).
 - **Accounts and signers** – Strongly typed wrappers around Ed25519 identities, muxed accounts, ledger keys, and signing. See [Accounts & signers](#accounts--signers).
-- **Common modules** – Shared configuration types, validators, StrKey utilities, transformers, and network profiles that keep every layer aligned. See [Common modules](#common-modules).
+- **Events** – Tools for parsing, filtering, and working with Soroban contract events from ledger metadata. See [Events](#events).
+- **TOID** – Utilities for working with Stellar's Total Order IDs for precise transaction and operation indexing. See [TOID](#toid).
+- **Network configuration** – Type-safe network profiles with runtime validation and type narrowing. See [Network configuration](#network-configuration).
+- **Common modules** – Shared configuration types, validators, StrKey utilities, and transformers that keep every layer aligned. See [Common modules](#common-modules).
 
 Use the high-level pipelines when you want an opinionated, metadata-rich flow. Drop down to processes or utilities when you need bespoke orchestration or integration with external services.
 
@@ -134,6 +137,191 @@ await signer.signSorobanAuthEntry(entry, validUntil, passphrase);
 
 If you rely on hardware wallets, custodial services, or remote signers, implement the exported `TransactionSigner` interface. Processes and pipelines only depend on the interface, so your signers become drop-in replacements for `LocalSigner`.
 
+## Events
+
+Colibri Core provides utilities for working with Soroban contract events, including parsing from ledger metadata and filtering.
+
+### Event parsing
+
+Parse contract events directly from `LedgerCloseMeta` XDR structures:
+
+```ts
+import { parseEventsFromLedgerCloseMeta } from "jsr:@colibri/core/events";
+
+await parseEventsFromLedgerCloseMeta(
+  metadataXdr, // LedgerCloseMeta XDR string
+  async (event) => {
+    // EventHandler callback
+    console.log(event);
+  },
+  filters // optional EventFilter[]
+);
+
+// Each event includes:
+// - id: unique event identifier
+// - type: "contract" | "system" | "diagnostic"
+// - ledger: ledger sequence number
+// - contractId: the emitting contract (with address helper)
+// - topic: decoded topic values
+// - value: the event payload
+```
+
+### Event filtering
+
+Create filters to select specific events by type, contract, or topic patterns:
+
+```ts
+import { EventFilter, EventType } from "jsr:@colibri/core/events";
+import { xdr } from "stellar-sdk";
+
+const filter = new EventFilter({
+  type: EventType.Contract,
+  contractIds: ["CABC..."],
+  topics: [
+    [xdr.ScVal.scvSymbol("transfer"), "*", "*", "*"],
+    [xdr.ScVal.scvSymbol("mint"), "**"],
+  ],
+});
+
+// Convert to RPC-compatible format
+const rawFilter = filter.toRawEventFilter();
+```
+
+**Topic wildcards:** `"*"` matches one segment, `"**"` matches zero or more.
+
+### Ledger metadata utilities
+
+Helper functions for working with ledger close metadata:
+
+```ts
+import {
+  isLedgerCloseMetaV1,
+  isLedgerCloseMetaV2,
+} from "jsr:@colibri/core/events";
+
+// Type guards for metadata versions
+if (isLedgerCloseMetaV2(meta)) {
+  // access V2-specific fields like txProcessing
+}
+```
+
+## TOID
+
+TOID (Total Order ID) is Stellar's mechanism for uniquely identifying transactions and operations across the entire network history. Colibri Core provides utilities for creating, parsing, and working with TOIDs.
+
+### Creating TOIDs
+
+```ts
+import { encodeTOID } from "jsr:@colibri/core/toid";
+
+// Create a TOID from components
+const toid = encodeTOID({
+  ledgerSeq: 12345678,
+  txOrder: 1,
+  opOrder: 0,
+});
+
+// Returns a bigint representing the unique identifier
+console.log(toid); // 53021371269890048n
+```
+
+### Parsing TOIDs
+
+```ts
+import { decodeTOID } from "jsr:@colibri/core/toid";
+
+const components = decodeTOID(53021371269890048n);
+// {
+//   ledgerSeq: 12345678,
+//   txOrder: 1,
+//   opOrder: 0
+// }
+```
+
+### Ledger bounds
+
+```ts
+import { getLedgerRangeFromTOID } from "jsr:@colibri/core/toid";
+
+// Get the TOID range for an entire ledger
+const { start, end } = getLedgerRangeFromTOID(12345678);
+// start: first possible TOID in ledger
+// end: last possible TOID in ledger
+```
+
+### TOID structure
+
+TOIDs pack three values into a 64-bit integer:
+
+| Field             | Bits | Description                                    |
+| ----------------- | ---- | ---------------------------------------------- |
+| Ledger sequence   | 32   | The ledger number (0 to ~4 billion)            |
+| Transaction order | 20   | Position within the ledger (0 to ~1 million)   |
+| Operation order   | 12   | Operation index within transaction (0 to 4095) |
+
+This structure ensures global uniqueness and natural ordering—comparing TOIDs as integers yields chronological order.
+
+## Network configuration
+
+Network configuration in Colibri Core uses a class-based approach with static factory methods and runtime type narrowing.
+
+### Creating configurations
+
+```ts
+import { NetworkConfig } from "jsr:@colibri/core/network";
+
+// Pre-configured networks
+const testnet = NetworkConfig.TestNet();
+const futurenet = NetworkConfig.FutureNet();
+const mainnet = NetworkConfig.MainNet();
+
+// Custom network
+const custom = NetworkConfig.CustomNet({
+  networkPassphrase: "My Custom Network",
+  rpcUrl: "https://rpc.custom.example.com",
+  horizonUrl: "https://horizon.custom.example.com",
+  friendbotUrl: "https://friendbot.custom.example.com", // optional
+  allowHttp: false,
+});
+```
+
+### Type narrowing
+
+Use built-in type guards to narrow configuration types:
+
+```ts
+const config = NetworkConfig.TestNet();
+
+if (config.isTestNet()) {
+  // config is narrowed to TestNetConfig
+  // friendbotUrl is guaranteed to exist
+  console.log(config.friendbotUrl);
+}
+
+if (config.isMainNet()) {
+  // config is narrowed to MainNetConfig
+  // friendbotUrl is never available
+}
+
+if (config.isFutureNet()) {
+  // config is narrowed to FutureNetConfig
+}
+
+if (config.isCustomNet()) {
+  // config is narrowed to CustomNetworkConfig
+}
+```
+
+### Configuration properties
+
+All configurations provide:
+
+- `networkPassphrase` – The network's passphrase for transaction signing
+- `rpcUrl` – Soroban RPC endpoint
+- `horizonUrl` – Horizon API endpoint (optional)
+- `friendbotUrl` – Friendbot endpoint for test networks (not available on mainnet)
+- `allowHttp` – Whether to allow non-HTTPS connections
+
 ## Common modules
 
 Colibri Core ships shared utilities so every layer speaks the same language:
@@ -142,10 +330,9 @@ Colibri Core ships shared utilities so every layer speaks the same language:
 - **Assertions and verifiers (`common/assert`, `common/verifiers`)** – Throw Colibri errors on invalid input, ensuring consistent error handling from top to bottom.
 - **Transformers (`core/transformers`)** – Bridge process output to the next step input (`buildToSimulate`, `simulateToRetval`, `assembleToEnvelopeSigningRequirements`, etc.), helping you compose custom pipelines without reimplementing glue logic.
 - **StrKey utilities (`core/strkeys`)** – Detect and validate every SEP-23 key (Ed25519 public/secret, muxed, contract IDs, signed payloads, liquidity pools, claimable balances). Two-tier checks (`is*` vs `isValid*`) let you pick between fast regex validation and checksum verification.
-- **Network profiles (`core/network`)** – Typed factory functions for `TestNet`, `FutureNet`, `MainNet`, and `CustomNet`. These provide passphrases, RPC URLs, Friendbot endpoints, and Horizon URLs so all orchestrators operate on consistent environment data.
 
 ```ts
-import { TestNet } from "jsr:@colibri/core/network";
+import { NetworkConfig } from "jsr:@colibri/core/network";
 import type { TransactionConfig } from "jsr:@colibri/core/common/types";
 ```
 
