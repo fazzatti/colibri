@@ -1,4 +1,4 @@
-import { ToolsError } from "../error.ts";
+import { ToolsError } from "@/tools/error.ts";
 
 export enum Code {
   UNEXPECTED = "TOOL_FRDBOT_000",

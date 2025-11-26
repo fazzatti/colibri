@@ -1,11 +1,11 @@
 {
-  "workspace": ["./core", "./plugins/*"],
-
+  "workspace": ["./core", "./event-streamer", "./plugins/*"],
+  "nodeModulesDir": "auto",
   "imports": {
     "jsr:@colibri/core": "./core",
     "colibri-internal/": "./_internal/",
     "colibri-tools/": "./_tools/",
-    "stellar-sdk": "npm:@stellar/stellar-sdk@^14.0.0",
+    "stellar-sdk": "npm:@stellar/stellar-sdk@^14.3.3",
     "buffer": "npm:buffer@^6.0.3",
     "crypto": "node:crypto",
     "convee": "jsr:@fifo/convee@^0.9.2",

@@ -10,7 +10,10 @@ export type ErrorDomain =
   | "accounts"
   | "pipelines"
   | "plugins"
-  | "rpc";
+  | "rpc"
+  | "events"
+  | "toid"
+  | "event-streamer";
 
 export type BaseMeta = {
   cause?: unknown; // chained errors
