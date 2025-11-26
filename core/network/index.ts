@@ -5,12 +5,19 @@ import type {
   MainNetConfig,
   FutureNetConfig,
   INetworkConfig,
+  MainNetCustomConfig,
+  FutureNetCustomConfig,
+  TestNetNetCustomConfig,
 } from "@/network/types.ts";
+import { isDefined } from "../common/verifiers/is-defined.ts";
+
+export * as NetworkProviders from "@/network/providers/index.ts";
 
 export class NetworkConfig implements INetworkConfig {
   private _type: NetworkType;
   private _networkPassphrase: string;
   private _rpcUrl?: string;
+  private _archiveRpcUrl?: string;
   private _horizonUrl?: string;
   private _friendbotUrl?: string;
   private _allowHttp?: boolean;
@@ -26,43 +33,72 @@ export class NetworkConfig implements INetworkConfig {
     this._networkPassphrase = networkPassphrase;
   }
 
-  static TestNet(): NetworkConfig & TestNetConfig {
+  static TestNet(args?: TestNetNetCustomConfig): NetworkConfig & TestNetConfig {
+    const { rpcUrl, archiveRpcUrl, horizonUrl, friendbotUrl, allowHttp } =
+      args || {};
+
     const config = new NetworkConfig({
       type: NetworkType.TESTNET,
       networkPassphrase: NetworkPassphrase.TESTNET,
     });
 
-    config._rpcUrl = "https://soroban-testnet.stellar.org:443";
-    config._friendbotUrl = "https://friendbot.stellar.org";
-    config._horizonUrl = "https://horizon-testnet.stellar.org";
-    config._allowHttp = false;
+    config._rpcUrl = isDefined(rpcUrl)
+      ? rpcUrl
+      : "https://soroban-testnet.stellar.org:443";
+    config._friendbotUrl = isDefined(friendbotUrl)
+      ? friendbotUrl
+      : "https://friendbot.stellar.org";
+    config._horizonUrl = isDefined(horizonUrl)
+      ? horizonUrl
+      : "https://horizon-testnet.stellar.org";
+    config._allowHttp = isDefined(allowHttp) ? allowHttp : false;
+    config._archiveRpcUrl = archiveRpcUrl;
 
     return config as NetworkConfig & TestNetConfig;
   }
 
-  static FutureNet(): NetworkConfig & FutureNetConfig {
+  static FutureNet(
+    args?: FutureNetCustomConfig
+  ): NetworkConfig & FutureNetConfig {
+    const { rpcUrl, archiveRpcUrl, horizonUrl, friendbotUrl, allowHttp } =
+      args || {};
+
     const config = new NetworkConfig({
       type: NetworkType.FUTURENET,
       networkPassphrase: NetworkPassphrase.FUTURENET,
     });
 
-    config._rpcUrl = "https://rpc-futurenet.stellar.org:443";
-    config._friendbotUrl = "https://friendbot-futurenet.stellar.org";
-    config._horizonUrl = "https://horizon-futurenet.stellar.org";
-    config._allowHttp = false;
+    config._rpcUrl = isDefined(rpcUrl)
+      ? rpcUrl
+      : "https://rpc-futurenet.stellar.org:443";
+    config._friendbotUrl = isDefined(friendbotUrl)
+      ? friendbotUrl
+      : "https://friendbot-futurenet.stellar.org";
+    config._horizonUrl = isDefined(horizonUrl)
+      ? horizonUrl
+      : "https://horizon-futurenet.stellar.org";
+    config._allowHttp = isDefined(allowHttp) ? allowHttp : false;
+    config._archiveRpcUrl = archiveRpcUrl;
 
     return config as NetworkConfig & FutureNetConfig;
   }
 
-  static MainNet(): NetworkConfig & MainNetConfig {
+  static MainNet(args?: MainNetCustomConfig): NetworkConfig & MainNetConfig {
+    const { rpcUrl, archiveRpcUrl, horizonUrl, allowHttp } = args || {};
+
     const config = new NetworkConfig({
       type: NetworkType.MAINNET,
       networkPassphrase: NetworkPassphrase.MAINNET,
     });
 
-    config._rpcUrl = "https://mainnet.sorobanrpc.com";
-    config._horizonUrl = "https://horizon.stellar.org";
-    config._allowHttp = false;
+    config._rpcUrl = isDefined(rpcUrl)
+      ? rpcUrl
+      : "https://mainnet.sorobanrpc.com";
+    config._horizonUrl = isDefined(horizonUrl)
+      ? horizonUrl
+      : "https://horizon.stellar.org";
+    config._allowHttp = isDefined(allowHttp) ? allowHttp : false;
+    config._archiveRpcUrl = archiveRpcUrl;
 
     return config as NetworkConfig & MainNetConfig;
   }
@@ -71,6 +107,7 @@ export class NetworkConfig implements INetworkConfig {
     networkPassphrase: string;
     type?: NetworkType;
     rpcUrl?: string;
+    archiveRpcUrl?: string;
     horizonUrl?: string;
     friendbotUrl?: string;
     allowHttp?: boolean;
@@ -80,12 +117,13 @@ export class NetworkConfig implements INetworkConfig {
       networkPassphrase: payload.networkPassphrase,
     });
 
-    if (payload.rpcUrl !== undefined) config._rpcUrl = payload.rpcUrl;
-    if (payload.horizonUrl !== undefined)
-      config._horizonUrl = payload.horizonUrl;
-    if (payload.friendbotUrl !== undefined)
+    if (isDefined(payload.rpcUrl)) config._rpcUrl = payload.rpcUrl;
+    if (isDefined(payload.horizonUrl)) config._horizonUrl = payload.horizonUrl;
+    if (isDefined(payload.friendbotUrl))
       config._friendbotUrl = payload.friendbotUrl;
-    if (payload.allowHttp !== undefined) config._allowHttp = payload.allowHttp;
+    if (isDefined(payload.allowHttp)) config._allowHttp = payload.allowHttp;
+    if (isDefined(payload.archiveRpcUrl))
+      config._archiveRpcUrl = payload.archiveRpcUrl;
 
     return config as NetworkConfig & CustomNetworkConfig;
   }
@@ -108,6 +146,7 @@ export class NetworkConfig implements INetworkConfig {
   private require(arg: "_type"): NetworkType;
   private require(arg: "_networkPassphrase"): string;
   private require(arg: "_rpcUrl"): string;
+  private require(arg: "_archiveRpcUrl"): string;
   private require(arg: "_horizonUrl"): string;
   private require(arg: "_friendbotUrl"): string;
   private require(arg: "_allowHttp"): boolean;
@@ -116,6 +155,7 @@ export class NetworkConfig implements INetworkConfig {
       | "_type"
       | "_networkPassphrase"
       | "_rpcUrl"
+      | "_archiveRpcUrl"
       | "_horizonUrl"
       | "_friendbotUrl"
       | "_allowHttp"
@@ -131,6 +171,7 @@ export class NetworkConfig implements INetworkConfig {
       | "_type"
       | "_networkPassphrase"
       | "_rpcUrl"
+      | "_archiveRpcUrl"
       | "_horizonUrl"
       | "_friendbotUrl"
       | "_allowHttp"
@@ -173,6 +214,14 @@ export class NetworkConfig implements INetworkConfig {
   set rpcUrl(value: string) {
     this.requireNo("_rpcUrl");
     this._rpcUrl = value;
+  }
+
+  get archiveRpcUrl(): string | undefined {
+    return this._archiveRpcUrl;
+  }
+  set archiveRpcUrl(value: string) {
+    this.requireNo("_archiveRpcUrl");
+    this._archiveRpcUrl = value;
   }
 
   get horizonUrl(): string | undefined {
