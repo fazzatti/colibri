@@ -1,10 +1,31 @@
-# @colibri
+<div align="center">
+  <a href="https://jsr.io/@colibri/core" title="@Colibri/core">
+    <img alt="@Colibri" src="./_internal/img/colibri-logo-light.jpg" alt="Colibri Logo" width="300" />
+  </a>
+  <br />
+  <h1>@colibri</h1>
+</div>
 
 <p align="center">
-  <img src="./_internal/img/colibri-logo-light.jpg" alt="Colibri Logo" width="300" />
+A TypeScript-first toolkit for building robust Stellar and Soroban applications with deterministic error handling, composable workflows, and extensible plugin architecture.
 </p>
 
-A TypeScript-first toolkit for building robust Stellar and Soroban applications with deterministic error handling, composable workflows, and extensible plugin architecture.
+<div align="center">
+
+  <a href="https://codecov.io/gh/fazzatti/colibri" > 
+    <img src="https://codecov.io/gh/fazzatti/colibri/branch/main/graph/badge.svg?token=QMVWNRZNWC"/> 
+ </a>
+  <a href="https://opensource.org/licenses/mit-license.php">
+    <img alt="MIT Licence" src="https://badges.frapsoft.com/os/mit/mit.svg?v=103" />
+  </a>
+  <a href="https://github.com/ellerbrock/open-source-badge/">
+    <img alt="Open Source Love" src="https://badges.frapsoft.com/os/v1/open-source.svg?v=103" />
+  </a>
+  
+  
+</div>
+
+<br />
 
 ## Packages
 
