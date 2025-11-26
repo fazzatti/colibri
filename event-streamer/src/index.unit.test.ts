@@ -1,3 +1,4 @@
+// deno-lint-ignore-file require-await no-explicit-any
 import { assertEquals, assertRejects, assertThrows } from "@std/assert";
 import { afterEach, beforeEach, describe, it } from "@std/testing/bdd";
 import { assertSpyCalls, type Stub, stub } from "@std/testing/mock";
@@ -95,7 +96,6 @@ const createMockEvent = (overrides: { id?: string; ledger?: number } = {}) => ({
 // Type-safe stub helpers
 // =============================================================================
 
-// deno-lint-ignore no-explicit-any
 type AnyStub = Stub<any, any[], any>;
 
 /**
@@ -105,7 +105,6 @@ function stubGetHealth(
   rpc: Server,
   responseFn: () => ReturnType<typeof createMockHealthResponse>
 ): AnyStub {
-  // deno-lint-ignore no-explicit-any
   return stub(rpc, "getHealth" as any, () =>
     Promise.resolve(responseFn())
   ) as AnyStub;
@@ -116,10 +115,8 @@ function stubGetHealth(
  */
 function stubGetEvents(
   rpc: Server,
-  // deno-lint-ignore no-explicit-any
   responseFn: (args?: any) => ReturnType<typeof createMockEventsResponse>
 ): AnyStub {
-  // deno-lint-ignore no-explicit-any
   return stub(rpc, "getEvents" as any, responseFn as any) as AnyStub;
 }
 
@@ -128,14 +125,12 @@ function stubGetEvents(
  */
 function stubGetLedgers(
   rpc: Server,
-  // deno-lint-ignore no-explicit-any
   responseFn: (
     args?: any
   ) =>
     | ReturnType<typeof createMockLedgersResponse>
     | Promise<ReturnType<typeof createMockLedgersResponse>>
 ): AnyStub {
-  // deno-lint-ignore no-explicit-any
   return stub(rpc, "getLedgers" as any, responseFn as any) as AnyStub;
 }
 
@@ -302,7 +297,6 @@ describe("EventStreamer Unit Tests", () => {
       stubs.push(healthStub);
 
       let callCount = 0;
-      // deno-lint-ignore no-explicit-any
       const eventsStub = stub(streamer.rpc, "getEvents" as any, () => {
         callCount++;
         // Keep returning "at tip" response to make it wait
@@ -385,7 +379,6 @@ describe("EventStreamer Unit Tests", () => {
       );
       stubs.push(healthStub);
 
-      // deno-lint-ignore no-explicit-any
       const eventsStub = stub(streamer.rpc, "getEvents" as any, () =>
         Promise.reject(new Error("Network error"))
       );
@@ -516,7 +509,6 @@ describe("EventStreamer Unit Tests", () => {
     });
 
     it("re-throws errors from ingestHistoricalLedger and sets isRunning to false", async () => {
-      // deno-lint-ignore no-explicit-any
       const ledgersStub = stub(streamer.archiveRpc!, "getLedgers" as any, () =>
         Promise.reject(new Error("Archive network error"))
       );
@@ -565,7 +557,6 @@ describe("EventStreamer Unit Tests", () => {
       ) => void;
       let healthCallCount = 0;
 
-      // deno-lint-ignore no-explicit-any
       const healthStub = stub(streamer.rpc, "getHealth" as any, () => {
         healthCallCount++;
         if (healthCallCount === 1) {
@@ -584,7 +575,6 @@ describe("EventStreamer Unit Tests", () => {
       });
       stubs.push(healthStub);
 
-      // deno-lint-ignore no-explicit-any
       const eventsStub = stub(streamer.rpc, "getEvents" as any, () => {
         // Return "at tip" response
         return Promise.resolve(
@@ -667,7 +657,6 @@ describe("EventStreamer Unit Tests", () => {
     });
 
     it("re-throws errors and sets isRunning to false", async () => {
-      // deno-lint-ignore no-explicit-any
       const healthStub = stub(streamer.rpc, "getHealth" as any, () =>
         Promise.reject(new Error("Connection refused"))
       );
@@ -752,7 +741,6 @@ describe("EventStreamer Unit Tests", () => {
       let capturedTargetLedger: number | undefined;
 
       // Stub ingestHistoricalLedger on the prototype to capture args and skip XDR parsing
-      // deno-lint-ignore no-explicit-any
       const ingestHistoricalStub = stub(
         EventStreamer.prototype as any,
         "ingestHistoricalLedger",
@@ -815,7 +803,6 @@ describe("EventStreamer Unit Tests", () => {
       let capturedTargetLedger: number | undefined;
 
       const ingestHistoricalStub = stub(
-        // deno-lint-ignore no-explicit-any
         EventStreamer.prototype as any,
         "ingestHistoricalLedger",
         (...args: unknown[]) => {
@@ -860,7 +847,6 @@ describe("EventStreamer Unit Tests", () => {
       let ingestHistoricalCallCount = 0;
 
       const ingestHistoricalStub = stub(
-        // deno-lint-ignore no-explicit-any
         EventStreamer.prototype as any,
         "ingestHistoricalLedger",
         (..._args: unknown[]) => {
@@ -947,7 +933,6 @@ describe("EventStreamer Unit Tests", () => {
       stubs.push(healthStub);
 
       let callCount = 0;
-      // deno-lint-ignore no-explicit-any
       const eventsStub = stub(streamer.rpc, "getEvents" as any, () => {
         callCount++;
         if (callCount <= 2) {
@@ -988,7 +973,7 @@ describe("EventStreamer Unit Tests", () => {
       stubs.push(healthStub);
 
       let callCount = 0;
-      // deno-lint-ignore no-explicit-any
+
       const eventsStub = stub(streamer.rpc, "getEvents" as any, () => {
         callCount++;
         if (callCount === 1) {
@@ -1031,7 +1016,6 @@ describe("EventStreamer Unit Tests", () => {
       stubs.push(healthStub);
 
       let callCount = 0;
-      // deno-lint-ignore no-explicit-any
       const eventsStub = stub(streamer.rpc, "getEvents" as any, () => {
         callCount++;
         if (callCount === 1) {
@@ -1239,7 +1223,6 @@ describe("EventStreamer Unit Tests", () => {
       stubs.push(healthStub);
 
       let callCount = 0;
-      // deno-lint-ignore no-explicit-any
       const eventsStub = stub(streamer.rpc, "getEvents" as any, () => {
         callCount++;
         if (callCount === 1) {
@@ -1283,7 +1266,6 @@ describe("EventStreamer Unit Tests", () => {
       stubs.push(healthStub);
 
       const calls: unknown[] = [];
-      // deno-lint-ignore no-explicit-any
       const eventsStub = stub(
         streamer.rpc,
         "getEvents" as any,

@@ -1,7 +1,5 @@
 import { ColibriError } from "@/error/index.ts";
 import type { Diagnostic } from "@/error/types.ts";
-import type { Segment } from "@/events/event-filter/types.ts";
-import type { xdr } from "stellar-sdk";
 
 export type Meta = {
   cause: Error | null;
