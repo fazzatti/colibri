@@ -1,7 +1,8 @@
 import { regex } from "@/common/regex/index.ts";
 import { isTOID, createTOID, parseTOID } from "@/toid/index.ts";
 import type { TOID } from "@/toid/types.ts";
-
+import { assert } from "@/common/assert/assert.ts";
+import * as E from "@/events/event-id/error.ts";
 /**
  * Unique identifier for an event, based on the TOID format.
  * Format: 19-character zero-padded TOID + hyphen + 10-character zero-padded event index.
@@ -34,11 +35,10 @@ export function isEventId(id: string): id is EventId {
  * // Returns: "0000530242871959552-0000000000"
  */
 export function createEventId(toid: TOID, eventIndex: number): EventId {
-  if (eventIndex < 1 || eventIndex > 9999999999) {
-    throw new Error(
-      `Event index out of range: ${eventIndex} (1-9,999,999,999)`
-    );
-  }
+  assert(
+    eventIndex >= 1 && eventIndex <= 9999999999,
+    new E.EVENT_INDEX_OUT_OF_RANGE(eventIndex)
+  );
 
   // Shift to 0-based for output (matches RPC behavior)
   const eventIndex0 = eventIndex - 1;
@@ -90,9 +90,7 @@ export function parseEventId(eventId: string): {
   operationIndex: number;
   eventIndex: number;
 } {
-  if (!isEventId(eventId)) {
-    throw new Error(`Invalid Event ID: ${eventId}`);
-  }
+  assert(isEventId(eventId), new E.INVALID_EVENT_ID_FORMAT(eventId));
 
   const [toidPart, eventIndexPart] = eventId.split("-");
   const toidComponents = parseTOID(toidPart);
