@@ -1,5 +1,4 @@
 import type { xdr } from "stellar-sdk";
-import type { Api } from "stellar-sdk/rpc";
 import type { BoundedArray } from "@/common/helpers/bounded-array.ts";
 import type { EventType } from "@/events/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
@@ -57,5 +56,3 @@ export type TopicFilter =
 
 export type Segment = "*" | xdr.ScVal;
 export type DoubleWildcard = "**";
-
-export type EventHandler = (event: Api.EventResponse) => Promise<void> | void;
