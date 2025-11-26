@@ -27,11 +27,11 @@ export function isEventId(id: string): id is EventId {
  * Creates an Event ID from a TOID and an event index.
  *
  * @param toid - The TOID for the operation that emitted this event
- * @param eventIndex - The index of the event within the operation (0-based, matches RPC)
+ * @param eventIndex - The index of the event within the operation (1-based input, converted to 0-based in output)
  * @returns A formatted Event ID string
  *
  * @example
- * const eventId = createEventId("0000530242871959552" as TOID, 0);
+ * const eventId = createEventId("0000530242871959552" as TOID, 1);
  * // Returns: "0000530242871959552-0000000000"
  */
 export function createEventId(toid: TOID, eventIndex: number): EventId {
@@ -56,11 +56,11 @@ export function createEventId(toid: TOID, eventIndex: number): EventId {
  * @param ledgerSequence - The ledger sequence number
  * @param transactionOrder - The transaction application order (1-based)
  * @param operationIndex - The operation index (1-based)
- * @param eventIndex - The event index within the operation (0-based, matches RPC)
+ * @param eventIndex - The event index within the operation (1-based input, converted to 0-based in output)
  * @returns A formatted Event ID string
  *
  * @example
- * const eventId = createEventIdFromParts(123456, 1, 1, 0);
+ * const eventId = createEventIdFromParts(123456, 1, 1, 1);
  * // Returns: "0000530242871959552-0000000000"
  */
 export function createEventIdFromParts(
