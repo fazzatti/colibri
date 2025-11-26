@@ -12,7 +12,8 @@ export type ErrorDomain =
   | "plugins"
   | "rpc"
   | "events"
-  | "toid";
+  | "toid"
+  | "event-streamer";
 
 export type BaseMeta = {
   cause?: unknown; // chained errors

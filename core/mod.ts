@@ -1,16 +1,19 @@
 export * from "@/account/native/index.ts";
 export type * from "@/account/types.ts";
 export type * from "@/account/native/types.ts";
-export * as ACC_NAT_ERROR from "@/account/native/error.ts";
+export * as ERRORS_ACC_NAT from "@/account/native/error.ts";
 
 export * from "@/common/index.ts";
 
 export * from "@/contract/index.ts";
 export type * from "@/contract/types.ts";
-export * as CONTR_ERROR from "@/contract/error.ts";
+export * as ERRORS_CONTR from "@/contract/error.ts";
 
 export * from "@/error/index.ts";
 export * from "@/error/types.ts";
+
+export * from "@/events/index.ts";
+export * from "@/events/types.ts";
 
 export * from "@/network/index.ts";
 export * from "@/network/types.ts";
