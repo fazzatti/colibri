@@ -10,6 +10,7 @@ export interface INetworkConfig {
   type: NetworkType;
   networkPassphrase: string;
   rpcUrl?: string;
+  archiveRpcUrl?: string;
   horizonUrl?: string;
   friendbotUrl?: string;
   allowHttp?: boolean;
@@ -19,6 +20,24 @@ export interface INetworkConfig {
   isMainNet(): this is MainNetConfig;
   isCustomNet(): this is CustomNetworkConfig;
 }
+
+export type MainNetCustomConfig = Partial<
+  Pick<INetworkConfig, "rpcUrl" | "allowHttp" | "horizonUrl" | "archiveRpcUrl">
+>;
+
+export type TestNetNetCustomConfig = Partial<
+  Pick<
+    INetworkConfig,
+    "rpcUrl" | "allowHttp" | "horizonUrl" | "friendbotUrl" | "archiveRpcUrl"
+  >
+>;
+
+export type FutureNetCustomConfig = Partial<
+  Pick<
+    INetworkConfig,
+    "rpcUrl" | "allowHttp" | "horizonUrl" | "friendbotUrl" | "archiveRpcUrl"
+  >
+>;
 
 export type MainNetConfig = Omit<INetworkConfig, "friendbotUrl"> & {
   type: NetworkType.MAINNET;

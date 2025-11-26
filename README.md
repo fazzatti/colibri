@@ -36,6 +36,20 @@ npm install @colibri/plugin-fee-bump
 
 ---
 
+### [@colibri/event-streamer](./event-streamer)
+
+A real-time event streaming client for Stellar/Soroban that supports live streaming, historical ingestion, and automatic mode switching.
+
+```sh
+deno add jsr:@colibri/event-streamer
+# or
+npm install @colibri/event-streamer
+```
+
+[View Documentation →](./event-streamer/README.md)
+
+---
+
 ## Core Concepts & Standards
 
 Colibri is designed around a specific mindset to ensure reliability and debuggability in blockchain applications. It is built on top of the **[Convee](https://jsr.io/@fifo/convee)** framework, leveraging its patterns for functional, railway-oriented programming.
@@ -78,8 +92,8 @@ Everything is strictly typed. From network configurations to error metadata, Typ
 
 The system is built in layers, aiming to provide both high-level tools for specific use cases and highly specialized, bullet-proof building blocks.
 
-- **Layer 4: Plugins & Clients**
-  - Extensions (Fee Bump) or specialized clients (Contract, Signer) that leverage the lower layers.
+- **Layer 4: Plugins, Clients & Streamers**
+  - Extensions (Fee Bump), specialized clients (Contract, Signer), and event streaming.
 - **Layer 3: Pipelines**
   - High-level workflows (`PIPE_InvokeContract`, `PIPE_ReadFromContract`).
 - **Layer 2: Processes**
