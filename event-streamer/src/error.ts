@@ -47,7 +47,7 @@ export enum Code {
   RPC_NOT_HEALTHY = "EVS_005",
   LEDGER_TOO_OLD = "EVS_006",
   LEDGER_TOO_HIGH = "EVS_007",
-  MISSING_ARCCHIVE_RPC = "EVS_008",
+  MISSING_ARCHIVE_RPC = "EVS_008",
   INVALID_INGESTION_RANGE = "EVS_009",
 }
 
@@ -183,10 +183,10 @@ export class LEDGER_TOO_HIGH extends EventStreamerError {
   }
 }
 
-export class MISSING_ARCCHIVE_RPC extends EventStreamerError {
+export class MISSING_ARCHIVE_RPC extends EventStreamerError {
   constructor() {
     super({
-      code: Code.MISSING_ARCCHIVE_RPC,
+      code: Code.MISSING_ARCHIVE_RPC,
       message: "Archive RPC client is not configured",
       details:
         "The EventStreamer instance requires an archive RPC client to perform historical event ingestion, but none is configured.",
@@ -230,6 +230,6 @@ export const ERROR_EVS = {
   [Code.RPC_NOT_HEALTHY]: RPC_NOT_HEALTHY,
   [Code.LEDGER_TOO_OLD]: LEDGER_TOO_OLD,
   [Code.LEDGER_TOO_HIGH]: LEDGER_TOO_HIGH,
-  [Code.MISSING_ARCCHIVE_RPC]: MISSING_ARCCHIVE_RPC,
+  [Code.MISSING_ARCHIVE_RPC]: MISSING_ARCHIVE_RPC,
   [Code.INVALID_INGESTION_RANGE]: INVALID_INGESTION_RANGE,
 };

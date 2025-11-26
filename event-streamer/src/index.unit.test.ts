@@ -482,7 +482,7 @@ describe("EventStreamer Unit Tests", () => {
       await runningPromise;
     });
 
-    it("throws MISSING_ARCCHIVE_RPC if no archive RPC is configured", async () => {
+    it("throws MISSING_ARCHIVE_RPC if no archive RPC is configured", async () => {
       const streamerNoArchive = new EventStreamer({ rpcUrl: TEST_RPC_URL });
 
       await assertRejects(
@@ -491,7 +491,7 @@ describe("EventStreamer Unit Tests", () => {
             startLedger: 1000,
             stopLedger: 1005,
           }),
-        E.MISSING_ARCCHIVE_RPC,
+        E.MISSING_ARCHIVE_RPC,
         "Archive RPC client is not configured"
       );
     });

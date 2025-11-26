@@ -345,7 +345,7 @@ export class EventStreamer {
     options: { startLedger: number; stopLedger: number }
   ) {
     assert(!this._isRunning, new E.STREAMER_ALREADY_RUNNING());
-    assert(isDefined(this._archiveRpc), new E.MISSING_ARCCHIVE_RPC());
+    assert(isDefined(this._archiveRpc), new E.MISSING_ARCHIVE_RPC());
     assert(
       options.startLedger <= options.stopLedger,
       new E.INVALID_INGESTION_RANGE(options.startLedger, options.stopLedger)
@@ -477,7 +477,7 @@ export class EventStreamer {
     stopLedger: number,
     _onEvent: EventHandler
   ): Promise<number> {
-    assert(isDefined(this._archiveRpc), new E.MISSING_ARCCHIVE_RPC());
+    assert(isDefined(this._archiveRpc), new E.MISSING_ARCHIVE_RPC());
 
     let currentLedger = startLedger;
 
