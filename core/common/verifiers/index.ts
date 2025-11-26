@@ -1,3 +1,4 @@
+export * from "@/common/verifiers/is-defined.ts";
 export * from "@/common/verifiers/is-fee-bump-transaction.ts";
 export * from "@/common/verifiers/is-muxed-id.ts";
 export * from "@/common/verifiers/is-signing-threshold.ts";
