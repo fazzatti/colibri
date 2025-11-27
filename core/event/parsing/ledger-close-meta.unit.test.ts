@@ -1,4 +1,4 @@
-// deno-lint-ignore-file require-await
+// deno-lint-ignore-file require-await no-explicit-any
 import { assertEquals, assertExists, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { xdr } from "stellar-sdk";
@@ -879,7 +879,6 @@ describe("parseEventsFromLedgerCloseMeta", () => {
       const contractIdBuffer = new Uint8Array(32);
       contractIdBuffer.fill(0xab);
 
-      // deno-lint-ignore no-explicit-any
       let capturedEvent: any = undefined;
       const mockMeta = {
         switch: () => 1,

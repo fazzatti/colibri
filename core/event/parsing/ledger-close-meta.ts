@@ -1,4 +1,4 @@
-import { Address, xdr, Contract } from "stellar-sdk";
+import { Address, xdr } from "stellar-sdk";
 import { createEventIdFromParts } from "@/event/event-id/index.ts";
 import { Event } from "@/event/event.ts";
 import type { EventType } from "@/event/types.ts";
