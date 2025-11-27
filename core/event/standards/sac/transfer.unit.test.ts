@@ -100,6 +100,34 @@ describe("TransferEvent", () => {
 
       assertEquals(TransferEvent.is(event), false);
     });
+
+    it("should return true for muxed data format (CAP-0067)", () => {
+      const from = Keypair.random().publicKey();
+      const to = Keypair.random().publicKey();
+      // Create muxed data value: { amount: i128, to_muxed_id?: u64 }
+      const muxedValue = xdr.ScVal.scvMap([
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol("amount"),
+          val: nativeToScVal(1000000n, { type: "i128" }),
+        }),
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol("to_muxed_id"),
+          val: nativeToScVal(12345n, { type: "u64" }),
+        }),
+      ]);
+
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("transfer"),
+          new Address(from).toScVal(),
+          new Address(to).toScVal(),
+          xdr.ScVal.scvString(assetString),
+        ],
+        muxedValue
+      );
+
+      assertEquals(TransferEvent.is(event), true);
+    });
   });
 
   describe("fromEvent()", () => {

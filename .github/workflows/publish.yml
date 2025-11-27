@@ -95,10 +95,17 @@ jobs:
               git tag "$TAG_NAME"
               git push origin "$TAG_NAME"
               
+              # Mark core releases as latest, others as not latest
+              if [[ "$TAG_NAME" == core-* ]]; then
+                LATEST_FLAG="--latest=true"
+              else
+                LATEST_FLAG="--latest=false"
+              fi
+              
               # Create GitHub release
               gh release create "$TAG_NAME" \
                 --title "$TAG_NAME" \
                 --generate-notes \
-                --latest=false
+                $LATEST_FLAG
             fi
           done

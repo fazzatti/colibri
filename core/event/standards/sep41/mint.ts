@@ -1,6 +1,7 @@
 import { StrKey } from "@/strkeys/index.ts";
 import { EventTemplate } from "@/event/template.ts";
 import type { EventSchema } from "@/event/types.ts";
+import type { Event } from "@/event/event.ts";
 import { isEventMuxedData } from "@/event/standards/cap67/index.ts";
 
 /**
@@ -40,6 +41,39 @@ export const MintEventSchema = {
  */
 export class MintEvent extends EventTemplate<typeof MintEventSchema> {
   static override schema = MintEventSchema;
+
+  /**
+   * Checks if an event matches the SEP-41 MintEvent schema.
+   * Overrides base implementation to accept both i128 and muxed map value formats.
+   */
+  static override is(event: Event): boolean {
+    const schema = this.schema;
+    const topics = event.topics;
+
+    // Check topic count: name + topic fields
+    if (topics.length !== schema.topics.length + 1) {
+      return false;
+    }
+
+    // Check event name
+    if (topics[0] !== schema.name) {
+      return false;
+    }
+
+    // Check topic field types (to)
+    if (typeof topics[1] !== "string") return false; // to address
+
+    // Check value type: accept either i128 (bigint) or muxed map format
+    const value = event.value;
+    if (typeof value === "bigint") {
+      return true; // Simple i128 format
+    }
+    if (isEventMuxedData(value)) {
+      return true; // Muxed map format (CAP-0067)
+    }
+
+    return false;
+  }
 
   /** The recipient address that received the minted tokens. */
   get to(): string {
