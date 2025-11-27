@@ -1,12 +1,11 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Buffer } from "node:buffer";
+import { Buffer } from "buffer";
 import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
-import { Event } from "./event.ts";
-import { EventTemplate } from "./template.ts";
+import { Event } from "@/event/event.ts";
+import { EventTemplate } from "@/event/template.ts";
 import type { ContractId } from "@/strkeys/types.ts";
-import { EventType } from "@colibri/core";
-import type { EventSchema } from "./types.ts";
+import { EventType, type EventSchema } from "@/event/types.ts";
 
 // Test schema for a simple custom event
 const TestEventSchema = {
