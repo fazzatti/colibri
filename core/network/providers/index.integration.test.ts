@@ -1,3 +1,4 @@
+import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { type Api, Server } from "stellar-sdk/rpc";
 import { describe, it } from "@std/testing/bdd";
 import { assertEquals } from "@std/assert";
@@ -22,7 +23,7 @@ type GetHealthResponse = Api.GetHealthResponse & {
  * Integration tests for RPC providers.
  * These tests verify that each provider's RPC endpoint is healthy and accessible.
  */
-describe("RPC Provider Health Checks", () => {
+describe("RPC Provider Health Checks", disableSanitizeConfig, () => {
   describe("Gateway", () => {
     it("MainNet should be healthy", async () => {
       const config = Gateway.MainNet();
