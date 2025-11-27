@@ -10,3 +10,5 @@ export * as EVP_ERRORS from "@/event/parsing/error.ts";
 
 export * from "@/event/event.ts";
 export * from "@/event/template.ts";
+
+export * from "@/event/standards/index.ts";

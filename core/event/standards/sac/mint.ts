@@ -1,0 +1,134 @@
+/**
+ * SAC (Stellar Asset Contract) Mint Event
+ *
+ * CAP-0067: Emitted when tokens are minted.
+ *
+ * Topics: [symbol("mint"), to: Address, sep0011_asset: String]
+ * Data: amount: i128
+ *
+ * @module
+ */
+
+import { StrKey } from "@/strkeys/index.ts";
+import { EventTemplate } from "@/event/template.ts";
+import type { EventSchema } from "@/event/types.ts";
+import type { ScValParsed, ScValRecord } from "@/common/scval/types.ts";
+import { isScValRecord } from "@/common/scval/index.ts";
+import { isSEP11Asset } from "@/asset/sep11/index.ts";
+import type { SEP11Asset } from "@/asset/sep11/types.ts";
+
+/**
+ * SAC Mint Event Schema
+ *
+ * Topics: [symbol("mint"), to: Address, asset: String]
+ * Value: i128 (amount)
+ *
+ * Note: CAP-0067 removed the admin from the topics.
+ */
+export const MintEventSchema = {
+  name: "mint",
+  topics: [
+    { name: "to", type: "address" },
+    { name: "asset", type: "string" },
+  ],
+  value: { name: "amount", type: "i128" },
+} as const satisfies EventSchema;
+
+/**
+ * Muxed data structure for mint events with muxed addresses.
+ */
+export interface MintMuxedData {
+  amount: bigint;
+  to_muxed_id?: bigint | string | Uint8Array;
+}
+
+/**
+ * Type guard to check if value is a muxed mint data structure.
+ */
+export function isMintMuxedData(value: ScValParsed): value is ScValRecord {
+  if (!isScValRecord(value)) return false;
+  return "amount" in value && typeof value.amount === "bigint";
+}
+
+/**
+ * SAC Mint Event
+ *
+ * Emitted when tokens are minted to an address.
+ *
+ * Topics: [symbol("mint"), to: Address, sep0011_asset: String]
+ * Data: i128 OR map { amount: i128, to_muxed_id?: u64 | String | BytesN<32> }
+ *
+ * Note: CAP-0067 removed the admin from the topics.
+ *
+ * @example
+ * // Check if an event is a SAC MintEvent
+ * if (MintEvent.is(event)) {
+ *   const mint = MintEvent.fromEvent(event);
+ *   console.log(mint.to, mint.amount);
+ *   console.log("Asset:", mint.asset);
+ * }
+ */
+export class MintEvent extends EventTemplate<typeof MintEventSchema> {
+  static override schema = MintEventSchema;
+
+  /** The address that received the minted tokens. */
+  get to(): string {
+    return this.get("to");
+  }
+
+  /** The SEP-11 asset string (e.g., "USDC:G..." or "native"). */
+  get asset(): SEP11Asset {
+    const val = this.get("asset");
+    if (!isSEP11Asset(val)) {
+      throw new Error(`Invalid SEP-11 asset format: ${val}`);
+    }
+    return val;
+  }
+
+  /**
+   * The amount of tokens minted.
+   * Handles both simple (i128) and muxed (map) data formats.
+   */
+  get amount(): bigint {
+    const val = this.value;
+    if (typeof val === "bigint") {
+      return val;
+    }
+    if (isMintMuxedData(val)) {
+      return val.amount as bigint;
+    }
+    throw new Error("Invalid mint event data format");
+  }
+
+  /**
+   * The muxed ID if present (for muxed addresses).
+   */
+  get toMuxedId(): bigint | string | Uint8Array | undefined {
+    const val = this.value;
+    if (isMintMuxedData(val) && "to_muxed_id" in val) {
+      return val.to_muxed_id as bigint | string | Uint8Array | undefined;
+    }
+    return undefined;
+  }
+
+  /**
+   * Whether this mint event has a muxed ID.
+   */
+  hasMuxedId(): boolean {
+    return this.toMuxedId !== undefined;
+  }
+
+  /**
+   * Whether the `to` address is a valid Stellar account (G...).
+   */
+  isToAccount(): boolean {
+    return StrKey.isValidEd25519PublicKey(this.to);
+  }
+
+  /**
+   * Whether the `to` address is a valid contract (C...).
+   */
+  isToContract(): boolean {
+    return StrKey.isValidContractId(this.to);
+  }
+}

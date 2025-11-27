@@ -1,0 +1,265 @@
+import { assertEquals, assertExists, assertThrows } from "@std/assert";
+import { describe, it } from "@std/testing/bdd";
+import { xdr, Keypair, Address, nativeToScVal, Contract } from "stellar-sdk";
+import { Event } from "@/event/event.ts";
+import {
+  TransferEvent,
+  TransferEventSchema,
+  isTransferMuxedData,
+} from "@/event/standards/sac/transfer.ts";
+import { EventType } from "@/event/types.ts";
+
+// Helper to create a mock Event
+function createMockEvent(
+  topics: xdr.ScVal[],
+  value: xdr.ScVal,
+  contractId?: string
+): Event {
+  const contract =
+    contractId ?? "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+
+  return new Event({
+    id: "0000000000000000000-0000000000",
+    type: EventType.Contract,
+    ledger: 12345,
+    ledgerClosedAt: "2024-01-01T00:00:00Z",
+    transactionIndex: 0,
+    operationIndex: 0,
+    inSuccessfulContractCall: true,
+    txHash: "abc123",
+    contractId: new Contract(contract),
+    topic: topics,
+    value: value,
+  });
+}
+
+describe("TransferEventSchema", () => {
+  it("should have correct structure per CAP-0046-06", () => {
+    assertEquals(TransferEventSchema.name, "transfer");
+    assertEquals(TransferEventSchema.topics.length, 3);
+    assertEquals(TransferEventSchema.topics[0].name, "from");
+    assertEquals(TransferEventSchema.topics[0].type, "address");
+    assertEquals(TransferEventSchema.topics[1].name, "to");
+    assertEquals(TransferEventSchema.topics[1].type, "address");
+    assertEquals(TransferEventSchema.topics[2].name, "asset");
+    assertEquals(TransferEventSchema.topics[2].type, "string");
+    assertEquals(TransferEventSchema.value.name, "amount");
+    assertEquals(TransferEventSchema.value.type, "i128");
+  });
+});
+
+describe("TransferEvent", () => {
+  const assetString =
+    "KALE:GBDVX4VELCDSQ54KQJYTNHXAHFLBCA77ZY2USQBM4CSHTTV7DME7KALE";
+
+  describe("is()", () => {
+    it("should return true for valid SAC transfer event", () => {
+      const from = Keypair.random().publicKey();
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("transfer"),
+          new Address(from).toScVal(),
+          new Address(to).toScVal(),
+          xdr.ScVal.scvString(assetString),
+        ],
+        nativeToScVal(1000000n, { type: "i128" })
+      );
+
+      assertEquals(TransferEvent.is(event), true);
+    });
+
+    it("should return true for native asset transfer", () => {
+      const from = Keypair.random().publicKey();
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("transfer"),
+          new Address(from).toScVal(),
+          new Address(to).toScVal(),
+          xdr.ScVal.scvString("native"),
+        ],
+        nativeToScVal(1000000n, { type: "i128" })
+      );
+
+      assertEquals(TransferEvent.is(event), true);
+    });
+
+    it("should return false for SEP-41 transfer (no asset topic)", () => {
+      const from = Keypair.random().publicKey();
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("transfer"),
+          new Address(from).toScVal(),
+          new Address(to).toScVal(),
+        ],
+        nativeToScVal(1000000n, { type: "i128" })
+      );
+
+      assertEquals(TransferEvent.is(event), false);
+    });
+  });
+
+  describe("fromEvent()", () => {
+    it("should create TransferEvent with typed accessors", () => {
+      const from = Keypair.random().publicKey();
+      const to = Keypair.random().publicKey();
+      const amount = 5000000000n;
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("transfer"),
+          new Address(from).toScVal(),
+          new Address(to).toScVal(),
+          xdr.ScVal.scvString(assetString),
+        ],
+        nativeToScVal(amount, { type: "i128" })
+      );
+
+      const transferEvent = TransferEvent.fromEvent(event);
+
+      assertExists(transferEvent);
+      assertEquals(transferEvent.from, from);
+      assertEquals(transferEvent.to, to);
+      assertEquals(transferEvent.amount, amount);
+      assertEquals(transferEvent.asset, assetString);
+    });
+
+    it("should throw for non-SAC transfer event", () => {
+      const from = Keypair.random().publicKey();
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("transfer"),
+          new Address(from).toScVal(),
+          new Address(to).toScVal(),
+        ],
+        nativeToScVal(100n, { type: "i128" })
+      );
+
+      assertThrows(
+        () => TransferEvent.fromEvent(event),
+        Error,
+        "does not match transfer schema"
+      );
+    });
+  });
+
+  describe("address type checks", () => {
+    it("should identify account addresses", () => {
+      const from = Keypair.random().publicKey();
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("transfer"),
+          new Address(from).toScVal(),
+          new Address(to).toScVal(),
+          xdr.ScVal.scvString(assetString),
+        ],
+        nativeToScVal(100n, { type: "i128" })
+      );
+
+      const transferEvent = TransferEvent.fromEvent(event);
+
+      assertEquals(transferEvent.isFromAccount(), true);
+      assertEquals(transferEvent.isFromContract(), false);
+      assertEquals(transferEvent.isToAccount(), true);
+      assertEquals(transferEvent.isToContract(), false);
+    });
+
+    it("should identify contract addresses", () => {
+      const contractId =
+        "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("transfer"),
+          new Address(contractId).toScVal(),
+          new Address(to).toScVal(),
+          xdr.ScVal.scvString(assetString),
+        ],
+        nativeToScVal(100n, { type: "i128" })
+      );
+
+      const transferEvent = TransferEvent.fromEvent(event);
+
+      assertEquals(transferEvent.isFromAccount(), false);
+      assertEquals(transferEvent.isFromContract(), true);
+    });
+  });
+
+  describe("muxed data handling", () => {
+    it("should return no muxed ID for simple value", () => {
+      const from = Keypair.random().publicKey();
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("transfer"),
+          new Address(from).toScVal(),
+          new Address(to).toScVal(),
+          xdr.ScVal.scvString(assetString),
+        ],
+        nativeToScVal(100n, { type: "i128" })
+      );
+
+      const transferEvent = TransferEvent.fromEvent(event);
+
+      assertEquals(transferEvent.hasMuxedId(), false);
+      assertEquals(transferEvent.toMuxedId, undefined);
+    });
+  });
+
+  describe("toTopicFilter()", () => {
+    it("should create filter for any SAC transfer event", () => {
+      const filter = TransferEvent.toTopicFilter({});
+
+      assertEquals(filter.length, 4);
+      assertEquals(filter[0]?.switch().name, "scvSymbol");
+      assertEquals(filter[1], null);
+      assertEquals(filter[2], null);
+      assertEquals(filter[3], null);
+    });
+
+    it("should create filter for transfers from specific address", () => {
+      const from = Keypair.random().publicKey();
+      const filter = TransferEvent.toTopicFilter({ from });
+
+      assertEquals(filter.length, 4);
+      assertEquals(filter[0]?.switch().name, "scvSymbol");
+      assertEquals(filter[1]?.switch().name, "scvAddress");
+      assertEquals(filter[2], null);
+      assertEquals(filter[3], null);
+    });
+
+    it("should create filter for transfers to specific address", () => {
+      const to = Keypair.random().publicKey();
+      const filter = TransferEvent.toTopicFilter({ to });
+
+      assertEquals(filter.length, 4);
+      assertEquals(filter[0]?.switch().name, "scvSymbol");
+      assertEquals(filter[1], null);
+      assertEquals(filter[2]?.switch().name, "scvAddress");
+      assertEquals(filter[3], null);
+    });
+  });
+});
+
+describe("isTransferMuxedData", () => {
+  it("should return true for muxed data structure", () => {
+    const data = { amount: 100n, to_muxed_id: 12345n };
+    assertEquals(isTransferMuxedData(data), true);
+  });
+
+  it("should return true for muxed data without muxed_id", () => {
+    const data = { amount: 100n };
+    assertEquals(isTransferMuxedData(data), true);
+  });
+
+  it("should return false for simple bigint", () => {
+    assertEquals(isTransferMuxedData(100n), false);
+  });
+
+  it("should return false for array", () => {
+    assertEquals(isTransferMuxedData([100n, 200n]), false);
+  });
+});
