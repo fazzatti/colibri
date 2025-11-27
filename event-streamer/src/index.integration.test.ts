@@ -1,7 +1,13 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { assertEquals } from "@std/assert";
 import { afterEach, beforeAll, describe, it } from "@std/testing/bdd";
-import { EventFilter, EventType, NetworkProviders } from "@colibri/core";
+import {
+  EventFilter,
+  EventType,
+  NetworkProviders,
+  type Event,
+  SACEvents,
+} from "@colibri/core";
 import { xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { EventStreamer } from "@/index.ts";
@@ -34,22 +40,22 @@ const LIVE_TEST_LEDGER_WINDOW = 3;
 // =============================================================================
 
 const createEventCollector = () => {
-  const events: Api.EventResponse[] = [];
-  const handler = async (event: Api.EventResponse) => {
+  const events: Event[] = [];
+  const handler = async (event: Event) => {
     events.push(event);
     return await Promise.resolve();
   };
   return { events, handler };
 };
 
-const getContractIdString = (event: Api.EventResponse): string | undefined => {
-  return event.contractId?.address().toString();
+const getContractIdString = (event: Event): string | undefined => {
+  return event.contractId;
 };
 
 /**
  * Validates that an event has the basic required structure
  */
-const isValidEvent = (event: Api.EventResponse): boolean => {
+const isValidEvent = (event: Event): boolean => {
   return (
     typeof event.id === "string" &&
     typeof event.ledger === "number" &&
@@ -147,7 +153,7 @@ describe(
           (await eventStreamer.rpc.getHealth()) as GetHealthResponse;
         const startLedger = health.latestLedger;
 
-        const handler = (event: Api.EventResponse) => {
+        const handler = (event: Event) => {
           if (isValidEvent(event)) {
             receivedValidEvent = true;
             eventStreamer.stop();
@@ -184,7 +190,7 @@ describe(
           (await eventStreamer.rpc.getHealth()) as GetHealthResponse;
         const startLedger = health.latestLedger;
 
-        const handler = (event: Api.EventResponse) => {
+        const handler = (event: Event) => {
           if (isValidEvent(event)) {
             receivedValidEvent = true;
             eventType = event.type;
@@ -224,7 +230,7 @@ describe(
           (await eventStreamer.rpc.getHealth()) as GetHealthResponse;
         const startLedger = health.latestLedger;
 
-        const handler = (event: Api.EventResponse) => {
+        const handler = (event: Event) => {
           if (isValidEvent(event)) {
             receivedValidEvent = true;
             contractId = getContractIdString(event);
@@ -295,6 +301,10 @@ describe(
           events.every(
             (e) => getContractIdString(e) === KALE_CONTRACT_ID_MAINNET
           ),
+          true
+        );
+        assertEquals(
+          events.every((e) => SACEvents.MintEvent.is(e)),
           true
         );
       });

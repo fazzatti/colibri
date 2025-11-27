@@ -4,6 +4,7 @@ import {
   parseEventsFromLedgerCloseMeta,
   isDefined,
   assert,
+  Event,
 } from "@colibri/core/";
 import type { EventFilters } from "@/types.ts";
 import * as E from "@/error.ts";
@@ -549,7 +550,7 @@ export class EventStreamer {
           continue;
         }
 
-        await onEvent(event);
+        await onEvent(Event.fromEventResponse(event));
 
         // Add to circular buffer
         this._recentlyCheckedEventsIds.push(event.id);

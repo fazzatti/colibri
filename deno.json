@@ -14,7 +14,6 @@
   },
   "tasks": {
     "check": "deno check *",
-
     "test": "deno test -A --parallel --clean --ignore='_*/' --coverage=coverage && deno coverage coverage && deno task coverage:report",
     "test:unit": "deno test -A --parallel --clean --ignore='_*/,**/*.integration.test.ts' --coverage=coverage && deno coverage coverage && deno task coverage:report",
     "test:integration": "deno test -A --parallel --clean --ignore='_*/,**/*.unit.test.ts' --coverage=coverage && deno coverage coverage && deno task coverage:report",
@@ -26,5 +25,9 @@
     "rules": {
       "exclude": ["no-slow-types", "explicit-function-return-type"]
     }
-  }
+  },
+  "compilerOptions": {
+    "skipLibCheck": true
+  },
+  "exclude": ["node_modules", "_*", "dist", "coverage"]
 }
