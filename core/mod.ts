@@ -14,8 +14,8 @@ export * as ERRORS_CONTR from "@/contract/error.ts";
 export * from "@/error/index.ts";
 export * from "@/error/types.ts";
 
-export * from "@/events/index.ts";
-export * from "@/events/types.ts";
+export * from "@/event/index.ts";
+export * from "@/event/types.ts";
 
 export * from "@/network/index.ts";
 export * from "@/network/types.ts";

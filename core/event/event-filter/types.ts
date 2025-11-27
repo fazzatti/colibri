@@ -1,6 +1,6 @@
 import type { xdr } from "stellar-sdk";
 import type { BoundedArray } from "@/common/helpers/bounded-array.ts";
-import type { EventType } from "@/events/types.ts";
+import type { EventType } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 
 /**

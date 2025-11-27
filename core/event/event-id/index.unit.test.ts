@@ -7,7 +7,7 @@ import {
   parseEventId,
 } from "./index.ts";
 import type { TOID } from "@/toid/types.ts";
-import * as E from "@/events/event-id/error.ts";
+import * as E from "@/event/event-id/error.ts";
 
 // =============================================================================
 // Tests: isEventId

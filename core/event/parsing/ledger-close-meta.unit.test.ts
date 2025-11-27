@@ -8,13 +8,13 @@ import {
   isIncludedInFilters,
   parseEventsFromLedgerCloseMeta,
 } from "./ledger-close-meta.ts";
-import type { EventFilter } from "@/events/event-filter/index.ts";
-import type { EventType } from "@/events/types.ts";
+import type { EventFilter } from "@/event/event-filter/index.ts";
+import type { EventType } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
-import * as E from "@/events/parsing/error.ts";
+import * as E from "@/event/parsing/error.ts";
 import type { Buffer } from "buffer";
 import type { BoundedArray } from "@/common/helpers/bounded-array.ts";
-import type { TopicFilter } from "@/events/event-filter/types.ts";
+import type { TopicFilter } from "@/event/event-filter/types.ts";
 import type { Api } from "stellar-sdk/rpc";
 
 // =============================================================================
@@ -446,9 +446,12 @@ describe("parseEventsFromLedgerCloseMeta", () => {
       } as unknown as xdr.LedgerCloseMeta;
 
       try {
-        await parseEventsFromLedgerCloseMeta(mockMeta, async (event) => {
-          events.push(event);
-        });
+        await parseEventsFromLedgerCloseMeta(
+          mockMeta,
+          async (event: unknown) => {
+            events.push(event);
+          }
+        );
 
         assertEquals(events.length, 1);
       } finally {
@@ -479,9 +482,12 @@ describe("parseEventsFromLedgerCloseMeta", () => {
       } as unknown as xdr.LedgerCloseMeta;
 
       try {
-        await parseEventsFromLedgerCloseMeta(mockMeta, async (event) => {
-          events.push(event);
-        });
+        await parseEventsFromLedgerCloseMeta(
+          mockMeta,
+          async (event: unknown) => {
+            events.push(event);
+          }
+        );
 
         assertEquals(events.length, 1);
       } finally {
@@ -512,9 +518,12 @@ describe("parseEventsFromLedgerCloseMeta", () => {
       } as unknown as xdr.LedgerCloseMeta;
 
       try {
-        await parseEventsFromLedgerCloseMeta(mockMeta, async (event) => {
-          capturedEvent = event;
-        });
+        await parseEventsFromLedgerCloseMeta(
+          mockMeta,
+          async (event: { ledger?: number }) => {
+            capturedEvent = event;
+          }
+        );
 
         assertEquals(capturedEvent.ledger, 54321);
       } finally {
@@ -545,9 +554,12 @@ describe("parseEventsFromLedgerCloseMeta", () => {
       } as unknown as xdr.LedgerCloseMeta;
 
       try {
-        await parseEventsFromLedgerCloseMeta(mockMeta, async (event) => {
-          capturedEvent = event;
-        });
+        await parseEventsFromLedgerCloseMeta(
+          mockMeta,
+          async (event: { ledgerClosedAt?: string }) => {
+            capturedEvent = event;
+          }
+        );
 
         assertEquals(capturedEvent.ledgerClosedAt, "1699999999");
       } finally {
@@ -578,9 +590,12 @@ describe("parseEventsFromLedgerCloseMeta", () => {
       } as unknown as xdr.LedgerCloseMeta;
 
       try {
-        await parseEventsFromLedgerCloseMeta(mockMeta, async (event) => {
-          capturedEvent = event;
-        });
+        await parseEventsFromLedgerCloseMeta(
+          mockMeta,
+          async (event: { txHash?: string }) => {
+            capturedEvent = event;
+          }
+        );
 
         assertEquals(capturedEvent.txHash, "abc123def456");
       } finally {
@@ -614,9 +629,12 @@ describe("parseEventsFromLedgerCloseMeta", () => {
       } as unknown as xdr.LedgerCloseMeta;
 
       try {
-        await parseEventsFromLedgerCloseMeta(mockMeta, async (event) => {
-          events.push(event);
-        });
+        await parseEventsFromLedgerCloseMeta(
+          mockMeta,
+          async (event: { transactionIndex?: number }) => {
+            events.push(event);
+          }
+        );
 
         assertEquals(events[0].transactionIndex, 1);
         assertEquals(events[1].transactionIndex, 2);
@@ -695,9 +713,12 @@ describe("parseEventsFromLedgerCloseMeta", () => {
       } as unknown as xdr.LedgerCloseMeta;
 
       try {
-        await parseEventsFromLedgerCloseMeta(mockMeta, async (event) => {
-          events.push(event);
-        });
+        await parseEventsFromLedgerCloseMeta(
+          mockMeta,
+          async (event: { operationIndex?: number }) => {
+            events.push(event);
+          }
+        );
 
         assertEquals(events[0].operationIndex, 1);
         assertEquals(events[1].operationIndex, 2);
@@ -729,9 +750,12 @@ describe("parseEventsFromLedgerCloseMeta", () => {
       } as unknown as xdr.LedgerCloseMeta;
 
       try {
-        await parseEventsFromLedgerCloseMeta(mockMeta, async (event) => {
-          capturedEvent = event;
-        });
+        await parseEventsFromLedgerCloseMeta(
+          mockMeta,
+          async (event: { type?: string }) => {
+            capturedEvent = event;
+          }
+        );
 
         assertEquals(capturedEvent.type, "system");
       } finally {
@@ -762,9 +786,12 @@ describe("parseEventsFromLedgerCloseMeta", () => {
       } as unknown as xdr.LedgerCloseMeta;
 
       try {
-        await parseEventsFromLedgerCloseMeta(mockMeta, async (event) => {
-          capturedEvent = event;
-        });
+        await parseEventsFromLedgerCloseMeta(
+          mockMeta,
+          async (event: { inSuccessfulContractCall?: boolean }) => {
+            capturedEvent = event;
+          }
+        );
 
         assertEquals(capturedEvent.inSuccessfulContractCall, true);
       } finally {
@@ -795,9 +822,12 @@ describe("parseEventsFromLedgerCloseMeta", () => {
       } as unknown as xdr.LedgerCloseMeta;
 
       try {
-        await parseEventsFromLedgerCloseMeta(mockMeta, async (event) => {
-          capturedEvent = event;
-        });
+        await parseEventsFromLedgerCloseMeta(
+          mockMeta,
+          async (event: { inSuccessfulContractCall?: boolean }) => {
+            capturedEvent = event;
+          }
+        );
 
         assertEquals(capturedEvent.inSuccessfulContractCall, false);
       } finally {
@@ -828,9 +858,12 @@ describe("parseEventsFromLedgerCloseMeta", () => {
       } as unknown as xdr.LedgerCloseMeta;
 
       try {
-        await parseEventsFromLedgerCloseMeta(mockMeta, async (event) => {
-          capturedEvent = event;
-        });
+        await parseEventsFromLedgerCloseMeta(
+          mockMeta,
+          async (event: { contractId?: unknown }) => {
+            capturedEvent = event;
+          }
+        );
 
         assertEquals(capturedEvent.contractId, undefined);
       } finally {
@@ -868,7 +901,7 @@ describe("parseEventsFromLedgerCloseMeta", () => {
       } as unknown as xdr.LedgerCloseMeta;
 
       try {
-        await parseEventsFromLedgerCloseMeta(mockMeta, async (event) => {
+        await parseEventsFromLedgerCloseMeta(mockMeta, async (event: any) => {
           capturedEvent = event;
         });
 
@@ -914,7 +947,7 @@ describe("parseEventsFromLedgerCloseMeta", () => {
         // Explicitly pass undefined as filters to test the `filters || []` fallback
         await parseEventsFromLedgerCloseMeta(
           mockMeta,
-          async (event) => {
+          async (event: unknown) => {
             events.push(event);
           },
           undefined
@@ -952,9 +985,12 @@ describe("parseEventsFromLedgerCloseMeta", () => {
       } as unknown as xdr.LedgerCloseMeta;
 
       try {
-        await parseEventsFromLedgerCloseMeta(mockMeta, async (event) => {
-          events.push(event);
-        });
+        await parseEventsFromLedgerCloseMeta(
+          mockMeta,
+          async (event: unknown) => {
+            events.push(event);
+          }
+        );
 
         assertEquals(events.length, 2);
       } finally {
@@ -994,7 +1030,7 @@ describe("parseEventsFromLedgerCloseMeta", () => {
       try {
         await parseEventsFromLedgerCloseMeta(
           mockMeta,
-          async (event) => {
+          async (event: unknown) => {
             events.push(event);
           },
           [filter]
@@ -1035,7 +1071,7 @@ describe("parseEventsFromLedgerCloseMeta", () => {
       try {
         await parseEventsFromLedgerCloseMeta(
           mockMeta,
-          async (event) => {
+          async (event: unknown) => {
             events.push(event);
           },
           [filter]

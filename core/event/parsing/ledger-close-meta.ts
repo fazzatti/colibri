@@ -1,10 +1,10 @@
 import { Address, xdr, Contract } from "stellar-sdk";
-import { createEventIdFromParts } from "@/events/event-id/index.ts";
-import type { EventType } from "@/events/types.ts";
+import { createEventIdFromParts } from "@/event/event-id/index.ts";
+import type { EventType } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
-import type { EventFilter } from "@/events/event-filter/index.ts";
-import type { EventHandler } from "@/events/types.ts";
-import * as E from "@/events/parsing/error.ts";
+import type { EventFilter } from "@/event/event-filter/index.ts";
+import type { EventHandler } from "@/event/types.ts";
+import * as E from "@/event/parsing/error.ts";
 import { assert } from "@/common/assert/assert.ts";
 import { isDefined } from "@/common/verifiers/is-defined.ts";
 
