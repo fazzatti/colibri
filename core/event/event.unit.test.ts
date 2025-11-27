@@ -68,6 +68,68 @@ describe("Event", () => {
       assertEquals(event.ledger, 12345);
       assertEquals(event.inSuccessfulContractCall, true);
     });
+
+    it("should create an Event without contractId", () => {
+      const event = new Event({
+        id: "0000000000000000000-0000000000",
+        type: EventType.Contract,
+        ledger: 12345,
+        ledgerClosedAt: "2024-01-01T00:00:00Z",
+        transactionIndex: 0,
+        operationIndex: 0,
+        inSuccessfulContractCall: true,
+        txHash: "abc123",
+        topic: [xdr.ScVal.scvSymbol("test")],
+        value: xdr.ScVal.scvU32(100),
+        // no contractId
+      });
+
+      assertExists(event);
+      assertEquals(event.contractId, undefined);
+    });
+
+    it("should throw for invalid contractId", () => {
+      assertThrows(
+        () =>
+          new Event({
+            id: "0000000000000000000-0000000000",
+            type: EventType.Contract,
+            ledger: 12345,
+            ledgerClosedAt: "2024-01-01T00:00:00Z",
+            transactionIndex: 0,
+            operationIndex: 0,
+            inSuccessfulContractCall: true,
+            txHash: "abc123",
+            contractId: "invalid-contract-id" as ContractId,
+            topic: [xdr.ScVal.scvSymbol("test")],
+            value: xdr.ScVal.scvU32(100),
+          }),
+        Error,
+        "Invalid event: contractId is not a valid ContractId"
+      );
+    });
+
+    it("should throw for invalid event id", () => {
+      assertThrows(
+        () =>
+          new Event({
+            id: "invalid-event-id",
+            type: EventType.Contract,
+            ledger: 12345,
+            ledgerClosedAt: "2024-01-01T00:00:00Z",
+            transactionIndex: 0,
+            operationIndex: 0,
+            inSuccessfulContractCall: true,
+            txHash: "abc123",
+            contractId:
+              "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC" as ContractId,
+            topic: [xdr.ScVal.scvSymbol("test")],
+            value: xdr.ScVal.scvU32(100),
+          }),
+        Error,
+        "Invalid event: id is not a valid EventId"
+      );
+    });
   });
 
   describe("topics getter", () => {
@@ -114,6 +176,129 @@ describe("Event", () => {
 
       const value = event.value as Record<string, unknown>;
       assertEquals(value["amount"], 100);
+    });
+  });
+
+  describe("fromEventResponse()", () => {
+    it("should create Event from contract type EventResponse", () => {
+      const mockContractId = {
+        contractId: () =>
+          "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+      };
+
+      const response = {
+        id: "0000000000000000000-0000000000",
+        type: "contract",
+        ledger: 12345,
+        ledgerClosedAt: "2024-01-01T00:00:00Z",
+        contractId: mockContractId,
+        topic: [xdr.ScVal.scvSymbol("test")],
+        value: xdr.ScVal.scvU32(100),
+        inSuccessfulContractCall: true,
+        txHash: "abc123",
+        transactionIndex: 0,
+        operationIndex: 0,
+      } as unknown as import("stellar-sdk/rpc").Api.EventResponse;
+
+      const event = Event.fromEventResponse(response);
+
+      assertExists(event);
+      assertEquals(event.type, EventType.Contract);
+      assertEquals(
+        event.contractId,
+        "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+      );
+    });
+
+    it("should create Event from system type EventResponse", () => {
+      const response = {
+        id: "0000000000000000000-0000000000",
+        type: "system",
+        ledger: 12345,
+        ledgerClosedAt: "2024-01-01T00:00:00Z",
+        contractId: undefined,
+        topic: [xdr.ScVal.scvSymbol("test")],
+        value: xdr.ScVal.scvU32(100),
+        inSuccessfulContractCall: true,
+        txHash: "abc123",
+        transactionIndex: 0,
+        operationIndex: 0,
+      } as unknown as import("stellar-sdk/rpc").Api.EventResponse;
+
+      const event = Event.fromEventResponse(response);
+
+      assertExists(event);
+      assertEquals(event.type, EventType.System);
+      assertEquals(event.contractId, undefined);
+    });
+
+    it("should throw for unknown event type", () => {
+      const response = {
+        id: "0000000000000000000-0000000000",
+        type: "unknown_type",
+        ledger: 12345,
+        ledgerClosedAt: "2024-01-01T00:00:00Z",
+        contractId: undefined,
+        topic: [xdr.ScVal.scvSymbol("test")],
+        value: xdr.ScVal.scvU32(100),
+        inSuccessfulContractCall: true,
+        txHash: "abc123",
+        transactionIndex: 0,
+        operationIndex: 0,
+      } as unknown as import("stellar-sdk/rpc").Api.EventResponse;
+
+      assertThrows(
+        () => Event.fromEventResponse(response),
+        Error,
+        "Unknown event type: unknown_type"
+      );
+    });
+
+    it("should throw for invalid contractId in EventResponse", () => {
+      const mockContractId = {
+        contractId: () => "invalid-contract-id",
+      };
+
+      const response = {
+        id: "0000000000000000000-0000000000",
+        type: "contract",
+        ledger: 12345,
+        ledgerClosedAt: "2024-01-01T00:00:00Z",
+        contractId: mockContractId,
+        topic: [xdr.ScVal.scvSymbol("test")],
+        value: xdr.ScVal.scvU32(100),
+        inSuccessfulContractCall: true,
+        txHash: "abc123",
+        transactionIndex: 0,
+        operationIndex: 0,
+      } as unknown as import("stellar-sdk/rpc").Api.EventResponse;
+
+      assertThrows(
+        () => Event.fromEventResponse(response),
+        Error,
+        "Invalid event: contractId is not a valid ContractId"
+      );
+    });
+
+    it("should create Event without contractId when response has no contractId", () => {
+      const response = {
+        id: "0000000000000000000-0000000000",
+        type: "contract",
+        ledger: 12345,
+        ledgerClosedAt: "2024-01-01T00:00:00Z",
+        contractId: undefined,
+        topic: [xdr.ScVal.scvSymbol("test")],
+        value: xdr.ScVal.scvU32(100),
+        inSuccessfulContractCall: true,
+        txHash: "abc123",
+        transactionIndex: 0,
+        operationIndex: 0,
+      } as unknown as import("stellar-sdk/rpc").Api.EventResponse;
+
+      const event = Event.fromEventResponse(response);
+
+      assertExists(event);
+      assertEquals(event.contractId, undefined);
     });
   });
 });
