@@ -11,6 +11,7 @@ import type {
   TopicFieldNames,
 } from "@/event/types.ts";
 import type { ScValParsed } from "@/common/scval/types.ts";
+import type { TopicFilter, Segment } from "@/event/event-filter/types.ts";
 
 /**
  * Converts a TypeScript value to ScVal based on schema field type.
@@ -268,9 +269,10 @@ export abstract class EventTemplate<S extends EventSchema> extends Event {
 
   /**
    * Creates a topic filter for querying events of this type.
+   * The returned filter can be used directly with EventFilter.
    *
-   * @param args Optional filter arguments. Omit a field to match any value (wildcard).
-   * @returns Array of ScVal topics (null = wildcard) for use with EventFilter
+   * @param args Optional filter arguments. Omit a field to match any value (wildcard "*").
+   * @returns TopicFilter ready for use with EventFilter
    *
    * @example
    * // Filter for any mint event
@@ -278,13 +280,18 @@ export abstract class EventTemplate<S extends EventSchema> extends Event {
    *
    * // Filter for mints to a specific address
    * MintEvent.toTopicFilter({ to: "G..." })
+   *
+   * // Use with EventFilter
+   * const filter = new EventFilter({
+   *   topics: [MintEvent.toTopicFilter({ to: "G..." })]
+   * });
    */
   static toTopicFilter<S extends EventSchema>(
     this: { schema: S },
     args: TopicFilterArgs<S> = {} as TopicFilterArgs<S>
-  ): (xdr.ScVal | null)[] {
+  ): TopicFilter {
     const schema = this.schema;
-    const filter: (xdr.ScVal | null)[] = [xdr.ScVal.scvSymbol(schema.name)];
+    const filter: Segment[] = [xdr.ScVal.scvSymbol(schema.name)];
 
     for (const topicField of schema.topics) {
       const fieldName = topicField.name as TopicFieldNames<S>;
@@ -293,10 +300,10 @@ export abstract class EventTemplate<S extends EventSchema> extends Event {
       if (value !== undefined) {
         filter.push(valueToScVal(value, topicField.type));
       } else {
-        filter.push(null); // wildcard
+        filter.push("*"); // wildcard
       }
     }
 
-    return filter;
+    return filter as TopicFilter;
   }
 }

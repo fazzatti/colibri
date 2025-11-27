@@ -473,9 +473,9 @@ describe("EventTemplate", () => {
       const filter = TestEvent.toTopicFilter({});
 
       assertEquals(filter.length, 3);
-      assertEquals(filter[0]?.switch().name, "scvSymbol");
-      assertEquals(filter[1], null); // wildcard
-      assertEquals(filter[2], null); // wildcard
+      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals(filter[1], "*"); // wildcard
+      assertEquals(filter[2], "*"); // wildcard
     });
 
     it("should create filter with specific address", () => {
@@ -483,18 +483,18 @@ describe("EventTemplate", () => {
       const filter = TestEvent.toTopicFilter({ user: userAddress });
 
       assertEquals(filter.length, 3);
-      assertEquals(filter[0]?.switch().name, "scvSymbol");
-      assertEquals(filter[1]?.switch().name, "scvAddress");
-      assertEquals(filter[2], null); // wildcard
+      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals((filter[1] as xdr.ScVal).switch().name, "scvAddress");
+      assertEquals(filter[2], "*"); // wildcard
     });
 
     it("should create filter with specific bool", () => {
       const filter = TestEvent.toTopicFilter({ flag: true });
 
       assertEquals(filter.length, 3);
-      assertEquals(filter[0]?.switch().name, "scvSymbol");
-      assertEquals(filter[1], null); // wildcard
-      assertEquals(filter[2]?.switch().name, "scvBool");
+      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals(filter[1], "*"); // wildcard
+      assertEquals((filter[2] as xdr.ScVal).switch().name, "scvBool");
     });
 
     it("should create filter with all fields specified", () => {
@@ -505,9 +505,9 @@ describe("EventTemplate", () => {
       });
 
       assertEquals(filter.length, 3);
-      assertEquals(filter[0]?.switch().name, "scvSymbol");
-      assertEquals(filter[1]?.switch().name, "scvAddress");
-      assertEquals(filter[2]?.switch().name, "scvBool");
+      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals((filter[1] as xdr.ScVal).switch().name, "scvAddress");
+      assertEquals((filter[2] as xdr.ScVal).switch().name, "scvBool");
     });
   });
 });
