@@ -14,6 +14,7 @@ const claimableBalance = /^B[A-Z2-7]{57}$/;
 const wasmHash = /^[a-f0-9]{64}$/;
 const uint64String = /^(?:0|[1-9]\d{0,19})$/;
 const eventId = /^\d{19}-\d{10}$/;
+const alphanumeric = /^[a-zA-Z0-9]+$/;
 
 export const regex = {
   ed25519PublicKey,
@@ -29,4 +30,5 @@ export const regex = {
   wasmHash,
   uint64String,
   eventId,
+  alphanumeric,
 };
