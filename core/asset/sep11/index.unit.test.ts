@@ -5,8 +5,8 @@ import {
   parseSEP11Asset,
   isNativeSEP11Asset,
   toSEP11Asset,
-  type SEP11Asset,
 } from "@/asset//sep11/index.ts";
+import type { SEP11Asset } from "@/asset//sep11/types.ts";
 
 describe("SEP11Asset", () => {
   describe("isSEP11Asset", () => {
