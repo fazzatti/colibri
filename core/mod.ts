@@ -3,6 +3,8 @@ export type * from "@/account/types.ts";
 export type * from "@/account/native/types.ts";
 export * as ERRORS_ACC_NAT from "@/account/native/error.ts";
 
+export * from "@/asset/index.ts";
+
 export * from "@/common/index.ts";
 
 export * from "@/contract/index.ts";
