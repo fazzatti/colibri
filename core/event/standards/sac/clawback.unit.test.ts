@@ -1,4 +1,4 @@
-import { assertEquals, assertExists } from "@std/assert";
+import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
@@ -123,6 +123,25 @@ describe("ClawbackEvent", () => {
       assertEquals(clawbackEvent.from, from);
       assertEquals(clawbackEvent.amount, amount);
       assertEquals(clawbackEvent.asset, assetString);
+    });
+
+    it("should throw for invalid SEP-11 asset format", () => {
+      const from = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("clawback"),
+          new Address(from).toScVal(),
+          xdr.ScVal.scvString("invalid-asset"),
+        ],
+        nativeToScVal(1000000n, { type: "i128" })
+      );
+
+      const clawbackEvent = ClawbackEvent.fromEvent(event);
+      assertThrows(
+        () => clawbackEvent.asset,
+        Error,
+        "Invalid SEP-11 asset format: invalid-asset"
+      );
     });
   });
 

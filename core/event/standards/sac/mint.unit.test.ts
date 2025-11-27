@@ -123,6 +123,25 @@ describe("MintEvent", () => {
       assertEquals(mintEvent.asset, assetString);
     });
 
+    it("should throw for invalid SEP-11 asset format", () => {
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("mint"),
+          new Address(to).toScVal(),
+          xdr.ScVal.scvString("invalid-asset"),
+        ],
+        nativeToScVal(1000000n, { type: "i128" })
+      );
+
+      const mintEvent = MintEvent.fromEvent(event);
+      assertThrows(
+        () => mintEvent.asset,
+        Error,
+        "Invalid SEP-11 asset format: invalid-asset"
+      );
+    });
+
     it("should throw for non-SAC mint event", () => {
       const to = Keypair.random().publicKey();
       const event = createMockEvent(
@@ -172,6 +191,73 @@ describe("MintEvent", () => {
 
       assertEquals(mintEvent.isToAccount(), false);
       assertEquals(mintEvent.isToContract(), true);
+    });
+  });
+
+  describe("muxed data handling", () => {
+    it("should get amount from muxed data structure", () => {
+      const to = Keypair.random().publicKey();
+      // Create a valid event first, then modify the value to test muxed handling
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("mint"),
+          new Address(to).toScVal(),
+          xdr.ScVal.scvString(assetString),
+        ],
+        nativeToScVal(5000n, { type: "i128" })
+      );
+
+      const mintEvent = MintEvent.fromEvent(event);
+
+      // Override the value getter to simulate muxed data
+      Object.defineProperty(mintEvent, "value", {
+        get: () => ({ amount: 5000n, to_muxed_id: 12345n }),
+      });
+
+      assertEquals(mintEvent.amount, 5000n);
+      assertEquals(mintEvent.toMuxedId, 12345n);
+      assertEquals(mintEvent.hasMuxedId(), true);
+    });
+
+    it("should return undefined for toMuxedId with simple i128 value", () => {
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("mint"),
+          new Address(to).toScVal(),
+          xdr.ScVal.scvString(assetString),
+        ],
+        nativeToScVal(1000n, { type: "i128" })
+      );
+
+      const mintEvent = MintEvent.fromEvent(event);
+      assertEquals(mintEvent.toMuxedId, undefined);
+      assertEquals(mintEvent.hasMuxedId(), false);
+    });
+
+    it("should throw for invalid data format (not bigint and not muxed)", () => {
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("mint"),
+          new Address(to).toScVal(),
+          xdr.ScVal.scvString(assetString),
+        ],
+        nativeToScVal(1000n, { type: "i128" })
+      );
+
+      const mintEvent = MintEvent.fromEvent(event);
+
+      // Override the value getter to simulate invalid data format
+      Object.defineProperty(mintEvent, "value", {
+        get: () => ["invalid"],
+      });
+
+      assertThrows(
+        () => mintEvent.amount,
+        Error,
+        "Invalid mint event data format"
+      );
     });
   });
 

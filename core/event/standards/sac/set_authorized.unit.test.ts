@@ -1,4 +1,4 @@
-import { assertEquals, assertExists } from "@std/assert";
+import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { xdr, Keypair, Address } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
@@ -145,6 +145,25 @@ describe("SetAuthorizedEvent", () => {
       assertEquals(setAuthEvent.account, account);
       assertEquals(setAuthEvent.authorize, false);
       assertEquals(setAuthEvent.asset, assetString);
+    });
+
+    it("should throw for invalid SEP-11 asset format", () => {
+      const account = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("set_authorized"),
+          new Address(account).toScVal(),
+          xdr.ScVal.scvString("invalid-asset"),
+        ],
+        xdr.ScVal.scvBool(true)
+      );
+
+      const setAuthEvent = SetAuthorizedEvent.fromEvent(event);
+      assertThrows(
+        () => setAuthEvent.asset,
+        Error,
+        "Invalid SEP-11 asset format: invalid-asset"
+      );
     });
   });
 

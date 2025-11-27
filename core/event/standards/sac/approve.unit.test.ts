@@ -1,4 +1,4 @@
-import { assertEquals, assertExists } from "@std/assert";
+import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
@@ -154,6 +154,30 @@ describe("ApproveEvent", () => {
       assertEquals(approveEvent.amount, amount);
       assertEquals(approveEvent.liveUntilLedger, liveUntilLedger);
       assertEquals(approveEvent.asset, assetString);
+    });
+
+    it("should throw for invalid SEP-11 asset format", () => {
+      const from = Keypair.random().publicKey();
+      const spender = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("approve"),
+          new Address(from).toScVal(),
+          new Address(spender).toScVal(),
+          xdr.ScVal.scvString("invalid-asset"),
+        ],
+        xdr.ScVal.scvVec([
+          nativeToScVal(1000000n, { type: "i128" }),
+          xdr.ScVal.scvU32(50000),
+        ])
+      );
+
+      const approveEvent = ApproveEvent.fromEvent(event);
+      assertThrows(
+        () => approveEvent.asset,
+        Error,
+        "Invalid SEP-11 asset format: invalid-asset"
+      );
     });
   });
 

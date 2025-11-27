@@ -1,4 +1,4 @@
-import { assertEquals, assertExists } from "@std/assert";
+import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { xdr, Keypair, Address } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
@@ -131,6 +131,26 @@ describe("SetAdminEvent", () => {
       assertEquals(setAdminEvent.admin, admin);
       assertEquals(setAdminEvent.newAdmin, newAdmin);
       assertEquals(setAdminEvent.asset, assetString);
+    });
+
+    it("should throw for invalid SEP-11 asset format", () => {
+      const admin = Keypair.random().publicKey();
+      const newAdmin = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("set_admin"),
+          new Address(admin).toScVal(),
+          xdr.ScVal.scvString("invalid-asset"),
+        ],
+        new Address(newAdmin).toScVal()
+      );
+
+      const setAdminEvent = SetAdminEvent.fromEvent(event);
+      assertThrows(
+        () => setAdminEvent.asset,
+        Error,
+        "Invalid SEP-11 asset format: invalid-asset"
+      );
     });
   });
 

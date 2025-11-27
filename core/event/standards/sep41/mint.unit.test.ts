@@ -176,6 +176,46 @@ describe("MintEvent", () => {
       assertEquals(mintEvent.hasMuxedId(), false);
       assertEquals(mintEvent.toMuxedId, undefined);
     });
+
+    it("should get amount from muxed data structure", () => {
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [xdr.ScVal.scvSymbol("mint"), new Address(to).toScVal()],
+        nativeToScVal(5000n, { type: "i128" })
+      );
+
+      const mintEvent = MintEvent.fromEvent(event);
+
+      // Override the value getter to simulate muxed data
+      Object.defineProperty(mintEvent, "value", {
+        get: () => ({ amount: 5000n, to_muxed_id: 12345n }),
+      });
+
+      assertEquals(mintEvent.amount, 5000n);
+      assertEquals(mintEvent.toMuxedId, 12345n);
+      assertEquals(mintEvent.hasMuxedId(), true);
+    });
+
+    it("should throw for invalid data format (not bigint and not muxed)", () => {
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [xdr.ScVal.scvSymbol("mint"), new Address(to).toScVal()],
+        nativeToScVal(1000n, { type: "i128" })
+      );
+
+      const mintEvent = MintEvent.fromEvent(event);
+
+      // Override the value getter to simulate invalid data format
+      Object.defineProperty(mintEvent, "value", {
+        get: () => ["invalid"],
+      });
+
+      assertThrows(
+        () => mintEvent.amount,
+        Error,
+        "Invalid mint event data format"
+      );
+    });
   });
 
   describe("toTopicFilter()", () => {

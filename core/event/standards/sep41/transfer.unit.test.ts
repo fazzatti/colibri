@@ -222,6 +222,56 @@ describe("TransferEvent", () => {
       assertEquals(transferEvent.hasMuxedId(), false);
       assertEquals(transferEvent.toMuxedId, undefined);
     });
+
+    it("should get amount from muxed data structure", () => {
+      const from = Keypair.random().publicKey();
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("transfer"),
+          new Address(from).toScVal(),
+          new Address(to).toScVal(),
+        ],
+        nativeToScVal(5000n, { type: "i128" })
+      );
+
+      const transferEvent = TransferEvent.fromEvent(event);
+
+      // Override the value getter to simulate muxed data
+      Object.defineProperty(transferEvent, "value", {
+        get: () => ({ amount: 5000n, to_muxed_id: 12345n }),
+      });
+
+      assertEquals(transferEvent.amount, 5000n);
+      assertEquals(transferEvent.toMuxedId, 12345n);
+      assertEquals(transferEvent.hasMuxedId(), true);
+    });
+
+    it("should throw for invalid data format (not bigint and not muxed)", () => {
+      const from = Keypair.random().publicKey();
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("transfer"),
+          new Address(from).toScVal(),
+          new Address(to).toScVal(),
+        ],
+        nativeToScVal(1000n, { type: "i128" })
+      );
+
+      const transferEvent = TransferEvent.fromEvent(event);
+
+      // Override the value getter to simulate invalid data format
+      Object.defineProperty(transferEvent, "value", {
+        get: () => ["invalid"],
+      });
+
+      assertThrows(
+        () => transferEvent.amount,
+        Error,
+        "Invalid transfer event data format"
+      );
+    });
   });
 
   describe("toTopicFilter()", () => {
