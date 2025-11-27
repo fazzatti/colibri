@@ -3,12 +3,12 @@ import type { xdr } from "stellar-sdk";
 import { parseScVal, parseScVals } from "@/common/scval/index.ts";
 import type { ScValParsed } from "@/common/scval/types.ts";
 import { isEventId, type EventId } from "@/event/event-id/index.ts";
-import { EventType } from "@/event/types.ts";
+import { EventType, type IEvent } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import { isDefined } from "@/common/verifiers/is-defined.ts";
 import { StrKey } from "@/strkeys/index.ts";
 
-export class Event {
+export class Event implements IEvent {
   id: EventId;
   type: EventType;
   ledger: number;

@@ -1,11 +1,31 @@
-import type { Api } from "stellar-sdk/rpc";
+import type { xdr } from "stellar-sdk";
+import type { EventId } from "@/event/event-id/index.ts";
+import type { ContractId } from "@/strkeys/types.ts";
+import type { ScValParsed } from "@/common/scval/types.ts";
+
+export interface IEvent {
+  id: EventId;
+  type: EventType;
+  ledger: number;
+  ledgerClosedAt: string;
+  transactionIndex: number;
+  operationIndex: number;
+  inSuccessfulContractCall: boolean;
+  txHash: string;
+  contractId: ContractId;
+  scvalTopics: xdr.ScVal[];
+  scvalValue: xdr.ScVal;
+
+  topics: ScValParsed[];
+  value: ScValParsed;
+}
 
 export enum EventType {
   Contract = "contract",
   System = "system",
 }
 
-export type EventHandler = (event: Api.EventResponse) => Promise<void> | void;
+export type EventHandler = (event: IEvent) => Promise<void> | void;
 
 /**
  * Schema types for defining event structures.

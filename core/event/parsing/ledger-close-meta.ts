@@ -1,5 +1,6 @@
 import { Address, xdr, Contract } from "stellar-sdk";
 import { createEventIdFromParts } from "@/event/event-id/index.ts";
+import { Event } from "@/event/event.ts";
 import type { EventType } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import type { EventFilter } from "@/event/event-filter/index.ts";
@@ -104,19 +105,21 @@ export const parseEventsFromLedgerCloseMeta = async (
             eventIndex
           );
 
-          await onEvent({
-            id: id,
-            ledger: ledgerSequence,
-            ledgerClosedAt: ledgerClosedAt,
-            contractId: contract,
-            type: type as EventType,
-            txHash: txHash,
-            transactionIndex: transactionIndex,
-            operationIndex: operationIndex,
-            topic: topic,
-            value: value,
-            inSuccessfulContractCall: inSuccessfulContractCall,
-          });
+          await onEvent(
+            new Event({
+              id: id,
+              ledger: ledgerSequence,
+              ledgerClosedAt: ledgerClosedAt,
+              contractId: contract,
+              type: type as EventType,
+              txHash: txHash,
+              transactionIndex: transactionIndex,
+              operationIndex: operationIndex,
+              topic: topic,
+              value: value,
+              inSuccessfulContractCall: inSuccessfulContractCall,
+            })
+          );
         }
       }
     }
