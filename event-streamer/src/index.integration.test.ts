@@ -25,6 +25,9 @@ type GetHealthResponse = Api.GetHealthResponse & {
 const KALE_CONTRACT_ID_MAINNET =
   "CB23WRDQWGSP6YPMY4UV5C4OW5CBTXKYN3XEATG7KJEZCXMJBYEHOUOV";
 
+const XLM_CONTRACT_ID_MAINNET =
+  "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA";
+
 // Known ledger with events for deterministic testing (Archive only)
 const TEST_LEDGER_START = 59895694;
 const TEST_LEDGER_END = 59895695;
@@ -209,13 +212,15 @@ describe(
         }
       });
 
-      it("receives valid events with contract ID filter (KALE)", async () => {
+      it("receives valid events with contract ID filter (XLM)", async () => {
+        // With unified events we should expect to see XLM contract events on mainnet
+        // over a reasonable ledger window.
         let receivedValidEvent = false;
         let contractId: string | undefined;
 
         const filter = new EventFilter({
           type: EventType.Contract,
-          contractIds: [KALE_CONTRACT_ID_MAINNET],
+          contractIds: [XLM_CONTRACT_ID_MAINNET],
         });
 
         eventStreamer = new EventStreamer({
@@ -245,7 +250,7 @@ describe(
 
         // If we received an event, verify it matches the filter
         if (receivedValidEvent) {
-          assertEquals(contractId, KALE_CONTRACT_ID_MAINNET);
+          assertEquals(contractId, XLM_CONTRACT_ID_MAINNET);
         }
       });
     });
