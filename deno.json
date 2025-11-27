@@ -25,5 +25,9 @@
     "rules": {
       "exclude": ["no-slow-types", "explicit-function-return-type"]
     }
-  }
+  },
+  "compilerOptions": {
+    "skipLibCheck": true
+  },
+  "exclude": ["node_modules", "_*", "dist", "coverage"]
 }
