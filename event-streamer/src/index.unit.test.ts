@@ -2,7 +2,7 @@
 import { assertEquals, assertRejects, assertThrows } from "@std/assert";
 import { afterEach, beforeEach, describe, it } from "@std/testing/bdd";
 import { assertSpyCalls, type Stub, stub } from "@std/testing/mock";
-import { EventFilter, EventType } from "@colibri/core";
+import { createEventIdFromParts, EventFilter, EventType } from "@colibri/core";
 import { Server } from "stellar-sdk/rpc";
 import { EventStreamer } from "@/index.ts";
 import * as E from "@/error.ts";
@@ -46,7 +46,7 @@ const createMockEventsResponse = (
     events?: Array<{
       id: string;
       ledger: number;
-      contractId?: { address: () => { toString: () => string } };
+      contractId?: { contractId: () => { toString: () => string } };
     }>;
     latestLedger?: number;
     cursor?: string;
@@ -82,11 +82,11 @@ const createMockLedgersResponse = (
  * Creates a mock event
  */
 const createMockEvent = (overrides: { id?: string; ledger?: number } = {}) => ({
-  id: overrides.id ?? `event-${Math.random().toString(36).substring(7)}`,
+  id: overrides.id ?? createEventIdFromParts(100000, 1, 1, 1),
   ledger: overrides.ledger ?? 100000,
   type: "contract" as const,
   contractId: {
-    address: () => ({ toString: () => TEST_CONTRACT_ID }),
+    contractId: () => ({ toString: () => TEST_CONTRACT_ID }),
   },
   topic: [],
   value: {},
@@ -939,7 +939,12 @@ describe("EventStreamer Unit Tests", () => {
           // Return same event twice to test deduplication
           return Promise.resolve(
             createMockEventsResponse({
-              events: [createMockEvent({ id: "same-event-id", ledger: 95000 })],
+              events: [
+                createMockEvent({
+                  id: createEventIdFromParts(100000, 1, 2, 3),
+                  ledger: 95000,
+                }),
+              ],
               latestLedger: 95000,
             })
           );
@@ -947,7 +952,12 @@ describe("EventStreamer Unit Tests", () => {
         // Third call - different event on next ledger
         return Promise.resolve(
           createMockEventsResponse({
-            events: [createMockEvent({ id: "new-event-id", ledger: 95001 })],
+            events: [
+              createMockEvent({
+                id: createEventIdFromParts(100000, 1, 2, 2),
+                ledger: 95001,
+              }),
+            ],
             latestLedger: 95001,
           })
         );
@@ -980,7 +990,12 @@ describe("EventStreamer Unit Tests", () => {
           // First page with cursor
           return Promise.resolve(
             createMockEventsResponse({
-              events: [createMockEvent({ id: "event-1", ledger: 95000 })],
+              events: [
+                createMockEvent({
+                  id: createEventIdFromParts(100000, 1, 2, 1),
+                  ledger: 95000,
+                }),
+              ],
               latestLedger: 95000,
               cursor: "cursor-page-2",
             })
@@ -989,7 +1004,12 @@ describe("EventStreamer Unit Tests", () => {
         // Second page, no more cursor
         return Promise.resolve(
           createMockEventsResponse({
-            events: [createMockEvent({ id: "event-2", ledger: 95000 })],
+            events: [
+              createMockEvent({
+                id: createEventIdFromParts(100000, 1, 2, 2),
+                ledger: 95000,
+              }),
+            ],
             latestLedger: 95000,
           })
         );
@@ -1113,8 +1133,14 @@ describe("EventStreamer Unit Tests", () => {
       const eventsStub = stubGetEvents(streamer.rpc, () =>
         createMockEventsResponse({
           events: [
-            createMockEvent({ id: "event-1", ledger: 95000 }),
-            createMockEvent({ id: "event-2", ledger: 95001 }), // Past stopLedger
+            createMockEvent({
+              id: createEventIdFromParts(100000, 1, 2, 1),
+              ledger: 95000,
+            }),
+            createMockEvent({
+              id: createEventIdFromParts(100000, 1, 2, 2),
+              ledger: 95001,
+            }), // Past stopLedger
           ],
           latestLedger: 95001,
         })
@@ -1141,7 +1167,10 @@ describe("EventStreamer Unit Tests", () => {
 
       // Generate 30 unique events
       const manyEvents = Array.from({ length: 30 }, (_, i) =>
-        createMockEvent({ id: `event-${i}`, ledger: 95000 })
+        createMockEvent({
+          id: createEventIdFromParts(100000, 1, 2, i + 1),
+          ledger: 95000,
+        })
       );
 
       const eventsStub = stubGetEvents(streamer.rpc, () =>
@@ -1274,7 +1303,12 @@ describe("EventStreamer Unit Tests", () => {
           if (calls.length === 1) {
             return Promise.resolve(
               createMockEventsResponse({
-                events: [createMockEvent({ id: "e1", ledger: 95000 })],
+                events: [
+                  createMockEvent({
+                    id: createEventIdFromParts(100000, 1, 2, 3),
+                    ledger: 95000,
+                  }),
+                ],
                 latestLedger: 95000,
                 cursor: "test-cursor",
               })
@@ -1322,7 +1356,12 @@ describe("EventStreamer Unit Tests", () => {
 
       const eventsStub = stubGetEvents(streamer.rpc, () =>
         createMockEventsResponse({
-          events: [createMockEvent({ id: "live-event", ledger: 95000 })],
+          events: [
+            createMockEvent({
+              id: createEventIdFromParts(100000, 1, 2, 3),
+              ledger: 95000,
+            }),
+          ],
           latestLedger: 95000,
         })
       );
@@ -1392,7 +1431,10 @@ describe("EventStreamer Unit Tests", () => {
       const eventsStub = stubGetEvents(streamer.rpc, () =>
         createMockEventsResponse({
           events: [
-            createMockEvent({ id: "e1", ledger: 95000 }),
+            createMockEvent({
+              id: createEventIdFromParts(100000, 1, 2, 3),
+              ledger: 95000,
+            }),
             createMockEvent({ id: "e2", ledger: 95002 }), // Past stop
           ],
           latestLedger: 95002,

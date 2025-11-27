@@ -9,7 +9,7 @@ import type {
   FutureNetCustomConfig,
   TestNetNetCustomConfig,
 } from "@/network/types.ts";
-import { isDefined } from "../common/verifiers/is-defined.ts";
+import { isDefined } from "@/common/verifiers/is-defined.ts";
 
 export * as NetworkProviders from "@/network/providers/index.ts";
 
@@ -160,7 +160,7 @@ export class NetworkConfig implements INetworkConfig {
       | "_friendbotUrl"
       | "_allowHttp"
   ): NetworkType | string | boolean {
-    if (this[arg]) return this[arg];
+    if (isDefined(this[arg])) return this[arg];
     throw new Error(
       `Property ${arg} is not set in the Network Config instance`
     );
@@ -176,7 +176,7 @@ export class NetworkConfig implements INetworkConfig {
       | "_friendbotUrl"
       | "_allowHttp"
   ): void {
-    if (this[arg] !== undefined) {
+    if (isDefined(this[arg])) {
       throw new Error(
         `Property ${arg} is already set in the Network Config instance`
       );

@@ -12,11 +12,11 @@ import {
   FAILED_TO_CHECK_FILTER_SEGMENT,
   Code,
   ERROR_EVF,
-} from "@/events/event-filter/error.ts";
-import { EventFilter } from "@/events/event-filter/index.ts";
-import type { TopicFilter } from "@/events/event-filter/types.ts";
+} from "@/event/event-filter/error.ts";
+import { EventFilter } from "@/event/event-filter/index.ts";
+import type { TopicFilter } from "@/event/event-filter/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
-import { EventType } from "@/events/types.ts";
+import { EventType } from "@/event/types.ts";
 
 describe("EventFilter Errors", () => {
   describe("Code enum", () => {

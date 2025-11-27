@@ -2,7 +2,7 @@ import { regex } from "@/common/regex/index.ts";
 import { isTOID, createTOID, parseTOID } from "@/toid/index.ts";
 import type { TOID } from "@/toid/types.ts";
 import { assert } from "@/common/assert/assert.ts";
-import * as E from "@/events/event-id/error.ts";
+import * as E from "@/event/event-id/error.ts";
 /**
  * Unique identifier for an event, based on the TOID format.
  * Format: 19-character zero-padded TOID + hyphen + 10-character zero-padded event index.

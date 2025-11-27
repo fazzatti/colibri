@@ -1,14 +1,14 @@
 import { xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
-import type { EventType } from "@/events/types.ts";
+import type { EventType } from "@/event/types.ts";
 import type {
   TopicFilter,
   EventFilterConstructorArgs,
-} from "@/events/event-filter/types.ts";
+} from "@/event/event-filter/types.ts";
 import type { BoundedArray } from "@/common/helpers/bounded-array.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import { assert } from "@/common/assert/assert.ts";
-import * as E from "@/events/event-filter/error.ts";
+import * as E from "@/event/event-filter/error.ts";
 export class EventFilter {
   private _type?: EventType;
   private _contractIds?: BoundedArray<ContractId, 0, 5>;
