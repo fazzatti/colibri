@@ -1,4 +1,5 @@
 name: Publish
+
 on:
   push:
     branches:
@@ -8,13 +9,96 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Setup Deno
-        uses: denoland/setup-deno@v1
+        uses: denoland/setup-deno@v2
         with:
           deno-version: 2.2.2
+
+      - name: Detect package version bumps
+        id: detect-versions
+        run: |
+          # Initialize arrays for tags to create
+          TAGS_TO_CREATE=""
+
+          # Function to check package version and create tag if needed
+          check_package() {
+            local package_path="$1"
+            local tag_prefix="$2"
+            local deno_json="$package_path/deno.json"
+            
+            if [ -f "$deno_json" ]; then
+              # Extract version from deno.json
+              VERSION=$(jq -r '.version // empty' "$deno_json")
+              
+              if [ -n "$VERSION" ]; then
+                TAG_NAME="${tag_prefix}-${VERSION}"
+                
+                # Check if tag already exists
+                if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+                  echo "New version detected: $TAG_NAME"
+                  if [ -n "$TAGS_TO_CREATE" ]; then
+                    TAGS_TO_CREATE="${TAGS_TO_CREATE}|${TAG_NAME}"
+                  else
+                    TAGS_TO_CREATE="${TAG_NAME}"
+                  fi
+                else
+                  echo "Tag $TAG_NAME already exists, skipping"
+                fi
+              fi
+            fi
+          }
+
+          # Check core package
+          check_package "core" "core"
+
+          # Check event-streamer package
+          check_package "event-streamer" "event-streamer"
+
+          # Check all plugin packages dynamically
+          if [ -d "plugins" ]; then
+            for plugin_dir in plugins/*/; do
+              if [ -d "$plugin_dir" ]; then
+                plugin_name=$(basename "$plugin_dir")
+                check_package "$plugin_dir" "plugin-${plugin_name}"
+              fi
+            done
+          fi
+
+          echo "tags_to_create=$TAGS_TO_CREATE" >> $GITHUB_OUTPUT
+          echo "Tags to create: $TAGS_TO_CREATE"
+
       - name: Publish package
         run: deno publish --allow-slow-types
+
+      - name: Create tags and releases
+        if: steps.detect-versions.outputs.tags_to_create != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAGS: ${{ steps.detect-versions.outputs.tags_to_create }}
+        run: |
+          # Split tags by pipe delimiter and create each one
+          IFS='|' read -ra TAG_ARRAY <<< "$TAGS"
+
+          for TAG_NAME in "${TAG_ARRAY[@]}"; do
+            if [ -n "$TAG_NAME" ]; then
+              echo "Creating tag and release for: $TAG_NAME"
+              
+              # Create the tag
+              git tag "$TAG_NAME"
+              git push origin "$TAG_NAME"
+              
+              # Create GitHub release
+              gh release create "$TAG_NAME" \
+                --title "$TAG_NAME" \
+                --generate-notes \
+                --latest=false
+            fi
+          done
