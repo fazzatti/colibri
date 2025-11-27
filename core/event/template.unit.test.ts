@@ -5,6 +5,7 @@ import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { Event } from "@/event/event.ts";
 import { EventTemplate } from "@/event/template.ts";
+import { EventFilter } from "@/event/event-filter/index.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import { EventType } from "@/event/types.ts";
 import type { EventSchema } from "@/event/types.ts";
@@ -522,7 +523,7 @@ describe("EventTemplate", () => {
 
       assertEquals(filter.length, 2);
       assertExists(filter[0]); // event name
-      assertEquals(filter[1], null); // wildcard for user
+      assertEquals(filter[1], "*"); // wildcard for user
     });
 
     it("should create filter with specific address", () => {
@@ -541,7 +542,7 @@ describe("EventTemplate", () => {
       assertEquals(filter.length, 4);
       assertExists(filter[0]); // event name
       assertExists(filter[1]); // from address
-      assertEquals(filter[2], null); // wildcard for to
+      assertEquals(filter[2], "*"); // wildcard for to
       assertExists(filter[3]); // bool flag
     });
 
@@ -550,7 +551,7 @@ describe("EventTemplate", () => {
 
       assertEquals(filter.length, 3);
       assertExists(filter[0]); // event name
-      assertEquals(filter[1], null); // wildcard for strField
+      assertEquals(filter[1], "*"); // wildcard for strField
       assertExists(filter[2]); // symbol value
     });
 
@@ -560,7 +561,7 @@ describe("EventTemplate", () => {
       assertEquals(filter.length, 3);
       assertExists(filter[0]); // event name
       assertExists(filter[1]); // string value
-      assertEquals(filter[2], null); // wildcard for symField
+      assertEquals(filter[2], "*"); // wildcard for symField
     });
 
     it("should create filter with bytes value", () => {
@@ -577,9 +578,9 @@ describe("EventTemplate", () => {
 
       assertEquals(filter.length, 4);
       assertExists(filter[0]); // event name is never wildcard
-      assertEquals(filter[1], null); // from wildcard
-      assertEquals(filter[2], null); // to wildcard
-      assertEquals(filter[3], null); // flag wildcard
+      assertEquals(filter[1], "*"); // from wildcard
+      assertEquals(filter[2], "*"); // to wildcard
+      assertEquals(filter[3], "*"); // flag wildcard
     });
   });
 
@@ -603,7 +604,7 @@ describe("EventTemplate", () => {
       assertEquals(filter.length, 3);
       assertExists(filter[0]); // event name
       assertExists(filter[1]); // u32 value
-      assertEquals(filter[2], null); // wildcard for signed
+      assertEquals(filter[2], "*"); // wildcard for signed
     });
 
     it("should create filter with i32 value", () => {
@@ -611,7 +612,7 @@ describe("EventTemplate", () => {
 
       assertEquals(filter.length, 3);
       assertExists(filter[0]); // event name
-      assertEquals(filter[1], null); // wildcard for unsigned
+      assertEquals(filter[1], "*"); // wildcard for unsigned
       assertExists(filter[2]); // i32 value
     });
   });
@@ -634,6 +635,104 @@ describe("EventTemplate", () => {
         Error,
         "Cannot convert value to ScVal for type: u128"
       );
+    });
+  });
+
+  describe("toTopicFilter() integration with EventFilter", () => {
+    it("should create filter usable with EventFilter", () => {
+      const userAddress = Keypair.random().publicKey();
+      const topicFilter = SimpleEvent.toTopicFilter({ user: userAddress });
+
+      // Should be directly usable with EventFilter
+      const eventFilter = new EventFilter({
+        topics: [topicFilter],
+      });
+
+      // Verify it can be converted to raw filter
+      const rawFilter = eventFilter.toRawEventFilter();
+      assertExists(rawFilter.topics);
+      assertEquals(rawFilter.topics.length, 1);
+    });
+
+    it("should create filter that matches events correctly", () => {
+      const userAddress = Keypair.random().publicKey();
+      const topicFilter = SimpleEvent.toTopicFilter({ user: userAddress });
+
+      const eventFilter = new EventFilter({
+        topics: [topicFilter],
+      });
+
+      // Create matching event topics
+      const matchingTopics = [
+        xdr.ScVal.scvSymbol("simple"),
+        new Address(userAddress).toScVal(),
+      ];
+
+      // Create non-matching event topics (different user)
+      const otherAddress = Keypair.random().publicKey();
+      const nonMatchingTopics = [
+        xdr.ScVal.scvSymbol("simple"),
+        new Address(otherAddress).toScVal(),
+      ];
+
+      assertEquals(eventFilter.matchesTopics(matchingTopics), true);
+      assertEquals(eventFilter.matchesTopics(nonMatchingTopics), false);
+    });
+
+    it("should create filter with wildcards that matches any value", () => {
+      // Filter for any simple event (wildcard for user)
+      const topicFilter = SimpleEvent.toTopicFilter({});
+
+      const eventFilter = new EventFilter({
+        topics: [topicFilter],
+      });
+
+      // Should match any simple event regardless of user
+      const user1 = Keypair.random().publicKey();
+      const user2 = Keypair.random().publicKey();
+
+      const topics1 = [
+        xdr.ScVal.scvSymbol("simple"),
+        new Address(user1).toScVal(),
+      ];
+      const topics2 = [
+        xdr.ScVal.scvSymbol("simple"),
+        new Address(user2).toScVal(),
+      ];
+
+      assertEquals(eventFilter.matchesTopics(topics1), true);
+      assertEquals(eventFilter.matchesTopics(topics2), true);
+    });
+
+    it("should create filter with partial wildcards", () => {
+      const from = Keypair.random().publicKey();
+      // Filter for multi events from a specific address, but any 'to' and 'flag'
+      const topicFilter = MultiTopicEvent.toTopicFilter({ from });
+
+      const eventFilter = new EventFilter({
+        topics: [topicFilter],
+      });
+
+      // Should match events from the specified address
+      const to = Keypair.random().publicKey();
+      const matchingTopics = [
+        xdr.ScVal.scvSymbol("multi"),
+        new Address(from).toScVal(),
+        new Address(to).toScVal(),
+        xdr.ScVal.scvBool(true),
+      ];
+
+      // Should not match events from a different address
+      const otherFrom = Keypair.random().publicKey();
+      const nonMatchingTopics = [
+        xdr.ScVal.scvSymbol("multi"),
+        new Address(otherFrom).toScVal(),
+        new Address(to).toScVal(),
+        xdr.ScVal.scvBool(true),
+      ];
+
+      assertEquals(eventFilter.matchesTopics(matchingTopics), true);
+      assertEquals(eventFilter.matchesTopics(nonMatchingTopics), false);
     });
   });
 

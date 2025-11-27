@@ -279,9 +279,9 @@ describe("TransferEvent", () => {
       const filter = TransferEvent.toTopicFilter({});
 
       assertEquals(filter.length, 3);
-      assertEquals(filter[0]?.switch().name, "scvSymbol");
-      assertEquals(filter[1], null);
-      assertEquals(filter[2], null);
+      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals(filter[1], "*");
+      assertEquals(filter[2], "*");
     });
 
     it("should create filter for transfers from specific address", () => {
@@ -289,9 +289,9 @@ describe("TransferEvent", () => {
       const filter = TransferEvent.toTopicFilter({ from });
 
       assertEquals(filter.length, 3);
-      assertEquals(filter[0]?.switch().name, "scvSymbol");
-      assertEquals(filter[1]?.switch().name, "scvAddress");
-      assertEquals(filter[2], null);
+      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals((filter[1] as xdr.ScVal).switch().name, "scvAddress");
+      assertEquals(filter[2], "*");
     });
 
     it("should create filter for transfers to specific address", () => {
@@ -299,9 +299,9 @@ describe("TransferEvent", () => {
       const filter = TransferEvent.toTopicFilter({ to });
 
       assertEquals(filter.length, 3);
-      assertEquals(filter[0]?.switch().name, "scvSymbol");
-      assertEquals(filter[1], null);
-      assertEquals(filter[2]?.switch().name, "scvAddress");
+      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals(filter[1], "*");
+      assertEquals((filter[2] as xdr.ScVal).switch().name, "scvAddress");
     });
 
     it("should create filter with both from and to", () => {
@@ -310,9 +310,9 @@ describe("TransferEvent", () => {
       const filter = TransferEvent.toTopicFilter({ from, to });
 
       assertEquals(filter.length, 3);
-      assertEquals(filter[0]?.switch().name, "scvSymbol");
-      assertEquals(filter[1]?.switch().name, "scvAddress");
-      assertEquals(filter[2]?.switch().name, "scvAddress");
+      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals((filter[1] as xdr.ScVal).switch().name, "scvAddress");
+      assertEquals((filter[2] as xdr.ScVal).switch().name, "scvAddress");
     });
   });
 });
