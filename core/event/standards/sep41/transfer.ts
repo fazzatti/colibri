@@ -1,8 +1,7 @@
 import { StrKey } from "@/strkeys/index.ts";
 import { EventTemplate } from "@/event/template.ts";
 import type { EventSchema } from "@/event/types.ts";
-import type { ScValParsed, ScValRecord } from "@/common/scval/types.ts";
-import { isScValRecord } from "@/common/scval/index.ts";
+import { isEventMuxedData } from "@/event/standards/cap67/index.ts";
 
 /**
  * SEP-41 Transfer Event Schema (simple variant)
@@ -18,22 +17,6 @@ export const TransferEventSchema = {
   ],
   value: { name: "amount", type: "i128" },
 } as const satisfies EventSchema;
-
-/**
- * Muxed data structure for transfer events with muxed addresses.
- */
-export interface TransferMuxedData {
-  amount: bigint;
-  to_muxed_id?: bigint | string | Uint8Array;
-}
-
-/**
- * Type guard to check if value is a muxed transfer data structure.
- */
-export function isTransferMuxedData(value: ScValParsed): value is ScValRecord {
-  if (!isScValRecord(value)) return false;
-  return "amount" in value && typeof value.amount === "bigint";
-}
 
 /**
  * SEP-41 Transfer Event
@@ -80,7 +63,7 @@ export class TransferEvent extends EventTemplate<typeof TransferEventSchema> {
     if (typeof val === "bigint") {
       return val;
     }
-    if (isTransferMuxedData(val)) {
+    if (isEventMuxedData(val)) {
       return val.amount as bigint;
     }
     throw new Error("Invalid transfer event data format");
@@ -92,7 +75,7 @@ export class TransferEvent extends EventTemplate<typeof TransferEventSchema> {
    */
   get toMuxedId(): bigint | string | Uint8Array | undefined {
     const val = this.value;
-    if (isTransferMuxedData(val) && "to_muxed_id" in val) {
+    if (isEventMuxedData(val) && "to_muxed_id" in val) {
       return val.to_muxed_id as bigint | string | Uint8Array | undefined;
     }
     return undefined;

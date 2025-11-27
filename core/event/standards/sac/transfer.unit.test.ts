@@ -5,9 +5,9 @@ import { Event } from "@/event/event.ts";
 import {
   TransferEvent,
   TransferEventSchema,
-  isTransferMuxedData,
 } from "@/event/standards/sac/transfer.ts";
 import { EventType } from "@/event/types.ts";
+import { isEventMuxedData } from "@/event/standards/cap67/index.ts";
 
 // Helper to create a mock Event
 function createMockEvent(
@@ -247,19 +247,19 @@ describe("TransferEvent", () => {
 describe("isTransferMuxedData", () => {
   it("should return true for muxed data structure", () => {
     const data = { amount: 100n, to_muxed_id: 12345n };
-    assertEquals(isTransferMuxedData(data), true);
+    assertEquals(isEventMuxedData(data), true);
   });
 
   it("should return true for muxed data without muxed_id", () => {
     const data = { amount: 100n };
-    assertEquals(isTransferMuxedData(data), true);
+    assertEquals(isEventMuxedData(data), true);
   });
 
   it("should return false for simple bigint", () => {
-    assertEquals(isTransferMuxedData(100n), false);
+    assertEquals(isEventMuxedData(100n), false);
   });
 
   it("should return false for array", () => {
-    assertEquals(isTransferMuxedData([100n, 200n]), false);
+    assertEquals(isEventMuxedData([100n, 200n]), false);
   });
 });

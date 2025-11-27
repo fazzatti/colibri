@@ -2,12 +2,9 @@ import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { xdr, Keypair, Address, nativeToScVal, Contract } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
-import {
-  MintEvent,
-  MintEventSchema,
-  isMintMuxedData,
-} from "@/event/standards/sac/mint.ts";
+import { MintEvent, MintEventSchema } from "@/event/standards/sac/mint.ts";
 import { EventType } from "@/event/types.ts";
+import { isEventMuxedData } from "@/event/standards/cap67/index.ts";
 
 // Helper to create a mock Event
 function createMockEvent(
@@ -202,19 +199,19 @@ describe("MintEvent", () => {
 describe("isMintMuxedData", () => {
   it("should return true for muxed data structure", () => {
     const data = { amount: 100n, to_muxed_id: 12345n };
-    assertEquals(isMintMuxedData(data), true);
+    assertEquals(isEventMuxedData(data), true);
   });
 
   it("should return true for muxed data without muxed_id", () => {
     const data = { amount: 100n };
-    assertEquals(isMintMuxedData(data), true);
+    assertEquals(isEventMuxedData(data), true);
   });
 
   it("should return false for simple bigint", () => {
-    assertEquals(isMintMuxedData(100n), false);
+    assertEquals(isEventMuxedData(100n), false);
   });
 
   it("should return false for array", () => {
-    assertEquals(isMintMuxedData([100n, 200n]), false);
+    assertEquals(isEventMuxedData([100n, 200n]), false);
   });
 });

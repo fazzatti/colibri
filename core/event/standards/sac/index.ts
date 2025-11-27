@@ -13,18 +13,12 @@
  * @module
  */
 
-import {
-  MintEvent,
-  MintEventSchema,
-  isMintMuxedData,
-} from "@/event/standards/sac/mint.ts";
-import type { MintMuxedData } from "@/event/standards/sac/mint.ts";
+import { MintEvent, MintEventSchema } from "@/event/standards/sac/mint.ts";
+
 import {
   TransferEvent,
   TransferEventSchema,
-  isTransferMuxedData,
 } from "@/event/standards/sac/transfer.ts";
-import type { TransferMuxedData } from "@/event/standards/sac/transfer.ts";
 import {
   ApproveEvent,
   ApproveEventSchema,
@@ -65,7 +59,4 @@ export const SACEvents = {
   ClawbackEventSchema,
   SetAdminEventSchema,
   SetAuthorizedEventSchema,
-  // Type guards
-  isMintMuxedData,
-  isTransferMuxedData,
 } as const;

@@ -7,18 +7,11 @@
  * @module
  */
 
-import {
-  MintEvent,
-  MintEventSchema,
-  isMintMuxedData,
-} from "@/event/standards/sep41/mint.ts";
-import type { MintMuxedData } from "@/event/standards/sep41/mint.ts";
+import { MintEvent, MintEventSchema } from "@/event/standards/sep41/mint.ts";
 import {
   TransferEvent,
   TransferEventSchema,
-  isTransferMuxedData,
 } from "@/event/standards/sep41/transfer.ts";
-import type { TransferMuxedData } from "@/event/standards/sep41/transfer.ts";
 import {
   ApproveEvent,
   ApproveEventSchema,
@@ -47,7 +40,4 @@ export const SEP41Events = {
   ApproveEventSchema,
   BurnEventSchema,
   ClawbackEventSchema,
-  // Type guards
-  isMintMuxedData,
-  isTransferMuxedData,
 } as const;

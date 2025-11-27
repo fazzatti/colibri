@@ -12,8 +12,7 @@
 import { StrKey } from "@/strkeys/index.ts";
 import { EventTemplate } from "@/event/template.ts";
 import type { EventSchema } from "@/event/types.ts";
-import type { ScValParsed, ScValRecord } from "@/common/scval/types.ts";
-import { isScValRecord } from "@/common/scval/index.ts";
+import { isEventMuxedData } from "@/event/standards/cap67/index.ts";
 import { isSEP11Asset } from "@/asset/sep11/index.ts";
 import type { SEP11Asset } from "@/asset/sep11/types.ts";
 
@@ -33,22 +32,6 @@ export const MintEventSchema = {
   ],
   value: { name: "amount", type: "i128" },
 } as const satisfies EventSchema;
-
-/**
- * Muxed data structure for mint events with muxed addresses.
- */
-export interface MintMuxedData {
-  amount: bigint;
-  to_muxed_id?: bigint | string | Uint8Array;
-}
-
-/**
- * Type guard to check if value is a muxed mint data structure.
- */
-export function isMintMuxedData(value: ScValParsed): value is ScValRecord {
-  if (!isScValRecord(value)) return false;
-  return "amount" in value && typeof value.amount === "bigint";
-}
 
 /**
  * SAC Mint Event
@@ -94,7 +77,7 @@ export class MintEvent extends EventTemplate<typeof MintEventSchema> {
     if (typeof val === "bigint") {
       return val;
     }
-    if (isMintMuxedData(val)) {
+    if (isEventMuxedData(val)) {
       return val.amount as bigint;
     }
     throw new Error("Invalid mint event data format");
@@ -105,7 +88,7 @@ export class MintEvent extends EventTemplate<typeof MintEventSchema> {
    */
   get toMuxedId(): bigint | string | Uint8Array | undefined {
     const val = this.value;
-    if (isMintMuxedData(val) && "to_muxed_id" in val) {
+    if (isEventMuxedData(val) && "to_muxed_id" in val) {
       return val.to_muxed_id as bigint | string | Uint8Array | undefined;
     }
     return undefined;
