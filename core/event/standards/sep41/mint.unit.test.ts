@@ -223,8 +223,8 @@ describe("MintEvent", () => {
       const filter = MintEvent.toTopicFilter({});
 
       assertEquals(filter.length, 2);
-      assertEquals(filter[0]?.switch().name, "scvSymbol");
-      assertEquals(filter[1], null);
+      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals(filter[1], "*");
     });
 
     it("should create filter for mints to specific address", () => {
@@ -232,8 +232,8 @@ describe("MintEvent", () => {
       const filter = MintEvent.toTopicFilter({ to });
 
       assertEquals(filter.length, 2);
-      assertEquals(filter[0]?.switch().name, "scvSymbol");
-      assertEquals(filter[1]?.switch().name, "scvAddress");
+      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals((filter[1] as xdr.ScVal).switch().name, "scvAddress");
     });
   });
 });

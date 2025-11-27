@@ -235,10 +235,10 @@ describe("ApproveEvent", () => {
       const filter = ApproveEvent.toTopicFilter({});
 
       assertEquals(filter.length, 4);
-      assertEquals(filter[0]?.switch().name, "scvSymbol");
-      assertEquals(filter[1], null);
-      assertEquals(filter[2], null);
-      assertEquals(filter[3], null);
+      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals(filter[1], "*");
+      assertEquals(filter[2], "*");
+      assertEquals(filter[3], "*");
     });
 
     it("should create filter for approvals from specific address", () => {
@@ -246,10 +246,10 @@ describe("ApproveEvent", () => {
       const filter = ApproveEvent.toTopicFilter({ from });
 
       assertEquals(filter.length, 4);
-      assertEquals(filter[0]?.switch().name, "scvSymbol");
-      assertEquals(filter[1]?.switch().name, "scvAddress");
-      assertEquals(filter[2], null);
-      assertEquals(filter[3], null);
+      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals((filter[1] as xdr.ScVal).switch().name, "scvAddress");
+      assertEquals(filter[2], "*");
+      assertEquals(filter[3], "*");
     });
 
     it("should create filter for approvals to specific spender", () => {
@@ -257,10 +257,10 @@ describe("ApproveEvent", () => {
       const filter = ApproveEvent.toTopicFilter({ spender });
 
       assertEquals(filter.length, 4);
-      assertEquals(filter[0]?.switch().name, "scvSymbol");
-      assertEquals(filter[1], null);
-      assertEquals(filter[2]?.switch().name, "scvAddress");
-      assertEquals(filter[3], null);
+      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals(filter[1], "*");
+      assertEquals((filter[2] as xdr.ScVal).switch().name, "scvAddress");
+      assertEquals(filter[3], "*");
     });
   });
 });
