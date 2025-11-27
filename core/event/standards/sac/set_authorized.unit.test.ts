@@ -1,12 +1,13 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { xdr, Keypair, Address, Contract } from "stellar-sdk";
+import { xdr, Keypair, Address } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
 import {
   SetAuthorizedEvent,
   SetAuthorizedEventSchema,
 } from "@/event/standards/sac/set_authorized.ts";
 import { EventType } from "@/event/types.ts";
+import type { ContractId } from "@/strkeys/types.ts";
 
 // Helper to create a mock Event
 function createMockEvent(
@@ -26,7 +27,7 @@ function createMockEvent(
     operationIndex: 0,
     inSuccessfulContractCall: true,
     txHash: "abc123",
-    contractId: new Contract(contract),
+    contractId: contract as ContractId,
     topic: topics,
     value: value,
   });

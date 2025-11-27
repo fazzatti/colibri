@@ -12,7 +12,7 @@ export interface IEvent {
   operationIndex: number;
   inSuccessfulContractCall: boolean;
   txHash: string;
-  contractId: ContractId;
+  contractId?: ContractId | undefined;
   scvalTopics: xdr.ScVal[];
   scvalValue: xdr.ScVal;
 

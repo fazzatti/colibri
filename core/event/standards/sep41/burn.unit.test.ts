@@ -1,9 +1,10 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { xdr, Keypair, Address, nativeToScVal, Contract } from "stellar-sdk";
+import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
 import { BurnEvent, BurnEventSchema } from "@/event/standards/sep41/burn.ts";
 import { EventType } from "@/event/types.ts";
+import type { ContractId } from "@/strkeys/types.ts";
 
 // Helper to create a mock Event
 function createMockEvent(
@@ -23,7 +24,7 @@ function createMockEvent(
     operationIndex: 0,
     inSuccessfulContractCall: true,
     txHash: "abc123",
-    contractId: new Contract(contract),
+    contractId: contract as ContractId,
     topic: topics,
     value: value,
   });

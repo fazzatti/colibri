@@ -81,18 +81,16 @@ export const parseEventsFromLedgerCloseMeta = async (
 
         const contractIdXdr = event.contractId();
 
-        const contract =
+        const contractId =
           contractIdXdr !== null
-            ? new Contract(
-                Address.fromScAddress(
-                  xdr.ScAddress.scAddressTypeContract(contractIdXdr)
-                ).toString()
-              )
+            ? (Address.fromScAddress(
+                xdr.ScAddress.scAddressTypeContract(contractIdXdr)
+              ).toString() as ContractId)
             : undefined;
 
         const eventMatchesFilters = isIncludedInFilters({
           filters: filters || [],
-          contractId: contract?.address().toString() as ContractId,
+          contractId: contractId,
           type: type as EventType,
           topics: topic,
         });
@@ -110,7 +108,7 @@ export const parseEventsFromLedgerCloseMeta = async (
               id: id,
               ledger: ledgerSequence,
               ledgerClosedAt: ledgerClosedAt,
-              contractId: contract,
+              contractId: contractId,
               type: type as EventType,
               txHash: txHash,
               transactionIndex: transactionIndex,

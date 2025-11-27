@@ -908,7 +908,7 @@ describe("parseEventsFromLedgerCloseMeta", () => {
         // Verify the contract was created and has an address
         assertExists(capturedEvent);
         assertExists(capturedEvent.contractId);
-        const address = capturedEvent.contractId.address().toString();
+        const address = capturedEvent.contractId;
         assertEquals(typeof address, "string");
         assertEquals(address.startsWith("C"), true);
       } finally {

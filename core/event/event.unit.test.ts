@@ -1,10 +1,10 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Buffer } from "node:buffer";
-import { xdr, Keypair, Address, nativeToScVal, Contract } from "stellar-sdk";
+import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
 import { Event } from "./event.ts";
 import { EventTemplate } from "./template.ts";
-
+import type { ContractId } from "@/strkeys/types.ts";
 import { EventType } from "@colibri/core";
 import type { EventSchema } from "./types.ts";
 
@@ -50,7 +50,7 @@ function createMockEvent(
     operationIndex: 0,
     inSuccessfulContractCall: true,
     txHash: "abc123",
-    contractId: new Contract(contract),
+    contractId: contract as ContractId,
     topic: topics,
     value: value,
   });

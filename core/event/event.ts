@@ -17,21 +17,26 @@ export class Event implements IEvent {
   operationIndex: number;
   inSuccessfulContractCall: boolean;
   txHash: string;
-  contractId: ContractId;
+  contractId?: ContractId | undefined;
   scvalTopics: xdr.ScVal[];
   scvalValue: xdr.ScVal;
 
-  constructor(args: Omit<Api.EventResponse, "type"> & { type: EventType }) {
-    if (!isDefined(args.contractId)) {
-      throw new Error(`Invalid event: missing contractId`);
+  constructor(
+    args: Omit<Api.EventResponse, "type" | "contractId"> & {
+      type: EventType;
+      contractId?: ContractId;
     }
+  ) {
+    if (isDefined(args.contractId)) {
+      const { contractId } = args;
 
-    const contractId = args.contractId.contractId();
+      if (!StrKey.isContractId(contractId)) {
+        throw new Error(
+          `Invalid event: contractId is not a valid ContractId (${contractId})`
+        );
+      }
 
-    if (!StrKey.isValidContractId(contractId)) {
-      throw new Error(
-        `Invalid event: contractId is not a valid ContractId (${contractId})`
-      );
+      this.contractId = contractId;
     }
 
     if (!isEventId(args.id))
@@ -45,7 +50,6 @@ export class Event implements IEvent {
     this.operationIndex = args.operationIndex;
     this.inSuccessfulContractCall = args.inSuccessfulContractCall;
     this.txHash = args.txHash;
-    this.contractId = contractId;
     this.scvalTopics = args.topic;
     this.scvalValue = args.value;
   }
@@ -82,9 +86,24 @@ export class Event implements IEvent {
         throw new Error(`Unknown event type: ${response.type}`);
     }
 
+    let contractId: ContractId | undefined;
+
+    if (isDefined(response.contractId)) {
+      const eventContractId = response.contractId?.contractId();
+
+      if (!StrKey.isContractId(eventContractId)) {
+        throw new Error(
+          `Invalid event: contractId is not a valid ContractId (${eventContractId})`
+        );
+      }
+
+      contractId = eventContractId;
+    }
+
     return new Event({
       ...response,
       type: eventType,
+      contractId,
     });
   }
 }
