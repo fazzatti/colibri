@@ -70,8 +70,8 @@ describe("MintEvent", () => {
         ])
       );
 
-      // The schema validates as map type for muxed
-      assertEquals(MintEvent.is(event), false); // Schema expects i128, not map
+      // Muxed map format is now supported per CAP-0067
+      assertEquals(MintEvent.is(event), true);
     });
 
     it("should return false for transfer event", () => {
