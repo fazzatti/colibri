@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import {
   isSEP11Asset,
@@ -169,6 +169,22 @@ describe("SEP11Asset", () => {
           "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
         ),
         "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+      );
+    });
+
+    it("should throw when issuer is missing for non-native asset", () => {
+      assertThrows(
+        () => toSEP11Asset("USDC"),
+        Error,
+        "Issuer required for non-native asset: USDC"
+      );
+    });
+
+    it("should throw when issuer is empty string for non-native asset", () => {
+      assertThrows(
+        () => toSEP11Asset("USDC", ""),
+        Error,
+        "Issuer required for non-native asset: USDC"
       );
     });
   });
