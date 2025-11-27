@@ -1,4 +1,9 @@
-import { assertEquals, assertExists, assertInstanceOf } from "@std/assert";
+import {
+  assertEquals,
+  assertExists,
+  assertInstanceOf,
+  assertThrows,
+} from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Buffer } from "buffer";
 import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
@@ -300,6 +305,17 @@ describe("ScVal Parser", () => {
           [3, 4],
         ]);
       });
+
+      it("should handle scvVec with null internal value", () => {
+        // Create a fake ScVal that returns null for vec()
+        const fakeScVal = {
+          switch: () => xdr.ScValType.scvVec(),
+          vec: () => null,
+        } as unknown as xdr.ScVal;
+
+        const result = parseScVal(fakeScVal);
+        assertEquals(result, []);
+      });
     });
 
     describe("map with string keys", () => {
@@ -343,6 +359,18 @@ describe("ScVal Parser", () => {
         const scv = xdr.ScVal.scvMap([]);
         const result = parseScVal(scv);
 
+        assertEquals(isScValRecord(result), true);
+        assertEquals(Object.keys(result as ScValRecord).length, 0);
+      });
+
+      it("should handle scvMap with null internal value", () => {
+        // Create a fake ScVal that returns null for map()
+        const fakeScVal = {
+          switch: () => xdr.ScValType.scvMap(),
+          map: () => null,
+        } as unknown as xdr.ScVal;
+
+        const result = parseScVal(fakeScVal);
         assertEquals(isScValRecord(result), true);
         assertEquals(Object.keys(result as ScValRecord).length, 0);
       });
@@ -439,6 +467,21 @@ describe("ScVal Parser", () => {
 
         assertEquals(isScValRecord(result), true);
         assertEquals((result as ScValRecord)["ledgerKeyType"], "nonce");
+      });
+    });
+
+    describe("unsupported types", () => {
+      it("should throw error for unsupported ScVal type", () => {
+        // Create a fake ScVal-like object with an unknown type
+        const fakeScVal = {
+          switch: () => ({ value: 9999, name: "scvUnknown" }),
+        } as unknown as xdr.ScVal;
+
+        assertThrows(
+          () => parseScVal(fakeScVal),
+          Error,
+          "Unsupported ScVal type: scvUnknown"
+        );
       });
     });
   });
@@ -595,6 +638,19 @@ describe("ScVal Parser", () => {
         new xdr.ScNonceKey({ nonce: new xdr.Int64(1) })
       );
       assertEquals(getScValTypeName(scv), "ledgerKeyNonce");
+    });
+
+    it("should throw error for unknown ScVal type", () => {
+      // Create a fake ScVal-like object with an unknown type
+      const fakeScVal = {
+        switch: () => ({ value: 9999, name: "scvUnknown" }),
+      } as unknown as xdr.ScVal;
+
+      assertThrows(
+        () => getScValTypeName(fakeScVal),
+        Error,
+        "Unknown ScVal type: scvUnknown"
+      );
     });
   });
 
