@@ -12,6 +12,7 @@ import type {
 } from "@/event/types.ts";
 import type { ScValParsed } from "@/common/scval/types.ts";
 import type { TopicFilter, Segment } from "@/event/event-filter/types.ts";
+import type { Prettify } from "@/common/ts-helpers.ts";
 
 /**
  * Converts a TypeScript value to ScVal based on schema field type.
@@ -286,15 +287,15 @@ export abstract class EventTemplate<S extends EventSchema> extends Event {
    *   topics: [MintEvent.toTopicFilter({ to: "G..." })]
    * });
    */
-  static toTopicFilter<S extends EventSchema>(
-    this: { schema: S },
-    args: TopicFilterArgs<S> = {} as TopicFilterArgs<S>
+  static toTopicFilter<Schema extends EventSchema>(
+    this: { schema: Schema },
+    args: Prettify<TopicFilterArgs<Schema>> = {} as TopicFilterArgs<Schema>
   ): TopicFilter {
     const schema = this.schema;
     const filter: Segment[] = [xdr.ScVal.scvSymbol(schema.name)];
 
     for (const topicField of schema.topics) {
-      const fieldName = topicField.name as TopicFieldNames<S>;
+      const fieldName = topicField.name as TopicFieldNames<Schema>;
       const value = (args as Record<string, unknown>)[fieldName];
 
       if (value !== undefined) {

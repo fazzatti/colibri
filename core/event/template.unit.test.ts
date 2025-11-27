@@ -519,7 +519,7 @@ describe("EventTemplate", () => {
 
   describe("toTopicFilter()", () => {
     it("should create filter with just event name", () => {
-      const filter = SimpleEvent.toTopicFilter({});
+      const filter = SimpleEvent.toTopicFilter();
 
       assertEquals(filter.length, 2);
       assertExists(filter[0]); // event name
