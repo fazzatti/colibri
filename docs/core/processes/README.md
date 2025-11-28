@@ -1,179 +1,52 @@
 # Processes
 
-Processes are the atomic building blocks of Colibri's transaction pipelines. Each process performs a single task and can be composed into larger workflows.
+Processes are the atomic building blocks of Colibri. Each process is a single-purpose unit built on the [`convee`](https://jsr.io/@fifo/convee) library with:
 
-For most use cases, use [Pipelines](../pipelines/README.md) which compose these processes automatically. Use processes directly when you need fine-grained control.
+- **Clear inputs and outputs** — Typed interfaces for predictable behavior
+- **Standardized errors** — Every failure is wrapped in a typed `ColibriError` with diagnostics
+- **Plugin extensibility** — Extend behavior via plugins that act on inputs, outputs, errors, or combinations
 
-## Available Processes
+## Process Structure
 
-| Process                 | Description                           |
-| ----------------------- | ------------------------------------- |
-| `P_BuildTransaction`    | Create a transaction from operations  |
-| `P_SimulateTransaction` | Simulate transaction on RPC           |
-| `P_AssembleTransaction` | Add simulation results to transaction |
-| `P_SignAuthEntries`     | Sign Soroban authorization entries    |
-| `P_SignEnvelope`        | Sign the transaction envelope         |
-| `P_SendTransaction`     | Submit to the network and wait        |
-| `P_WrapFeeBump`         | Wrap transaction with fee bump        |
-
-## P_BuildTransaction
-
-Creates a transaction from operations.
+Each process follows the same pattern:
 
 ```typescript
 import { P_BuildTransaction } from "@colibri/core";
-import { Operation } from "stellar-sdk";
-import { Server } from "stellar-sdk/rpc";
 
-const result = await P_BuildTransaction().run({
-  operations: [Operation.invokeContractFunction({...})],
-  source: "GABC...",
-  baseFee: "100000",
-  networkPassphrase: "Test SDF Network ; September 2015",
-  rpc: new Server("https://soroban-testnet.stellar.org"),
-});
+const process = P_BuildTransaction();
+
+// Run standalone
+const result = await process.run(input);
+
+// Or add plugins
+process.addPlugin(myPlugin, "onInput");
 ```
 
-**Input:**
-- `operations` — Array of `xdr.Operation`
-- `source` — Source account public key
-- `baseFee` — Fee in stroops
-- `networkPassphrase` — Network passphrase
-- `rpc` — RPC server (or provide `sequence` directly)
+Plugins can hook into:
 
-**Output:** `Transaction`
+- `onInput` — Transform or validate input before execution
+- `onOutput` — Transform or enrich output after execution
+- `onError` — Handle or transform errors
+- Combinations of the above
 
-## P_SimulateTransaction
+## Available Processes
 
-Simulates a transaction to calculate resource usage and fees.
+| Process                                                         | Description                                            |
+| --------------------------------------------------------------- | ------------------------------------------------------ |
+| [BuildTransaction](build-transaction.md)                        | Creates a transaction from operations                  |
+| [SimulateTransaction](simulate-transaction.md)                  | Simulates transaction on RPC to get resource estimates |
+| [AssembleTransaction](assemble-transaction.md)                  | Attaches simulation results to a transaction           |
+| [SignAuthEntries](sign-auth-entries.md)                         | Signs Soroban authorization entries                    |
+| [EnvelopeSigningRequirements](envelope-signing-requirements.md) | Determines which signatures a transaction needs        |
+| [SignEnvelope](sign-envelope.md)                                | Signs the transaction envelope                         |
+| [SendTransaction](send-transaction.md)                          | Submits transaction and waits for confirmation         |
+| [WrapFeeBump](wrap-fee-bump.md)                                 | Wraps a transaction with a fee bump                    |
 
-```typescript
-import { P_SimulateTransaction } from "@colibri/core";
+## When to Use Processes Directly
 
-const result = await P_SimulateTransaction().run({
-  transaction: builtTx,
-  rpc: rpcServer,
-});
-```
+For most use cases, use [Pipelines](../pipelines/README.md) which compose these processes automatically. Use processes directly when you need:
 
-**Input:**
-- `transaction` — Built transaction
-- `rpc` — RPC server
-
-**Output:** `SimulateTransactionSuccessResponse` or `SimulateTransactionRestoreResponse`
-
-## P_AssembleTransaction
-
-Adds simulation results (footprint, auth entries, resource fees) to a transaction.
-
-```typescript
-import { P_AssembleTransaction } from "@colibri/core";
-
-const result = await P_AssembleTransaction().run({
-  transaction: builtTx,
-  simulation: simulationResponse,
-});
-```
-
-**Input:**
-- `transaction` — Built transaction
-- `simulation` — Successful simulation response
-
-**Output:** `Transaction` (with soroban data attached)
-
-## P_SignAuthEntries
-
-Signs Soroban authorization entries for contract calls requiring authorization.
-
-```typescript
-import { P_SignAuthEntries } from "@colibri/core";
-
-const result = await P_SignAuthEntries().run({
-  authEntries: simulation.result?.auth || [],
-  signers: [signer],
-  networkPassphrase: "Test SDF Network ; September 2015",
-  validUntilLedgerSeq: currentLedger + 100,
-});
-```
-
-**Input:**
-- `authEntries` — Authorization entries from simulation
-- `signers` — Array of signers
-- `networkPassphrase` — Network passphrase
-- `validUntilLedgerSeq` — Expiration ledger for auth
-
-**Output:** Signed `SorobanAuthorizationEntry[]`
-
-## P_SignEnvelope
-
-Signs the transaction envelope.
-
-```typescript
-import { P_SignEnvelope } from "@colibri/core";
-
-const result = await P_SignEnvelope().run({
-  transaction: assembledTx,
-  signers: [signer],
-  requirements: { requiresSourceSignature: true, authSigners: [] },
-});
-```
-
-**Input:**
-- `transaction` — Assembled transaction
-- `signers` — Array of signers
-- `requirements` — Signing requirements
-
-**Output:** Signed `Transaction` or `FeeBumpTransaction`
-
-## P_SendTransaction
-
-Submits a signed transaction and waits for confirmation.
-
-```typescript
-import { P_SendTransaction } from "@colibri/core";
-
-const result = await P_SendTransaction().run({
-  transaction: signedTx,
-  rpc: rpcServer,
-  options: { timeoutInSeconds: 45 },
-});
-
-console.log("TX Hash:", result.hash);
-console.log("Return Value:", result.returnValue);
-```
-
-**Input:**
-- `transaction` — Signed transaction
-- `rpc` — RPC server
-- `options` — Optional timeout settings
-
-**Output:**
-- `hash` — Transaction hash
-- `returnValue` — Contract return value (if any)
-- `response` — Full transaction response
-
-## P_WrapFeeBump
-
-Wraps a transaction with a fee bump for fee sponsorship.
-
-```typescript
-import { P_WrapFeeBump } from "@colibri/core";
-
-const result = await P_WrapFeeBump().run({
-  transaction: innerTx,
-  config: {
-    source: sponsorPublicKey,
-    fee: "200000",
-  },
-  networkPassphrase: "Test SDF Network ; September 2015",
-});
-```
-
-**Input:**
-- `transaction` — Inner transaction to wrap
-- `config` — Fee bump configuration (source, fee)
-- `networkPassphrase` — Network passphrase
-
-**Output:** `FeeBumpTransaction`
-
-See also: [Fee Bump Plugin](../../packages/plugin-fee-bump.md)
+- Fine-grained control over individual steps
+- Custom process ordering
+- To build your own pipelines
+- To run a single step in isolation

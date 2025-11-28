@@ -1,24 +1,43 @@
 # Pipelines
 
-Pipelines are pre-composed workflows that chain multiple processes together for common transaction patterns. They're built on top of the `convee` process engine.
+Pipelines are pre-composed workflows that chain multiple [processes](../processes/README.md) together for common transaction patterns. They're built on the [`convee`](https://jsr.io/@fifo/convee) library.
 
 ## Available Pipelines
 
-| Pipeline                                      | Use Case                                         |
-| --------------------------------------------- | ------------------------------------------------ |
-| [Invoke Contract](invoke-contract.md)         | Build, simulate, sign, and submit contract calls |
-| [Read From Contract](read-from-contract.md)   | Simulate read-only contract calls                |
-| [Classic Transaction](classic-transaction.md) | Build, sign, and submit classic operations       |
+### Invoke Contract
 
-## Architecture
+Full contract invocation: build → simulate → sign auth → assemble → sign envelope → submit.
 
-Pipelines are built using the `convee` library and consist of:
+```
+BuildTransaction → SimulateTransaction → SignAuthEntries → AssembleTransaction
+    → EnvelopeSigningRequirements → SignEnvelope → SendTransaction
+```
 
-1. **Processes** — Atomic operations (build, simulate, sign, send)
-2. **Connectors** — Transform data between processes
-3. **Metadata Storage** — Store intermediate results
+[Full documentation →](invoke-contract.md)
 
-## Adding Plugins
+### Read From Contract
+
+Read-only contract calls: build → simulate → extract return value.
+
+```
+BuildTransaction → SimulateTransaction → (extract retval)
+```
+
+[Full documentation →](read-from-contract.md)
+
+### Classic Transaction
+
+Classic Stellar operations: build → determine signing requirements → sign → submit.
+
+```
+BuildTransaction → EnvelopeSigningRequirements → SignEnvelope → SendTransaction
+```
+
+[Full documentation →](classic-transaction.md)
+
+## Plugins
+
+Pipelines can be extended with plugins. Each plugin targets specific processes within the pipeline:
 
 ```typescript
 import { PIPE_InvokeContract } from "@colibri/core";
@@ -37,3 +56,5 @@ const feeBumpPlugin = PLG_FeeBump.create({
 
 pipeline.addPlugin(feeBumpPlugin, PLG_FeeBump.target);
 ```
+
+See [Plugins](../../packages/plugins.md) for available plugins.
