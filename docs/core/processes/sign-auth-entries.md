@@ -78,12 +78,12 @@ Returns `SorobanAuthorizationEntry[]` with signatures added to entries matching 
 
 ## Errors
 
-| Code      | Description                                 |
-| --------- | ------------------------------------------- |
-| `SAE_001` | Missing required argument                   |
-| `SAE_002` | Could not get current ledger from RPC       |
-| `SAE_003` | Failed to sign authorization entry          |
-| `SAE_004` | Missing signer for required address         |
-| `SAE_005` | Valid until ledger sequence too low (≤ 0)   |
-| `SAE_006` | Valid for seconds too low (≤ 5)             |
-| `SAE_007` | Valid for ledgers too low (≤ 0)             |
+| Code      | Description                               |
+| --------- | ----------------------------------------- |
+| `SAE_001` | Missing required argument                 |
+| `SAE_002` | Could not get current ledger from RPC     |
+| `SAE_003` | Failed to sign authorization entry        |
+| `SAE_004` | Missing signer for required address       |
+| `SAE_005` | Valid until ledger sequence too low (≤ 0) |
+| `SAE_006` | Valid for seconds too low (≤ 5)           |
+| `SAE_007` | Valid for ledgers too low (≤ 0)           |

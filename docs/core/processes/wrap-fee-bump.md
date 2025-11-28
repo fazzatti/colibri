@@ -48,6 +48,7 @@ Returns a `FeeBumpTransaction` wrapping the inner transaction.
 ### Fee Bump Construction
 
 The process uses `TransactionBuilder.buildFeeBumpTransaction()` with:
+
 - The sponsor's public key as the fee source
 - The new (higher) fee
 - The original inner transaction

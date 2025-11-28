@@ -70,6 +70,7 @@ type SendTransactionOutput = {
 ### Timeout Behavior
 
 The process will poll until one of these conditions:
+
 - Transaction status becomes `SUCCESS` or `FAILED`
 - The calculated wait time is exceeded
 - If timeout is exceeded while status is still `NOT_FOUND`, throws `TRANSACTION_NOT_FOUND`

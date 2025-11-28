@@ -36,15 +36,15 @@ Either `rpc` or `sequence` must be provided. If `rpc` is provided, the process f
 
 The `preconditions` object supports:
 
-| Property                      | Type           | Description                                  |
-| ----------------------------- | -------------- | -------------------------------------------- |
-| `timeBounds`                  | `TimeBounds`   | Explicit time bounds (`minTime`, `maxTime`)  |
-| `timeoutSeconds`              | `number`       | Timeout from now (cannot use with timeBounds)|
-| `ledgerBounds`                | `LedgerBounds` | Ledger bounds (`minLedger`, `maxLedger`)     |
-| `minAccountSequence`          | `string`       | Minimum account sequence                     |
-| `minAccountSequenceAge`       | `number`       | Minimum sequence age in seconds              |
-| `minAccountSequenceLedgerGap` | `number`       | Minimum gap from last sequence change        |
-| `extraSigners`                | `SignerKey[]`  | Additional required signers                  |
+| Property                      | Type           | Description                                   |
+| ----------------------------- | -------------- | --------------------------------------------- |
+| `timeBounds`                  | `TimeBounds`   | Explicit time bounds (`minTime`, `maxTime`)   |
+| `timeoutSeconds`              | `number`       | Timeout from now (cannot use with timeBounds) |
+| `ledgerBounds`                | `LedgerBounds` | Ledger bounds (`minLedger`, `maxLedger`)      |
+| `minAccountSequence`          | `string`       | Minimum account sequence                      |
+| `minAccountSequenceAge`       | `number`       | Minimum sequence age in seconds               |
+| `minAccountSequenceLedgerGap` | `number`       | Minimum gap from last sequence change         |
+| `extraSigners`                | `SignerKey[]`  | Additional required signers                   |
 
 ## Output
 
@@ -65,11 +65,11 @@ Returns a `Transaction` object ready for simulation or signing.
 
 ## Errors
 
-| Code      | Description                                            |
-| --------- | ------------------------------------------------------ |
-| `BTX_001` | Invalid base fee format (not a valid number)           |
-| `BTX_002` | Base fee too low (must be > 0)                         |
-| `BTX_003` | Could not load source account from RPC                 |
-| `BTX_010` | No operations provided                                 |
-| `BTX_011` | RPC required when sequence not provided                |
-| `BTX_012` | Cannot specify both timeBounds and timeoutSeconds      |
+| Code      | Description                                       |
+| --------- | ------------------------------------------------- |
+| `BTX_001` | Invalid base fee format (not a valid number)      |
+| `BTX_002` | Base fee too low (must be > 0)                    |
+| `BTX_003` | Could not load source account from RPC            |
+| `BTX_010` | No operations provided                            |
+| `BTX_011` | RPC required when sequence not provided           |
+| `BTX_012` | Cannot specify both timeBounds and timeoutSeconds |

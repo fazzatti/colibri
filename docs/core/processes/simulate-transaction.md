@@ -45,8 +45,8 @@ The process distinguishes between different response types by checking the respo
 
 ## Errors
 
-| Code      | Description                                          |
-| --------- | ---------------------------------------------------- |
-| `SIM_001` | Simulation failed — contract reverted or invalid     |
-| `SIM_002` | Could not reach RPC server                           |
-| `SIM_003` | Simulation result not verified (unknown response)    |
+| Code      | Description                                       |
+| --------- | ------------------------------------------------- |
+| `SIM_001` | Simulation failed — contract reverted or invalid  |
+| `SIM_002` | Could not reach RPC server                        |
+| `SIM_003` | Simulation result not verified (unknown response) |

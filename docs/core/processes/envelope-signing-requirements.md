@@ -52,6 +52,7 @@ Each requirement specifies:
 ### Threshold Resolution
 
 When the same address appears multiple times:
+
 - The highest threshold level wins
 - Example: If source needs `medium` for the transaction but `high` for a SetOptions operation, the result is `high`
 
