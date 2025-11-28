@@ -49,8 +49,8 @@
 
 ## Plugins
 
-- [Plugins](packages/plugins.md)
-  - [Fee Bump](packages/plugin-fee-bump.md)
+- [Plugins](packages/plugins/README.md)
+  - [Fee Bump](packages/plugins/fee-bump.md)
 
 ## Examples
 

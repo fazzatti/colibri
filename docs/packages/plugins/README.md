@@ -12,16 +12,16 @@ Input → [Plugin: Pre-process] → Process → [Plugin: Post-process] → Outpu
 
 This architecture enables:
 
-- **Fee Sponsorship** — Wrap transactions with fee bumps
+- **Fee Coverage** — Wrap transactions with fee bumps so a separate account covers network fees
 - **Custom Signing** — Integrate hardware wallets or custodial signers
 - **Logging & Metrics** — Track transaction lifecycle events
 - **Validation** — Add custom checks before submission
 
 ## Available Plugins
 
-| Plugin                         | Description                           |
-| ------------------------------ | ------------------------------------- |
-| [Fee Bump](plugin-fee-bump.md) | Wrap transactions for fee sponsorship |
+| Plugin                  | Description                                      |
+| ----------------------- | ------------------------------------------------ |
+| [Fee Bump](fee-bump.md) | Wrap transactions so another account covers fees |
 
 ## Using Plugins
 
@@ -36,9 +36,9 @@ const pipeline = PIPE_InvokeContract.create({ networkConfig });
 const plugin = PLG_FeeBump.create({
   networkConfig,
   feeBumpConfig: {
-    source: sponsorPublicKey,
+    source: feeSourcePublicKey,
     fee: "1000000",
-    signers: [sponsorSigner],
+    signers: [feeSourceSigner],
   },
 });
 

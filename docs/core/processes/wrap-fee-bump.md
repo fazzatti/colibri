@@ -49,14 +49,14 @@ Returns a `FeeBumpTransaction` wrapping the inner transaction.
 
 The process uses `TransactionBuilder.buildFeeBumpTransaction()` with:
 
-- The sponsor's public key as the fee source
+- The fee bump source's public key
 - The new (higher) fee
 - The original inner transaction
 - The network passphrase
 
 ### After Creation
 
-The fee bump transaction must then be signed by the fee source (sponsor) before submission. The inner transaction's signatures are preserved.
+The fee bump transaction must then be signed by the fee bump source before submission. The inner transaction's signatures are preserved.
 
 ## Errors
 
@@ -70,4 +70,4 @@ The fee bump transaction must then be signed by the fee source (sponsor) before 
 
 ## See Also
 
-- [Fee Bump Plugin](../../packages/plugin-fee-bump.md) — Integrates fee bumps into pipelines
+- [Fee Bump Plugin](../../packages/plugins/fee-bump.md) — Integrates fee bumps into pipelines
