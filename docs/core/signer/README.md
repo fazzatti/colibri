@@ -1,8 +1,6 @@
 # Signer
 
-The Signer module defines the `TransactionSigner` interface—the standard type structure used throughout Colibri for transaction and authorization signing.
-
-By defining a clear interface, anyone can build custom signers and key handling tools that integrate seamlessly with Colibri's pipelines and processes.
+The Signer module defines `TransactionSigner`—the standard interface used throughout Colibri for transaction and authorization signing. By defining a clear interface, anyone can build custom signers and key handling tools that integrate seamlessly with Colibri's pipelines and processes.
 
 ## TransactionSigner Interface
 

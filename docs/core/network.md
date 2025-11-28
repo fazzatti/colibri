@@ -1,10 +1,6 @@
 # Network
 
-The Network module provides configuration for connecting to Stellar networks with pre-built providers for common infrastructure.
-
-## Type Philosophy
-
-Colibri uses a consistent type interface pattern across its core modules. `NetworkConfig` is a well-defined type that any implementation can satisfy, allowing you to build custom network configurations that integrate seamlessly with all Colibri tools.
+`NetworkConfig` is used consistently across all Colibri tools—pipelines, processes, plugins, and utilities. Use the built-in configurations for common networks or define your own with full compatibility.
 
 ```typescript
 type NetworkConfig = {
@@ -18,9 +14,7 @@ type NetworkConfig = {
 };
 ```
 
-This means you can create your own network configuration objects directly, or extend the built-in helpers to suit your infrastructure needs.
-
-## NetworkConfig
+## Built-in Configurations
 
 Create network configurations for TestNet, MainNet, or FutureNet:
 

@@ -1,10 +1,6 @@
 # Transaction Config
 
-`TransactionConfig` is the standard type used across all Colibri pipelines to configure transaction parameters—fee, source account, timeout, and signers.
-
-## Type Philosophy
-
-Colibri uses consistent type interfaces throughout its core modules. `TransactionConfig` is a well-defined type that any calling code can construct, making it easy to integrate Colibri pipelines into your application without being tied to specific helper functions.
+`TransactionConfig` is the standard type used across all Colibri pipelines to configure transaction parameters. It's a well-defined type that any calling code can construct directly, making it easy to integrate Colibri into your application.
 
 ```typescript
 type TransactionConfig = {
@@ -25,6 +21,8 @@ type BaseFee = `${number}`;
 | `source`  | `Ed25519PublicKey`    | Source account public key (G...)                   |
 | `timeout` | `number`              | Transaction timeout in seconds                     |
 | `signers` | `TransactionSigner[]` | Array of signers to sign the transaction           |
+
+The `signers` array accepts any object implementing the [TransactionSigner](signer/README.md) interface, allowing you to integrate custom key management solutions.
 
 ## Usage
 
@@ -53,41 +51,7 @@ const result = await pipeline.run({
 });
 ```
 
-## Fee Bump Config
-
-For fee bump operations, Colibri provides a related `FeeBumpConfig` type that omits the timeout (fee bumps inherit the inner transaction's timeout):
-
-```typescript
-type FeeBumpConfig = {
-  fee: BaseFee;
-  source: Ed25519PublicKey;
-  signers: TransactionSigner[];
-};
-```
-
-Used with the Fee Bump plugin:
-
-```typescript
-import { PLG_FeeBump } from "@colibri/plugin-fee-bump";
-
-const feeBumpPlugin = PLG_FeeBump.create({
-  networkConfig: network,
-  feeBumpConfig: {
-    source: sponsorSigner.publicKey(),
-    fee: "1000000",
-    signers: [sponsorSigner],
-  },
-});
-```
-
-## Custom Signers
-
-The `signers` array accepts any object implementing the `TransactionSigner` interface. This allows you to integrate custom key management solutions while using the same transaction config structure.
-
-See [Signer](signer/README.md) for details on implementing custom signers.
-
 ## Next Steps
 
 - [Signer](signer/README.md) — TransactionSigner interface
 - [Pipelines](pipelines/README.md) — Use TransactionConfig in workflows
-- [Fee Bump Plugin](../packages/plugin-fee-bump.md) — Sponsor transactions with FeeBumpConfig

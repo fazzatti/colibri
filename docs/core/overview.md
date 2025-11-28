@@ -8,22 +8,6 @@ The `@colibri/core` package is the foundation of the Colibri toolkit. It provide
 deno add jsr:@colibri/core
 ```
 
-## Module Overview
-
-| Module                           | Description                                      |
-| -------------------------------- | ------------------------------------------------ |
-| [Error](error.md)                | Deterministic error handling with `ColibriError` |
-| [Account](account.md)            | Native Stellar account utilities                 |
-| [Asset](asset.md)                | SEP-11 asset string format                       |
-| [Contract](contract.md)          | Contract invocation and deployment               |
-| [Network](network.md)            | Network configuration with pre-built providers   |
-| [Signer](signer.md)              | Local signing with Ed25519 keypairs              |
-| [StrKeys](strkeys.md)            | Validate and identify Stellar key types          |
-| [TOID](toid.md)                  | SEP-0035 Total Order ID utilities                |
-| [Tools](tools.md)                | Friendbot initialization and other utilities     |
-| [Processes](processes/README.md) | Atomic transaction building blocks               |
-| [Pipelines](pipelines/README.md) | Composable transaction workflows                 |
-
 ## Quick Import Examples
 
 ### Network Setup

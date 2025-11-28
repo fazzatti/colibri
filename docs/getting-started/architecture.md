@@ -55,13 +55,7 @@ Type checkers are available for public keys, secret keys, contract IDs, muxed ad
 
 ## Core Types
 
-Colibri uses well-defined interfaces and types throughout, so you can build custom implementations that integrate seamlessly with all tools. Key examples:
-
-- **[TransactionSigner](../core/signer/README.md)** — Any signer implementing this interface works with all pipelines
-- **[TransactionConfig](../core/transaction-config.md)** — Standard transaction parameters (fee, source, timeout, signers)
-- **[NetworkConfig](../core/network.md)** — Network connection settings
-
-This pattern means you're never locked into Colibri's built-in implementations. Build your own signers, use your own key management, and everything integrates cleanly.
+Colibri uses well-defined interfaces and types throughout the library. This enables custom implementations that integrate seamlessly—you're never locked into built-in tools. For example, [TransactionSigner](../core/signer/README.md) defines the signing interface so any custom signer works with all pipelines, [NetworkConfig](../core/network.md) standardizes network settings across all tools, and [TransactionConfig](../core/transaction-config.md) provides consistent transaction parameters.
 
 ## Error Handling
 
