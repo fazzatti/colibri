@@ -10,6 +10,10 @@
 A TypeScript-first toolkit for building robust Stellar and Soroban applications with deterministic error handling, composable workflows, and extensible plugin architecture.
 </p>
 
+<p align="center">
+  <a href="https://colibri-docs.gitbook.io/">📚 Documentation</a>
+</p>
+
 <div align="center">
 
   <a href="https://codecov.io/gh/fazzatti/colibri" > 
