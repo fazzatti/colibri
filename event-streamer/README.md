@@ -2,7 +2,7 @@
 
 A real-time event streaming client for Stellar/Soroban that supports both live and historical event ingestion. Part of the [Colibri](https://github.com/fazzatti/colibri) ecosystem.
 
-[📚 Documentation](https://colibri-docs.gitbook.io/)
+[📚 Documentation](https://colibri-docs.gitbook.io/) | [💡 Examples](https://github.com/fazzatti/colibri-examples)
 
 ## Installation
 

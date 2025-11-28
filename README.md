@@ -11,7 +11,7 @@ A TypeScript-first toolkit for building robust Stellar and Soroban applications 
 </p>
 
 <p align="center">
-  <a href="https://colibri-docs.gitbook.io/">📚 Documentation</a>
+  <a href="https://colibri-docs.gitbook.io/">📚 Documentation</a> | <a href="https://github.com/fazzatti/colibri-examples">💡 Examples</a>
 </p>
 
 <div align="center">

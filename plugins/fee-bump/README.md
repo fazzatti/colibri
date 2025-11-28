@@ -4,7 +4,7 @@ A Colibri plugin that wraps a Stellar Transaction in a Fee Bump Transaction so a
 
 It operates on the `P_SendTransaction` process from `@colibri/core`. You can use it directly with that process or add it to any pipeline that uses `P_SendTransaction` (for example, `PIPE_InvokeContract`).
 
-[📚 Documentation](https://colibri-docs.gitbook.io/)
+[📚 Documentation](https://colibri-docs.gitbook.io/) | [💡 Examples](https://github.com/fazzatti/colibri-examples)
 
 ## Quick start
 
