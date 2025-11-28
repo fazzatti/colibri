@@ -1,6 +1,6 @@
 # Event Streamer
 
-The `@colibri/event-streamer` package provides real-time and historical Soroban event ingestion.
+The `@colibri/event-streamer` package provides real-time and historical Soroban event ingestion. It intelligently handles both live streaming from the RPC retention window (~17 days) and archive ingestion from older ledgers, automatically switching between modes as needed.
 
 ## Installation
 
@@ -8,41 +8,35 @@ The `@colibri/event-streamer` package provides real-time and historical Soroban 
 deno add jsr:@colibri/event-streamer
 ```
 
+## Overview
+
+The Event Streamer solves the challenge of ingesting Soroban contract events across different time ranges:
+
+- **Live mode** — Streams events from ledgers within the RPC retention window using `getEvents`
+- **Archive mode** — Fetches historical events from past ledgers using `getLedgers` on archive nodes
+- **Auto mode** — Automatically detects which mode to use and transitions between them seamlessly
+
+This allows you to backfill historical data and continue with real-time streaming without manual intervention.
+
 ## Quick Start
 
 ```typescript
-import { EventStreamer } from "@colibri/event-streamer";
-import {
-  EventFilter,
-  EventType,
-  SACEvents,
-  NetworkProviders,
-} from "@colibri/core";
-
-const network = NetworkProviders.Lightsail.MainNet();
-
-// Create a filter
-const filter = new EventFilter({
-  contractIds: ["CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA"],
-  type: EventType.Contract,
-  topics: [SACEvents.TransferEvent.toTopicFilter()],
-});
-
-// Create the streamer
 const streamer = new EventStreamer({
   rpcUrl: network.rpcUrl,
   archiveRpcUrl: network.archiveRpcUrl,
   filters: [filter],
 });
 
-// Start streaming
-await streamer.start((event) => {
-  const transfer = SACEvents.TransferEvent.fromEvent(event);
-  console.log(
-    `Transfer: ${transfer.from} → ${transfer.to}: ${transfer.amount}`
-  );
-});
+// Start streaming — automatically chooses live or archive mode
+await streamer.start(
+  (event) => {
+    console.log(`Event: ${event.id} at ledger ${event.ledger}`);
+  },
+  { startLedger, stopLedger }
+);
 ```
+
+For complete working examples, see the [event-streamer examples repository](https://github.com/fazzatti/colibri-examples/tree/main/examples/event-streamer).
 
 ## Constructor
 
@@ -88,56 +82,11 @@ interface StreamerOptions {
 
 ### `start(handler, options?)`
 
-Start event ingestion with automatic mode detection:
+Start event ingestion with automatic mode detection. See [Ingestion Modes](#ingestion-modes) for details.
 
 ```typescript
-await streamer.start(
-  (event) => {
-    // Handle each event
-    console.log(event);
-  },
-  {
-    startLedger: number, // Starting ledger (optional)
-    stopLedger: number, // Stopping ledger (optional)
-  }
-);
+await streamer.start(handler, { startLedger, stopLedger });
 ```
-
-The `start` method automatically determines whether to use live or archive ingestion based on:
-
-- If `startLedger` is within RPC retention window → **Live mode**
-- If `startLedger` is outside retention window → **Archive mode**
-- If `startLedger` is omitted → Starts from latest ledger in **Live mode**
-
-### `startLive(handler, options?)`
-
-Explicitly start live ingestion:
-
-```typescript
-await streamer.startLive((event) => console.log(event), {
-  startLedger: number,
-  stopLedger: number,
-});
-```
-
-{% hint style="warning" %}
-**Throws error** if `startLedger` is outside the RPC retention window.
-{% endhint %}
-
-### `startArchive(handler, options?)`
-
-Explicitly start archive ingestion:
-
-```typescript
-await streamer.startArchive((event) => console.log(event), {
-  startLedger: number, // Required for archive
-  stopLedger: number,
-});
-```
-
-{% hint style="info" %}
-Requires `archiveRpcUrl` to be configured.
-{% endhint %}
 
 ### `stop()`
 
@@ -147,106 +96,55 @@ Stop the event streamer:
 streamer.stop();
 ```
 
-### `getLatestLedger()`
-
-Get the latest ledger from RPC:
-
-```typescript
-const ledger = await streamer.getLatestLedger();
-console.log("Latest ledger:", ledger);
-```
-
 ## Ingestion Modes
 
 ### Live Mode
 
-Streams events from ledgers within the RPC retention window (~17 days):
+Streams events from ledgers within the RPC retention window (~17 days) using `getEvents`:
 
 ```typescript
-// Start from latest ledger
-await streamer.start(handler);
-
-// Start from specific recent ledger
-await streamer.start(handler, { startLedger: recentLedger });
-
-// Stop after specific ledger
-await streamer.start(handler, { stopLedger: targetLedger });
+await streamer.start(handler); // Starts from latest
+await streamer.start(handler, { stopLedger }); // Stop at specific ledger
 ```
+
+Use `startLive()` to explicitly require live mode — throws if `startLedger` is outside the retention window.
 
 ### Archive Mode
 
-Fetches events from historical ledgers using archive RPC:
+Fetches historical events from ledgers outside the retention window using `getLedgers`:
 
 ```typescript
-const streamer = new EventStreamer({
-  rpcUrl: network.rpcUrl,
-  archiveRpcUrl: network.archiveRpcUrl, // Required!
-  filters: [filter],
-});
-
-// Ingest specific historical ledger
 await streamer.start(handler, {
   startLedger: 59895694,
   stopLedger: 59895694,
 });
 ```
 
+Requires `archiveRpcUrl` to be configured. Use `startArchive()` to explicitly use archive mode.
+
 ### Auto Mode
 
-The `start()` method automatically switches between modes:
+The `start()` method automatically detects and switches between modes:
 
-```typescript
-// If historical → starts in archive mode
-// Transitions to live mode when reaching retention window
-await streamer.start(handler, {
-  startLedger: 50000000, // Historical
-  // No stopLedger = continues indefinitely
-});
-```
+- If `startLedger` is within retention → uses live mode
+- If `startLedger` is outside retention → starts in archive mode, transitions to live when reaching the retention window
+
+This enables seamless backfilling of historical data followed by continuous real-time streaming.
 
 ## Event Handler
 
-The event handler receives raw events:
+The event handler receives raw events with XDR-encoded topics and values:
 
 ```typescript
 type EventHandler = (event: RawEvent) => void | Promise<void>;
-
-interface RawEvent {
-  type: string;
-  ledger: number;
-  ledgerClosedAt: string;
-  contractId: string;
-  id: string;
-  pagingToken: string;
-  topic: xdr.ScVal[];
-  value: xdr.ScVal;
-  inSuccessfulContractCall: boolean;
-  txHash: string;
-}
 ```
 
-### Parsing Events
+For parsing and working with events, see the `@colibri/core` event utilities:
 
-Use event templates to parse raw events:
-
-```typescript
-import { SACEvents } from "@colibri/core";
-
-await streamer.start((event) => {
-  // Check event type and parse
-  if (SACEvents.TransferEvent.is(event)) {
-    const transfer = SACEvents.TransferEvent.fromEvent(event);
-    console.log(transfer.from, transfer.to, transfer.amount);
-  } else if (SACEvents.MintEvent.is(event)) {
-    const mint = SACEvents.MintEvent.fromEvent(event);
-    console.log(mint.to, mint.amount);
-  }
-});
-```
+- [Standardized Events](../events/standardized-events/README.md) — SAC and SEP-41 event parsers
+- [Event Filter](../events/event-filter.md) — Configure filters
 
 ## Error Handling
-
-### Error Codes
 
 | Code      | Class                      | Description                                  |
 | --------- | -------------------------- | -------------------------------------------- |
@@ -260,26 +158,6 @@ await streamer.start((event) => {
 | `EVS_008` | `MISSING_ARCHIVE_RPC`      | Archive RPC required but not configured      |
 | `EVS_009` | `INVALID_INGESTION_RANGE`  | Invalid ingestion range specified            |
 
-### Error Handling Example
-
-```typescript
-try {
-  await streamer.start(handler, { startLedger: 1 });
-} catch (error) {
-  if (error.code === "EVS_006") {
-    console.log("Ledger too old - use archive mode");
-  } else if (error.code === "EVS_008") {
-    console.log("Configure archiveRpcUrl for historical data");
-  }
-}
-```
-
 ## Examples
 
 For complete working examples, see the [event-streamer examples](https://github.com/fazzatti/colibri-examples/tree/main/examples/event-streamer).
-
-## Next Steps
-
-- [Events Overview](../events/overview.md) — Understanding event structure
-- [Standardized Events](../events/standardized-events/README.md) — SAC and SEP-41 event parsers
-- [Event Filter](../events/event-filter.md) — Configure filters
