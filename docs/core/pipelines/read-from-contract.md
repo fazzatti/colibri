@@ -2,11 +2,12 @@
 
 For read-only contract calls that don't modify state.
 
-## Flow
+## Process Composition
 
-```
-Input → Build → Simulate → ExtractReturnValue
-```
+This pipeline chains the following processes:
+
+1. [P_BuildTransaction](../processes/build-transaction.md) — Creates the transaction
+2. [P_SimulateTransaction](../processes/simulate-transaction.md) — Simulates and extracts return value
 
 ## Usage
 

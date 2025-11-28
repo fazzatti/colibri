@@ -2,11 +2,14 @@
 
 For classic Stellar operations (payments, account creation, etc.).
 
-## Flow
+## Process Composition
 
-```
-Input → Build → Sign → Send
-```
+This pipeline chains the following processes:
+
+1. [P_BuildTransaction](../processes/build-transaction.md) — Creates the transaction
+2. [P_EnvelopeSigningRequirements](../processes/envelope-signing-requirements.md) — Determines required signatures
+3. [P_SignEnvelope](../processes/sign-envelope.md) — Signs the transaction
+4. [P_SendTransaction](../processes/send-transaction.md) — Submits and waits for confirmation
 
 ## Usage
 

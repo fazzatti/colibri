@@ -1,6 +1,6 @@
 # AssembleTransaction
 
-Attaches simulation results (footprint, authorization entries, resource fees) to a transaction, making it ready for signing.
+Attaches simulation results (footprint, authorization entries, resource fees) to a transaction, making it ready for signing. This process reconstructs the transaction with all the Soroban-specific data from simulation.
 
 ## `P_AssembleTransaction`
 
@@ -27,6 +27,23 @@ const result = await P_AssembleTransaction().run({
 ## Output
 
 Returns an assembled `Transaction` with Soroban data attached, ready for envelope signing.
+
+## Behavior
+
+1. **Validates required arguments** — Ensures `transaction` and `resourceFee` are present
+2. **Verifies smart contract transaction** — Confirms the transaction is a Soroban transaction
+3. **Verifies operation type** — Checks that the operation is `invokeHostFunction`
+4. **Rebuilds the operation** — Reconstructs the invoke host function operation with the provided auth entries (signed or unsigned)
+5. **Calculates total fee** — Combines the original inclusion fee (`baseFee`) with the `resourceFee` from simulation
+6. **Preserves transaction settings** — Maintains all original transaction properties:
+   - Memo
+   - Time bounds
+   - Ledger bounds
+   - Min sequence constraints
+   - Extra signers
+7. **Attaches Soroban data** — Sets the `sorobanData` (footprint and resources) on the transaction
+
+The assembled transaction has the correct fee structure and all necessary Soroban metadata to be valid on the network.
 
 ## Errors
 

@@ -1,6 +1,6 @@
 # WrapFeeBump
 
-Wraps a transaction with a fee bump, enabling fee sponsorship.
+Wraps a transaction with a fee bump, enabling fee sponsorship. A fee bump allows a different account to pay for a transaction's fees, useful for improving user experience or handling fee increases after initial signing.
 
 ## `P_WrapFeeBump`
 
@@ -38,13 +38,24 @@ Returns a `FeeBumpTransaction` wrapping the inner transaction.
 
 ## Behavior
 
-The process:
+### Validations
 
-1. Validates the inner transaction is not already a fee bump
-2. Validates the fee bump fee is greater than the inner transaction fee
-3. Builds the fee bump transaction
+1. **Validates required arguments** — Ensures `transaction`, `networkPassphrase`, `config`, `config.source`, and `config.fee` are all present
+2. **Verifies not already a fee bump** — The input transaction cannot already be a fee bump transaction (no double-wrapping)
+3. **Verifies is a valid transaction** — Ensures the input is a proper Transaction object
+4. **Validates fee** — The fee bump fee must be strictly greater than the inner transaction's fee
 
-The fee bump transaction must then be signed by the fee source before submission.
+### Fee Bump Construction
+
+The process uses `TransactionBuilder.buildFeeBumpTransaction()` with:
+- The sponsor's public key as the fee source
+- The new (higher) fee
+- The original inner transaction
+- The network passphrase
+
+### After Creation
+
+The fee bump transaction must then be signed by the fee source (sponsor) before submission. The inner transaction's signatures are preserved.
 
 ## Errors
 

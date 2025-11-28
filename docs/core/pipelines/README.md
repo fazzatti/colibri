@@ -1,43 +1,17 @@
 # Pipelines
 
-Pipelines are pre-composed workflows that chain multiple [processes](../processes/README.md) together for common transaction patterns. They're built on the [`convee`](https://jsr.io/@fifo/convee) library.
+Pipelines chain multiple [processes](../processes/README.md) and transformer functions into reusable workflows. Built on the [`convee`](https://jsr.io/@fifo/convee) library, they handle the complexity of multi-step transaction flows.
 
-## Available Pipelines
+In Colibri, all pipelines are prefixed with `PIPE_` (e.g., `PIPE_InvokeContract`).
 
-### Invoke Contract
+A pipeline connects steps sequentially—each step receives the output of the previous one. Steps can be:
 
-Full contract invocation: build → simulate → sign auth → assemble → sign envelope → submit.
+- **Processes** — Atomic operations like `BuildTransaction`, `SimulateTransaction`
+- **Transformers** — Simple functions that modify or reshape data between processes
 
-```
-BuildTransaction → SimulateTransaction → SignAuthEntries → AssembleTransaction
-    → EnvelopeSigningRequirements → SignEnvelope → SendTransaction
-```
-
-[Full documentation →](invoke-contract.md)
-
-### Read From Contract
-
-Read-only contract calls: build → simulate → extract return value.
-
-```
-BuildTransaction → SimulateTransaction → (extract retval)
-```
-
-[Full documentation →](read-from-contract.md)
-
-### Classic Transaction
-
-Classic Stellar operations: build → determine signing requirements → sign → submit.
-
-```
-BuildTransaction → EnvelopeSigningRequirements → SignEnvelope → SendTransaction
-```
-
-[Full documentation →](classic-transaction.md)
+Like processes, pipelines can be extended with plugins that operate on the input, output, or errors at specific points in the flow.
 
 ## Plugins
-
-Pipelines can be extended with plugins. Each plugin targets specific processes within the pipeline:
 
 ```typescript
 import { PIPE_InvokeContract } from "@colibri/core";

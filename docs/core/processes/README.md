@@ -6,6 +6,8 @@ Processes are the atomic building blocks of Colibri. Each process is a single-pu
 - **Standardized errors** — Every failure is wrapped in a typed `ColibriError` with diagnostics
 - **Plugin extensibility** — Extend behavior via plugins that act on inputs, outputs, errors, or combinations
 
+In Colibri, all processes are prefixed with `P_` (e.g., `P_BuildTransaction`).
+
 ## Process Structure
 
 Each process follows the same pattern:
@@ -19,7 +21,7 @@ const process = P_BuildTransaction();
 const result = await process.run(input);
 
 // Or add plugins
-process.addPlugin(myPlugin, "onInput");
+process.addPlugin(handleErrorGraciouslyPlugin);
 ```
 
 Plugins can hook into:
@@ -28,19 +30,7 @@ Plugins can hook into:
 - `onOutput` — Transform or enrich output after execution
 - `onError` — Handle or transform errors
 - Combinations of the above
-
-## Available Processes
-
-| Process                                                         | Description                                            |
-| --------------------------------------------------------------- | ------------------------------------------------------ |
-| [BuildTransaction](build-transaction.md)                        | Creates a transaction from operations                  |
-| [SimulateTransaction](simulate-transaction.md)                  | Simulates transaction on RPC to get resource estimates |
-| [AssembleTransaction](assemble-transaction.md)                  | Attaches simulation results to a transaction           |
-| [SignAuthEntries](sign-auth-entries.md)                         | Signs Soroban authorization entries                    |
-| [EnvelopeSigningRequirements](envelope-signing-requirements.md) | Determines which signatures a transaction needs        |
-| [SignEnvelope](sign-envelope.md)                                | Signs the transaction envelope                         |
-| [SendTransaction](send-transaction.md)                          | Submits transaction and waits for confirmation         |
-| [WrapFeeBump](wrap-fee-bump.md)                                 | Wraps a transaction with a fee bump                    |
+  |
 
 ## When to Use Processes Directly
 

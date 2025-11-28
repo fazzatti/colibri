@@ -1,6 +1,6 @@
 # SignEnvelope
 
-Signs the transaction envelope based on signature requirements.
+Signs the transaction envelope based on signature requirements. This process takes the signature requirements from `P_EnvelopeSigningRequirements` and applies signatures from the available signers.
 
 ## `P_SignEnvelope`
 
@@ -28,12 +28,16 @@ Returns the signed `Transaction` or `FeeBumpTransaction`.
 
 ## Behavior
 
-The process:
+1. **Validates requirements** — Ensures at least one signature requirement exists
+2. **Validates signers** — Ensures at least one signer is provided
+3. **Iterates through requirements** — For each signature requirement:
+   - Finds a signer with matching public key
+   - Throws `SIGNER_NOT_FOUND` if no match exists
+   - Signs the transaction with the signer
+4. **Deserializes after each signature** — Converts the signed XDR back to a transaction object to accumulate signatures
+5. **Preserves network passphrase** — Uses the transaction's embedded network passphrase for deserialization
 
-1. Iterates through each signature requirement
-2. Finds a matching signer by public key
-3. Signs the transaction with that signer
-4. Throws if a required signer is not found
+The process is strict — it requires a signer for every requirement. If you want to partially sign (for multi-sig scenarios where different parties sign at different times), you'll need to filter the requirements first.
 
 ## Errors
 
