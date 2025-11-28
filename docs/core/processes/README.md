@@ -26,11 +26,10 @@ process.addPlugin(handleErrorGraciouslyPlugin);
 
 Plugins can hook into:
 
-- `onInput` — Transform or validate input before execution
-- `onOutput` — Transform or enrich output after execution
-- `onError` — Handle or transform errors
+- `processInput` — Transform or validate input before execution
+- `processOutput` — Transform or enrich output after execution
+- `processError` — Handle or transform errors
 - Combinations of the above
-  |
 
 ## When to Use Processes Directly
 
