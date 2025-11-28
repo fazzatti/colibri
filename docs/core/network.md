@@ -2,6 +2,24 @@
 
 The Network module provides configuration for connecting to Stellar networks with pre-built providers for common infrastructure.
 
+## Type Philosophy
+
+Colibri uses a consistent type interface pattern across its core modules. `NetworkConfig` is a well-defined type that any implementation can satisfy, allowing you to build custom network configurations that integrate seamlessly with all Colibri tools.
+
+```typescript
+type NetworkConfig = {
+  rpcUrl: string;
+  networkPassphrase: string;
+  type: NetworkType;
+  archiveRpcUrl?: string;
+  horizonUrl?: string;
+  friendbotUrl?: string;
+  allowHttp?: boolean;
+};
+```
+
+This means you can create your own network configuration objects directly, or extend the built-in helpers to suit your infrastructure needs.
+
 ## NetworkConfig
 
 Create network configurations for TestNet, MainNet, or FutureNet:
@@ -62,47 +80,19 @@ const network = NetworkConfig.TestNet({
 
 ## Network Providers
 
-Pre-configured setups for popular infrastructure providers:
-
-### Lightsail (Recommended for MainNet)
-
-Provides both standard and archive RPC access:
+Pre-configured setups for known infrastructure providers in the Stellar ecosystem with public infrastructure:
 
 ```typescript
 import { NetworkProviders } from "@colibri/core";
 
+// Use a provider's MainNet configuration
 const network = NetworkProviders.Lightsail.MainNet();
 
-console.log(network.rpcUrl); // "https://rpc.lightsail.network/"
-console.log(network.archiveRpcUrl); // "https://archive-rpc.lightsail.network/"
+console.log(network.rpcUrl);
+console.log(network.archiveRpcUrl); // Some providers include archive RPC
 ```
 
-### Provider Comparison
-
-| Provider      | Networks | Archive RPC | Notes                          |
-| ------------- | -------- | ----------- | ------------------------------ |
-| **Lightsail** | MainNet  | Yes         | Free public infrastructure     |
-| **Lobstr**    | MainNet  | —           | Wallet provider infrastructure |
-| **Gateway**   | MainNet  | —           | General purpose                |
-| **Nodies**    | MainNet  | —           | Node infrastructure            |
-
-### Usage
-
-```typescript
-import { NetworkProviders } from "@colibri/core";
-
-// Lightsail (has archive support)
-const lightsail = NetworkProviders.Lightsail.MainNet();
-
-// Lobstr
-const lobstr = NetworkProviders.Lobstr.MainNet();
-
-// Gateway
-const gateway = NetworkProviders.Gateway.MainNet();
-
-// Nodies
-const nodies = NetworkProviders.Nodies.MainNet();
-```
+Colibri's CI pipeline checks that all listed provider servers are up and healthy before publishing new package versions, ensuring an up-to-date and reliable list.
 
 ## Archive RPC
 
@@ -165,7 +155,7 @@ console.log(network.networkPassphrase);
 // "Public Global Stellar Network ; September 2015"
 ```
 
-## Usage with Pipelines
+## Example of Usage with Pipelines
 
 All pipelines accept a `NetworkConfig`:
 
@@ -190,23 +180,6 @@ const result = await pipeline.run({
     fee: "100000",
     signers: [signer],
   },
-});
-```
-
-## Usage with Event Streamer
-
-The Event Streamer uses network URLs directly:
-
-```typescript
-import { EventStreamer } from "@colibri/event-streamer";
-import { NetworkProviders } from "@colibri/core";
-
-const network = NetworkProviders.Lightsail.MainNet();
-
-const streamer = new EventStreamer({
-  rpcUrl: network.rpcUrl,
-  archiveRpcUrl: network.archiveRpcUrl, // Optional but recommended
-  filters: [...],
 });
 ```
 

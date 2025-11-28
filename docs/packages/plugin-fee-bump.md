@@ -1,4 +1,4 @@
-# Fee Bump Plugin
+# @colibri/plugin-fee-bump
 
 The `@colibri/plugin-fee-bump` package provides fee sponsorship for Soroban transactions.
 
@@ -13,7 +13,7 @@ deno add jsr:@colibri/plugin-fee-bump
 Fee bumping allows a third party (sponsor) to pay transaction fees on behalf of a user. This is useful for:
 
 - **User Onboarding** — New users can interact without holding XLM for fees
-- **Sponsored Transactions** — dApps can subsidize user transactions
+- **Sponsored Nework Fees** — dApps can subsidize user transactions
 - **Enterprise Workflows** — Centralized fee payment for organization transactions
 
 ## Quick Start
