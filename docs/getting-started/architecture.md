@@ -10,9 +10,9 @@ Colibri uses the [`convee`](https://jsr.io/@fifo/convee) library to compose work
 
 A pipeline chains multiple processes together, where each process:
 
-- Receives input from the previous process
-- Performs a specific task (build, simulate, sign, submit)
-- Passes output to the next process
+* Receives input from the previous process
+* Performs a specific task (build, simulate, sign, submit)
+* Passes output to the next process
 
 ```
 ┌─────────┐     ┌──────────┐     ┌──────────┐     ┌────────┐     ┌────────┐
@@ -22,19 +22,19 @@ A pipeline chains multiple processes together, where each process:
 
 Colibri provides ready-to-use pipelines for common use cases like contract invocation, read-only calls, and classic transactions. You can use them directly or compose custom pipelines from individual processes.
 
-See [Pipelines](../core/pipelines/README.md) for the full list and detailed documentation.
+See [Pipelines](../core/pipelines/) for the full list and detailed documentation.
 
 ## Processes
 
 Processes are the atomic building blocks of Colibri. Each process handles a single task with predictable behavior, typed input/output, and specific error codes. They can be used standalone or composed into pipelines.
 
-See [Processes](../core/processes/README.md) for the full list and detailed documentation.
+See [Processes](../core/processes/) for the full list and detailed documentation.
 
 ## Plugins
 
 Plugins extend pipeline and process behavior without modifying core logic. They wrap around steps to add functionality like fee sponsorship, custom signing strategies, or logging.
 
-See [Plugins](../packages/plugins.md) for available plugins and how to use them.
+See [Plugins](../packages/plugins/) for available plugins and how to use them.
 
 ## Type Safety
 
@@ -55,15 +55,15 @@ Type checkers are available for public keys, secret keys, contract IDs, muxed ad
 
 ## Core Types
 
-Colibri uses well-defined interfaces and types throughout the library. This enables custom implementations that integrate seamlessly—you're never locked into built-in tools. For example, [TransactionSigner](../core/signer/README.md) defines the signing interface so any custom signer works with all pipelines, [NetworkConfig](../core/network.md) standardizes network settings across all tools, and [TransactionConfig](../core/transaction-config.md) provides consistent transaction parameters.
+Colibri uses well-defined interfaces and types throughout the library. This enables custom implementations that integrate seamlessly—you're never locked into built-in tools. For example, [TransactionSigner](../core/signer/) defines the signing interface so any custom signer works with all pipelines, [NetworkConfig](../core/network.md) standardizes network settings across all tools, and [TransactionConfig](../core/transaction-config.md) provides consistent transaction parameters.
 
 ## Error Handling
 
 Colibri uses **typed errors** with unique, standardized error codes across the entire library. Every error includes:
 
-- A unique error code (e.g., `BTX_003`, `SIM_001`)
-- A human-readable message
-- Optional diagnostic information with suggestions
+* A unique error code (e.g., `BTX_003`, `SIM_001`)
+* A human-readable message
+* Optional diagnostic information with suggestions
 
 Network failures and external errors are wrapped and enriched with context, making debugging straightforward.
 
@@ -88,7 +88,7 @@ See [Error Handling](../core/error.md) for the full error system documentation.
 
 ## Next Steps
 
-- [Pipelines](../core/pipelines/README.md) — Build custom transaction workflows
-- [Processes](../core/processes/README.md) — Learn about each process in detail
-- [Plugins](../packages/plugins.md) — Extend behavior with plugins
-- [Error Handling](../core/error.md) — Deep dive into the error system
+* [Pipelines](../core/pipelines/) — Build custom transaction workflows
+* [Processes](../core/processes/) — Learn about each process in detail
+* [Plugins](../packages/plugins/) — Extend behavior with plugins
+* [Error Handling](../core/error.md) — Deep dive into the error system

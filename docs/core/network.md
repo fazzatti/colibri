@@ -90,11 +90,11 @@ Colibri's CI pipeline checks that all listed provider servers are up and healthy
 
 ## Archive RPC
 
-Archive RPC endpoints provide access to historical data beyond the standard RPC retention window (~17 days). Required for:
+Archive RPC endpoints provide access to historical data beyond the standard RPC retention window (\~17 days). Required for:
 
-- Historical event ingestion
-- Past ledger queries
-- Transaction history lookups
+* Historical event ingestion
+* Past ledger queries
+* Transaction history lookups
 
 ### Checking Archive Availability
 
@@ -179,6 +179,6 @@ const result = await pipeline.run({
 
 ## Next Steps
 
-- [Pipelines](pipelines/README.md) — Use network config in transactions
-- [Event Streamer](../packages/event-streamer.md) — Stream events from the network
-- [Tools](tools.md) — Use Friendbot for TestNet funding
+* [Pipelines](pipelines/) — Use network config in transactions
+* [Event Streamer](../packages/event-streamer.md) — Stream events from the network
+* [Tools](tools/) — Use Friendbot for TestNet funding

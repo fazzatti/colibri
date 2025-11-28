@@ -4,7 +4,7 @@ Colibri packages are published to [JSR](https://jsr.io/) (JavaScript Registry) a
 
 ## Prerequisites
 
-- [Deno](https://deno.land/) v2.0 or later
+* [Deno](https://deno.land/) v2.0 or later
 
 ## Installing Packages
 
@@ -54,13 +54,13 @@ The foundation package containing all core primitives for Stellar and Soroban de
 
 Real-time and historical event ingestion with support for live streaming, archive fetching, and automatic mode switching.
 
-### [Plugins](../packages/plugins.md)
+### [Plugins](../packages/plugins/)
 
 Use case-specific plugins extend pipeline and process behavior. Each plugin is published as its own package:
 
-| Plugin                                     | Package                    | Description                                       |
-| ------------------------------------------ | -------------------------- | ------------------------------------------------- |
-| [Fee Bump](../packages/plugin-fee-bump.md) | `@colibri/plugin-fee-bump` | Wrap transactions for third-party fee sponsorship |
+| Plugin                                         | Package                    | Description                                       |
+| ---------------------------------------------- | -------------------------- | ------------------------------------------------- |
+| [Fee Bump](/broken/pages/K772Z56ARvj70OPYUbLz) | `@colibri/plugin-fee-bump` | Wrap transactions for third-party fee sponsorship |
 
 ## Stellar SDK Dependency
 
@@ -78,5 +78,5 @@ deno add npm:@stellar/stellar-sdk
 
 ## Next Steps
 
-- [Quick Start](quick-start.md) — Build your first transaction
-- [Architecture Overview](architecture.md) — Understand the design principles
+* [Quick Start](quick-start.md) — Build your first transaction
+* [Architecture Overview](architecture.md) — Understand the design principles
