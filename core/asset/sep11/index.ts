@@ -1,3 +1,4 @@
+// ASSET CANONICAL STRING
 /**
  * SEP-11 Asset String Format
  *

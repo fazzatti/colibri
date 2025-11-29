@@ -52,9 +52,9 @@ export enum Code {
   PROPERTY_ALREADY_SET = "CONTR_006",
   MISSING_SPEC_IN_WASM = "CONTR_007",
   FAILED_TO_DEPLOY_CONTRACT = "CONTR_008",
-  FAILED_TO_WRAP_ASSET = "CONTR_009",
-  CONTRACT_INSTANCE_NOT_FOUND = "CONTR_010",
-  CONTRACT_CODE_NOT_FOUND = "CONTR_011",
+  CONTRACT_INSTANCE_NOT_FOUND = "CONTR_009",
+  CONTRACT_CODE_NOT_FOUND = "CONTR_010",
+  INVALID_CONTRACT_ID = "CONTR_011",
 }
 
 // Currently unused, reserving
@@ -179,23 +179,6 @@ export class PROPERTY_ALREADY_SET extends ContractError<Code> {
   }
 }
 
-export class FAILED_TO_WRAP_ASSET extends ContractError<Code> {
-  constructor(asset: Asset, cause: Error) {
-    super({
-      code: Code.FAILED_TO_WRAP_ASSET,
-      message: `Failed to wrap asset`,
-      details: `An error occurred while attempting to wrap the asset. See the 'cause' for more details.`,
-      cause,
-      data: {
-        asset: {
-          code: asset.code,
-          issuer: asset.issuer,
-        },
-      },
-    });
-  }
-}
-
 export class CONTRACT_INSTANCE_NOT_FOUND extends ContractError<Code> {
   constructor(contractId: string) {
     super({
@@ -226,6 +209,21 @@ export class CONTRACT_CODE_NOT_FOUND extends ContractError<Code> {
   }
 }
 
+export class INVALID_CONTRACT_ID extends ContractError<Code> {
+  constructor(contractId: string) {
+    super({
+      code: Code.INVALID_CONTRACT_ID,
+      message: `Invalid contract ID: ${contractId}`,
+      details: `The provided contract ID '${contractId}' is not valid.`,
+      diagnostic: {
+        suggestion: `Ensure that the contract ID is correctly formatted and valid.`,
+        rootCause: `The contract ID does not conform to the expected format or criteria.`,
+      },
+      data: { contractId },
+    });
+  }
+}
+
 export const ERROR_CONTR = {
   // [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.MISSING_ARG]: MISSING_ARG,
@@ -236,7 +234,7 @@ export const ERROR_CONTR = {
   [Code.MISSING_SPEC_IN_WASM]: MISSING_SPEC_IN_WASM,
   [Code.FAILED_TO_DEPLOY_CONTRACT]: FAILED_TO_DEPLOY_CONTRACT,
   [Code.PROPERTY_ALREADY_SET]: PROPERTY_ALREADY_SET,
-  [Code.FAILED_TO_WRAP_ASSET]: FAILED_TO_WRAP_ASSET,
   [Code.CONTRACT_INSTANCE_NOT_FOUND]: CONTRACT_INSTANCE_NOT_FOUND,
   [Code.CONTRACT_CODE_NOT_FOUND]: CONTRACT_CODE_NOT_FOUND,
+  [Code.INVALID_CONTRACT_ID]: INVALID_CONTRACT_ID,
 };
