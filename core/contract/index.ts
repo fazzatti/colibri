@@ -47,7 +47,7 @@ export class Contract {
   private wasmHash?: string;
   private contractId?: string;
 
-  private constructor({
+  protected constructor({
     networkConfig,
     rpc,
     contractConfig,
