@@ -3,7 +3,6 @@ import {
   Address,
   Operation,
   xdr,
-  Asset,
 } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import { Spec } from "stellar-sdk/contract";
@@ -25,18 +24,15 @@ import {
 import { processSpecEntryStream } from "@/common/helpers/wasm.ts";
 import { generateRandomSalt } from "@/common/helpers/generate-random-salt.ts";
 import * as E from "@/contract/error.ts";
-import type {
-  ContractConfig,
-  ContractConstructorArgs,
-} from "@/contract/types.ts";
+import type { ContractConstructorArgs } from "@/contract/types.ts";
 import type { Api } from "stellar-sdk/rpc";
 import type { OperationOptions } from "stellar-sdk";
-import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
+import type { ContractId } from "@/strkeys/types.ts";
 import type { NetworkConfig } from "@/network/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { InvokeContractOutput } from "@/pipelines/invoke-contract/types.ts";
-import { StrKey } from "../strkeys/index.ts";
-import { ReadFromContractOutput } from "../pipelines/read-from-contract/types.ts";
+import { StrKey } from "@/strkeys/index.ts";
+import type { ReadFromContractOutput } from "@/pipelines/read-from-contract/types.ts";
 export class Contract {
   readonly rpc: Server;
   readonly networkConfig: NetworkConfig;

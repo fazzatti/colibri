@@ -12,7 +12,7 @@ describe("Contract", () => {
   describe("construction", () => {
     it("instantiates a contract without rpc", () => {
       const mockWasm = Buffer.from("mock");
-      const contract = Contract.create({
+      const contract = new Contract({
         networkConfig: NetworkConfig.CustomNet({
           type: NetworkType.TESTNET,
           networkPassphrase: "Test Network",
@@ -28,7 +28,7 @@ describe("Contract", () => {
     it("instantiates a contract with an rpc", () => {
       const mockWasm = Buffer.from("mock");
       const mockRpc = {} as unknown as Server;
-      const contract = Contract.create({
+      const contract = new Contract({
         networkConfig: NetworkConfig.CustomNet({
           type: NetworkType.TESTNET,
           networkPassphrase: "Test Network",
@@ -52,7 +52,7 @@ describe("Contract", () => {
       };
       assertThrows(
         () =>
-          Contract.create({
+          new Contract({
             networkConfig: undefined as unknown as NetworkConfig,
             contractConfig,
           }),
@@ -61,7 +61,7 @@ describe("Contract", () => {
 
       assertThrows(
         () =>
-          Contract.create({
+          new Contract({
             networkConfig: {} as unknown as NetworkConfig,
             contractConfig,
           }),
@@ -70,7 +70,7 @@ describe("Contract", () => {
 
       assertThrows(
         () =>
-          Contract.create({
+          new Contract({
             networkConfig: {
               type: NetworkType.TESTNET,
               networkPassphrase: "Test Network",
@@ -85,7 +85,7 @@ describe("Contract", () => {
       const mockWasm = Buffer.from("mock");
       assertThrows(
         () =>
-          Contract.create({
+          new Contract({
             networkConfig: NetworkConfig.CustomNet({
               type: NetworkType.TESTNET,
               networkPassphrase: "Test Network",
@@ -101,7 +101,7 @@ describe("Contract", () => {
     it("throws INVALID_CONTRACT_CONFIG if contractConfig doesn't match the required shape", () => {
       assertThrows(
         () =>
-          Contract.create({
+          new Contract({
             networkConfig: NetworkConfig.CustomNet({
               type: NetworkType.TESTNET,
               networkPassphrase: "Test Network",
@@ -116,7 +116,7 @@ describe("Contract", () => {
     it("throws MISSING_REQUIRED_PROPERTY if contract is missing required properties", () => {
       const mockWasm = Buffer.from("mock");
       const mockRpc = {} as unknown as Server;
-      const contractWithWasm = Contract.create({
+      const contractWithWasm = new Contract({
         networkConfig: NetworkConfig.CustomNet({
           type: NetworkType.TESTNET,
           networkPassphrase: "Test Network",
@@ -127,7 +127,7 @@ describe("Contract", () => {
         rpc: mockRpc,
       });
 
-      const contractWithWasmHash = Contract.create({
+      const contractWithWasmHash = new Contract({
         networkConfig: NetworkConfig.CustomNet({
           type: NetworkType.TESTNET,
           networkPassphrase: "Test Network",

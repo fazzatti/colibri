@@ -1,5 +1,4 @@
 import { ColibriError } from "@/error/index.ts";
-import type { Asset } from "stellar-sdk";
 import type { Diagnostic } from "@/error/types.ts";
 
 export type Meta = {

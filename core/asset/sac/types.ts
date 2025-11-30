@@ -2,8 +2,8 @@ import type { xdr } from "stellar-sdk";
 import type {
   Address,
   TransactionConfig,
-} from "../../common/types/transaction-config/types.ts";
-import type { InvokeContractOutput } from "../../pipelines/invoke-contract/types.ts";
+} from "@/common/types/transaction-config/types.ts";
+import type { InvokeContractOutput } from "@/pipelines/invoke-contract/types.ts";
 
 export type BaseInvocation = {
   config: TransactionConfig;
