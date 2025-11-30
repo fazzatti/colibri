@@ -9,7 +9,60 @@ import type { TransactionConfig } from "@/common/types/transaction-config/types.
 import { SIMULATION_FAILED } from "@/processes/simulate-transaction/error.ts";
 import * as SACError from "./error.ts";
 import type { Server } from "stellar-sdk/rpc";
-import type { TransactionBuilder } from "stellar-sdk";
+import { Asset, type TransactionBuilder } from "stellar-sdk";
+
+describe("StellarAssetContract initialization", () => {
+  const networkConfig = NetworkConfig.TestNet();
+
+  describe("NativeXLM static factory", () => {
+    it("creates a SAC instance for native XLM", () => {
+      const sac = StellarAssetContract.NativeXLM(networkConfig);
+
+      assertEquals(sac.code, "XLM");
+      assertEquals(sac.isNativeXLM(), true);
+
+      const expectedContractId = Asset.native().contractId(
+        networkConfig.networkPassphrase
+      );
+      assertEquals(sac.contractId, expectedContractId);
+    });
+  });
+
+  describe("isNativeXLM", () => {
+    it("returns true for native XLM SAC", () => {
+      const sac = StellarAssetContract.NativeXLM(networkConfig);
+      assertEquals(sac.isNativeXLM(), true);
+    });
+
+    it("returns false for credit asset SAC", () => {
+      const issuer = LocalSigner.generateRandom();
+      const sac = new StellarAssetContract({
+        code: "TEST",
+        issuer: issuer.publicKey(),
+        networkConfig,
+      });
+      assertEquals(sac.isNativeXLM(), false);
+    });
+  });
+
+  describe("constructor with native issuer", () => {
+    it("creates a SAC instance when issuer is 'native'", () => {
+      const sac = new StellarAssetContract({
+        code: "XLM",
+        issuer: "native",
+        networkConfig,
+      });
+
+      assertEquals(sac.code, "XLM");
+      assertEquals(sac.isNativeXLM(), true);
+
+      const expectedContractId = Asset.native().contractId(
+        networkConfig.networkPassphrase
+      );
+      assertEquals(sac.contractId, expectedContractId);
+    });
+  });
+});
 
 describe("StellarAssetContract.deploy() error handling", () => {
   const networkConfig = NetworkConfig.TestNet();

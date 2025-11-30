@@ -80,7 +80,7 @@ export class StellarAssetContract {
    * The Ed25519 public key of the asset issuer.
    * This is the Stellar account that issued the classic asset.
    */
-  readonly issuer: Ed25519PublicKey;
+  private issuer: Ed25519PublicKey | "native";
 
   /**
    * The underlying Contract instance used for Soroban interactions.
@@ -117,13 +117,18 @@ export class StellarAssetContract {
   constructor(args: {
     networkConfig: NetworkConfig;
     code: string;
-    issuer: Ed25519PublicKey;
+    issuer: Ed25519PublicKey | "native";
   }) {
     const { code, issuer, networkConfig } = args;
 
-    this.contractId = new Asset(code, issuer).contractId(
-      networkConfig.networkPassphrase
-    ) as ContractId;
+    this.contractId =
+      issuer === "native"
+        ? (Asset.native().contractId(
+            networkConfig.networkPassphrase
+          ) as ContractId)
+        : (new Asset(code, issuer).contractId(
+            networkConfig.networkPassphrase
+          ) as ContractId);
 
     this.contract = new Contract({
       networkConfig,
@@ -134,6 +139,30 @@ export class StellarAssetContract {
 
     this.code = code;
     this.issuer = issuer;
+  }
+
+  /**
+   * Creates a StellarAssetContract instance for the native XLM asset.
+   * This is a convenience method for working with the native asset SAC.
+   *
+   * @param networkConfig - Network configuration (TestNet, MainNet, or custom)
+   * @returns A StellarAssetContract instance for the native XLM asset
+   */
+  static NativeXLM(networkConfig: NetworkConfig): StellarAssetContract {
+    return new StellarAssetContract({
+      code: "XLM",
+      issuer: "native",
+      networkConfig,
+    });
+  }
+
+  /**
+   * Checks if the SAC represents the native XLM asset.
+   *
+   * @returns `true` if the SAC is for native XLM, `false` otherwise
+   */
+  public isNativeXLM(): boolean {
+    return this.issuer === "native";
   }
 
   /**
