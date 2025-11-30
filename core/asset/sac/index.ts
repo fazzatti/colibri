@@ -77,8 +77,9 @@ export class StellarAssetContract {
   readonly code: string;
 
   /**
-   * The Ed25519 public key of the asset issuer.
-   * This is the Stellar account that issued the classic asset.
+   * The asset issuer, which can be either:
+   * - An Ed25519 public key (for credit assets), representing the Stellar account that issued the asset.
+   * - The string `"native"` (for the native XLM asset).
    */
   private issuer: Ed25519PublicKey | "native";
 
