@@ -14,8 +14,8 @@ import { EventTemplate } from "@/event/template.ts";
 import type { EventSchema } from "@/event/types.ts";
 import type { Event } from "@/event/event.ts";
 import { isEventMuxedData } from "@/event/standards/cap67/index.ts";
-import { isSEP11Asset } from "@/asset/sep11/index.ts";
-import type { SEP11Asset } from "@/asset/sep11/types.ts";
+import { isStellarAssetCanonicalString } from "@/asset/sep11/index.ts";
+import type { StellarAssetCanonicalString } from "@/asset/sep11/types.ts";
 
 /**
  * SAC Transfer Event Schema
@@ -98,9 +98,9 @@ export class TransferEvent extends EventTemplate<typeof TransferEventSchema> {
   }
 
   /** The SEP-11 asset string (e.g., "USDC:G..." or "native"). */
-  get asset(): SEP11Asset {
+  get asset(): StellarAssetCanonicalString {
     const val = this.get("asset");
-    if (!isSEP11Asset(val)) {
+    if (!isStellarAssetCanonicalString(val)) {
       throw new Error(`Invalid SEP-11 asset format: ${val}`);
     }
     return val;

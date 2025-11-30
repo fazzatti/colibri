@@ -12,8 +12,8 @@
 import { StrKey } from "@/strkeys/index.ts";
 import { EventTemplate } from "@/event/template.ts";
 import type { EventSchema } from "@/event/types.ts";
-import { isSEP11Asset } from "@/asset/sep11/index.ts";
-import type { SEP11Asset } from "@/asset/sep11/types.ts";
+import { isStellarAssetCanonicalString } from "@/asset/sep11/index.ts";
+import type { StellarAssetCanonicalString } from "@/asset/sep11/types.ts";
 
 /**
  * SAC Set Admin Event Schema
@@ -56,9 +56,9 @@ export class SetAdminEvent extends EventTemplate<typeof SetAdminEventSchema> {
   }
 
   /** The SEP-11 asset string (e.g., "USDC:G..." or "native"). */
-  get asset(): SEP11Asset {
+  get asset(): StellarAssetCanonicalString {
     const val = this.get("asset");
-    if (!isSEP11Asset(val)) {
+    if (!isStellarAssetCanonicalString(val)) {
       throw new Error(`Invalid SEP-11 asset format: ${val}`);
     }
     return val;
