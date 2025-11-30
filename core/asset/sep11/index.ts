@@ -12,9 +12,9 @@
 
 import { StrKey } from "@/strkeys/index.ts";
 import { regex } from "@/common/regex/index.ts";
-import type { SEP11Asset } from "@/asset/sep11/types.ts";
+import type { StellarAssetCanonicalString } from "@/asset/sep11/types.ts";
 /**
- * Check if a value is a valid SEP-11 asset string.
+ * Check if a value is a valid SEP-11 StellarAssetCanonicalString.
  *
  * Valid formats:
  * - `"native"` - The native XLM asset
@@ -25,12 +25,14 @@ import type { SEP11Asset } from "@/asset/sep11/types.ts";
  * @returns True if the value is a valid SEP-11 asset string
  *
  * @example
- * isSEP11Asset("native") // true
- * isSEP11Asset("USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN") // true
- * isSEP11Asset("invalid") // false
- * isSEP11Asset("TOOLONGCODE:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN") // false
+ * isStellarAssetCanonicalString("native") // true
+ * isStellarAssetCanonicalString("USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN") // true
+ * isStellarAssetCanonicalString("invalid") // false
+ * isStellarAssetCanonicalString("TOOLONGCODE:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN") // false
  */
-export function isSEP11Asset(value: unknown): value is SEP11Asset {
+export function isStellarAssetCanonicalString(
+  value: unknown
+): value is StellarAssetCanonicalString {
   if (typeof value !== "string") {
     return false;
   }
@@ -67,19 +69,21 @@ export function isSEP11Asset(value: unknown): value is SEP11Asset {
 }
 
 /**
- * Parse a SEP-11 asset string into its components.
+ * Parse a StellarAssetCanonicalString into its components.
  *
- * @param asset - A valid SEP-11 asset string
+ * @param asset - A valid SEP-11 StellarAssetCanonicalString
  * @returns An object with `code` and `issuer` (or `{ code: "XLM", issuer: undefined }` for native)
  *
  * @example
- * parseSEP11Asset("native")
+ * parseStellarAssetCanonicalString("native")
  * // { code: "XLM", issuer: undefined }
  *
- * parseSEP11Asset("USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN")
+ * parseStellarAssetCanonicalString("USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN")
  * // { code: "USDC", issuer: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN" }
  */
-export function parseSEP11Asset(asset: SEP11Asset): {
+export function parseStellarAssetCanonicalString(
+  asset: StellarAssetCanonicalString
+): {
   code: string;
   issuer: string | undefined;
 } {
@@ -95,25 +99,30 @@ export function parseSEP11Asset(asset: SEP11Asset): {
 }
 
 /**
- * Check if a SEP-11 asset is the native XLM asset.
+ * Check if a SEP-11 StellarAssetCanonicalString is the native XLM asset.
  */
-export function isNativeSEP11Asset(asset: SEP11Asset): asset is "native" {
+export function isNativeStellarAssetCanonicalString(
+  asset: StellarAssetCanonicalString
+): asset is "native" {
   return asset === "native";
 }
 
 /**
- * Create a SEP-11 asset string from code and issuer.
+ * Create a SEP-11 StellarAssetCanonicalString from code and issuer.
  *
  * @param code - The asset code (or "XLM" / "native" for native)
  * @param issuer - The issuer account ID (optional for native)
- * @returns A SEP-11 formatted asset string
+ * @returns A SEP-11 formatted StellarAssetCanonicalString
  *
  * @example
- * toSEP11Asset("XLM") // "native"
- * toSEP11Asset("USDC", "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN")
+ * toStellarAssetCanonicalString("XLM") // "native"
+ * toStellarAssetCanonicalString("USDC", "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN")
  * // "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
  */
-export function toSEP11Asset(code: string, issuer?: string): SEP11Asset {
+export function toStellarAssetCanonicalString(
+  code: string,
+  issuer?: string
+): StellarAssetCanonicalString {
   if (code === "XLM" || code === "native") {
     return "native";
   }
@@ -122,5 +131,5 @@ export function toSEP11Asset(code: string, issuer?: string): SEP11Asset {
     throw new Error(`Issuer required for non-native asset: ${code}`);
   }
 
-  return `${code}:${issuer}` as SEP11Asset;
+  return `${code}:${issuer}` as StellarAssetCanonicalString;
 }

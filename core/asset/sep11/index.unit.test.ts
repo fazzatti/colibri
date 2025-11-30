@@ -1,22 +1,22 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import {
-  isSEP11Asset,
-  parseSEP11Asset,
-  isNativeSEP11Asset,
-  toSEP11Asset,
+  isStellarAssetCanonicalString,
+  parseStellarAssetCanonicalString,
+  isNativeStellarAssetCanonicalString,
+  toStellarAssetCanonicalString,
 } from "@/asset//sep11/index.ts";
-import type { SEP11Asset } from "@/asset//sep11/types.ts";
+import type { StellarAssetCanonicalString } from "@/asset//sep11/types.ts";
 
-describe("SEP11Asset", () => {
-  describe("isSEP11Asset", () => {
+describe("StellarAssetCanonicalString", () => {
+  describe("isStellarAssetCanonicalString", () => {
     it("should return true for native", () => {
-      assertEquals(isSEP11Asset("native"), true);
+      assertEquals(isStellarAssetCanonicalString("native"), true);
     });
 
     it("should return true for valid CODE:ISSUER format", () => {
       assertEquals(
-        isSEP11Asset(
+        isStellarAssetCanonicalString(
           "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
         ),
         true
@@ -25,7 +25,7 @@ describe("SEP11Asset", () => {
 
     it("should return true for 4 character code", () => {
       assertEquals(
-        isSEP11Asset(
+        isStellarAssetCanonicalString(
           "KALE:GBDVX4VELCDSQ54KQJYTNHXAHFLBCA77ZY2USQBM4CSHTTV7DME7KALE"
         ),
         true
@@ -34,7 +34,7 @@ describe("SEP11Asset", () => {
 
     it("should return true for 12 character code", () => {
       assertEquals(
-        isSEP11Asset(
+        isStellarAssetCanonicalString(
           "ABCDEFGHIJKL:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
         ),
         true
@@ -43,7 +43,7 @@ describe("SEP11Asset", () => {
 
     it("should return true for 1 character code", () => {
       assertEquals(
-        isSEP11Asset(
+        isStellarAssetCanonicalString(
           "X:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
         ),
         true
@@ -52,7 +52,7 @@ describe("SEP11Asset", () => {
 
     it("should return false for code longer than 12 characters", () => {
       assertEquals(
-        isSEP11Asset(
+        isStellarAssetCanonicalString(
           "ABCDEFGHIJKLM:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
         ),
         false
@@ -61,7 +61,7 @@ describe("SEP11Asset", () => {
 
     it("should return false for empty code", () => {
       assertEquals(
-        isSEP11Asset(
+        isStellarAssetCanonicalString(
           ":GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
         ),
         false
@@ -69,33 +69,33 @@ describe("SEP11Asset", () => {
     });
 
     it("should return false for invalid issuer", () => {
-      assertEquals(isSEP11Asset("USDC:INVALID"), false);
+      assertEquals(isStellarAssetCanonicalString("USDC:INVALID"), false);
     });
 
     it("should return false for missing colon", () => {
-      assertEquals(isSEP11Asset("USDC"), false);
+      assertEquals(isStellarAssetCanonicalString("USDC"), false);
     });
 
     it("should return false for multiple colons", () => {
-      assertEquals(isSEP11Asset("USDC:ABC:DEF"), false);
+      assertEquals(isStellarAssetCanonicalString("USDC:ABC:DEF"), false);
     });
 
     it("should return false for non-string values", () => {
-      assertEquals(isSEP11Asset(123), false);
-      assertEquals(isSEP11Asset(null), false);
-      assertEquals(isSEP11Asset(undefined), false);
-      assertEquals(isSEP11Asset({}), false);
+      assertEquals(isStellarAssetCanonicalString(123), false);
+      assertEquals(isStellarAssetCanonicalString(null), false);
+      assertEquals(isStellarAssetCanonicalString(undefined), false);
+      assertEquals(isStellarAssetCanonicalString({}), false);
     });
 
     it("should return false for non-alphanumeric code", () => {
       assertEquals(
-        isSEP11Asset(
+        isStellarAssetCanonicalString(
           "USD-C:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
         ),
         false
       );
       assertEquals(
-        isSEP11Asset(
+        isStellarAssetCanonicalString(
           "USD C:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
         ),
         false
@@ -104,7 +104,7 @@ describe("SEP11Asset", () => {
 
     it("should return false for contract ID as issuer", () => {
       assertEquals(
-        isSEP11Asset(
+        isStellarAssetCanonicalString(
           "USDC:CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
         ),
         false
@@ -112,15 +112,15 @@ describe("SEP11Asset", () => {
     });
   });
 
-  describe("parseSEP11Asset", () => {
+  describe("parseStellarAssetCanonicalString", () => {
     it("should parse native asset", () => {
-      const result = parseSEP11Asset("native");
+      const result = parseStellarAssetCanonicalString("native");
       assertEquals(result.code, "XLM");
       assertEquals(result.issuer, undefined);
     });
 
     it("should parse issued asset", () => {
-      const result = parseSEP11Asset(
+      const result = parseStellarAssetCanonicalString(
         "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
       );
       assertEquals(result.code, "USDC");
@@ -131,21 +131,21 @@ describe("SEP11Asset", () => {
     });
 
     it("should parse 12 character code", () => {
-      const result = parseSEP11Asset(
-        "ABCDEFGHIJKL:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN" as SEP11Asset
+      const result = parseStellarAssetCanonicalString(
+        "ABCDEFGHIJKL:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN" as StellarAssetCanonicalString
       );
       assertEquals(result.code, "ABCDEFGHIJKL");
     });
   });
 
-  describe("isNativeSEP11Asset", () => {
+  describe("isNativeStellarAssetCanonicalString", () => {
     it("should return true for native", () => {
-      assertEquals(isNativeSEP11Asset("native"), true);
+      assertEquals(isNativeStellarAssetCanonicalString("native"), true);
     });
 
     it("should return false for issued asset", () => {
       assertEquals(
-        isNativeSEP11Asset(
+        isNativeStellarAssetCanonicalString(
           "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
         ),
         false
@@ -153,18 +153,18 @@ describe("SEP11Asset", () => {
     });
   });
 
-  describe("toSEP11Asset", () => {
+  describe("toStellarAssetCanonicalString", () => {
     it("should return native for XLM", () => {
-      assertEquals(toSEP11Asset("XLM"), "native");
+      assertEquals(toStellarAssetCanonicalString("XLM"), "native");
     });
 
     it("should return native for native", () => {
-      assertEquals(toSEP11Asset("native"), "native");
+      assertEquals(toStellarAssetCanonicalString("native"), "native");
     });
 
     it("should return CODE:ISSUER for issued asset", () => {
       assertEquals(
-        toSEP11Asset(
+        toStellarAssetCanonicalString(
           "USDC",
           "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
         ),
@@ -174,7 +174,7 @@ describe("SEP11Asset", () => {
 
     it("should throw when issuer is missing for non-native asset", () => {
       assertThrows(
-        () => toSEP11Asset("USDC"),
+        () => toStellarAssetCanonicalString("USDC"),
         Error,
         "Issuer required for non-native asset: USDC"
       );
@@ -182,7 +182,7 @@ describe("SEP11Asset", () => {
 
     it("should throw when issuer is empty string for non-native asset", () => {
       assertThrows(
-        () => toSEP11Asset("USDC", ""),
+        () => toStellarAssetCanonicalString("USDC", ""),
         Error,
         "Issuer required for non-native asset: USDC"
       );
