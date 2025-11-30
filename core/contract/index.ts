@@ -95,21 +95,6 @@ export class Contract {
     assert(hasValidContractConfig, new E.INVALID_CONTRACT_CONFIG());
   }
 
-  // static create({
-  //   networkConfig,
-  //   rpc,
-  //   contractConfig,
-  // }: ContractConstructorArgs): Contract {
-  //   const contract = new Contract({ networkConfig, rpc, contractConfig });
-
-  //   const hasValidContractConfig =
-  //     contract.contractId || contract.wasm || contract.wasmHash;
-
-  //   assert(hasValidContractConfig, new E.INVALID_CONTRACT_CONFIG());
-
-  //   return contract as Contract;
-  // }
-
   //==========================================
   // Meta Requirement Methods
   //==========================================
