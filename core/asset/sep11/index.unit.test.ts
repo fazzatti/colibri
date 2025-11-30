@@ -5,8 +5,8 @@ import {
   parseStellarAssetCanonicalString,
   isNativeStellarAssetCanonicalString,
   toStellarAssetCanonicalString,
-} from "@/asset//sep11/index.ts";
-import type { StellarAssetCanonicalString } from "@/asset//sep11/types.ts";
+} from "@/asset/sep11/index.ts";
+import type { StellarAssetCanonicalString } from "@/asset/sep11/types.ts";
 
 describe("StellarAssetCanonicalString", () => {
   describe("isStellarAssetCanonicalString", () => {
