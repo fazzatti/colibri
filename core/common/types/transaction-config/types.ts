@@ -1,5 +1,9 @@
 import type { TransactionSigner } from "@/signer/types.ts";
-import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+import type {
+  ContractId,
+  Ed25519PublicKey,
+  MuxedAddress,
+} from "@/strkeys/types.ts";
 
 export type TransactionConfig = {
   fee: BaseFee;
@@ -15,3 +19,5 @@ export type FeeBumpConfig = {
   source: TransactionConfig["source"];
   signers: TransactionConfig["signers"];
 };
+
+export type Address = Ed25519PublicKey | ContractId | MuxedAddress;

@@ -100,6 +100,87 @@ describe("MintEvent", () => {
 
       assertEquals(MintEvent.is(event), false);
     });
+
+    it("should return false for wrong event name with correct topic count", () => {
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("transfer"), // wrong name but correct topic count
+          new Address(to).toScVal(),
+          xdr.ScVal.scvString(assetString),
+        ],
+        nativeToScVal(1000000n, { type: "i128" })
+      );
+
+      assertEquals(MintEvent.is(event), false);
+    });
+
+    it("should return true for muxed data format (CAP-0067)", () => {
+      const to = Keypair.random().publicKey();
+      // Create muxed data value: { amount: i128, to_muxed_id?: u64 }
+      const muxedValue = xdr.ScVal.scvMap([
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol("amount"),
+          val: nativeToScVal(1000000n, { type: "i128" }),
+        }),
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol("to_muxed_id"),
+          val: nativeToScVal(12345n, { type: "u64" }),
+        }),
+      ]);
+
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("mint"),
+          new Address(to).toScVal(),
+          xdr.ScVal.scvString(assetString),
+        ],
+        muxedValue
+      );
+
+      assertEquals(MintEvent.is(event), true);
+    });
+
+    it("should return false when 'to' topic is not a string", () => {
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("mint"),
+          xdr.ScVal.scvU32(123), // non-string type instead of address
+          xdr.ScVal.scvString(assetString),
+        ],
+        nativeToScVal(1000000n, { type: "i128" })
+      );
+
+      assertEquals(MintEvent.is(event), false);
+    });
+
+    it("should return false when 'asset' topic is not a string", () => {
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("mint"),
+          new Address(to).toScVal(),
+          xdr.ScVal.scvU32(456), // non-string type instead of asset string
+        ],
+        nativeToScVal(1000000n, { type: "i128" })
+      );
+
+      assertEquals(MintEvent.is(event), false);
+    });
+
+    it("should return false when value is invalid format (not bigint and not muxed)", () => {
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("mint"),
+          new Address(to).toScVal(),
+          xdr.ScVal.scvString(assetString),
+        ],
+        xdr.ScVal.scvString("invalid") // not i128 or muxed map
+      );
+
+      assertEquals(MintEvent.is(event), false);
+    });
   });
 
   describe("fromEvent()", () => {
