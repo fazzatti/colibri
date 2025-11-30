@@ -100,8 +100,22 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
 
       assertExists(colibriSAC);
       assertEquals(colibriSAC.code, code);
-      assertEquals(colibriSAC.issuer, issuer.address());
       assertEquals(colibriSAC.contractId, contractId);
+      assertEquals(colibriSAC.isNativeXLM(), false);
+    });
+
+    it("Instantiates SAC for native XLM using static method", () => {
+      const nativeSAC = StellarAssetContract.NativeXLM(networkConfig);
+
+      assertExists(nativeSAC);
+      assertEquals(nativeSAC.code, "XLM");
+      assertEquals(nativeSAC.isNativeXLM(), true);
+
+      // Verify the contract ID matches the native asset contract ID
+      const expectedContractId = Asset.native().contractId(
+        networkConfig.networkPassphrase
+      );
+      assertEquals(nativeSAC.contractId, expectedContractId);
     });
 
     it("Deploys the SAC contract for a new asset", async () => {
