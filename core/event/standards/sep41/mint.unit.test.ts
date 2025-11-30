@@ -102,6 +102,41 @@ describe("MintEvent", () => {
 
       assertEquals(MintEvent.is(event), false);
     });
+
+    it("should return false for wrong event name with correct topic count", () => {
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("transfer"), // wrong name but correct topic count
+          new Address(to).toScVal(),
+        ],
+        nativeToScVal(1000000n, { type: "i128" })
+      );
+
+      assertEquals(MintEvent.is(event), false);
+    });
+
+    it("should return false when 'to' topic is not a string", () => {
+      const event = createMockEvent(
+        [
+          xdr.ScVal.scvSymbol("mint"),
+          xdr.ScVal.scvU32(123), // non-string type instead of address
+        ],
+        nativeToScVal(1000000n, { type: "i128" })
+      );
+
+      assertEquals(MintEvent.is(event), false);
+    });
+
+    it("should return false when value is invalid format (not bigint and not muxed)", () => {
+      const to = Keypair.random().publicKey();
+      const event = createMockEvent(
+        [xdr.ScVal.scvSymbol("mint"), new Address(to).toScVal()],
+        xdr.ScVal.scvString("invalid") // not i128 or muxed map
+      );
+
+      assertEquals(MintEvent.is(event), false);
+    });
   });
 
   describe("fromEvent()", () => {
