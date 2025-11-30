@@ -1,6 +1,6 @@
 # Event Streamer
 
-The `@colibri/event-streamer` package provides real-time and historical Soroban event ingestion. It intelligently handles both live streaming from the RPC retention window (~17 days) and archive ingestion from older ledgers, automatically switching between modes as needed.
+The `@colibri/event-streamer` package provides real-time and historical Soroban event ingestion. It intelligently handles both live streaming from the RPC retention window (~7 days) and archive ingestion from older ledgers, automatically switching between modes as needed.
 
 ## Installation
 
@@ -100,7 +100,7 @@ streamer.stop();
 
 ### Live Mode
 
-Streams events from ledgers within the RPC retention window (~17 days) using `getEvents`:
+Streams events from ledgers within the RPC retention window (~7 days) using `getEvents`:
 
 ```typescript
 await streamer.start(handler); // Starts from latest
