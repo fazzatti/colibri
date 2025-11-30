@@ -9,62 +9,99 @@
 
 ## Functions
 
-### isSEP11Asset
+### isStellarAssetCanonicalString
 
 Check if a value is a valid SEP-11 asset string:
 
 ```typescript
-import { isSEP11Asset } from "@colibri/core";
+import { isStellarAssetCanonicalString } from "@colibri/core";
 
-isSEP11Asset("native"); // true
-isSEP11Asset("USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"); // true
-isSEP11Asset("invalid"); // false
+isStellarAssetCanonicalString("native"); // true
+isStellarAssetCanonicalString(
+  "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+); // true
+isStellarAssetCanonicalString("invalid"); // false
+isStellarAssetCanonicalString(123); // false (type guard)
 ```
 
-### parseSEP11Asset
+### parseStellarAssetCanonicalString
 
 Parse a SEP-11 string into code and issuer:
 
 ```typescript
-import { parseSEP11Asset } from "@colibri/core";
+import { parseStellarAssetCanonicalString } from "@colibri/core";
 
-parseSEP11Asset("native");
+parseStellarAssetCanonicalString("native");
 // { code: "XLM", issuer: undefined }
 
-parseSEP11Asset(
+parseStellarAssetCanonicalString(
   "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
 );
 // { code: "USDC", issuer: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN" }
 ```
 
-### isNativeSEP11Asset
+### isNativeStellarAssetCanonicalString
 
 Check if a SEP-11 asset is native XLM:
 
 ```typescript
-import { isNativeSEP11Asset } from "@colibri/core";
+import { isNativeStellarAssetCanonicalString } from "@colibri/core";
 
-isNativeSEP11Asset("native"); // true
-isNativeSEP11Asset("USDC:GA5Z..."); // false
+isNativeStellarAssetCanonicalString("native"); // true
+isNativeStellarAssetCanonicalString("USDC:GA5Z..."); // false
 ```
 
-### toSEP11Asset
+### toStellarAssetCanonicalString
 
 Create a SEP-11 string from code and issuer:
 
 ```typescript
-import { toSEP11Asset } from "@colibri/core";
+import { toStellarAssetCanonicalString } from "@colibri/core";
 
-toSEP11Asset("XLM"); // "native"
-toSEP11Asset(
+toStellarAssetCanonicalString("XLM"); // "native"
+toStellarAssetCanonicalString("native"); // "native"
+toStellarAssetCanonicalString(
   "USDC",
   "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
 );
 // "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+
+// Throws if issuer is missing for non-native asset
+toStellarAssetCanonicalString("USDC"); // Error: Issuer required for non-native asset: USDC
 ```
 
 ## Type
 
 ```typescript
-type SEP11Asset = `${string}:${string}` | "native";
+type StellarAssetCanonicalString = `${string}:${string}` | "native";
 ```
+
+## Validation Rules
+
+The `isStellarAssetCanonicalString` function validates:
+
+1. **Type check**: Value must be a string
+2. **Native format**: `"native"` is always valid
+3. **Colon format**: Must contain exactly one colon (`:`)
+4. **Asset code**: 1-12 alphanumeric characters before the colon
+5. **Issuer**: Valid Stellar Ed25519 public key (G...) after the colon
+
+```typescript
+// Valid examples
+isStellarAssetCanonicalString("native"); // true
+isStellarAssetCanonicalString("X:GA5Z..."); // true (1 char code)
+isStellarAssetCanonicalString("ABCDEFGHIJKL:GA5Z..."); // true (12 char code)
+
+// Invalid examples
+isStellarAssetCanonicalString(""); // false (empty)
+isStellarAssetCanonicalString("USDC"); // false (no colon)
+isStellarAssetCanonicalString("USDC:INVALID"); // false (invalid issuer)
+isStellarAssetCanonicalString("TOOLONGASSETCODE:GA5Z..."); // false (code > 12 chars)
+isStellarAssetCanonicalString("USD-C:GA5Z..."); // false (non-alphanumeric)
+isStellarAssetCanonicalString(":GA5Z..."); // false (empty code)
+```
+
+## See Also
+
+- [Stellar Asset Contract](stellar-asset-contract.md) — Interacting with wrapped assets
+- [SEP-11 Specification](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0011.md)

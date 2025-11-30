@@ -14,6 +14,7 @@
   - [Account](core/account.md)
   - [Asset](core/asset/README.md)
     - [SEP-11](core/asset/sep-11.md)
+    - [Stellar Asset Contract](core/asset/stellar-asset-contract.md)
   - [Contract](core/contract.md)
   - [Network](core/network.md)
   - [Signer](core/signer/README.md)

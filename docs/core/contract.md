@@ -10,65 +10,55 @@ The `Contract` class is the main interface for interacting with Soroban contract
 
 ```typescript
 import { Contract, NetworkConfig } from "@colibri/core";
-import { Server } from "stellar-sdk/rpc";
 
 const network = NetworkConfig.TestNet();
-const rpc = new Server(network.rpcUrl);
 
 // Create from existing contract ID
-const contract = Contract.create({
+const contract = new Contract({
   networkConfig: network,
-  rpc,
   contractConfig: {
     contractId: "CABC..." as ContractId,
   },
 });
 
 // Create from WASM buffer
-const contractFromWasm = Contract.create({
+const contractFromWasm = new Contract({
   networkConfig: network,
-  rpc,
   contractConfig: {
     wasm: wasmBuffer,
   },
 });
 
 // Create from WASM hash
-const contractFromHash = Contract.create({
+const contractFromHash = new Contract({
   networkConfig: network,
-  rpc,
   contractConfig: {
     wasmHash: "abc123...",
   },
 });
-```
 
-### Wrapping Stellar Assets
+// Optionally provide a custom RPC server
+import { Server } from "stellar-sdk/rpc";
+const customRpc = new Server("https://custom-rpc.example.com");
 
-Create a Stellar Asset Contract (SAC) for classic assets:
-
-```typescript
-import { Contract, NetworkConfig, LocalSigner } from "@colibri/core";
-import { Asset } from "stellar-sdk";
-
-const signer = LocalSigner.fromSecret("SXXX...");
-
-const sacContract = await Contract.wrapAssetAndInitialize({
+const contractWithCustomRpc = new Contract({
   networkConfig: network,
-  asset: new Asset(
-    "USDC",
-    "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
-  ),
-  config: {
-    source: signer.publicKey(),
-    signers: [signer],
+  rpc: customRpc,
+  contractConfig: {
+    contractId: "CABC..." as ContractId,
   },
 });
 ```
 
+{% hint style="info" %}
+For Stellar Asset Contracts (SAC), use the dedicated `StellarAssetContract` class instead. See [Stellar Asset Contract](asset/stellar-asset-contract.md).
+{% endhint %}
+
 ## Contract Methods
 
-### `getContractId()`
+### Getters
+
+#### `getContractId()`
 
 Returns the contract ID (requires contract to have an ID):
 
@@ -76,7 +66,7 @@ Returns the contract ID (requires contract to have an ID):
 const contractId = contract.getContractId();
 ```
 
-### `getSpec()`
+#### `getSpec()`
 
 Returns the contract specification (requires spec to be loaded):
 
@@ -84,7 +74,7 @@ Returns the contract specification (requires spec to be loaded):
 const spec = contract.getSpec();
 ```
 
-### `getWasm()`
+#### `getWasm()`
 
 Returns the WASM buffer (requires WASM to be loaded):
 
@@ -92,7 +82,7 @@ Returns the WASM buffer (requires WASM to be loaded):
 const wasm = contract.getWasm();
 ```
 
-### `getWasmHash()`
+#### `getWasmHash()`
 
 Returns the WASM hash:
 
@@ -100,12 +90,28 @@ Returns the WASM hash:
 const wasmHash = contract.getWasmHash();
 ```
 
-### `getContractFootprint()`
+#### `getContractFootprint()`
 
 Returns the ledger key for the contract:
 
 ```typescript
 const footprint = contract.getContractFootprint();
+```
+
+#### `getContractCodeLedgerEntry()`
+
+Fetches the contract code entry from the network:
+
+```typescript
+const codeEntry = await contract.getContractCodeLedgerEntry();
+```
+
+#### `getContractInstanceLedgerEntry()`
+
+Fetches the contract instance entry from the network:
+
+```typescript
+const instanceEntry = await contract.getContractInstanceLedgerEntry();
 ```
 
 ## Invoking Contract Methods
@@ -123,6 +129,8 @@ const result = await contract.invoke({
     amount: 1000000n,
   },
   config: {
+    fee: "10000000",
+    timeout: 30,
     source: signer.publicKey(),
     signers: [signer],
   },
@@ -147,21 +155,34 @@ const balance = await contract.read({
 For passing pre-encoded ScVal arguments:
 
 ```typescript
-import { xdr } from "stellar-sdk";
+import { xdr, nativeToScVal } from "stellar-sdk";
 
 const result = await contract.invokeRaw({
   operationArgs: {
     function: "transfer",
     args: [
-      xdr.ScVal.scvAddress(...),
-      xdr.ScVal.scvAddress(...),
-      xdr.ScVal.scvI128(...),
+      nativeToScVal(fromAddress, { type: "address" }),
+      nativeToScVal(toAddress, { type: "address" }),
+      nativeToScVal(1000000n, { type: "i128" }),
     ],
   },
   config: {
+    fee: "10000000",
+    timeout: 30,
     source: signer.publicKey(),
     signers: [signer],
   },
+});
+```
+
+### `readRaw()` - Low-Level Read
+
+For reading with pre-encoded ScVal arguments:
+
+```typescript
+const result = await contract.readRaw({
+  method: "balance",
+  methodArgs: [nativeToScVal(address, { type: "address" })],
 });
 ```
 
@@ -173,9 +194,14 @@ Upload WASM to the network:
 
 ```typescript
 const uploadResult = await contract.uploadWasm({
+  fee: "10000000",
+  timeout: 30,
   source: signer.publicKey(),
   signers: [signer],
 });
+
+// WASM hash is now stored in the contract instance
+const wasmHash = contract.getWasmHash();
 ```
 
 ### `deploy()`
@@ -185,15 +211,50 @@ Deploy a contract from an uploaded WASM hash:
 ```typescript
 const deployResult = await contract.deploy({
   config: {
+    fee: "10000000",
+    timeout: 30,
     source: signer.publicKey(),
     signers: [signer],
   },
   constructorArgs: {
-    /* optional constructor args */
+    // Optional constructor arguments
+    owner: adminAddress,
   },
 });
 
 const deployedContractId = contract.getContractId();
+```
+
+## Loading Contract Metadata
+
+### `loadSpecFromWasm()`
+
+Extract and load the contract specification from a local WASM buffer:
+
+```typescript
+// Requires WASM to be set in contractConfig
+await contract.loadSpecFromWasm();
+const spec = contract.getSpec();
+```
+
+### `loadSpecFromDeployedContract()`
+
+Load the contract specification from an on-chain deployed contract:
+
+```typescript
+// Requires wasmHash or contractId to be set
+await contract.loadSpecFromDeployedContract();
+const spec = contract.getSpec();
+```
+
+### `loadWasmHashFromContractInstance()`
+
+Load the WASM hash from an on-chain contract instance:
+
+```typescript
+// Requires contractId to be set
+await contract.loadWasmHashFromContractInstance();
+const wasmHash = contract.getWasmHash();
 ```
 
 ## Contract Types
@@ -211,7 +272,7 @@ Contract IDs always start with `C` and are 56 characters long.
 ### Validating Contract IDs
 
 ```typescript
-import { StrKey } from "@colibri/core";
+import { StrKey } from "@colibri/core/strkeys";
 
 const input = "CABC...";
 
@@ -271,7 +332,6 @@ const result = await pipeline.run({
 
 | Code        | Class                         | Description                                |
 | ----------- | ----------------------------- | ------------------------------------------ |
-| `CONTR_000` | `UNEXPECTED_ERROR`            | An unexpected error occurred               |
 | `CONTR_001` | `MISSING_ARG`                 | Required argument not provided             |
 | `CONTR_002` | `MISSING_RPC_URL`             | RPC URL required but not provided          |
 | `CONTR_003` | `INVALID_CONTRACT_CONFIG`     | Must provide contractId, wasm, or wasmHash |
@@ -280,9 +340,26 @@ const result = await pipeline.run({
 | `CONTR_006` | `PROPERTY_ALREADY_SET`        | Property is immutable once set             |
 | `CONTR_007` | `MISSING_SPEC_IN_WASM`        | WASM doesn't contain valid spec            |
 | `CONTR_008` | `FAILED_TO_DEPLOY_CONTRACT`   | Contract deployment failed                 |
-| `CONTR_009` | `FAILED_TO_WRAP_ASSET`        | Asset wrapping failed                      |
-| `CONTR_010` | `CONTRACT_INSTANCE_NOT_FOUND` | Contract instance not found                |
-| `CONTR_011` | `CONTRACT_CODE_NOT_FOUND`     | Contract code not found                    |
+| `CONTR_009` | `CONTRACT_INSTANCE_NOT_FOUND` | Contract instance not found on network     |
+| `CONTR_010` | `CONTRACT_CODE_NOT_FOUND`     | Contract code not found on network         |
+| `CONTR_011` | `INVALID_CONTRACT_ID`         | Invalid contract ID format                 |
+
+```typescript
+import { ContractError } from "@colibri/core";
+
+try {
+  const contract = new Contract({ networkConfig, contractConfig });
+  await contract.deploy({ config });
+} catch (error) {
+  if (error instanceof ContractError.MISSING_ARG) {
+    console.error("Missing argument:", error.meta.data.argName);
+  }
+  if (error instanceof ContractError.FAILED_TO_DEPLOY_CONTRACT) {
+    console.error("Deployment failed:", error.message);
+    console.error("Cause:", error.meta.cause);
+  }
+}
+```
 
 ## Next Steps
 
