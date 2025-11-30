@@ -14,12 +14,12 @@ import {
   isScValRecord,
   isScValMap,
   asUnion,
-} from "@/common//scval/index.ts";
+} from "@/common/scval/index.ts";
 import type {
   ScValParsed,
   ScValRecord,
   ScValMap,
-} from "@/common//scval/types.ts";
+} from "@/common/scval/types.ts";
 
 describe("ScVal Parser", () => {
   describe("parseScVal", () => {

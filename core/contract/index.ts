@@ -23,35 +23,28 @@ import {
 } from "@/common/helpers/get-transaction-response.ts";
 import { processSpecEntryStream } from "@/common/helpers/wasm.ts";
 import { generateRandomSalt } from "@/common/helpers/generate-random-salt.ts";
-import { SIMULATION_FAILED } from "@/processes/simulate-transaction/error.ts";
-import { getStellarAssetContractIdFromFailedSimulationResponse } from "@/common/helpers/failed-simulation-response.ts";
 import * as E from "@/contract/error.ts";
-import type {
-  ContractConfig,
-  ContractConstructorArgs,
-} from "@/contract/types.ts";
+import type { ContractConstructorArgs } from "@/contract/types.ts";
 import type { Api } from "stellar-sdk/rpc";
-import type { Asset, OperationOptions } from "stellar-sdk";
+import type { OperationOptions } from "stellar-sdk";
 import type { ContractId } from "@/strkeys/types.ts";
 import type { NetworkConfig } from "@/network/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { InvokeContractOutput } from "@/pipelines/invoke-contract/types.ts";
+import { StrKey } from "@/strkeys/index.ts";
+import type { ReadFromContractOutput } from "@/pipelines/read-from-contract/types.ts";
 export class Contract {
-  private rpc: Server;
-  private networkConfig: NetworkConfig;
-  private readPipe: ReadFromContractPipeline;
-  private invokePipe: InvokeContractPipeline;
+  readonly rpc: Server;
+  readonly networkConfig: NetworkConfig;
+  readonly readPipe: ReadFromContractPipeline;
+  readonly invokePipe: InvokeContractPipeline;
 
-  private spec?: Spec;
-  private wasm?: Buffer;
-  private wasmHash?: string;
-  private contractId?: string;
+  protected spec?: Spec;
+  protected wasm?: Buffer;
+  protected wasmHash?: string;
+  protected contractId?: ContractId;
 
-  private constructor({
-    networkConfig,
-    rpc,
-    contractConfig,
-  }: ContractConstructorArgs) {
+  constructor({ networkConfig, rpc, contractConfig }: ContractConstructorArgs) {
     assertRequiredArgs(
       {
         networkConfig: networkConfig,
@@ -83,6 +76,10 @@ export class Contract {
       this.spec = spec;
     }
     if (contractId) {
+      assert(
+        StrKey.isContractId(contractId),
+        new E.INVALID_CONTRACT_ID(contractId)
+      );
       this.contractId = contractId;
     }
     if (wasm) {
@@ -91,46 +88,11 @@ export class Contract {
     if (wasmHash) {
       this.wasmHash = wasmHash;
     }
-  }
-
-  static create({
-    networkConfig,
-    rpc,
-    contractConfig,
-  }: ContractConstructorArgs): Contract {
-    const contract = new Contract({ networkConfig, rpc, contractConfig });
 
     const hasValidContractConfig =
-      contract.contractId || contract.wasm || contract.wasmHash;
+      this.contractId || this.wasm || this.wasmHash;
 
     assert(hasValidContractConfig, new E.INVALID_CONTRACT_CONFIG());
-
-    return contract as Contract;
-  }
-
-  static async wrapAssetAndInitialize({
-    networkConfig,
-    rpc,
-    asset,
-    config,
-  }: {
-    networkConfig: NetworkConfig;
-    rpc?: Server;
-    asset: Asset;
-    config: TransactionConfig;
-  }): Promise<Contract> {
-    const contract = new Contract({
-      networkConfig,
-      rpc,
-      contractConfig: {} as unknown as ContractConfig,
-    });
-
-    await contract.wrapAndDeployClassicAsset({
-      config,
-      asset,
-    });
-
-    return contract;
   }
 
   //==========================================
@@ -139,26 +101,26 @@ export class Contract {
   //
   //
 
-  private require(arg: "spec"): Spec;
-  private require(arg: "wasm"): Buffer;
-  private require(arg: "wasmHash"): string;
-  private require(arg: "contractId"): ContractId;
-  private require(
+  protected require(arg: "spec"): Spec;
+  protected require(arg: "wasm"): Buffer;
+  protected require(arg: "wasmHash"): string;
+  protected require(arg: "contractId"): ContractId;
+  protected require(
     arg: "spec" | "contractId" | "wasm" | "wasmHash"
   ): ContractId | Spec | Buffer | string {
     assert(this[arg], new E.MISSING_REQUIRED_PROPERTY(arg));
     return this[arg];
   }
 
-  private requireNo(arg: "spec" | "contractId" | "wasm" | "wasmHash"): void {
+  protected requireNo(arg: "spec" | "contractId" | "wasm" | "wasmHash"): void {
     assert(!this[arg], new E.PROPERTY_ALREADY_SET(arg));
   }
 
-  private requireNoContractId(): void {
+  protected requireNoContractId(): void {
     this.requireNo("contractId");
   }
 
-  private requireNoSpec(): void {
+  protected requireNoSpec(): void {
     this.requireNo("spec");
   }
 
@@ -303,51 +265,6 @@ export class Contract {
       return result;
     } catch (error) {
       throw new E.FAILED_TO_DEPLOY_CONTRACT(error as Error);
-    }
-  }
-
-  public async wrapAndDeployClassicAsset({
-    config,
-    asset,
-  }: {
-    config: TransactionConfig;
-    asset: Asset;
-  }): Promise<ContractId> {
-    this.requireNoContractId();
-
-    try {
-      const wrapOperation = Operation.createStellarAssetContract({
-        asset: asset,
-      } as OperationOptions.CreateStellarAssetContract);
-
-      const result = await this.invokePipe.run({
-        config,
-        operations: [wrapOperation],
-      });
-
-      this.contractId = getContractIdFromGetTransactionResponse(
-        result.response
-      );
-
-      return this.contractId as ContractId;
-    } catch (error) {
-      if (error instanceof SIMULATION_FAILED) {
-        try {
-          const contractId =
-            getStellarAssetContractIdFromFailedSimulationResponse(
-              error.meta.data.simulationResponse
-            );
-
-          if (contractId) {
-            this.contractId = contractId;
-            return this.contractId as ContractId;
-          }
-        } catch (_innerError) {
-          // Ignore inner errors related to extracting contract ID
-        }
-      }
-
-      throw new E.FAILED_TO_WRAP_ASSET(asset, error as Error);
     }
   }
 
@@ -541,5 +458,34 @@ export class Contract {
     });
 
     return await this.invokePipe.run({ config, operations: [operation] });
+  }
+
+  /**
+   *
+   * @param {string} method - The method to invoke as it is identified in the contract.
+   * @param {xdr.ScVal[]} methodArgs - The arguments for the method invocation in ScVal array.
+   *
+   * @returns {Promise<ReadFromContractOutput>} The returned value of the simulated invocation
+   * encoded as ScVal array.
+   *
+   * @description - Simulate an invocation of a contract method that does not alter the state of the contract.
+   *
+   */
+  public async readRaw({
+    method,
+    methodArgs,
+  }: {
+    method: string;
+    methodArgs?: xdr.ScVal[] | undefined;
+  }): Promise<ReadFromContractOutput> {
+    const contractId = this.getContractId();
+
+    const operation = Operation.invokeContractFunction({
+      function: method,
+      contract: contractId,
+      args: methodArgs || [],
+    });
+
+    return await this.readPipe.run({ operations: [operation] });
   }
 }
