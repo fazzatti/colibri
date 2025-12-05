@@ -226,6 +226,7 @@ export class Contract {
   /**
    * @param {TransactionConfig} config - The transaction configuration object to use in this transaction.
    * @param {T} constructorArgs - The arguments to pass to the contract constructor, if any.
+   * @param {Buffer} salt - The salt to use for the contract deployment. When not provided, a random salt will be generated.
    *
    * @description - Deploys a new instance of the contract to the network and stores the contract id in the contract instance.
    *
@@ -235,11 +236,15 @@ export class Contract {
   public async deploy<T>({
     config,
     constructorArgs,
+    salt,
   }: {
     config: TransactionConfig;
     constructorArgs?: T;
+    salt?: Buffer;
   }): Promise<InvokeContractOutput> {
     const wasmHash = this.getWasmHash();
+
+    const contractSalt = salt || generateRandomSalt();
 
     try {
       const encodedArgs = constructorArgs
@@ -249,7 +254,7 @@ export class Contract {
       const deployOperation = Operation.createCustomContract({
         address: new Address(config.source),
         wasmHash: Buffer.from(wasmHash, "hex"),
-        salt: generateRandomSalt(),
+        salt: contractSalt,
         constructorArgs: encodedArgs,
       } as OperationOptions.CreateCustomContract);
 
