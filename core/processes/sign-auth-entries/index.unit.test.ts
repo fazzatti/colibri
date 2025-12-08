@@ -59,19 +59,6 @@ const makeSourceAuthEntry = () =>
     rootInvocation: makeInvocation(),
   });
 
-const makeContractAuthEntry = () =>
-  new xdr.SorobanAuthorizationEntry({
-    credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
-      new xdr.SorobanAddressCredentials({
-        address: Address.contract(Buffer.alloc(32, 9)).toScAddress(),
-        nonce: new xdr.Int64(0),
-        signatureExpirationLedger: 0,
-        signature: xdr.ScVal.scvVec([]),
-      })
-    ),
-    rootInvocation: makeInvocation(),
-  });
-
 const makeSigner = (
   publicKey: string,
   behavior?: (
@@ -243,12 +230,20 @@ describe("SignAuthEntries", () => {
 
   it("passes through unsupported entries only when includeUnsigned is true", async () => {
     const account = Address.account(Buffer.alloc(32, 8));
-    const contractEntry = makeContractAuthEntry();
+    // Use a truly unsupported address type (muxed account)
+    const unsupportedEntry = makeScAddressAuthEntry(
+      xdr.ScAddress.scAddressTypeMuxedAccount(
+        new xdr.MuxedEd25519Account({
+          id: new xdr.Uint64(123),
+          ed25519: Buffer.alloc(32, 9),
+        })
+      )
+    );
     const accountEntry = makeAccountAuthEntry(account);
     const signer = makeSigner(account.toString());
 
     const out = await P_SignAuthEntries().run({
-      auth: [contractEntry, accountEntry],
+      auth: [unsupportedEntry, accountEntry],
       signers: [signer],
       rpc: makeRpc(),
       networkPassphrase,
