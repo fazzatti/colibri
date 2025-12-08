@@ -7,7 +7,7 @@ import type {
 import * as E from "@/processes/assemble-transaction/error.ts";
 
 import { assert } from "@/common/assert/assert.ts";
-import { isSmartContractTransaction } from "@/common/verifiers/is-smart-contract-transaction.ts";
+import { isSmartContractTransaction } from "@/common/type-guards/is-smart-contract-transaction.ts";
 import {
   getOperationsFromTransaction,
   getOperationType,

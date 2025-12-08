@@ -11,7 +11,7 @@ import {
 import { P_WrapFeeBump } from "@/processes/wrap-fee-bump/index.ts";
 import * as E from "@/processes/wrap-fee-bump/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
-import { isFeeBumpTransaction } from "@/common/verifiers/is-fee-bump-transaction.ts";
+import { isFeeBumpTransaction } from "@/common/type-guards/is-fee-bump-transaction.ts";
 import type {
   BaseFee,
   FeeBumpConfig,

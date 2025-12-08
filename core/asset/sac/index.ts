@@ -24,7 +24,7 @@ import {
   type BaseInvocation,
   type ContractInput,
 } from "@/asset/sac/types.ts";
-import { isDefined } from "@/common/verifiers/is-defined.ts";
+import { isDefined } from "@/common/type-guards/is-defined.ts";
 
 /**
  * Client class for interacting with Stellar Asset Contracts (SAC).

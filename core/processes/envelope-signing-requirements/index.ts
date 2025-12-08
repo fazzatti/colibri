@@ -4,8 +4,8 @@ import type {
   EnvelopeSigningRequirementsOutput,
 } from "@/processes/envelope-signing-requirements/types.ts";
 import * as E from "@/processes/envelope-signing-requirements/error.ts";
-import { isFeeBumpTransaction } from "@/common/verifiers/is-fee-bump-transaction.ts";
-import { isTransaction } from "@/common/verifiers/is-transaction.ts";
+import { isFeeBumpTransaction } from "@/common/type-guards/is-fee-bump-transaction.ts";
+import { isTransaction } from "@/common/type-guards/is-transaction.ts";
 import { muxedAddressToBaseAccount } from "@/transformers/address/index.ts";
 import { ColibriError } from "@/error/index.ts";
 import { getRequiredOperationThresholdForClassicOperation } from "@/transformers/auth/index.ts";

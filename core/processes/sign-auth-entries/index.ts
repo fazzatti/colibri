@@ -14,7 +14,6 @@ import {
   getAddressTypeFromAuthEntry,
 } from "@/common/helpers/xdr/general.ts";
 import { ResultOrError } from "@/common/deferred/result-or-error.ts";
-import type { TransactionSigner } from "@/signer/types.ts";
 
 const signAuthEntriesProcess = async (
   input: SignAuthEntriesInput
@@ -70,9 +69,7 @@ const signAuthEntriesProcess = async (
       if (addressType === "scAddressTypeAccount") {
         const requiredSigner = getAddressSignerFromAuthEntry(authEntry);
 
-        const signer = signers.find(
-          (s) => s.publicKey() === requiredSigner
-        ) as TransactionSigner;
+        const signer = signers.find((s) => s.signsFor(requiredSigner));
 
         assert(signer, new E.MISSING_SIGNER(input, requiredSigner, authEntry));
 

@@ -7,7 +7,7 @@ import type { EventFilter } from "@/event/event-filter/index.ts";
 import type { EventHandler } from "@/event/types.ts";
 import * as E from "@/event/parsing/error.ts";
 import { assert } from "@/common/assert/assert.ts";
-import { isDefined } from "@/common/verifiers/is-defined.ts";
+import { isDefined } from "@/common/type-guards/is-defined.ts";
 
 export const isLedgerCloseMetaV1 = (
   metadataXdr: xdr.LedgerCloseMeta
