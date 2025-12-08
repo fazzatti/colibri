@@ -46,11 +46,6 @@ const signAuthEntriesProcess = async (
       const addressType = getAddressTypeFromAuthEntry(authEntry);
 
       // Unsupported addresses are not signed
-      if (addressType === "scAddressTypeContract") {
-        if (!removeUnsigned) signedEntries.push(authEntry);
-        continue;
-      }
-
       if (addressType === "scAddressTypeClaimableBalance") {
         if (!removeUnsigned) signedEntries.push(authEntry);
         continue;
@@ -66,7 +61,10 @@ const signAuthEntriesProcess = async (
         continue;
       }
 
-      if (addressType === "scAddressTypeAccount") {
+      if (
+        addressType === "scAddressTypeAccount" ||
+        addressType === "scAddressTypeContract"
+      ) {
         const requiredSigner = getAddressSignerFromAuthEntry(authEntry);
 
         const signer = signers.find((s) => s.signsFor(requiredSigner));
