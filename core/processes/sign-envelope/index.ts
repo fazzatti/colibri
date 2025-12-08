@@ -21,8 +21,7 @@ const signEnvelopeProcess = async (
 
     for (const requirement of signatureRequirements) {
       const requiredSigner = requirement.address;
-      const signer = signers.find((s) => s.publicKey() === requiredSigner);
-
+      const signer = signers.find((s) => s.signsFor(requiredSigner));
       assert(signer, new E.SIGNER_NOT_FOUND(input, requiredSigner, signers));
 
       try {

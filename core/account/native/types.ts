@@ -1,6 +1,6 @@
 import type { Asset, xdr } from "stellar-sdk";
 import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
-import type { MultiSigSchema, TransactionSigner } from "@/signer/types.ts";
+import type { MultiSigSchema, Signer } from "@/signer/types.ts";
 
 export type MuxedId = `${number}`;
 
@@ -12,11 +12,11 @@ export type NativeAccountType = {
 };
 
 export type WithoutSigner<AccountType> = AccountType & {
-  withMasterSigner(signer: TransactionSigner): WithSigner<NativeAccountType>;
+  withMasterSigner(signer: Signer): WithSigner<NativeAccountType>;
 };
 
 export type WithSigner<AccountType> = AccountType & {
-  signer(): TransactionSigner;
+  signer(): Signer;
 };
 
 export type WithMultiSig<AccountType> = AccountType & {

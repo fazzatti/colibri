@@ -1,9 +1,9 @@
 import type { Buffer } from "buffer";
 import type { FeeBumpTransaction, Transaction, xdr } from "stellar-sdk";
-import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 import type { TransactionXDRBase64 } from "@/common/types/index.ts";
 
-export type TransactionSigner = {
+export type Signer = {
   publicKey(): Ed25519PublicKey;
   sign(data: Buffer): Buffer;
   signTransaction(
@@ -14,6 +14,7 @@ export type TransactionSigner = {
     validUntilLedgerSeq: number,
     networkPassphrase: string
   ): Promise<xdr.SorobanAuthorizationEntry>;
+  signsFor(target: Ed25519PublicKey | ContractId): boolean;
 };
 
 export type MultiSigSchema = {
@@ -43,14 +44,3 @@ export enum OperationThreshold {
   medium = 2,
   high = 3,
 }
-
-// export type Signer<PK, SignIn, SignOut> = {
-//   publicKey: PK;
-//   sign: (data: SignIn) => Promise<SignOut> | SignOut;
-// };
-
-// export type Ed25519Signer = Signer<
-//   Ed25519PublicKey,
-//   Transaction | FeeBumpTransaction,
-//   TransactionXDRBase64
-// >;
