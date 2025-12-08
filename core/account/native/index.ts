@@ -1,9 +1,9 @@
 import { Account, type Asset, Keypair, MuxedAccount, xdr } from "stellar-sdk";
 import { assert } from "@/common/assert/assert.ts";
 import { StrKey } from "@/strkeys/index.ts";
-import { isMuxedId } from "@/common/verifiers/is-muxed-id.ts";
+import { isMuxedId } from "@/common/type-guards/is-muxed-id.ts";
 import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
-import type { TransactionSigner } from "@/signer/types.ts";
+import type { Signer } from "@/signer/types.ts";
 import * as E from "@/account/native/error.ts";
 import type {
   WithSigner,
@@ -14,7 +14,7 @@ import type {
 
 export class NativeAccount implements NativeAccountType {
   protected _address: Ed25519PublicKey;
-  protected _masterSigner?: TransactionSigner;
+  protected _masterSigner?: Signer;
 
   private constructor(address: Ed25519PublicKey) {
     assert(
@@ -77,18 +77,18 @@ export class NativeAccount implements NativeAccountType {
   // WithSigner methods
   // ----------------
 
-  static fromMasterSigner(signer: TransactionSigner) {
+  static fromMasterSigner(signer: Signer) {
     return NativeAccount.fromAddress(signer.publicKey()).withMasterSigner(
       signer
     );
   }
 
-  withMasterSigner(signer: TransactionSigner): WithSigner<this> {
+  withMasterSigner(signer: Signer): WithSigner<this> {
     this._masterSigner = signer;
     return this as WithSigner<this>;
   }
 
-  signer(): TransactionSigner {
+  signer(): Signer {
     assert(this._masterSigner, new E.MISSING_MASTER_SIGNER(this._address));
     return this._masterSigner;
   }

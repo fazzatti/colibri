@@ -7,10 +7,10 @@ import {
 } from "stellar-sdk";
 import { NetworkConfig } from "@/network/index.ts";
 import { StrKey } from "@/strkeys/index.ts";
-import { isTransaction } from "@/common/verifiers/is-transaction.ts";
-import { isFeeBumpTransaction } from "@/common/verifiers/is-fee-bump-transaction.ts";
-import { isSigningThreshold } from "@/common/verifiers/is-signing-threshold.ts";
-import { isSmartContractTransaction } from "@/common/verifiers/is-smart-contract-transaction.ts";
+import { isTransaction } from "@/common/type-guards/is-transaction.ts";
+import { isFeeBumpTransaction } from "@/common/type-guards/is-fee-bump-transaction.ts";
+import { isSigningThreshold } from "@/common/type-guards/is-signing-threshold.ts";
+import { isSmartContractTransaction } from "@/common/type-guards/is-smart-contract-transaction.ts";
 
 describe("Verifiers", () => {
   describe("isEd25519PublicKey", () => {
