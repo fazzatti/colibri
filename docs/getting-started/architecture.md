@@ -10,9 +10,9 @@ Colibri uses the [`convee`](https://jsr.io/@fifo/convee) library to compose work
 
 A pipeline chains multiple processes together, where each process:
 
-* Receives input from the previous process
-* Performs a specific task (build, simulate, sign, submit)
-* Passes output to the next process
+- Receives input from the previous process
+- Performs a specific task (build, simulate, sign, submit)
+- Passes output to the next process
 
 ```
 ┌─────────┐     ┌──────────┐     ┌──────────┐     ┌────────┐     ┌────────┐
@@ -55,15 +55,15 @@ Type checkers are available for public keys, secret keys, contract IDs, muxed ad
 
 ## Core Types
 
-Colibri uses well-defined interfaces and types throughout the library. This enables custom implementations that integrate seamlessly—you're never locked into built-in tools. For example, [TransactionSigner](../core/signer/) defines the signing interface so any custom signer works with all pipelines, [NetworkConfig](../core/network.md) standardizes network settings across all tools, and [TransactionConfig](../core/transaction-config.md) provides consistent transaction parameters.
+Colibri uses well-defined interfaces and types throughout the library. This enables custom implementations that integrate seamlessly—you're never locked into built-in tools. For example, [Signer](../core/signer/) defines the signing interface so any custom signer works with all pipelines, [NetworkConfig](../core/network.md) standardizes network settings across all tools, and [TransactionConfig](../core/transaction-config.md) provides consistent transaction parameters.
 
 ## Error Handling
 
 Colibri uses **typed errors** with unique, standardized error codes across the entire library. Every error includes:
 
-* A unique error code (e.g., `BTX_003`, `SIM_001`)
-* A human-readable message
-* Optional diagnostic information with suggestions
+- A unique error code (e.g., `BTX_003`, `SIM_001`)
+- A human-readable message
+- Optional diagnostic information with suggestions
 
 Network failures and external errors are wrapped and enriched with context, making debugging straightforward.
 
@@ -88,7 +88,7 @@ See [Error Handling](../core/error.md) for the full error system documentation.
 
 ## Next Steps
 
-* [Pipelines](../core/pipelines/) — Build custom transaction workflows
-* [Processes](../core/processes/) — Learn about each process in detail
-* [Plugins](../packages/plugins/) — Extend behavior with plugins
-* [Error Handling](../core/error.md) — Deep dive into the error system
+- [Pipelines](../core/pipelines/) — Build custom transaction workflows
+- [Processes](../core/processes/) — Learn about each process in detail
+- [Plugins](../packages/plugins/) — Extend behavior with plugins
+- [Error Handling](../core/error.md) — Deep dive into the error system

@@ -65,7 +65,7 @@ type TransactionConfig = {
   source: Ed25519PublicKey;
   fee: BaseFee;
   timeout?: number;
-  signers: TransactionSigner[];
+  signers: Signer[];
   memo?: Memo;
 };
 ```

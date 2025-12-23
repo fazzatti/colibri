@@ -80,17 +80,17 @@ interface FeeBumpPluginConfig {
   feeBumpConfig: {
     source: Ed25519PublicKey;
     fee: string;
-    signers: TransactionSigner[];
+    signers: Signer[];
   };
 }
 ```
 
-| Property                | Type                  | Description                          |
-| ----------------------- | --------------------- | ------------------------------------ |
-| `networkConfig`         | `NetworkConfig`       | Network configuration                |
-| `feeBumpConfig.source`  | `Ed25519PublicKey`    | Account covering the fee             |
-| `feeBumpConfig.fee`     | `string`              | Fee in stroops                       |
-| `feeBumpConfig.signers` | `TransactionSigner[]` | Signers for the fee bump transaction |
+| Property                | Type               | Description                          |
+| ----------------------- | ------------------ | ------------------------------------ |
+| `networkConfig`         | `NetworkConfig`    | Network configuration                |
+| `feeBumpConfig.source`  | `Ed25519PublicKey` | Account covering the fee             |
+| `feeBumpConfig.fee`     | `string`           | Fee in stroops                       |
+| `feeBumpConfig.signers` | `Signer[]`         | Signers for the fee bump transaction |
 
 ### Fee Calculation
 
@@ -223,7 +223,7 @@ import {
   PIPE_InvokeContract,
   NetworkConfig,
   LocalSigner,
-  TransactionSigner,
+  Signer,
 } from "@colibri/core";
 import { PLG_FeeBump } from "@colibri/plugin-fee-bump";
 import { Operation, xdr } from "stellar-sdk";
@@ -233,7 +233,7 @@ const treasury = LocalSigner.fromSecret(TREASURY_KEY);
 const network = NetworkConfig.MainNet();
 
 async function executeUserTransaction(
-  user: TransactionSigner,
+  user: Signer,
   contractId: string,
   method: string,
   args: xdr.ScVal[]

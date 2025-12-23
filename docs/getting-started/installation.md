@@ -4,7 +4,7 @@ Colibri packages are published to [JSR](https://jsr.io/) (JavaScript Registry) a
 
 ## Prerequisites
 
-* [Deno](https://deno.land/) v2.0 or later
+- [Deno](https://deno.land/) v2.0 or later
 
 ## Installing Packages
 
@@ -28,9 +28,9 @@ This will add the packages to your `deno.json` imports map:
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^0.1.0",
-    "@colibri/event-streamer": "jsr:@colibri/event-streamer@^0.1.0",
-    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.1.0"
+    "@colibri/core": "jsr:@colibri/core@^0.14.0",
+    "@colibri/event-streamer": "jsr:@colibri/event-streamer@^0.5.0",
+    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.6.0"
   }
 }
 ```
@@ -40,8 +40,8 @@ This will add the packages to your `deno.json` imports map:
 You can also import directly from JSR URLs:
 
 ```typescript
-import { NetworkConfig, LocalSigner } from "jsr:@colibri/core@^0.1.0";
-import { EventStreamer } from "jsr:@colibri/event-streamer@^0.1.0";
+import { NetworkConfig, LocalSigner } from "jsr:@colibri/core@^0.14.0";
+import { EventStreamer } from "jsr:@colibri/event-streamer@^0.5.0";
 ```
 
 ## Package Overview
@@ -58,16 +58,16 @@ Real-time and historical event ingestion with support for live streaming, archiv
 
 Use case-specific plugins extend pipeline and process behavior. Each plugin is published as its own package:
 
-| Plugin                                         | Package                    | Description                                       |
-| ---------------------------------------------- | -------------------------- | ------------------------------------------------- |
-| [Fee Bump](/broken/pages/K772Z56ARvj70OPYUbLz) | `@colibri/plugin-fee-bump` | Wrap transactions for third-party fee sponsorship |
+| Plugin                                      | Package                    | Description                                       |
+| ------------------------------------------- | -------------------------- | ------------------------------------------------- |
+| [Fee Bump](../packages/plugins/fee-bump.md) | `@colibri/plugin-fee-bump` | Wrap transactions for third-party fee sponsorship |
 
 ## Stellar SDK Dependency
 
 Colibri uses `@stellar/stellar-sdk` internally. You may need to import it directly for certain operations:
 
 ```typescript
-import { Keypair, xdr } from "@stellar/stellar-sdk";
+import { Keypair, xdr } from "npm:@stellar/stellar-sdk";
 ```
 
 The SDK is re-exported through Colibri where needed, but for advanced XDR manipulation, you may want to add it explicitly:
@@ -78,5 +78,5 @@ deno add npm:@stellar/stellar-sdk
 
 ## Next Steps
 
-* [Quick Start](quick-start.md) — Build your first transaction
-* [Architecture Overview](architecture.md) — Understand the design principles
+- [Quick Start](quick-start.md) — Build your first transaction
+- [Architecture Overview](architecture.md) — Understand the design principles
