@@ -70,3 +70,4 @@ const account = NativeAccount.fromMasterSigner(signer);
 | `ACC_NAT_002` | Invalid muxed ID                |
 | `ACC_NAT_003` | Invalid muxed address generated |
 | `ACC_NAT_004` | Missing master signer           |
+| `ACC_NAT_005` | Unsupported address type        |
