@@ -134,7 +134,7 @@ export class INVALID_SCIENTIFIC_EXPONENT extends FormatUnitsError {
       message: `Invalid exponent in: ${value}`,
       data: { value },
       details:
-        "The exponent portion of a scientific-notation number must be an integer.",
+        "The exponent portion of a scientific-notation number must be an integer within the allowed range.",
     });
   }
 }
