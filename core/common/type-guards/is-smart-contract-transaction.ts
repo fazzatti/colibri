@@ -1,7 +1,7 @@
 import type { FeeBumpTransaction, Transaction } from "stellar-sdk";
 import { getOperationsFromTransaction } from "@/common/helpers/transaction.ts";
-import { isTransaction } from "@/common/verifiers/is-transaction.ts";
-import { isFeeBumpTransaction } from "@/common/verifiers/is-fee-bump-transaction.ts";
+import { isTransaction } from "@/common/type-guards/is-transaction.ts";
+import { isFeeBumpTransaction } from "@/common/type-guards/is-fee-bump-transaction.ts";
 
 export const SMART_CONTRACT_OPERATIONS = [
   "invokeHostFunction",

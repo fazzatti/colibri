@@ -5,8 +5,8 @@ import type {
   WrapFeeBumpOutput,
 } from "@/processes/wrap-fee-bump/types.ts";
 import * as E from "@/processes/wrap-fee-bump/error.ts";
-import { isFeeBumpTransaction } from "@/common/verifiers/is-fee-bump-transaction.ts";
-import { isTransaction } from "@/common/verifiers/is-transaction.ts";
+import { isFeeBumpTransaction } from "@/common/type-guards/is-fee-bump-transaction.ts";
+import { isTransaction } from "@/common/type-guards/is-transaction.ts";
 import { assert } from "@/common/assert/assert.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 

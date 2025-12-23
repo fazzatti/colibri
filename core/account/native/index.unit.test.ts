@@ -4,7 +4,9 @@ import { Asset, Keypair, xdr } from "stellar-sdk";
 import { NativeAccount } from "@/account/native/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
-import type { MuxedId, WithSigner } from "@/account/native/types.ts";
+import type { MuxedId } from "@/account/native/types.ts";
+import type { WithSigner } from "@/account/types.ts";
+
 import * as E from "@/account/native/error.ts";
 
 describe("NativeAccount", () => {
@@ -25,7 +27,7 @@ describe("NativeAccount", () => {
     it("throws on invalid Ed25519 public key", () => {
       assertThrows(
         () => NativeAccount.fromAddress(INVALID_ADDRESS as Ed25519PublicKey),
-        E.INVALID_ED25519_PUBLIC_KEY
+        E.UNSUPPORTED_ADDRESS_TYPE
       );
     });
 
@@ -35,6 +37,22 @@ describe("NativeAccount", () => {
 
       assertThrows(
         () => NativeAccount.fromAddress(muxedAddr),
+        E.UNSUPPORTED_ADDRESS_TYPE
+      );
+    });
+  });
+
+  describe("fromPublicKey", () => {
+    it("creates an account from a valid Ed25519 public key", () => {
+      const account = NativeAccount.fromPublicKey(TEST_ADDRESS);
+
+      assertExists(account);
+      assertEquals(account.address(), TEST_ADDRESS);
+    });
+
+    it("throws on invalid Ed25519 public key", () => {
+      assertThrows(
+        () => NativeAccount.fromPublicKey(INVALID_ADDRESS as Ed25519PublicKey),
         E.INVALID_ED25519_PUBLIC_KEY
       );
     });

@@ -13,8 +13,8 @@ import {
 import { P_SignEnvelope } from "@/processes/sign-envelope/index.ts";
 import * as E from "@/processes/sign-envelope/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
-import { OperationThreshold, type TransactionSigner } from "@/signer/types.ts";
-import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+import { OperationThreshold, type Signer } from "@/signer/types.ts";
+import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 
 describe("SignEnvelope", () => {
   const { networkPassphrase } = NetworkConfig.TestNet();
@@ -55,14 +55,16 @@ describe("SignEnvelope", () => {
     );
   };
 
-  type MockSigner = TransactionSigner & {
+  type MockSigner = Signer & {
     calls: number;
     lastType?: "tx" | "feeBump";
   };
 
   const createSigner = (kp: Keypair): MockSigner => {
+    const pub = kp.publicKey() as Ed25519PublicKey;
     return {
-      publicKey: () => kp.publicKey() as Ed25519PublicKey,
+      publicKey: () => pub,
+      signsFor: (target: Ed25519PublicKey | ContractId) => target === pub,
       calls: 0,
       async signSorobanAuthEntry(e, _vu, _np) {
         return e;
@@ -92,8 +94,10 @@ describe("SignEnvelope", () => {
     publicKey: string,
     mode: "throw" | "invalidXDR"
   ): MockSigner => {
+    const pub = publicKey as Ed25519PublicKey;
     return {
-      publicKey: () => publicKey as Ed25519PublicKey,
+      publicKey: () => pub,
+      signsFor: (target: Ed25519PublicKey | ContractId) => target === pub,
       calls: 0,
       async signSorobanAuthEntry(e, _vu: unknown, _np: unknown) {
         return e;

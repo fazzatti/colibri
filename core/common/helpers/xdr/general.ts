@@ -1,7 +1,7 @@
 import { Address, humanizeEvents, type xdr } from "stellar-sdk";
 import { ColibriError } from "@/error/index.ts";
 import { assert } from "@/common/assert/assert.ts";
-import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 import { StrKey } from "@/strkeys/index.ts";
 
 enum ErrorCode {
@@ -35,11 +35,11 @@ export const getAddressTypeFromAuthEntry = (
 
 export const getAddressSignerFromAuthEntry = (
   authEntry: xdr.SorobanAuthorizationEntry
-): Ed25519PublicKey => {
+): Ed25519PublicKey | ContractId => {
   let signer: string;
   try {
-    signer = Address.account(
-      authEntry.credentials().address().address().accountId().ed25519()
+    signer = Address.fromScAddress(
+      authEntry.credentials().address().address()
     ).toString();
   } catch (e) {
     const message =
@@ -59,7 +59,7 @@ export const getAddressSignerFromAuthEntry = (
   }
 
   assert(
-    StrKey.isValidEd25519PublicKey(signer),
+    StrKey.isValidEd25519PublicKey(signer) || StrKey.isValidContractId(signer),
     ColibriError.unexpected({
       domain: "helpers",
       source: baseErrorSource + "/getAddressSignerFromAuthEntry",

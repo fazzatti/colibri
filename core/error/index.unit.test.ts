@@ -17,8 +17,8 @@ describe("ColibriError", () => {
       };
       const meta: BaseMeta = { data: { accountId: "GABC" } };
       const shape: ColibriErrorShape<"ACC_001", BaseMeta> = {
-        domain: "accounts",
-        source: "@colibri/accounts",
+        domain: "account",
+        source: "@colibri/account",
         code: "ACC_001",
         message: "Invalid account key",
         details: "malformed key",
@@ -31,8 +31,8 @@ describe("ColibriError", () => {
       assert(e instanceof Error);
       assert(e instanceof ColibriError);
       assertStrictEquals(e.name, "ColibriError ACC_001");
-      assertStrictEquals(e.domain, "accounts");
-      assertStrictEquals(e.source, "@colibri/accounts");
+      assertStrictEquals(e.domain, "account");
+      assertStrictEquals(e.source, "@colibri/account");
       assertStrictEquals(e.code, "ACC_001");
       assertStrictEquals(e.message, "Invalid account key");
       assertStrictEquals(e.details, "malformed key");
@@ -145,14 +145,14 @@ describe("ColibriError", () => {
     it("wraps native Error and keeps stack in details and cause in meta", () => {
       const native = new Error("boom");
       const wrapped = ColibriError.fromUnknown(native, {
-        domain: "accounts",
-        source: "@colibri/accounts",
+        domain: "account",
+        source: "@colibri/account",
         code: "ACC_999",
       });
 
       assert(wrapped instanceof ColibriError);
-      assertEquals(wrapped.domain, "accounts");
-      assertEquals(wrapped.source, "@colibri/accounts");
+      assertEquals(wrapped.domain, "account");
+      assertEquals(wrapped.source, "@colibri/account");
       assertEquals(wrapped.code, "ACC_999");
       assertEquals(wrapped.message, "boom");
       assert(typeof wrapped.details === "string"); // stack string

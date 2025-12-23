@@ -7,7 +7,7 @@ export type ErrorDomain =
   | "verifiers"
   | "helpers"
   | "core"
-  | "accounts"
+  | "signer"
   | "pipelines"
   | "plugins"
   | "rpc"
