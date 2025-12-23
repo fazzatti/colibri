@@ -1,13 +1,13 @@
 # Signer
 
-The Signer module defines `TransactionSigner`—the standard interface used throughout Colibri for transaction and authorization signing. By defining a clear interface, anyone can build custom signers and key handling tools that integrate seamlessly with Colibri's pipelines and processes.
+The Signer module defines `Signer`—the standard interface used throughout Colibri for transaction and authorization signing. By defining a clear interface, anyone can build custom signers and key handling tools that integrate seamlessly with Colibri's pipelines and processes.
 
-## TransactionSigner Interface
+## Signer Interface
 
-All signers in Colibri implement the `TransactionSigner` interface:
+All signers in Colibri implement the `Signer` interface:
 
 ```typescript
-type TransactionSigner = {
+type Signer = {
   /** Returns the public key for this signer */
   publicKey(): Ed25519PublicKey;
 
@@ -25,6 +25,9 @@ type TransactionSigner = {
     validUntilLedgerSeq: number,
     networkPassphrase: string
   ): Promise<xdr.SorobanAuthorizationEntry>;
+
+  /** Returns true if this signer can sign for the given target */
+  signsFor(target: Ed25519PublicKey | ContractId): boolean;
 };
 ```
 
@@ -60,10 +63,10 @@ config: {
 
 ## Implementing Custom Signers
 
-For hardware wallets, custodial services, or custom signing flows, implement the `TransactionSigner` interface:
+For hardware wallets, custodial services, or custom signing flows, implement the `Signer` interface:
 
 ```typescript
-class CustomSigner implements TransactionSigner {
+class CustomSigner implements Signer {
   publicKey(): Ed25519PublicKey {
     // Return the public key
   }
@@ -82,6 +85,10 @@ class CustomSigner implements TransactionSigner {
     passphrase: string
   ): Promise<xdr.SorobanAuthorizationEntry> {
     // Sign Soroban auth entry
+  }
+
+  signsFor(target: Ed25519PublicKey | ContractId): boolean {
+    // Return true if this signer can sign for the target
   }
 }
 ```

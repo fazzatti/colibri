@@ -28,7 +28,7 @@ console.log(signer.publicKey()); // New random public key
 
 ## Usage with Pipelines
 
-```typescript
+````typescript
 import { PIPE_InvokeContract, LocalSigner, NetworkConfig } from "@colibri/core";
 import { Operation } from "stellar-sdk";
 
@@ -50,7 +50,21 @@ const result = await pipeline.run({
     signers: [signer],
   },
 });
-```
+
+## Signing Targets
+
+Colibri processes select signers via `signsFor(target)`. By default, `LocalSigner` signs for its own public key.
+
+If you need a `LocalSigner` to sign Soroban authorization entries for a contract address, add that contract ID as a target:
+
+```typescript
+import { LocalSigner } from "@colibri/core";
+
+const signer = LocalSigner.fromSecret("S...");
+signer.addTarget("CABC..." as ContractId);
+````
+
+````
 
 ## Fee Bump Signing
 
@@ -84,9 +98,9 @@ const result = await pipeline.run({
     signers: [userSigner],
   },
 });
-```
+````
 
 ## Next Steps
 
-- [Signer](README.md) — TransactionSigner interface for custom implementations
+- [Signer](README.md) — Signer interface for custom implementations
 - [Pipelines](../pipelines/README.md) — Use signers in transaction workflows
