@@ -18,10 +18,10 @@ export type WithoutSigner<T extends Account> = T & {
   withMasterSigner(signer: Signer): WithSigner<T>;
 };
 
-export type WithSigner<T> = T & {
+export type WithSigner<T extends Account> = T & {
   signer(): Signer;
 };
 
-export type WithMultiSig<T> = T & {
+export type WithMultiSig<T extends Account> = T & {
   getMultiSigSchema(): MultiSigSchema;
 };
