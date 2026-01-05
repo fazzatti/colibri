@@ -150,11 +150,11 @@ export class Sep10Client {
     }
 
     // Extract web auth domain from endpoint URL
-    let webAuthDomain: string | undefined;
+    let webAuthDomain: string;
     try {
       webAuthDomain = new URL(toml.webAuthEndpoint).hostname;
     } catch {
-      // Invalid URL, will be caught later
+      throw new E.INVALID_TOML(homeDomain, "WEB_AUTH_ENDPOINT");
     }
 
     return new Sep10Client({

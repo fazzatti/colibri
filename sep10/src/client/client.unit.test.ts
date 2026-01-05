@@ -237,6 +237,24 @@ NETWORK_PASSPHRASE = "${NETWORK_PASSPHRASE}"
       assertEquals(client.authEndpoint, "https://custom-auth.example.org/auth");
     });
 
+    it("throws INVALID_TOML when WEB_AUTH_ENDPOINT is not a valid URL", () => {
+      const toml = StellarToml.fromString(
+        `
+WEB_AUTH_ENDPOINT = "not-a-valid-url"
+SIGNING_KEY = "${SERVER_PUBLIC_KEY}"
+NETWORK_PASSPHRASE = "${NETWORK_PASSPHRASE}"
+`,
+        { validate: false },
+        HOME_DOMAIN
+      );
+
+      const error = assertThrows(
+        () => Sep10Client.fromToml(toml),
+        E.INVALID_TOML
+      );
+      assertEquals(error.code, E.Code.INVALID_TOML);
+    });
+
     it("throws INVALID_TOML when domain is missing", () => {
       const toml = StellarToml.fromString(
         `
