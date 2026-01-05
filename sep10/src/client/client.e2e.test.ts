@@ -30,8 +30,11 @@ const NETWORK_PASSPHRASE = Networks.TESTNET;
 
 // Custom fetch that fixes Accept header issue with testanchor.stellar.org
 // The server returns 406 for "text/plain, application/toml" Accept header
-const customFetch: typeof fetch = async (input, init) => {
-  const headers = new Headers(init?.headers);
+const customFetch = async (
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> => {
+  const headers = new Headers(init?.headers as HeadersInit | undefined);
   // Override Accept header to avoid 406 from testanchor
   if (
     !headers.has("Accept") ||
