@@ -250,7 +250,7 @@ export class INVALID_ACCOUNT extends Sep1Error<
   }
 }
 
-export const ERRORS = {
+export const ERROR_SEP1 = {
   [Code.FETCH_FAILED]: FETCH_FAILED,
   [Code.INVALID_DOMAIN]: INVALID_DOMAIN,
   [Code.PARSE_ERROR]: PARSE_ERROR,
