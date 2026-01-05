@@ -8,7 +8,6 @@
   },
   "imports": {
     "@/": "./src/",
-    "@colibri/core": "jsr:@colibri/core@^0.14.0",
-    "stellar-sdk": "npm:@stellar/stellar-sdk@^14.3.3"
+    "@colibri/core": "jsr:@colibri/core@^0.15.0"
   }
 }

@@ -118,3 +118,10 @@ export interface ParsedChallenge {
  * Used for custom signing implementations (hardware wallets, etc.)
  */
 export type SignerFn = (hash: Buffer) => Promise<Buffer>;
+
+// Re-export client types for convenience
+export type {
+  Sep10ClientConfig,
+  GetChallengeOptions,
+  AuthenticateOptions,
+} from "@/client/client.ts";
