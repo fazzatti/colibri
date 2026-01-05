@@ -62,6 +62,9 @@ jobs:
           # Check event-streamer package
           check_package "event-streamer" "event-streamer"
 
+          # Check sep10 package
+          check_package "sep10" "sep10"
+
           # Check all plugin packages dynamically
           if [ -d "plugins" ]; then
             for plugin_dir in plugins/*/; do
