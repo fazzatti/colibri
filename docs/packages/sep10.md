@@ -13,14 +13,13 @@ deno add jsr:@colibri/sep10
 ```typescript
 import { Sep10Client } from "@colibri/sep10";
 import { StellarToml } from "@colibri/core";
-import { Keypair, Networks } from "stellar-sdk";
+import { Keypair } from "stellar-sdk";
 
+// Fetch and parse stellar.toml
 const toml = await StellarToml.fromDomain("anchor.example.com");
-const client = Sep10Client.fromToml(
-  { WEB_AUTH_ENDPOINT: toml.webAuthEndpoint, SIGNING_KEY: toml.signingKey },
-  "anchor.example.com",
-  Networks.PUBLIC
-);
+
+// Create client directly from StellarToml instance
+const client = Sep10Client.fromToml(toml);
 
 const keypair = Keypair.fromSecret("S...");
 const jwt = await client.authenticate({
@@ -47,17 +46,27 @@ const client = new Sep10Client({
 });
 ```
 
-### `fromToml(tomlData, homeDomain, networkPassphrase)`
+### `fromToml(toml, networkPassphrase?)`
 
-Create client from stellar.toml data:
+Create client from a `StellarToml` instance:
 
 ```typescript
-const client = Sep10Client.fromToml(
-  { WEB_AUTH_ENDPOINT: "https://...", SIGNING_KEY: "G..." },
-  "anchor.example.com",
-  Networks.PUBLIC
-);
+const toml = await StellarToml.fromDomain("anchor.example.com");
+const client = Sep10Client.fromToml(toml);
+
+// Or with network passphrase override
+const client = Sep10Client.fromToml(toml, Networks.TESTNET);
 ```
+
+The client extracts `webAuthEndpoint`, `signingKey`, `domain`, and `networkPassphrase` from the `StellarToml` instance.
+
+**Throws:**
+
+- `INVALID_TOML` if domain is missing
+- `MISSING_AUTH_ENDPOINT` if `WEB_AUTH_ENDPOINT` is missing
+- `INVALID_TOML` if `SIGNING_KEY` is missing
+- `INVALID_TOML` if `WEB_AUTH_ENDPOINT` is not a valid URL
+- `INVALID_TOML` if `NETWORK_PASSPHRASE` is missing and not provided
 
 ### `authenticate(options)`
 
