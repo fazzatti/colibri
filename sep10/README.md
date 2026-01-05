@@ -29,17 +29,13 @@ npm install @colibri/sep10
 ```ts
 import { Sep10Client } from "@colibri/sep10";
 import { StellarToml } from "@colibri/core";
-import { Keypair, Networks } from "stellar-sdk";
+import { Keypair } from "stellar-sdk";
 
 // Fetch anchor's stellar.toml
 const toml = await StellarToml.fromDomain("anchor.example.com");
 
 // Create client from TOML
-const client = Sep10Client.fromToml(
-  { WEB_AUTH_ENDPOINT: toml.webAuthEndpoint, SIGNING_KEY: toml.signingKey },
-  "anchor.example.com",
-  Networks.PUBLIC
-);
+const client = Sep10Client.fromToml(toml);
 
 // Authenticate with a single call
 const keypair = Keypair.fromSecret("S...");
@@ -124,14 +120,11 @@ const client = new Sep10Client({
 ### Create from stellar.toml
 
 ```ts
-const client = Sep10Client.fromToml(
-  {
-    WEB_AUTH_ENDPOINT: "https://anchor.example.com/auth",
-    SIGNING_KEY: "G...",
-  },
-  "anchor.example.com",
-  Networks.PUBLIC
-);
+const toml = await StellarToml.fromDomain("anchor.example.com");
+const client = Sep10Client.fromToml(toml);
+
+// Or with network passphrase override
+const client = Sep10Client.fromToml(toml, Networks.TESTNET);
 ```
 
 ## SEP10Challenge class
@@ -277,7 +270,7 @@ try {
 ```ts
 import { Sep10Client, Sep10Jwt } from "@colibri/sep10";
 import { StellarToml } from "@colibri/core";
-import { Keypair, Networks } from "stellar-sdk";
+import { Keypair } from "stellar-sdk";
 
 async function authenticateWithAnchor(
   domain: string,
@@ -286,16 +279,12 @@ async function authenticateWithAnchor(
   // Fetch the anchor's stellar.toml
   const toml = await StellarToml.fromDomain(domain);
 
-  if (!toml.webAuthEndpoint || !toml.signingKey) {
+  if (!toml.hasWebAuth()) {
     throw new Error("Anchor does not support SEP-10");
   }
 
-  // Create client
-  const client = Sep10Client.fromToml(
-    { WEB_AUTH_ENDPOINT: toml.webAuthEndpoint, SIGNING_KEY: toml.signingKey },
-    domain,
-    Networks.PUBLIC
-  );
+  // Create client from toml
+  const client = Sep10Client.fromToml(toml);
 
   // Authenticate
   const keypair = Keypair.fromSecret(secretKey);

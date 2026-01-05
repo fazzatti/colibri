@@ -93,14 +93,7 @@ describe("Sep10Client E2E Integration Tests", disableSanitizeConfig, () => {
     });
 
     it("creates client using fromToml helper", () => {
-      const client = Sep10Client.fromToml(
-        {
-          WEB_AUTH_ENDPOINT: stellarToml.webAuthEndpoint,
-          SIGNING_KEY: stellarToml.signingKey,
-        },
-        TEST_ANCHOR_DOMAIN,
-        NETWORK_PASSPHRASE
-      );
+      const client = Sep10Client.fromToml(stellarToml, NETWORK_PASSPHRASE);
 
       assertEquals(client instanceof Sep10Client, true);
     });

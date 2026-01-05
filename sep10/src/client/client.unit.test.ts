@@ -12,6 +12,7 @@ import {
   Account,
 } from "stellar-sdk";
 import { Buffer } from "buffer";
+import { StellarToml } from "@colibri/core";
 import { Sep10Client } from "@/client/client.ts";
 import { Sep10Jwt } from "@/client/jwt.ts";
 import { SEP10Challenge } from "@/challenge/challenge.ts";
@@ -136,71 +137,140 @@ describe("Sep10Client", () => {
   });
 
   describe("fromToml", () => {
-    it("creates client from stellar.toml data", () => {
-      const toml = {
-        WEB_AUTH_ENDPOINT: AUTH_ENDPOINT,
-        SIGNING_KEY: SERVER_PUBLIC_KEY,
-      };
-
-      const client = Sep10Client.fromToml(
-        toml,
-        HOME_DOMAIN,
-        NETWORK_PASSPHRASE
+    it("creates client from StellarToml instance", () => {
+      const toml = StellarToml.fromString(
+        `
+WEB_AUTH_ENDPOINT = "${AUTH_ENDPOINT}"
+SIGNING_KEY = "${SERVER_PUBLIC_KEY}"
+NETWORK_PASSPHRASE = "${NETWORK_PASSPHRASE}"
+`,
+        { validate: false },
+        HOME_DOMAIN
       );
+
+      const client = Sep10Client.fromToml(toml);
 
       assertEquals(client.authEndpoint, AUTH_ENDPOINT);
       assertEquals(client.serverPublicKey, SERVER_PUBLIC_KEY);
       assertEquals(client.homeDomain, HOME_DOMAIN);
+      assertEquals(client.networkPassphrase, NETWORK_PASSPHRASE);
     });
 
     it("throws MISSING_AUTH_ENDPOINT when WEB_AUTH_ENDPOINT is missing", () => {
-      const toml = { SIGNING_KEY: SERVER_PUBLIC_KEY };
+      const toml = StellarToml.fromString(
+        `
+SIGNING_KEY = "${SERVER_PUBLIC_KEY}"
+NETWORK_PASSPHRASE = "${NETWORK_PASSPHRASE}"
+`,
+        { validate: false },
+        HOME_DOMAIN
+      );
 
       const error = assertThrows(
-        () => Sep10Client.fromToml(toml, HOME_DOMAIN, NETWORK_PASSPHRASE),
+        () => Sep10Client.fromToml(toml),
         E.MISSING_AUTH_ENDPOINT
       );
       assertEquals(error.code, E.Code.MISSING_AUTH_ENDPOINT);
     });
 
     it("throws INVALID_TOML when SIGNING_KEY is missing", () => {
-      const toml = { WEB_AUTH_ENDPOINT: AUTH_ENDPOINT };
+      const toml = StellarToml.fromString(
+        `
+WEB_AUTH_ENDPOINT = "${AUTH_ENDPOINT}"
+NETWORK_PASSPHRASE = "${NETWORK_PASSPHRASE}"
+`,
+        { validate: false },
+        HOME_DOMAIN
+      );
 
       const error = assertThrows(
-        () => Sep10Client.fromToml(toml, HOME_DOMAIN, NETWORK_PASSPHRASE),
+        () => Sep10Client.fromToml(toml),
         E.INVALID_TOML
       );
       assertEquals(error.code, E.Code.INVALID_TOML);
     });
 
-    it("extracts web auth domain from endpoint URL", () => {
-      const toml = {
-        WEB_AUTH_ENDPOINT: "https://custom-auth.example.org/auth",
-        SIGNING_KEY: SERVER_PUBLIC_KEY,
-      };
-
-      // Client is created successfully (webAuthDomain extracted internally)
-      const client = Sep10Client.fromToml(
-        toml,
-        HOME_DOMAIN,
-        NETWORK_PASSPHRASE
+    it("throws INVALID_TOML when NETWORK_PASSPHRASE is missing and not provided", () => {
+      const toml = StellarToml.fromString(
+        `
+WEB_AUTH_ENDPOINT = "${AUTH_ENDPOINT}"
+SIGNING_KEY = "${SERVER_PUBLIC_KEY}"
+`,
+        { validate: false },
+        HOME_DOMAIN
       );
+
+      const error = assertThrows(
+        () => Sep10Client.fromToml(toml),
+        E.INVALID_TOML
+      );
+      assertEquals(error.code, E.Code.INVALID_TOML);
+    });
+
+    it("uses provided networkPassphrase over toml value", () => {
+      const toml = StellarToml.fromString(
+        `
+WEB_AUTH_ENDPOINT = "${AUTH_ENDPOINT}"
+SIGNING_KEY = "${SERVER_PUBLIC_KEY}"
+NETWORK_PASSPHRASE = "wrong passphrase"
+`,
+        { validate: false },
+        HOME_DOMAIN
+      );
+
+      const client = Sep10Client.fromToml(toml, NETWORK_PASSPHRASE);
+      assertEquals(client.networkPassphrase, NETWORK_PASSPHRASE);
+    });
+
+    it("extracts web auth domain from endpoint URL", () => {
+      const toml = StellarToml.fromString(
+        `
+WEB_AUTH_ENDPOINT = "https://custom-auth.example.org/auth"
+SIGNING_KEY = "${SERVER_PUBLIC_KEY}"
+NETWORK_PASSPHRASE = "${NETWORK_PASSPHRASE}"
+`,
+        { validate: false },
+        HOME_DOMAIN
+      );
+
+      const client = Sep10Client.fromToml(toml);
       assertEquals(client.authEndpoint, "https://custom-auth.example.org/auth");
     });
 
-    it("handles invalid endpoint URL gracefully", () => {
-      const toml = {
-        WEB_AUTH_ENDPOINT: "not-a-valid-url",
-        SIGNING_KEY: SERVER_PUBLIC_KEY,
-      };
-
-      // Should not throw, webAuthDomain will be undefined
-      const client = Sep10Client.fromToml(
-        toml,
-        HOME_DOMAIN,
-        NETWORK_PASSPHRASE
+    it("throws INVALID_TOML when WEB_AUTH_ENDPOINT is not a valid URL", () => {
+      const toml = StellarToml.fromString(
+        `
+WEB_AUTH_ENDPOINT = "not-a-valid-url"
+SIGNING_KEY = "${SERVER_PUBLIC_KEY}"
+NETWORK_PASSPHRASE = "${NETWORK_PASSPHRASE}"
+`,
+        { validate: false },
+        HOME_DOMAIN
       );
-      assertEquals(client.authEndpoint, "not-a-valid-url");
+
+      const error = assertThrows(
+        () => Sep10Client.fromToml(toml),
+        E.INVALID_TOML
+      );
+      assertEquals(error.code, E.Code.INVALID_TOML);
+    });
+
+    it("throws INVALID_TOML when domain is missing", () => {
+      const toml = StellarToml.fromString(
+        `
+WEB_AUTH_ENDPOINT = "${AUTH_ENDPOINT}"
+SIGNING_KEY = "${SERVER_PUBLIC_KEY}"
+NETWORK_PASSPHRASE = "${NETWORK_PASSPHRASE}"
+`,
+        { validate: false }
+        // No domain provided
+      );
+
+      const error = assertThrows(
+        () => Sep10Client.fromToml(toml),
+        E.INVALID_TOML
+      );
+      assertEquals(error.code, E.Code.INVALID_TOML);
     });
   });
 
