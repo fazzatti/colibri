@@ -12,6 +12,7 @@
     "include": ["mod.ts", "./**/*.ts", "README.md", "LICENSE"]
   },
   "imports": {
-    "@/": "./"
+    "@/": "./",
+    "@std/toml": "jsr:@std/toml@^1.0.0"
   }
 }

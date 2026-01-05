@@ -14,7 +14,8 @@ export type ErrorDomain =
   | "events"
   | "toid"
   | "event-streamer"
-  | "sep1";
+  | "sep1"
+  | "sep10";
 
 export type BaseMeta = {
   cause?: unknown; // chained errors
