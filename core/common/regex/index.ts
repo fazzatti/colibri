@@ -16,6 +16,9 @@ const uint64String = /^(?:0|[1-9]\d{0,19})$/;
 const eventId = /^\d{19}-\d{10}$/;
 const alphanumeric = /^[a-zA-Z0-9]+$/;
 
+// DOMAIN REGEX
+const domain = /^(?!:\/\/)([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/;
+
 export const regex = {
   ed25519PublicKey,
   ed25519SecretKey,
@@ -31,4 +34,5 @@ export const regex = {
   uint64String,
   eventId,
   alphanumeric,
+  domain,
 };
