@@ -37,3 +37,7 @@ export * from "@/toid/index.ts";
 export type * from "@/toid/types.ts";
 
 export * from "@/tools/index.ts";
+
+export * from "@/sep1/index.ts";
+export type * from "@/sep1/types.ts";
+export * as ERRORS_SEP1 from "@/sep1/error.ts";
