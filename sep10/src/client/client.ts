@@ -7,7 +7,7 @@
 
 import type { Keypair } from "stellar-sdk";
 import type { Signer } from "@colibri/core";
-import { StellarToml } from "@colibri/core";
+import type { StellarToml } from "@colibri/core";
 import { SEP10Challenge } from "@/challenge/challenge.ts";
 import { Sep10Jwt } from "@/client/jwt.ts";
 import type { VerifyChallengeOptions } from "@/types.ts";
