@@ -1,6 +1,6 @@
 {
   "name": "@colibri/core",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "license": "MIT",
   "exports": {
     ".": "./mod.ts"
@@ -12,7 +12,6 @@
     "include": ["mod.ts", "./**/*.ts", "README.md", "LICENSE"]
   },
   "imports": {
-    "@/": "./",
-    "@std/toml": "jsr:@std/toml@^1.0.0"
+    "@/": "./"
   }
 }
