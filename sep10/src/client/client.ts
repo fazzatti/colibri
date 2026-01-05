@@ -7,6 +7,7 @@
 
 import type { Keypair } from "stellar-sdk";
 import type { Signer } from "@colibri/core";
+import { StellarToml } from "@colibri/core";
 import { SEP10Challenge } from "@/challenge/challenge.ts";
 import { Sep10Jwt } from "@/client/jwt.ts";
 import type { VerifyChallengeOptions } from "@/types.ts";
@@ -112,48 +113,55 @@ export class Sep10Client {
   // ===========================================================================
 
   /**
-   * Creates a Sep10Client from a parsed stellar.toml object.
+   * Creates a Sep10Client from a StellarToml instance.
    *
-   * @param toml - The parsed stellar.toml (from @colibri/core/sep1)
-   * @param networkPassphrase - The Stellar network passphrase
+   * @param toml - The StellarToml instance from `StellarToml.fromDomain()`
+   * @param networkPassphrase - Optional network passphrase override (uses toml.networkPassphrase if available)
    * @returns A Sep10Client instance
-   * @throws {MISSING_AUTH_ENDPOINT} If WEB_AUTH_ENDPOINT is missing
-   * @throws {INVALID_TOML} If SIGNING_KEY is missing or invalid
+   * @throws {MISSING_AUTH_ENDPOINT} If WEB_AUTH_ENDPOINT is missing from toml
+   * @throws {INVALID_TOML} If SIGNING_KEY is missing or domain is unknown
    *
    * @example
    * ```typescript
    * import { StellarToml } from "@colibri/core";
    *
    * const toml = await StellarToml.fromDomain("example.com");
-   * const client = Sep10Client.fromToml(toml.data, "example.com", Networks.TESTNET);
+   * const client = Sep10Client.fromToml(toml);
    * ```
    */
-  static fromToml(
-    toml: { WEB_AUTH_ENDPOINT?: string; SIGNING_KEY?: string },
-    homeDomain: string,
-    networkPassphrase: string
-  ): Sep10Client {
-    if (!toml.WEB_AUTH_ENDPOINT) {
+  static fromToml(toml: StellarToml, networkPassphrase?: string): Sep10Client {
+    // Validate domain first so we can use it in subsequent error messages
+    const homeDomain = toml.domain;
+    if (!homeDomain) {
+      throw new E.INVALID_TOML("unknown", "domain");
+    }
+
+    if (!toml.webAuthEndpoint) {
       throw new E.MISSING_AUTH_ENDPOINT(homeDomain);
     }
 
-    if (!toml.SIGNING_KEY) {
+    if (!toml.signingKey) {
       throw new E.INVALID_TOML(homeDomain, "SIGNING_KEY");
+    }
+
+    const passphrase = networkPassphrase ?? toml.networkPassphrase;
+    if (!passphrase) {
+      throw new E.INVALID_TOML(homeDomain, "NETWORK_PASSPHRASE");
     }
 
     // Extract web auth domain from endpoint URL
     let webAuthDomain: string | undefined;
     try {
-      webAuthDomain = new URL(toml.WEB_AUTH_ENDPOINT).hostname;
+      webAuthDomain = new URL(toml.webAuthEndpoint).hostname;
     } catch {
       // Invalid URL, will be caught later
     }
 
     return new Sep10Client({
-      authEndpoint: toml.WEB_AUTH_ENDPOINT,
-      serverPublicKey: toml.SIGNING_KEY,
+      authEndpoint: toml.webAuthEndpoint,
+      serverPublicKey: toml.signingKey,
       homeDomain,
-      networkPassphrase,
+      networkPassphrase: passphrase,
       webAuthDomain,
     });
   }
