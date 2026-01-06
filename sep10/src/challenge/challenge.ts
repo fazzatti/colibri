@@ -24,6 +24,8 @@ import type {
   ChallengeTimeBounds,
 } from "@/types.ts";
 import * as E from "@/challenge/error.ts";
+import { isChallengeTransaction as _isChallengeTransaction } from "@/utils/is-challenge-transaction.ts";
+import { isChallengeXDR as _isChallengeXDR } from "@/utils/is-challenge-xdr.ts";
 
 /** Suffix for the home domain auth key */
 const AUTH_KEY_SUFFIX = " auth";
@@ -735,5 +737,47 @@ export class SEP10Challenge {
       isExpired: this.isExpired,
       signatureCount: this._transaction.signatures.length,
     };
+  }
+
+  // ===========================================================================
+  // Static Utilities
+  // ===========================================================================
+
+  /**
+   * Checks if a Transaction object has the structure of a SEP-10 challenge.
+   * This performs structural validation only (no signature verification).
+   *
+   * @param transaction - The Transaction object to check
+   * @returns true if the transaction has challenge structure, false otherwise
+   *
+   * @example
+   * ```typescript
+   * if (SEP10Challenge.isChallengeTransaction(tx)) {
+   *   const challenge = SEP10Challenge.fromTransaction(tx, networkPassphrase);
+   * }
+   * ```
+   */
+  static isChallengeTransaction(transaction: Transaction): boolean {
+    return _isChallengeTransaction(transaction);
+  }
+
+  /**
+   * Checks if an XDR string can be parsed as a SEP-10 challenge.
+   * This attempts to decode the XDR and validate the challenge structure.
+   * Does not verify signatures.
+   *
+   * @param xdr - Base64-encoded transaction envelope XDR
+   * @param networkPassphrase - The Stellar network passphrase
+   * @returns true if the XDR is a valid challenge structure, false otherwise
+   *
+   * @example
+   * ```typescript
+   * if (SEP10Challenge.isChallengeXDR(xdrString, Networks.TESTNET)) {
+   *   const challenge = SEP10Challenge.fromXDR(xdrString, Networks.TESTNET);
+   * }
+   * ```
+   */
+  static isChallengeXDR(xdr: string, networkPassphrase: string): boolean {
+    return _isChallengeXDR(xdr, networkPassphrase);
   }
 }

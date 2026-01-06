@@ -12,3 +12,12 @@ export { Sep10Client } from "@/client/client.ts";
 export { Sep10Jwt } from "@/client/jwt.ts";
 export * as ClientErrors from "@/client/error.ts";
 export { ERROR_SEP10_CLI } from "@/client/error.ts";
+
+// Utilities
+export {
+  isChallengeTransaction,
+  isChallengeXDR,
+  isSEP10Challenge,
+  parseChallengeXDR,
+  parseChallengeTransaction,
+} from "@/utils/index.ts";
