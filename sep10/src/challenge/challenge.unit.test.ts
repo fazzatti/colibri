@@ -1386,7 +1386,10 @@ describe("SEP10Challenge Static Utilities", () => {
         networkPassphrase: NETWORK_PASSPHRASE,
         webAuthDomain: WEB_AUTH_DOMAIN,
       });
-      assertEquals(SEP10Challenge.isChallengeTransaction(challenge.transaction), true);
+      assertEquals(
+        SEP10Challenge.isChallengeTransaction(challenge.transaction),
+        true
+      );
     });
 
     it("returns false for non-challenge transaction", () => {
@@ -1414,11 +1417,17 @@ describe("SEP10Challenge Static Utilities", () => {
   describe("isChallengeXDR", () => {
     it("returns true for valid challenge XDR", () => {
       const xdr = createValidChallenge();
-      assertEquals(SEP10Challenge.isChallengeXDR(xdr, NETWORK_PASSPHRASE), true);
+      assertEquals(
+        SEP10Challenge.isChallengeXDR(xdr, NETWORK_PASSPHRASE),
+        true
+      );
     });
 
     it("returns false for invalid XDR", () => {
-      assertEquals(SEP10Challenge.isChallengeXDR("invalid", NETWORK_PASSPHRASE), false);
+      assertEquals(
+        SEP10Challenge.isChallengeXDR("invalid", NETWORK_PASSPHRASE),
+        false
+      );
     });
 
     it("returns false for non-challenge transaction XDR", () => {
@@ -1439,7 +1448,10 @@ describe("SEP10Challenge Static Utilities", () => {
         })
       );
       const tx = builder.build();
-      assertEquals(SEP10Challenge.isChallengeXDR(tx.toXDR(), NETWORK_PASSPHRASE), false);
+      assertEquals(
+        SEP10Challenge.isChallengeXDR(tx.toXDR(), NETWORK_PASSPHRASE),
+        false
+      );
     });
   });
 });
