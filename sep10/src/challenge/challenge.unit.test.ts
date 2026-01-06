@@ -1371,3 +1371,75 @@ describe("Error Classes Coverage", () => {
     });
   });
 });
+
+// =============================================================================
+// Static Utility Methods Tests
+// =============================================================================
+
+describe("SEP10Challenge Static Utilities", () => {
+  describe("isChallengeTransaction", () => {
+    it("returns true for valid challenge transaction", () => {
+      const challenge = SEP10Challenge.build({
+        serverAccount: SERVER_PUBLIC_KEY,
+        clientAccount: CLIENT_PUBLIC_KEY,
+        homeDomain: HOME_DOMAIN,
+        networkPassphrase: NETWORK_PASSPHRASE,
+        webAuthDomain: WEB_AUTH_DOMAIN,
+      });
+      assertEquals(SEP10Challenge.isChallengeTransaction(challenge.transaction), true);
+    });
+
+    it("returns false for non-challenge transaction", () => {
+      const account = new Account(SERVER_PUBLIC_KEY, "0");
+      const builder = new TransactionBuilder(account, {
+        fee: "100",
+        networkPassphrase: NETWORK_PASSPHRASE,
+        timebounds: {
+          minTime: 0,
+          maxTime: Math.floor(Date.now() / 1000) + 900,
+        },
+      });
+      builder.addOperation(
+        Operation.payment({
+          destination: CLIENT_PUBLIC_KEY,
+          asset: Asset.native(),
+          amount: "10",
+        })
+      );
+      const tx = builder.build();
+      assertEquals(SEP10Challenge.isChallengeTransaction(tx), false);
+    });
+  });
+
+  describe("isChallengeXDR", () => {
+    it("returns true for valid challenge XDR", () => {
+      const xdr = createValidChallenge();
+      assertEquals(SEP10Challenge.isChallengeXDR(xdr, NETWORK_PASSPHRASE), true);
+    });
+
+    it("returns false for invalid XDR", () => {
+      assertEquals(SEP10Challenge.isChallengeXDR("invalid", NETWORK_PASSPHRASE), false);
+    });
+
+    it("returns false for non-challenge transaction XDR", () => {
+      const account = new Account(SERVER_PUBLIC_KEY, "0");
+      const builder = new TransactionBuilder(account, {
+        fee: "100",
+        networkPassphrase: NETWORK_PASSPHRASE,
+        timebounds: {
+          minTime: 0,
+          maxTime: Math.floor(Date.now() / 1000) + 900,
+        },
+      });
+      builder.addOperation(
+        Operation.payment({
+          destination: CLIENT_PUBLIC_KEY,
+          asset: Asset.native(),
+          amount: "10",
+        })
+      );
+      const tx = builder.build();
+      assertEquals(SEP10Challenge.isChallengeXDR(tx.toXDR(), NETWORK_PASSPHRASE), false);
+    });
+  });
+});
