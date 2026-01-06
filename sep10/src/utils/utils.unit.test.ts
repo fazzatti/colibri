@@ -12,6 +12,7 @@ import {
   Memo,
   Account,
   Asset,
+  type Transaction,
 } from "stellar-sdk";
 import { Buffer } from "buffer";
 import { SEP10Challenge } from "@/challenge/challenge.ts";
@@ -114,7 +115,6 @@ function createValidChallengeTransaction(
  */
 function createValidChallengeXDR(options = {}): string {
   const tx = createValidChallengeTransaction(options);
-  SERVER_KEYPAIR.sign(tx.hash());
   tx.sign(SERVER_KEYPAIR);
   return tx.toXDR();
 }
@@ -135,47 +135,29 @@ describe("isChallengeTransaction", () => {
   });
 
   it("returns false for transaction without time bounds", () => {
-    const account = new Account(SERVER_PUBLIC_KEY, "-1");
-    const builder = new TransactionBuilder(account, {
-      fee: "100",
-      networkPassphrase: NETWORK_PASSPHRASE,
-    });
-    builder.addOperation(
-      Operation.manageData({
-        source: CLIENT_PUBLIC_KEY,
-        name: `${HOME_DOMAIN} auth`,
-        value: Buffer.from(crypto.getRandomValues(new Uint8Array(48))).toString(
-          "base64"
-        ),
-      })
-    );
-    builder.setTimeout(0); // This sets timebounds but with 0
-    const tx = builder.build();
-    // Actually this will have timebounds, let's check without
-    assertEquals(isChallengeTransaction(tx), true); // It has timebounds from setTimeout
+    const tx = createValidChallengeTransaction();
+    // Create a mock transaction without timeBounds
+    const txWithoutTimeBounds = {
+      ...tx,
+      sequence: "0",
+      timeBounds: undefined,
+      operations: tx.operations,
+      memo: tx.memo,
+    } as unknown as Transaction;
+    assertEquals(isChallengeTransaction(txWithoutTimeBounds), false);
   });
 
   it("returns false for transaction without operations", () => {
-    const account = new Account(SERVER_PUBLIC_KEY, "-1");
-    const builder = new TransactionBuilder(account, {
-      fee: "100",
-      networkPassphrase: NETWORK_PASSPHRASE,
-      timebounds: {
-        minTime: 0,
-        maxTime: Math.floor(Date.now() / 1000) + 900,
-      },
-    });
-    // Build without operations - but TransactionBuilder requires at least one op
-    // So we'll test with a payment op instead
-    builder.addOperation(
-      Operation.payment({
-        destination: CLIENT_PUBLIC_KEY,
-        asset: Asset.native(),
-        amount: "10",
-      })
-    );
-    const tx = builder.build();
-    assertEquals(isChallengeTransaction(tx), false);
+    const tx = createValidChallengeTransaction();
+    // Create a mock transaction with empty operations array
+    const txWithoutOps = {
+      ...tx,
+      sequence: "0",
+      timeBounds: tx.timeBounds,
+      operations: [],
+      memo: tx.memo,
+    } as unknown as Transaction;
+    assertEquals(isChallengeTransaction(txWithoutOps), false);
   });
 
   it("returns false for first operation not ManageData", () => {
