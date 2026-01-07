@@ -515,6 +515,96 @@ describe("SEP10Challenge", () => {
       challenge.verifyTimeBounds({ allowExpired: true });
     });
 
+    it("verifyTimeBounds applies time tolerance for recently expired challenge", () => {
+      // Create a challenge that expired 3 seconds ago
+      const xdr = createValidChallenge({ timeout: -3 });
+      const challenge = SEP10Challenge.fromXDR(xdr, NETWORK_PASSPHRASE);
+
+      // Should throw with default tolerance (5s) since it's within tolerance
+      // But we need to check tolerances work - let's use a fresh challenge
+
+      // Actually create a challenge that expired less than 5 seconds ago
+      // Default tolerance should accept it
+      challenge.verifyTimeBounds({ timeTolerance: 5 });
+    });
+
+    it("verifyTimeBounds rejects challenge expired beyond tolerance", () => {
+      // Create a challenge that expired 10 seconds ago
+      const xdr = createValidChallenge({ timeout: -10 });
+      const challenge = SEP10Challenge.fromXDR(xdr, NETWORK_PASSPHRASE);
+
+      // Default tolerance of 5 seconds should reject
+      assertThrows(
+        () => challenge.verifyTimeBounds({ timeTolerance: 5 }),
+        E.CHALLENGE_EXPIRED
+      );
+    });
+
+    it("verifyTimeBounds applies time tolerance for future minTime (client clock behind)", () => {
+      // Simulate a challenge where minTime is 3 seconds in the future
+      // (as if client clock is 3 seconds behind server)
+      const now = new Date();
+      const clientTimeBehind = new Date(now.getTime() - 3000); // Client thinks it's 3s earlier
+
+      const xdr = createValidChallenge({ timeout: 900 });
+      const challenge = SEP10Challenge.fromXDR(xdr, NETWORK_PASSPHRASE);
+
+      // With 5 second tolerance, should pass
+      challenge.verifyTimeBounds({ now: clientTimeBehind, timeTolerance: 5 });
+    });
+
+    it("verifyTimeBounds rejects challenge when minTime is too far in future", () => {
+      // Simulate client clock 10 seconds behind server
+      const now = new Date();
+      const clientTimeFarBehind = new Date(now.getTime() - 10000);
+
+      const xdr = createValidChallenge({ timeout: 900 });
+      const challenge = SEP10Challenge.fromXDR(xdr, NETWORK_PASSPHRASE);
+
+      // With 5 second tolerance, should fail (minTime is 10s in future from client POV)
+      assertThrows(
+        () =>
+          challenge.verifyTimeBounds({
+            now: clientTimeFarBehind,
+            timeTolerance: 5,
+          }),
+        E.CHALLENGE_EXPIRED
+      );
+    });
+
+    it("verifyTimeBounds skipTimeValidation bypasses all time checks", () => {
+      // Create a very expired challenge
+      const xdr = createValidChallenge({ timeout: -1000 });
+      const challenge = SEP10Challenge.fromXDR(xdr, NETWORK_PASSPHRASE);
+
+      // Should not throw with skipTimeValidation
+      challenge.verifyTimeBounds({ skipTimeValidation: true });
+    });
+
+    it("verifyTimeBounds uses default tolerance of 5 seconds", () => {
+      // Verify the static constant
+      assertEquals(SEP10Challenge.DEFAULT_TIME_TOLERANCE, 5);
+
+      // Create a challenge that expired 4 seconds ago - should pass with default tolerance
+      const xdr = createValidChallenge({ timeout: -4 });
+      const challenge = SEP10Challenge.fromXDR(xdr, NETWORK_PASSPHRASE);
+
+      // Default tolerance should accept (4 < 5)
+      challenge.verifyTimeBounds();
+    });
+
+    it("verifyTimeBounds with zero tolerance is strict", () => {
+      // Create a challenge that expired 1 second ago
+      const xdr = createValidChallenge({ timeout: -1 });
+      const challenge = SEP10Challenge.fromXDR(xdr, NETWORK_PASSPHRASE);
+
+      // Zero tolerance should reject
+      assertThrows(
+        () => challenge.verifyTimeBounds({ timeTolerance: 0 }),
+        E.CHALLENGE_EXPIRED
+      );
+    });
+
     it("verifyServerSignature passes for valid signature", () => {
       const xdr = createValidChallenge();
       const challenge = SEP10Challenge.fromXDR(xdr, NETWORK_PASSPHRASE);

@@ -447,6 +447,13 @@ export class SEP10Challenge {
   // ===========================================================================
 
   /**
+   * Default time tolerance in seconds for time bounds validation.
+   * Safely covers typical NTP drift while being negligible compared
+   * to the standard 15-minute challenge validity window.
+   */
+  static readonly DEFAULT_TIME_TOLERANCE = 5;
+
+  /**
    * Verifies the challenge transaction time bounds.
    *
    * @param options - Time bounds verification options
@@ -454,16 +461,27 @@ export class SEP10Challenge {
    *
    * @example
    * ```typescript
-   * challenge.verifyTimeBounds(); // uses current time
+   * challenge.verifyTimeBounds(); // uses current time with default 5s tolerance
    * challenge.verifyTimeBounds({ now: new Date(), allowExpired: true });
+   * challenge.verifyTimeBounds({ timeTolerance: 10 }); // 10 second tolerance
+   * challenge.verifyTimeBounds({ skipTimeValidation: true }); // skip validation
    * ```
    */
   verifyTimeBounds(
-    options: Pick<VerifyChallengeOptions, "allowExpired" | "now"> = {}
+    options: Pick<
+      VerifyChallengeOptions,
+      "allowExpired" | "now" | "timeTolerance" | "skipTimeValidation"
+    > = {}
   ): void {
-    const { allowExpired = false, now = new Date() } = options;
+    const {
+      allowExpired = false,
+      now = new Date(),
+      timeTolerance = SEP10Challenge.DEFAULT_TIME_TOLERANCE,
+      skipTimeValidation = false,
+    } = options;
 
-    if (allowExpired) {
+    // Skip all time validation if requested (for testing scenarios)
+    if (skipTimeValidation || allowExpired) {
       return;
     }
 
@@ -471,7 +489,13 @@ export class SEP10Challenge {
     const minTime = Math.floor(this._timeBounds.minTime.getTime() / 1000);
     const maxTime = Math.floor(this._timeBounds.maxTime.getTime() / 1000);
 
-    if (nowSeconds < minTime || nowSeconds > maxTime) {
+    // Apply tolerance in both directions:
+    // - Accept challenges whose minTime is up to N seconds in the future (client clock behind)
+    // - Accept challenges whose maxTime was up to N seconds ago (client clock ahead)
+    const adjustedMinTime = minTime - timeTolerance;
+    const adjustedMaxTime = maxTime + timeTolerance;
+
+    if (nowSeconds < adjustedMinTime || nowSeconds > adjustedMaxTime) {
       throw new E.CHALLENGE_EXPIRED(minTime, maxTime, nowSeconds);
     }
   }
@@ -618,10 +642,22 @@ export class SEP10Challenge {
    * ```
    */
   verify(serverPublicKey: string, options: VerifyChallengeOptions = {}): void {
-    const { homeDomain, webAuthDomain, allowExpired, now } = options;
+    const {
+      homeDomain,
+      webAuthDomain,
+      allowExpired,
+      now,
+      timeTolerance,
+      skipTimeValidation,
+    } = options;
 
     // 1. Check time bounds
-    this.verifyTimeBounds({ allowExpired, now });
+    this.verifyTimeBounds({
+      allowExpired,
+      now,
+      timeTolerance,
+      skipTimeValidation,
+    });
 
     // 2. Verify server signature
     this.verifyServerSignature(serverPublicKey);

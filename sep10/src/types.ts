@@ -81,6 +81,20 @@ export interface VerifyChallengeOptions {
    * Default: new Date()
    */
   now?: Date;
+  /**
+   * Time tolerance in seconds to handle clock skew between client and server.
+   * The tolerance is applied in both directions:
+   * - Accept challenges whose minTime is up to N seconds in the future (client clock behind)
+   * - Accept challenges whose maxTime was up to N seconds ago (client clock ahead)
+   * Default: 5 (safely covers typical NTP drift)
+   */
+  timeTolerance?: number;
+  /**
+   * Whether to skip time validation entirely.
+   * Useful for testing scenarios where strict time validation isn't needed.
+   * Default: false
+   */
+  skipTimeValidation?: boolean;
 }
 
 /**

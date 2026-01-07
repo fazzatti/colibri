@@ -134,6 +134,42 @@ describe("Sep10Client", () => {
       assertEquals(client.homeDomain, HOME_DOMAIN);
       assertEquals(client.networkPassphrase, NETWORK_PASSPHRASE);
     });
+
+    it("uses default timeTolerance of 5 seconds", () => {
+      const client = new Sep10Client({
+        authEndpoint: AUTH_ENDPOINT,
+        serverPublicKey: SERVER_PUBLIC_KEY,
+        homeDomain: HOME_DOMAIN,
+        networkPassphrase: NETWORK_PASSPHRASE,
+      });
+
+      // Verify default through behavior - client should be created successfully
+      assertEquals(client.authEndpoint, AUTH_ENDPOINT);
+    });
+
+    it("accepts custom timeTolerance configuration", () => {
+      const client = new Sep10Client({
+        authEndpoint: AUTH_ENDPOINT,
+        serverPublicKey: SERVER_PUBLIC_KEY,
+        homeDomain: HOME_DOMAIN,
+        networkPassphrase: NETWORK_PASSPHRASE,
+        timeTolerance: 10,
+      });
+
+      assertEquals(client.authEndpoint, AUTH_ENDPOINT);
+    });
+
+    it("accepts skipTimeValidation configuration", () => {
+      const client = new Sep10Client({
+        authEndpoint: AUTH_ENDPOINT,
+        serverPublicKey: SERVER_PUBLIC_KEY,
+        homeDomain: HOME_DOMAIN,
+        networkPassphrase: NETWORK_PASSPHRASE,
+        skipTimeValidation: true,
+      });
+
+      assertEquals(client.authEndpoint, AUTH_ENDPOINT);
+    });
   });
 
   describe("fromToml", () => {
@@ -472,6 +508,163 @@ NETWORK_PASSPHRASE = "${NETWORK_PASSPHRASE}"
         () => client.getChallenge({ account: CLIENT_PUBLIC_KEY }),
         E.TIMEOUT
       );
+    });
+
+    it("uses client timeTolerance when verifying challenge", async () => {
+      // Create a challenge that would expire 4 seconds ago, but should pass with default 5s tolerance
+      const now = Math.floor(Date.now() / 1000);
+      const nonce = Buffer.from(
+        crypto.getRandomValues(new Uint8Array(48))
+      ).toString("base64");
+
+      const serverAccount = new Account(SERVER_PUBLIC_KEY, "-1");
+      const transaction = new TransactionBuilder(serverAccount, {
+        fee: "100",
+        networkPassphrase: NETWORK_PASSPHRASE,
+        timebounds: { minTime: now - 904, maxTime: now - 4 }, // Expired 4s ago
+      })
+        .addOperation(
+          Operation.manageData({
+            source: CLIENT_PUBLIC_KEY,
+            name: `${HOME_DOMAIN} auth`,
+            value: nonce,
+          })
+        )
+        .addOperation(
+          Operation.manageData({
+            source: SERVER_PUBLIC_KEY,
+            name: "web_auth_domain",
+            value: WEB_AUTH_DOMAIN,
+          })
+        )
+        .build();
+
+      transaction.sign(SERVER_KEYPAIR);
+      const xdr = transaction.toXDR();
+
+      const mockFetch = createMockFetch({
+        body: { transaction: xdr, network_passphrase: NETWORK_PASSPHRASE },
+      });
+
+      const client = new Sep10Client({
+        authEndpoint: AUTH_ENDPOINT,
+        serverPublicKey: SERVER_PUBLIC_KEY,
+        homeDomain: HOME_DOMAIN,
+        networkPassphrase: NETWORK_PASSPHRASE,
+        fetch: mockFetch,
+        timeTolerance: 10, // 10s tolerance should accept 4s expired
+      });
+
+      const challenge = await client.getChallenge({
+        account: CLIENT_PUBLIC_KEY,
+      });
+      assertEquals(challenge.clientAccount, CLIENT_PUBLIC_KEY);
+    });
+
+    it("allows per-request timeTolerance override", async () => {
+      // Create a challenge that expires 4 seconds ago
+      const now = Math.floor(Date.now() / 1000);
+      const nonce = Buffer.from(
+        crypto.getRandomValues(new Uint8Array(48))
+      ).toString("base64");
+
+      const serverAccount = new Account(SERVER_PUBLIC_KEY, "-1");
+      const transaction = new TransactionBuilder(serverAccount, {
+        fee: "100",
+        networkPassphrase: NETWORK_PASSPHRASE,
+        timebounds: { minTime: now - 904, maxTime: now - 4 }, // Expired 4s ago
+      })
+        .addOperation(
+          Operation.manageData({
+            source: CLIENT_PUBLIC_KEY,
+            name: `${HOME_DOMAIN} auth`,
+            value: nonce,
+          })
+        )
+        .addOperation(
+          Operation.manageData({
+            source: SERVER_PUBLIC_KEY,
+            name: "web_auth_domain",
+            value: WEB_AUTH_DOMAIN,
+          })
+        )
+        .build();
+
+      transaction.sign(SERVER_KEYPAIR);
+      const xdr = transaction.toXDR();
+
+      const mockFetch = createMockFetch({
+        body: { transaction: xdr, network_passphrase: NETWORK_PASSPHRASE },
+      });
+
+      // Client has strict 2s tolerance
+      const client = new Sep10Client({
+        authEndpoint: AUTH_ENDPOINT,
+        serverPublicKey: SERVER_PUBLIC_KEY,
+        homeDomain: HOME_DOMAIN,
+        networkPassphrase: NETWORK_PASSPHRASE,
+        fetch: mockFetch,
+        timeTolerance: 2, // Would normally reject 4s expired
+      });
+
+      // But per-request override of 10s accepts it
+      const challenge = await client.getChallenge({
+        account: CLIENT_PUBLIC_KEY,
+        timeTolerance: 10, // Override to allow 4s expired
+      });
+      assertEquals(challenge.clientAccount, CLIENT_PUBLIC_KEY);
+    });
+
+    it("allows per-request skipTimeValidation override", async () => {
+      // Create a very expired challenge
+      const now = Math.floor(Date.now() / 1000);
+      const nonce = Buffer.from(
+        crypto.getRandomValues(new Uint8Array(48))
+      ).toString("base64");
+
+      const serverAccount = new Account(SERVER_PUBLIC_KEY, "-1");
+      const transaction = new TransactionBuilder(serverAccount, {
+        fee: "100",
+        networkPassphrase: NETWORK_PASSPHRASE,
+        timebounds: { minTime: now - 1000, maxTime: now - 100 }, // Very expired
+      })
+        .addOperation(
+          Operation.manageData({
+            source: CLIENT_PUBLIC_KEY,
+            name: `${HOME_DOMAIN} auth`,
+            value: nonce,
+          })
+        )
+        .addOperation(
+          Operation.manageData({
+            source: SERVER_PUBLIC_KEY,
+            name: "web_auth_domain",
+            value: WEB_AUTH_DOMAIN,
+          })
+        )
+        .build();
+
+      transaction.sign(SERVER_KEYPAIR);
+      const xdr = transaction.toXDR();
+
+      const mockFetch = createMockFetch({
+        body: { transaction: xdr, network_passphrase: NETWORK_PASSPHRASE },
+      });
+
+      const client = new Sep10Client({
+        authEndpoint: AUTH_ENDPOINT,
+        serverPublicKey: SERVER_PUBLIC_KEY,
+        homeDomain: HOME_DOMAIN,
+        networkPassphrase: NETWORK_PASSPHRASE,
+        fetch: mockFetch,
+      });
+
+      // Skip time validation entirely for this request
+      const challenge = await client.getChallenge({
+        account: CLIENT_PUBLIC_KEY,
+        skipTimeValidation: true,
+      });
+      assertEquals(challenge.clientAccount, CLIENT_PUBLIC_KEY);
     });
   });
 

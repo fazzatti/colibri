@@ -31,6 +31,21 @@ export interface Sep10ClientConfig {
   fetch?: typeof fetch;
   /** Optional request timeout in milliseconds (default: 30000) */
   timeout?: number;
+  /**
+   * Time tolerance in seconds for challenge time bounds validation.
+   * Handles clock skew between client and server.
+   * Applied in both directions: accepts challenges whose minTime is up to N seconds
+   * in the future (client clock behind) and whose maxTime was up to N seconds ago
+   * (client clock ahead).
+   * Default: 5 (safely covers typical NTP drift)
+   */
+  timeTolerance?: number;
+  /**
+   * Whether to skip time validation entirely.
+   * Useful for testing scenarios where strict time validation isn't needed.
+   * Default: false
+   */
+  skipTimeValidation?: boolean;
 }
 
 /**
@@ -43,6 +58,16 @@ export interface GetChallengeOptions {
   memo?: string;
   /** Optional client domain for client domain verification */
   clientDomain?: string;
+  /**
+   * Time tolerance in seconds for challenge time bounds validation.
+   * Overrides the client-level timeTolerance setting for this request.
+   */
+  timeTolerance?: number;
+  /**
+   * Whether to skip time validation entirely.
+   * Overrides the client-level skipTimeValidation setting for this request.
+   */
+  skipTimeValidation?: boolean;
 }
 
 /**
@@ -89,11 +114,20 @@ export interface AuthenticateOptions extends GetChallengeOptions {
  */
 export class Sep10Client {
   private readonly _config: Required<
-    Omit<Sep10ClientConfig, "webAuthDomain" | "fetch" | "timeout">
+    Omit<
+      Sep10ClientConfig,
+      | "webAuthDomain"
+      | "fetch"
+      | "timeout"
+      | "timeTolerance"
+      | "skipTimeValidation"
+    >
   > & {
     webAuthDomain?: string;
     fetch: typeof fetch;
     timeout: number;
+    timeTolerance: number;
+    skipTimeValidation: boolean;
   };
 
   constructor(config: Sep10ClientConfig) {
@@ -105,6 +139,8 @@ export class Sep10Client {
       webAuthDomain: config.webAuthDomain,
       fetch: config.fetch ?? globalThis.fetch,
       timeout: config.timeout ?? 30000,
+      timeTolerance: config.timeTolerance ?? 5,
+      skipTimeValidation: config.skipTimeValidation ?? false,
     };
   }
 
@@ -220,7 +256,8 @@ export class Sep10Client {
    * ```
    */
   async getChallenge(options: GetChallengeOptions): Promise<SEP10Challenge> {
-    const { account, memo, clientDomain } = options;
+    const { account, memo, clientDomain, timeTolerance, skipTimeValidation } =
+      options;
 
     // Build URL with query params
     const url = new URL(this._config.authEndpoint);
@@ -279,8 +316,11 @@ export class Sep10Client {
     );
 
     // Build verification options
+    // Per-request options override client-level config
     const verifyOptions: VerifyChallengeOptions = {
       homeDomain: this._config.homeDomain,
+      timeTolerance: timeTolerance ?? this._config.timeTolerance,
+      skipTimeValidation: skipTimeValidation ?? this._config.skipTimeValidation,
     };
     if (this._config.webAuthDomain) {
       verifyOptions.webAuthDomain = this._config.webAuthDomain;
