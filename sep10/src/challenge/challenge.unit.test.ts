@@ -520,11 +520,8 @@ describe("SEP10Challenge", () => {
       const xdr = createValidChallenge({ timeout: -3 });
       const challenge = SEP10Challenge.fromXDR(xdr, NETWORK_PASSPHRASE);
 
-      // Should throw with default tolerance (5s) since it's within tolerance
-      // But we need to check tolerances work - let's use a fresh challenge
-
-      // Actually create a challenge that expired less than 5 seconds ago
-      // Default tolerance should accept it
+      // With 5 second tolerance, a challenge expired 3 seconds ago should pass
+      // (3 < 5, so it's within the acceptable tolerance window)
       challenge.verifyTimeBounds({ timeTolerance: 5 });
     });
 
