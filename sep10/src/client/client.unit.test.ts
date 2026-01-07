@@ -134,42 +134,6 @@ describe("Sep10Client", () => {
       assertEquals(client.homeDomain, HOME_DOMAIN);
       assertEquals(client.networkPassphrase, NETWORK_PASSPHRASE);
     });
-
-    it("uses default timeTolerance of 5 seconds", () => {
-      const client = new Sep10Client({
-        authEndpoint: AUTH_ENDPOINT,
-        serverPublicKey: SERVER_PUBLIC_KEY,
-        homeDomain: HOME_DOMAIN,
-        networkPassphrase: NETWORK_PASSPHRASE,
-      });
-
-      // Verify default through behavior - client should be created successfully
-      assertEquals(client.authEndpoint, AUTH_ENDPOINT);
-    });
-
-    it("accepts custom timeTolerance configuration", () => {
-      const client = new Sep10Client({
-        authEndpoint: AUTH_ENDPOINT,
-        serverPublicKey: SERVER_PUBLIC_KEY,
-        homeDomain: HOME_DOMAIN,
-        networkPassphrase: NETWORK_PASSPHRASE,
-        timeTolerance: 10,
-      });
-
-      assertEquals(client.authEndpoint, AUTH_ENDPOINT);
-    });
-
-    it("accepts skipTimeValidation configuration", () => {
-      const client = new Sep10Client({
-        authEndpoint: AUTH_ENDPOINT,
-        serverPublicKey: SERVER_PUBLIC_KEY,
-        homeDomain: HOME_DOMAIN,
-        networkPassphrase: NETWORK_PASSPHRASE,
-        skipTimeValidation: true,
-      });
-
-      assertEquals(client.authEndpoint, AUTH_ENDPOINT);
-    });
   });
 
   describe("fromToml", () => {
