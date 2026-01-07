@@ -4,6 +4,7 @@
 
 import { assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
+import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { memoize } from "@/common/decorators/memoize/index.ts";
 
 // =============================================================================
@@ -21,7 +22,7 @@ function delay(ms: number): Promise<void> {
 // Getter Tests
 // =============================================================================
 
-describe("memoize decorator", () => {
+describe("memoize decorator", disableSanitizeConfig, () => {
   describe("getter memoization", () => {
     it("caches the result of a getter", () => {
       let callCount = 0;
@@ -659,6 +660,352 @@ describe("memoize decorator", () => {
       instance.value = 20;
       assertEquals(setterCalls, 2);
       assertEquals(instance.value, 20);
+    });
+  });
+
+  // ===========================================================================
+  // evictOnExpiry Tests
+  // ===========================================================================
+
+  describe("evictOnExpiry option", disableSanitizeConfig, () => {
+    describe("getter with evictOnExpiry", () => {
+      it("should actively evict cached value after TTL when evictOnExpiry is true", async () => {
+        let callCount = 0;
+        class TestClass {
+          @memoize({ ttl: 100, evictOnExpiry: true })
+          get value(): number {
+            callCount++;
+            return 42;
+          }
+        }
+
+        const instance = new TestClass();
+
+        // First access - computes and caches
+        assertEquals(instance.value, 42);
+        assertEquals(callCount, 1);
+
+        // Access before TTL - returns cached
+        await delay(50);
+        assertEquals(instance.value, 42);
+        assertEquals(callCount, 1); // Still 1, used cache
+
+        // Wait for TTL to expire and timer to fire
+        await delay(60); // Now at 110ms total, timer has fired
+
+        // Next access - should recompute because cache was evicted
+        assertEquals(instance.value, 42);
+        assertEquals(callCount, 2); // Incremented because cache was evicted by timer
+      });
+
+      it("should NOT actively evict when evictOnExpiry is false (default)", async () => {
+        let callCount = 0;
+        class TestClass {
+          @memoize({ ttl: 100 }) // evictOnExpiry defaults to false
+          get value(): number {
+            callCount++;
+            return 42;
+          }
+        }
+
+        const instance = new TestClass();
+
+        assertEquals(instance.value, 42);
+        assertEquals(callCount, 1);
+
+        // Advance past TTL
+        await delay(110);
+
+        // Cache is still in memory (just marked stale), so no eviction timer fired
+        // But next access WILL recompute because it checks timestamp
+        assertEquals(instance.value, 42);
+        assertEquals(callCount, 2); // Recomputed on access, not via timer
+      });
+
+      it("should clear previous timer when value is re-cached before TTL", async () => {
+        let callCount = 0;
+        class TestClass {
+          @memoize({ ttl: 100, evictOnExpiry: true })
+          get value(): number {
+            callCount++;
+            return callCount; // Returns different value each time
+          }
+        }
+
+        const instance = new TestClass();
+
+        assertEquals(instance.value, 1); // First computation
+        
+        // Wait for TTL to expire
+        await delay(110);
+        
+        assertEquals(instance.value, 2); // Recomputes, schedules new timer
+
+        // Wait less than TTL
+        await delay(50);
+        assertEquals(instance.value, 2); // Still cached
+        assertEquals(callCount, 2);
+
+        // Wait for second timer to fire
+        await delay(60); // Now 110ms from second cache
+        assertEquals(instance.value, 3); // Evicted, recomputes
+        assertEquals(callCount, 3);
+      });
+
+      it("should handle multiple instances independently", async () => {
+        let callCountA = 0;
+        let callCountB = 0;
+
+        class TestClass {
+          constructor(private id: string) {}
+
+          @memoize({ ttl: 100, evictOnExpiry: true })
+          get value(): string {
+            if (this.id === 'A') callCountA++;
+            else callCountB++;
+            return `value-${this.id}`;
+          }
+        }
+
+        const instanceA = new TestClass('A');
+        const instanceB = new TestClass('B');
+
+        // Both cache
+        assertEquals(instanceA.value, 'value-A');
+        assertEquals(instanceB.value, 'value-B');
+        assertEquals(callCountA, 1);
+        assertEquals(callCountB, 1);
+
+        // Advance and check both evict independently
+        await delay(110);
+
+        assertEquals(instanceA.value, 'value-A');
+        assertEquals(instanceB.value, 'value-B');
+        assertEquals(callCountA, 2); // Both re-computed
+        assertEquals(callCountB, 2);
+      });
+    });
+
+    describe("method with evictOnExpiry", () => {
+      it("should actively evict each cached argument combination independently", async () => {
+        const callLog: string[] = [];
+
+        class TestClass {
+          @memoize({ ttl: 100, evictOnExpiry: true })
+          compute(x: number): number {
+            callLog.push(`compute(${x})`);
+            return x * 2;
+          }
+        }
+
+        const instance = new TestClass();
+
+        // Cache multiple argument combinations
+        assertEquals(instance.compute(1), 2);
+        assertEquals(instance.compute(2), 4);
+        assertEquals(instance.compute(3), 6);
+        assertEquals(callLog.length, 3);
+
+        // Access before TTL - all cached
+        await delay(50);
+        assertEquals(instance.compute(1), 2);
+        assertEquals(instance.compute(2), 4);
+        assertEquals(callLog.length, 3); // No new calls
+
+        // Advance past TTL - all timers fire
+        await delay(60);
+
+        // All should be evicted, need to recompute
+        assertEquals(instance.compute(1), 2);
+        assertEquals(instance.compute(2), 4);
+        assertEquals(instance.compute(3), 6);
+        assertEquals(callLog.length, 6); // 3 new calls
+      });
+
+      it("should clear timer for specific argument when re-cached", async () => {
+        const callLog: string[] = [];
+
+        class TestClass {
+          @memoize({ ttl: 100, evictOnExpiry: true })
+          compute(x: number): number {
+            callLog.push(`compute(${x})`);
+            return x * 2;
+          }
+        }
+
+        const instance = new TestClass();
+
+        // Cache arg=1
+        assertEquals(instance.compute(1), 2);
+        assertEquals(callLog, ['compute(1)']);
+
+        // Advance past TTL - timer fires for arg=1
+        await delay(110);
+
+        // Recompute arg=1 (new timer starts)
+        assertEquals(instance.compute(1), 2);
+        assertEquals(callLog, ['compute(1)', 'compute(1)']);
+
+        // Advance less than TTL
+        await delay(50);
+        assertEquals(instance.compute(1), 2);
+        assertEquals(callLog, ['compute(1)', 'compute(1)']); // Still cached
+
+        // Advance for new timer to fire
+        await delay(60);
+        assertEquals(instance.compute(1), 2);
+        assertEquals(callLog, ['compute(1)', 'compute(1)', 'compute(1)']);
+      });
+
+      it("should handle custom keyFn with evictOnExpiry", async () => {
+        const callLog: Array<{ id: string }> = [];
+
+        class TestClass {
+          @memoize({
+            ttl: 100,
+            evictOnExpiry: true,
+            keyFn: (obj: any) => obj.id
+          })
+          fetchUser(user: { id: string; name: string }): string {
+            callLog.push({ id: user.id });
+            return `User: ${user.name}`;
+          }
+        }
+
+        const instance = new TestClass();
+
+        // Cache with same ID (different name shouldn't matter)
+        assertEquals(instance.fetchUser({ id: '1', name: 'Alice' }), 'User: Alice');
+        assertEquals(instance.fetchUser({ id: '1', name: 'DIFFERENT' }), 'User: Alice');
+        assertEquals(callLog.length, 1); // Cached by ID
+
+        // Advance past TTL
+        await delay(110);
+
+        // Should recompute
+        assertEquals(instance.fetchUser({ id: '1', name: 'Bob' }), 'User: Bob');
+        assertEquals(callLog.length, 2);
+      });
+
+      it("should clear timer when method is re-called after expiry but before eviction", async () => {
+        const callLog: string[] = [];
+
+        class TestClass {
+          @memoize({ ttl: 5000, evictOnExpiry: true }) // Long TTL
+          compute(x: number): number {
+            callLog.push(`compute(${x})`);
+            return x * 2;
+          }
+        }
+
+        const instance = new TestClass();
+
+        // Cache arg=1 with timer scheduled for 5000ms
+        assertEquals(instance.compute(1), 2);
+        assertEquals(callLog, ['compute(1)']);
+
+        // Manually manipulate timestamp to force expiry
+        const symbols = Object.getOwnPropertySymbols(instance);
+        const timestampsMapSymbol = symbols.find(s => s.description?.includes('timestamps')); // plural!
+        if (timestampsMapSymbol) {
+          const timestampsMap = (instance as any)[timestampsMapSymbol];
+          const key = JSON.stringify([1]); // Default keyFn result
+          if (timestampsMap && timestampsMap.has(key)) {
+            // Set timestamp to 6 seconds ago
+            timestampsMap.set(key, Date.now() - 6000);
+          }
+        }
+        
+        // Recompute - clearTimeout path because timer still pending but isExpired=true
+        assertEquals(instance.compute(1), 2);
+        assertEquals(callLog, ['compute(1)', 'compute(1)']);
+      });
+    });
+
+    describe("evictOnExpiry edge cases", () => {
+      it("should work with TTL of 0 and evictOnExpiry", async () => {
+        let callCount = 0;
+        class TestClass {
+          @memoize({ ttl: 0, evictOnExpiry: true })
+          get value(): number {
+            callCount++;
+            return 42;
+          }
+        }
+
+        const instance = new TestClass();
+
+        // First access
+        assertEquals(instance.value, 42);
+        assertEquals(callCount, 1);
+
+        // Wait at least 1ms so Date.now() advances
+        await delay(1);
+
+        // Now (now - cachedAt > 0) will be true, triggering clearTimeout
+        assertEquals(instance.value, 42);
+        assertEquals(callCount, 2);
+      });
+
+      it("should handle rapid re-caching before timer fires", async () => {
+        let callCount = 0;
+        class TestClass {
+          @memoize({ ttl: 100, evictOnExpiry: true })
+          get value(): number {
+            callCount++;
+            return callCount;
+          }
+        }
+
+        const instance = new TestClass();
+
+        // First cache
+        assertEquals(instance.value, 1);
+        
+        // Wait until expired, trigger recompute
+        await delay(110);
+        assertEquals(instance.value, 2); // New timer scheduled
+
+        // Immediately expire and recompute again
+        await delay(110);
+        assertEquals(instance.value, 3); // Another new timer
+
+        // Verify old timers don't interfere
+        await delay(110);
+        assertEquals(instance.value, 4);
+        assertEquals(callCount, 4);
+      });
+
+      it("should clear timer when getter is re-accessed after expiry but before eviction", async () => {
+        let callCount = 0;
+        class TestClass {
+          @memoize({ ttl: 5000, evictOnExpiry: true }) // Long TTL so timer doesn't fire quickly
+          get value(): number {
+            callCount++;
+            return callCount;
+          }
+        }
+
+        const instance = new TestClass();
+
+        // First cache - timer scheduled for 5000ms
+        assertEquals(instance.value, 1);
+        
+        // Manually manipulate the cached timestamp to make it appear expired
+        // Find the timestamp symbol by iterating over the instance's symbols
+        const symbols = Object.getOwnPropertySymbols(instance);
+        const timestampSymbol = symbols.find(s => s.description?.includes('timestamp'));
+        if (timestampSymbol) {
+          // Set timestamp to 6 seconds ago (past the 5000ms TTL)
+          (instance as any)[timestampSymbol] = Date.now() - 6000;
+        }
+        
+        // This access sees isExpired=true (timestamp is 6s old, TTL is 5s)
+        // But timer is still pending (won't fire for another ~5 seconds)
+        // This hits the clearTimeout path!
+        assertEquals(instance.value, 2);
+        assertEquals(callCount, 2);
+      });
     });
   });
 });

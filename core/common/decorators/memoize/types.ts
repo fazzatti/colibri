@@ -4,24 +4,9 @@
  */
 
 /**
- * Options for configuring the memoize decorator behavior.
- *
- * @example
- * ```typescript
- * // Basic usage with TTL
- * @memoize({ ttl: 5000 })
- * get data(): Data { ... }
- *
- * // Disabled memoization (useful for testing)
- * @memoize({ enabled: false })
- * get value(): number { ... }
- *
- * // Custom key function for methods
- * @memoize({ keyFn: (obj) => obj.id })
- * fetchUser(user: { id: string }): Promise<User> { ... }
- * ```
+ * Base options shared by all memoize configurations.
  */
-export interface MemoizeOptions {
+interface MemoizeOptionsBase {
   /**
    * Whether memoization is enabled.
    *
@@ -32,33 +17,14 @@ export interface MemoizeOptions {
    *
    * @example
    * ```typescript
-   * // Disable caching for debugging
-   * @memoize({ enabled: process.env.NODE_ENV !== 'test' })
-   * get expensiveValue(): number { ... }
+   * // Disable caching in test environment
+   * @memoize({ enabled: Deno.env.get('DENO_ENV') !== 'test' })
+   * get expensiveComputation(): number {
+   *   return this.compute();
+   * }
    * ```
    */
   enabled?: boolean;
-
-  /**
-   * Time-to-live in milliseconds.
-   *
-   * After this duration, the cached value expires and will be recomputed
-   * on the next access. If not specified, cached values never expire.
-   *
-   * @default undefined (no expiry)
-   *
-   * @example
-   * ```typescript
-   * // Cache expires after 5 seconds
-   * @memoize({ ttl: 5000 })
-   * get freshData(): Data { ... }
-   *
-   * // TTL of 0 means always recompute (cache immediately expires)
-   * @memoize({ ttl: 0 })
-   * get alwaysFresh(): Data { ... }
-   * ```
-   */
-  ttl?: number;
 
   /**
    * Custom function to generate cache keys for method arguments.
@@ -78,15 +44,120 @@ export interface MemoizeOptions {
    * ```typescript
    * // Key by object ID instead of full serialization
    * @memoize({ keyFn: (user) => user.id })
-   * fetchUserData(user: { id: string; name: string }): Promise<Data> { ... }
+   * fetchUserData(user: { id: string; name: string }): Promise<Data> {
+   *   return this.fetch(user.id);
+   * }
    *
    * // Combine multiple arguments into a key
    * @memoize({ keyFn: (a, b) => `${a}:${b}` })
-   * compute(a: number, b: number): number { ... }
+   * compute(a: number, b: number): number {
+   *   return a * b;
+   * }
    * ```
    */
   keyFn?: (...args: unknown[]) => string;
 }
+
+/**
+ * Options when TTL is specified - allows evictOnExpiry.
+ */
+interface MemoizeOptionsWithTtl extends MemoizeOptionsBase {
+  /**
+   * Time-to-live in milliseconds.
+   *
+   * After this duration, the cached value expires and will be recomputed
+   * on the next access.
+   *
+   * @example
+   * ```typescript
+   * // Cache expires after 5 seconds
+   * @memoize({ ttl: 5000 })
+   * get freshData(): Data {
+   *   return this.fetchData();
+   * }
+   * ```
+   */
+  ttl: number;
+
+  /**
+   * Whether to actively evict cached values when TTL expires.
+   *
+   * **When `true` (active eviction):**
+   * - Schedules a `setTimeout` to delete the cached value from memory
+   *   exactly when the TTL expires
+   * - Ensures memory is freed even if the getter/method is never accessed again
+   * - Useful for large cached values or memory-sensitive applications
+   * - Slight overhead from timer management
+   *
+   * **When `false` (passive expiration, default):**
+   * - Expired values remain in memory until the next access
+   * - On access, checks if expired and recomputes if needed
+   * - More memory-lazy but may keep stale data in memory longer
+   * - No timer overhead
+   *
+   * @default false
+   *
+   * @example
+   * ```typescript
+   * // Active eviction - cache is cleared after 5 seconds even if never accessed
+   * class ImageProcessor {
+   *   @memoize({ ttl: 5000, evictOnExpiry: true })
+   *   get largeImageBuffer(): Buffer {
+   *     // Returns a 50MB buffer
+   *     return fs.readFileSync('image.png');
+   *   }
+   * }
+   *
+   * // Passive expiration (default) - cache stays until next access
+   * class ConfigService {
+   *   @memoize({ ttl: 60000 })  // evictOnExpiry defaults to false
+   *   get config(): Config {
+   *     return this.loadConfig();
+   *   }
+   * }
+   * ```
+   */
+  evictOnExpiry?: boolean;
+}
+
+/**
+ * Options when TTL is not specified - evictOnExpiry is not allowed.
+ */
+interface MemoizeOptionsWithoutTtl extends MemoizeOptionsBase {
+  /**
+   * TTL is not specified.
+   */
+  ttl?: undefined;
+
+  /**
+   * evictOnExpiry cannot be set without ttl.
+   *
+   * This prevents nonsensical configurations like:
+   * `@memoize({ evictOnExpiry: true })`  // Error: no TTL to evict on!
+   */
+  evictOnExpiry?: never;
+}
+
+/**
+ * Options for configuring the memoize decorator behavior.
+ *
+ * This is a discriminated union that enforces type safety:
+ * - When `ttl` is specified, `evictOnExpiry` may optionally be set
+ * - When `ttl` is not specified, `evictOnExpiry` cannot be set
+ *
+ * @example Valid configurations
+ * ```typescript
+ * @memoize({ ttl: 5000, evictOnExpiry: true })   // ✅
+ * @memoize({ ttl: 5000 })                        // ✅ evictOnExpiry defaults false
+ * @memoize({})                                   // ✅ No TTL, no eviction
+ * ```
+ *
+ * @example Invalid configuration (TypeScript error)
+ * ```typescript
+ * @memoize({ evictOnExpiry: true })              // ❌ Error: requires ttl!
+ * ```
+ */
+export type MemoizeOptions = MemoizeOptionsWithTtl | MemoizeOptionsWithoutTtl;
 
 /**
  * Context object provided by TC39 stage 3 decorators.
