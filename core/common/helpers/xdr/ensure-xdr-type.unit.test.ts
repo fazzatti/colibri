@@ -3,7 +3,7 @@ import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { xdr } from "stellar-sdk";
 import { ensureXdrType } from "@/common/helpers/xdr/ensure-xdr-type.ts";
 import { FAILED_TO_PARSE_XDR } from "@/common/helpers/xdr/error.ts";
-import { loadLedgerFixtures } from "@/_internal/tests/fixtures/rpc/get_ledgers/index.ts";
+import { loadLedgerFixtures } from "colibri-internal/tests/fixtures/rpc/get_ledgers/index.ts";
 
 describe("ensureXdrType", () => {
   // Use real fixture data for reliable XDR testing
