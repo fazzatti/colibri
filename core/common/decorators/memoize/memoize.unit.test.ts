@@ -735,10 +735,10 @@ describe("memoize decorator", disableSanitizeConfig, () => {
         const instance = new TestClass();
 
         assertEquals(instance.value, 1); // First computation
-        
+
         // Wait for TTL to expire
         await delay(110);
-        
+
         assertEquals(instance.value, 2); // Recomputes, schedules new timer
 
         // Wait less than TTL
@@ -761,26 +761,26 @@ describe("memoize decorator", disableSanitizeConfig, () => {
 
           @memoize({ ttl: 100, evictOnExpiry: true })
           get value(): string {
-            if (this.id === 'A') callCountA++;
+            if (this.id === "A") callCountA++;
             else callCountB++;
             return `value-${this.id}`;
           }
         }
 
-        const instanceA = new TestClass('A');
-        const instanceB = new TestClass('B');
+        const instanceA = new TestClass("A");
+        const instanceB = new TestClass("B");
 
         // Both cache
-        assertEquals(instanceA.value, 'value-A');
-        assertEquals(instanceB.value, 'value-B');
+        assertEquals(instanceA.value, "value-A");
+        assertEquals(instanceB.value, "value-B");
         assertEquals(callCountA, 1);
         assertEquals(callCountB, 1);
 
         // Advance and check both evict independently
         await delay(110);
 
-        assertEquals(instanceA.value, 'value-A');
-        assertEquals(instanceB.value, 'value-B');
+        assertEquals(instanceA.value, "value-A");
+        assertEquals(instanceB.value, "value-B");
         assertEquals(callCountA, 2); // Both re-computed
         assertEquals(callCountB, 2);
       });
@@ -837,24 +837,24 @@ describe("memoize decorator", disableSanitizeConfig, () => {
 
         // Cache arg=1
         assertEquals(instance.compute(1), 2);
-        assertEquals(callLog, ['compute(1)']);
+        assertEquals(callLog, ["compute(1)"]);
 
         // Advance past TTL - timer fires for arg=1
         await delay(110);
 
         // Recompute arg=1 (new timer starts)
         assertEquals(instance.compute(1), 2);
-        assertEquals(callLog, ['compute(1)', 'compute(1)']);
+        assertEquals(callLog, ["compute(1)", "compute(1)"]);
 
         // Advance less than TTL
         await delay(50);
         assertEquals(instance.compute(1), 2);
-        assertEquals(callLog, ['compute(1)', 'compute(1)']); // Still cached
+        assertEquals(callLog, ["compute(1)", "compute(1)"]); // Still cached
 
         // Advance for new timer to fire
         await delay(60);
         assertEquals(instance.compute(1), 2);
-        assertEquals(callLog, ['compute(1)', 'compute(1)', 'compute(1)']);
+        assertEquals(callLog, ["compute(1)", "compute(1)", "compute(1)"]);
       });
 
       it("should handle custom keyFn with evictOnExpiry", async () => {
@@ -864,7 +864,7 @@ describe("memoize decorator", disableSanitizeConfig, () => {
           @memoize({
             ttl: 100,
             evictOnExpiry: true,
-            keyFn: (obj: any) => obj.id
+            keyFn: (...args: unknown[]) => (args[0] as { id: string }).id,
           })
           fetchUser(user: { id: string; name: string }): string {
             callLog.push({ id: user.id });
@@ -875,19 +875,25 @@ describe("memoize decorator", disableSanitizeConfig, () => {
         const instance = new TestClass();
 
         // Cache with same ID (different name shouldn't matter)
-        assertEquals(instance.fetchUser({ id: '1', name: 'Alice' }), 'User: Alice');
-        assertEquals(instance.fetchUser({ id: '1', name: 'DIFFERENT' }), 'User: Alice');
+        assertEquals(
+          instance.fetchUser({ id: "1", name: "Alice" }),
+          "User: Alice"
+        );
+        assertEquals(
+          instance.fetchUser({ id: "1", name: "DIFFERENT" }),
+          "User: Alice"
+        );
         assertEquals(callLog.length, 1); // Cached by ID
 
         // Advance past TTL
         await delay(110);
 
         // Should recompute
-        assertEquals(instance.fetchUser({ id: '1', name: 'Bob' }), 'User: Bob');
+        assertEquals(instance.fetchUser({ id: "1", name: "Bob" }), "User: Bob");
         assertEquals(callLog.length, 2);
       });
 
-      it("should clear timer when method is re-called after expiry but before eviction", async () => {
+      it("should clear timer when method is re-called after expiry but before eviction", () => {
         const callLog: string[] = [];
 
         class TestClass {
@@ -902,12 +908,15 @@ describe("memoize decorator", disableSanitizeConfig, () => {
 
         // Cache arg=1 with timer scheduled for 5000ms
         assertEquals(instance.compute(1), 2);
-        assertEquals(callLog, ['compute(1)']);
+        assertEquals(callLog, ["compute(1)"]);
 
         // Manually manipulate timestamp to force expiry
         const symbols = Object.getOwnPropertySymbols(instance);
-        const timestampsMapSymbol = symbols.find(s => s.description?.includes('timestamps')); // plural!
+        const timestampsMapSymbol = symbols.find((s) =>
+          s.description?.includes("timestamps")
+        ); // plural!
         if (timestampsMapSymbol) {
+          // deno-lint-ignore no-explicit-any
           const timestampsMap = (instance as any)[timestampsMapSymbol];
           const key = JSON.stringify([1]); // Default keyFn result
           if (timestampsMap && timestampsMap.has(key)) {
@@ -915,10 +924,10 @@ describe("memoize decorator", disableSanitizeConfig, () => {
             timestampsMap.set(key, Date.now() - 6000);
           }
         }
-        
+
         // Recompute - clearTimeout path because timer still pending but isExpired=true
         assertEquals(instance.compute(1), 2);
-        assertEquals(callLog, ['compute(1)', 'compute(1)']);
+        assertEquals(callLog, ["compute(1)", "compute(1)"]);
       });
     });
 
@@ -961,7 +970,7 @@ describe("memoize decorator", disableSanitizeConfig, () => {
 
         // First cache
         assertEquals(instance.value, 1);
-        
+
         // Wait until expired, trigger recompute
         await delay(110);
         assertEquals(instance.value, 2); // New timer scheduled
@@ -976,7 +985,7 @@ describe("memoize decorator", disableSanitizeConfig, () => {
         assertEquals(callCount, 4);
       });
 
-      it("should clear timer when getter is re-accessed after expiry but before eviction", async () => {
+      it("should clear timer when getter is re-accessed after expiry but before eviction", () => {
         let callCount = 0;
         class TestClass {
           @memoize({ ttl: 5000, evictOnExpiry: true }) // Long TTL so timer doesn't fire quickly
@@ -990,16 +999,19 @@ describe("memoize decorator", disableSanitizeConfig, () => {
 
         // First cache - timer scheduled for 5000ms
         assertEquals(instance.value, 1);
-        
+
         // Manually manipulate the cached timestamp to make it appear expired
         // Find the timestamp symbol by iterating over the instance's symbols
         const symbols = Object.getOwnPropertySymbols(instance);
-        const timestampSymbol = symbols.find(s => s.description?.includes('timestamp'));
+        const timestampSymbol = symbols.find((s) =>
+          s.description?.includes("timestamp")
+        );
         if (timestampSymbol) {
           // Set timestamp to 6 seconds ago (past the 5000ms TTL)
+          // deno-lint-ignore no-explicit-any
           (instance as any)[timestampSymbol] = Date.now() - 6000;
         }
-        
+
         // This access sees isExpired=true (timestamp is 6s old, TTL is 5s)
         // But timer is still pending (won't fire for another ~5 seconds)
         // This hits the clearTimeout path!
