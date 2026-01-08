@@ -1,17 +1,13 @@
 import { Address, humanizeEvents, type xdr } from "stellar-sdk";
-import { ColibriError } from "@/error/index.ts";
 import { assert } from "@/common/assert/assert.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 import { StrKey } from "@/strkeys/index.ts";
-
-enum ErrorCode {
-  FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE = "HLP_XDR_01",
-  FAILED_TO_GET_AUTH_ENTRY_SIGNER = "HLP_XDR_02",
-  INVALID_AUTH_ENTRY_SIGNER_ADDRESS = "HLP_XDR_03",
-  FAILED_TO_PARSE_ERROR_RESULT = "HLP_XDR_04",
-}
-
-const baseErrorSource = "@colibri/core/helpers/xdr";
+import {
+  FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE,
+  FAILED_TO_GET_AUTH_ENTRY_SIGNER,
+  FAILED_TO_PARSE_ERROR_RESULT,
+  INVALID_AUTH_ENTRY_SIGNER_ADDRESS,
+} from "@/common/helpers/xdr/error.ts";
 
 export const getAddressTypeFromAuthEntry = (
   authEntry: xdr.SorobanAuthorizationEntry
@@ -19,17 +15,10 @@ export const getAddressTypeFromAuthEntry = (
   try {
     return authEntry.credentials().address().address().switch().name;
   } catch (e) {
-    throw ColibriError.fromUnknown(e, {
-      domain: "helpers",
-      source: baseErrorSource + "/getAddressTypeFromAuthEntry",
-      message: "Failed to get address type from SorobanAuthorizationEntry!",
-      code: ErrorCode.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE,
-      meta: {
-        data: {
-          authEntryXDR: authEntry.toXDR("base64"),
-        },
-      },
-    });
+    throw new FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE(
+      authEntry.toXDR("base64"),
+      e instanceof Error ? e : undefined
+    );
   }
 };
 
@@ -42,36 +31,15 @@ export const getAddressSignerFromAuthEntry = (
       authEntry.credentials().address().address()
     ).toString();
   } catch (e) {
-    const message =
-      "Failed to get address type from SorobanAuthorizationEntry!";
-
-    throw ColibriError.fromUnknown(e, {
-      domain: "helpers",
-      source: baseErrorSource + "/xdr",
-      message,
-      code: ErrorCode.FAILED_TO_GET_AUTH_ENTRY_SIGNER,
-      meta: {
-        data: {
-          authEntryXDR: authEntry.toXDR("base64"),
-        },
-      },
-    });
+    throw new FAILED_TO_GET_AUTH_ENTRY_SIGNER(
+      authEntry.toXDR("base64"),
+      e instanceof Error ? e : undefined
+    );
   }
 
   assert(
     StrKey.isValidEd25519PublicKey(signer) || StrKey.isValidContractId(signer),
-    ColibriError.unexpected({
-      domain: "helpers",
-      source: baseErrorSource + "/getAddressSignerFromAuthEntry",
-      message:
-        "Invalid signer address extracted from SorobanAuthorizationEntry!",
-      code: ErrorCode.INVALID_AUTH_ENTRY_SIGNER_ADDRESS,
-      meta: {
-        data: {
-          authEntryXDR: authEntry.toXDR("base64"),
-        },
-      },
-    })
+    new INVALID_AUTH_ENTRY_SIGNER_ADDRESS(authEntry.toXDR("base64"), signer)
   );
 
   return signer as Ed25519PublicKey;
@@ -115,16 +83,7 @@ export const parseErrorResult = (
       .flatMap((r) => r.toString());
   }
 
-  throw ColibriError.unexpected({
-    domain: "helpers",
-    source: baseErrorSource + "/parseErrorResult",
-    message: "Unexpected format of TransactionResult XDR!",
-    details: `The TransactionResult XDR does not match the expected format. See the meta section for the XDR provided.`,
-    code: ErrorCode.FAILED_TO_PARSE_ERROR_RESULT,
-    meta: {
-      data: {
-        errorResultXDR: softTryToXDR(() => errorResult.toXDR("base64")),
-      },
-    },
-  });
+  throw new FAILED_TO_PARSE_ERROR_RESULT(
+    softTryToXDR(() => errorResult.toXDR("base64"))
+  );
 };

@@ -4,7 +4,11 @@ import type {
   ScValTypeName,
   ScValRecord,
   ScValMap,
-} from "@/common/scval/types.ts";
+} from "@/common/helpers/xdr/types.ts";
+import {
+  UNSUPPORTED_SCVAL_TYPE,
+  UNKNOWN_SCVAL_TYPE,
+} from "@/common/helpers/xdr/error.ts";
 
 /**
  * Parse an xdr.ScVal into a TypeScript-friendly value.
@@ -100,7 +104,7 @@ export function parseScVal(scv: xdr.ScVal): ScValParsed {
       return { ledgerKeyType: "nonce" } as ScValRecord;
 
     default:
-      throw new Error(`Unsupported ScVal type: ${type.name}`);
+      throw new UNSUPPORTED_SCVAL_TYPE(type.name);
   }
 }
 
@@ -192,7 +196,7 @@ export function getScValTypeName(scv: xdr.ScVal): ScValTypeName {
     case xdr.ScValType.scvLedgerKeyNonce().value:
       return "ledgerKeyNonce";
     default:
-      throw new Error(`Unknown ScVal type: ${type.name}`);
+      throw new UNKNOWN_SCVAL_TYPE(type.name);
   }
 }
 

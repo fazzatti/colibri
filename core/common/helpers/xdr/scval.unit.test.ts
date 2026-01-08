@@ -14,12 +14,16 @@ import {
   isScValRecord,
   isScValMap,
   asUnion,
-} from "@/common/scval/index.ts";
+} from "@/common/helpers/xdr/scval.ts";
+import {
+  UNSUPPORTED_SCVAL_TYPE,
+  UNKNOWN_SCVAL_TYPE,
+} from "@/common/helpers/xdr/error.ts";
 import type {
   ScValParsed,
   ScValRecord,
   ScValMap,
-} from "@/common/scval/types.ts";
+} from "@/common/helpers/xdr/types.ts";
 
 describe("ScVal Parser", () => {
   describe("parseScVal", () => {
@@ -479,7 +483,7 @@ describe("ScVal Parser", () => {
 
         assertThrows(
           () => parseScVal(fakeScVal),
-          Error,
+          UNSUPPORTED_SCVAL_TYPE,
           "Unsupported ScVal type: scvUnknown"
         );
       });
@@ -648,7 +652,7 @@ describe("ScVal Parser", () => {
 
       assertThrows(
         () => getScValTypeName(fakeScVal),
-        Error,
+        UNKNOWN_SCVAL_TYPE,
         "Unknown ScVal type: scvUnknown"
       );
     });
