@@ -1,5 +1,11 @@
 {
-  "workspace": ["./core", "./event-streamer", "./sep10", "./plugins/*"],
+  "workspace": [
+    "./core",
+    "./event-streamer",
+    "./ledger-streamer",
+    "./sep10",
+    "./plugins/*"
+  ],
   "nodeModulesDir": "auto",
   "imports": {
     "jsr:@colibri/core": "./core",
