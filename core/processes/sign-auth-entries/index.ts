@@ -9,10 +9,8 @@ import type {
 import * as E from "@/processes/sign-auth-entries/error.ts";
 import { assert } from "@/common/assert/assert.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
-import {
-  getAddressSignerFromAuthEntry,
-  getAddressTypeFromAuthEntry,
-} from "@/common/helpers/xdr/general.ts";
+import { getAddressSignerFromAuthEntry } from "@/common/helpers/xdr/get-address-signer-from-auth-entry.ts";
+import { getAddressTypeFromAuthEntry } from "@/common/helpers/xdr/get-address-type-from-auth-entry.ts";
 import { ResultOrError } from "@/common/deferred/result-or-error.ts";
 
 const signAuthEntriesProcess = async (

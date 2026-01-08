@@ -1,7 +1,7 @@
 import type { xdr } from "stellar-sdk";
 import type { EventId } from "@/event/event-id/index.ts";
 import type { ContractId } from "@/strkeys/types.ts";
-import type { ScValParsed } from "@/common/scval/types.ts";
+import type { ScValParsed } from "@/common/helpers/xdr/types.ts";
 
 export interface IEvent {
   id: EventId;

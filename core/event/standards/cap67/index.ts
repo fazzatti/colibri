@@ -5,8 +5,8 @@
  * use a map structure for the event value instead of a simple i128.
  */
 
-import type { ScValParsed, ScValRecord } from "@/common/scval/types.ts";
-import { isScValRecord } from "@/common/scval/index.ts";
+import type { ScValParsed, ScValRecord } from "@/common/helpers/xdr/types.ts";
+import { isScValRecord } from "@/common/helpers/xdr/scval.ts";
 
 /**
  * Type guard to check if value is a muxed event data structure.
