@@ -5,13 +5,14 @@
     "jsr:@colibri/core": "./core",
     "colibri-internal/": "./_internal/",
     "colibri-tools/": "./_tools/",
-    "stellar-sdk": "npm:@stellar/stellar-sdk@^14.3.3",
+    "stellar-sdk": "npm:@stellar/stellar-sdk@^14.4.3",
     "buffer": "npm:buffer@^6.0.3",
     "crypto": "node:crypto",
     "convee": "jsr:@fifo/convee@^0.9.2",
     "@std/toml": "jsr:@std/toml@^1.0.11",
     "@std/assert": "jsr:@std/assert@^1.0.0",
-    "@std/testing": "jsr:@std/testing@^1.0.0"
+    "@std/testing": "jsr:@std/testing@^1.0.0",
+    "@std/expect": "jsr:@std/expect@^1.0.0"
   },
   "tasks": {
     "check": "deno check *",
