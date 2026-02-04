@@ -1,3 +1,5 @@
+// deno-coverage-ignore-file
+
 import { load } from "@std/dotenv";
 
 const env = await load(); // Reads from .env file
