@@ -1,4 +1,5 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
+import { QUASAR_API_KEY } from "colibri-internal/env/index.ts";
 import {
   getLedgerFixture,
   loadMultiVersionFixtures,
@@ -66,8 +67,7 @@ describe(
   disableSanitizeConfig,
 
   () => {
-    const networkConfig = NetworkProviders.Lightsail.MainNet();
-    const archiveRpcUrl = "https://archive-rpc.lightsail.network/";
+    const networkConfig = NetworkProviders.Lightsail.MainNet(QUASAR_API_KEY);
 
     let ledgerStreamer: LedgerStreamer;
 
@@ -93,7 +93,7 @@ describe(
       it("creates LedgerStreamer with archive RPC", () => {
         ledgerStreamer = new LedgerStreamer({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: archiveRpcUrl,
+          archiveRpcUrl: networkConfig.archiveRpcUrl,
         });
 
         assertEquals(ledgerStreamer.archiveRpc !== undefined, true);
@@ -104,7 +104,7 @@ describe(
           rpcUrl: networkConfig.rpcUrl,
         });
 
-        ledgerStreamer.setArchiveRpc(archiveRpcUrl);
+        ledgerStreamer.setArchiveRpc(networkConfig.archiveRpcUrl);
 
         assertEquals(ledgerStreamer.archiveRpc !== undefined, true);
       });
@@ -236,7 +236,7 @@ describe(
 
         ledgerStreamer = new LedgerStreamer({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: archiveRpcUrl,
+          archiveRpcUrl: networkConfig.archiveRpcUrl,
           options: {
             skipLedgerWaitIfBehind: true,
           },
@@ -257,7 +257,7 @@ describe(
 
         ledgerStreamer = new LedgerStreamer({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: archiveRpcUrl,
+          archiveRpcUrl: networkConfig.archiveRpcUrl,
           options: {
             skipLedgerWaitIfBehind: true,
           },
@@ -277,7 +277,7 @@ describe(
 
         ledgerStreamer = new LedgerStreamer({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: archiveRpcUrl,
+          archiveRpcUrl: networkConfig.archiveRpcUrl,
           options: {
             skipLedgerWaitIfBehind: true,
           },
@@ -290,11 +290,11 @@ describe(
 
         assertEquals(
           ledgers[0].ledgerCloseTime,
-          String(FIXTURE_V2_FIRST.ledgerCloseTime)
+          String(FIXTURE_V2_FIRST.ledgerCloseTime),
         );
         assertEquals(
           ledgers[1].ledgerCloseTime,
-          String(FIXTURE_V2_SECOND.ledgerCloseTime)
+          String(FIXTURE_V2_SECOND.ledgerCloseTime),
         );
       });
 
@@ -303,7 +303,7 @@ describe(
 
         ledgerStreamer = new LedgerStreamer({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: archiveRpcUrl,
+          archiveRpcUrl: networkConfig.archiveRpcUrl,
           options: {
             skipLedgerWaitIfBehind: true,
           },
@@ -319,7 +319,7 @@ describe(
         assertEquals(ledgers[0].hash, FIXTURE_V0.hash);
         assertEquals(
           ledgers[0].ledgerCloseTime,
-          String(FIXTURE_V0.ledgerCloseTime)
+          String(FIXTURE_V0.ledgerCloseTime),
         );
         assertEquals(ledgers[0].version, "v0");
       });
@@ -329,7 +329,7 @@ describe(
 
         ledgerStreamer = new LedgerStreamer({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: archiveRpcUrl,
+          archiveRpcUrl: networkConfig.archiveRpcUrl,
           options: {
             skipLedgerWaitIfBehind: true,
           },
@@ -345,7 +345,7 @@ describe(
         assertEquals(ledgers[0].hash, FIXTURE_V1.hash);
         assertEquals(
           ledgers[0].ledgerCloseTime,
-          String(FIXTURE_V1.ledgerCloseTime)
+          String(FIXTURE_V1.ledgerCloseTime),
         );
         assertEquals(ledgers[0].version, "v1");
       });
@@ -355,7 +355,7 @@ describe(
 
         ledgerStreamer = new LedgerStreamer({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: archiveRpcUrl,
+          archiveRpcUrl: networkConfig.archiveRpcUrl,
           options: {
             skipLedgerWaitIfBehind: true,
           },
@@ -383,7 +383,7 @@ describe(
 
         ledgerStreamer = new LedgerStreamer({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: archiveRpcUrl,
+          archiveRpcUrl: networkConfig.archiveRpcUrl,
           options: {
             skipLedgerWaitIfBehind: true,
           },
@@ -417,7 +417,7 @@ describe(
 
         ledgerStreamer = new LedgerStreamer({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: archiveRpcUrl,
+          archiveRpcUrl: networkConfig.archiveRpcUrl,
           options: {
             skipLedgerWaitIfBehind: true,
           },
@@ -439,7 +439,7 @@ describe(
 
           ledgerStreamer = new LedgerStreamer({
             rpcUrl: networkConfig.rpcUrl,
-            archiveRpcUrl: archiveRpcUrl,
+            archiveRpcUrl: networkConfig.archiveRpcUrl,
             options: {
               skipLedgerWaitIfBehind: true,
             },
@@ -454,12 +454,12 @@ describe(
           assertEquals(
             ledgers[0].sequence,
             fixture.sequence,
-            `${version} sequence mismatch`
+            `${version} sequence mismatch`,
           );
           assertEquals(
             ledgers[0].hash,
             fixture.hash,
-            `${version} hash mismatch`
+            `${version} hash mismatch`,
           );
         }
       });
@@ -478,7 +478,7 @@ describe(
 
         ledgerStreamer = new LedgerStreamer({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: archiveRpcUrl,
+          archiveRpcUrl: networkConfig.archiveRpcUrl,
           options: {
             skipLedgerWaitIfBehind: true,
           },
@@ -502,5 +502,5 @@ describe(
         assertEquals(ledgers2[0].sequence, FIXTURE_V2_SECOND.sequence);
       });
     });
-  }
+  },
 );

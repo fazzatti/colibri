@@ -1,4 +1,6 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
+import { QUASAR_API_KEY } from "colibri-internal/env/index.ts";
+
 import { assertEquals } from "@std/assert";
 import { afterEach, beforeAll, describe, it } from "@std/testing/bdd";
 import {
@@ -75,8 +77,7 @@ describe(
   disableSanitizeConfig,
 
   () => {
-    const networkConfig = NetworkProviders.Lightsail.MainNet();
-    const archiveRpcUrl = "https://archive-rpc.lightsail.network/";
+    const networkConfig = NetworkProviders.Lightsail.MainNet(QUASAR_API_KEY);
 
     let eventStreamer: EventStreamer;
 
@@ -120,7 +121,7 @@ describe(
       it("creates EventStreamer with archive RPC", () => {
         eventStreamer = new EventStreamer({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: archiveRpcUrl,
+          archiveRpcUrl: networkConfig.archiveRpcUrl,
         });
 
         assertEquals(eventStreamer.archiveRpc !== undefined, true);
@@ -131,7 +132,7 @@ describe(
           rpcUrl: networkConfig.rpcUrl,
         });
 
-        eventStreamer.setArchiveRpc(archiveRpcUrl);
+        eventStreamer.setArchiveRpc(networkConfig.archiveRpcUrl);
 
         assertEquals(eventStreamer.archiveRpc !== undefined, true);
       });
@@ -265,7 +266,7 @@ describe(
 
         eventStreamer = new EventStreamer({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: archiveRpcUrl,
+          archiveRpcUrl: networkConfig.archiveRpcUrl,
           options: {
             skipLedgerWaitIfBehind: true,
           },
@@ -289,7 +290,7 @@ describe(
 
         eventStreamer = new EventStreamer({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: archiveRpcUrl,
+          archiveRpcUrl: networkConfig.archiveRpcUrl,
           filters: [filter],
           options: {
             skipLedgerWaitIfBehind: true,
@@ -304,13 +305,13 @@ describe(
         assertEquals(events.length, 9);
         assertEquals(
           events.every(
-            (e) => getContractIdString(e) === KALE_CONTRACT_ID_MAINNET
+            (e) => getContractIdString(e) === KALE_CONTRACT_ID_MAINNET,
           ),
-          true
+          true,
         );
         assertEquals(
           events.every((e) => SACEvents.MintEvent.is(e)),
-          true
+          true,
         );
       });
 
@@ -324,7 +325,7 @@ describe(
 
         eventStreamer = new EventStreamer({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: archiveRpcUrl,
+          archiveRpcUrl: networkConfig.archiveRpcUrl,
           filters: [filter],
           options: {
             skipLedgerWaitIfBehind: true,
@@ -361,7 +362,7 @@ describe(
 
         eventStreamer = new EventStreamer({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: archiveRpcUrl,
+          archiveRpcUrl: networkConfig.archiveRpcUrl,
           filters: [kaleFilter],
           options: {
             skipLedgerWaitIfBehind: true,
@@ -387,9 +388,9 @@ describe(
         assertEquals(events2.length, 200);
         assertEquals(
           events1.every(
-            (e) => getContractIdString(e) === KALE_CONTRACT_ID_MAINNET
+            (e) => getContractIdString(e) === KALE_CONTRACT_ID_MAINNET,
           ),
-          true
+          true,
         );
       });
 
@@ -406,7 +407,7 @@ describe(
 
         eventStreamer = new EventStreamer({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: archiveRpcUrl,
+          archiveRpcUrl: networkConfig.archiveRpcUrl,
           filters: [filter],
           options: {
             skipLedgerWaitIfBehind: true,
@@ -432,5 +433,5 @@ describe(
         assertEquals(unfilteredEvents.length, 1098);
       });
     });
-  }
+  },
 );

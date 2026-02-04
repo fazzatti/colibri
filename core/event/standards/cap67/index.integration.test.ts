@@ -12,6 +12,8 @@
  */
 
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
+import { QUASAR_API_KEY } from "colibri-internal/env/index.ts";
+
 import { assertEquals, assertExists } from "@std/assert";
 import { describe, it, afterEach } from "@std/testing/bdd";
 import {
@@ -47,7 +49,7 @@ describe(
   disableSanitizeConfig,
 
   () => {
-    const networkConfig = NetworkProviders.Lightsail.MainNet();
+    const networkConfig = NetworkProviders.Lightsail.MainNet(QUASAR_API_KEY);
 
     let eventStreamer: EventStreamer;
 
@@ -100,21 +102,21 @@ describe(
       assertEquals(
         events.length,
         EXPECTED_TRANSFER_COUNT,
-        `Expected ${EXPECTED_TRANSFER_COUNT} XLM transfer events in ledger ${MUXED_TRANSFER_LEDGER}`
+        `Expected ${EXPECTED_TRANSFER_COUNT} XLM transfer events in ledger ${MUXED_TRANSFER_LEDGER}`,
       );
 
       // Verify all events were successfully parsed as TransferEvents
       assertEquals(
         transferEvents.length,
         EXPECTED_TRANSFER_COUNT,
-        "All events should be parseable as SAC TransferEvents (including muxed)"
+        "All events should be parseable as SAC TransferEvents (including muxed)",
       );
 
       // Verify we found at least one muxed transfer
       assertEquals(
         muxedTransfers.length > 0,
         true,
-        "Expected at least one muxed transfer event in ledger 60044284"
+        "Expected at least one muxed transfer event in ledger 60044284",
       );
     });
 
@@ -148,25 +150,25 @@ describe(
             assertEquals(
               typeof transfer.amount,
               "bigint",
-              "Amount should be bigint"
+              "Amount should be bigint",
             );
             assertEquals(
               transfer.amount > 0n,
               true,
-              "Amount should be positive"
+              "Amount should be positive",
             );
 
             // Verify muxed ID is present
             assertExists(
               transfer.toMuxedId,
-              "Muxed transfer should have toMuxedId"
+              "Muxed transfer should have toMuxedId",
             );
 
             // Verify asset is native
             assertEquals(
               transfer.asset,
               "native",
-              "XLM transfers should have native asset"
+              "XLM transfers should have native asset",
             );
 
             eventStreamer.stop();
@@ -182,7 +184,7 @@ describe(
       assertEquals(
         foundMuxedTransfer,
         true,
-        "Should find at least one muxed transfer event"
+        "Should find at least one muxed transfer event",
       );
     });
 
@@ -231,27 +233,27 @@ describe(
       assertEquals(
         failedIsCheckCount,
         0,
-        "All transfer events should pass TransferEvent.is() check"
+        "All transfer events should pass TransferEvent.is() check",
       );
 
       // We should have both types
       assertEquals(
         simpleTransferCount > 0,
         true,
-        "Should have simple i128 transfers"
+        "Should have simple i128 transfers",
       );
       assertEquals(
         muxedTransferCount > 0,
         true,
-        "Should have muxed map transfers"
+        "Should have muxed map transfers",
       );
 
       // Total should match expected
       assertEquals(
         simpleTransferCount + muxedTransferCount,
         EXPECTED_TRANSFER_COUNT,
-        "Total transfers should match expected count"
+        "Total transfers should match expected count",
       );
     });
-  }
+  },
 );
