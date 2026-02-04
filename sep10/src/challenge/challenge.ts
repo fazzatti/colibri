@@ -24,6 +24,8 @@ import type {
   ChallengeTimeBounds,
 } from "@/types.ts";
 import * as E from "@/challenge/error.ts";
+import { isChallengeTransaction as _isChallengeTransaction } from "@/utils/is-challenge-transaction.ts";
+import { isChallengeXDR as _isChallengeXDR } from "@/utils/is-challenge-xdr.ts";
 
 /** Suffix for the home domain auth key */
 const AUTH_KEY_SUFFIX = " auth";
@@ -445,6 +447,13 @@ export class SEP10Challenge {
   // ===========================================================================
 
   /**
+   * Default time tolerance in seconds for time bounds validation.
+   * Safely covers typical NTP drift while being negligible compared
+   * to the standard 15-minute challenge validity window.
+   */
+  static readonly DEFAULT_TIME_TOLERANCE = 5;
+
+  /**
    * Verifies the challenge transaction time bounds.
    *
    * @param options - Time bounds verification options
@@ -452,16 +461,27 @@ export class SEP10Challenge {
    *
    * @example
    * ```typescript
-   * challenge.verifyTimeBounds(); // uses current time
+   * challenge.verifyTimeBounds(); // uses current time with default 5s tolerance
    * challenge.verifyTimeBounds({ now: new Date(), allowExpired: true });
+   * challenge.verifyTimeBounds({ timeTolerance: 10 }); // 10 second tolerance
+   * challenge.verifyTimeBounds({ skipTimeValidation: true }); // skip validation
    * ```
    */
   verifyTimeBounds(
-    options: Pick<VerifyChallengeOptions, "allowExpired" | "now"> = {}
+    options: Pick<
+      VerifyChallengeOptions,
+      "allowExpired" | "now" | "timeTolerance" | "skipTimeValidation"
+    > = {}
   ): void {
-    const { allowExpired = false, now = new Date() } = options;
+    const {
+      allowExpired = false,
+      now = new Date(),
+      timeTolerance = SEP10Challenge.DEFAULT_TIME_TOLERANCE,
+      skipTimeValidation = false,
+    } = options;
 
-    if (allowExpired) {
+    // Skip all time validation if requested (for testing scenarios)
+    if (skipTimeValidation || allowExpired) {
       return;
     }
 
@@ -469,7 +489,13 @@ export class SEP10Challenge {
     const minTime = Math.floor(this._timeBounds.minTime.getTime() / 1000);
     const maxTime = Math.floor(this._timeBounds.maxTime.getTime() / 1000);
 
-    if (nowSeconds < minTime || nowSeconds > maxTime) {
+    // Apply tolerance in both directions:
+    // - Accept challenges whose minTime is up to N seconds in the future (client clock behind)
+    // - Accept challenges whose maxTime was up to N seconds ago (client clock ahead)
+    const adjustedMinTime = minTime - timeTolerance;
+    const adjustedMaxTime = maxTime + timeTolerance;
+
+    if (nowSeconds < adjustedMinTime || nowSeconds > adjustedMaxTime) {
       throw new E.CHALLENGE_EXPIRED(minTime, maxTime, nowSeconds);
     }
   }
@@ -616,10 +642,22 @@ export class SEP10Challenge {
    * ```
    */
   verify(serverPublicKey: string, options: VerifyChallengeOptions = {}): void {
-    const { homeDomain, webAuthDomain, allowExpired, now } = options;
+    const {
+      homeDomain,
+      webAuthDomain,
+      allowExpired,
+      now,
+      timeTolerance,
+      skipTimeValidation,
+    } = options;
 
     // 1. Check time bounds
-    this.verifyTimeBounds({ allowExpired, now });
+    this.verifyTimeBounds({
+      allowExpired,
+      now,
+      timeTolerance,
+      skipTimeValidation,
+    });
 
     // 2. Verify server signature
     this.verifyServerSignature(serverPublicKey);
@@ -735,5 +773,47 @@ export class SEP10Challenge {
       isExpired: this.isExpired,
       signatureCount: this._transaction.signatures.length,
     };
+  }
+
+  // ===========================================================================
+  // Static Utilities
+  // ===========================================================================
+
+  /**
+   * Checks if a Transaction object has the structure of a SEP-10 challenge.
+   * This performs structural validation only (no signature verification).
+   *
+   * @param transaction - The Transaction object to check
+   * @returns true if the transaction has challenge structure, false otherwise
+   *
+   * @example
+   * ```typescript
+   * if (SEP10Challenge.isChallengeTransaction(tx)) {
+   *   const challenge = SEP10Challenge.fromTransaction(tx, networkPassphrase);
+   * }
+   * ```
+   */
+  static isChallengeTransaction(transaction: Transaction): boolean {
+    return _isChallengeTransaction(transaction);
+  }
+
+  /**
+   * Checks if an XDR string can be parsed as a SEP-10 challenge.
+   * This attempts to decode the XDR and validate the challenge structure.
+   * Does not verify signatures.
+   *
+   * @param xdr - Base64-encoded transaction envelope XDR
+   * @param networkPassphrase - The Stellar network passphrase
+   * @returns true if the XDR is a valid challenge structure, false otherwise
+   *
+   * @example
+   * ```typescript
+   * if (SEP10Challenge.isChallengeXDR(xdrString, Networks.TESTNET)) {
+   *   const challenge = SEP10Challenge.fromXDR(xdrString, Networks.TESTNET);
+   * }
+   * ```
+   */
+  static isChallengeXDR(xdr: string, networkPassphrase: string): boolean {
+    return _isChallengeXDR(xdr, networkPassphrase);
   }
 }

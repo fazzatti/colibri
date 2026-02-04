@@ -1,3 +1,5 @@
+// deno-coverage-ignore-file
+
 import { Spec } from "stellar-sdk/contract";
 export const TYPES_HARNESS_SPEC = new Spec([
   "AAAAAQAAAAAAAAAAAAAABFVzZXIAAAADAAAAAAAAAAJpZAAAAAAABAAAAAAAAAAEbmFtZQAAABAAAAAAAAAABHRhZ3MAAAPqAAAAEQ==",

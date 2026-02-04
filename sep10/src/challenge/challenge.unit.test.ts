@@ -515,6 +515,93 @@ describe("SEP10Challenge", () => {
       challenge.verifyTimeBounds({ allowExpired: true });
     });
 
+    it("verifyTimeBounds applies time tolerance for recently expired challenge", () => {
+      // Create a challenge that expired 3 seconds ago
+      const xdr = createValidChallenge({ timeout: -3 });
+      const challenge = SEP10Challenge.fromXDR(xdr, NETWORK_PASSPHRASE);
+
+      // With 5 second tolerance, a challenge expired 3 seconds ago should pass
+      // (3 < 5, so it's within the acceptable tolerance window)
+      challenge.verifyTimeBounds({ timeTolerance: 5 });
+    });
+
+    it("verifyTimeBounds rejects challenge expired beyond tolerance", () => {
+      // Create a challenge that expired 10 seconds ago
+      const xdr = createValidChallenge({ timeout: -10 });
+      const challenge = SEP10Challenge.fromXDR(xdr, NETWORK_PASSPHRASE);
+
+      // Default tolerance of 5 seconds should reject
+      assertThrows(
+        () => challenge.verifyTimeBounds({ timeTolerance: 5 }),
+        E.CHALLENGE_EXPIRED
+      );
+    });
+
+    it("verifyTimeBounds applies time tolerance for future minTime (client clock behind)", () => {
+      // Simulate a challenge where minTime is 3 seconds in the future
+      // (as if client clock is 3 seconds behind server)
+      const now = new Date();
+      const clientTimeBehind = new Date(now.getTime() - 3000); // Client thinks it's 3s earlier
+
+      const xdr = createValidChallenge({ timeout: 900 });
+      const challenge = SEP10Challenge.fromXDR(xdr, NETWORK_PASSPHRASE);
+
+      // With 5 second tolerance, should pass
+      challenge.verifyTimeBounds({ now: clientTimeBehind, timeTolerance: 5 });
+    });
+
+    it("verifyTimeBounds rejects challenge when minTime is too far in future", () => {
+      // Simulate client clock 10 seconds behind server
+      const now = new Date();
+      const clientTimeFarBehind = new Date(now.getTime() - 10000);
+
+      const xdr = createValidChallenge({ timeout: 900 });
+      const challenge = SEP10Challenge.fromXDR(xdr, NETWORK_PASSPHRASE);
+
+      // With 5 second tolerance, should fail (minTime is 10s in future from client POV)
+      assertThrows(
+        () =>
+          challenge.verifyTimeBounds({
+            now: clientTimeFarBehind,
+            timeTolerance: 5,
+          }),
+        E.CHALLENGE_EXPIRED
+      );
+    });
+
+    it("verifyTimeBounds skipTimeValidation bypasses all time checks", () => {
+      // Create a very expired challenge
+      const xdr = createValidChallenge({ timeout: -1000 });
+      const challenge = SEP10Challenge.fromXDR(xdr, NETWORK_PASSPHRASE);
+
+      // Should not throw with skipTimeValidation
+      challenge.verifyTimeBounds({ skipTimeValidation: true });
+    });
+
+    it("verifyTimeBounds uses default tolerance of 5 seconds", () => {
+      // Verify the static constant
+      assertEquals(SEP10Challenge.DEFAULT_TIME_TOLERANCE, 5);
+
+      // Create a challenge that expired 4 seconds ago - should pass with default tolerance
+      const xdr = createValidChallenge({ timeout: -4 });
+      const challenge = SEP10Challenge.fromXDR(xdr, NETWORK_PASSPHRASE);
+
+      // Default tolerance should accept (4 < 5)
+      challenge.verifyTimeBounds();
+    });
+
+    it("verifyTimeBounds with zero tolerance is strict", () => {
+      // Create a challenge that expired 1 second ago
+      const xdr = createValidChallenge({ timeout: -1 });
+      const challenge = SEP10Challenge.fromXDR(xdr, NETWORK_PASSPHRASE);
+
+      // Zero tolerance should reject
+      assertThrows(
+        () => challenge.verifyTimeBounds({ timeTolerance: 0 }),
+        E.CHALLENGE_EXPIRED
+      );
+    });
+
     it("verifyServerSignature passes for valid signature", () => {
       const xdr = createValidChallenge();
       const challenge = SEP10Challenge.fromXDR(xdr, NETWORK_PASSPHRASE);
@@ -1368,6 +1455,90 @@ describe("Error Classes Coverage", () => {
         "Challenge is missing a signature from account 'GMISSING...'."
       );
       assertEquals(error.code, E.Code.MISSING_SIGNATURE);
+    });
+  });
+});
+
+// =============================================================================
+// Static Utility Methods Tests
+// =============================================================================
+
+describe("SEP10Challenge Static Utilities", () => {
+  describe("isChallengeTransaction", () => {
+    it("returns true for valid challenge transaction", () => {
+      const challenge = SEP10Challenge.build({
+        serverAccount: SERVER_PUBLIC_KEY,
+        clientAccount: CLIENT_PUBLIC_KEY,
+        homeDomain: HOME_DOMAIN,
+        networkPassphrase: NETWORK_PASSPHRASE,
+        webAuthDomain: WEB_AUTH_DOMAIN,
+      });
+      assertEquals(
+        SEP10Challenge.isChallengeTransaction(challenge.transaction),
+        true
+      );
+    });
+
+    it("returns false for non-challenge transaction", () => {
+      const account = new Account(SERVER_PUBLIC_KEY, "0");
+      const builder = new TransactionBuilder(account, {
+        fee: "100",
+        networkPassphrase: NETWORK_PASSPHRASE,
+        timebounds: {
+          minTime: 0,
+          maxTime: Math.floor(Date.now() / 1000) + 900,
+        },
+      });
+      builder.addOperation(
+        Operation.payment({
+          destination: CLIENT_PUBLIC_KEY,
+          asset: Asset.native(),
+          amount: "10",
+        })
+      );
+      const tx = builder.build();
+      assertEquals(SEP10Challenge.isChallengeTransaction(tx), false);
+    });
+  });
+
+  describe("isChallengeXDR", () => {
+    it("returns true for valid challenge XDR", () => {
+      const xdr = createValidChallenge();
+      assertEquals(
+        SEP10Challenge.isChallengeXDR(xdr, NETWORK_PASSPHRASE),
+        true
+      );
+    });
+
+    it("returns false for invalid XDR", () => {
+      assertEquals(
+        SEP10Challenge.isChallengeXDR("invalid", NETWORK_PASSPHRASE),
+        false
+      );
+    });
+
+    it("returns false for non-challenge transaction XDR", () => {
+      const account = new Account(SERVER_PUBLIC_KEY, "0");
+      const builder = new TransactionBuilder(account, {
+        fee: "100",
+        networkPassphrase: NETWORK_PASSPHRASE,
+        timebounds: {
+          minTime: 0,
+          maxTime: Math.floor(Date.now() / 1000) + 900,
+        },
+      });
+      builder.addOperation(
+        Operation.payment({
+          destination: CLIENT_PUBLIC_KEY,
+          asset: Asset.native(),
+          amount: "10",
+        })
+      );
+      const tx = builder.build();
+      assertEquals(
+        SEP10Challenge.isChallengeXDR(tx.toXDR(), NETWORK_PASSPHRASE),
+        false
+      );
     });
   });
 });
