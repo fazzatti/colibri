@@ -45,9 +45,9 @@
       - [SAC](events/standardized-events/sac.md)
       - [SEP-41](events/standardized-events/sep-41.md)
 
-## @colibri/event-streamer
+## @colibri/rpc-streamer
 
-- [Event Streamer](packages/event-streamer.md)
+- [RPC Streamer](packages/rpc-streamer.md)
 
 ## @colibri/sep10
 

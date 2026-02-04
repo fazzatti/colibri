@@ -77,7 +77,7 @@ if (transfer.hasMuxedId()) {
 ## Example
 
 ```typescript
-import { EventStreamer } from "@colibri/event-streamer";
+import { RPCStreamer } from "@colibri/rpc-streamer";
 import { EventFilter, EventType, SACEvents } from "@colibri/core";
 
 const filter = new EventFilter({
@@ -85,7 +85,7 @@ const filter = new EventFilter({
   topics: [SACEvents.TransferEvent.toTopicFilter()],
 });
 
-const streamer = new EventStreamer({
+const streamer = RPCStreamer.event({
   rpcUrl: "https://soroban-testnet.stellar.org",
   filters: [filter],
 });

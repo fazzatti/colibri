@@ -126,7 +126,7 @@ const specificFilter = SACEvents.TransferEvent.toTopicFilter({
 You can use multiple filters to capture different event types:
 
 ```typescript
-import { EventStreamer } from "@colibri/event-streamer";
+import { RPCStreamer } from "@colibri/rpc-streamer";
 import { EventFilter, SACEvents } from "@colibri/core";
 
 const transferFilter = new EventFilter({
@@ -141,7 +141,7 @@ const mintFilter = new EventFilter({
   topics: [SACEvents.MintEvent.toTopicFilter()],
 });
 
-const streamer = new EventStreamer({
+const streamer = RPCStreamer.event({
   rpcUrl: "...",
   filters: [transferFilter, mintFilter], // Both filters
 });
@@ -271,4 +271,4 @@ if (StrKey.isContractId(contractId)) {
 
 - [SAC Events](standardized-events/sac.md) — Stellar Asset Contract event templates
 - [SEP-41 Events](standardized-events/sep-41.md) — Token interface event templates
-- [Event Streamer](../packages/event-streamer.md) — Use filters with streaming
+- [RPC Streamer](../packages/rpc-streamer.md) — Use filters with streaming

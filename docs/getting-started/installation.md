@@ -16,8 +16,8 @@ Add packages directly to your project using `deno add`:
 # Core package (required)
 deno add jsr:@colibri/core
 
-# Event Streamer (optional)
-deno add jsr:@colibri/event-streamer
+# RPC Streamer (optional)
+deno add jsr:@colibri/rpc-streamer
 
 # Fee Bump Plugin (optional)
 deno add jsr:@colibri/plugin-fee-bump
@@ -28,9 +28,9 @@ This will add the packages to your `deno.json` imports map:
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^0.14.0",
-    "@colibri/event-streamer": "jsr:@colibri/event-streamer@^0.5.0",
-    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.6.0"
+    "@colibri/core": "jsr:@colibri/core@^0.16.0",
+    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.1.0",
+    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.8.0"
   }
 }
 ```
@@ -40,8 +40,8 @@ This will add the packages to your `deno.json` imports map:
 You can also import directly from JSR URLs:
 
 ```typescript
-import { NetworkConfig, LocalSigner } from "jsr:@colibri/core@^0.14.0";
-import { EventStreamer } from "jsr:@colibri/event-streamer@^0.5.0";
+import { NetworkConfig, LocalSigner } from "jsr:@colibri/core@^0.16.0";
+import { RPCStreamer } from "jsr:@colibri/rpc-streamer@^0.1.0";
 ```
 
 ## Package Overview
@@ -50,9 +50,9 @@ import { EventStreamer } from "jsr:@colibri/event-streamer@^0.5.0";
 
 The foundation package containing all core primitives for Stellar and Soroban development: account management, contract client, network configuration, transaction pipelines and processes, event parsing, signers, and typed error handling.
 
-### [@colibri/event-streamer](../packages/event-streamer.md)
+### [@colibri/rpc-streamer](../packages/rpc-streamer.md)
 
-Real-time and historical event ingestion with support for live streaming, archive fetching, and automatic mode switching.
+Generic RPC streaming framework for real-time and historical data ingestion (events, ledgers, or custom data types) with support for live streaming, archive fetching, and automatic mode switching.
 
 ### [Plugins](../packages/plugins/)
 

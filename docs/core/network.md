@@ -180,5 +180,5 @@ const result = await pipeline.run({
 ## Next Steps
 
 - [Pipelines](pipelines/) — Use network config in transactions
-- [Event Streamer](../packages/event-streamer.md) — Stream events from the network
+- [RPC Streamer](../packages/rpc-streamer.md) — Stream events and ledgers from the network
 - [Tools](tools/) — Use Friendbot for TestNet funding

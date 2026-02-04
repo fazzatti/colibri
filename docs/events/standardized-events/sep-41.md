@@ -66,7 +66,7 @@ SEP41Events.TransferEvent.toTopicFilter({ to: "GABC..." });
 ## Example
 
 ```typescript
-import { EventStreamer } from "@colibri/event-streamer";
+import { RPCStreamer } from "@colibri/rpc-streamer";
 import { EventFilter, EventType, SEP41Events } from "@colibri/core";
 
 const MY_TOKEN = "CABC..."; // your custom token contract
@@ -77,7 +77,7 @@ const filter = new EventFilter({
   topics: [SEP41Events.TransferEvent.toTopicFilter()],
 });
 
-const streamer = new EventStreamer({
+const streamer = RPCStreamer.event({
   rpcUrl: "https://soroban-testnet.stellar.org",
   filters: [filter],
 });
