@@ -2410,7 +2410,7 @@ describe("RPCStreamer stopLedger guard paths (forced coverage)", () => {
       rpcUrl: TEST_RPC_URL,
       archiveRpcUrl: TEST_ARCHIVE_RPC_URL,
       ingestLive: createMockLiveIngest<string>(["live1"]),
-      ingestArchive: async (_rpc, start, stop, onData, context) => {
+      ingestArchive: async (_rpc, _start, stop, onData, context) => {
         // Call isRunning to exercise the callback
         isRunningCalled = context.isRunning();
         await onData("archive1");

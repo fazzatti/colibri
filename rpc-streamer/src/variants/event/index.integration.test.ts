@@ -10,7 +10,6 @@ import {
   SACEvents,
 } from "@colibri/core";
 import { xdr } from "stellar-sdk";
-import type { Api } from "stellar-sdk/rpc";
 import { RPCStreamer } from "@/streamer.ts";
 
 // =============================================================================

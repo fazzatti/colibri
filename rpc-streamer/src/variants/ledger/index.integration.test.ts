@@ -7,7 +7,6 @@ import {
 import { assertEquals, assertExists } from "@std/assert";
 import { afterEach, describe, it } from "@std/testing/bdd";
 import { type Ledger, NetworkProviders } from "@colibri/core";
-import type { Api } from "stellar-sdk/rpc";
 import { RPCStreamer } from "@/streamer.ts";
 
 // =============================================================================
@@ -30,7 +29,7 @@ const FIXTURE_V2_SECOND = getLedgerFixture(60661501)!;
 
 const createLedgerCollector = () => {
   const ledgers: Ledger[] = [];
-  const handler = async (ledger: Ledger) => {
+  const handler = (ledger: Ledger) => {
     ledgers.push(ledger);
   };
   return { ledgers, handler };
