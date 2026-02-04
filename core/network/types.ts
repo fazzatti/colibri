@@ -88,6 +88,10 @@ type HorizonConfig = {
   allowHttp?: boolean;
 };
 
+export type WithArchiveRPC<T> = T & {
+  archiveRpcUrl: string;
+};
+
 // export const isNetworkConfig = (obj: unknown): obj is NetworkConfig => {
 //   return (
 //     typeof obj === "object" &&

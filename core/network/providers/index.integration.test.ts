@@ -1,10 +1,12 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
+import { QUASAR_API_KEY } from "colibri-internal/env/index.ts";
 import { type Api, Server } from "stellar-sdk/rpc";
 import { describe, it } from "@std/testing/bdd";
 import { assertEquals } from "@std/assert";
 import { Gateway } from "@/network/providers/gateway.ts";
 import { Lightsail } from "@/network/providers/lightsail.ts";
 import { Nodies } from "@/network/providers/nodies.ts";
+import { isDefined } from "@/common/type-guards/is-defined.ts";
 
 /**
  * Extended health response type that includes additional fields missing from the SDK.
@@ -43,6 +45,19 @@ describe("RPC Provider Health Checks", disableSanitizeConfig, () => {
   describe("Lightsail", () => {
     it("MainNet should be healthy", async () => {
       const config = Lightsail.MainNet();
+      const server = new Server(config.rpcUrl);
+      const health = (await server.getHealth()) as GetHealthResponse;
+      assertEquals(health.status, "healthy");
+    });
+
+    it("MainNet PRO should be healthy", async () => {
+      assertEquals(
+        isDefined(QUASAR_API_KEY),
+        true,
+        "QUASAR_API_KEY is not defined in env",
+      );
+
+      const config = Lightsail.MainNet(QUASAR_API_KEY);
       const server = new Server(config.rpcUrl);
       const health = (await server.getHealth()) as GetHealthResponse;
       assertEquals(health.status, "healthy");
