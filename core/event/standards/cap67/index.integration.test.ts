@@ -23,7 +23,7 @@ import {
   type Event,
   SACEvents,
 } from "@colibri/core";
-import { EventStreamer } from "@colibri/event-streamer";
+import { RPCStreamer } from "@colibri/rpc-streamer";
 
 // =============================================================================
 // Test Constants
@@ -51,7 +51,7 @@ describe(
   () => {
     const networkConfig = NetworkProviders.Lightsail.MainNet(QUASAR_API_KEY);
 
-    let eventStreamer: EventStreamer;
+    let eventStreamer: ReturnType<typeof RPCStreamer.event>;
 
     afterEach(() => {
       if (eventStreamer) {
@@ -70,7 +70,7 @@ describe(
         topics: [SACEvents.TransferEvent.toTopicFilter()],
       });
 
-      eventStreamer = new EventStreamer({
+      eventStreamer = RPCStreamer.event({
         rpcUrl: networkConfig.rpcUrl,
         archiveRpcUrl: networkConfig.archiveRpcUrl,
         filters: [filter],
@@ -129,7 +129,7 @@ describe(
         topics: [SACEvents.TransferEvent.toTopicFilter()],
       });
 
-      eventStreamer = new EventStreamer({
+      eventStreamer = RPCStreamer.event({
         rpcUrl: networkConfig.rpcUrl,
         archiveRpcUrl: networkConfig.archiveRpcUrl,
         filters: [filter],
@@ -199,7 +199,7 @@ describe(
         topics: [SACEvents.TransferEvent.toTopicFilter()],
       });
 
-      eventStreamer = new EventStreamer({
+      eventStreamer = RPCStreamer.event({
         rpcUrl: networkConfig.rpcUrl,
         archiveRpcUrl: networkConfig.archiveRpcUrl,
         filters: [filter],

@@ -1,12 +1,5 @@
 {
-  "workspace": [
-    "./core",
-    "./event-streamer",
-    "./ledger-streamer",
-    "./rpc-streamer",
-    "./sep10",
-    "./plugins/*"
-  ],
+  "workspace": ["./core", "./rpc-streamer", "./sep10", "./plugins/*"],
   "nodeModulesDir": "auto",
   "imports": {
     "jsr:@colibri/core": "./core",
@@ -24,9 +17,9 @@
   },
   "tasks": {
     "check": "deno check *",
-    "test": "deno test -A --parallel --clean --ignore='_*/,event-streamer/,ledger-streamer/' --coverage=coverage && deno coverage coverage && deno task coverage:report",
-    "test:unit": "deno test -A --parallel --clean --ignore='_*/,**/*.integration.test.ts,event-streamer/,ledger-streamer/' --coverage=coverage && deno coverage coverage && deno task coverage:report",
-    "test:integration": "deno test -A --parallel --clean --ignore='_*/,**/*.unit.test.ts,event-streamer/,ledger-streamer/' --coverage=coverage && deno coverage coverage && deno task coverage:report",
+    "test": "deno test -A --parallel --clean --ignore='_*/' --coverage=coverage && deno coverage coverage && deno task coverage:report",
+    "test:unit": "deno test -A --parallel --clean --ignore='_*/,**/*.integration.test.ts' --coverage=coverage && deno coverage coverage && deno task coverage:report",
+    "test:integration": "deno test -A --parallel --clean --ignore='_*/,**/*.unit.test.ts' --coverage=coverage && deno coverage coverage && deno task coverage:report",
     "test:file": "deno test -A --parallel --clean --ignore='_*/'",
     "coverage:report": "deno coverage --html"
   },
