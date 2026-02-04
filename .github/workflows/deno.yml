@@ -39,6 +39,8 @@ jobs:
 
       - name: Run tests
         run: deno task test
+        env:
+          QUASAR_API_KEY: ${{ secrets.QUASAR_API_KEY }}
 
       - name: Generate coverage report
         run: deno coverage --lcov coverage > coverage.lcov
