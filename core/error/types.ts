@@ -14,6 +14,7 @@ export type ErrorDomain =
   | "events"
   | "toid"
   | "event-streamer"
+  | "ledger-streamer"
   | "sep1"
   | "sep10";
 

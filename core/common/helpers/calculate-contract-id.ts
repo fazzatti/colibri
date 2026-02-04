@@ -1,5 +1,6 @@
-import { hash, Address, xdr, StrKey as StellarStrKey } from "stellar-sdk";
+import { hash, Address, xdr } from "stellar-sdk";
 import { Buffer } from "buffer";
+import { StrKey } from "@/strkeys/index.ts";
 
 /**
  * Calculates the expected contract ID from an address and salt.
@@ -26,5 +27,5 @@ export function calculateContractId(
     })
   );
 
-  return StellarStrKey.encodeContract(hash(preimage.toXDR()));
+  return StrKey.encodeContract(hash(preimage.toXDR()));
 }

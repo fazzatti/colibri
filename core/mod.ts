@@ -17,6 +17,9 @@ export * from "@/error/types.ts";
 export * from "@/event/index.ts";
 export * from "@/event/types.ts";
 
+export * from "@/ledger-parser/index.ts";
+export * as ERRORS_LDP from "@/ledger-parser/error.ts";
+
 export * from "@/network/index.ts";
 export * from "@/network/types.ts";
 

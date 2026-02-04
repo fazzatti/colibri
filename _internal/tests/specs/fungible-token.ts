@@ -1,3 +1,5 @@
+// deno-coverage-ignore-file
+
 import { Spec } from "stellar-sdk/contract";
 export const FT_SPEC = new Spec([
   "AAAAAAAAAAAAAAAHdXBncmFkZQAAAAACAAAAAAAAAA1uZXdfd2FzbV9oYXNoAAAAAAAD7gAAACAAAAAAAAAACG9wZXJhdG9yAAAAEwAAAAA=",

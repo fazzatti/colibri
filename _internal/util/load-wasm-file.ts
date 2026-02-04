@@ -1,3 +1,5 @@
+// deno-coverage-ignore-file
+
 import { readFile } from "node:fs/promises";
 import type { Buffer } from "buffer";
 

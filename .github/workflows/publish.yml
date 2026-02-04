@@ -59,8 +59,8 @@ jobs:
           # Check core package
           check_package "core" "core"
 
-          # Check event-streamer package
-          check_package "event-streamer" "event-streamer"
+          # Check rpc-streamer package
+          check_package "rpc-streamer" "rpc-streamer"
 
           # Check sep10 package
           check_package "sep10" "sep10"
