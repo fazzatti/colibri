@@ -3,6 +3,11 @@
  *  https://quasar.lightsail.network/
  */
 
+// TODO: Switch to use key in headers instead of URL path
+// This will require the network config structure to be
+// modified to support headers. (stellar sdk's Server class
+// supports custom headers)
+
 import { NetworkConfig } from "@/network/index.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
 import type { MainNetConfig, WithArchiveRPC } from "@/network/types.ts";
