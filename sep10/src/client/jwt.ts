@@ -6,6 +6,7 @@
  */
 
 import * as E from "@/client/error.ts";
+import { isDefined } from "@colibri/core";
 
 /**
  * Standard JWT claims
@@ -83,7 +84,7 @@ export class Sep10Jwt {
     if (parts.length !== 3) {
       throw new E.INVALID_JWT(
         token,
-        `JWT must have 3 parts, got ${parts.length}`
+        `JWT must have 3 parts, got ${parts.length}`,
       );
     }
 
@@ -130,7 +131,7 @@ export class Sep10Jwt {
    * When the token expires.
    */
   get expiresAt(): Date | undefined {
-    if (this._claims.exp === undefined) {
+    if (!isDefined(this._claims.exp)) {
       return undefined;
     }
     return new Date(this._claims.exp * 1000);
@@ -140,7 +141,7 @@ export class Sep10Jwt {
    * When the token was issued.
    */
   get issuedAt(): Date | undefined {
-    if (this._claims.iat === undefined) {
+    if (!isDefined(this._claims.iat)) {
       return undefined;
     }
     return new Date(this._claims.iat * 1000);
