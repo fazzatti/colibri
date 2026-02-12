@@ -200,8 +200,7 @@ export class Transaction {
       // parseAccountId only uses ed25519(), so switch is not needed
       return parseAccountId({
         ed25519: () => ed25519,
-        // deno-lint-ignore no-explicit-any
-      } as any);
+      } as unknown as xdr.AccountId);
     } else if (envType === 5) {
       // envelopeTypeTxFeeBump
       const feeBump = envelope.feeBump().tx();
