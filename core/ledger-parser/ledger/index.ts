@@ -25,8 +25,8 @@ import {
  * - TransactionMeta: v4 only (archive normalizes all to v4)
  *
  * Envelope availability:
- * - v2: ✅ Available from txSet.phases
- * - v0/v1: ❌ Not available (v4 meta doesn't include envelope)
+ * - v2: Available from txSet.phases
+ * - v0/v1: Not available (v4 meta doesn't include envelope)
  *
  * Uses @memoize() to cache expensive parsing operations.
  *
@@ -60,7 +60,7 @@ export class Ledger {
     // Validate required fields
     if (!entry.sequence || !entry.hash || !entry.ledgerCloseTime) {
       throw new INVALID_LEDGER_ENTRY(
-        JSON.stringify({ sequence: entry.sequence, hash: entry.hash })
+        JSON.stringify({ sequence: entry.sequence, hash: entry.hash }),
       );
     }
 
@@ -91,7 +91,7 @@ export class Ledger {
       // RPC returns base64-encoded LedgerHeaderHistoryEntry
       const historyEntry = ensureXdrType(
         this.headerXdr,
-        xdr.LedgerHeaderHistoryEntry
+        xdr.LedgerHeaderHistoryEntry,
       );
       return historyEntry.header();
     } catch (error) {
@@ -198,7 +198,7 @@ export class Ledger {
               this,
               resultMeta,
               envelope,
-              index
+              index,
             );
           } else {
             return Transaction.fromMeta(this, resultMeta, index);
@@ -219,7 +219,7 @@ export class Ledger {
               this,
               resultMeta,
               envelope,
-              index
+              index,
             );
           } else {
             return Transaction.fromMeta(this, resultMeta, index);
@@ -241,7 +241,7 @@ export class Ledger {
               this,
               resultMeta,
               envelope,
-              index
+              index,
             );
           } else {
             // Fallback to fromMeta if envelope not found (shouldn't happen normally)
@@ -264,7 +264,7 @@ export class Ledger {
    * - parallelTxsComponent: Soroban transactions (ParallelTxExecutionStage[][])
    */
   private extractEnvelopesFromGeneralizedTxSet(
-    txSet: xdr.GeneralizedTransactionSet
+    txSet: xdr.GeneralizedTransactionSet,
   ): xdr.TransactionEnvelope[] {
     const txSetV1 = txSet.v1TxSet();
     const phases = txSetV1.phases();
