@@ -57,7 +57,7 @@ export class Contract {
     this.networkConfig = networkConfig;
     if (!rpc) {
       assert(networkConfig && networkConfig.rpcUrl, new E.MISSING_RPC_URL());
-      rpc = new Server(networkConfig.rpcUrl);
+      rpc = new Server(networkConfig.rpcUrl, { allowHttp: networkConfig.allowHttp });
     }
 
     this.rpc = rpc;
