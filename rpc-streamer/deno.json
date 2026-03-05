@@ -8,6 +8,6 @@
   },
   "imports": {
     "@/": "./src/",
-    "@colibri/core": "jsr:@colibri/core@^0.16.0"
+    "@colibri/core": "jsr:@colibri/core@^0.16.1"
   }
 }
