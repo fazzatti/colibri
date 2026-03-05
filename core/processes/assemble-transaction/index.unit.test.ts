@@ -22,7 +22,7 @@ import type { BaseFee } from "@/common/types/transaction-config/types.ts";
 const createTestTransaction = (fee: BaseFee = "100") => {
   const account = new Account(
     "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
-    "100"
+    "100",
   );
 
   return new TransactionBuilder(account, {
@@ -34,7 +34,7 @@ const createTestTransaction = (fee: BaseFee = "100") => {
         contract: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
         function: "transfer",
         args: [],
-      })
+      }),
     )
     .setTimeout(0)
     .build();
@@ -67,7 +67,7 @@ describe("AssembleTransaction", () => {
       const inclusionFee = "10";
       const transaction = createTestTransaction(inclusionFee);
       const sorobanData = new SorobanDataBuilder();
-      sorobanData.setResourceFee(1);
+      sorobanData.setResourceFee(3);
 
       const input: AssembleTransactionInput = {
         transaction,
@@ -78,7 +78,7 @@ describe("AssembleTransaction", () => {
 
       const result = await P_AssembleTransaction().run(input);
       assertInstanceOf(result, Transaction);
-      assertEquals(result.fee, "15");
+      assertEquals(result.fee, "18"); // 10 inclusion fee + 3 resource fee from soroban data + 5 resource fee from input
     });
 
     it("executes with soroban data and auth entries", async () => {
@@ -104,14 +104,14 @@ describe("AssembleTransaction", () => {
 
       await assertRejects(
         async () => await P_AssembleTransaction().run(faultyInput),
-        E.UNEXPECTED_ERROR
+        E.UNEXPECTED_ERROR,
       );
     });
 
     it("throws NOT_SMART_CONTRACT_TRANSACTION_ERROR for non-smart contract transaction", async () => {
       const account = new Account(
         "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
-        "100"
+        "100",
       );
 
       const nonSmartContractTx = new TransactionBuilder(account, {
@@ -124,7 +124,7 @@ describe("AssembleTransaction", () => {
               "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
             asset: Asset.native(),
             amount: "100",
-          })
+          }),
         )
         .setTimeout(0)
         .build();
@@ -138,7 +138,7 @@ describe("AssembleTransaction", () => {
 
       await assertRejects(
         async () => await P_AssembleTransaction().run(input),
-        E.NOT_SMART_CONTRACT_TRANSACTION_ERROR
+        E.NOT_SMART_CONTRACT_TRANSACTION_ERROR,
       );
     });
 
@@ -156,7 +156,7 @@ describe("AssembleTransaction", () => {
 
       await assertRejects(
         async () => await P_AssembleTransaction().run(input),
-        E.FAILED_TO_BUILD_SOROBAN_DATA_ERROR
+        E.FAILED_TO_BUILD_SOROBAN_DATA_ERROR,
       );
     });
 
@@ -168,7 +168,7 @@ describe("AssembleTransaction", () => {
         "addOperation",
         () => {
           throw new Error("Mocked addOperation error");
-        }
+        },
       );
 
       const input: AssembleTransactionInput = {
@@ -180,7 +180,7 @@ describe("AssembleTransaction", () => {
 
       await assertRejects(
         async () => await P_AssembleTransaction().run(input),
-        E.FAILED_TO_ASSEMBLE_TRANSACTION_ERROR
+        E.FAILED_TO_ASSEMBLE_TRANSACTION_ERROR,
       );
 
       addOperationStub.restore();
@@ -190,7 +190,7 @@ describe("AssembleTransaction", () => {
       const createFaultyTestTransaction = () => {
         const account = new Account(
           "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
-          "100"
+          "100",
         );
 
         const tx = new TransactionBuilder(account, {
@@ -203,7 +203,7 @@ describe("AssembleTransaction", () => {
                 "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
               function: "transfer",
               args: [],
-            })
+            }),
           )
           .setTimeout(0)
           .build();
@@ -223,7 +223,7 @@ describe("AssembleTransaction", () => {
 
       await assertRejects(
         async () => await P_AssembleTransaction().run(input),
-        E.FAILED_TO_BUILD_TRANSACTION_ERROR
+        E.FAILED_TO_BUILD_TRANSACTION_ERROR,
       );
     });
 
@@ -239,7 +239,7 @@ describe("AssembleTransaction", () => {
 
       await assertRejects(
         async () => await P_AssembleTransaction().run(input),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
     });
   });
