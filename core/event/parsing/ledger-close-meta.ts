@@ -10,13 +10,13 @@ import { assert } from "@/common/assert/assert.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
 
 export const isLedgerCloseMetaV1 = (
-  metadataXdr: xdr.LedgerCloseMeta
+  metadataXdr: xdr.LedgerCloseMeta,
 ): boolean => {
   return metadataXdr.switch() === 1;
 };
 
 export const isLedgerCloseMetaV2 = (
-  metadataXdr: xdr.LedgerCloseMeta
+  metadataXdr: xdr.LedgerCloseMeta,
 ): boolean => {
   return metadataXdr.switch() === 2;
 };
@@ -24,11 +24,11 @@ export const isLedgerCloseMetaV2 = (
 export const parseEventsFromLedgerCloseMeta = async (
   metadataXdr: xdr.LedgerCloseMeta,
   onEvent: EventHandler,
-  filters?: EventFilter[]
+  filters?: EventFilter[],
 ): Promise<void> => {
   assert(
     xdr.LedgerCloseMeta.isValid(metadataXdr),
-    new E.INVALID_LEDGER_CLOSE_META_XDR()
+    new E.INVALID_LEDGER_CLOSE_META_XDR(),
   );
 
   let ledgerCloseMeta:
@@ -46,7 +46,7 @@ export const parseEventsFromLedgerCloseMeta = async (
 
   assert(
     isDefined(ledgerCloseMeta),
-    new E.UNSUPPORTED_LEDGER_CLOSE_META_VERSION(metadataXdr.switch())
+    new E.UNSUPPORTED_LEDGER_CLOSE_META_VERSION(metadataXdr.switch()),
   );
 
   const ledgerSequence = ledgerCloseMeta.ledgerHeader().header().ledgerSeq();
@@ -84,7 +84,7 @@ export const parseEventsFromLedgerCloseMeta = async (
         const contractId =
           contractIdXdr !== null
             ? (Address.fromScAddress(
-                xdr.ScAddress.scAddressTypeContract(contractIdXdr)
+                xdr.ScAddress.scAddressTypeContract(contractIdXdr),
               ).toString() as ContractId)
             : undefined;
 
@@ -100,7 +100,7 @@ export const parseEventsFromLedgerCloseMeta = async (
             ledgerSequence,
             transactionIndex,
             operationIndex,
-            eventIndex
+            eventIndex,
           );
 
           await onEvent(
@@ -116,7 +116,7 @@ export const parseEventsFromLedgerCloseMeta = async (
               topic: topic,
               value: value,
               inSuccessfulContractCall: inSuccessfulContractCall,
-            })
+            }),
           );
         }
       }
@@ -135,7 +135,7 @@ export const isIncludedInFilters = ({
   type?: EventType;
   topics?: xdr.ScVal[];
 }): boolean => {
-  if (filters === undefined || filters.length === 0) return true;
+  if (!isDefined(filters) || filters.length === 0) return true;
 
   for (const filter of filters) {
     if (type !== undefined && !filter.matchesType(type)) continue;

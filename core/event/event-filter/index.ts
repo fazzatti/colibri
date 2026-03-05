@@ -9,6 +9,7 @@ import type { BoundedArray } from "@/common/helpers/bounded-array.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import { assert } from "@/common/assert/assert.ts";
 import * as E from "@/event/event-filter/error.ts";
+import { isDefined } from "@/common/type-guards/is-defined.ts";
 export class EventFilter {
   private _type?: EventType;
   private _contractIds?: BoundedArray<ContractId, 0, 5>;
@@ -36,14 +37,9 @@ export class EventFilter {
     return {
       type: this._type,
       contractIds: this._contractIds,
-      topics:
-        this._topics === undefined
-          ? undefined
-          : [
-              ...this._topics.map((topicFilter) =>
-                this.encodeTopics(topicFilter)
-              ),
-            ],
+      topics: isDefined(this._topics)
+        ? [...this._topics.map((topicFilter) => this.encodeTopics(topicFilter))]
+        : undefined,
     };
   }
 
@@ -77,7 +73,7 @@ export class EventFilter {
 }
 const eventTopicsMatchFilterTopic = (
   topicFilter: TopicFilter,
-  eventTopics: xdr.ScVal[]
+  eventTopics: xdr.ScVal[],
 ): boolean => {
   assert(eventTopics.length > 0, new E.EVENT_HAS_NO_TOPICS());
 
@@ -101,7 +97,7 @@ const eventTopicsMatchFilterTopic = (
       throw new E.FAILED_TO_CHECK_FILTER_SEGMENT(
         filterSegment,
         eventSegment,
-        e as Error
+        e as Error,
       );
     }
     return false; // No match for this segment

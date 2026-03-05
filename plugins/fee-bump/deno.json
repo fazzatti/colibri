@@ -1,6 +1,6 @@
 {
   "name": "@colibri/plugin-fee-bump",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "exports": "./mod.ts",
   "license": "MIT",
   "publish": {
@@ -8,6 +8,6 @@
   },
   "imports": {
     "@/": "./src/",
-    "jsr:@colibri/core": "jsr:@colibri/core@^0.16.0"
+    "jsr:@colibri/core": "jsr:@colibri/core@^0.16.1"
   }
 }

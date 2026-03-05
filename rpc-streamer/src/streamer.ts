@@ -352,7 +352,7 @@ export class RPCStreamer<T> {
           // Don't wait if we're about to stop
           if (
             shouldWait &&
-            (options.stopLedger === undefined ||
+            (!isDefined(options.stopLedger) ||
               currentLedger <= options.stopLedger)
           ) {
             await this.waitFor("ledger");

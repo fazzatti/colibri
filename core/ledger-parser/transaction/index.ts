@@ -14,6 +14,7 @@ import {
 import { Operation } from "@/ledger-parser/operation/index.ts";
 import { INVALID_TRANSACTION_INDEX } from "@/ledger-parser/error.ts";
 import type { Ledger } from "@/ledger-parser/ledger/index.ts";
+import { isDefined } from "@/common/type-guards/is-defined.ts";
 
 /**
  * Transaction class for lazy operation parsing
@@ -41,7 +42,7 @@ export class Transaction {
     txResult: xdr.TransactionResult,
     txMeta: xdr.TransactionMeta,
     txHash: Uint8Array,
-    index: number
+    index: number,
   ) {
     this.ledger = ledger;
     this.txEnvelope = txEnvelope;
@@ -54,13 +55,13 @@ export class Transaction {
   /**
    * Factory method to create a Transaction from transaction result metadata
    *
-   * Note: Only supports TransactionMeta v4 (Lightsail archive normalizes all to v4).
+   * Note: Only supports TransactionMeta v4.
    * Envelope is NOT available in v4 meta - use fromMetaWithEnvelope for LedgerCloseMeta v2.
    */
   static fromMeta(
     ledger: Ledger,
     txResultMeta: xdr.TransactionResultMeta,
-    index: number
+    index: number,
   ): Transaction {
     if (index < 0) {
       throw new INVALID_TRANSACTION_INDEX(index, ledger.sequence, -1);
@@ -82,15 +83,12 @@ export class Transaction {
 
   /**
    * Factory method for V2 where envelope comes from txSet separately
-   *
-   * In V2, envelopes are stored in txSet.phases, not in TransactionMeta.
-   * The Ledger class extracts them and passes them here.
    */
   static fromMetaWithEnvelope(
     ledger: Ledger,
     txResultMeta: xdr.TransactionResultMeta,
     envelope: xdr.TransactionEnvelope,
-    index: number
+    index: number,
   ): Transaction {
     if (index < 0) {
       throw new INVALID_TRANSACTION_INDEX(index, ledger.sequence, -1);
@@ -106,13 +104,9 @@ export class Transaction {
 
   /**
    * Check if transaction envelope is available
-   *
-   * Envelope availability:
-   * - LedgerCloseMeta v2: ✅ Available (from txSet)
-   * - LedgerCloseMeta v0/v1: ❌ Not available (TransactionMeta v4 doesn't include envelope)
    */
   get hasEnvelope(): boolean {
-    return this.txEnvelope !== undefined;
+    return isDefined(this.txEnvelope);
   }
 
   /**
@@ -134,7 +128,7 @@ export class Transaction {
   @memoize()
   get hash(): string {
     return Array.from(this.txHash, (b) => b.toString(16).padStart(2, "0")).join(
-      ""
+      "",
     );
   }
 
@@ -186,7 +180,7 @@ export class Transaction {
   get sourceAccount(): string {
     if (!this.txEnvelope) {
       throw new Error(
-        `Cannot get source account for transaction ${this.hash} - envelope not available`
+        `Cannot get source account for transaction ${this.hash} - envelope not available`,
       );
     }
 
@@ -206,8 +200,7 @@ export class Transaction {
       // parseAccountId only uses ed25519(), so switch is not needed
       return parseAccountId({
         ed25519: () => ed25519,
-        // deno-lint-ignore no-explicit-any
-      } as any);
+      } as unknown as xdr.AccountId);
     } else if (envType === 5) {
       // envelopeTypeTxFeeBump
       const feeBump = envelope.feeBump().tx();
@@ -235,7 +228,7 @@ export class Transaction {
   get sequence(): bigint {
     if (!this.txEnvelope) {
       throw new Error(
-        `Cannot get sequence for transaction ${this.hash} - envelope not available`
+        `Cannot get sequence for transaction ${this.hash} - envelope not available`,
       );
     }
 
@@ -267,7 +260,7 @@ export class Transaction {
   get operations(): Operation[] {
     if (!this.txEnvelope) {
       throw new Error(
-        `Cannot get operations for transaction ${this.hash} - envelope not available`
+        `Cannot get operations for transaction ${this.hash} - envelope not available`,
       );
     }
 
