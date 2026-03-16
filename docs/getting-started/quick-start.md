@@ -134,7 +134,7 @@ console.log("Current count:", count);
 To listen for contract events in real-time:
 
 ```typescript
-import { EventStreamer } from "@colibri/event-streamer";
+import { RPCStreamer } from "@colibri/rpc-streamer";
 import { EventFilter, EventType, SACEvents } from "@colibri/core";
 
 // Create a filter for transfer events
@@ -145,7 +145,7 @@ const filter = new EventFilter({
 });
 
 // Create the streamer
-const streamer = new EventStreamer({
+const streamer = RPCStreamer.event({
   rpcUrl: network.rpcUrl,
   filters: [filter],
 });
@@ -154,7 +154,7 @@ const streamer = new EventStreamer({
 await streamer.start((event) => {
   const transfer = SACEvents.TransferEvent.fromEvent(event);
   console.log(
-    `Transfer: ${transfer.from} → ${transfer.to}: ${transfer.amount}`
+    `Transfer: ${transfer.from} → ${transfer.to}: ${transfer.amount}`,
   );
 });
 ```

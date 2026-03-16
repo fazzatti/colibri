@@ -69,8 +69,9 @@ console.log(symbol); // "USDC"
 ```typescript
 // Check balance (returns bigint with 7 decimal places)
 const balance = await sac.balance({ id: userAddress });
-const humanReadable = Number(balance) / 10_000_000;
-console.log(`Balance: ${humanReadable} tokens`);
+// Prefer string formatting over Number(bigint) to avoid precision loss.
+import { toDecimals } from "@colibri/core";
+console.log(`Balance: ${toDecimals(balance, 7)} tokens`);
 
 // Check allowance
 const allowance = await sac.allowance({
@@ -325,7 +326,7 @@ try {
 ## Notes
 
 - **Decimals**: All SACs use 7 decimal places, matching classic Stellar assets
-- **Amounts**: All amounts are `bigint` values. Multiply human-readable amounts by `10_000_000n`
+- **Amounts**: All amounts are `bigint` base units. Use `fromDecimals("100", 7)` / `toDecimals(amount, 7)` to convert safely
 - **Authorization**: The `from` address must sign/authorize most operations
 - **Admin**: Initially the asset issuer; can be transferred via `setAdmin`
 - **Deterministic IDs**: Contract IDs are deterministically derived from the asset and network

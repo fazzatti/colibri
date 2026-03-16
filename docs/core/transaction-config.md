@@ -7,7 +7,7 @@ type TransactionConfig = {
   fee: BaseFee;
   source: Ed25519PublicKey;
   timeout: number;
-  signers: TransactionSigner[];
+  signers: Signer[];
 };
 
 type BaseFee = `${number}`;
@@ -15,14 +15,14 @@ type BaseFee = `${number}`;
 
 ## Properties
 
-| Property  | Type                  | Description                                        |
-| --------- | --------------------- | -------------------------------------------------- |
-| `fee`     | `BaseFee`             | Base fee in stroops as a string (e.g., `"100000"`) |
-| `source`  | `Ed25519PublicKey`    | Source account public key (G...)                   |
-| `timeout` | `number`              | Transaction timeout in seconds                     |
-| `signers` | `TransactionSigner[]` | Array of signers to sign the transaction           |
+| Property  | Type               | Description                                        |
+| --------- | ------------------ | -------------------------------------------------- |
+| `fee`     | `BaseFee`          | Base fee in stroops as a string (e.g., `"100000"`) |
+| `source`  | `Ed25519PublicKey` | Source account public key (G...)                   |
+| `timeout` | `number`           | Transaction timeout in seconds                     |
+| `signers` | `Signer[]`         | Array of signers to sign the transaction           |
 
-The `signers` array accepts any object implementing the [TransactionSigner](signer/README.md) interface, allowing you to integrate custom key management solutions.
+The `signers` array accepts any object implementing the [Signer](signer/README.md) interface, allowing you to integrate custom key management solutions.
 
 ## Usage
 
@@ -53,5 +53,5 @@ const result = await pipeline.run({
 
 ## Next Steps
 
-- [Signer](signer/README.md) — TransactionSigner interface
+- [Signer](signer/README.md) — Signer interface
 - [Pipelines](pipelines/README.md) — Use TransactionConfig in workflows

@@ -20,7 +20,7 @@ const result = await P_SignAuthEntries().run({
 | Property            | Type                          | Required | Description                            |
 | ------------------- | ----------------------------- | -------- | -------------------------------------- |
 | `auth`              | `SorobanAuthorizationEntry[]` | Yes      | Authorization entries from simulation  |
-| `signers`           | `TransactionSigner[]`         | Yes      | Signers for the entries                |
+| `signers`           | `Signer[]`                    | Yes      | Signers for the entries                |
 | `rpc`               | `Server`                      | Yes      | RPC server (to get current ledger)     |
 | `networkPassphrase` | `string`                      | Yes      | Network passphrase                     |
 | `validity`          | `LedgerValidity`              | —        | How long signatures are valid          |
@@ -62,12 +62,14 @@ Returns `SorobanAuthorizationEntry[]` with signatures added to entries matching 
    - **Address credentials** — Need to be signed
    - **Already signed entries** — Preserved as-is (detected by checking for empty signature)
 4. **Filters by address type**:
-   - **Account addresses** — Signs with matching signer
-   - **Contract addresses** — Cannot be signed by accounts, skipped
-   - **Claimable balance addresses** — Skipped
-   - **Liquidity pool addresses** — Skipped
-   - **Muxed account addresses** — Skipped
-5. **Signs matching entries** — For each account address entry, finds the signer with matching public key and signs
+
+- **Account addresses** — Signs with a signer that `signsFor(address)`
+- **Contract addresses** — Signs with a signer that `signsFor(contractId)`
+- **Claimable balance addresses** — Skipped
+- **Liquidity pool addresses** — Skipped
+- **Muxed account addresses** — Skipped
+
+5. **Signs matching entries** — For each signable address entry, finds a signer where `signsFor(requiredSigner)` is true and signs
 6. **Handles `removeUnsigned`** — If `true`, entries without a matching signer are removed from output; if `false` (default), they're included unsigned
 
 ### Validity Validation

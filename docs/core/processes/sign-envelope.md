@@ -20,7 +20,7 @@ const result = await P_SignEnvelope().run({
 | ----------------------- | ----------------------------------- | -------- | ------------------- |
 | `transaction`           | `Transaction \| FeeBumpTransaction` | Yes      | Transaction to sign |
 | `signatureRequirements` | `SignatureRequirement[]`            | Yes      | Required signatures |
-| `signers`               | `TransactionSigner[]`               | Yes      | Available signers   |
+| `signers`               | `Signer[]`                          | Yes      | Available signers   |
 
 ## Output
 
@@ -31,9 +31,11 @@ Returns the signed `Transaction` or `FeeBumpTransaction`.
 1. **Validates requirements** — Ensures at least one signature requirement exists
 2. **Validates signers** — Ensures at least one signer is provided
 3. **Iterates through requirements** — For each signature requirement:
-   - Finds a signer with matching public key
-   - Throws `SIGNER_NOT_FOUND` if no match exists
-   - Signs the transaction with the signer
+
+- Finds a signer where `signsFor(requiredSigner)` is true
+- Throws `SIGNER_NOT_FOUND` if no match exists
+- Signs the transaction with the signer
+
 4. **Deserializes after each signature** — Converts the signed XDR back to a transaction object to accumulate signatures
 5. **Preserves network passphrase** — Uses the transaction's embedded network passphrase for deserialization
 

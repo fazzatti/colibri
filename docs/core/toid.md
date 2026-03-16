@@ -22,7 +22,7 @@ import { createTOID } from "@colibri/core";
 const toid = createTOID(
   123456, // ledgerSequence
   1, // transactionOrder (1-based)
-  1 // operationIndex (1-based)
+  1, // operationIndex (1-based)
 );
 
 console.log(toid); // "0000530242871959553"
@@ -34,7 +34,7 @@ console.log(toid); // "0000530242871959553"
 function createTOID(
   ledgerSequence: number,
   transactionOrder: number,
-  operationIndex: number
+  operationIndex: number,
 ): TOID;
 ```
 
@@ -177,5 +177,5 @@ const { start, end } = getToidRange(60044284);
 
 ## Next Steps
 
-- [Event Streamer](../packages/event-streamer.md) — Use TOIDs for event pagination
+- [RPC Streamer](../packages/rpc-streamer.md) — Stream events and ledgers
 - [Events Overview](../events/overview.md) — Understand event identification

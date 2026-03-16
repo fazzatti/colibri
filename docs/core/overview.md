@@ -82,6 +82,30 @@ const transfer = SACEvents.TransferEvent.fromEvent(rawEvent);
 console.log(transfer.from, transfer.to, transfer.amount);
 ```
 
+### Ledger Parsing
+
+```typescript
+import { Ledger } from "@colibri/core";
+
+// Parse ledger data from RPC response
+const response = await rpc.getLedgers({
+  startLedger: 1000,
+  pagination: { limit: 1 },
+});
+const ledger = Ledger.fromEntry(response.ledgers[0]);
+
+console.log(`Ledger ${ledger.sequence} (version: ${ledger.version})`);
+console.log(`Transactions: ${ledger.transactions.length}`);
+
+// Access transaction details
+for (const tx of ledger.transactions) {
+  console.log(`TX ${tx.hash}: ${tx.operationCount} operations`);
+  for (const op of tx.operations) {
+    console.log(`  - ${op.type}`);
+  }
+}
+```
+
 ### Error Handling
 
 ```typescript
@@ -112,6 +136,7 @@ import {
   NativeAccount,
   EventFilter,
   SACEvents,
+  Ledger,
   PIPE_InvokeContract,
 } from "@colibri/core";
 
@@ -150,3 +175,4 @@ try {
 - [Error Handling](error.md) — Understand the error system
 - [Pipelines](pipelines/README.md) — Build transaction workflows
 - [Events Overview](../events/overview.md) — Parse and filter contract events
+- [RPC Streamer](../packages/rpc-streamer.md) — Stream ledgers and events
