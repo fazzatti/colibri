@@ -96,8 +96,16 @@ export class MintEvent extends EventTemplate<typeof MintEventSchema> {
   }
 
   /**
-   * The muxed ID if present (for muxed addresses).
-   * Can be u64 (bigint), String, or BytesN<32> (Uint8Array).
+   * The raw CAP-67 `to_muxed_id` field if present.
+   *
+   * This value is exposed exactly as emitted in the event payload. Per CAP-67,
+   * it can represent either a real muxed account ID for a muxed destination, or
+   * transaction memo data mapped onto a classic non-muxed destination
+   * (`MEMO_ID` -> `bigint`, `MEMO_TEXT` -> `string`, `MEMO_HASH` /
+   * `MEMO_RETURN` -> `Uint8Array`).
+   *
+   * Do not assume that a present value is always a raw muxed-account ID without
+   * considering the destination type and transaction context.
    */
   get toMuxedId(): bigint | string | Uint8Array | undefined {
     const val = this.value;
@@ -108,7 +116,7 @@ export class MintEvent extends EventTemplate<typeof MintEventSchema> {
   }
 
   /**
-   * Whether this mint event has a muxed ID.
+   * Whether this mint event includes the CAP-67 `to_muxed_id` field.
    */
   hasMuxedId(): boolean {
     return this.toMuxedId !== undefined;
