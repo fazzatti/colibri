@@ -21,15 +21,16 @@ After installation, import from the root (`jsr:@colibri/core`) or from specific 
 ## Architecture overview
 
 - **Deterministic errors** – Every recoverable failure is a named `ColibriError` subclass with a domain, code, metadata payload, and JSON representation you can rely on when monitoring or retrying. See [Error system](#error-system).
-- **Pipelines** – High-level orchestrators built with `convee`, wiring processes and transformers into repeatable flows for Soroban contract invocation, read-only simulations, and classic transactions. See [Pipelines](#pipelines).
-- **Processes** – Focused `ProcessEngine` units (build, simulate, authorize, assemble, sign, send) you can run individually or plug into your own pipelines. See [Processes](#processes).
+- **Pipelines** – High-level orchestrators built with `convee`, wiring steps and shared connectors into repeatable flows for Soroban contract invocation, read-only simulations, and classic transactions. See [Pipelines](#pipelines).
+- **Processes** – Focused raw functions (build, simulate, authorize, assemble, sign, send) you can call directly or wrap in your own steps. See [Processes](#processes).
+- **Steps** – Thin `convee` wrappers around processes that provide stable ids and plugin targets. See [Pipelines](#pipelines).
 - **Accounts and signers** – Strongly typed wrappers around Ed25519 identities, muxed accounts, ledger keys, and signing. See [Accounts & signers](#accounts--signers).
 - **Events** – Tools for parsing, filtering, and working with Soroban contract events from ledger metadata. See [Events](#events).
 - **TOID** – Utilities for working with Stellar's Total Order IDs for precise transaction and operation indexing. See [TOID](#toid).
 - **Network configuration** – Type-safe network profiles with runtime validation and type narrowing. See [Network configuration](#network-configuration).
-- **Common modules** – Shared configuration types, validators, StrKey utilities, and transformers that keep every layer aligned. See [Common modules](#common-modules).
+- **Common modules** – Shared configuration types, validators, StrKey utilities, auth rules, address helpers, and pipeline connectors that keep every layer aligned. See [Common modules](#common-modules).
 
-Use the high-level pipelines when you want an opinionated, metadata-rich flow. Drop down to processes or utilities when you need bespoke orchestration or integration with external services.
+Use the high-level pipelines when you want an opinionated flow. Drop down to processes, steps, or utilities when you need bespoke orchestration or integration with external services.
 
 ## Error system
 
@@ -70,7 +71,13 @@ When wrapping unexpected exceptions, use `ColibriError.fromUnknown(error, contex
 
 ## Pipelines
 
-Pipelines combine processes, transformers, and metadata storage into end-to-end transaction flows. They are instances of `Pipeline` from `convee`, giving you deterministic step execution, metadata snapshots, and the ability to inject custom connectors.
+Pipelines combine `convee` steps and shared connectors into end-to-end transaction flows. Colibri keeps a clear boundary:
+
+- **Processes** are plain functions with typed inputs, outputs, and error namespaces.
+- **Steps** are `convee` wrappers with stable ids, such as `steps.createBuildTransactionStep()`.
+- **Connectors** adapt one step boundary to the next. Shared ones live under `core/pipelines/shared/connectors`, while pipeline-specific ones stay next to the owning pipeline.
+
+Pipelines are built with `pipe(...)` and `step(...)` from `convee`, and plugins target step ids such as `steps.SEND_TRANSACTION_STEP_ID`.
 
 ### Soroban invocation
 
@@ -84,7 +91,7 @@ Pipelines combine processes, transformers, and metadata storage into end-to-end 
 6. Apply available signers (`SignEnvelope`).
 7. Submit via RPC (`SendTransaction`).
 
-Output includes the RPC submission response, transaction hash, and the Soroban return value decoded to `xdr.ScVal`. Because every intermediate result is stored in pipeline metadata, you can inspect or replace connectors to persist additional state (e.g., audit logs or telemetry).
+Output includes the RPC submission response, transaction hash, and the Soroban return value decoded to `xdr.ScVal`. Connectors use `convee` run context to access prior step outputs where needed, instead of the old metadata helper pattern.
 
 ```ts
 const pipe = createInvokeContractPipeline({ networkConfig });
@@ -101,9 +108,9 @@ const result = await pipe.run({ operations, config }); // config: TransactionCon
 
 ## Processes
 
-Processes are reusable building blocks exposed under `jsr:@colibri/core/processes`. They are perfect when you already have orchestration in place but want Colibri’s robust implementations and error surfaces.
+Processes are reusable building blocks exposed under `jsr:@colibri/core/processes`. They are plain functions, which makes them easy to test directly and easy to reuse outside Colibri's built-in pipelines.
 
-- **BuildTransaction** – Creates transactions with optional memo, preconditions, and either RPC-derived or explicit sequence numbers. Supports plugins (`BuildTransactionPlugin`) so you can enforce extra validation or mutate transactions before they leave the step.
+- **BuildTransaction** – Creates transactions with optional memo, preconditions, and either RPC-derived or explicit sequence numbers.
 - **SimulateTransaction** – Wraps `Server.simulateTransaction`, producing typed success/restore responses and raising specific errors for transport failures, simulation errors, or unrecognized payloads.
 - **SignAuthEntries** – Consumes simulated Soroban auth entries alongside a set of `TransactionSigner`s, returning signatures in the order Soroban expects.
 - **AssembleTransaction** – Merges the base transaction, signed auth entries, Soroban data, and resource fee into a ready-to-sign transaction.
@@ -111,7 +118,15 @@ Processes are reusable building blocks exposed under `jsr:@colibri/core/processe
 - **SignEnvelope** – Applies available signers, allowing partial signing when you plan to collect additional approvals downstream.
 - **SendTransaction** – Submits the envelope (classic or fee-bump) via RPC and normalizes RPC responses into Colibri errors when failures occur.
 
-Each process exposes a `run(input)` method and a dedicated error namespace (e.g., `buildTransactionError`). Leverage them individually when you need customized sequencing or to integrate with other workflow engines.
+Each process is exported as a function plus an error namespace. Example:
+
+```ts
+import { buildTransaction, BTX_ERRORS } from "jsr:@colibri/core/processes";
+
+const transaction = await buildTransaction(input);
+```
+
+When you need orchestration ids or plugin targets, use the matching step factory from `jsr:@colibri/core`.
 
 ## Accounts & signers
 
@@ -330,7 +345,9 @@ Colibri Core ships shared utilities so every layer speaks the same language:
 
 - **Transaction configuration (`common/types`)** – `TransactionConfig` defines fee, timeout, source address, and signer list; additional types cover base fees, time bounds, preconditions, and transaction XDR string aliases.
 - **Assertions and verifiers (`common/assert`, `common/verifiers`)** – Throw Colibri errors on invalid input, ensuring consistent error handling from top to bottom.
-- **Transformers (`core/transformers`)** – Bridge process output to the next step input (`buildToSimulate`, `simulateToRetval`, `assembleToEnvelopeSigningRequirements`, etc.), helping you compose custom pipelines without reimplementing glue logic.
+- **Address (`core/address`)** – Address-specific utilities such as muxed-account normalization.
+- **Auth (`core/auth`)** – Authorization and requirement derivation helpers, such as classic operation threshold calculation.
+- **Shared pipeline connectors (`core/pipelines/shared/connectors`)** – Reusable step-boundary adapters such as `buildToSimulate`, `simulateToRetval`, and signing-envelope connector helpers.
 - **StrKey utilities (`core/strkeys`)** – Detect and validate every SEP-23 key (Ed25519 public/secret, muxed, contract IDs, signed payloads, liquidity pools, claimable balances). Two-tier checks (`is*` vs `isValid*`) let you pick between fast regex validation and checksum verification.
 
 ```ts

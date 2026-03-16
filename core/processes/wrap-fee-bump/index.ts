@@ -1,16 +1,15 @@
-import { ProcessEngine } from "convee";
 import { TransactionBuilder } from "stellar-sdk";
 import type {
   WrapFeeBumpInput,
   WrapFeeBumpOutput,
 } from "@/processes/wrap-fee-bump/types.ts";
 import * as E from "@/processes/wrap-fee-bump/error.ts";
-import { isFeeBumpTransaction } from "@/common/verifiers/is-fee-bump-transaction.ts";
-import { isTransaction } from "@/common/verifiers/is-transaction.ts";
+import { isFeeBumpTransaction } from "@/common/type-guards/is-fee-bump-transaction.ts";
+import { isTransaction } from "@/common/type-guards/is-transaction.ts";
 import { assert } from "@/common/assert/assert.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 
-const wrapFeeBumpProcess = (input: WrapFeeBumpInput): WrapFeeBumpOutput => {
+export const wrapFeeBump = (input: WrapFeeBumpInput): WrapFeeBumpOutput => {
   try {
     const { transaction, config, networkPassphrase } = input;
 
@@ -54,19 +53,4 @@ const wrapFeeBumpProcess = (input: WrapFeeBumpInput): WrapFeeBumpOutput => {
     throw new E.UNEXPECTED_ERROR(input, e as Error);
   }
 };
-
-const PROCESS_NAME = "WrapFeeBump" as const;
-
-const P_WrapFeeBump = () =>
-  ProcessEngine.create<
-    WrapFeeBumpInput,
-    WrapFeeBumpOutput,
-    E.WrapFeeBumpError,
-    typeof PROCESS_NAME
-  >(wrapFeeBumpProcess, {
-    name: PROCESS_NAME,
-  });
-
-const P_WrapFeeBumpErrors = E;
-
-export { P_WrapFeeBump, P_WrapFeeBumpErrors };
+export { E as WrapFeeBumpErrors };

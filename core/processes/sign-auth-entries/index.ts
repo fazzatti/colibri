@@ -1,4 +1,3 @@
-import { ProcessEngine } from "convee";
 import { xdr } from "stellar-sdk";
 import type { Api, Server } from "stellar-sdk/rpc";
 import type {
@@ -9,14 +8,11 @@ import type {
 import * as E from "@/processes/sign-auth-entries/error.ts";
 import { assert } from "@/common/assert/assert.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
-import {
-  getAddressSignerFromAuthEntry,
-  getAddressTypeFromAuthEntry,
-} from "@/common/helpers/xdr/general.ts";
+import { getAddressSignerFromAuthEntry } from "@/common/helpers/xdr/get-address-signer-from-auth-entry.ts";
+import { getAddressTypeFromAuthEntry } from "@/common/helpers/xdr/get-address-type-from-auth-entry.ts";
 import { ResultOrError } from "@/common/deferred/result-or-error.ts";
-import type { TransactionSigner } from "@/signer/types.ts";
 
-const signAuthEntriesProcess = async (
+export const signAuthEntries = async (
   input: SignAuthEntriesInput
 ): Promise<SignAuthEntriesOutput> => {
   try {
@@ -47,11 +43,6 @@ const signAuthEntriesProcess = async (
       const addressType = getAddressTypeFromAuthEntry(authEntry);
 
       // Unsupported addresses are not signed
-      if (addressType === "scAddressTypeContract") {
-        if (!removeUnsigned) signedEntries.push(authEntry);
-        continue;
-      }
-
       if (addressType === "scAddressTypeClaimableBalance") {
         if (!removeUnsigned) signedEntries.push(authEntry);
         continue;
@@ -67,12 +58,13 @@ const signAuthEntriesProcess = async (
         continue;
       }
 
-      if (addressType === "scAddressTypeAccount") {
+      if (
+        addressType === "scAddressTypeAccount" ||
+        addressType === "scAddressTypeContract"
+      ) {
         const requiredSigner = getAddressSignerFromAuthEntry(authEntry);
 
-        const signer = signers.find(
-          (s) => s.publicKey() === requiredSigner
-        ) as TransactionSigner;
+        const signer = signers.find((s) => s.signsFor(requiredSigner));
 
         assert(signer, new E.MISSING_SIGNER(input, requiredSigner, authEntry));
 
@@ -204,17 +196,4 @@ const separateSignedAndUnsignedAuthEntries = (
 
   return { signed, unsigned };
 };
-
-const PROCESS_NAME = "SignAuthEntries" as const;
-
-const P_SignAuthEntries = () =>
-  ProcessEngine.create<
-    SignAuthEntriesInput,
-    SignAuthEntriesOutput,
-    E.SignAuthEntriesError,
-    typeof PROCESS_NAME
-  >(signAuthEntriesProcess, { name: PROCESS_NAME });
-
-const P_SignAuthEntriesErrors = E;
-
-export { P_SignAuthEntries, P_SignAuthEntriesErrors };
+export { E as SignAuthEntriesErrors };

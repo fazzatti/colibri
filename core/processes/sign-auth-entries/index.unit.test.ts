@@ -3,12 +3,12 @@ import { describe, it } from "@std/testing/bdd";
 import { Buffer } from "buffer";
 import { xdr, Address } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
-import { P_SignAuthEntries } from "@/processes/sign-auth-entries/index.ts";
+import { signAuthEntries } from "@/processes/sign-auth-entries/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
-import type { TransactionSigner } from "@/signer/types.ts";
-import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+import type { Signer } from "@/signer/types.ts";
+import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 
-type MockSigner = TransactionSigner & {
+type MockSigner = Signer & {
   calls: number;
   lastEntry?: xdr.SorobanAuthorizationEntry;
   lastValidUntil?: number;
@@ -59,19 +59,6 @@ const makeSourceAuthEntry = () =>
     rootInvocation: makeInvocation(),
   });
 
-const makeContractAuthEntry = () =>
-  new xdr.SorobanAuthorizationEntry({
-    credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
-      new xdr.SorobanAddressCredentials({
-        address: Address.contract(Buffer.alloc(32, 9)).toScAddress(),
-        nonce: new xdr.Int64(0),
-        signatureExpirationLedger: 0,
-        signature: xdr.ScVal.scvVec([]),
-      })
-    ),
-    rootInvocation: makeInvocation(),
-  });
-
 const makeSigner = (
   publicKey: string,
   behavior?: (
@@ -80,22 +67,22 @@ const makeSigner = (
     passphrase: string
   ) => Promise<xdr.SorobanAuthorizationEntry>
 ): MockSigner => {
-  const sign: TransactionSigner["sign"] = (b: Buffer): Buffer => {
+  const pub = publicKey as Ed25519PublicKey;
+  const sign: Signer["sign"] = (b: Buffer): Buffer => {
     return b;
   };
-  const signTransaction: TransactionSigner["signTransaction"] = async (
-    ..._args: Parameters<TransactionSigner["signTransaction"]>
+  const signTransaction: Signer["signTransaction"] = async (
+    ..._args: Parameters<Signer["signTransaction"]>
   ) => {
     return await Promise.resolve(
-      undefined as unknown as Awaited<
-        ReturnType<TransactionSigner["signTransaction"]>
-      >
+      undefined as unknown as Awaited<ReturnType<Signer["signTransaction"]>>
     );
   };
 
   const signer: MockSigner = {
     calls: 0,
-    publicKey: () => publicKey as Ed25519PublicKey,
+    publicKey: () => pub,
+    signsFor: (target: Ed25519PublicKey | ContractId) => target === pub,
     signTransaction,
     sign,
     async signSorobanAuthEntry(entry, validUntil, passphrase) {
@@ -125,7 +112,7 @@ describe("SignAuthEntries", () => {
     const signer = makeSigner(account.toString());
     const rpc = makeRpc();
 
-    const out = await P_SignAuthEntries().run({
+    const out = await signAuthEntries({
       auth: [entry],
       signers: [signer],
       rpc,
@@ -145,7 +132,7 @@ describe("SignAuthEntries", () => {
     const signer1 = makeSigner(account1.toString());
     const signer2 = makeSigner(account2.toString());
 
-    const out = await P_SignAuthEntries().run({
+    const out = await signAuthEntries({
       auth: [entry1, entry2],
       signers: [signer1, signer2],
       rpc: makeRpc(),
@@ -162,7 +149,7 @@ describe("SignAuthEntries", () => {
     const entry = makeAccountAuthEntry(account);
     const signer = makeSigner(account.toString());
 
-    await P_SignAuthEntries().run({
+    await signAuthEntries({
       auth: [entry],
       signers: [signer],
       rpc: makeRpc(),
@@ -178,7 +165,7 @@ describe("SignAuthEntries", () => {
     const entry = makeAccountAuthEntry(account);
     const signer = makeSigner(account.toString());
 
-    await P_SignAuthEntries().run({
+    await signAuthEntries({
       auth: [entry],
       signers: [signer],
       rpc: makeRpc(2000),
@@ -194,7 +181,7 @@ describe("SignAuthEntries", () => {
     const entry = makeAccountAuthEntry(account);
     const signer = makeSigner(account.toString());
 
-    await P_SignAuthEntries().run({
+    await signAuthEntries({
       auth: [entry],
       signers: [signer],
       rpc: makeRpc(3000),
@@ -211,7 +198,7 @@ describe("SignAuthEntries", () => {
     const accountEntry = makeAccountAuthEntry(account);
     const signer = makeSigner(account.toString());
 
-    const out = await P_SignAuthEntries().run({
+    const out = await signAuthEntries({
       auth: [sourceEntry, accountEntry],
       signers: [signer],
       rpc: makeRpc(),
@@ -229,7 +216,7 @@ describe("SignAuthEntries", () => {
     const accountEntry = makeAccountAuthEntry(account);
     const signer = makeSigner(account.toString());
 
-    const out = await P_SignAuthEntries().run({
+    const out = await signAuthEntries({
       auth: [sourceEntry, accountEntry],
       signers: [signer],
       rpc: makeRpc(),
@@ -243,12 +230,20 @@ describe("SignAuthEntries", () => {
 
   it("passes through unsupported entries only when includeUnsigned is true", async () => {
     const account = Address.account(Buffer.alloc(32, 8));
-    const contractEntry = makeContractAuthEntry();
+    // Use a truly unsupported address type (muxed account)
+    const unsupportedEntry = makeScAddressAuthEntry(
+      xdr.ScAddress.scAddressTypeMuxedAccount(
+        new xdr.MuxedEd25519Account({
+          id: new xdr.Uint64(123),
+          ed25519: Buffer.alloc(32, 9),
+        })
+      )
+    );
     const accountEntry = makeAccountAuthEntry(account);
     const signer = makeSigner(account.toString());
 
-    const out = await P_SignAuthEntries().run({
-      auth: [contractEntry, accountEntry],
+    const out = await signAuthEntries({
+      auth: [unsupportedEntry, accountEntry],
       signers: [signer],
       rpc: makeRpc(),
       networkPassphrase,
@@ -280,7 +275,7 @@ describe("SignAuthEntries", () => {
     );
     const signer = makeSigner(Address.account(Buffer.alloc(32, 24)).toString());
 
-    const out = await P_SignAuthEntries().run({
+    const out = await signAuthEntries({
       auth: [claimable, liquidity, muxed],
       signers: [signer],
       rpc: makeRpc(),
@@ -313,7 +308,7 @@ describe("SignAuthEntries", () => {
     );
     const signer = makeSigner(Address.account(Buffer.alloc(32, 28)).toString());
 
-    const out = await P_SignAuthEntries().run({
+    const out = await signAuthEntries({
       auth: [claimable, liquidity, muxed],
       signers: [signer],
       rpc: makeRpc(),

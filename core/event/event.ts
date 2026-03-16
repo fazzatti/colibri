@@ -1,11 +1,11 @@
 import type { Api } from "stellar-sdk/rpc";
 import type { xdr } from "stellar-sdk";
-import { parseScVal, parseScVals } from "@/common/scval/index.ts";
-import type { ScValParsed } from "@/common/scval/types.ts";
+import { parseScVal, parseScVals } from "@/common/helpers/xdr/scval.ts";
+import type { ScValParsed } from "@/common/helpers/xdr/types.ts";
 import { isEventId, type EventId } from "@/event/event-id/index.ts";
 import { EventType, type IEvent } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
-import { isDefined } from "@/common/verifiers/is-defined.ts";
+import { isDefined } from "@/common/type-guards/is-defined.ts";
 import { StrKey } from "@/strkeys/index.ts";
 
 export class Event implements IEvent {

@@ -3,17 +3,17 @@ import { describe, it } from "@std/testing/bdd";
 import { Buffer } from "buffer";
 import { Address, xdr } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
-import { P_SignAuthEntries } from "@/processes/sign-auth-entries/index.ts";
+import { signAuthEntries } from "@/processes/sign-auth-entries/index.ts";
 import * as E from "@/processes/sign-auth-entries/error.ts";
 import type { SignAuthEntriesInput } from "@/processes/sign-auth-entries/types.ts";
 import { NetworkConfig } from "@/network/index.ts";
-import type { TransactionSigner } from "@/signer/types.ts";
+import type { Signer } from "@/signer/types.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 
 describe("SignAuthEntries", () => {
   const { networkPassphrase } = NetworkConfig.TestNet();
 
-  type MockSigner = TransactionSigner & {
+  type MockSigner = Signer & {
     calls: number;
     lastEntry?: xdr.SorobanAuthorizationEntry;
     lastValidUntil?: number;
@@ -53,16 +53,14 @@ describe("SignAuthEntries", () => {
       passphrase: string
     ) => Promise<xdr.SorobanAuthorizationEntry>
   ): MockSigner => {
-    const signTransaction: TransactionSigner["signTransaction"] = async (
-      ..._args: Parameters<TransactionSigner["signTransaction"]>
+    const signTransaction: Signer["signTransaction"] = async (
+      ..._args: Parameters<Signer["signTransaction"]>
     ) => {
       return await Promise.resolve(
-        undefined as unknown as Awaited<
-          ReturnType<TransactionSigner["signTransaction"]>
-        >
+        undefined as unknown as Awaited<ReturnType<Signer["signTransaction"]>>
       );
     };
-    const sign: TransactionSigner["sign"] = (b: Buffer): Buffer => {
+    const sign: Signer["sign"] = (b: Buffer): Buffer => {
       return b;
     };
 
@@ -71,6 +69,7 @@ describe("SignAuthEntries", () => {
       publicKey: () => publicKey as Ed25519PublicKey,
       sign,
       signTransaction,
+      signsFor: (target: Ed25519PublicKey | string) => target === publicKey,
       async signSorobanAuthEntry(entry, validUntil, passphrase) {
         signer.calls++;
         signer.lastEntry = entry;
@@ -103,7 +102,7 @@ describe("SignAuthEntries", () => {
       );
       await assertRejects(
         () =>
-          P_SignAuthEntries().run({
+          signAuthEntries({
             auth: undefined as unknown as xdr.SorobanAuthorizationEntry[],
             signers: [signer],
             rpc: makeRpc(),
@@ -120,7 +119,7 @@ describe("SignAuthEntries", () => {
 
       await assertRejects(
         () =>
-          P_SignAuthEntries().run({
+          signAuthEntries({
             auth: [entry],
             signers: [signer],
             rpc: undefined as unknown as Server,
@@ -136,9 +135,9 @@ describe("SignAuthEntries", () => {
 
       await assertRejects(
         () =>
-          P_SignAuthEntries().run({
+          signAuthEntries({
             auth: [entry],
-            signers: undefined as unknown as TransactionSigner[],
+            signers: undefined as unknown as Signer[],
             rpc: makeRpc(),
             networkPassphrase,
           }),
@@ -153,7 +152,7 @@ describe("SignAuthEntries", () => {
 
       await assertRejects(
         () =>
-          P_SignAuthEntries().run({
+          signAuthEntries({
             auth: [entry],
             signers: [signer],
             rpc: makeRpc(),
@@ -170,7 +169,7 @@ describe("SignAuthEntries", () => {
 
       await assertRejects(
         () =>
-          P_SignAuthEntries().run({
+          signAuthEntries({
             auth: [entry],
             signers: [signer],
             rpc: makeRpc(),
@@ -188,7 +187,7 @@ describe("SignAuthEntries", () => {
 
       await assertRejects(
         () =>
-          P_SignAuthEntries().run({
+          signAuthEntries({
             auth: [entry],
             signers: [signer],
             rpc: makeRpc(),
@@ -206,7 +205,7 @@ describe("SignAuthEntries", () => {
 
       await assertRejects(
         () =>
-          P_SignAuthEntries().run({
+          signAuthEntries({
             auth: [entry],
             signers: [signer],
             rpc: makeRpc(),
@@ -224,7 +223,7 @@ describe("SignAuthEntries", () => {
 
       await assertRejects(
         () =>
-          P_SignAuthEntries().run({
+          signAuthEntries({
             auth: [entry],
             signers: [signer],
             rpc: makeFailingRpc(),
@@ -240,7 +239,7 @@ describe("SignAuthEntries", () => {
 
       await assertRejects(
         () =>
-          P_SignAuthEntries().run({
+          signAuthEntries({
             auth: [entry],
             signers: [],
             rpc: makeRpc(),
@@ -259,7 +258,7 @@ describe("SignAuthEntries", () => {
 
       await assertRejects(
         () =>
-          P_SignAuthEntries().run({
+          signAuthEntries({
             auth: [entry],
             signers: [signer],
             rpc: makeRpc(),
@@ -271,7 +270,7 @@ describe("SignAuthEntries", () => {
 
     it("wraps unexpected errors", async () => {
       await assertRejects(
-        () => P_SignAuthEntries().run(null as unknown as SignAuthEntriesInput),
+        () => signAuthEntries(null as unknown as SignAuthEntriesInput),
         E.UNEXPECTED_ERROR
       );
     });

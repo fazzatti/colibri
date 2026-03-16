@@ -9,7 +9,7 @@ import type {
   FutureNetCustomConfig,
   TestNetNetCustomConfig,
 } from "@/network/types.ts";
-import { isDefined } from "@/common/verifiers/is-defined.ts";
+import { isDefined } from "@/common/type-guards/is-defined.ts";
 
 export * as NetworkProviders from "@/network/providers/index.ts";
 

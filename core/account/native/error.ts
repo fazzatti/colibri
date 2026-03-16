@@ -4,9 +4,9 @@ export enum Code {
   // UNEXPECTED = "ACC_NAT_000", // Reserved for unexpected errors - not currently used in NativeAccount
   INVALID_ED25519_PUBLIC_KEY = "ACC_NAT_001",
   INVALID_MUXED_ID = "ACC_NAT_002",
-
   INVALID_MUXED_ADDRESS_GENERATED = "ACC_NAT_003",
   MISSING_MASTER_SIGNER = "ACC_NAT_004",
+  UNSUPPORTED_ADDRESS_TYPE = "ACC_NAT_005",
 }
 export type MetaData = unknown;
 
@@ -113,10 +113,27 @@ export class MISSING_MASTER_SIGNER extends NativeAccountError {
   }
 }
 
+export class UNSUPPORTED_ADDRESS_TYPE extends NativeAccountError {
+  constructor(address: string) {
+    super({
+      code: Code.UNSUPPORTED_ADDRESS_TYPE,
+      message: "The provided address type is unsupported!",
+      data: null,
+      details: `The address '${address}' is of an unsupported type for NativeAccount. Only ED25519 public keys are supported.`,
+      diagnostic: {
+        rootCause: "The address type is not supported by NativeAccount.",
+        suggestion:
+          "Use an ED25519 public key as the address for NativeAccount instances.",
+      },
+    });
+  }
+}
+
 export const ERROR_ACC_NAT = {
   // [Code.UNEXPECTED]: UNEXPECTED,
   [Code.INVALID_ED25519_PUBLIC_KEY]: INVALID_ED25519_PUBLIC_KEY,
   [Code.INVALID_MUXED_ID]: INVALID_MUXED_ID,
   [Code.INVALID_MUXED_ADDRESS_GENERATED]: INVALID_MUXED_ADDRESS_GENERATED,
   [Code.MISSING_MASTER_SIGNER]: MISSING_MASTER_SIGNER,
+  [Code.UNSUPPORTED_ADDRESS_TYPE]: UNSUPPORTED_ADDRESS_TYPE,
 };

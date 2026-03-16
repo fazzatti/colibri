@@ -10,7 +10,7 @@ import {
   Transaction,
   TransactionBuilder,
 } from "stellar-sdk";
-import { P_AssembleTransaction } from "@/processes/assemble-transaction/index.ts";
+import { assembleTransaction } from "@/processes/assemble-transaction/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import type { AssembleTransactionInput } from "@/processes/assemble-transaction/types.ts";
 
@@ -22,7 +22,7 @@ import type { BaseFee } from "@/common/types/transaction-config/types.ts";
 const createTestTransaction = (fee: BaseFee = "100") => {
   const account = new Account(
     "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
-    "100"
+    "100",
   );
 
   return new TransactionBuilder(account, {
@@ -34,19 +34,13 @@ const createTestTransaction = (fee: BaseFee = "100") => {
         contract: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
         function: "transfer",
         args: [],
-      })
+      }),
     )
     .setTimeout(0)
     .build();
 };
 
 describe("AssembleTransaction", () => {
-  describe("Construction", () => {
-    it("creates process with proper name", () => {
-      assertEquals(P_AssembleTransaction().name, "AssembleTransaction");
-    });
-  });
-
   describe("Features", () => {
     it("executes with minimal valid input", async () => {
       const transaction = createTestTransaction();
@@ -58,7 +52,7 @@ describe("AssembleTransaction", () => {
         resourceFee: 0,
       };
 
-      const result = await P_AssembleTransaction().run(input);
+      const result = await assembleTransaction(input);
 
       assertInstanceOf(result, Transaction);
     });
@@ -67,7 +61,7 @@ describe("AssembleTransaction", () => {
       const inclusionFee = "10";
       const transaction = createTestTransaction(inclusionFee);
       const sorobanData = new SorobanDataBuilder();
-      sorobanData.setResourceFee(1);
+      sorobanData.setResourceFee(3);
 
       const input: AssembleTransactionInput = {
         transaction,
@@ -76,9 +70,9 @@ describe("AssembleTransaction", () => {
         resourceFee: 5,
       };
 
-      const result = await P_AssembleTransaction().run(input);
+      const result = await assembleTransaction(input);
       assertInstanceOf(result, Transaction);
-      assertEquals(result.fee, "15");
+      assertEquals(result.fee, "18"); // 10 inclusion fee + 3 resource fee from soroban data + 5 resource fee from input
     });
 
     it("executes with soroban data and auth entries", async () => {
@@ -93,7 +87,7 @@ describe("AssembleTransaction", () => {
         resourceFee: 0,
       };
 
-      const result = await P_AssembleTransaction().run(input);
+      const result = await assembleTransaction(input);
       assertInstanceOf(result, Transaction);
     });
   });
@@ -103,15 +97,15 @@ describe("AssembleTransaction", () => {
       const faultyInput = null as unknown as AssembleTransactionInput;
 
       await assertRejects(
-        async () => await P_AssembleTransaction().run(faultyInput),
-        E.UNEXPECTED_ERROR
+        async () => await assembleTransaction(faultyInput),
+        E.UNEXPECTED_ERROR,
       );
     });
 
     it("throws NOT_SMART_CONTRACT_TRANSACTION_ERROR for non-smart contract transaction", async () => {
       const account = new Account(
         "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
-        "100"
+        "100",
       );
 
       const nonSmartContractTx = new TransactionBuilder(account, {
@@ -124,7 +118,7 @@ describe("AssembleTransaction", () => {
               "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
             asset: Asset.native(),
             amount: "100",
-          })
+          }),
         )
         .setTimeout(0)
         .build();
@@ -137,8 +131,8 @@ describe("AssembleTransaction", () => {
       };
 
       await assertRejects(
-        async () => await P_AssembleTransaction().run(input),
-        E.NOT_SMART_CONTRACT_TRANSACTION_ERROR
+        async () => await assembleTransaction(input),
+        E.NOT_SMART_CONTRACT_TRANSACTION_ERROR,
       );
     });
 
@@ -155,8 +149,8 @@ describe("AssembleTransaction", () => {
       };
 
       await assertRejects(
-        async () => await P_AssembleTransaction().run(input),
-        E.FAILED_TO_BUILD_SOROBAN_DATA_ERROR
+        async () => await assembleTransaction(input),
+        E.FAILED_TO_BUILD_SOROBAN_DATA_ERROR,
       );
     });
 
@@ -168,7 +162,7 @@ describe("AssembleTransaction", () => {
         "addOperation",
         () => {
           throw new Error("Mocked addOperation error");
-        }
+        },
       );
 
       const input: AssembleTransactionInput = {
@@ -179,8 +173,8 @@ describe("AssembleTransaction", () => {
       };
 
       await assertRejects(
-        async () => await P_AssembleTransaction().run(input),
-        E.FAILED_TO_ASSEMBLE_TRANSACTION_ERROR
+        async () => await assembleTransaction(input),
+        E.FAILED_TO_ASSEMBLE_TRANSACTION_ERROR,
       );
 
       addOperationStub.restore();
@@ -190,7 +184,7 @@ describe("AssembleTransaction", () => {
       const createFaultyTestTransaction = () => {
         const account = new Account(
           "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
-          "100"
+          "100",
         );
 
         const tx = new TransactionBuilder(account, {
@@ -203,7 +197,7 @@ describe("AssembleTransaction", () => {
                 "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
               function: "transfer",
               args: [],
-            })
+            }),
           )
           .setTimeout(0)
           .build();
@@ -222,8 +216,8 @@ describe("AssembleTransaction", () => {
       };
 
       await assertRejects(
-        async () => await P_AssembleTransaction().run(input),
-        E.FAILED_TO_BUILD_TRANSACTION_ERROR
+        async () => await assembleTransaction(input),
+        E.FAILED_TO_BUILD_TRANSACTION_ERROR,
       );
     });
 
@@ -238,8 +232,8 @@ describe("AssembleTransaction", () => {
       };
 
       await assertRejects(
-        async () => await P_AssembleTransaction().run(input),
-        E.MISSING_ARG
+        async () => await assembleTransaction(input),
+        E.MISSING_ARG,
       );
     });
   });

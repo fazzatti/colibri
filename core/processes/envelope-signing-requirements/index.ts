@@ -1,14 +1,13 @@
-import { ProcessEngine } from "convee";
 import type {
   EnvelopeSigningRequirementsInput,
   EnvelopeSigningRequirementsOutput,
 } from "@/processes/envelope-signing-requirements/types.ts";
 import * as E from "@/processes/envelope-signing-requirements/error.ts";
-import { isFeeBumpTransaction } from "@/common/verifiers/is-fee-bump-transaction.ts";
-import { isTransaction } from "@/common/verifiers/is-transaction.ts";
-import { muxedAddressToBaseAccount } from "@/transformers/address/index.ts";
+import { isFeeBumpTransaction } from "@/common/type-guards/is-fee-bump-transaction.ts";
+import { isTransaction } from "@/common/type-guards/is-transaction.ts";
+import { muxedAddressToBaseAccount } from "@/address/index.ts";
+import { getRequiredOperationThresholdForClassicOperation } from "@/auth/index.ts";
 import { ColibriError } from "@/error/index.ts";
-import { getRequiredOperationThresholdForClassicOperation } from "@/transformers/auth/index.ts";
 import {
   OperationThreshold,
   type SignatureRequirement,
@@ -17,7 +16,7 @@ import {
 import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
 import { StrKey } from "@/strkeys/index.ts";
 
-const envelopeSigningRequirementsProcess = (
+export const envelopeSigningRequirements = (
   input: EnvelopeSigningRequirementsInput
 ): EnvelopeSigningRequirementsOutput => {
   try {
@@ -124,18 +123,4 @@ const removeConflictingRequirements = (
   return requirementsBundle;
 };
 
-const PROCESS_NAME = "EnvelopeSigningRequirements" as const;
-
-const P_EnvelopeSigningRequirements = () =>
-  ProcessEngine.create<
-    EnvelopeSigningRequirementsInput,
-    EnvelopeSigningRequirementsOutput,
-    E.EnvelopeSigningRequirementsError,
-    typeof PROCESS_NAME
-  >(envelopeSigningRequirementsProcess, {
-    name: PROCESS_NAME,
-  });
-
-const P_EnvelopeSigningRequirementsErrors = E;
-
-export { P_EnvelopeSigningRequirements, P_EnvelopeSigningRequirementsErrors };
+export { E as EnvelopeSigningRequirementsErrors };

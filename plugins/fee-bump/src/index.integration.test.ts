@@ -11,10 +11,10 @@ import {
 } from "@colibri/core/";
 import { PLG_FeeBump } from "@/index.ts";
 import {
-  P_SendTransaction,
   NetworkConfig,
   PIPE_InvokeContract,
   type TransactionConfig,
+  steps,
 } from "@colibri/core";
 
 describe(
@@ -41,11 +41,19 @@ describe(
     beforeAll(async () => {
       await initializeWithFriendbot(
         networkConfig.friendbotUrl,
-        innerSource.address() as Ed25519PublicKey
+        innerSource.address() as Ed25519PublicKey,
+        {
+          rpcUrl: networkConfig.rpcUrl,
+          allowHttp: networkConfig.allowHttp,
+        },
       );
       await initializeWithFriendbot(
         networkConfig.friendbotUrl,
-        feeBumpSource.address() as Ed25519PublicKey
+        feeBumpSource.address() as Ed25519PublicKey,
+        {
+          rpcUrl: networkConfig.rpcUrl,
+          allowHttp: networkConfig.allowHttp,
+        },
       );
 
       invokePipe = PIPE_InvokeContract.create({
@@ -69,7 +77,7 @@ describe(
         });
 
         assertExists(plugin);
-        assertEquals(plugin.name, PLG_FeeBump.name);
+        assertEquals(plugin.id, PLG_FeeBump.name);
       });
 
       it("should add the plugin to the SendTransaction process", () => {
@@ -86,32 +94,18 @@ describe(
           networkConfig,
         });
 
-        const SendTransactionStep = P_SendTransaction();
-
-        const sendTransactionStepBefore = invokePipe.steps.find(
-          (step) => step.name === PLG_FeeBump.target
-        ) as typeof SendTransactionStep;
-
-        assertExists(sendTransactionStepBefore);
-        assertExists(sendTransactionStepBefore.plugins);
-        assertEquals(sendTransactionStepBefore.plugins.length, 0);
-
-        invokePipe.addPlugin(plugin, PLG_FeeBump.target);
+        assertEquals(invokePipe.plugins.length, 0);
+        invokePipe.use(plugin);
 
         assertExists(invokePipe);
-        assertEquals(invokePipe.name, PIPE_InvokeContract.name);
-
-        const sendTransactionStepAfter = invokePipe.steps.find(
-          (step) => step.name === PLG_FeeBump.target
-        ) as typeof SendTransactionStep;
-
-        assertExists(sendTransactionStepAfter);
-        assertExists(sendTransactionStepAfter.plugins);
-        assertEquals(sendTransactionStepAfter.plugins.length, 1);
-        assertEquals(
-          sendTransactionStepAfter.plugins[0].name,
-          PLG_FeeBump.name
+        assertEquals(invokePipe.id, PIPE_InvokeContract.name);
+        assertEquals(invokePipe.plugins.length, 1);
+        const [attachedPlugin] = Array.from(
+          invokePipe.plugins as unknown as readonly typeof plugin[],
         );
+        assertExists(attachedPlugin);
+        assertEquals(attachedPlugin.id, PLG_FeeBump.name);
+        assertEquals(attachedPlugin.target, steps.SEND_TRANSACTION_STEP_ID);
       });
     });
     describe("Execute", () => {
@@ -132,21 +126,13 @@ describe(
           signers: [innerSource.signer()],
         };
         assertExists(plugin);
-        assertEquals(plugin.name, "FeeBumpPlugin");
+        assertEquals(plugin.id, "FeeBumpPlugin");
 
         invokePipe = PIPE_InvokeContract.create({
           networkConfig,
         });
-        const SendTransactionStep = P_SendTransaction();
-
-        const sendTransactionStepBefore = invokePipe.steps.find(
-          (step) => step.name === PLG_FeeBump.target
-        ) as typeof SendTransactionStep;
-
-        assertExists(sendTransactionStepBefore);
-        assertExists(sendTransactionStepBefore.plugins);
-        assertEquals(sendTransactionStepBefore.plugins.length, 0);
-        invokePipe.addPlugin(plugin, PLG_FeeBump.target);
+        assertEquals(invokePipe.plugins.length, 0);
+        invokePipe.use(plugin);
 
         const decimalsOp = Operation.invokeContractFunction({
           function: "decimals",

@@ -1,4 +1,4 @@
-import type { TransactionSigner } from "@/signer/types.ts";
+import type { Signer } from "@/signer/types.ts";
 import type {
   ContractId,
   Ed25519PublicKey,
@@ -9,7 +9,7 @@ export type TransactionConfig = {
   fee: BaseFee;
   source: Ed25519PublicKey;
   timeout: number;
-  signers: TransactionSigner[];
+  signers: Signer[];
 };
 
 export type BaseFee = `${number}`;

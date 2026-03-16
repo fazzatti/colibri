@@ -1,6 +1,8 @@
 # Dependency directories
 node_modules/
 
+.env
+
 # Deno
 .deno/
 deno.lock
@@ -12,3 +14,6 @@ target/
 **/.bindings/
 
 **/test_snapshots/
+
+
+.DS_Store

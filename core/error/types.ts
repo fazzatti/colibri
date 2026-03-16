@@ -1,19 +1,23 @@
 export type ErrorDomain =
   | "account"
+  | "address"
+  | "auth"
   | "contract"
-  | "transformers"
   | "tools"
   | "processes"
   | "verifiers"
   | "helpers"
   | "core"
-  | "accounts"
+  | "signer"
   | "pipelines"
   | "plugins"
   | "rpc"
   | "events"
   | "toid"
-  | "event-streamer";
+  | "event-streamer"
+  | "ledger-streamer"
+  | "sep1"
+  | "sep10";
 
 export type BaseMeta = {
   cause?: unknown; // chained errors

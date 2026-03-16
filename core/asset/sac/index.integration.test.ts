@@ -18,17 +18,21 @@ import {
 import { Server } from "stellar-sdk/rpc";
 import { toStellarAssetCanonicalString } from "@/asset/sep11/index.ts";
 import { PIPE_ClassicTransaction } from "@/pipelines/classic-transaction/index.ts";
-import type { TransactionSigner } from "@/signer/types.ts";
+import type { Signer } from "@/signer/types.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 import * as SACError from "@/asset/sac/error.ts";
 
 describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
   const networkConfig = NetworkConfig.TestNet();
 
+  // The RPC may sometimes take a while to reflect changes, so we use a longer timeout for the integration tests
+  // This seems to be specific to testnet.
+  const wait = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms));
+
   const setupIssuerFlags = async (
     publicKey: Ed25519PublicKey,
     networkConfig: NetworkConfig,
-    config: TransactionConfig
+    config: TransactionConfig,
   ) => {
     const pipe = PIPE_ClassicTransaction.create({ networkConfig });
     const op = Operation.setOptions({
@@ -40,10 +44,10 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
   };
 
   const addTrustline = async (
-    users: TransactionSigner[],
+    users: Signer[],
     asset: Asset,
     networkConfig: NetworkConfig,
-    config: TransactionConfig
+    config: TransactionConfig,
   ) => {
     const pipe = PIPE_ClassicTransaction.create({ networkConfig });
     const operations: xdr.Operation[] = [];
@@ -53,7 +57,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
         Operation.changeTrust({
           asset: asset,
           source: user.publicKey(),
-        })
+        }),
       );
     }
 
@@ -78,9 +82,18 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
   };
 
   beforeAll(async () => {
-    await initializeWithFriendbot(networkConfig.friendbotUrl, issuer.address());
-    await initializeWithFriendbot(networkConfig.friendbotUrl, userA.address());
-    await initializeWithFriendbot(networkConfig.friendbotUrl, userB.address());
+    await initializeWithFriendbot(networkConfig.friendbotUrl, issuer.address(), {
+      rpcUrl: networkConfig.rpcUrl,
+      allowHttp: networkConfig.allowHttp,
+    });
+    await initializeWithFriendbot(networkConfig.friendbotUrl, userA.address(), {
+      rpcUrl: networkConfig.rpcUrl,
+      allowHttp: networkConfig.allowHttp,
+    });
+    await initializeWithFriendbot(networkConfig.friendbotUrl, userB.address(), {
+      rpcUrl: networkConfig.rpcUrl,
+      allowHttp: networkConfig.allowHttp,
+    });
 
     await setupIssuerFlags(issuer.address(), networkConfig, txConfig);
 
@@ -100,8 +113,22 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
 
       assertExists(colibriSAC);
       assertEquals(colibriSAC.code, code);
-      assertEquals(colibriSAC.issuer, issuer.address());
       assertEquals(colibriSAC.contractId, contractId);
+      assertEquals(colibriSAC.isNativeXLM(), false);
+    });
+
+    it("Instantiates SAC for native XLM using static method", () => {
+      const nativeSAC = StellarAssetContract.NativeXLM(networkConfig);
+
+      assertExists(nativeSAC);
+      assertEquals(nativeSAC.code, "XLM");
+      assertEquals(nativeSAC.isNativeXLM(), true);
+
+      // Verify the contract ID matches the native asset contract ID
+      const expectedContractId = Asset.native().contractId(
+        networkConfig.networkPassphrase,
+      );
+      assertEquals(nativeSAC.contractId, expectedContractId);
     });
 
     it("Deploys the SAC contract for a new asset", async () => {
@@ -141,7 +168,11 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
 
       await initializeWithFriendbot(
         networkConfig.friendbotUrl,
-        newAdminAccount.publicKey()
+        newAdminAccount.publicKey(),
+        {
+          rpcUrl: networkConfig.rpcUrl,
+          allowHttp: networkConfig.allowHttp,
+        },
       );
     });
 
@@ -153,6 +184,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
         newAdmin: newAdminAccount.publicKey(),
         config: txConfig,
       });
+      await wait();
       currentAdmin = await colibriSAC.admin();
       assertEquals(currentAdmin, newAdminAccount.publicKey());
 
@@ -163,6 +195,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
           signers: [newAdminAccount, issuer.signer()],
         },
       });
+      await wait();
       currentAdmin = await colibriSAC.admin();
       assertEquals(currentAdmin, issuer.address());
     });
@@ -178,6 +211,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
         amount: 1_000_000_0000000n, // 1M COLIBRI
         config: txConfig,
       });
+      await wait();
 
       userACurrentBalance = await colibriSAC.balance({
         id: userA.address(),
@@ -192,6 +226,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
           signers: [userA.signer(), issuer.signer()],
         },
       });
+      await wait();
 
       userACurrentBalance = await colibriSAC.balance({
         id: userA.address(),
@@ -210,6 +245,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
         authorize: false,
         config: txConfig,
       });
+      await wait();
 
       isAuthorized = await colibriSAC.authorized({
         id: userB.address(),
@@ -221,6 +257,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
         authorize: true,
         config: txConfig,
       });
+      await wait();
 
       isAuthorized = await colibriSAC.authorized({
         id: userB.address(),
@@ -235,6 +272,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
         amount: 100_0000000n, // 100 COLIBRI
         config: txConfig,
       });
+      await wait();
 
       let userBBalance = await colibriSAC.balance({
         id: userB.address(),
@@ -247,6 +285,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
         amount: 50_0000000n,
         config: txConfig,
       });
+      await wait();
 
       userBBalance = await colibriSAC.balance({
         id: userB.address(),
@@ -275,6 +314,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
           signers: [userA.signer(), issuer.signer()],
         },
       });
+      await wait();
 
       const userABalanceAfter = await colibriSAC.balance({
         id: userA.address(),
@@ -313,6 +353,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
           signers: [userA.signer(), issuer.signer()],
         },
       });
+      await wait();
 
       // Check allowance is now set
       allowance = await colibriSAC.allowance({
@@ -350,6 +391,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
           signers: [userB.signer(), issuer.signer()],
         },
       });
+      await wait();
 
       const userABalanceAfter = await colibriSAC.balance({
         id: userA.address(),
@@ -387,6 +429,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
           signers: [userA.signer(), issuer.signer()],
         },
       });
+      await wait();
 
       const userABalanceBefore = await colibriSAC.balance({
         id: userA.address(),
@@ -404,6 +447,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
           signers: [userB.signer(), issuer.signer()],
         },
       });
+      await wait();
 
       const userABalanceAfter = await colibriSAC.balance({
         id: userA.address(),

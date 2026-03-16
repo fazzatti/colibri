@@ -4,6 +4,8 @@ export type * from "@/account/native/types.ts";
 export * as ERRORS_ACC_NAT from "@/account/native/error.ts";
 
 export * from "@/asset/index.ts";
+export * as address from "@/address/index.ts";
+export * as auth from "@/auth/index.ts";
 
 export * from "@/common/index.ts";
 
@@ -17,11 +19,14 @@ export * from "@/error/types.ts";
 export * from "@/event/index.ts";
 export * from "@/event/types.ts";
 
+export * from "@/ledger-parser/index.ts";
+export * as ERRORS_LDP from "@/ledger-parser/error.ts";
+
 export * from "@/network/index.ts";
 export * from "@/network/types.ts";
 
 export * from "@/processes/index.ts";
-export * as transformers from "@/transformers/index.ts";
+export * as steps from "@/steps/index.ts";
 
 export * from "@/pipelines/index.ts";
 
@@ -37,3 +42,7 @@ export * from "@/toid/index.ts";
 export type * from "@/toid/types.ts";
 
 export * from "@/tools/index.ts";
+
+export * from "@/sep1/index.ts";
+export type * from "@/sep1/types.ts";
+export * as ERRORS_SEP1 from "@/sep1/error.ts";

@@ -2,7 +2,7 @@
 
 A Colibri plugin that wraps a Stellar Transaction in a Fee Bump Transaction so a designated account pays the fees.
 
-It operates on the `P_SendTransaction` process from `@colibri/core`. You can use it directly with that process or add it to any pipeline that uses `P_SendTransaction` (for example, `PIPE_InvokeContract`).
+It targets the `SendTransaction` step from `@colibri/core`. You can attach it to any `convee` pipe that includes `steps.SEND_TRANSACTION_STEP_ID` (for example, `PIPE_InvokeContract`).
 
 [📚 Documentation](https://colibri-docs.gitbook.io/) | [💡 Examples](https://github.com/fazzatti/colibri-examples)
 
@@ -16,9 +16,9 @@ Minimal usage — create the plugin with its configuration and add it to a pipel
 
 ```ts
 import { PLG_FeeBump } from "@colibri/plugin-fee-bump";
-import { PIPE_InvokeContract, TestNet } from "@colibri/core";
+import { PIPE_InvokeContract, NetworkConfig } from "@colibri/core";
 
-const networkConfig = TestNet();
+const networkConfig = NetworkConfig.TestNet();
 
 const plugin = PLG_FeeBump.create({
   networkConfig,
@@ -32,39 +32,14 @@ const plugin = PLG_FeeBump.create({
 });
 
 const pipeline = PIPE_InvokeContract.create({ networkConfig });
-pipeline.addPlugin(plugin, PLG_FeeBump.target);
-```
-
-### Using directly with `P_SendTransaction`
-
-If you want to use the plugin directly with the process, create the process and add the plugin to it:
-
-```ts
-import { PLG_FeeBump } from "@colibri/plugin-fee-bump";
-import { P_SendTransaction, TestNet } from "@colibri/core";
-
-const networkConfig = TestNet();
-
-const plugin = PLG_FeeBump.create({
-  networkConfig,
-  feeBumpConfig: {
-    source: "G...FEEPAYER", // fee payer address
-    fee: "10000000", // fee in stroops (1 XLM)
-    signers: [
-      /* signer objects */
-    ],
-  },
-});
-
-const process = P_SendTransaction.create({ networkConfig });
-process.addPlugin(plugin);
+pipeline.use(plugin);
 ```
 
 See the tests for full examples.
 
 ## How it works
 
-The plugin runs on the input belt of the `SendTransaction` process. That means it acts before the transaction is sent. It inspects the incoming input, wraps and authorizes the `transaction` with a FeeBumpTransaction (signed by the configured signers), and returns the modified input for the rest of the pipeline.
+The plugin runs on the input of the `SendTransaction` step. It inspects the incoming payload, wraps and authorizes the `transaction` with a `FeeBumpTransaction` signed by the configured signers, and returns the modified input for the rest of the pipeline.
 
 ## API
 
@@ -78,7 +53,7 @@ For concrete examples, refer to the unit and integration tests in `src/`.
 
 `PLG_FeeBump.create` accepts an options object with the following fields:
 
-- `networkConfig` (required) — Colibri network configuration (e.g.: you can use the core export `TestNet()` for testnet). The plugin uses this configuration when building transactions.
+- `networkConfig` (required) — Colibri network configuration (for example, `NetworkConfig.TestNet()`). The plugin uses this configuration when building transactions.
 
 - `feeBumpConfig` (required) — Configuration for the fee bump behavior:
   - `source` (string, required) — The Stellar account address that will pay the fee (fee source).
@@ -91,7 +66,7 @@ _\*Since this value defines a base fee, the total amount set as max network fee 
 
 ```ts
 PLG_FeeBump.create({
-  networkConfig: TestNet(),
+  networkConfig: NetworkConfig.TestNet(),
   feeBumpConfig: {
     source: feePayer.address(),
     fee: "10000000",

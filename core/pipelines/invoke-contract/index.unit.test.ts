@@ -1,6 +1,6 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { MetadataHelper } from "convee";
+import { createRunContext, step } from "convee";
 import { Operation, SorobanDataBuilder, xdr } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
 import { NetworkConfig } from "@/network/index.ts";
@@ -8,6 +8,7 @@ import * as E from "@/pipelines/invoke-contract/error.ts";
 import { createInvokeContractPipeline } from "@/pipelines/invoke-contract/index.ts";
 import type { SimulateTransactionOutput } from "@/processes/simulate-transaction/types.ts";
 import {
+  INVOKE_CONTRACT_INPUT_STEP_ID,
   inputToBuild,
   signAuthEntriesToAssemble,
   simulateToSignAuthEntries,
@@ -18,6 +19,20 @@ import type { InvokeContractInput } from "@/pipelines/invoke-contract/types.ts";
 import type { EnvelopeSigningRequirementsOutput } from "@/processes/envelope-signing-requirements/types.ts";
 import type { SignEnvelopeOutput } from "@/processes/sign-envelope/types.ts";
 import { NetworkType } from "@/network/types.ts";
+import {
+  ASSEMBLE_TRANSACTION_STEP_ID,
+  BUILD_TRANSACTION_STEP_ID,
+  SIMULATE_TRANSACTION_STEP_ID,
+} from "@/steps/index.ts";
+
+const seedStepOutput = async <Output>(
+  context: ReturnType<typeof createRunContext>,
+  stepId: string,
+  output: Output,
+) => {
+  const seedStep = step(() => output, { id: stepId });
+  await seedStep.runWith({ context: { parent: context } });
+};
 
 describe("createInvokeContractPipeline", () => {
   describe("Construction", () => {
@@ -30,7 +45,7 @@ describe("createInvokeContractPipeline", () => {
 
       const pipeline = createInvokeContractPipeline({ networkConfig });
 
-      assertEquals(pipeline.name, "InvokeContractPipeline");
+      assertEquals(pipeline.id, "InvokeContractPipeline");
     });
   });
 
@@ -90,13 +105,24 @@ describe("createInvokeContractPipeline", () => {
           transactionData: new SorobanDataBuilder(),
         };
 
-        const metadata = new MetadataHelper();
-        metadata.add("buildKey", mockBuildOutput);
-        metadata.add("simulateKey", mockSimulateOutput);
+        const context = createRunContext();
+        await seedStepOutput(
+          context,
+          BUILD_TRANSACTION_STEP_ID,
+          mockBuildOutput,
+        );
+        await seedStepOutput(
+          context,
+          SIMULATE_TRANSACTION_STEP_ID,
+          mockSimulateOutput,
+        );
 
-        const connector = signAuthEntriesToAssemble("buildKey", "simulateKey");
+        const connector = signAuthEntriesToAssemble();
 
-        const result = await connector(mockSignAuthEntriesOutput, metadata);
+        const result = await connector.runWith(
+          { context: { parent: context } },
+          ...mockSignAuthEntriesOutput,
+        );
 
         assertExists(result);
         assertEquals(result.authEntries, mockSignAuthEntriesOutput);
@@ -124,13 +150,24 @@ describe("createInvokeContractPipeline", () => {
           },
         };
 
-        const metadata = new MetadataHelper();
-        metadata.add("assembleKey", mockAssembleOutput);
-        metadata.add("inputKey", mockInputStep);
+        const context = createRunContext();
+        await seedStepOutput(
+          context,
+          ASSEMBLE_TRANSACTION_STEP_ID,
+          mockAssembleOutput,
+        );
+        await seedStepOutput(
+          context,
+          INVOKE_CONTRACT_INPUT_STEP_ID,
+          mockInputStep,
+        );
 
-        const connector = envSignReqToSignEnvelope("assembleKey", "inputKey");
+        const connector = envSignReqToSignEnvelope();
 
-        const result = await connector(mockEnvelopeSigningReqOutput, metadata);
+        const result = await connector.runWith(
+          { context: { parent: context } },
+          ...mockEnvelopeSigningReqOutput,
+        );
 
         assertExists(result);
         assertEquals(
@@ -177,14 +214,13 @@ describe("createInvokeContractPipeline", () => {
         const mockRpc = {} as unknown as Server;
         const mockNetworkPassphrase = "mockNetworkPassphrase";
         const connector = simulateToSignAuthEntries(
-          "key",
           mockRpc,
           mockNetworkPassphrase
         );
 
-        const metadata = new MetadataHelper();
+        const context = createRunContext();
 
-        metadata.add("key", {
+        await seedStepOutput(context, INVOKE_CONTRACT_INPUT_STEP_ID, {
           operations: [],
           config: {
             fee: "100",
@@ -193,7 +229,10 @@ describe("createInvokeContractPipeline", () => {
           },
         });
 
-        const result = await connector(mockSimulateOutput, metadata);
+        const result = await connector.runWith(
+          { context: { parent: context } },
+          mockSimulateOutput,
+        );
 
         assertExists(result);
         assertEquals(result, {
@@ -220,14 +259,13 @@ describe("createInvokeContractPipeline", () => {
         const mockRpc = {} as unknown as Server;
         const mockNetworkPassphrase = "mockNetworkPassphrase";
         const connector = simulateToSignAuthEntries(
-          "key",
           mockRpc,
           mockNetworkPassphrase
         );
 
-        const metadata = new MetadataHelper();
+        const context = createRunContext();
 
-        metadata.add("key", {
+        await seedStepOutput(context, INVOKE_CONTRACT_INPUT_STEP_ID, {
           operations: [],
           config: {
             fee: "100",
@@ -235,7 +273,10 @@ describe("createInvokeContractPipeline", () => {
           },
         });
 
-        const result = await connector(mockSimulateOutput, metadata);
+        const result = await connector.runWith(
+          { context: { parent: context } },
+          mockSimulateOutput,
+        );
 
         assertExists(result);
         assertEquals(result, {

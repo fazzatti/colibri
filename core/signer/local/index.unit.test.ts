@@ -5,6 +5,7 @@ import {
   assertNotEquals,
   assertThrows,
 } from "@std/assert";
+import { Buffer } from "buffer";
 import { describe, it } from "@std/testing/bdd";
 import {
   Keypair,
@@ -17,12 +18,20 @@ import {
   Contract,
 } from "stellar-sdk";
 import { LocalSigner } from "@/signer/local/index.ts";
-import type { Ed25519PublicKey, Ed25519SecretKey } from "@/strkeys/types.ts";
-
+import type {
+  ContractId,
+  Ed25519PublicKey,
+  Ed25519SecretKey,
+} from "@/strkeys/types.ts";
+import * as E from "@/signer/local/error.ts";
 
 describe("LocalSigner", () => {
-  const TEST_SECRET = "SC3DH36U5MAMSKENSVWSCVOXKCAEWX7EEHR347PJNHMMQDXRBSZ3PRCJ" as Ed25519SecretKey;
-  const TEST_PUBLIC = "GAA2CTTAU36PSQZI2QX2FZ2AVJEFSJSOYDQ4CJ35NKSRHXVBTZWYAMSZ" as Ed25519PublicKey;
+  const TEST_SECRET =
+    "SC3DH36U5MAMSKENSVWSCVOXKCAEWX7EEHR347PJNHMMQDXRBSZ3PRCJ" as Ed25519SecretKey;
+  const TEST_PUBLIC =
+    "GAA2CTTAU36PSQZI2QX2FZ2AVJEFSJSOYDQ4CJ35NKSRHXVBTZWYAMSZ" as Ed25519PublicKey;
+  const TEST_CONTRACT_ID =
+    "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId;
 
   describe("fromSecret", () => {
     it("creates a signer from Ed25519 secret", () => {
@@ -32,15 +41,36 @@ describe("LocalSigner", () => {
       assertEquals(signer.publicKey(), TEST_PUBLIC);
     });
 
-    it("secret is not exposed on the instance", () => {
+    it("secretKey method exists but does not expose secret as plain property", () => {
       const signer = LocalSigner.fromSecret(TEST_SECRET);
-      
-      const keys = Object.keys(signer);
-      const hasSecretProperty = keys.some(k => 
-        k.toLowerCase().includes("secret") || k.toLowerCase().includes("private")
+
+      // secretKey is a method, not a direct property
+      assert(typeof signer.secretKey === "function");
+
+      // The actual secret value should not be directly accessible as a property
+      const ownProps = Object.getOwnPropertyNames(signer);
+      const hasSecretValue = ownProps.some(
+        (k) => {
+          const descriptor = Object.getOwnPropertyDescriptor(signer, k);
+          return descriptor?.value === TEST_SECRET;
+        }
       );
-      
-      assert(!hasSecretProperty, "Secret should not be exposed as property");
+
+      assert(!hasSecretValue, "Secret value should not be stored directly on instance");
+    });
+
+    it("creates a signer with hideSecret = false by default", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      assertEquals(signer.secretKey(), TEST_SECRET);
+    });
+
+    it("creates a signer with hideSecret = true", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET, true);
+      assertThrows(
+        () => signer.secretKey(),
+        E.SECRET_NOT_ACCESSIBLE,
+        "Secret key is not accessible"
+      );
     });
   });
 
@@ -52,6 +82,42 @@ describe("LocalSigner", () => {
       assertExists(signer1.publicKey());
       assertExists(signer2.publicKey());
       assertNotEquals(signer1.publicKey(), signer2.publicKey());
+    });
+
+    it("creates a signer with accessible secret by default", () => {
+      const signer = LocalSigner.generateRandom();
+      assertExists(signer.secretKey());
+    });
+
+    it("creates a signer with hidden secret when hideSecret = true", () => {
+      const signer = LocalSigner.generateRandom(true);
+      assertThrows(
+        () => signer.secretKey(),
+        E.SECRET_NOT_ACCESSIBLE,
+        "Secret key is not accessible"
+      );
+    });
+  });
+
+  describe("secretKey", () => {
+    it("returns the secret key when not hidden", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      assertEquals(signer.secretKey(), TEST_SECRET);
+    });
+
+    it("throws when secret is hidden", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET, true);
+      assertThrows(
+        () => signer.secretKey(),
+        E.SECRET_NOT_ACCESSIBLE,
+        "Secret key is not accessible"
+      );
+    });
+
+    it("throws after destroy even when secret was accessible", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      signer.destroy();
+      assertThrows(() => signer.secretKey(), E.SIGNER_DESTROYED);
     });
   });
 
@@ -66,6 +132,114 @@ describe("LocalSigner", () => {
       const pk1 = signer.publicKey();
       const pk2 = signer.publicKey();
       assertEquals(pk1, pk2);
+    });
+  });
+
+  describe("signsFor", () => {
+    it("returns true for signer's own public key by default", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      assert(signer.signsFor(TEST_PUBLIC));
+    });
+
+    it("returns false for unknown public key", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const otherKey = Keypair.random().publicKey() as Ed25519PublicKey;
+      assert(!signer.signsFor(otherKey));
+    });
+
+    it("returns true for added target public key", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const otherKey = Keypair.random().publicKey() as Ed25519PublicKey;
+      signer.addTarget(otherKey);
+      assert(signer.signsFor(otherKey));
+    });
+
+    it("returns true for added contract ID", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      signer.addTarget(TEST_CONTRACT_ID);
+      assert(signer.signsFor(TEST_CONTRACT_ID));
+    });
+
+    it("returns false for removed target", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const otherKey = Keypair.random().publicKey() as Ed25519PublicKey;
+      signer.addTarget(otherKey);
+      assert(signer.signsFor(otherKey));
+      signer.removeTarget(otherKey);
+      assert(!signer.signsFor(otherKey));
+    });
+  });
+
+  describe("addTarget", () => {
+    it("adds a public key target", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const otherKey = Keypair.random().publicKey() as Ed25519PublicKey;
+      signer.addTarget(otherKey);
+      assert(signer.signsFor(otherKey));
+    });
+
+    it("adds a contract ID target", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      signer.addTarget(TEST_CONTRACT_ID);
+      assert(signer.signsFor(TEST_CONTRACT_ID));
+    });
+
+    it("adding the same target twice does not duplicate", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const otherKey = Keypair.random().publicKey() as Ed25519PublicKey;
+      signer.addTarget(otherKey);
+      signer.addTarget(otherKey);
+      assertEquals(signer.getTargets().filter((t) => t === otherKey).length, 1);
+    });
+  });
+
+  describe("getTargets", () => {
+    it("returns the signer's own public key by default", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const targets = signer.getTargets();
+      assertEquals(targets.length, 1);
+      assertEquals(targets[0], TEST_PUBLIC);
+    });
+
+    it("returns all added targets", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const otherKey = Keypair.random().publicKey() as Ed25519PublicKey;
+      signer.addTarget(otherKey);
+      signer.addTarget(TEST_CONTRACT_ID);
+
+      const targets = signer.getTargets();
+      assertEquals(targets.length, 3);
+      assert(targets.includes(TEST_PUBLIC));
+      assert(targets.includes(otherKey));
+      assert(targets.includes(TEST_CONTRACT_ID));
+    });
+  });
+
+  describe("removeTarget", () => {
+    it("removes an added target", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const otherKey = Keypair.random().publicKey() as Ed25519PublicKey;
+      signer.addTarget(otherKey);
+      assert(signer.signsFor(otherKey));
+
+      signer.removeTarget(otherKey);
+      assert(!signer.signsFor(otherKey));
+    });
+
+    it("throws when trying to remove signer's own public key", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      assertThrows(
+        () => signer.removeTarget(TEST_PUBLIC),
+        E.CANNOT_REMOVE_MASTER_TARGET
+      );
+    });
+
+    it("removing non-existent target is a no-op", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const otherKey = Keypair.random().publicKey() as Ed25519PublicKey;
+      // Should not throw
+      signer.removeTarget(otherKey);
+      assert(!signer.signsFor(otherKey));
     });
   });
 
@@ -120,9 +294,111 @@ describe("LocalSigner", () => {
 
       assertThrows(
         () => signer.signTransaction(tx),
-        Error,
-        "Signer destroyed"
+        E.SIGNER_DESTROYED
       );
+    });
+  });
+
+  describe("sign (raw data)", () => {
+    it("signs raw data and returns a Buffer", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const data = Buffer.from("test message to sign");
+
+      const signature = signer.sign(data);
+
+      assertExists(signature);
+      assert(Buffer.isBuffer(signature));
+      assertEquals(signature.length, 64); // Ed25519 signatures are 64 bytes
+    });
+
+    it("produces valid signature that can be verified", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const data = Buffer.from("test message to sign");
+
+      const signature = signer.sign(data);
+
+      // Verify using stellar-sdk Keypair
+      const keypair = Keypair.fromPublicKey(TEST_PUBLIC);
+      assert(keypair.verify(data, signature));
+    });
+
+    it("produces different signatures for different data", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const data1 = Buffer.from("message one");
+      const data2 = Buffer.from("message two");
+
+      const sig1 = signer.sign(data1);
+      const sig2 = signer.sign(data2);
+
+      assertNotEquals(sig1.toString("hex"), sig2.toString("hex"));
+    });
+
+    it("throws after destroy", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      signer.destroy();
+
+      const data = Buffer.from("test message");
+
+      assertThrows(
+        () => signer.sign(data),
+        E.SIGNER_DESTROYED
+      );
+    });
+  });
+
+  describe("verifySignature", () => {
+    it("returns true for valid signature", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const data = Buffer.from("test message to verify");
+
+      const signature = signer.sign(data);
+      const isValid = signer.verifySignature(data, signature);
+
+      assert(isValid);
+    });
+
+    it("returns false for invalid signature", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const data = Buffer.from("test message");
+      const invalidSignature = Buffer.alloc(64, 0); // All zeros is invalid
+
+      const isValid = signer.verifySignature(data, invalidSignature);
+
+      assert(!isValid);
+    });
+
+    it("returns false for signature of different data", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const data1 = Buffer.from("original message");
+      const data2 = Buffer.from("different message");
+
+      const signature = signer.sign(data1);
+      const isValid = signer.verifySignature(data2, signature);
+
+      assert(!isValid);
+    });
+
+    it("returns false for signature from different key", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const otherSigner = LocalSigner.generateRandom();
+      const data = Buffer.from("test message");
+
+      const otherSignature = otherSigner.sign(data);
+      const isValid = signer.verifySignature(data, otherSignature);
+
+      assert(!isValid);
+    });
+
+    it("works after destroy (uses only public key)", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const data = Buffer.from("test message");
+      const signature = signer.sign(data);
+
+      signer.destroy();
+
+      // verifySignature should still work as it only needs the public key
+      const isValid = signer.verifySignature(data, signature);
+      assert(isValid);
     });
   });
 
@@ -191,7 +467,7 @@ describe("LocalSigner", () => {
         await signer.signSorobanAuthEntry(entry, 1000000, Networks.TESTNET);
         assert(false, "Should have thrown");
       } catch (e) {
-        assertEquals((e as Error).message, "Signer destroyed");
+        assert(e instanceof E.SIGNER_DESTROYED);
       }
     });
   });
@@ -245,8 +521,7 @@ describe("LocalSigner", () => {
 
       assertThrows(
         () => signer.signTransaction(tx),
-        Error,
-        "Signer destroyed"
+        E.SIGNER_DESTROYED
       );
     });
   });

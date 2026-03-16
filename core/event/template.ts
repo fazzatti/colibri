@@ -10,7 +10,7 @@ import type {
   TopicFilterArgs,
   TopicFieldNames,
 } from "@/event/types.ts";
-import type { ScValParsed } from "@/common/scval/types.ts";
+import type { ScValParsed } from "@/common/helpers/xdr/types.ts";
 import type { TopicFilter, Segment } from "@/event/event-filter/types.ts";
 import type { Prettify } from "@/common/ts-helpers.ts";
 

@@ -19,7 +19,7 @@ describe("createReadFromContractPipeline", () => {
 
       const pipeline = createReadFromContractPipeline({ networkConfig });
 
-      assertEquals(pipeline.name, "ReadFromContractPipeline");
+      assertEquals(pipeline.id, "ReadFromContractPipeline");
     });
 
     it("inputToBuild: converts input to BuildTransactionInput", () => {

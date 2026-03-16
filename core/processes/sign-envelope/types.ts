@@ -1,13 +1,10 @@
 import type { FeeBumpTransaction, Transaction } from "stellar-sdk";
-import type {
-  SignatureRequirement,
-  TransactionSigner,
-} from "@/signer/types.ts";
+import type { SignatureRequirement, Signer } from "@/signer/types.ts";
 
 export type SignEnvelopeInput = {
   transaction: Transaction | FeeBumpTransaction;
   signatureRequirements: SignatureRequirement[];
-  signers: TransactionSigner[];
+  signers: Signer[];
 };
 
 export type SignEnvelopeOutput = Transaction | FeeBumpTransaction;

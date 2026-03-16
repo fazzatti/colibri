@@ -1,24 +1,26 @@
 {
-  "workspace": ["./core", "./event-streamer", "./plugins/*"],
+  "workspace": ["./core", "./rpc-streamer", "./sep10", "./plugins/*"],
   "nodeModulesDir": "auto",
   "imports": {
     "jsr:@colibri/core": "./core",
     "colibri-internal/": "./_internal/",
     "colibri-tools/": "./_tools/",
-    "stellar-sdk": "npm:@stellar/stellar-sdk@^14.3.3",
+    "stellar-sdk": "npm:@stellar/stellar-sdk@^14.6.1",
     "buffer": "npm:buffer@^6.0.3",
     "crypto": "node:crypto",
-    "convee": "jsr:@fifo/convee@^0.9.2",
+    "convee": "jsr:@fifo/convee@1.0.0",
+    "@std/toml": "jsr:@std/toml@^1.0.11",
     "@std/assert": "jsr:@std/assert@^1.0.0",
-    "@std/testing": "jsr:@std/testing@^1.0.0"
+    "@std/testing": "jsr:@std/testing@^1.0.0",
+    "@std/expect": "jsr:@std/expect@^1.0.0",
+    "@std/dotenv": "jsr:@std/dotenv@^0.225.6"
   },
   "tasks": {
-    "check": "deno check *",
-    "test": "deno test -A --parallel --clean --ignore='_*/' --coverage=coverage && deno coverage coverage && deno task coverage:report",
-    "test:unit": "deno test -A --parallel --clean --ignore='_*/,**/*.integration.test.ts' --coverage=coverage && deno coverage coverage && deno task coverage:report",
-    "test:integration": "deno test -A --parallel --clean --ignore='_*/,**/*.unit.test.ts' --coverage=coverage && deno coverage coverage && deno task coverage:report",
-    "test:file": "deno test -A --parallel --clean --ignore='_*/'",
-    "coverage:report": "deno coverage --html"
+    "check": "deno check core/mod.ts rpc-streamer/mod.ts sep10/mod.ts plugins/fee-bump/mod.ts",
+    "test": "deno test -A --parallel --clean --ignore='_*/' --coverage=coverage",
+    "test:unit": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.integration.test.ts' --ignore='**/*.testnet.integration.test.ts' --coverage=coverage",
+    "test:integration": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.unit.test.ts' --coverage=coverage",
+    "test:file": "deno test -A --parallel --clean --ignore='_*/'"
   },
   "lint": {
     "plugins": [],

@@ -1,4 +1,3 @@
-import { ProcessEngine } from "convee";
 import { Account, Operation, TransactionBuilder, type xdr } from "stellar-sdk";
 import type {
   AssembleTransactionInput,
@@ -7,14 +6,14 @@ import type {
 import * as E from "@/processes/assemble-transaction/error.ts";
 
 import { assert } from "@/common/assert/assert.ts";
-import { isSmartContractTransaction } from "@/common/verifiers/is-smart-contract-transaction.ts";
+import { isSmartContractTransaction } from "@/common/type-guards/is-smart-contract-transaction.ts";
 import {
   getOperationsFromTransaction,
   getOperationType,
 } from "@/common/helpers/transaction.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 
-const assembleTransactionProcess = async (
+export const assembleTransaction = async (
   input: AssembleTransactionInput
 ): Promise<AssembleTransactionOutput> => {
   try {
@@ -93,19 +92,4 @@ const assembleTransactionProcess = async (
     throw new E.UNEXPECTED_ERROR(input, e as Error);
   }
 };
-
-const PROCESS_NAME = "AssembleTransaction" as const;
-
-const P_AssembleTransaction = () =>
-  ProcessEngine.create<
-    AssembleTransactionInput,
-    AssembleTransactionOutput,
-    E.AssembleTransactionError,
-    typeof PROCESS_NAME
-  >(assembleTransactionProcess, {
-    name: PROCESS_NAME,
-  });
-
-const P_AssembleTransactionErrors = E;
-
-export { P_AssembleTransaction, P_AssembleTransactionErrors };
+export { E as AssembleTransactionErrors };

@@ -14,7 +14,7 @@ describe("[Testnet] ReadFromContract Pipeline", disableSanitizeConfig, () => {
   it("should create a pipeline", () => {
     const readPipe = createReadFromContractPipeline({ networkConfig });
     assertInstanceOf(readPipe, Object);
-    assertEquals(readPipe.name, "ReadFromContractPipeline");
+    assertEquals(readPipe.id, "ReadFromContractPipeline");
   });
   it("should read from a contract and return the contract returned value", async () => {
     const readPipe = createReadFromContractPipeline({ networkConfig });

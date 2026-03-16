@@ -1,7 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
-import { assertEquals, assertRejects } from "@std/assert";
+import { assertEquals, assertRejects, assertStrictEquals } from "@std/assert";
 import { afterEach, describe, it } from "@std/testing/bdd";
-import { type Stub, stub } from "@std/testing/mock";
 import { StellarAssetContract } from "./index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
@@ -9,7 +8,60 @@ import type { TransactionConfig } from "@/common/types/transaction-config/types.
 import { SIMULATION_FAILED } from "@/processes/simulate-transaction/error.ts";
 import * as SACError from "./error.ts";
 import type { Server } from "stellar-sdk/rpc";
-import type { TransactionBuilder } from "stellar-sdk";
+import { Asset, type TransactionBuilder } from "stellar-sdk";
+
+describe("StellarAssetContract initialization", () => {
+  const networkConfig = NetworkConfig.TestNet();
+
+  describe("NativeXLM static factory", () => {
+    it("creates a SAC instance for native XLM", () => {
+      const sac = StellarAssetContract.NativeXLM(networkConfig);
+
+      assertEquals(sac.code, "XLM");
+      assertEquals(sac.isNativeXLM(), true);
+
+      const expectedContractId = Asset.native().contractId(
+        networkConfig.networkPassphrase
+      );
+      assertEquals(sac.contractId, expectedContractId);
+    });
+  });
+
+  describe("isNativeXLM", () => {
+    it("returns true for native XLM SAC", () => {
+      const sac = StellarAssetContract.NativeXLM(networkConfig);
+      assertEquals(sac.isNativeXLM(), true);
+    });
+
+    it("returns false for credit asset SAC", () => {
+      const issuer = LocalSigner.generateRandom();
+      const sac = new StellarAssetContract({
+        code: "TEST",
+        issuer: issuer.publicKey(),
+        networkConfig,
+      });
+      assertEquals(sac.isNativeXLM(), false);
+    });
+  });
+
+  describe("constructor with native issuer", () => {
+    it("creates a SAC instance when issuer is 'native'", () => {
+      const sac = new StellarAssetContract({
+        code: "XLM",
+        issuer: "native",
+        networkConfig,
+      });
+
+      assertEquals(sac.code, "XLM");
+      assertEquals(sac.isNativeXLM(), true);
+
+      const expectedContractId = Asset.native().contractId(
+        networkConfig.networkPassphrase
+      );
+      assertEquals(sac.contractId, expectedContractId);
+    });
+  });
+});
 
 describe("StellarAssetContract.deploy() error handling", () => {
   const networkConfig = NetworkConfig.TestNet();
@@ -28,11 +80,33 @@ describe("StellarAssetContract.deploy() error handling", () => {
     rpc: {} as Server,
   });
 
-  let invokePipeStub: Stub | undefined;
+  let restoreInvokePipe: (() => void) | undefined;
 
   afterEach(() => {
-    invokePipeStub?.restore();
+    restoreInvokePipe?.();
+    restoreInvokePipe = undefined;
   });
+
+  const mockInvokePipeRun = (
+    sac: StellarAssetContract,
+    run: () => never | Promise<never>,
+  ) => {
+    const originalInvokePipe = sac.contract.invokePipe;
+
+    Object.defineProperty(sac.contract, "invokePipe", {
+      value: { run },
+      configurable: true,
+      writable: true,
+    });
+
+    restoreInvokePipe = () => {
+      Object.defineProperty(sac.contract, "invokePipe", {
+        value: originalInvokePipe,
+        configurable: true,
+        writable: true,
+      });
+    };
+  };
 
   it("throws FAILED_TO_WRAP_ASSET when a non-SIMULATION_FAILED error occurs", async () => {
     const sac = new StellarAssetContract({
@@ -43,8 +117,7 @@ describe("StellarAssetContract.deploy() error handling", () => {
 
     const genericError = new Error("Some unexpected network error");
 
-    // Stub the invokePipe.run to throw a generic error (not SIMULATION_FAILED)
-    invokePipeStub = stub(sac.contract.invokePipe, "run", () => {
+    mockInvokePipeRun(sac, () => {
       throw genericError;
     });
 
@@ -54,7 +127,7 @@ describe("StellarAssetContract.deploy() error handling", () => {
     );
 
     assertEquals(error.code, SACError.Code.FAILED_TO_WRAP_ASSET);
-    assertEquals(error.meta.cause, genericError);
+    assertStrictEquals(error.meta.cause, genericError);
     const data = error.meta.data as { asset: { code: string; issuer: string } };
     assertEquals(data.asset.code, "TEST");
     assertEquals(data.asset.issuer, issuer.publicKey());
@@ -79,8 +152,7 @@ describe("StellarAssetContract.deploy() error handling", () => {
       _parsed: true,
     } as any);
 
-    // Stub the invokePipe.run to throw SIMULATION_FAILED
-    invokePipeStub = stub(sac.contract.invokePipe, "run", () => {
+    mockInvokePipeRun(sac, () => {
       throw simulationFailedError;
     });
 
@@ -90,7 +162,7 @@ describe("StellarAssetContract.deploy() error handling", () => {
     );
 
     assertEquals(error.code, SACError.Code.FAILED_TO_WRAP_ASSET);
-    assertEquals(error.meta.cause, simulationFailedError);
+    assertStrictEquals(error.meta.cause, simulationFailedError);
     const data = error.meta.data as { asset: { code: string; issuer: string } };
     assertEquals(data.asset.code, "TEST");
     assertEquals(data.asset.issuer, issuer.publicKey());
@@ -133,8 +205,7 @@ describe("StellarAssetContract.deploy() error handling", () => {
       _parsed: true,
     } as any);
 
-    // Stub the invokePipe.run to throw SIMULATION_FAILED
-    invokePipeStub = stub(sac.contract.invokePipe, "run", () => {
+    mockInvokePipeRun(sac, () => {
       throw simulationFailedError;
     });
 
@@ -144,6 +215,6 @@ describe("StellarAssetContract.deploy() error handling", () => {
     );
 
     assertEquals(error.code, SACError.Code.FAILED_TO_WRAP_ASSET);
-    assertEquals(error.meta.cause, simulationFailedError);
+    assertStrictEquals(error.meta.cause, simulationFailedError);
   });
 });

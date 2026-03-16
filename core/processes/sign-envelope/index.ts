@@ -1,4 +1,3 @@
-import { ProcessEngine } from "convee";
 import { TransactionBuilder } from "stellar-sdk";
 import type {
   SignEnvelopeInput,
@@ -7,7 +6,7 @@ import type {
 import * as E from "@/processes/sign-envelope/error.ts";
 import { assert } from "@/common/assert/assert.ts";
 
-const signEnvelopeProcess = async (
+export const signEnvelope = async (
   input: SignEnvelopeInput
 ): Promise<SignEnvelopeOutput> => {
   try {
@@ -21,8 +20,7 @@ const signEnvelopeProcess = async (
 
     for (const requirement of signatureRequirements) {
       const requiredSigner = requirement.address;
-      const signer = signers.find((s) => s.publicKey() === requiredSigner);
-
+      const signer = signers.find((s) => s.signsFor(requiredSigner));
       assert(signer, new E.SIGNER_NOT_FOUND(input, requiredSigner, signers));
 
       try {
@@ -47,17 +45,4 @@ const signEnvelopeProcess = async (
     throw new E.UNEXPECTED_ERROR(input, e as Error);
   }
 };
-
-const PROCESS_NAME = "SignEnvelope" as const;
-
-const P_SignEnvelope = () =>
-  ProcessEngine.create<
-    SignEnvelopeInput,
-    SignEnvelopeOutput,
-    E.SignEnvelopeError,
-    typeof PROCESS_NAME
-  >(signEnvelopeProcess, { name: PROCESS_NAME });
-
-const P_SignEnvelopeErrors = E;
-
-export { P_SignEnvelope, P_SignEnvelopeErrors };
+export { E as SignEnvelopeErrors };

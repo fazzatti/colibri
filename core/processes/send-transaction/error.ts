@@ -1,11 +1,9 @@
 import type { xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { ProcessError } from "@/processes/error.ts";
-import {
-  parseErrorResult,
-  parseEvents,
-  softTryToXDR,
-} from "@/common/helpers/xdr/general.ts";
+import { softTryToXDR } from "@/common/helpers/xdr/soft-try-to-xdr.ts";
+import { parseErrorResult } from "@/common/helpers/xdr/parse-error-result.ts";
+import { parseEvents } from "@/common/helpers/xdr/parse-events.ts";
 import type { SendTransactionInput } from "@/processes/send-transaction/types.ts";
 
 export enum Code {

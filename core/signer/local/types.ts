@@ -1,6 +1,6 @@
 import type { Buffer } from "buffer";
-import type { TransactionSigner } from "@/signer/types.ts";
+import type { Signer } from "@/signer/types.ts";
 
-export type LocalSigner = TransactionSigner & {
+export type LocalSigner = Signer & {
   verifySignature(data: Buffer, signature: Buffer): boolean;
 };
