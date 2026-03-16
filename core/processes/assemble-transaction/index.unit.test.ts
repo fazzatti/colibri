@@ -10,7 +10,7 @@ import {
   Transaction,
   TransactionBuilder,
 } from "stellar-sdk";
-import { P_AssembleTransaction } from "@/processes/assemble-transaction/index.ts";
+import { assembleTransaction } from "@/processes/assemble-transaction/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import type { AssembleTransactionInput } from "@/processes/assemble-transaction/types.ts";
 
@@ -41,12 +41,6 @@ const createTestTransaction = (fee: BaseFee = "100") => {
 };
 
 describe("AssembleTransaction", () => {
-  describe("Construction", () => {
-    it("creates process with proper name", () => {
-      assertEquals(P_AssembleTransaction().name, "AssembleTransaction");
-    });
-  });
-
   describe("Features", () => {
     it("executes with minimal valid input", async () => {
       const transaction = createTestTransaction();
@@ -58,7 +52,7 @@ describe("AssembleTransaction", () => {
         resourceFee: 0,
       };
 
-      const result = await P_AssembleTransaction().run(input);
+      const result = await assembleTransaction(input);
 
       assertInstanceOf(result, Transaction);
     });
@@ -76,7 +70,7 @@ describe("AssembleTransaction", () => {
         resourceFee: 5,
       };
 
-      const result = await P_AssembleTransaction().run(input);
+      const result = await assembleTransaction(input);
       assertInstanceOf(result, Transaction);
       assertEquals(result.fee, "18"); // 10 inclusion fee + 3 resource fee from soroban data + 5 resource fee from input
     });
@@ -93,7 +87,7 @@ describe("AssembleTransaction", () => {
         resourceFee: 0,
       };
 
-      const result = await P_AssembleTransaction().run(input);
+      const result = await assembleTransaction(input);
       assertInstanceOf(result, Transaction);
     });
   });
@@ -103,7 +97,7 @@ describe("AssembleTransaction", () => {
       const faultyInput = null as unknown as AssembleTransactionInput;
 
       await assertRejects(
-        async () => await P_AssembleTransaction().run(faultyInput),
+        async () => await assembleTransaction(faultyInput),
         E.UNEXPECTED_ERROR,
       );
     });
@@ -137,7 +131,7 @@ describe("AssembleTransaction", () => {
       };
 
       await assertRejects(
-        async () => await P_AssembleTransaction().run(input),
+        async () => await assembleTransaction(input),
         E.NOT_SMART_CONTRACT_TRANSACTION_ERROR,
       );
     });
@@ -155,7 +149,7 @@ describe("AssembleTransaction", () => {
       };
 
       await assertRejects(
-        async () => await P_AssembleTransaction().run(input),
+        async () => await assembleTransaction(input),
         E.FAILED_TO_BUILD_SOROBAN_DATA_ERROR,
       );
     });
@@ -179,7 +173,7 @@ describe("AssembleTransaction", () => {
       };
 
       await assertRejects(
-        async () => await P_AssembleTransaction().run(input),
+        async () => await assembleTransaction(input),
         E.FAILED_TO_ASSEMBLE_TRANSACTION_ERROR,
       );
 
@@ -222,7 +216,7 @@ describe("AssembleTransaction", () => {
       };
 
       await assertRejects(
-        async () => await P_AssembleTransaction().run(input),
+        async () => await assembleTransaction(input),
         E.FAILED_TO_BUILD_TRANSACTION_ERROR,
       );
     });
@@ -238,7 +232,7 @@ describe("AssembleTransaction", () => {
       };
 
       await assertRejects(
-        async () => await P_AssembleTransaction().run(input),
+        async () => await assembleTransaction(input),
         E.MISSING_ARG,
       );
     });

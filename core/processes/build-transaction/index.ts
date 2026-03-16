@@ -1,4 +1,3 @@
-import { ProcessEngine } from "convee";
 import {
   NO_LIMIT,
   type BuildTransactionInput,
@@ -9,7 +8,7 @@ import * as E from "@/processes/build-transaction/error.ts";
 import { Account, TransactionBuilder } from "stellar-sdk";
 import { assert } from "@/common/assert/assert.ts";
 
-const buildTransactionProcess = async (
+export const buildTransaction = async (
   input: BuildTransactionInput
 ): Promise<BuildTransactionOutput> => {
   try {
@@ -166,18 +165,4 @@ const appendPreconditions = (
   return tx;
 };
 
-const PROCESS_NAME = "BuildTransaction" as const;
-
-const P_BuildTransaction = () =>
-  ProcessEngine.create<
-    BuildTransactionInput,
-    BuildTransactionOutput,
-    E.BuildTransactionError,
-    typeof PROCESS_NAME
-  >(buildTransactionProcess, {
-    name: PROCESS_NAME,
-  });
-
-const P_BuildTransactionErrors = E;
-
-export { P_BuildTransaction, P_BuildTransactionErrors };
+export { E as BuildTransactionErrors };

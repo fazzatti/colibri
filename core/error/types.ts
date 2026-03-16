@@ -1,7 +1,8 @@
 export type ErrorDomain =
   | "account"
+  | "address"
+  | "auth"
   | "contract"
-  | "transformers"
   | "tools"
   | "processes"
   | "verifiers"

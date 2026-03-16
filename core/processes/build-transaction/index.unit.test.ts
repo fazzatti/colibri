@@ -11,7 +11,7 @@ import {
   xdr,
   Address,
 } from "stellar-sdk";
-import { P_BuildTransaction } from "@/processes/build-transaction/index.ts";
+import { buildTransaction } from "@/processes/build-transaction/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import type { BuildTransactionInput } from "@/processes/build-transaction/types.ts";
 
@@ -26,10 +26,6 @@ const mockRpc = {
 
 describe("BuildTransaction", () => {
   describe("Construction", () => {
-    it("creates process with proper name", () => {
-      assertEquals(P_BuildTransaction().name, "BuildTransaction");
-    });
-
     it("executes with minimal valid input", async () => {
       const input: BuildTransactionInput = {
         rpc: mockRpc,
@@ -39,7 +35,7 @@ describe("BuildTransaction", () => {
         networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
       };
 
-      const tx = await P_BuildTransaction().run(input);
+      const tx = await buildTransaction(input);
       assertInstanceOf(tx, Transaction);
     });
   });
@@ -59,7 +55,7 @@ describe("BuildTransaction", () => {
           networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
         };
 
-        await P_BuildTransaction().run(input);
+        await buildTransaction(input);
         assertEquals(isGetAccountCalled, true);
       });
 
@@ -72,7 +68,7 @@ describe("BuildTransaction", () => {
           sequence: "500",
         };
 
-        const tx = await P_BuildTransaction().run(input);
+        const tx = await buildTransaction(input);
         assertEquals(isGetAccountCalled, false);
 
         assertInstanceOf(tx, Transaction);
@@ -96,7 +92,7 @@ describe("BuildTransaction", () => {
           networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
         };
 
-        const tx = await P_BuildTransaction().run(input);
+        const tx = await buildTransaction(input);
         assertInstanceOf(tx, Transaction);
         assertEquals(tx.operations.length, 1);
       });
@@ -130,7 +126,7 @@ describe("BuildTransaction", () => {
           networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
         };
 
-        const tx = await P_BuildTransaction().run(input);
+        const tx = await buildTransaction(input);
 
         assertEquals(tx.operations.length, 3);
       });
@@ -149,7 +145,7 @@ describe("BuildTransaction", () => {
           },
         };
 
-        const tx = await P_BuildTransaction().run(input);
+        const tx = await buildTransaction(input);
         assertInstanceOf(tx, Transaction);
       });
 
@@ -168,7 +164,7 @@ describe("BuildTransaction", () => {
           },
         };
 
-        const tx = await P_BuildTransaction().run(input);
+        const tx = await buildTransaction(input);
         assertInstanceOf(tx, Transaction);
         assertEquals(tx.timeBounds?.minTime, "1000");
         assertEquals(tx.timeBounds?.maxTime, "2000");
@@ -188,7 +184,7 @@ describe("BuildTransaction", () => {
           },
         };
 
-        const tx = await P_BuildTransaction().run(input);
+        const tx = await buildTransaction(input);
         assertInstanceOf(tx, Transaction);
         assertEquals(tx.timeBounds?.minTime, "0");
         assertEquals(tx.timeBounds?.maxTime, "2000");
@@ -208,7 +204,7 @@ describe("BuildTransaction", () => {
           },
         };
 
-        const tx = await P_BuildTransaction().run(input);
+        const tx = await buildTransaction(input);
         assertInstanceOf(tx, Transaction);
         assertEquals(tx.timeBounds?.minTime, "1000");
         assertEquals(tx.timeBounds?.maxTime, "0");
@@ -229,7 +225,7 @@ describe("BuildTransaction", () => {
           },
         };
 
-        const tx = await P_BuildTransaction().run(input);
+        const tx = await buildTransaction(input);
         assertInstanceOf(tx, Transaction);
         assertEquals(tx.ledgerBounds?.minLedger, 100);
         assertEquals(tx.ledgerBounds?.maxLedger, 200);
@@ -249,7 +245,7 @@ describe("BuildTransaction", () => {
           },
         };
 
-        const tx = await P_BuildTransaction().run(input);
+        const tx = await buildTransaction(input);
         assertInstanceOf(tx, Transaction);
         assertEquals(tx.ledgerBounds?.minLedger, 0);
         assertEquals(tx.ledgerBounds?.maxLedger, 200);
@@ -269,7 +265,7 @@ describe("BuildTransaction", () => {
           },
         };
 
-        const tx = await P_BuildTransaction().run(input);
+        const tx = await buildTransaction(input);
         assertInstanceOf(tx, Transaction);
         assertEquals(tx.ledgerBounds?.minLedger, 100);
         assertEquals(tx.ledgerBounds?.maxLedger, 0);
@@ -288,7 +284,7 @@ describe("BuildTransaction", () => {
         },
       };
 
-      const tx = await P_BuildTransaction().run(input);
+      const tx = await buildTransaction(input);
       assertInstanceOf(tx, Transaction);
       assertEquals(tx.minAccountSequence, "100");
     });
@@ -305,7 +301,7 @@ describe("BuildTransaction", () => {
         },
       };
 
-      const tx = await P_BuildTransaction().run(input);
+      const tx = await buildTransaction(input);
       assertInstanceOf(tx, Transaction);
       assertEquals(tx.minAccountSequenceAge?.toString(), "100");
     });
@@ -322,7 +318,7 @@ describe("BuildTransaction", () => {
         },
       };
 
-      const tx = await P_BuildTransaction().run(input);
+      const tx = await buildTransaction(input);
       assertInstanceOf(tx, Transaction);
       assertEquals(tx.minAccountSequenceLedgerGap, 100);
     });
@@ -342,7 +338,7 @@ describe("BuildTransaction", () => {
         },
       };
 
-      const tx = await P_BuildTransaction().run(input);
+      const tx = await buildTransaction(input);
       assertInstanceOf(tx, Transaction);
       assertEquals(tx.extraSigners, [
         xdr.SignerKey.signerKeyTypeEd25519(
@@ -369,7 +365,7 @@ describe("BuildTransaction", () => {
           memo: new Memo(MemoText, "test memo"),
         };
 
-        const tx = await P_BuildTransaction().run(input);
+        const tx = await buildTransaction(input);
 
         assertEquals(tx.memo?.type, "text");
       });
@@ -391,7 +387,7 @@ describe("BuildTransaction", () => {
           sorobanData,
         };
 
-        const tx = await P_BuildTransaction().run(input);
+        const tx = await buildTransaction(input);
         assertInstanceOf(tx, Transaction);
       });
     });

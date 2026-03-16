@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { assert, assertEquals, assertRejects } from "@std/assert";
+import { assert, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import {
   Account,
@@ -8,7 +8,7 @@ import {
   type xdr,
   type Transaction,
 } from "stellar-sdk";
-import { P_WrapFeeBump } from "@/processes/wrap-fee-bump/index.ts";
+import { wrapFeeBump } from "@/processes/wrap-fee-bump/index.ts";
 import * as E from "@/processes/wrap-fee-bump/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { isFeeBumpTransaction } from "@/common/type-guards/is-fee-bump-transaction.ts";
@@ -35,20 +35,13 @@ describe("WrapFeeBump", () => {
   const alice = "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P";
   const bob = "GDMZZQ62ZEO4B7YMBHPJ3LHCLIYOG7JE4XCHEGHV4MINCN6O3WFA4MVQ";
 
-  describe("Construction", () => {
-    it("creates process with proper name", () => {
-      // This will fail until you change the name in index.ts to "WrapFeeBump"
-      assertEquals(P_WrapFeeBump().name, "WrapFeeBump");
-    });
-  });
-
   describe("Features", () => {
     it("wraps a Transaction into a FeeBumpTransaction", async () => {
       const transaction = assembleTransaction(alice, [
         Operation.setOptions({}),
       ]);
 
-      const result = await P_WrapFeeBump().run({
+      const result = await wrapFeeBump({
         transaction,
         config: { source: bob, fee: "101", signers: [] },
         networkPassphrase,
@@ -67,9 +60,9 @@ describe("WrapFeeBump", () => {
         networkPassphrase
       );
 
-      await assertRejects(
+      assertThrows(
         () =>
-          P_WrapFeeBump().run({
+          wrapFeeBump({
             transaction: feebump as unknown as Transaction, // run expects Transaction | FeeBumpTransaction
             config: null as unknown as FeeBumpConfig,
             networkPassphrase,
@@ -87,9 +80,9 @@ describe("WrapFeeBump", () => {
         networkPassphrase
       );
 
-      await assertRejects(
+      assertThrows(
         () =>
-          P_WrapFeeBump().run({
+          wrapFeeBump({
             transaction: feebump as unknown as Transaction, // run expects Transaction | FeeBumpTransaction
             config: { source: bob, fee: "100", signers: [] },
             networkPassphrase,
@@ -101,9 +94,9 @@ describe("WrapFeeBump", () => {
 
   describe("Errors", () => {
     it("throws NOT_A_TRANSACTION for invalid input", async () => {
-      await assertRejects(
+      assertThrows(
         () =>
-          P_WrapFeeBump().run({
+          wrapFeeBump({
             transaction: null as unknown as Transaction,
             config: { source: bob, fee: "100", signers: [] },
             networkPassphrase,
@@ -117,9 +110,9 @@ describe("WrapFeeBump", () => {
         Operation.setOptions({}),
       ]);
 
-      await assertRejects(
+      assertThrows(
         () =>
-          P_WrapFeeBump().run({
+          wrapFeeBump({
             transaction,
             // missing fee
             config: {
@@ -132,9 +125,9 @@ describe("WrapFeeBump", () => {
         E.MISSING_ARG
       );
 
-      await assertRejects(
+      assertThrows(
         () =>
-          P_WrapFeeBump().run({
+          wrapFeeBump({
             transaction,
             // missing source
             config: {
@@ -160,9 +153,9 @@ describe("WrapFeeBump", () => {
           throw new Error("synthetic failure");
         };
 
-        await assertRejects(
+        assertThrows(
           () =>
-            P_WrapFeeBump().run({
+            wrapFeeBump({
               transaction,
               config: { source: bob, fee: "101", signers: [] },
               networkPassphrase,
@@ -179,9 +172,9 @@ describe("WrapFeeBump", () => {
         Operation.setOptions({}),
       ]);
 
-      await assertRejects(
+      assertThrows(
         () =>
-          P_WrapFeeBump().run({
+          wrapFeeBump({
             transaction,
             config: { source: bob, fee: "100", signers: [] },
             networkPassphrase,

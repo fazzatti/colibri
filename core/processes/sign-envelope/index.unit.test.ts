@@ -10,7 +10,7 @@ import {
   Transaction,
   TransactionBuilder,
 } from "stellar-sdk";
-import { P_SignEnvelope } from "@/processes/sign-envelope/index.ts";
+import { signEnvelope } from "@/processes/sign-envelope/index.ts";
 import * as E from "@/processes/sign-envelope/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { OperationThreshold, type Signer } from "@/signer/types.ts";
@@ -119,18 +119,12 @@ describe("SignEnvelope", () => {
 
   beforeEach(() => {});
 
-  describe("Construction", () => {
-    it("creates process with proper name", () => {
-      assertEquals(P_SignEnvelope().name, "SignEnvelope");
-    });
-  });
-
   describe("Success", () => {
     it("signs a Transaction with one requirement and one signer", async () => {
       const tx = buildTx(KPS[1].publicKey());
       const signer = createSigner(KPS[0]);
 
-      const out = await P_SignEnvelope().run({
+      const out = await signEnvelope({
         transaction: tx,
         signatureRequirements: [
           {
@@ -152,7 +146,7 @@ describe("SignEnvelope", () => {
       const signer1 = createSigner(KPS[1]);
       const signer2 = createSigner(KPS[2]);
 
-      const out = await P_SignEnvelope().run({
+      const out = await signEnvelope({
         transaction: tx,
         signatureRequirements: [
           {
@@ -176,7 +170,7 @@ describe("SignEnvelope", () => {
       const signer1 = createSigner(KPS[1]);
       const signer2 = createSigner(KPS[2]);
 
-      const out = await P_SignEnvelope().run({
+      const out = await signEnvelope({
         transaction: tx,
         signatureRequirements: [
           {
@@ -206,7 +200,7 @@ describe("SignEnvelope", () => {
       const tx = buildTx(KPS[0].publicKey());
       const signer = createSigner(KPS[0]);
 
-      const out = await P_SignEnvelope().run({
+      const out = await signEnvelope({
         transaction: tx,
         signatureRequirements: [
           {
@@ -235,7 +229,7 @@ describe("SignEnvelope", () => {
       const feeBump = buildFeeBump(KPS[0].publicKey(), inner);
       const signer = createSigner(KPS[0]);
 
-      const out = await P_SignEnvelope().run({
+      const out = await signEnvelope({
         transaction: feeBump,
         signatureRequirements: [
           {
@@ -260,7 +254,7 @@ describe("SignEnvelope", () => {
 
       await assertRejects(
         async () =>
-          await P_SignEnvelope().run({
+          await signEnvelope({
             transaction: tx,
             signatureRequirements: [],
             signers: [signer],
@@ -274,7 +268,7 @@ describe("SignEnvelope", () => {
 
       await assertRejects(
         async () =>
-          await P_SignEnvelope().run({
+          await signEnvelope({
             transaction: tx,
             signatureRequirements: [
               {
@@ -294,7 +288,7 @@ describe("SignEnvelope", () => {
 
       await assertRejects(
         async () =>
-          await P_SignEnvelope().run({
+          await signEnvelope({
             transaction: tx,
             signatureRequirements: [
               {
@@ -314,7 +308,7 @@ describe("SignEnvelope", () => {
 
       await assertRejects(
         async () =>
-          await P_SignEnvelope().run({
+          await signEnvelope({
             transaction: tx,
             signatureRequirements: [
               {
@@ -334,7 +328,7 @@ describe("SignEnvelope", () => {
 
       await assertRejects(
         async () =>
-          await P_SignEnvelope().run({
+          await signEnvelope({
             transaction: tx,
             signatureRequirements: [
               {
@@ -349,14 +343,10 @@ describe("SignEnvelope", () => {
     });
 
     it("throws UNEXPECTED_ERROR on malformed input", async () => {
-      const SignEnvelope = P_SignEnvelope();
-
-      const faultyInput = null as unknown as Parameters<
-        typeof SignEnvelope.run
-      >[0];
+      const faultyInput = null as unknown as Parameters<typeof signEnvelope>[0];
 
       await assertRejects(
-        async () => await P_SignEnvelope().run(faultyInput),
+        async () => await signEnvelope(faultyInput),
         E.UNEXPECTED_ERROR
       );
     });

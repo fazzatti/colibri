@@ -9,10 +9,10 @@ import {
   TransactionBuilder,
   type xdr,
 } from "stellar-sdk";
-import { P_EnvelopeSigningRequirements } from "@/processes/envelope-signing-requirements/index.ts";
+import { envelopeSigningRequirements } from "@/processes/envelope-signing-requirements/index.ts";
 import * as E from "@/processes/envelope-signing-requirements/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
-import { muxedAddressToBaseAccount } from "@/transformers/address/index.ts";
+import { muxedAddressToBaseAccount } from "@/address/index.ts";
 import type { EnvelopeSigningRequirementsInput } from "@/processes/envelope-signing-requirements/types.ts";
 import type { MuxedAddress } from "@/strkeys/types.ts";
 import { OperationThreshold } from "@/signer/types.ts";
@@ -58,15 +58,6 @@ describe("EnvelopeSigningRequirements", () => {
     return tx.build();
   };
 
-  describe("Construction", () => {
-    it("creates process with proper name", () => {
-      assertEquals(
-        P_EnvelopeSigningRequirements().name,
-        "EnvelopeSigningRequirements"
-      );
-    });
-  });
-
   describe("Features", () => {
     it("Calculates the requirements for a minimal Transaction", async () => {
       const transaction = assembleTransaction(
@@ -74,7 +65,7 @@ describe("EnvelopeSigningRequirements", () => {
         [Operation.setOptions({})]
       );
 
-      const result = await P_EnvelopeSigningRequirements().run({ transaction });
+      const result = await envelopeSigningRequirements({ transaction });
 
       assert(result);
       assert(result.length);
@@ -98,7 +89,7 @@ describe("EnvelopeSigningRequirements", () => {
         networkPassphrase
       );
 
-      const result = await P_EnvelopeSigningRequirements().run({
+      const result = await envelopeSigningRequirements({
         transaction: feebump,
       });
 
@@ -117,7 +108,7 @@ describe("EnvelopeSigningRequirements", () => {
         [Operation.setOptions({})]
       );
 
-      const result = await P_EnvelopeSigningRequirements().run({ transaction });
+      const result = await envelopeSigningRequirements({ transaction });
 
       assert(result);
       assert(result.length);
@@ -141,7 +132,7 @@ describe("EnvelopeSigningRequirements", () => {
         networkPassphrase
       );
 
-      const result = await P_EnvelopeSigningRequirements().run({
+      const result = await envelopeSigningRequirements({
         transaction: feebump,
       });
 
@@ -182,7 +173,7 @@ describe("EnvelopeSigningRequirements", () => {
         opLowCharlie,
       ]);
 
-      const result = await P_EnvelopeSigningRequirements().run({
+      const result = await envelopeSigningRequirements({
         transaction,
       });
 
@@ -261,7 +252,7 @@ describe("EnvelopeSigningRequirements", () => {
         opLowCharlie,
       ]);
 
-      const result = await P_EnvelopeSigningRequirements().run({
+      const result = await envelopeSigningRequirements({
         transaction,
       });
 
@@ -312,7 +303,7 @@ describe("EnvelopeSigningRequirements", () => {
       const faultyInput = null as unknown as EnvelopeSigningRequirementsInput;
 
       await assertRejects(
-        async () => await P_EnvelopeSigningRequirements().run(faultyInput),
+        async () => await envelopeSigningRequirements(faultyInput),
         E.UNEXPECTED_ERROR
       );
     });
@@ -321,7 +312,7 @@ describe("EnvelopeSigningRequirements", () => {
       const transaction = null as unknown as Transaction;
 
       await assertRejects(
-        async () => await P_EnvelopeSigningRequirements().run({ transaction }),
+        async () => await envelopeSigningRequirements({ transaction }),
         E.INVALID_TRANSACTION_TYPE
       );
     });
@@ -347,7 +338,7 @@ describe("EnvelopeSigningRequirements", () => {
 
       await assertRejects(
         async () =>
-          await P_EnvelopeSigningRequirements().run({ transaction: faultyTx }),
+          await envelopeSigningRequirements({ transaction: faultyTx }),
         E.FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX
       );
     });
@@ -367,7 +358,7 @@ describe("EnvelopeSigningRequirements", () => {
 
       await assertRejects(
         async () =>
-          await P_EnvelopeSigningRequirements().run({
+          await envelopeSigningRequirements({
             transaction: faultyTx,
           }),
         E.FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION

@@ -25,13 +25,16 @@ describe(
       signers: [john.signer()],
     };
     beforeAll(async () => {
-      await initializeWithFriendbot(networkConfig.friendbotUrl, john.address());
+      await initializeWithFriendbot(networkConfig.friendbotUrl, john.address(), {
+        rpcUrl: networkConfig.rpcUrl,
+        allowHttp: networkConfig.allowHttp,
+      });
     });
 
     it("should create a pipeline", () => {
       const readPipe = createClassicTransactionPipeline({ networkConfig });
       assertInstanceOf(readPipe, Object);
-      assertEquals(readPipe.name, "ClassicTransactionPipeline");
+      assertEquals(readPipe.id, "ClassicTransactionPipeline");
     });
 
     it("should execute a transaction with a classic operation", async () => {

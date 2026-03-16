@@ -1,10 +1,8 @@
-import { Pipeline, PipelineConnectors } from "convee";
+import { pipe, step } from "convee";
 import {
   ColibriError,
-  P_EnvelopeSigningRequirements,
-  P_SignEnvelope,
-  P_WrapFeeBump,
   assertRequiredArgs,
+  steps,
 } from "@colibri/core";
 import {
   type CreateFeeBumpPipelineArgs,
@@ -17,7 +15,6 @@ import {
 } from "@/pipeline/connectors.ts";
 import * as E from "@/error.ts";
 
-const { storeMetadata } = PipelineConnectors;
 const createFeeBumpPipeline = ({
   networkConfig,
   feeBumpConfig,
@@ -37,25 +34,25 @@ const createFeeBumpPipeline = ({
       feeBumpConfig
     );
 
-    const WrapFeeBump = P_WrapFeeBump();
-    const EnvelopeSigningRequirements = P_EnvelopeSigningRequirements();
-    const SignEnvelope = P_SignEnvelope();
+    const WrapFeeBump = steps.createWrapFeeBumpStep();
+    const EnvelopeSigningRequirements =
+      steps.createEnvelopeSigningRequirementsStep();
+    const SignEnvelope = steps.createSignEnvelopeStep();
 
     const pipelineSteps = [
-      inputStep,
+      step(inputStep, { id: "fee-bump-input" as const }),
       WrapFeeBump,
-      storeMetadata("wrapFeeBumpOutput", WrapFeeBump),
       wrapFeeBumpToEnvelopeSigningRequirements,
       EnvelopeSigningRequirements,
-      envSignReqToSignEnvelope("wrapFeeBumpOutput", feeBumpConfig),
+      envSignReqToSignEnvelope(feeBumpConfig),
       SignEnvelope,
     ] as const;
 
-    const pipe = Pipeline.create([...pipelineSteps], {
-      name: PIPELINE_NAME,
+    const feeBumpPipe = pipe([...pipelineSteps], {
+      id: PIPELINE_NAME,
     });
 
-    return pipe;
+    return feeBumpPipe;
   } catch (error) {
     if (error instanceof ColibriError) {
       throw error;

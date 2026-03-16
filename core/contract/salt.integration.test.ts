@@ -46,7 +46,10 @@ describe("[Testnet] Contract Salt Deployment", disableSanitizeConfig, () => {
   let wasmHash: string;
 
   beforeAll(async () => {
-    await initializeWithFriendbot(networkConfig.friendbotUrl, admin.address());
+    await initializeWithFriendbot(networkConfig.friendbotUrl, admin.address(), {
+      rpcUrl: networkConfig.rpcUrl,
+      allowHttp: networkConfig.allowHttp,
+    });
 
     // Upload the wasm once for all salt tests
     const wasm = await loadWasmFile(

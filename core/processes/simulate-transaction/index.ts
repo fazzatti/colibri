@@ -1,4 +1,3 @@
-import { ProcessEngine } from "convee";
 import type {
   SimulateTransactionInput,
   SimulateTransactionOutput,
@@ -7,7 +6,7 @@ import * as E from "@/processes/simulate-transaction/error.ts";
 
 import { Api } from "stellar-sdk/rpc";
 
-const simulateTransactionProcess = async (
+export const simulateTransaction = async (
   input: SimulateTransactionInput
 ): Promise<SimulateTransactionOutput> => {
   try {
@@ -48,18 +47,4 @@ const simulateTransactionProcess = async (
     throw new E.UNEXPECTED_ERROR(input, e as Error);
   }
 };
-const PROCESS_NAME = "SimulateTransaction" as const;
-
-const P_SimulateTransaction = () =>
-  ProcessEngine.create<
-    SimulateTransactionInput,
-    SimulateTransactionOutput,
-    E.SimulateTransactionError,
-    typeof PROCESS_NAME
-  >(simulateTransactionProcess, {
-    name: PROCESS_NAME,
-  });
-
-const P_SimulateTransactionErrors = E;
-
-export { P_SimulateTransaction, P_SimulateTransactionErrors };
+export { E as SimulateTransactionErrors };

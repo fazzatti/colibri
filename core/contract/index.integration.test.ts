@@ -31,7 +31,10 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
   };
 
   beforeAll(async () => {
-    await initializeWithFriendbot(networkConfig.friendbotUrl, admin.address());
+    await initializeWithFriendbot(networkConfig.friendbotUrl, admin.address(), {
+      rpcUrl: networkConfig.rpcUrl,
+      allowHttp: networkConfig.allowHttp,
+    });
   });
 
   describe("Core features and initialization", () => {

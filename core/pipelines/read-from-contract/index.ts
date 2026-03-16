@@ -1,15 +1,19 @@
-import { Pipeline } from "convee";
+import { pipe, step } from "convee";
 import { Server } from "stellar-sdk/rpc";
-import { P_BuildTransaction } from "@/processes/build-transaction/index.ts";
-import { P_SimulateTransaction } from "@/processes/simulate-transaction/index.ts";
 import { ColibriError } from "@/error/index.ts";
-import { buildToSimulate } from "@/transformers/pipeline-connectors/build-to-simulate.ts";
+import { buildToSimulate } from "@/pipelines/shared/connectors/build-to-simulate.ts";
 import type { CreateReadFromContractPipelineArgs } from "@/pipelines/read-from-contract/types.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
-import { simulateToRetval } from "@/transformers/pipeline-connectors/simulate-to-retval/index.ts";
+import { simulateToRetval } from "@/pipelines/shared/connectors/simulate-to-retval/index.ts";
 import * as E from "@/pipelines/read-from-contract/error.ts";
 import { inputToBuild } from "@/pipelines/read-from-contract/connectors.ts";
 import { assert } from "@/common/assert/assert.ts";
+import {
+  BUILD_TRANSACTION_STEP_ID,
+  createBuildTransactionStep,
+  createSimulateTransactionStep,
+  SIMULATE_TRANSACTION_STEP_ID,
+} from "@/steps/index.ts";
 
 export const PIPELINE_NAME = "ReadFromContractPipeline";
 
@@ -30,22 +34,24 @@ const createReadFromContractPipeline = ({
       assert(networkConfig && networkConfig.rpcUrl, new E.MISSING_RPC_URL());
       rpc = new Server(networkConfig.rpcUrl!);
     }
-    const BuildTransaction = P_BuildTransaction();
-    const SimulateTransaction = P_SimulateTransaction();
+    const BuildTransaction = createBuildTransactionStep();
+    const SimulateTransaction = createSimulateTransactionStep();
 
     const pipelineSteps = [
-      inputToBuild(networkConfig.networkPassphrase),
+      step(inputToBuild(networkConfig.networkPassphrase), {
+        id: "read-from-contract-input" as const,
+      }),
       BuildTransaction,
       buildToSimulate(rpc),
       SimulateTransaction,
       simulateToRetval,
     ] as const;
 
-    const pipe = Pipeline.create([...pipelineSteps], {
-      name: PIPELINE_NAME,
+    const readPipe = pipe([...pipelineSteps], {
+      id: PIPELINE_NAME,
     });
 
-    return pipe;
+    return readPipe;
   } catch (error) {
     if (error instanceof ColibriError) {
       throw error;
