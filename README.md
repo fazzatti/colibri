@@ -16,6 +16,9 @@ A TypeScript-first toolkit for building robust Stellar and Soroban applications 
 
 <div align="center">
 
+  <a href="https://github.com/fazzatti/colibri/actions/workflows/deno.yml">
+    <img src="https://github.com/fazzatti/colibri/actions/workflows/deno.yml/badge.svg" alt="CI" />
+  </a>
   <a href="https://codecov.io/gh/fazzatti/colibri" > 
     <img src="https://codecov.io/gh/fazzatti/colibri/branch/main/graph/badge.svg?token=QMVWNRZNWC"/> 
  </a>
@@ -61,17 +64,17 @@ npm install @colibri/plugin-fee-bump
 
 ---
 
-### [@colibri/event-streamer](./event-streamer)
+### [@colibri/rpc-streamer](./rpc-streamer)
 
 A real-time event streaming client for Stellar/Soroban that supports live streaming, historical ingestion, and automatic mode switching.
 
 ```sh
-deno add jsr:@colibri/event-streamer
+deno add jsr:@colibri/rpc-streamer
 # or
-npm install @colibri/event-streamer
+npm install @colibri/rpc-streamer
 ```
 
-[View Documentation →](./event-streamer/README.md)
+[View Documentation →](./rpc-streamer/README.md)
 
 ---
 
@@ -88,24 +91,21 @@ We do not throw generic errors. Every error in Colibri is a typed `ColibriError`
 - **Meta**: Structured data relevant to the error context.
 - **Diagnostic**: Human-readable suggestions for resolution.
 
-### 2. Pipelines & Processes
+### 2. Pipelines, Processes & Steps
 
 The architecture separates orchestration from execution, promoting reusability and testability.
 
-- **Processes (The "How")**: Atomic, stateless units of work. They focus on doing one thing well.
+- **Processes (The "How")**: Atomic functions that do one thing well. They are plain reusable building blocks, independent from orchestration.
 
-  - _Example:_ `P_SignAuthEntries` takes a transaction and a signer, and produces signed authorization entries. It doesn't care where the transaction came from or what happens next.
-  - _Example:_ `P_SimulateTransaction` takes a transaction, sends it to the RPC, and returns the simulation results (or a specific error if simulation fails).
+  - _Example:_ `signAuthEntries` takes Soroban auth entries plus signers and returns signed authorization entries.
+  - _Example:_ `simulateTransaction` takes a transaction, sends it to the RPC, and returns simulation results.
+
+- **Steps (The orchestration boundary)**: Thin `convee` wrappers around processes. They attach stable step ids, plugin targets, and runtime context without polluting the process layer.
 
 - **Pipelines (The "What")**: Orchestrators that chain processes together to achieve a high-level business goal.
-  - _Example:_ `PIPE_InvokeContract` is a pipeline composed of several processes:
-    1.  `P_BuildTransaction` (Create the XDR)
-    2.  `P_SimulateTransaction` (Check if it's valid)
-    3.  `P_AssembleTransaction` (Apply simulation data)
-    4.  `P_SignEnvelope` (Gather signatures)
-    5.  `P_SendTransaction` (Submit to network)
+  - _Example:_ `PIPE_InvokeContract` composes build, simulate, sign-auth, assemble, envelope-signing-requirements, sign-envelope, and send steps into one write flow.
 
-This composition allows us to swap parts easily. For instance, a `FeeBump` plugin simply injects a `P_WrapFeeBump` process into the pipeline before the signing phase, without rewriting the core logic.
+This composition allows us to swap parts easily. For instance, the `FeeBump` plugin targets the `SendTransaction` step and wraps the outgoing transaction before submission, without rewriting the rest of the pipeline.
 
 ### 3. Type Safety
 
@@ -121,10 +121,10 @@ The system is built in layers, aiming to provide both high-level tools for speci
   - Extensions (Fee Bump), specialized clients (Contract, Signer), and event streaming.
 - **Layer 3: Pipelines**
   - High-level workflows (`PIPE_InvokeContract`, `PIPE_ReadFromContract`).
-- **Layer 2: Processes**
-  - Atomic logic blocks (`P_BuildTransaction`, `P_SimulateTransaction`).
+- **Layer 2: Steps & Processes**
+  - Plain process functions plus `convee` step wrappers with stable ids.
 - **Layer 1: Core**
-  - Base types, Error primitives, Network configurations, and Account wrappers.
+  - Base types, Error primitives, Network configurations, account wrappers, and shared auth/address utilities.
 
 ---
 
@@ -154,16 +154,6 @@ Ensure code style consistency.
 ```sh
 deno lint
 ```
-
-### Coverage
-
-Generate and view test coverage reports.
-
-```sh
-deno task coverage:report
-```
-
----
 
 ## License
 
