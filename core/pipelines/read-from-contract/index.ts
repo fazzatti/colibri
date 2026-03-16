@@ -9,10 +9,8 @@ import * as E from "@/pipelines/read-from-contract/error.ts";
 import { inputToBuild } from "@/pipelines/read-from-contract/connectors.ts";
 import { assert } from "@/common/assert/assert.ts";
 import {
-  BUILD_TRANSACTION_STEP_ID,
   createBuildTransactionStep,
   createSimulateTransactionStep,
-  SIMULATE_TRANSACTION_STEP_ID,
 } from "@/steps/index.ts";
 
 export const PIPELINE_NAME = "ReadFromContractPipeline";
