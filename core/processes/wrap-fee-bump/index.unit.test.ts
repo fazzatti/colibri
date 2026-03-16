@@ -51,7 +51,7 @@ describe("WrapFeeBump", () => {
     });
   });
   describe("Errors", () => {
-    it("throws UNEXPECTED_ERROR for unexpected errors", async () => {
+    it("throws UNEXPECTED_ERROR for unexpected errors", () => {
       const inner = assembleTransaction(alice, [Operation.setOptions({})]);
       const feebump = TransactionBuilder.buildFeeBumpTransaction(
         bob,
@@ -71,7 +71,7 @@ describe("WrapFeeBump", () => {
       );
     });
 
-    it("throws ALREADY_FEE_BUMP if input is already a FeeBumpTransaction", async () => {
+    it("throws ALREADY_FEE_BUMP if input is already a FeeBumpTransaction", () => {
       const inner = assembleTransaction(alice, [Operation.setOptions({})]);
       const feebump = TransactionBuilder.buildFeeBumpTransaction(
         bob,
@@ -93,7 +93,7 @@ describe("WrapFeeBump", () => {
   });
 
   describe("Errors", () => {
-    it("throws NOT_A_TRANSACTION for invalid input", async () => {
+    it("throws NOT_A_TRANSACTION for invalid input", () => {
       assertThrows(
         () =>
           wrapFeeBump({
@@ -105,7 +105,7 @@ describe("WrapFeeBump", () => {
       );
     });
 
-    it("throws MISSING_ARG when required args are missing", async () => {
+    it("throws MISSING_ARG when required args are missing", () => {
       const transaction = assembleTransaction(alice, [
         Operation.setOptions({}),
       ]);
@@ -141,7 +141,7 @@ describe("WrapFeeBump", () => {
       );
     });
 
-    it("throws FAILED_TO_BUILD_FEE_BUMP when builder fails", async () => {
+    it("throws FAILED_TO_BUILD_FEE_BUMP when builder fails", () => {
       const transaction = assembleTransaction(alice, [
         Operation.setOptions({}),
       ]);
@@ -167,7 +167,7 @@ describe("WrapFeeBump", () => {
       }
     });
 
-    it("throws FEE_TOO_LOW when the fee for the outer envelope is lower than the inner transaction fee", async () => {
+    it("throws FEE_TOO_LOW when the fee for the outer envelope is lower than the inner transaction fee", () => {
       const transaction = assembleTransaction(alice, [
         Operation.setOptions({}),
       ]);
