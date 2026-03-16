@@ -2,16 +2,17 @@
 
 Wraps a transaction with a fee bump, enabling fee sponsorship. A fee bump allows a different account to pay for a transaction's fees, useful for improving user experience or handling fee increases after initial signing.
 
-## `P_WrapFeeBump`
+## `wrapFeeBump`
 
 ```typescript
-import { P_WrapFeeBump } from "@colibri/core";
+import { wrapFeeBump } from "@colibri/core";
 
-const result = await P_WrapFeeBump().run({
+const result = await wrapFeeBump({
   transaction: innerTx,
   config: {
     source: sponsorPublicKey,
     fee: "1000000",
+    signers: [sponsorSigner],
   },
   networkPassphrase: "Test SDF Network ; September 2015",
 });
@@ -31,6 +32,7 @@ const result = await P_WrapFeeBump().run({
 | -------- | ------------------ | ----------------------------- |
 | `source` | `Ed25519PublicKey` | Fee bump source (sponsor)     |
 | `fee`    | `BaseFee`          | Total fee (must exceed inner) |
+| `signers` | `Signer[]`         | Signers kept with the shared fee bump config shape |
 
 ## Output
 
@@ -65,8 +67,8 @@ The fee bump transaction must then be signed by the fee bump source before submi
 | `WFB_001` | Missing required argument             |
 | `WFB_002` | Transaction is already a fee bump     |
 | `WFB_003` | Not a valid transaction               |
-| `WFB_004` | Fee bump fee must exceed inner tx fee |
-| `WFB_005` | Failed to build fee bump transaction  |
+| `WFB_004` | Failed to build fee bump transaction  |
+| `WFB_005` | Fee bump fee must exceed inner tx fee |
 
 ## See Also
 

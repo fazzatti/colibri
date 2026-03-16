@@ -2,12 +2,12 @@
 
 Attaches simulation results (footprint, authorization entries, resource fees) to a transaction, making it ready for signing. This process reconstructs the transaction with all the Soroban-specific data from simulation.
 
-## `P_AssembleTransaction`
+## `assembleTransaction`
 
 ```typescript
-import { P_AssembleTransaction } from "@colibri/core";
+import { assembleTransaction } from "@colibri/core";
 
-const result = await P_AssembleTransaction().run({
+const result = await assembleTransaction({
   transaction: builtTx,
   authEntries: signedAuthEntries,
   sorobanData: simulation.transactionData,

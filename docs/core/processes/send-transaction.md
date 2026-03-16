@@ -2,12 +2,12 @@
 
 Submits a signed transaction to the network and waits for confirmation. This process handles the full lifecycle of transaction submission, including polling for the final status.
 
-## `P_SendTransaction`
+## `sendTransaction`
 
 ```typescript
-import { P_SendTransaction } from "@colibri/core";
+import { sendTransaction } from "@colibri/core";
 
-const result = await P_SendTransaction().run({
+const result = await sendTransaction({
   transaction: signedTx,
   rpc: rpcServer,
 });

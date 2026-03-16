@@ -1,13 +1,13 @@
 # SignEnvelope
 
-Signs the transaction envelope based on signature requirements. This process takes the signature requirements from `P_EnvelopeSigningRequirements` and applies signatures from the available signers.
+Signs the transaction envelope based on signature requirements. This process takes the requirements from `envelopeSigningRequirements` and applies signatures from the available signers.
 
-## `P_SignEnvelope`
+## `signEnvelope`
 
 ```typescript
-import { P_SignEnvelope } from "@colibri/core";
+import { signEnvelope } from "@colibri/core";
 
-const result = await P_SignEnvelope().run({
+const result = await signEnvelope({
   transaction: assembledTx,
   signatureRequirements: requirements,
   signers: [signer],

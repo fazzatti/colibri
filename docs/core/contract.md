@@ -308,6 +308,8 @@ const result = await pipeline.run({
   operations: [operation],
   config: {
     source: signer.publicKey(),
+    fee: "100000",
+    timeout: 30,
     signers: [signer],
   },
 });

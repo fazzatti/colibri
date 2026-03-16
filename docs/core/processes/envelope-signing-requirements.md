@@ -2,12 +2,12 @@
 
 Determines which signatures are required for a transaction based on its source account and operations. This analysis is needed to know which signers must sign the transaction envelope before submission.
 
-## `P_EnvelopeSigningRequirements`
+## `envelopeSigningRequirements`
 
 ```typescript
-import { P_EnvelopeSigningRequirements } from "@colibri/core";
+import { envelopeSigningRequirements } from "@colibri/core";
 
-const result = await P_EnvelopeSigningRequirements().run({
+const result = await envelopeSigningRequirements({
   transaction: assembledTx,
 });
 ```
@@ -41,7 +41,7 @@ Each requirement specifies:
 1. **Extracts source account** — Gets the transaction source, handling muxed addresses by extracting the base Ed25519 key
 2. **Sets source requirement** — Source account requires `medium` threshold by default
 3. **Analyzes each operation** — Determines the required threshold for each operation type
-4. **Resolves "source-account" references** — Operations that use the transaction source (indicated by `"source-account"`) are merged with the source requirement
+4. **Resolves "source-account" references** — Operations that use the transaction source are merged with the source requirement
 5. **Deduplicates requirements** — If multiple requirements exist for the same address, uses the highest threshold level
 
 ### For Fee Bump Transactions

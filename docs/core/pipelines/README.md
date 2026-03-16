@@ -1,22 +1,23 @@
 # Pipelines
 
-Pipelines chain multiple [processes](../processes/) and transformer functions into reusable workflows. Built on the [`convee`](https://jsr.io/@fifo/convee) library, they handle the complexity of multi-step transaction flows.
+Pipelines combine [processes](../processes/) with step wrappers and connectors into reusable workflows. They are built on [`convee`](https://jsr.io/@fifo/convee) and expose `PIPE_*` factories such as `PIPE_InvokeContract`.
 
-In Colibri, all pipelines are prefixed with `PIPE_` (e.g., `PIPE_InvokeContract`).
+Each pipeline typically includes:
 
-A pipeline connects steps sequentially—each step receives the output of the previous one. Steps can be:
-
-* **Processes** — Atomic operations like `BuildTransaction`, `SimulateTransaction`
-* **Transformers** — Simple functions that modify or reshape data between processes
-
-Like processes, pipelines can be extended with plugins that operate on the input, output, or errors at specific points in the flow.
+- **Input connectors** that normalize pipeline input into a process-friendly shape
+- **Step wrappers** around raw processes such as `buildTransaction` and `sendTransaction`
+- **Shared connectors** under `core/pipelines/shared/connectors`
+- **Pipeline-specific connectors** kept next to the owning pipeline
 
 ## Plugins
 
+Plugins target a specific step id and are attached with `pipeline.use(...)`:
+
 ```typescript
-import { PIPE_InvokeContract } from "@colibri/core";
+import { PIPE_InvokeContract, NetworkConfig } from "@colibri/core";
 import { PLG_FeeBump } from "@colibri/plugin-fee-bump";
 
+const networkConfig = NetworkConfig.TestNet();
 const pipeline = PIPE_InvokeContract.create({ networkConfig });
 
 const feeBumpPlugin = PLG_FeeBump.create({
@@ -28,7 +29,7 @@ const feeBumpPlugin = PLG_FeeBump.create({
   },
 });
 
-pipeline.addPlugin(feeBumpPlugin, PLG_FeeBump.target);
+pipeline.use(feeBumpPlugin);
 ```
 
 See [Plugins](../../packages/plugins/) for available plugins.

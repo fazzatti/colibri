@@ -2,12 +2,14 @@
 
 For read-only contract calls that don't modify state.
 
-## Process Composition
+## Composition
 
-This pipeline chains the following processes:
+This pipeline uses step wrappers around:
 
-1. [P_BuildTransaction](../processes/build-transaction.md) — Creates the transaction
-2. [P_SimulateTransaction](../processes/simulate-transaction.md) — Simulates and extracts return value
+1. [buildTransaction](../processes/build-transaction.md) — Creates the transaction
+2. [simulateTransaction](../processes/simulate-transaction.md) — Simulates the operation
+
+It then uses the shared `simulateToRetval` connector to return only the simulated contract value.
 
 ## Usage
 

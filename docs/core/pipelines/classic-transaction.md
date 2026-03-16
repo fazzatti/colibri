@@ -2,14 +2,16 @@
 
 For classic Stellar operations (payments, account creation, etc.).
 
-## Process Composition
+## Composition
 
-This pipeline chains the following processes:
+This pipeline uses step wrappers around the following raw processes:
 
-1. [P_BuildTransaction](../processes/build-transaction.md) — Creates the transaction
-2. [P_EnvelopeSigningRequirements](../processes/envelope-signing-requirements.md) — Determines required signatures
-3. [P_SignEnvelope](../processes/sign-envelope.md) — Signs the transaction
-4. [P_SendTransaction](../processes/send-transaction.md) — Submits and waits for confirmation
+1. [buildTransaction](../processes/build-transaction.md) — Creates the transaction
+2. [envelopeSigningRequirements](../processes/envelope-signing-requirements.md) — Determines required signatures
+3. [signEnvelope](../processes/sign-envelope.md) — Signs the transaction
+4. [sendTransaction](../processes/send-transaction.md) — Submits and waits for confirmation
+
+Between those steps, Colibri uses shared connectors to adapt pipeline input, signing requirements, and final output.
 
 ## Usage
 
@@ -39,6 +41,7 @@ const result = await pipeline.run({
   config: {
     source: signer.publicKey(),
     fee: "100",
+    timeout: 30,
     signers: [signer],
   },
 });

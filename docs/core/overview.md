@@ -8,6 +8,16 @@ The `@colibri/core` package is the foundation of the Colibri toolkit. It provide
 deno add jsr:@colibri/core
 ```
 
+## Architecture at a Glance
+
+The core package is organized around a few clear boundaries:
+
+- **Processes** are raw single-purpose functions such as `buildTransaction` and `sendTransaction`
+- **Steps** are `convee` wrappers with stable ids exposed under `steps`
+- **Pipelines** are composed flows such as `PIPE_InvokeContract`
+- **Auth** and **address** hold reusable domain logic that should not live in pipelines
+- **Errors** are typed and stable across all modules
+
 ## Quick Import Examples
 
 ### Network Setup
@@ -60,6 +70,7 @@ const result = await pipeline.run({
   config: {
     source: signer.publicKey(),
     fee: "100000",
+    timeout: 30,
     signers: [signer],
   },
 });
@@ -138,6 +149,9 @@ import {
   SACEvents,
   Ledger,
   PIPE_InvokeContract,
+  steps,
+  address,
+  auth,
 } from "@colibri/core";
 
 // Type-only exports
@@ -170,9 +184,21 @@ try {
 }
 ```
 
+## Processes, Steps, and Pipelines
+
+Most transaction flows use the same progression:
+
+- call raw process functions when you need isolated behavior
+- use `steps` when you need stable orchestration ids or plugin targets
+- use `PIPE_*` factories when you want the end-to-end flows Colibri ships with
+
+This keeps business logic in plain functions while leaving `convee` details at the orchestration boundary.
+
 ## Next Steps
 
 - [Error Handling](error.md) — Understand the error system
 - [Pipelines](pipelines/README.md) — Build transaction workflows
+- [Steps](steps.md) — See the orchestration wrappers and stable ids
+- [Processes](processes/README.md) — Work with the raw building blocks
 - [Events Overview](../events/overview.md) — Parse and filter contract events
 - [RPC Streamer](../packages/rpc-streamer.md) — Stream ledgers and events

@@ -1,9 +1,9 @@
 # LocalSigner
 
-`LocalSigner` is a simple in-memory signer shipped with Colibri for convenience during development and testing. It is not intended for production use cases where more secure key management solutions are recommended.
+`LocalSigner` is an in-memory signer shipped with Colibri for development and testing. It is convenient, but it is not intended for production environments where stronger key custody is required.
 
 {% hint style="info" %}
-LocalSigner shields the secret key by not exposing it unnecessarily—the key exists only inside a secure closure and is never returned by any method.
+LocalSigner keeps the secret key inside a closure and does not expose it through the public API.
 {% endhint %}
 
 ## Creating a LocalSigner
@@ -21,14 +21,16 @@ console.log(signer.publicKey()); // "GABC..."
 ### Generate Random Keypair
 
 ```typescript
+import { LocalSigner } from "@colibri/core";
+
 const signer = LocalSigner.generateRandom();
 
-console.log(signer.publicKey()); // New random public key
+console.log(signer.publicKey());
 ```
 
 ## Usage with Pipelines
 
-````typescript
+```typescript
 import { PIPE_InvokeContract, LocalSigner, NetworkConfig } from "@colibri/core";
 import { Operation } from "stellar-sdk";
 
@@ -47,28 +49,29 @@ const result = await pipeline.run({
   config: {
     source: signer.publicKey(),
     fee: "100000",
+    timeout: 30,
     signers: [signer],
   },
 });
+```
 
 ## Signing Targets
 
-Colibri processes select signers via `signsFor(target)`. By default, `LocalSigner` signs for its own public key.
+Colibri selects signers via `signsFor(target)`. By default, `LocalSigner` signs for its own public key.
 
-If you need a `LocalSigner` to sign Soroban authorization entries for a contract address, add that contract ID as a target:
+If you need the signer to authorize a contract id as well, add that target explicitly:
 
 ```typescript
 import { LocalSigner } from "@colibri/core";
+import type { ContractId } from "@colibri/core";
 
 const signer = LocalSigner.fromSecret("S...");
 signer.addTarget("CABC..." as ContractId);
-````
-
-````
+```
 
 ## Fee Bump Signing
 
-When using fee bumps, use separate LocalSigner instances for the user and sponsor:
+When using fee bumps, use separate signer instances for the user and sponsor:
 
 ```typescript
 import { PIPE_InvokeContract, LocalSigner, NetworkConfig } from "@colibri/core";
@@ -80,25 +83,27 @@ const sponsorSigner = LocalSigner.fromSecret("S_SPONSOR...");
 
 const pipeline = PIPE_InvokeContract.create({ networkConfig: network });
 
-const feeBumpPlugin = PLG_FeeBump.create({
-  networkConfig: network,
-  feeBumpConfig: {
-    source: sponsorSigner.publicKey(),
-    fee: "1000000",
-    signers: [sponsorSigner],
-  },
-});
-pipeline.addPlugin(feeBumpPlugin, PLG_FeeBump.target);
+pipeline.use(
+  PLG_FeeBump.create({
+    networkConfig: network,
+    feeBumpConfig: {
+      source: sponsorSigner.publicKey(),
+      fee: "1000000",
+      signers: [sponsorSigner],
+    },
+  }),
+);
 
 const result = await pipeline.run({
   operations: [...],
   config: {
     source: userSigner.publicKey(),
     fee: "100000",
+    timeout: 30,
     signers: [userSigner],
   },
 });
-````
+```
 
 ## Next Steps
 

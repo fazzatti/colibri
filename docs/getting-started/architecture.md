@@ -1,18 +1,39 @@
 # Architecture Overview
 
-Colibri is built around core principles: **composable pipelines**, **robust processes**, **extensible plugins**, and **type-safe abstractions**.
+Colibri separates execution from orchestration so the core logic stays easy to test and the higher-level flows stay easy to extend.
 
-## Pipeline Architecture
+## Layers
 
-Colibri uses the [`convee`](https://jsr.io/@fifo/convee) library to compose workflows as **pipelines** of discrete **processes**.
+### Processes
 
-### What is a Pipeline?
+Processes are plain functions such as `buildTransaction`, `simulateTransaction`, `signEnvelope`, and `sendTransaction`.
 
-A pipeline chains multiple processes together, where each process:
+- They do one job
+- They expose typed inputs and outputs
+- They raise named `ColibriError` subclasses
+- They do not depend on `convee`
 
-- Receives input from the previous process
-- Performs a specific task (build, simulate, sign, submit)
-- Passes output to the next process
+Use processes directly when you need a single operation in isolation or when you want to build your own orchestration.
+
+### Steps
+
+Steps are thin [`convee`](https://jsr.io/@fifo/convee) wrappers around processes.
+
+- They assign stable ids such as `steps.SEND_TRANSACTION_STEP_ID`
+- They define plugin targets
+- They keep orchestration concerns out of the process layer
+
+### Connectors
+
+Connectors adapt one step boundary into the next.
+
+- Pipeline-specific connectors live next to the owning pipeline
+- Shared connectors live under `core/pipelines/shared/connectors`
+- They use run context instead of the older metadata helper pattern
+
+### Pipelines
+
+Pipelines are ready-to-use `convee` pipes built from step wrappers and connectors.
 
 ```
 ┌─────────┐     ┌──────────┐     ┌──────────┐     ┌────────┐     ┌────────┐
@@ -20,25 +41,51 @@ A pipeline chains multiple processes together, where each process:
 └─────────┘     └──────────┘     └──────────┘     └────────┘     └────────┘
 ```
 
-Colibri provides ready-to-use pipelines for common use cases like contract invocation, read-only calls, and classic transactions. You can use them directly or compose custom pipelines from individual processes.
+Colibri ships with:
 
-See [Pipelines](../core/pipelines/) for the full list and detailed documentation.
+- `PIPE_InvokeContract`
+- `PIPE_ReadFromContract`
+- `PIPE_ClassicTransaction`
 
-## Processes
+See [Pipelines](../core/pipelines/) for details.
 
-Processes are the atomic building blocks of Colibri. Each process handles a single task with predictable behavior, typed input/output, and specific error codes. They can be used standalone or composed into pipelines.
+### Plugins
 
-See [Processes](../core/processes/) for the full list and detailed documentation.
+Plugins attach to step ids inside a pipeline. For example, the Fee Bump plugin targets the `SendTransaction` step and wraps the outgoing transaction before submission.
 
-## Plugins
+```typescript
+import { PIPE_InvokeContract, NetworkConfig } from "@colibri/core";
+import { PLG_FeeBump } from "@colibri/plugin-fee-bump";
 
-Plugins extend pipeline and process behavior without modifying core logic. They wrap around steps to add functionality like fee sponsorship, custom signing strategies, or logging.
+const networkConfig = NetworkConfig.TestNet();
+const pipeline = PIPE_InvokeContract.create({ networkConfig });
 
-See [Plugins](../packages/plugins/) for available plugins and how to use them.
+pipeline.use(
+  PLG_FeeBump.create({
+    networkConfig,
+    feeBumpConfig: {
+      source: "G...SPONSOR",
+      fee: "1000000",
+      signers: [sponsorSigner],
+    },
+  }),
+);
+```
+
+See [Plugins](../packages/plugins/) for available plugins and usage.
+
+## Domain Modules
+
+Colibri also keeps reusable domain logic outside the orchestration layer:
+
+- `address` for address normalization helpers such as muxed-account handling
+- `auth` for authorization and threshold rules
+- `signer` for signer interfaces and implementations
+- `network` for validated network configuration
 
 ## Type Safety
 
-Colibri leverages TypeScript's type system extensively to ensure consistency across all components. Validation guards like `StrKey` help validate and narrow types at runtime:
+Colibri uses TypeScript narrowing and validation helpers throughout the stack:
 
 ```typescript
 import { StrKey } from "@colibri/core";
@@ -46,26 +93,13 @@ import { StrKey } from "@colibri/core";
 const input = "G...";
 
 if (StrKey.isEd25519PublicKey(input)) {
-  // TypeScript now knows input is Ed25519PublicKey
   await loadAccount(input);
 }
 ```
 
-Type checkers are available for public keys, secret keys, contract IDs, muxed addresses, and more—keeping consistency across the core components and tools.
-
-## Core Types
-
-Colibri uses well-defined interfaces and types throughout the library. This enables custom implementations that integrate seamlessly—you're never locked into built-in tools. For example, [Signer](../core/signer/) defines the signing interface so any custom signer works with all pipelines, [NetworkConfig](../core/network.md) standardizes network settings across all tools, and [TransactionConfig](../core/transaction-config.md) provides consistent transaction parameters.
-
 ## Error Handling
 
-Colibri uses **typed errors** with unique, standardized error codes across the entire library. Every error includes:
-
-- A unique error code (e.g., `BTX_003`, `SIM_001`)
-- A human-readable message
-- Optional diagnostic information with suggestions
-
-Network failures and external errors are wrapped and enriched with context, making debugging straightforward.
+Every Colibri subsystem emits typed errors with stable codes and structured metadata:
 
 ```typescript
 import { ColibriError } from "@colibri/core";
@@ -76,19 +110,17 @@ try {
   if (ColibriError.is(error)) {
     console.log("Error Code:", error.code);
     console.log("Message:", error.message);
-
-    if (error.diagnostic) {
-      console.log("Suggestion:", error.diagnostic.suggestion);
-    }
+    console.log("Source:", error.source);
   }
 }
 ```
 
-See [Error Handling](../core/error.md) for the full error system documentation.
+See [Error Handling](../core/error.md) for the full model.
 
 ## Next Steps
 
-- [Pipelines](../core/pipelines/) — Build custom transaction workflows
-- [Processes](../core/processes/) — Learn about each process in detail
-- [Plugins](../packages/plugins/) — Extend behavior with plugins
+- [Pipelines](../core/pipelines/) — Build transaction workflows
+- [Steps](../core/steps.md) — Understand the orchestration wrappers and plugin targets
+- [Processes](../core/processes/) — Learn about the raw building blocks
+- [Plugins](../packages/plugins/) — Extend behavior with step-targeted plugins
 - [Error Handling](../core/error.md) — Deep dive into the error system

@@ -2,12 +2,12 @@
 
 Signs Soroban authorization entries for contract calls that require authorization from specific accounts. When a contract calls `require_auth()`, the authorization entry must be signed by the required account before the transaction can succeed.
 
-## `P_SignAuthEntries`
+## `signAuthEntries`
 
 ```typescript
-import { P_SignAuthEntries } from "@colibri/core";
+import { signAuthEntries } from "@colibri/core";
 
-const result = await P_SignAuthEntries().run({
+const result = await signAuthEntries({
   auth: simulation.result?.auth || [],
   signers: [signer],
   rpc: rpcServer,

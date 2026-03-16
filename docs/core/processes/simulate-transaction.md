@@ -2,12 +2,12 @@
 
 Simulates a transaction on the Soroban RPC to calculate resource usage, fees, and authorization requirements. Simulation is required before submitting any Soroban transaction to determine the exact resources it will consume.
 
-## `P_SimulateTransaction`
+## `simulateTransaction`
 
 ```typescript
-import { P_SimulateTransaction } from "@colibri/core";
+import { simulateTransaction } from "@colibri/core";
 
-const result = await P_SimulateTransaction().run({
+const result = await simulateTransaction({
   transaction: builtTx,
   rpc: rpcServer,
 });

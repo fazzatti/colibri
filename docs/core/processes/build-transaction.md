@@ -2,12 +2,12 @@
 
 Creates a Stellar transaction from operations. This is the foundational step that takes your operations, source account, and configuration to produce a transaction ready for simulation or signing.
 
-## `P_BuildTransaction`
+## `buildTransaction`
 
 ```typescript
-import { P_BuildTransaction } from "@colibri/core";
+import { buildTransaction } from "@colibri/core";
 
-const result = await P_BuildTransaction().run({
+const result = await buildTransaction({
   operations: [Operation.invokeContractFunction({...})],
   source: "GABC...",
   baseFee: "100000",

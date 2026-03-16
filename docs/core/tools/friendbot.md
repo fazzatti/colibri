@@ -11,7 +11,10 @@ const network = NetworkConfig.TestNet();
 
 await initializeWithFriendbot(
   network.friendbotUrl,
-  "GABC...XYZ" // Public key to fund
+  "GABC...XYZ",
+  {
+    rpcUrl: network.rpcUrl,
+  },
 );
 ```
 
@@ -20,7 +23,13 @@ await initializeWithFriendbot(
 ```typescript
 async function initializeWithFriendbot(
   friendbotUrl: string,
-  publicKey: Ed25519PublicKey
+  publicKey: Ed25519PublicKey,
+  options?: {
+    rpcUrl?: string;
+    allowHttp?: boolean;
+    timeoutInMs?: number;
+    pollIntervalInMs?: number;
+  },
 ): Promise<void>;
 ```
 
@@ -39,7 +48,9 @@ import {
 const signer = LocalSigner.generateRandom();
 const network = NetworkConfig.TestNet();
 
-await initializeWithFriendbot(network.friendbotUrl, signer.publicKey());
+await initializeWithFriendbot(network.friendbotUrl, signer.publicKey(), {
+  rpcUrl: network.rpcUrl,
+});
 
 const account = NativeAccount.fromMasterSigner(signer);
 ```
@@ -59,7 +70,9 @@ Check availability before calling:
 const network = NetworkConfig.MainNet();
 
 if (network.friendbotUrl) {
-  await initializeWithFriendbot(network.friendbotUrl, publicKey);
+  await initializeWithFriendbot(network.friendbotUrl, publicKey, {
+    rpcUrl: network.rpcUrl,
+  });
 }
 ```
 

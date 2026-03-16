@@ -2,17 +2,19 @@
 
 The most commonly used pipeline for Soroban contract interactions.
 
-## Process Composition
+## Composition
 
-This pipeline chains the following processes:
+This pipeline uses step wrappers around the following raw processes:
 
-1. [P_BuildTransaction](../processes/build-transaction.md) — Creates the transaction
-2. [P_SimulateTransaction](../processes/simulate-transaction.md) — Simulates to get resource estimates
-3. [P_SignAuthEntries](../processes/sign-auth-entries.md) — Signs Soroban authorization entries
-4. [P_AssembleTransaction](../processes/assemble-transaction.md) — Attaches simulation results
-5. [P_EnvelopeSigningRequirements](../processes/envelope-signing-requirements.md) — Determines required signatures
-6. [P_SignEnvelope](../processes/sign-envelope.md) — Signs the transaction
-7. [P_SendTransaction](../processes/send-transaction.md) — Submits and waits for confirmation
+1. [buildTransaction](../processes/build-transaction.md) — Creates the transaction
+2. [simulateTransaction](../processes/simulate-transaction.md) — Simulates to get resource estimates
+3. [signAuthEntries](../processes/sign-auth-entries.md) — Signs Soroban authorization entries
+4. [assembleTransaction](../processes/assemble-transaction.md) — Attaches simulation results
+5. [envelopeSigningRequirements](../processes/envelope-signing-requirements.md) — Determines required signatures
+6. [signEnvelope](../processes/sign-envelope.md) — Signs the transaction
+7. [sendTransaction](../processes/send-transaction.md) — Submits and waits for confirmation
+
+Shared and pipeline-specific connectors adapt the data between each step.
 
 ## Creating the Pipeline
 

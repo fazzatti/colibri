@@ -1,20 +1,12 @@
 # @colibri/plugin-fee-bump
 
-The `@colibri/plugin-fee-bump` package allows a separate account to cover network fees for Soroban transactions.
+The `@colibri/plugin-fee-bump` package lets a separate account cover the network fees for a transaction. It targets the `SendTransaction` step from `@colibri/core`, so it can be attached to any pipeline that includes `steps.SEND_TRANSACTION_STEP_ID`.
 
 ## Installation
 
 ```bash
 deno add jsr:@colibri/plugin-fee-bump
 ```
-
-## Overview
-
-Fee bumping allows a different account (the fee bump source) to pay transaction fees on behalf of the user. This is useful for:
-
-- **User Onboarding** — New users can interact without holding XLM for fees
-- **Covered Network Fees** — dApps can subsidize user transactions
-- **Enterprise Workflows** — Centralized fee payment for organization transactions
 
 ## Quick Start
 
@@ -23,29 +15,23 @@ import { PIPE_InvokeContract, LocalSigner, NetworkConfig } from "@colibri/core";
 import { PLG_FeeBump } from "@colibri/plugin-fee-bump";
 import { Operation } from "stellar-sdk";
 
-// User's signer (the one making the contract call)
 const userSigner = LocalSigner.fromSecret("USER_SECRET...");
-
-// Fee bump source's signer (covers the fees)
-const feeSourceSigner = LocalSigner.fromSecret("FEE_SOURCE_SECRET...");
-
+const sponsorSigner = LocalSigner.fromSecret("SPONSOR_SECRET...");
 const network = NetworkConfig.TestNet();
 
-// Create the pipeline
 const pipeline = PIPE_InvokeContract.create({ networkConfig: network });
 
-// Create and add fee bump plugin
-const feeBumpPlugin = PLG_FeeBump.create({
-  networkConfig: network,
-  feeBumpConfig: {
-    source: feeSourceSigner.publicKey(),
-    fee: "1000000", // 0.1 XLM in stroops
-    signers: [feeSourceSigner],
-  },
-});
-pipeline.addPlugin(feeBumpPlugin, PLG_FeeBump.target);
+pipeline.use(
+  PLG_FeeBump.create({
+    networkConfig: network,
+    feeBumpConfig: {
+      source: sponsorSigner.publicKey(),
+      fee: "1000000",
+      signers: [sponsorSigner],
+    },
+  }),
+);
 
-// Run the pipeline
 const result = await pipeline.run({
   operations: [
     Operation.invokeContractFunction({
@@ -57,75 +43,32 @@ const result = await pipeline.run({
   config: {
     source: userSigner.publicKey(),
     fee: "100000",
+    timeout: 30,
     signers: [userSigner],
   },
 });
 ```
 
-## PLG_FeeBump
+## Configuration
 
-Factory object for creating fee bump plugin instances.
-
-### Creating a Plugin
-
-```typescript
-const plugin = PLG_FeeBump.create(config);
-```
-
-### Configuration
-
-```typescript
-interface FeeBumpPluginConfig {
-  networkConfig: NetworkConfig;
-  feeBumpConfig: {
-    source: Ed25519PublicKey;
-    fee: string;
-    signers: Signer[];
-  };
-}
-```
+`PLG_FeeBump.create(...)` accepts:
 
 | Property                | Type               | Description                          |
 | ----------------------- | ------------------ | ------------------------------------ |
 | `networkConfig`         | `NetworkConfig`    | Network configuration                |
 | `feeBumpConfig.source`  | `Ed25519PublicKey` | Account covering the fee             |
-| `feeBumpConfig.fee`     | `string`           | Fee in stroops                       |
+| `feeBumpConfig.fee`     | `string`           | Base fee in stroops for the fee bump |
 | `feeBumpConfig.signers` | `Signer[]`         | Signers for the fee bump transaction |
-
-### Fee Calculation
-
-The fee bump `fee` must be greater than the inner transaction's fee:
-
-```typescript
-PLG_FeeBump.create({
-  networkConfig: network,
-  feeBumpConfig: {
-    source: feeSource.publicKey(),
-    fee: "1000000", // 0.1 XLM - safe margin
-    signers: [feeSource],
-  },
-});
-```
 
 ## How It Works
 
-1. **User transaction is built and signed normally**
-2. **Plugin wraps the transaction** in a fee bump envelope
-3. **Fee bump source signs** the fee bump transaction
-4. **Combined transaction is submitted** — fee bump source pays fees
+1. Your pipeline reaches the `SendTransaction` step
+2. The plugin intercepts the step input
+3. It wraps the outgoing transaction in a fee bump envelope
+4. It signs the fee bump with the configured sponsor signers
+5. The wrapped transaction continues to `sendTransaction`
 
-```
-┌─────────────────────────────────────────────────┐
-│               Fee Bump Transaction              │
-│  ┌───────────────────────────────────────────┐  │
-│  │          Inner Transaction                │  │
-│  │   • Contract invocation                   │  │
-│  │   • Signed by user                        │  │
-│  └───────────────────────────────────────────┘  │
-│  • Fee covered by fee bump source               │
-│  • Signed by fee bump source                    │
-└─────────────────────────────────────────────────┘
-```
+The inner transaction signatures are preserved. Only the outer fee bump envelope is added.
 
 ## Error Handling
 
@@ -174,46 +117,27 @@ import {
   initializeWithFriendbot,
 } from "@colibri/core";
 import { PLG_FeeBump } from "@colibri/plugin-fee-bump";
-import { Operation } from "stellar-sdk";
 
-// App's fee account (has XLM for fees)
 const feeSource = LocalSigner.fromSecret(Deno.env.get("FEE_SOURCE_KEY")!);
-
-// New user (may have zero XLM)
 const newUser = LocalSigner.generateRandom();
-
-// Fund user account on TestNet (required for account to exist)
 const network = NetworkConfig.TestNet();
-await initializeWithFriendbot(network.friendbotUrl, newUser.publicKey());
 
-// Create pipeline with fee bump
+await initializeWithFriendbot(network.friendbotUrl, newUser.publicKey(), {
+  rpcUrl: network.rpcUrl,
+});
+
 const pipeline = PIPE_InvokeContract.create({ networkConfig: network });
 
-const feeBumpPlugin = PLG_FeeBump.create({
-  networkConfig: network,
-  feeBumpConfig: {
-    source: feeSource.publicKey(),
-    fee: "500000",
-    signers: [feeSource],
-  },
-});
-pipeline.addPlugin(feeBumpPlugin, PLG_FeeBump.target);
-
-// User can now make transactions with covered fees
-const result = await pipeline.run({
-  operations: [
-    Operation.invokeContractFunction({
-      contract: "CABC...",
-      function: "register",
-      args: [...],
-    }),
-  ],
-  config: {
-    source: newUser.publicKey(),
-    fee: "100000",
-    signers: [newUser],
-  },
-});
+pipeline.use(
+  PLG_FeeBump.create({
+    networkConfig: network,
+    feeBumpConfig: {
+      source: feeSource.publicKey(),
+      fee: "500000",
+      signers: [feeSource],
+    },
+  }),
+);
 ```
 
 ### Enterprise Fee Management
@@ -228,7 +152,6 @@ import {
 import { PLG_FeeBump } from "@colibri/plugin-fee-bump";
 import { Operation, xdr } from "stellar-sdk";
 
-// Central treasury account pays all fees
 const treasury = LocalSigner.fromSecret(TREASURY_KEY);
 const network = NetworkConfig.MainNet();
 
@@ -236,19 +159,20 @@ async function executeUserTransaction(
   user: Signer,
   contractId: string,
   method: string,
-  args: xdr.ScVal[]
+  args: xdr.ScVal[],
 ) {
   const pipeline = PIPE_InvokeContract.create({ networkConfig: network });
 
-  const feeBumpPlugin = PLG_FeeBump.create({
-    networkConfig: network,
-    feeBumpConfig: {
-      source: treasury.publicKey(),
-      fee: "2000000", // 0.2 XLM per transaction
-      signers: [treasury],
-    },
-  });
-  pipeline.addPlugin(feeBumpPlugin, PLG_FeeBump.target);
+  pipeline.use(
+    PLG_FeeBump.create({
+      networkConfig: network,
+      feeBumpConfig: {
+        source: treasury.publicKey(),
+        fee: "2000000",
+        signers: [treasury],
+      },
+    }),
+  );
 
   return pipeline.run({
     operations: [
@@ -261,82 +185,15 @@ async function executeUserTransaction(
     config: {
       source: user.publicKey(),
       fee: "100000",
+      timeout: 30,
       signers: [user],
     },
   });
 }
 ```
 
-### Dynamic Fee Calculation
-
-```typescript
-import { Contract, NetworkConfig, LocalSigner } from "@colibri/core";
-
-const network = NetworkConfig.TestNet();
-const feeSource = LocalSigner.fromSecret("S...");
-
-// Use Contract.read() to simulate and get fee estimate
-const contract = Contract.create({
-  networkConfig: network,
-  contractConfig: { contractId: "CABC..." },
-});
-
-// Read operations don't submit, just simulate
-const readResult = await contract.read({
-  method: "get_state",
-  methodArgs: {},
-});
-
-// For actual invocation with fee bump, estimate fee and add buffer
-// The simulation gives you an idea of resource usage
-```
-
-## Security Considerations
-
-### 1. Validate Transactions
-
-Before covering fees, validate the transaction content:
-
-```typescript
-// In production, validate what you're covering fees for
-const ALLOWED_CONTRACTS = ["CABC...", "CDEF..."];
-
-if (!ALLOWED_CONTRACTS.includes(contractId)) {
-  throw new Error("Contract not allowed for fee coverage");
-}
-```
-
-### 2. Rate Limiting
-
-Implement rate limiting for covered transactions:
-
-```typescript
-const userCoveredCount = await getUserDailyCount(user);
-if (userCoveredCount >= MAX_DAILY_COVERED) {
-  throw new Error("Daily fee coverage limit reached");
-}
-```
-
-### 3. Fee Limits
-
-Set reasonable fee limits:
-
-```typescript
-// Don't cover excessive fees
-const MAX_COVERED_FEE = "5000000"; // 0.5 XLM
-
-PLG_FeeBump.create({
-  networkConfig: network,
-  feeBumpConfig: {
-    source: feeSource.publicKey(),
-    fee: MAX_COVERED_FEE,
-    signers: [feeSource],
-  },
-});
-```
-
 ## Next Steps
 
 - [Pipelines](../../core/pipelines/README.md) — Pipeline documentation
-- [Processes](../../core/processes/README.md) — Build fee bump process
+- [WrapFeeBump](../../core/processes/wrap-fee-bump.md) — Raw fee bump process
 - [Signer](../../core/signer/README.md) — Signer configuration

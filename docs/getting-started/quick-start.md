@@ -30,7 +30,9 @@ const signer = LocalSigner.generateRandom();
 console.log("Public Key:", signer.publicKey());
 
 // 3. Fund the account on TestNet using Friendbot
-await initializeWithFriendbot(network.friendbotUrl, signer.publicKey());
+await initializeWithFriendbot(network.friendbotUrl, signer.publicKey(), {
+  rpcUrl: network.rpcUrl,
+});
 console.log("Account funded!");
 
 // 4. Create a contract instance
@@ -48,6 +50,7 @@ const result = await contract.invoke({
   config: {
     source: signer.publicKey(),
     fee: "100000",
+    timeout: 30,
     signers: [signer],
   },
 });
@@ -74,7 +77,9 @@ import { Operation } from "stellar-sdk";
 // Configure network and signer
 const network = NetworkConfig.TestNet();
 const signer = LocalSigner.generateRandom();
-await initializeWithFriendbot(network.friendbotUrl, signer.publicKey());
+await initializeWithFriendbot(network.friendbotUrl, signer.publicKey(), {
+  rpcUrl: network.rpcUrl,
+});
 
 // Create the pipeline
 const pipeline = PIPE_InvokeContract.create({
@@ -135,7 +140,9 @@ To listen for contract events in real-time:
 
 ```typescript
 import { RPCStreamer } from "@colibri/rpc-streamer";
-import { EventFilter, EventType, SACEvents } from "@colibri/core";
+import { EventFilter, EventType, NetworkConfig, SACEvents } from "@colibri/core";
+
+const network = NetworkConfig.TestNet();
 
 // Create a filter for transfer events
 const filter = new EventFilter({
@@ -170,6 +177,8 @@ Colibri uses typed errors that extend `ColibriError`. Each error includes:
 - `meta.cause` — Original error if wrapped
 
 ```typescript
+import { ColibriError } from "@colibri/core";
+
 try {
   const result = await pipeline.run({...});
   console.log("Success:", result.hash);

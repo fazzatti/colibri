@@ -29,6 +29,7 @@
     - [Invoke Contract](core/pipelines/invoke-contract.md)
     - [Read From Contract](core/pipelines/read-from-contract.md)
     - [Classic Transaction](core/pipelines/classic-transaction.md)
+  - [Steps](core/steps.md)
   - [Processes](core/processes/README.md)
     - [BuildTransaction](core/processes/build-transaction.md)
     - [SimulateTransaction](core/processes/simulate-transaction.md)

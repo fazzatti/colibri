@@ -1,6 +1,6 @@
 # Signer
 
-The Signer module defines `Signer`—the standard interface used throughout Colibri for transaction and authorization signing. By defining a clear interface, anyone can build custom signers and key handling tools that integrate seamlessly with Colibri's pipelines and processes.
+The Signer module defines `Signer`—the standard interface used throughout Colibri for transaction and authorization signing. By defining a clear interface, anyone can build custom signers and key handling tools that integrate seamlessly with Colibri's pipelines and raw process functions.
 
 ## Signer Interface
 
@@ -38,12 +38,14 @@ Pass signers to pipelines via the `TransactionConfig`:
 ```typescript
 import { PIPE_InvokeContract, NetworkConfig } from "@colibri/core";
 
+const networkConfig = NetworkConfig.TestNet();
 const pipeline = PIPE_InvokeContract.create({ networkConfig });
 const result = await pipeline.run({
   operations: [...],
   config: {
     source: signer.publicKey(),
     fee: "100000",
+    timeout: 30,
     signers: [signer], // Signer handles both TX and auth signing
   },
 });
@@ -57,6 +59,7 @@ For multi-signature transactions, pass multiple signers:
 config: {
   source: signer1.publicKey(),
   fee: "100000",
+  timeout: 30,
   signers: [signer1, signer2], // Both signers will be used
 }
 ```

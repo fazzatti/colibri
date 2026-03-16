@@ -28,9 +28,9 @@ This will add the packages to your `deno.json` imports map:
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^0.16.0",
-    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.1.0",
-    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.8.0"
+    "@colibri/core": "jsr:@colibri/core@^0.17.1",
+    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.2.1",
+    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.9.1"
   }
 }
 ```
@@ -40,8 +40,8 @@ This will add the packages to your `deno.json` imports map:
 You can also import directly from JSR URLs:
 
 ```typescript
-import { NetworkConfig, LocalSigner } from "jsr:@colibri/core@^0.16.0";
-import { RPCStreamer } from "jsr:@colibri/rpc-streamer@^0.1.0";
+import { NetworkConfig, LocalSigner } from "jsr:@colibri/core@^0.17.1";
+import { RPCStreamer } from "jsr:@colibri/rpc-streamer@^0.2.1";
 ```
 
 ## Package Overview
@@ -56,7 +56,7 @@ Generic RPC streaming framework for real-time and historical data ingestion (eve
 
 ### [Plugins](../packages/plugins/)
 
-Use case-specific plugins extend pipeline and process behavior. Each plugin is published as its own package:
+Use case-specific plugins extend pipeline step behavior. Each plugin is published as its own package:
 
 | Plugin                                      | Package                    | Description                                       |
 | ------------------------------------------- | -------------------------- | ------------------------------------------------- |
