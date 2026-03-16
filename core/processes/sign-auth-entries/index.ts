@@ -1,4 +1,3 @@
-import { ProcessEngine } from "convee";
 import { xdr } from "stellar-sdk";
 import type { Api, Server } from "stellar-sdk/rpc";
 import type {
@@ -13,7 +12,7 @@ import { getAddressSignerFromAuthEntry } from "@/common/helpers/xdr/get-address-
 import { getAddressTypeFromAuthEntry } from "@/common/helpers/xdr/get-address-type-from-auth-entry.ts";
 import { ResultOrError } from "@/common/deferred/result-or-error.ts";
 
-const signAuthEntriesProcess = async (
+export const signAuthEntries = async (
   input: SignAuthEntriesInput
 ): Promise<SignAuthEntriesOutput> => {
   try {
@@ -197,17 +196,4 @@ const separateSignedAndUnsignedAuthEntries = (
 
   return { signed, unsigned };
 };
-
-const PROCESS_NAME = "SignAuthEntries" as const;
-
-const P_SignAuthEntries = () =>
-  ProcessEngine.create<
-    SignAuthEntriesInput,
-    SignAuthEntriesOutput,
-    E.SignAuthEntriesError,
-    typeof PROCESS_NAME
-  >(signAuthEntriesProcess, { name: PROCESS_NAME });
-
-const P_SignAuthEntriesErrors = E;
-
-export { P_SignAuthEntries, P_SignAuthEntriesErrors };
+export { E as SignAuthEntriesErrors };

@@ -2,9 +2,48 @@ import { assert } from "@/common/assert/assert.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 import * as E from "@/tools/friendbot/error.ts";
+import { Server } from "stellar-sdk/rpc";
+
+export type InitializeWithFriendbotOptions = {
+  rpcUrl?: string;
+  allowHttp?: boolean;
+  timeoutInMs?: number;
+  pollIntervalInMs?: number;
+};
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const waitForRpcPropagation = async (
+  publicKey: Ed25519PublicKey,
+  options?: InitializeWithFriendbotOptions,
+) => {
+  if (!options?.rpcUrl) return;
+
+  const rpc = new Server(options.rpcUrl, {
+    allowHttp: options.allowHttp ?? false,
+  });
+  const startedAt = Date.now();
+  const timeoutInMs = options.timeoutInMs ?? 15_000;
+  const pollIntervalInMs = options.pollIntervalInMs ?? 1_000;
+
+  while (Date.now() - startedAt < timeoutInMs) {
+    try {
+      await rpc.getAccount(publicKey);
+      return;
+    } catch {
+      await sleep(pollIntervalInMs);
+    }
+  }
+
+  throw new Error(
+    `Account ${publicKey} was funded but did not become visible on RPC within ${timeoutInMs}ms.`,
+  );
+};
+
 export const initializeWithFriendbot = async (
   friendbotUrl: string,
-  publicKey: Ed25519PublicKey
+  publicKey: Ed25519PublicKey,
+  options?: InitializeWithFriendbotOptions,
 ): Promise<void> => {
   assert(
     StrKey.isEd25519PublicKey(publicKey),
@@ -18,12 +57,18 @@ export const initializeWithFriendbot = async (
 
     const text = await response.text(); // Deno: Consume the response body to prevent resource leaks
 
-    if (response.status !== 200) {
+    const alreadyFunded =
+      response.status === 400 &&
+      text.includes("account already funded to starting balance");
+
+    if (response.status !== 200 && !alreadyFunded) {
       throw new E.UNEXPECTED(
         friendbotUrl,
         new Error(`Failed to initialize with Friendbot: ${text}`)
       );
     }
+
+    await waitForRpcPropagation(publicKey, options);
 
     return;
   } catch (e) {

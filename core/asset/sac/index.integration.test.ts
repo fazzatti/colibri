@@ -82,9 +82,18 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
   };
 
   beforeAll(async () => {
-    await initializeWithFriendbot(networkConfig.friendbotUrl, issuer.address());
-    await initializeWithFriendbot(networkConfig.friendbotUrl, userA.address());
-    await initializeWithFriendbot(networkConfig.friendbotUrl, userB.address());
+    await initializeWithFriendbot(networkConfig.friendbotUrl, issuer.address(), {
+      rpcUrl: networkConfig.rpcUrl,
+      allowHttp: networkConfig.allowHttp,
+    });
+    await initializeWithFriendbot(networkConfig.friendbotUrl, userA.address(), {
+      rpcUrl: networkConfig.rpcUrl,
+      allowHttp: networkConfig.allowHttp,
+    });
+    await initializeWithFriendbot(networkConfig.friendbotUrl, userB.address(), {
+      rpcUrl: networkConfig.rpcUrl,
+      allowHttp: networkConfig.allowHttp,
+    });
 
     await setupIssuerFlags(issuer.address(), networkConfig, txConfig);
 
@@ -160,6 +169,10 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
       await initializeWithFriendbot(
         networkConfig.friendbotUrl,
         newAdminAccount.publicKey(),
+        {
+          rpcUrl: networkConfig.rpcUrl,
+          allowHttp: networkConfig.allowHttp,
+        },
       );
     });
 

@@ -1,7 +1,5 @@
-import type { BeltPlugin } from "convee";
 import type { Server } from "stellar-sdk/rpc";
 import type { Memo, Transaction, xdr } from "stellar-sdk";
-import type { ColibriError } from "@/error/index.ts";
 import type { BaseFee } from "@/common/types/transaction-config/types.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 
@@ -16,12 +14,6 @@ export type BuildTransactionInput = {
 } & (WithRpc | WithoutRpc);
 
 export type BuildTransactionOutput = Transaction;
-
-export type BuildTransactionPlugin = BeltPlugin<
-  BuildTransactionInput,
-  BuildTransactionOutput,
-  ColibriError
->;
 
 export type RpcVariants =
   | { rpc?: never; sequence?: never }

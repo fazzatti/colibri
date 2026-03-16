@@ -1,5 +1,6 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
+import { createRunContext, step } from "convee";
 import { Operation, xdr } from "stellar-sdk";
 import type { Api, Server } from "stellar-sdk/rpc";
 
@@ -8,16 +9,26 @@ import * as E from "@/pipelines/classic-transaction/error.ts";
 import { createClassicTransactionPipeline } from "@/pipelines/classic-transaction/index.ts";
 import type { ClassicTransactionInput } from "@/pipelines/classic-transaction/types.ts";
 import {
+  CLASSIC_TRANSACTION_INPUT_STEP_ID,
   envSignReqToSignEnvelope,
   inputToBuild,
   sendTransactionToPipeOutput,
   signEnvelopeToSendTransaction,
 } from "@/pipelines/classic-transaction/connectors.ts";
 import type { EnvelopeSigningRequirementsOutput } from "@/processes/envelope-signing-requirements/types.ts";
-import { MetadataHelper } from "convee";
 import type { SignEnvelopeOutput } from "@/processes/sign-envelope/types.ts";
 import type { SendTransactionOutput } from "@/processes/send-transaction/types.ts";
 import { NetworkType } from "@/network/types.ts";
+import { BUILD_TRANSACTION_STEP_ID } from "@/steps/index.ts";
+
+const seedStepOutput = async <Output>(
+  context: ReturnType<typeof createRunContext>,
+  stepId: string,
+  output: Output,
+) => {
+  const seedStep = step(() => output, { id: stepId });
+  await seedStep.runWith({ context: { parent: context } });
+};
 
 describe("createClassicTransactionPipeline", () => {
   describe("Construction", () => {
@@ -30,7 +41,7 @@ describe("createClassicTransactionPipeline", () => {
 
       const pipeline = createClassicTransactionPipeline({ networkConfig });
 
-      assertEquals(pipeline.name, "ClassicTransactionPipeline");
+      assertEquals(pipeline.id, "ClassicTransactionPipeline");
     });
   });
 
@@ -85,13 +96,24 @@ describe("createClassicTransactionPipeline", () => {
           },
         };
 
-        const metadata = new MetadataHelper();
-        metadata.add("buildKey", mockBuildOutput);
-        metadata.add("inputKey", mockInputStep);
+        const context = createRunContext();
+        await seedStepOutput(
+          context,
+          BUILD_TRANSACTION_STEP_ID,
+          mockBuildOutput,
+        );
+        await seedStepOutput(
+          context,
+          CLASSIC_TRANSACTION_INPUT_STEP_ID,
+          mockInputStep,
+        );
 
-        const connector = envSignReqToSignEnvelope("buildKey", "inputKey");
+        const connector = envSignReqToSignEnvelope();
 
-        const result = await connector(mockEnvelopeSigningReqOutput, metadata);
+        const result = await connector.runWith(
+          { context: { parent: context } },
+          ...mockEnvelopeSigningReqOutput,
+        );
 
         assertExists(result);
         assertEquals(

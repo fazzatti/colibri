@@ -3,7 +3,7 @@ import { describe, it } from "@std/testing/bdd";
 import { Buffer } from "buffer";
 import { xdr, Address } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
-import { P_SignAuthEntries } from "@/processes/sign-auth-entries/index.ts";
+import { signAuthEntries } from "@/processes/sign-auth-entries/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import type { Signer } from "@/signer/types.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
@@ -112,7 +112,7 @@ describe("SignAuthEntries", () => {
     const signer = makeSigner(account.toString());
     const rpc = makeRpc();
 
-    const out = await P_SignAuthEntries().run({
+    const out = await signAuthEntries({
       auth: [entry],
       signers: [signer],
       rpc,
@@ -132,7 +132,7 @@ describe("SignAuthEntries", () => {
     const signer1 = makeSigner(account1.toString());
     const signer2 = makeSigner(account2.toString());
 
-    const out = await P_SignAuthEntries().run({
+    const out = await signAuthEntries({
       auth: [entry1, entry2],
       signers: [signer1, signer2],
       rpc: makeRpc(),
@@ -149,7 +149,7 @@ describe("SignAuthEntries", () => {
     const entry = makeAccountAuthEntry(account);
     const signer = makeSigner(account.toString());
 
-    await P_SignAuthEntries().run({
+    await signAuthEntries({
       auth: [entry],
       signers: [signer],
       rpc: makeRpc(),
@@ -165,7 +165,7 @@ describe("SignAuthEntries", () => {
     const entry = makeAccountAuthEntry(account);
     const signer = makeSigner(account.toString());
 
-    await P_SignAuthEntries().run({
+    await signAuthEntries({
       auth: [entry],
       signers: [signer],
       rpc: makeRpc(2000),
@@ -181,7 +181,7 @@ describe("SignAuthEntries", () => {
     const entry = makeAccountAuthEntry(account);
     const signer = makeSigner(account.toString());
 
-    await P_SignAuthEntries().run({
+    await signAuthEntries({
       auth: [entry],
       signers: [signer],
       rpc: makeRpc(3000),
@@ -198,7 +198,7 @@ describe("SignAuthEntries", () => {
     const accountEntry = makeAccountAuthEntry(account);
     const signer = makeSigner(account.toString());
 
-    const out = await P_SignAuthEntries().run({
+    const out = await signAuthEntries({
       auth: [sourceEntry, accountEntry],
       signers: [signer],
       rpc: makeRpc(),
@@ -216,7 +216,7 @@ describe("SignAuthEntries", () => {
     const accountEntry = makeAccountAuthEntry(account);
     const signer = makeSigner(account.toString());
 
-    const out = await P_SignAuthEntries().run({
+    const out = await signAuthEntries({
       auth: [sourceEntry, accountEntry],
       signers: [signer],
       rpc: makeRpc(),
@@ -242,7 +242,7 @@ describe("SignAuthEntries", () => {
     const accountEntry = makeAccountAuthEntry(account);
     const signer = makeSigner(account.toString());
 
-    const out = await P_SignAuthEntries().run({
+    const out = await signAuthEntries({
       auth: [unsupportedEntry, accountEntry],
       signers: [signer],
       rpc: makeRpc(),
@@ -275,7 +275,7 @@ describe("SignAuthEntries", () => {
     );
     const signer = makeSigner(Address.account(Buffer.alloc(32, 24)).toString());
 
-    const out = await P_SignAuthEntries().run({
+    const out = await signAuthEntries({
       auth: [claimable, liquidity, muxed],
       signers: [signer],
       rpc: makeRpc(),
@@ -308,7 +308,7 @@ describe("SignAuthEntries", () => {
     );
     const signer = makeSigner(Address.account(Buffer.alloc(32, 28)).toString());
 
-    const out = await P_SignAuthEntries().run({
+    const out = await signAuthEntries({
       auth: [claimable, liquidity, muxed],
       signers: [signer],
       rpc: makeRpc(),

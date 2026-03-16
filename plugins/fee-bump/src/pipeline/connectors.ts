@@ -1,4 +1,4 @@
-import type { MetadataHelper, Transformer } from "convee";
+import { step, type StepThis } from "convee";
 import type {
   FeeBumpConfig,
   WrapFeeBumpInput,
@@ -8,10 +8,26 @@ import type {
   SignEnvelopeInput,
 } from "@colibri/core";
 import type { FeeBumpPipelineInput } from "@/pipeline/types.ts";
+import { ColibriError, steps } from "@colibri/core";
+
+const getRequiredStepOutput = <Output>(
+  runtime: StepThis,
+  stepId: string,
+): Output => {
+  const snapshot = runtime.context().step.get(stepId);
+
+  if (!snapshot || snapshot.output === undefined) {
+    throw ColibriError.unexpected({
+      message: `Missing required step output: '${stepId}'`,
+    });
+  }
+
+  return snapshot.output as Output;
+};
 
 export const inputToBuild = (
   networkPassphrase: string,
-  config: FeeBumpConfig
+  config: FeeBumpConfig,
 ) => {
   return (input: FeeBumpPipelineInput): WrapFeeBumpInput => {
     const { transaction } = input;
@@ -19,24 +35,25 @@ export const inputToBuild = (
   };
 };
 
-export const wrapFeeBumpToEnvelopeSigningRequirements: Transformer<
-  WrapFeeBumpOutput,
-  EnvelopeSigningRequirementsInput
-> = (transaction) => {
+export const wrapFeeBumpToEnvelopeSigningRequirements = (
+  transaction: WrapFeeBumpOutput,
+): EnvelopeSigningRequirementsInput => {
   return { transaction };
 };
 
 export const envSignReqToSignEnvelope = (
-  wrapFeeBumpOutput: string,
-  config: FeeBumpConfig
-): Transformer<EnvelopeSigningRequirementsOutput, SignEnvelopeInput> => {
-  return ((
-    envelopeSigningRequirementsOutput: EnvelopeSigningRequirementsOutput,
-    metadata: MetadataHelper
-  ): SignEnvelopeInput => {
+  config: FeeBumpConfig,
+) =>
+  step(function (
+    this: StepThis,
+    ...envelopeSigningRequirementsOutput: EnvelopeSigningRequirementsOutput
+  ): SignEnvelopeInput {
     const signers = config.signers;
 
-    const transaction = metadata.get(wrapFeeBumpOutput) as WrapFeeBumpOutput;
+    const transaction = getRequiredStepOutput<WrapFeeBumpOutput>(
+      this,
+      steps.WRAP_FEE_BUMP_STEP_ID,
+    );
 
     const signatureRequirements = envelopeSigningRequirementsOutput;
 
@@ -45,5 +62,4 @@ export const envSignReqToSignEnvelope = (
       transaction,
       signers,
     };
-  }) as Transformer<EnvelopeSigningRequirementsOutput, SignEnvelopeInput>;
-};
+  }, { id: "fee-bump-envelope-to-sign-envelope" as const });

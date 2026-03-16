@@ -9,7 +9,7 @@ import {
   type Transaction,
   TransactionBuilder,
 } from "stellar-sdk";
-import { P_SimulateTransaction } from "@/processes/simulate-transaction/index.ts";
+import { simulateTransaction } from "@/processes/simulate-transaction/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import type { SimulateTransactionInput } from "@/processes/simulate-transaction/types.ts";
 import * as E from "@/processes/simulate-transaction/error.ts";
@@ -77,10 +77,6 @@ const createMockErrorResponse = (): Api.SimulateTransactionErrorResponse => ({
 
 describe("SimulateTransaction", () => {
   describe("Construction", () => {
-    it("creates process with proper name", () => {
-      assertEquals(P_SimulateTransaction().name, "SimulateTransaction");
-    });
-
     it("executes with minimal valid input", async () => {
       const transaction = createTestTransaction();
       const mockRpc = {
@@ -92,7 +88,7 @@ describe("SimulateTransaction", () => {
         rpc: mockRpc,
       };
 
-      const result = await P_SimulateTransaction().run(input);
+      const result = await simulateTransaction(input);
       assertEquals(result.id, "mock-id");
     });
   });
@@ -110,7 +106,7 @@ describe("SimulateTransaction", () => {
           rpc: mockRpc,
         };
 
-        const result = await P_SimulateTransaction().run(input);
+        const result = await simulateTransaction(input);
         assertEquals(result.minResourceFee, "100");
       });
 
@@ -125,7 +121,7 @@ describe("SimulateTransaction", () => {
           rpc: mockRpc,
         };
 
-        const result = await P_SimulateTransaction().run(input);
+        const result = await simulateTransaction(input);
         assertEquals(result.minResourceFee, "100");
         assertEquals(
           (result as Api.SimulateTransactionRestoreResponse).restorePreamble
@@ -152,7 +148,7 @@ describe("SimulateTransaction", () => {
         };
 
         await assertRejects(
-          async () => await P_SimulateTransaction().run(input),
+          async () => await simulateTransaction(input),
           E.COULD_NOT_SIMULATE_TRANSACTION
         );
       });
@@ -171,7 +167,7 @@ describe("SimulateTransaction", () => {
         };
 
         await assertRejects(
-          async () => await P_SimulateTransaction().run(input),
+          async () => await simulateTransaction(input),
           E.SIMULATION_FAILED
         );
       });
@@ -195,7 +191,7 @@ describe("SimulateTransaction", () => {
         };
 
         await assertRejects(
-          async () => await P_SimulateTransaction().run(input),
+          async () => await simulateTransaction(input),
           E.SIMULATION_RESULT_NOT_VERIFIED
         );
       });
@@ -217,7 +213,7 @@ describe("SimulateTransaction", () => {
         };
 
         await assertRejects(
-          async () => await P_SimulateTransaction().run(input),
+          async () => await simulateTransaction(input),
           E.UNEXPECTED_ERROR
         );
       });

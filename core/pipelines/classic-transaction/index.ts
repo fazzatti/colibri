@@ -1,9 +1,8 @@
-import { Pipeline, PipelineConnectors } from "convee";
+import { pipe, step } from "convee";
 import { Server } from "stellar-sdk/rpc";
-import { P_BuildTransaction } from "@/processes/build-transaction/index.ts";
 import type {
-  CreateClassicTransactionPipelineArgs,
   ClassicTransactionInput,
+  CreateClassicTransactionPipelineArgs,
 } from "@/pipelines/classic-transaction/types.ts";
 import * as E from "@/pipelines/classic-transaction/error.ts";
 import { ColibriError } from "@/error/index.ts";
@@ -14,13 +13,15 @@ import {
   sendTransactionToPipeOutput,
   signEnvelopeToSendTransaction,
 } from "@/pipelines/classic-transaction/connectors.ts";
-import { P_EnvelopeSigningRequirements } from "@/processes/index.ts";
-import { buildToEnvelopeSigningRequirements } from "@/transformers/pipeline-connectors/build-to-envelope-signing-req.ts";
-import { P_SignEnvelope } from "@/processes/sign-envelope/index.ts";
-import { P_SendTransaction } from "@/processes/send-transaction/index.ts";
+import { buildToEnvelopeSigningRequirements } from "@/pipelines/shared/connectors/build-to-envelope-signing-req.ts";
 import { assert } from "@/common/assert/assert.ts";
-
-const { storeMetadata } = PipelineConnectors;
+import {
+  createBuildTransactionStep,
+  createEnvelopeSigningRequirementsStep,
+  createSendTransactionStep,
+  createSignEnvelopeStep,
+} from "@/steps/index.ts";
+import { CLASSIC_TRANSACTION_INPUT_STEP_ID } from "@/pipelines/classic-transaction/connectors.ts";
 
 const PIPELINE_NAME = "ClassicTransactionPipeline";
 
@@ -42,33 +43,39 @@ const createClassicTransactionPipeline = ({
       rpc = new Server(networkConfig.rpcUrl!);
     }
 
-    const inputStep = inputToBuild(rpc, networkConfig.networkPassphrase);
+    const inputStep = step(
+      (input: ClassicTransactionInput) => input,
+      { id: CLASSIC_TRANSACTION_INPUT_STEP_ID },
+    );
+    const buildInputStep = step(
+      inputToBuild(rpc, networkConfig.networkPassphrase),
+      { id: "classic-transaction-build-input" as const },
+    );
     const connectSignEnvelopeToSend = signEnvelopeToSendTransaction(rpc);
 
-    const BuildTransaction = P_BuildTransaction();
-    const EnvelopeSigningRequirements = P_EnvelopeSigningRequirements();
-    const SignEnvelope = P_SignEnvelope();
-    const SendTransaction = P_SendTransaction();
+    const BuildTransaction = createBuildTransactionStep();
+    const EnvelopeSigningRequirements = createEnvelopeSigningRequirementsStep();
+    const SignEnvelope = createSignEnvelopeStep();
+    const SendTransaction = createSendTransactionStep();
 
     const pipelineSteps = [
-      storeMetadata<ClassicTransactionInput>("pipeInput"),
       inputStep,
+      buildInputStep,
       BuildTransaction,
-      storeMetadata("buildTxOutput", BuildTransaction),
       buildToEnvelopeSigningRequirements,
       EnvelopeSigningRequirements,
-      envSignReqToSignEnvelope("buildTxOutput", "pipeInput"),
+      envSignReqToSignEnvelope(),
       SignEnvelope,
       connectSignEnvelopeToSend,
       SendTransaction,
       sendTransactionToPipeOutput,
     ] as const;
 
-    const pipe = Pipeline.create([...pipelineSteps], {
-      name: PIPELINE_NAME,
+    const classicPipe = pipe([...pipelineSteps], {
+      id: PIPELINE_NAME,
     });
 
-    return pipe;
+    return classicPipe;
   } catch (error) {
     if (error instanceof ColibriError) {
       throw error;

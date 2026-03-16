@@ -1,8 +1,7 @@
+import { step, type StepThis } from "convee";
 import type { Server } from "stellar-sdk/rpc";
-import type { MetadataHelper, Transformer } from "convee";
 import type { InvokeContractInput } from "@/pipelines/invoke-contract/types.ts";
 import type {
-  BuildTransactionInput,
   BuildTransactionOutput,
 } from "@/processes/build-transaction/types.ts";
 import type { SimulateTransactionOutput } from "@/processes/simulate-transaction/types.ts";
@@ -14,38 +13,38 @@ import type {
   SignAuthEntriesInput,
   SignAuthEntriesOutput,
 } from "@/processes/sign-auth-entries/types.ts";
-import type { EnvelopeSigningRequirementsOutput } from "@/processes/envelope-signing-requirements/types.ts";
-import type {
-  SignEnvelopeInput,
-  SignEnvelopeOutput,
-} from "@/processes/sign-envelope/types.ts";
-import type { SendTransactionInput } from "@/processes/send-transaction/types.ts";
+import {
+  ASSEMBLE_TRANSACTION_STEP_ID,
+  BUILD_TRANSACTION_STEP_ID,
+  SIMULATE_TRANSACTION_STEP_ID,
+} from "@/steps/index.ts";
+import {
+  createEnvSignReqToSignEnvelope,
+  createInputToBuild,
+  getRequiredStepOutput,
+  signEnvelopeToSendTransaction,
+} from "@/pipelines/shared/connectors/index.ts";
+
+export const INVOKE_CONTRACT_INPUT_STEP_ID =
+  "invoke-contract-input" as const;
 
 export const inputToBuild = (rpc: Server, networkPassphrase: string) => {
-  return (input: InvokeContractInput): BuildTransactionInput => {
-    const { operations, config } = input;
-
-    return {
-      baseFee: config.fee,
-      source: config.source,
-      networkPassphrase,
-      operations,
-      rpc,
-    };
-  };
+  return createInputToBuild<InvokeContractInput>(rpc, networkPassphrase);
 };
 
 export const simulateToSignAuthEntries = (
-  inputKey: string,
   rpc: Server,
-  networkPassphrase: string
-): Transformer<SimulateTransactionOutput, SignAuthEntriesInput> => {
-  return ((
+  networkPassphrase: string,
+) =>
+  step(function (
+    this: StepThis,
     simulationResponse: SimulateTransactionOutput,
-    metadata: MetadataHelper
-  ): SignAuthEntriesInput => {
+  ): SignAuthEntriesInput {
     const authEntries = simulationResponse.result?.auth || [];
-    const inputStep = metadata.get(inputKey) as InvokeContractInput;
+    const inputStep = getRequiredStepOutput<InvokeContractInput>(
+      this,
+      INVOKE_CONTRACT_INPUT_STEP_ID,
+    );
     const signers = inputStep.config.signers || [];
 
     return {
@@ -54,24 +53,22 @@ export const simulateToSignAuthEntries = (
       rpc,
       networkPassphrase,
     };
-  }) as Transformer<SimulateTransactionOutput, SignAuthEntriesInput>;
-};
+  }, { id: "invoke-contract-simulate-to-sign-auth" as const });
 
-export const signAuthEntriesToAssemble = (
-  buildTransactionOutputKey: string,
-  simulateTransactionOutputKey: string
-): Transformer<SignAuthEntriesOutput, AssembleTransactionInput> => {
-  return ((
-    signAuthEntriesOutput: SignAuthEntriesOutput,
-    metadata: MetadataHelper
-  ): AssembleTransactionInput => {
-    const transaction = metadata.get(
-      buildTransactionOutputKey
-    ) as BuildTransactionOutput;
+export const signAuthEntriesToAssemble = () =>
+  step(function (
+    this: StepThis,
+    ...signAuthEntriesOutput: SignAuthEntriesOutput
+  ): AssembleTransactionInput {
+    const transaction = getRequiredStepOutput<BuildTransactionOutput>(
+      this,
+      BUILD_TRANSACTION_STEP_ID,
+    );
 
-    const simulateOutput = metadata.get(
-      simulateTransactionOutputKey
-    ) as SimulateTransactionOutput;
+    const simulateOutput = getRequiredStepOutput<SimulateTransactionOutput>(
+      this,
+      SIMULATE_TRANSACTION_STEP_ID,
+    );
 
     const sorobanData = simulateOutput.transactionData;
     const authEntries = signAuthEntriesOutput;
@@ -83,38 +80,16 @@ export const signAuthEntriesToAssemble = (
       sorobanData,
       resourceFee,
     };
-  }) as Transformer<SignAuthEntriesOutput, AssembleTransactionInput>;
-};
+  }, { id: "invoke-contract-sign-auth-to-assemble" as const });
 
-export const envSignReqToSignEnvelope = (
-  assembleTransactionOutputKey: string,
-  inputKey: string
-): Transformer<EnvelopeSigningRequirementsOutput, SignEnvelopeInput> => {
-  return ((
-    envelopeSigningRequirementsOutput: EnvelopeSigningRequirementsOutput,
-    metadata: MetadataHelper
-  ): SignEnvelopeInput => {
-    const inputStep = metadata.get(inputKey) as InvokeContractInput;
-    const signers = inputStep.config.signers;
+export const envSignReqToSignEnvelope = () =>
+  createEnvSignReqToSignEnvelope<
+    InvokeContractInput,
+    AssembleTransactionOutput
+  >({
+    id: "invoke-contract-envelope-to-sign-envelope" as const,
+    inputStepId: INVOKE_CONTRACT_INPUT_STEP_ID,
+    transactionStepId: ASSEMBLE_TRANSACTION_STEP_ID,
+  });
 
-    const transaction = metadata.get(
-      assembleTransactionOutputKey
-    ) as AssembleTransactionOutput;
-
-    const signatureRequirements = envelopeSigningRequirementsOutput;
-
-    return {
-      signatureRequirements,
-      transaction,
-      signers,
-    };
-  }) as Transformer<EnvelopeSigningRequirementsOutput, SignEnvelopeInput>;
-};
-
-export const signEnvelopeToSendTransaction = (
-  rpc: Server
-): Transformer<SignEnvelopeOutput, SendTransactionInput> => {
-  return (transaction: SignEnvelopeOutput) => {
-    return { transaction, rpc };
-  };
-};
+export { signEnvelopeToSendTransaction };

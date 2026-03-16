@@ -32,7 +32,11 @@ describe(
     beforeAll(async () => {
       await initializeWithFriendbot(
         networkConfig.friendbotUrl,
-        john.address() as Ed25519PublicKey
+        john.address() as Ed25519PublicKey,
+        {
+          rpcUrl: networkConfig.rpcUrl,
+          allowHttp: networkConfig.allowHttp,
+        },
       );
     });
 
@@ -40,7 +44,7 @@ describe(
       it("should create a pipeline", () => {
         const invokePipe = createInvokeContractPipeline({ networkConfig });
         assertInstanceOf(invokePipe, Object);
-        assertEquals(invokePipe.name, "InvokeContractPipeline");
+        assertEquals(invokePipe.id, "InvokeContractPipeline");
       });
 
       it("should invoke a contract and return the output of the pipeline", async () => {
@@ -72,11 +76,19 @@ describe(
       beforeAll(async () => {
         await initializeWithFriendbot(
           networkConfig.friendbotUrl,
-          bob.address() as Ed25519PublicKey
+          bob.address() as Ed25519PublicKey,
+          {
+            rpcUrl: networkConfig.rpcUrl,
+            allowHttp: networkConfig.allowHttp,
+          },
         );
         await initializeWithFriendbot(
           networkConfig.friendbotUrl,
-          alice.address() as Ed25519PublicKey
+          alice.address() as Ed25519PublicKey,
+          {
+            rpcUrl: networkConfig.rpcUrl,
+            allowHttp: networkConfig.allowHttp,
+          },
         );
       });
 

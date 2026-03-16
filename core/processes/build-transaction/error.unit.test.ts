@@ -2,7 +2,7 @@ import { assertRejects } from "@std/assert";
 
 import { describe, it } from "@std/testing/bdd";
 import { Account, Operation, type xdr } from "stellar-sdk";
-import { P_BuildTransaction } from "@/processes/build-transaction/index.ts";
+import { buildTransaction } from "@/processes/build-transaction/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import type {
   BuildTransactionInput,
@@ -24,7 +24,7 @@ describe("BuildTransactionErrors", () => {
     const faultyInput = null as unknown as BuildTransactionInput;
 
     await assertRejects(
-      async () => await P_BuildTransaction().run(faultyInput),
+      async () => await buildTransaction(faultyInput),
       E.UNEXPECTED_ERROR
     );
   });
@@ -40,7 +40,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await P_BuildTransaction().run(input),
+        async () => await buildTransaction(input),
         E.INVALID_BASE_FEE_ERROR
       );
     });
@@ -55,7 +55,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await P_BuildTransaction().run(input),
+        async () => await buildTransaction(input),
         E.BASE_FEE_TOO_LOW_ERROR
       );
     });
@@ -70,7 +70,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await P_BuildTransaction().run(input),
+        async () => await buildTransaction(input),
         E.BASE_FEE_TOO_LOW_ERROR
       );
     });
@@ -93,7 +93,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await P_BuildTransaction().run(input),
+        async () => await buildTransaction(input),
         E.COULD_NOT_LOAD_ACCOUNT_ERROR
       );
     });
@@ -108,7 +108,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await P_BuildTransaction().run(input),
+        async () => await buildTransaction(input),
         E.COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE_ERROR
       );
     });
@@ -129,7 +129,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await P_BuildTransaction().run(input),
+        async () => await buildTransaction(input),
         E.CONFLICTING_TIME_CONSTRAINTS_ERROR
       );
     });
@@ -146,7 +146,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await P_BuildTransaction().run(input),
+        async () => await buildTransaction(input),
         Error
       );
     });
@@ -163,7 +163,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await P_BuildTransaction().run(input),
+        async () => await buildTransaction(input),
         E.NO_OPERATIONS_PROVIDED_ERROR
       );
     });
@@ -186,7 +186,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await P_BuildTransaction().run(input),
+        async () => await buildTransaction(input),
         E.COULD_NOT_CREATE_TRANSACTION_BUILDER_ERROR
       );
     });
@@ -204,7 +204,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await P_BuildTransaction().run(input),
+        async () => await buildTransaction(input),
         E.COULD_NOT_BUILD_TRANSACTION_ERROR
       );
     });
@@ -224,7 +224,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await P_BuildTransaction().run(input),
+        async () => await buildTransaction(input),
         E.FAILED_TO_SET_PRECONDITIONS_ERROR
       );
     });
@@ -243,7 +243,7 @@ describe("BuildTransactionErrors", () => {
       };
 
       await assertRejects(
-        async () => await P_BuildTransaction().run(input),
+        async () => await buildTransaction(input),
         E.COULD_NOT_SET_SOROBAN_DATA_ERROR
       );
     });
