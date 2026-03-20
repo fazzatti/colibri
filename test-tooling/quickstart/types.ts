@@ -1,58 +1,148 @@
-import { NetworkConfig } from "@colibri/core";
+import type { NetworkConfig } from "@colibri/core";
+import type Dockerode from "dockerode";
 import type { Container } from "dockerode";
-import { LogLevelDesc } from "../logger/types.ts";
+import type { LoggerLike, LogLevelDesc } from "@/quickstart/logging.ts";
 
+export { LogLevel } from "@/quickstart/logging.ts";
+export type { LoggerLike, LogLevelDesc } from "@/quickstart/logging.ts";
 export type { Container };
 
+/**
+ * Common interface exposed by quickstart-backed ledgers.
+ */
 export interface IStellarTestLedger {
+  /**
+   * Resolves the network configuration for the running quickstart instance.
+   *
+   * @returns A Colibri `NetworkConfig` pointing at the running ledger.
+   */
   getNetworkConfiguration(): Promise<NetworkConfig>;
+
+  /**
+   * Returns the tracked Docker container instance.
+   *
+   * @returns The running Docker container.
+   */
   getContainer(): Container;
+
+  /**
+   * Returns the container IP address from Docker network inspection data.
+   *
+   * @returns The first IP address reported by Docker for the container.
+   */
   getContainerIpAddress(): Promise<string>;
 }
 
+/**
+ * Configuration for `StellarTestLedger`.
+ */
 export interface TestLedgerOptions {
-  // Defines which type of network will the image will be configured to run.
+  /**
+   * Explicit Dockerode connection options.
+   *
+   * Common fields:
+   * - `socketPath`: Unix socket path such as `/var/run/docker.sock`
+   * - `host` / `port` / `protocol`: TCP Docker endpoint settings
+   */
+  readonly dockerOptions?: Dockerode.DockerOptions;
+
+  /**
+   * Explicit Unix socket path to the Docker daemon.
+   *
+   * When provided, this takes precedence over auto-detected local sockets.
+   */
+  readonly dockerSocketPath?: string;
+
+  /**
+   * Ledger network profile to start.
+   *
+   * Only `NetworkEnv.LOCAL` is currently supported.
+   */
   network?: NetworkEnv;
 
-  // Defines the resource limits for soroban transactions. A valid transaction and only be included in a ledger
-  // block if enough resources are available for that operation.
+  /**
+   * Soroban resource limits profile to apply.
+   *
+   * Only `ResourceLimits.TESTNET` is currently supported.
+   */
   limits?: ResourceLimits;
 
-  // For test development, attach to ledger that is already running, don't spin up new one
+  /**
+   * Reuse an already-running named ledger instead of creating a new container.
+   */
   useRunningLedger?: boolean;
 
+  /**
+   * Custom logger implementation used for lifecycle diagnostics.
+   */
+  readonly logger?: LoggerLike;
+
+  /**
+   * Minimum level for the built-in fallback logger.
+   *
+   * Ignored when `logger` is provided.
+   */
   readonly logLevel?: LogLevelDesc;
+
+  /**
+   * Docker container name to create or reuse.
+   *
+   * Defaults to `colibri-stellar-test-ledger`.
+   */
+  readonly containerName?: string;
+
+  /**
+   * Docker image repository name.
+   *
+   * Defaults to `stellar/quickstart`.
+   */
   readonly containerImageName?: string;
+
+  /**
+   * Docker image tag to use.
+   *
+   * Supported tags are listed in `SupportedImageVersions`.
+   */
   readonly containerImageVersion?: SupportedImageVersions | string;
+
+  /**
+   * Stream container stdout/stderr into the configured logger.
+   */
   readonly emitContainerLogs?: boolean;
 }
 
-// Define the resource limits set to Soroban transactions
-// when pulling up a local network. This defines how smart contract
-// transactions are limited in terms of resources during execution.
-//
-// Transactions that exceed these limits will be rejected.
-//
+/**
+ * Soroban resource profiles accepted by Stellar Quickstart.
+ */
 export enum ResourceLimits {
-  TESTNET = "testnet", // (Default) sets the limits to match those used on testnet.
-  DEFAULT = "default", // leaves resource limits set extremely low as per Stellar's core default configuration
-  UNLIMITED = "unlimited", // set limits to maximum resources that can be configured
+  /** Matches the resource profile used by Stellar Testnet. */
+  TESTNET = "testnet",
+  /** Leaves Stellar Core's default local limits in place. */
+  DEFAULT = "default",
+  /** Sets the highest available limits for local experimentation. */
+  UNLIMITED = "unlimited",
 }
 
-//
-// List of supported networks to connect
-// when the test ledger image is pulled up.
-//
+/**
+ * Network modes supported by Stellar Quickstart.
+ */
 export enum NetworkEnv {
-  LOCAL = "local", // (Default) pull up a new pristine network image locally.
-  FUTURENET = "futurenet", // pull up an image to connect to futurenet. Can take several minutes to sync the ledger state.
-  TESTNET = "testnet", // pull up an image to connect to testnet  Can take several minutes to sync the ledger state.
+  /** Starts a fresh local standalone ledger. */
+  LOCAL = "local",
+  /** Connects Quickstart to Futurenet. */
+  FUTURENET = "futurenet",
+  /** Connects Quickstart to Testnet. */
+  TESTNET = "testnet",
 }
 
-// For now, only the latest version of the image is supported.
-// This enum can be expanded to support more versions in the future.
+/**
+ * Quickstart image tags known to be supported by this package.
+ */
 export enum SupportedImageVersions {
+  /** Tracks the latest published quickstart image. */
   LASTEST = "latest",
+  /** Tracks the latest `v425` quickstart build. */
   V425_LATEST = "v425-latest",
+  /** Tracks the latest `pr757` quickstart build. */
   PR757_LATEST = "pr757-latest",
 }

@@ -65,6 +65,9 @@ jobs:
           # Check sep10 package
           check_package "sep10" "sep10"
 
+          # Check test-tooling package
+          check_package "test-tooling" "test-tooling"
+
           # Check all plugin packages dynamically
           if [ -d "plugins" ]; then
             for plugin_dir in plugins/*/; do

@@ -1,0 +1,690 @@
+import {
+  assertEquals,
+  assertRejects,
+  assertStrictEquals,
+  assertThrows,
+} from "@std/assert";
+import { stub } from "@std/testing/mock";
+import { EventEmitter } from "node:events";
+import type { Container, ContainerInfo } from "dockerode";
+import {
+  Code,
+  CONTAINER_ERROR,
+  IMAGE_ERROR,
+  READINESS_ERROR,
+} from "@/quickstart/error.ts";
+import {
+  findContainerByName,
+  getContainerIpAddress,
+  getPublicPort,
+  hasContainerName,
+  pullImage,
+  pullImageOnce,
+  removeContainerAndVolumes,
+  stopContainer,
+  streamContainerLogs,
+  waitForLedgerReady,
+  type ContainerInspectInfo,
+  type DockerClientLike,
+} from "@/quickstart/runtime.ts";
+
+type PullCallback = (
+  error: unknown,
+  stream?: NodeJS.ReadableStream
+) => void;
+type FollowProgressCallback = (error: unknown, output: unknown[]) => void;
+type FollowProgressEvent = { progress?: string; status?: string };
+
+const createLoggerSpy = () => {
+  const messages = {
+    debug: [] as unknown[][],
+    info: [] as unknown[][],
+    warn: [] as unknown[][],
+    error: [] as unknown[][],
+    trace: [] as unknown[][],
+  };
+
+  return {
+    logger: {
+      debug: (...args: unknown[]) => messages.debug.push(args),
+      info: (...args: unknown[]) => messages.info.push(args),
+      warn: (...args: unknown[]) => messages.warn.push(args),
+      error: (...args: unknown[]) => messages.error.push(args),
+      trace: (...args: unknown[]) => messages.trace.push(args),
+    },
+    messages,
+  };
+};
+
+const createInspectInfo = (
+  overrides: Partial<ContainerInspectInfo> = {}
+): ContainerInspectInfo => {
+  return {
+    Id: "container-id",
+    State: {
+      Running: true,
+      Status: "running",
+      ExitCode: 0,
+    },
+    NetworkSettings: {
+      Ports: {
+        "8000/tcp": [{ HostPort: "18000", HostIp: "0.0.0.0" }],
+      },
+      Networks: {
+        bridge: { IPAddress: "172.20.0.2" },
+      },
+    },
+    Mounts: [],
+    Config: { Env: ["A=B"] },
+    ...overrides,
+  };
+};
+
+const createFakeContainer = (
+  inspectInfo: ContainerInspectInfo,
+  options?: {
+    id?: string;
+    stopError?: unknown;
+    logStream?: EventEmitter;
+    onRemove?: (options: Record<string, unknown>) => void;
+  }
+): Container => {
+  const id = options?.id || inspectInfo.Id;
+  const logStream = options?.logStream || new EventEmitter();
+
+  return {
+    id,
+    inspect: async () => inspectInfo,
+    remove: async (removeOptions?: Record<string, unknown>) => {
+      options?.onRemove?.(removeOptions || {});
+    },
+    stop: (_opts: Record<string, unknown>, callback: (error?: unknown) => void) =>
+      callback(options?.stopError),
+    logs: async () => logStream,
+  } as unknown as Container;
+};
+
+Deno.test("hasContainerName and findContainerByName match Docker names", async () => {
+  const target = {
+    Names: ["/colibri-stellar-test-ledger"],
+  } as ContainerInfo;
+  const dockerClient = {
+    listContainers: async () => [target],
+  } as unknown as DockerClientLike;
+
+  assertEquals(hasContainerName(target, "colibri-stellar-test-ledger"), true);
+  assertEquals(hasContainerName(target, "other"), false);
+  assertEquals(hasContainerName({} as ContainerInfo, "missing"), false);
+  assertEquals(
+    await findContainerByName("colibri-stellar-test-ledger", { dockerClient }),
+    target
+  );
+  assertEquals(await findContainerByName("missing", { dockerClient }), undefined);
+
+  const wrappedError = await assertRejects(
+    () =>
+      findContainerByName("broken", {
+        dockerClient: {
+          listContainers: async () => {
+            throw new CONTAINER_ERROR({
+              message: "already wrapped",
+              details: "wrapped",
+            });
+          },
+        } as unknown as DockerClientLike,
+      }),
+    CONTAINER_ERROR,
+    "already wrapped"
+  );
+  assertStrictEquals(wrappedError.code, Code.CONTAINER_ERROR);
+});
+
+Deno.test("stopContainer resolves and rejects based on the Docker callback", async () => {
+  await stopContainer(createFakeContainer(createInspectInfo()));
+
+  const error = await assertRejects(
+    () =>
+      stopContainer(
+        createFakeContainer(createInspectInfo(), {
+          stopError: new Error("failed"),
+        })
+      ),
+    CONTAINER_ERROR,
+    "failed"
+  );
+  assertStrictEquals(error.code, Code.CONTAINER_ERROR);
+});
+
+Deno.test("removeContainerAndVolumes stops running containers and removes only volumes", async () => {
+  const inspectInfo = createInspectInfo({
+    Mounts: [
+      { Type: "volume", Name: "keep-me" },
+      { Type: "bind", Name: "bind-mount" },
+      { Type: "volume", Name: "broken-volume" },
+    ],
+  });
+  const removedVolumes: string[] = [];
+  const removeOptions: Record<string, unknown>[] = [];
+  const { logger, messages } = createLoggerSpy();
+  const container = createFakeContainer(inspectInfo, {
+    onRemove: (options) => removeOptions.push(options),
+  });
+  const dockerClient = {
+    getContainer: () => container,
+    getVolume: (name: string) => ({
+      remove: async () => {
+        if (name === "broken-volume") {
+          throw new Error("broken");
+        }
+        removedVolumes.push(name);
+      },
+    }),
+  } as unknown as DockerClientLike;
+
+  await removeContainerAndVolumes("container-id", {
+    dockerClient,
+    logger,
+  });
+
+  assertEquals(removeOptions, [{ v: true, force: true }]);
+  assertEquals(removedVolumes, ["keep-me"]);
+  assertEquals(messages.debug.length, 1);
+});
+
+Deno.test("removeContainerAndVolumes handles stopped containers with no mounts", async () => {
+  const removeOptions: Record<string, unknown>[] = [];
+  const inspectInfo = createInspectInfo({
+    State: {
+      Running: false,
+      Status: "exited",
+      ExitCode: 0,
+    },
+    Mounts: [],
+  });
+  const container = createFakeContainer(inspectInfo, {
+    onRemove: (options) => removeOptions.push(options),
+  });
+  const dockerClient = {
+    getContainer: () => container,
+    getVolume: () => ({
+      remove: async () => undefined,
+    }),
+  } as unknown as DockerClientLike;
+
+  await removeContainerAndVolumes("container-id", { dockerClient });
+
+  assertEquals(removeOptions, [{ v: true, force: true }]);
+});
+
+Deno.test("removeContainerAndVolumes wraps unexpected failures", async () => {
+  const dockerClient = {
+    getContainer: () => ({
+      inspect: async () => {
+        throw new Error("inspect failed");
+      },
+    }),
+  } as unknown as DockerClientLike;
+
+  const error = await assertRejects(
+    () => removeContainerAndVolumes("container-id", { dockerClient }),
+    CONTAINER_ERROR,
+    "Failed to remove Docker container."
+  );
+  assertStrictEquals(error.code, Code.CONTAINER_ERROR);
+});
+
+Deno.test("getPublicPort validates mappings", () => {
+  assertEquals(getPublicPort(8000, createInspectInfo()), 18000);
+
+  const missingMappingError = assertThrows(
+    () =>
+      getPublicPort(
+        8000,
+        createInspectInfo({
+          NetworkSettings: { Ports: {}, Networks: {} },
+        })
+      ),
+    CONTAINER_ERROR
+  );
+  assertStrictEquals(missingMappingError.code, Code.CONTAINER_ERROR);
+
+  const missingPortsError = assertThrows(
+    () =>
+      getPublicPort(
+        8000,
+        createInspectInfo({
+          NetworkSettings: {
+            Networks: {},
+          },
+        })
+      ),
+    CONTAINER_ERROR
+  );
+  assertStrictEquals(missingPortsError.code, Code.CONTAINER_ERROR);
+
+  const invalidPortError = assertThrows(
+    () =>
+      getPublicPort(
+        8000,
+        createInspectInfo({
+          NetworkSettings: {
+            Ports: {
+              "8000/tcp": [{ HostPort: "not-a-number" }],
+            },
+            Networks: {},
+          },
+        })
+      ),
+    CONTAINER_ERROR
+  );
+  assertStrictEquals(invalidPortError.code, Code.CONTAINER_ERROR);
+});
+
+Deno.test("getContainerIpAddress returns the first network IP and validates missing networks", () => {
+  assertEquals(getContainerIpAddress(createInspectInfo()), "172.20.0.2");
+
+  const emptyNetworksError = assertThrows(
+    () =>
+      getContainerIpAddress(
+        createInspectInfo({
+          NetworkSettings: {
+            Ports: {},
+            Networks: {},
+          },
+        })
+      ),
+    CONTAINER_ERROR
+  );
+  assertStrictEquals(emptyNetworksError.code, Code.CONTAINER_ERROR);
+
+  const undefinedNetworksError = assertThrows(
+    () =>
+      getContainerIpAddress(
+        createInspectInfo({
+          NetworkSettings: {
+            Ports: {},
+          },
+        })
+      ),
+    CONTAINER_ERROR
+  );
+  assertStrictEquals(undefinedNetworksError.code, Code.CONTAINER_ERROR);
+});
+
+Deno.test("pullImageOnce handles pull errors, missing streams, and success", async () => {
+  const { logger, messages } = createLoggerSpy();
+
+  const pullError = await assertRejects(
+    () =>
+      pullImageOnce("stellar/quickstart:latest", {
+        dockerClient: {
+          pull: (
+            _image: string,
+            _options: Record<string, unknown>,
+            callback: PullCallback
+          ) => callback(new Error("no pull")),
+          modem: { followProgress: () => undefined },
+        } as unknown as DockerClientLike,
+        logger,
+      }),
+    IMAGE_ERROR,
+    "no pull"
+  );
+  assertStrictEquals(pullError.code, Code.IMAGE_ERROR);
+
+  const noStreamError = await assertRejects(
+    () =>
+      pullImageOnce("stellar/quickstart:latest", {
+        dockerClient: {
+          pull: (
+            _image: string,
+            _options: Record<string, unknown>,
+            callback: PullCallback
+          ) => callback(undefined, undefined),
+          modem: { followProgress: () => undefined },
+        } as unknown as DockerClientLike,
+        logger,
+      }),
+    IMAGE_ERROR
+  );
+  assertStrictEquals(noStreamError.code, Code.IMAGE_ERROR);
+
+  const result = await pullImageOnce("stellar/quickstart:latest", {
+    dockerClient: {
+      pull: (
+        _image: string,
+        _options: Record<string, unknown>,
+        callback: PullCallback
+      ) =>
+        callback(undefined, new EventEmitter() as unknown as NodeJS.ReadableStream),
+      modem: {
+        followProgress: (
+          _stream: NodeJS.ReadableStream,
+          onFinished: FollowProgressCallback,
+          onProgress?: (event: FollowProgressEvent) => void
+        ) => {
+          onProgress?.({ status: "Downloading" });
+          onFinished(undefined, ["done"]);
+        },
+      },
+    } as unknown as DockerClientLike,
+    logger,
+  });
+
+  assertEquals(result, ["done"]);
+  assertEquals(messages.debug.length > 0, true);
+});
+
+Deno.test("pullImageOnce surfaces progress errors and throttles progress logs", async () => {
+  const { logger, messages } = createLoggerSpy();
+
+  const progressError = await assertRejects(
+    () =>
+      pullImageOnce("stellar/quickstart:latest", {
+        dockerClient: {
+          pull: (
+            _image: string,
+            _options: Record<string, unknown>,
+            callback: PullCallback
+          ) =>
+            callback(
+              undefined,
+              new EventEmitter() as unknown as NodeJS.ReadableStream
+            ),
+          modem: {
+            followProgress: (
+              _stream: NodeJS.ReadableStream,
+              onFinished: FollowProgressCallback
+            ) => onFinished(new Error("progress failed"), []),
+          },
+        } as unknown as DockerClientLike,
+        logger,
+      }),
+    IMAGE_ERROR,
+    "progress failed"
+  );
+  assertStrictEquals(progressError.code, Code.IMAGE_ERROR);
+
+  const nowValues = [1001, 1500, 2501];
+  const dateNowStub = stub(Date, "now", () => nowValues.shift() ?? 2501);
+
+  try {
+    const result = await pullImageOnce("stellar/quickstart:latest", {
+      dockerClient: {
+        pull: (
+          _image: string,
+          _options: Record<string, unknown>,
+          callback: PullCallback
+        ) =>
+          callback(
+            undefined,
+            new EventEmitter() as unknown as NodeJS.ReadableStream
+          ),
+        modem: {
+          followProgress: (
+            _stream: NodeJS.ReadableStream,
+            onFinished: FollowProgressCallback,
+            onProgress?: (event: FollowProgressEvent) => void
+          ) => {
+            onProgress?.({ status: "Downloading" });
+            onProgress?.({ status: "Ignored" });
+            onProgress?.({});
+            onFinished(undefined, ["ok"]);
+          },
+        },
+      } as unknown as DockerClientLike,
+      logger,
+    });
+
+    assertEquals(result, ["ok"]);
+    assertEquals(messages.debug, [
+      ['"Downloading"'],
+      ['"pulling image"'],
+      ["Finished stellar/quickstart:latest pull completely OK"],
+    ]);
+  } finally {
+    dateNowStub.restore();
+  }
+});
+
+Deno.test("pullImage retries and eventually succeeds or fails", async () => {
+  let attempts = 0;
+  const delays: number[] = [];
+  const { logger, messages } = createLoggerSpy();
+
+  const result = await pullImage("stellar/quickstart:latest", {
+    retries: 2,
+    sleepFn: async (delay) => {
+      delays.push(delay);
+    },
+    dockerClient: {
+      pull: (
+        _image: string,
+        _options: Record<string, unknown>,
+        callback: PullCallback
+      ) => {
+        attempts += 1;
+        if (attempts < 2) {
+          callback(new Error("transient"));
+        } else {
+          callback(
+            undefined,
+            new EventEmitter() as unknown as NodeJS.ReadableStream
+          );
+        }
+      },
+      modem: {
+        followProgress: (
+          _stream: NodeJS.ReadableStream,
+          onFinished: FollowProgressCallback
+        ) => onFinished(undefined, ["ok"]),
+      },
+    } as unknown as DockerClientLike,
+    logger,
+  });
+
+  assertEquals(result, ["ok"]);
+  assertEquals(delays, [1000]);
+  assertEquals(messages.warn.length, 1);
+
+  const fatalError = await assertRejects(
+    () =>
+      pullImage("stellar/quickstart:latest", {
+        retries: 0,
+        dockerClient: {
+          pull: (
+            _image: string,
+            _options: Record<string, unknown>,
+            callback: PullCallback
+          ) => callback(new Error("fatal")),
+          modem: { followProgress: () => undefined },
+        } as unknown as DockerClientLike,
+      }),
+    IMAGE_ERROR,
+    "fatal"
+  );
+  assertStrictEquals(fatalError.code, Code.IMAGE_ERROR);
+
+  const zeroRetryClient = {
+    pull: (
+      _image: string,
+      _options: Record<string, unknown>,
+      callback: PullCallback
+    ) =>
+      callback(undefined, new EventEmitter() as unknown as NodeJS.ReadableStream),
+    modem: {
+      followProgress: (
+        _stream: NodeJS.ReadableStream,
+        onFinished: FollowProgressCallback
+      ) => onFinished(undefined, ["one-shot"]),
+    },
+  } as unknown as DockerClientLike;
+
+  assertEquals(
+    await pullImage("stellar/quickstart:latest", {
+      retries: -1,
+      dockerClient: zeroRetryClient,
+    }),
+    ["one-shot"]
+  );
+});
+
+Deno.test("streamContainerLogs filters noise and accepts string and binary chunks", async () => {
+  const stream = new EventEmitter();
+  const { logger, messages } = createLoggerSpy();
+  const container = createFakeContainer(createInspectInfo(), { logStream: stream });
+
+  await streamContainerLogs({
+    container,
+    logger,
+    tag: "[ledger]",
+  });
+
+  stream.emit("data", "\r\n");
+  stream.emit("data", new TextEncoder().encode("hello"));
+  stream.emit("data", "world");
+
+  assertEquals(messages.debug, [["[ledger] hello"], ["[ledger] world"]]);
+});
+
+Deno.test("streamContainerLogs wraps attachment failures", async () => {
+  const { logger } = createLoggerSpy();
+  const container = {
+    logs: async () => {
+      throw new Error("attach failed");
+    },
+  } as unknown as Container;
+
+  const error = await assertRejects(
+    () =>
+      streamContainerLogs({
+        container,
+        logger,
+        tag: "[ledger]",
+      }),
+    CONTAINER_ERROR,
+    "Failed to stream container logs."
+  );
+  assertStrictEquals(error.code, Code.CONTAINER_ERROR);
+});
+
+Deno.test("waitForLedgerReady succeeds after transient failures", async () => {
+  let fetchCalls = 0;
+  let sleepCalls = 0;
+  const inspectInfo = createInspectInfo();
+  const dockerClient = {
+    getContainer: () => createFakeContainer(inspectInfo),
+  } as unknown as DockerClientLike;
+
+  await waitForLedgerReady({
+    containerId: "container-id",
+    dockerClient,
+    sleepFn: async () => {
+      sleepCalls += 1;
+    },
+    fetchFn: async (input) => {
+      fetchCalls += 1;
+      const url = String(input);
+
+      if (fetchCalls === 1) {
+        return new Response("booting", { status: 503 });
+      }
+
+      if (url.endsWith("/rpc")) {
+        return new Response('{"status":"healthy"}', { status: 200 });
+      }
+
+      return new Response("ok", { status: 200 });
+    },
+  });
+
+  assertEquals(fetchCalls >= 3, true);
+  assertEquals(sleepCalls, 1);
+});
+
+Deno.test("waitForLedgerReady times out with both Error and string failures", async () => {
+  const stalledNow = (() => {
+    const values = [0, 0, 10, 20];
+    return () => values.shift() ?? 20;
+  })();
+
+  const stoppedError = await assertRejects(
+    () =>
+      waitForLedgerReady({
+        containerId: "container-id",
+        dockerClient: {
+          getContainer: () =>
+            createFakeContainer(
+              createInspectInfo({
+                State: {
+                  Running: false,
+                  Status: "exited",
+                  ExitCode: 1,
+                },
+              })
+            ),
+        } as unknown as DockerClientLike,
+        timeoutMs: 15,
+        nowFn: stalledNow,
+        sleepFn: async () => undefined,
+      }),
+    READINESS_ERROR,
+    "Container is not running"
+  );
+  assertStrictEquals(stoppedError.code, Code.READINESS_ERROR);
+
+  const throwingNow = (() => {
+    const values = [0, 0, 10, 20];
+    return () => values.shift() ?? 20;
+  })();
+
+  const stringCauseError = await assertRejects(
+    () =>
+      waitForLedgerReady({
+        containerId: "container-id",
+        dockerClient: {
+          getContainer: () => createFakeContainer(createInspectInfo()),
+        } as unknown as DockerClientLike,
+        timeoutMs: 15,
+        nowFn: throwingNow,
+        sleepFn: async () => undefined,
+        fetchFn: async () => {
+          throw "boom";
+        },
+      }),
+    READINESS_ERROR,
+    '"boom"'
+  );
+  assertStrictEquals(stringCauseError.code, Code.READINESS_ERROR);
+});
+
+Deno.test("waitForLedgerReady times out when the RPC endpoint is unhealthy", async () => {
+  const rpcNow = (() => {
+    const values = [0, 0, 10, 20];
+    return () => values.shift() ?? 20;
+  })();
+
+  const rpcError = await assertRejects(
+    () =>
+      waitForLedgerReady({
+        containerId: "container-id",
+        dockerClient: {
+          getContainer: () => createFakeContainer(createInspectInfo()),
+        } as unknown as DockerClientLike,
+        timeoutMs: 15,
+        nowFn: rpcNow,
+        sleepFn: async () => undefined,
+        fetchFn: async (input) => {
+          const url = String(input);
+          if (url.endsWith("/rpc")) {
+            return new Response('{"status":"starting"}', { status: 200 });
+          }
+
+          return new Response("ok", { status: 200 });
+        },
+      }),
+    READINESS_ERROR,
+    "RPC is not ready yet"
+  );
+  assertStrictEquals(rpcError.code, Code.READINESS_ERROR);
+});

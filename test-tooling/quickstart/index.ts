@@ -1,26 +1,45 @@
-import Docker, {
-  type Container,
-  type ContainerCreateOptions,
-  type ContainerInfo,
-} from "dockerode";
-
-import { Containers } from "./containers/index.ts";
-import type EventEmitter from "node:events";
-
+import type { Container, ContainerCreateOptions, ContainerInfo } from "dockerode";
+import {
+  createDockerClient,
+  resolveDockerOptions,
+  type DockerConnectionConfig,
+} from "@/quickstart/docker.ts";
+import {
+  CONTAINER_ERROR,
+  INVALID_CONFIGURATION,
+  QuickstartError,
+} from "@/quickstart/error.ts";
+import {
+  findContainerByName,
+  getContainerIpAddress,
+  getPublicPort,
+  pullImage,
+  removeContainerAndVolumes,
+  streamContainerLogs,
+  stopContainer,
+  type ContainerInspectInfo,
+  waitForLedgerReady,
+} from "@/quickstart/runtime.ts";
 import {
   type IStellarTestLedger,
   NetworkEnv,
   ResourceLimits,
   SupportedImageVersions,
   type TestLedgerOptions,
-} from "./types.ts";
-
-import { type NetworkConfig, CustomNet, helpers } from "@colibri/core";
-import type { LogLevelDesc } from "../logger/types.ts";
-import { Logger } from "../logger/index.ts";
-const { isBooleanStrict } = helpers.boolean;
+} from "@/quickstart/types.ts";
+import {
+  type NetworkConfig,
+  NetworkConfig as ColibriNetworkConfig,
+  isBooleanStrict,
+} from "@colibri/core";
+import {
+  createLogger,
+  type LogLevelDesc,
+  type LoggerLike,
+} from "@/quickstart/logging.ts";
 
 const DEFAULTS = Object.freeze({
+  containerName: "colibri-stellar-test-ledger",
   imageName: "stellar/quickstart",
   imageVersion: SupportedImageVersions.LASTEST,
   network: NetworkEnv.LOCAL,
@@ -30,265 +49,246 @@ const DEFAULTS = Object.freeze({
   emitContainerLogs: false,
 });
 
+const QUICKSTART_CMD = ["--local", "--limits", "testnet"] as const;
+
+const ensureQuickstartError = <T extends QuickstartError>(
+  error: unknown,
+  fallback: T,
+): T | QuickstartError => {
+  if (error instanceof QuickstartError) {
+    return error;
+  }
+
+  return fallback;
+};
+
 /**
- * This class provides the functionality to start and stop a test stellar ledger.
- * The ledger is started as a docker container and can be configured to run on different networks.
+ * Manages a Docker-backed Stellar Quickstart instance for tests.
  *
- * @param {IStellarTestLedgerOptions} options - Options for the test stellar ledger.
- * @param {Network} options.network - Defines which type of network will the image will be configured to run.
- * @param {ResourceLimits} options.limits - Defines the resource limits for soroban transactions.
- * @param {boolean} options.useRunningLedger - For test development, attach to ledger that is already running, don't spin up new one.
- * @param {LogLevelDesc} options.logLevel - The log level for the test stellar ledger.
- * @param {string} options.containerImageName - The name of the container image to use for the test stellar ledger.
- * @param {SupportedImageVersions | string} options.containerImageVersion - The version of the container image to use for the test stellar ledger.
- * @param {boolean} options.emitContainerLogs - If true, the container logs will be emitted.
+ * The class can either start a new container or attach to an already-running
+ * named container. Once started, it exposes a ready-to-use Colibri
+ * `NetworkConfig` for the embedded Horizon and Soroban RPC endpoints.
  *
+ * @example
+ * ```ts
+ * import { StellarTestLedger } from "jsr:@colibri/test-tooling";
+ *
+ * const ledger = new StellarTestLedger({
+ *   containerName: "my-test-ledger",
+ *   emitContainerLogs: true,
+ * });
+ *
+ * await ledger.start();
+ * const network = await ledger.getNetworkConfiguration();
+ *
+ * console.log(network.rpcUrl);
+ *
+ * await ledger.stop();
+ * await ledger.destroy();
+ * ```
  */
 export class StellarTestLedger implements IStellarTestLedger {
+  /** The Docker container name managed by this ledger instance. */
+  public readonly containerName: string;
+
+  /** The Docker image repository used to start the ledger. */
   public readonly containerImageName: string;
+
+  /** The Docker image tag used to start the ledger. */
   public readonly containerImageVersion: SupportedImageVersions | string;
 
-  private readonly network: string;
-  private readonly limits: string;
   private readonly useRunningLedger: boolean;
-
   private readonly emitContainerLogs: boolean;
-  private readonly log: Logger;
+  private readonly log: LoggerLike;
   private readonly logLevel: LogLevelDesc;
+  private readonly dockerConnection: DockerConnectionConfig;
+
+  /** The currently tracked Docker container, if one has been started or attached. */
   public container: Container | undefined;
+
+  /** The Docker container ID for the tracked container, if available. */
   public containerId: string | undefined;
 
+  /**
+   * Creates a new quickstart ledger manager.
+   *
+   * @param options - Ledger startup options.
+   *   - `containerName`: Optional Docker container name.
+   *   - `containerImageName`: Optional Docker image repository, defaults to `stellar/quickstart`.
+   *   - `containerImageVersion`: Optional Docker image tag, defaults to `latest`.
+   *   - `dockerOptions` / `dockerSocketPath`: Optional explicit Docker connection settings.
+   *   - `useRunningLedger`: Reuse an existing named container instead of creating one.
+   *   - `emitContainerLogs`: Forward container logs to the configured logger.
+   *   - `logger` / `logLevel`: Logging configuration for lifecycle diagnostics.
+   * @returns A configured `StellarTestLedger` instance.
+   * @throws {INVALID_CONFIGURATION} If an unsupported network, limit profile, or image tag is provided.
+   *
+   * @example
+   * ```ts
+   * const ledger = new StellarTestLedger({
+   *   containerName: "integration-ledger",
+   *   dockerSocketPath: "/var/run/docker.sock",
+   *   logLevel: "debug",
+   * });
+   * ```
+   */
   constructor(options?: TestLedgerOptions) {
-    this.network = options?.network || DEFAULTS.network;
-    this.limits = options?.limits || DEFAULTS.limits;
+    const network = options?.network || DEFAULTS.network;
+    const limits = options?.limits || DEFAULTS.limits;
 
-    if (this.network != NetworkEnv.LOCAL) {
-      throw new Error(
-        `StellarTestLedger#constructor() network ${this.network} not supported yet.`
-      );
+    if (network !== NetworkEnv.LOCAL) {
+      throw new INVALID_CONFIGURATION({
+        option: "network",
+        value: network,
+        supportedValues: [NetworkEnv.LOCAL],
+        message: `StellarTestLedger#constructor() network ${network} not supported.`,
+        details:
+          "The quickstart harness currently supports only the local standalone network profile.",
+      });
     }
-    if (this.limits != ResourceLimits.TESTNET) {
-      throw new Error(
-        `StellarTestLedger#constructor() limits ${this.limits} not supported yet.`
-      );
+
+    if (limits !== ResourceLimits.TESTNET) {
+      throw new INVALID_CONFIGURATION({
+        option: "limits",
+        value: limits,
+        supportedValues: [ResourceLimits.TESTNET],
+        message: `StellarTestLedger#constructor() limits ${limits} not supported.`,
+        details:
+          "The quickstart harness currently supports only the testnet resource limits profile.",
+      });
     }
 
     this.containerImageVersion =
       options?.containerImageVersion || DEFAULTS.imageVersion;
 
-    // if image name is not a supported version
     if (
       !Object.values(SupportedImageVersions).includes(
-        this.containerImageVersion as SupportedImageVersions
+        this.containerImageVersion as SupportedImageVersions,
       )
     ) {
-      throw new Error(
-        `StellarTestLedger#constructor() containerImageVersion ${options?.containerImageVersion} not supported.`
-      );
+      throw new INVALID_CONFIGURATION({
+        option: "containerImageVersion",
+        value: options?.containerImageVersion,
+        supportedValues: Object.values(SupportedImageVersions),
+        message:
+          `StellarTestLedger#constructor() containerImageVersion ${options?.containerImageVersion} not supported.`,
+        details:
+          "The requested quickstart image tag is not in the supported image version allow-list.",
+      });
     }
 
+    this.containerName = options?.containerName || DEFAULTS.containerName;
     this.containerImageName = options?.containerImageName || DEFAULTS.imageName;
-
     this.useRunningLedger = isBooleanStrict(options?.useRunningLedger)
       ? (options?.useRunningLedger as boolean)
       : DEFAULTS.useRunningLedger;
-
     this.logLevel = options?.logLevel || DEFAULTS.logLevel;
     this.emitContainerLogs = isBooleanStrict(options?.emitContainerLogs)
       ? (options?.emitContainerLogs as boolean)
       : DEFAULTS.emitContainerLogs;
-
-    this.log = new Logger({
+    this.dockerConnection = {
+      dockerOptions: resolveDockerOptions({
+        dockerOptions: options?.dockerOptions,
+        dockerSocketPath: options?.dockerSocketPath,
+      }),
+    };
+    this.log = createLogger({
       level: this.logLevel,
       label: "StellarTestLedger",
+      logger: options?.logger,
     });
 
     this.log.debug("Initialized");
   }
 
   /**
-   * Get the full container image name.
-   *
-   * @returns {string} Full container image name
+   * Returns the fully qualified Docker image reference for the current ledger.
    */
   public get fullContainerImageName(): string {
     return [this.containerImageName, this.containerImageVersion].join(":");
   }
 
-  public getContainer(): Container {
-    if (!this.container) {
-      throw new Error(
-        `StellarTestLedger#getContainer() Container not started yet by this instance.`
-      );
-    } else {
-      return this.container;
+  /**
+   * Creates the Docker client used by this instance.
+   */
+  protected getDockerClient() {
+    return createDockerClient(this.dockerConnection);
+  }
+
+  /**
+   * Looks up an existing container with the configured name.
+   */
+  protected async findNamedContainer(): Promise<ContainerInfo | undefined> {
+    return await findContainerByName(this.containerName, {
+      ...this.dockerConnection,
+      dockerClient: this.getDockerClient() as never,
+    });
+  }
+
+  /**
+   * Ensures a named container is using the expected quickstart image.
+   */
+  protected ensureExpectedNamedContainer(containerInfo: ContainerInfo): void {
+    if (containerInfo.Image !== this.fullContainerImageName) {
+      throw new CONTAINER_ERROR({
+        message:
+          `StellarTestLedger found container "${this.containerName}" with image "${containerInfo.Image}", expected "${this.fullContainerImageName}".`,
+        details:
+          "A container with the requested name already exists, but it was created from a different Docker image.",
+        data: {
+          containerName: this.containerName,
+          expectedImage: this.fullContainerImageName,
+          actualImage: containerInfo.Image,
+        },
+      });
     }
   }
 
   /**
-   *
-   * Get the container information for the test stellar ledger.
-   *
-   * @returns {ContainerInfo} Container information
+   * Removes a container by ID along with its attached named volumes.
    */
-  protected async getContainerInfo(): Promise<ContainerInfo> {
-    const fnTag = "StellarTestLedger#getContainerInfo()";
-    const docker = new Docker();
-    const image = this.containerImageName;
-    const containerInfos = await docker.listContainers({});
-
-    let aContainerInfo;
-    if (this.containerId !== undefined) {
-      aContainerInfo = containerInfos.find(
-        (ci: { Id: string | undefined }) => ci.Id === this.containerId
-      );
-    }
-
-    if (aContainerInfo) {
-      return aContainerInfo;
-    } else {
-      throw new Error(`${fnTag} no image "${image}"`);
-    }
+  protected async removeContainerById(containerId: string): Promise<void> {
+    await removeContainerAndVolumes(containerId, {
+      ...this.dockerConnection,
+      dockerClient: this.getDockerClient() as never,
+      logger: this.log,
+      logLevel: this.logLevel,
+    });
   }
 
   /**
-   *
-   * Get the IP address of the container.
-   *
-   * @returns {string} IP address of the container
+   * Pulls the configured quickstart image.
    */
-  public async getContainerIpAddress(): Promise<string> {
-    const fnTag = "StellarTestLedger#getContainerIpAddress()";
-    const aContainerInfo = await this.getContainerInfo();
-
-    if (aContainerInfo) {
-      const { NetworkSettings } = aContainerInfo;
-      const networkNames: string[] = Object.keys(NetworkSettings.Networks);
-      if (networkNames.length < 1) {
-        throw new Error(`${fnTag} container not connected to any networks`);
-      } else {
-        // return IP address of container on the first network that we found
-        return NetworkSettings.Networks[networkNames[0]].IPAddress;
-      }
-    } else {
-      throw new Error(`${fnTag} cannot find image: ${this.containerImageName}`);
-    }
+  protected async pullContainerImage(): Promise<void> {
+    await pullImage(this.fullContainerImageName, {
+      ...this.dockerConnection,
+      dockerClient: this.getDockerClient() as never,
+      logger: this.log,
+      logLevel: this.logLevel,
+    });
   }
 
   /**
-   *
-   * Get the commands to pass to the docker container.
-   *
-   * @returns {string[]} Array of commands to pass to the docker container
+   * Waits until the underlying quickstart services are ready.
    */
-  private getImageCommands(): string[] {
-    const cmds = [];
-
-    switch (this.network) {
-      case NetworkEnv.FUTURENET:
-        cmds.push("--futurenet");
-        break;
-      case NetworkEnv.TESTNET:
-        cmds.push("--testnet");
-        break;
-      case NetworkEnv.LOCAL:
-      default:
-        cmds.push("--local");
-        break;
-    }
-
-    switch (this.limits) {
-      case ResourceLimits.DEFAULT:
-        cmds.push("--limits", "default");
-        break;
-      case ResourceLimits.UNLIMITED:
-        cmds.push("--limits", "unlimited");
-        break;
-      case ResourceLimits.TESTNET:
-      default:
-        cmds.push("--limits", "testnet");
-        break;
-    }
-
-    return cmds;
+  protected async waitUntilReady(containerId: string): Promise<void> {
+    await waitForLedgerReady({
+      containerId,
+      ...this.dockerConnection,
+      dockerClient: this.getDockerClient() as never,
+    });
   }
 
   /**
-   *
-   * Get the network configuration data for the test stellar ledger.
-   * This includes the network passphrase, rpcUrl, horizonUrl,
-   * friendbotUrl, and the allowHttp flag.
-   *
-   * @returns {INetworkConfigData} Network configuration data
+   * Creates the Docker container definition for the quickstart image.
    */
-  public async getNetworkConfiguration(): Promise<NetworkConfig> {
-    if (this.network != "local") {
-      throw new Error(
-        `StellarTestLedger#getNetworkConfiguration() network ${this.network} not supported yet.`
-      );
-    }
-    const cInfo = await this.getContainerInfo();
-    const publicPort = await Containers.getPublicPort(8000, cInfo);
-
-    // Default docker internal domain. Redirects to the local host where docker is running.
-    const domain = "127.0.0.1";
-
-    return Promise.resolve(
-      CustomNet({
-        networkPassphrase: "Standalone Network ; February 2017",
-        rpcUrl: `http://${domain}:${publicPort}/rpc`,
-        horizonUrl: `http://${domain}:${publicPort}`,
-        friendbotUrl: `http://${domain}:${publicPort}/friendbot`,
-        allowHttp: true,
-      })
-    );
-  }
-
-  /**
-   *  Start a test stellar ledger.
-   *
-   * @param {boolean} omitPull - If true, the image will not be pulled from the registry.
-   * @returns {Container} The container object.
-   */
-  public async start(omitPull = false): Promise<Container> {
-    if (this.useRunningLedger) {
-      this.log.info(
-        "Search for already running Stellar Test Ledger because 'useRunningLedger' flag is enabled."
-      );
-      this.log.info(
-        "Search criteria - image name: ",
-        this.fullContainerImageName,
-        ", state: running"
-      );
-      const containerInfo = await Containers.getByPredicate(
-        (ci: { Image: string; State: string }) =>
-          ci.Image === this.fullContainerImageName && ci.State === "running"
-      );
-      const docker = new Docker();
-      this.containerId = containerInfo.Id;
-      this.container = docker.getContainer(this.containerId);
-      return this.container;
-    }
-
-    if (this.container) {
-      await this.container.stop();
-      await this.container.remove();
-      this.container = undefined;
-      this.containerId = undefined;
-    }
-
-    this.log.info("Pulling image...");
-    if (!omitPull) {
-      await Containers.pullImage(
-        this.fullContainerImageName,
-        {},
-        this.logLevel
-      );
-    }
-    this.log.info("Creating container...");
+  protected async createContainer(): Promise<Container> {
     const createOptions: ContainerCreateOptions = {
+      name: this.containerName,
+      Image: this.fullContainerImageName,
+      Cmd: [...QUICKSTART_CMD],
       ExposedPorts: {
-        "8000/tcp": {}, // Stellar services will use this port (Horizon, RPC and Friendbot)
+        "8000/tcp": {},
       },
       HostConfig: {
         PublishAllPorts: true,
@@ -296,107 +296,280 @@ export class StellarTestLedger implements IStellarTestLedger {
       },
     };
 
-    const Healthcheck = {
-      Test: [
-        "CMD-SHELL",
-        "curl -s -o /dev/null -w '%{http_code}' http://localhost:8000 | grep -q '200' && curl -s -X POST -H 'Content-Type: application/json' -d '{\"jsonrpc\": \"2.0\", \"id\": 8675309, \"method\": \"getHealth\"}' http://localhost:8000/rpc | grep -q 'healthy' && curl -s http://localhost:8000/friendbot | grep -q '\"status\": 400' || exit 1",
-      ],
-      Interval: 1000000000, // 1 second
-      Timeout: 3000000000, // 3 seconds
-      Retries: 120, // 120 retries over 2 min should be enough for a big variety of systems
-      StartPeriod: 1000000000, // 1 second
-    };
+    return await this.getDockerClient().createContainer(createOptions);
+  }
 
-    return new Promise<Container>((resolve, reject) => {
-      const docker = new Docker();
-      this.log.info("About to run docker.run()...");
-
-      const eventEmitter: EventEmitter = docker.run(
-        this.fullContainerImageName,
-        [...this.getImageCommands()],
-        [],
-        { ...createOptions, Healthcheck: Healthcheck },
-        {},
-        (err: unknown) => {
-          this.log.error("docker.run() error:", err);
-          if (err) {
-            reject(err);
-          }
-        }
-      );
-
-      this.log.info("docker.run() called, waiting for start event...");
-      eventEmitter.once("start", async (container: Container) => {
-        this.container = container;
-        this.containerId = container.id;
-
-        if (this.emitContainerLogs) {
-          const fnTag = `[${this.fullContainerImageName}]`;
-          await Containers.streamLogs({
-            container: this.container,
-            tag: fnTag,
-            log: this.log,
-          });
-        }
-
-        try {
-          this.log.debug("Waiting for services to fully start.");
-          await Containers.waitForHealthCheck(this.containerId!);
-          this.log.debug("Stellar Test Ledger is ready.");
-          resolve(container);
-        } catch (ex) {
-          this.log.error(ex);
-          reject(ex);
-        }
-      });
+  /**
+   * Attaches container stdout and stderr to the configured logger.
+   */
+  protected async streamContainerLogs(container: Container): Promise<void> {
+    await streamContainerLogs({
+      container,
+      tag: `[${this.fullContainerImageName}]`,
+      logger: this.log,
     });
   }
 
   /**
-   * Stop the test stellar ledger.
-   *
-   * @returns {Promise<unknown>} A promise that resolves when the ledger is stopped.
+   * Loads the latest Docker inspect data for the tracked container.
    */
-  public async stop(): Promise<unknown> {
-    if (this.useRunningLedger) {
-      this.log.info("Ignore stop request because useRunningLedger is enabled.");
-      return Promise.resolve();
-    } else {
-      return await Containers.stop(this.getContainer());
+  protected async getContainerInfo(): Promise<ContainerInspectInfo> {
+    return (await this.getContainer().inspect()) as ContainerInspectInfo;
+  }
+
+  /**
+   * Returns the tracked Docker container.
+   *
+   * @returns The currently tracked Docker container instance.
+   * @throws {CONTAINER_ERROR} If this ledger instance has not started or attached to a container yet.
+   */
+  public getContainer(): Container {
+    if (!this.container) {
+      throw new CONTAINER_ERROR({
+        message:
+          "StellarTestLedger#getContainer() Container not started yet by this instance.",
+        details:
+          "Call start() or attach to an existing ledger before requesting the container instance.",
+      });
+    }
+
+    return this.container;
+  }
+
+  /**
+   * Returns the container IP address from Docker inspection data.
+   *
+   * @returns The first Docker network IP address assigned to the container.
+   * @throws {CONTAINER_ERROR} If the ledger has not started or Docker inspection fails.
+   *
+   * @example
+   * ```ts
+   * const ledger = new StellarTestLedger();
+   * await ledger.start();
+   *
+   * console.log(await ledger.getContainerIpAddress());
+   * ```
+   */
+  public async getContainerIpAddress(): Promise<string> {
+    try {
+      return getContainerIpAddress(await this.getContainerInfo());
+    } catch (error) {
+      throw ensureQuickstartError(
+        error,
+        new CONTAINER_ERROR({
+          message: "Failed to resolve the container IP address.",
+          details:
+            "Quickstart could not read the Docker network information for the tracked container.",
+          data: { containerId: this.containerId },
+          cause: error,
+        }),
+      );
     }
   }
 
   /**
-   * Destroy the test stellar ledger.
+   * Builds a Colibri `NetworkConfig` for the running quickstart services.
    *
-   * @returns {Promise<unknown>} A promise that resolves when the ledger is destroyed.
+   * @returns A `NetworkConfig` pointing at Horizon, Soroban RPC, and Friendbot.
+   * @throws {CONTAINER_ERROR} If the ledger has not started or the published port is unavailable.
+   *
+   * @example
+   * ```ts
+   * const ledger = new StellarTestLedger();
+   * await ledger.start();
+   *
+   * const network = await ledger.getNetworkConfiguration();
+   * console.log(network.horizonUrl);
+   * ```
    */
-  public async destroy(): Promise<unknown> {
-    if (this.useRunningLedger) {
-      this.log.info(
-        "Ignore destroy request because useRunningLedger is enabled."
-      );
-      return Promise.resolve();
-    } else if (this.container) {
-      const docker = new Docker();
-      const containerInfo = await this.container.inspect();
-      const volumes = containerInfo.Mounts;
-      await this.container.remove();
-      volumes.forEach(async (volume: { Name: unknown }) => {
-        this.log.info(`Removing volume ${volume}`);
-        if (volume.Name) {
-          const volumeToDelete = docker.getVolume(volume.Name);
-          await volumeToDelete.remove();
-        } else {
-          this.log.warn(`Volume ${volume} could not be removed!`);
-        }
+  public async getNetworkConfiguration(): Promise<NetworkConfig> {
+    try {
+      const containerInfo = await this.getContainerInfo();
+      const publicPort = getPublicPort(8000, containerInfo);
+      const domain = "127.0.0.1";
+
+      return ColibriNetworkConfig.CustomNet({
+        networkPassphrase: "Standalone Network ; February 2017",
+        rpcUrl: `http://${domain}:${publicPort}/rpc`,
+        horizonUrl: `http://${domain}:${publicPort}`,
+        friendbotUrl: `http://${domain}:${publicPort}/friendbot`,
+        allowHttp: true,
       });
-      return Promise.resolve();
-    } else {
-      return Promise.reject(
-        new Error(
-          `StellarTestLedger#destroy() Container was never created, nothing to destroy.`
-        )
+    } catch (error) {
+      throw ensureQuickstartError(
+        error,
+        new CONTAINER_ERROR({
+          message: "Failed to build network configuration for the test ledger.",
+          details:
+            "Quickstart could not resolve the container port mapping needed to build a Colibri NetworkConfig.",
+          data: {
+            containerId: this.containerId,
+            containerName: this.containerName,
+          },
+          cause: error,
+        }),
+      );
+    }
+  }
+
+  /**
+   * Starts the quickstart ledger or attaches to an existing named container.
+   *
+   * @param omitPull - Skip the Docker image pull step when `true`.
+   * @returns The running Docker container instance.
+   * @throws {CONTAINER_ERROR} If the named container state is invalid or container lifecycle operations fail.
+   * @throws {IMAGE_ERROR} If the quickstart image cannot be pulled.
+   *
+   * @example
+   * ```ts
+   * const ledger = new StellarTestLedger({
+   *   emitContainerLogs: true,
+   * });
+   *
+   * await ledger.start();
+   * ```
+   */
+  public async start(omitPull = false): Promise<Container> {
+    try {
+      if (this.useRunningLedger) {
+        const containerInfo = await this.findNamedContainer();
+
+        if (!containerInfo) {
+          throw new CONTAINER_ERROR({
+            message:
+              `StellarTestLedger could not find a container named "${this.containerName}".`,
+            details:
+              "A running container was requested via useRunningLedger, but Docker could not find one with the configured name.",
+            data: { containerName: this.containerName },
+          });
+        }
+
+        this.ensureExpectedNamedContainer(containerInfo);
+
+        if (containerInfo.State !== "running") {
+          throw new CONTAINER_ERROR({
+            message:
+              `StellarTestLedger found "${this.containerName}" but it is not running.`,
+            details:
+              "A named container exists, but Docker reports that it is not in the running state.",
+            data: {
+              containerName: this.containerName,
+              containerId: containerInfo.Id,
+              state: containerInfo.State,
+            },
+          });
+        }
+
+        this.containerId = containerInfo.Id;
+        this.container = this.getDockerClient().getContainer(containerInfo.Id);
+        return this.container;
+      }
+
+      if (this.container) {
+        await stopContainer(this.container);
+        await this.container.remove({ force: true });
+        this.container = undefined;
+        this.containerId = undefined;
+      }
+
+      const existingNamedContainer = await this.findNamedContainer();
+      if (existingNamedContainer) {
+        this.ensureExpectedNamedContainer(existingNamedContainer);
+        await this.removeContainerById(existingNamedContainer.Id);
+      }
+
+      if (!omitPull) {
+        await this.pullContainerImage();
+      }
+
+      const container = await this.createContainer();
+      await container.start();
+
+      this.container = container;
+      this.containerId = container.id;
+
+      if (this.emitContainerLogs) {
+        await this.streamContainerLogs(container);
+      }
+
+      await this.waitUntilReady(container.id);
+      return container;
+    } catch (error) {
+      throw ensureQuickstartError(
+        error,
+        new CONTAINER_ERROR({
+          message: "Failed to start the Stellar test ledger.",
+          details:
+            "Quickstart could not finish creating, starting, or preparing the requested test ledger container.",
+          data: {
+            containerName: this.containerName,
+            imageName: this.fullContainerImageName,
+            omitPull,
+          },
+          cause: error,
+        }),
+      );
+    }
+  }
+
+  /**
+   * Stops the tracked quickstart container without removing it.
+   *
+   * @returns A promise that resolves after the stop request completes.
+   * @throws {CONTAINER_ERROR} If Docker rejects the stop request.
+   */
+  public async stop(): Promise<void> {
+    if (this.useRunningLedger || !this.container) {
+      return;
+    }
+
+    try {
+      await stopContainer(this.container);
+    } catch (error) {
+      throw ensureQuickstartError(
+        error,
+        new CONTAINER_ERROR({
+          message: "Failed to stop the Stellar test ledger.",
+          details:
+            "Docker rejected the stop request for the tracked quickstart container.",
+          data: {
+            containerName: this.containerName,
+            containerId: this.containerId,
+          },
+          cause: error,
+        }),
+      );
+    }
+  }
+
+  /**
+   * Removes the tracked quickstart container and any attached named volumes.
+   *
+   * @returns A promise that resolves after cleanup completes.
+   * @throws {CONTAINER_ERROR} If Docker rejects the remove request.
+   */
+  public async destroy(): Promise<void> {
+    if (this.useRunningLedger || !this.containerId) {
+      return;
+    }
+
+    try {
+      await this.removeContainerById(this.containerId);
+      this.container = undefined;
+      this.containerId = undefined;
+    } catch (error) {
+      throw ensureQuickstartError(
+        error,
+        new CONTAINER_ERROR({
+          message: "Failed to destroy the Stellar test ledger.",
+          details:
+            "Docker rejected the request to remove the tracked quickstart container.",
+          data: {
+            containerName: this.containerName,
+            containerId: this.containerId,
+          },
+          cause: error,
+        }),
       );
     }
   }

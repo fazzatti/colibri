@@ -1,31 +1,24 @@
-// import {
-//   StellarTestLedger,
-//   LogLevelDesc,
-//   Container,
-// } from "../test-tooling/mod.ts";
-// console.log("test local");
+import { StellarTestLedger, type LogLevelDesc } from "../test-tooling/mod.ts";
 
-// const logLevel: LogLevelDesc = "debug";
-// const stellarTestLedger = new StellarTestLedger({ logLevel });
+const logLevel: LogLevelDesc = "debug";
+const stellarTestLedger = new StellarTestLedger({ logLevel });
 
-// console.log("Starting container...");
-// try {
-//   const container: Container = await stellarTestLedger.start();
-//   console.log("Container started");
-// } catch (error) {
-//   console.error("Failed to start container:", error);
-//   throw error;
-// }
-
-import Docker from "npm:dockerode";
-
-const docker = new Docker();
-console.log("Testing Docker connection...");
+console.log("Starting Stellar test ledger...");
 
 try {
-  const info = await docker.info();
-  console.log("Docker connected successfully!");
-  console.log("Docker version:", info.ServerVersion);
+  await stellarTestLedger.start();
+  console.log("Container started");
+
+  const networkConfig = await stellarTestLedger.getNetworkConfiguration();
+  console.log("Resolved network:", networkConfig.horizonUrl);
+
+  const horizonResponse = await fetch(networkConfig.horizonUrl as string);
+  console.log("Horizon status:", horizonResponse.status);
+  await horizonResponse.text();
 } catch (error) {
-  console.error("Docker connection failed:", error);
+  console.error("Smoke test failed:", error);
+  throw error;
+} finally {
+  await stellarTestLedger.stop();
+  await stellarTestLedger.destroy();
 }
