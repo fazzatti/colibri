@@ -45,7 +45,11 @@ const normalizeCause = (cause?: unknown): Error | null => {
     return new Error(cause);
   }
 
-  return new Error(JSON.stringify(cause));
+  try {
+    return new Error(JSON.stringify(cause));
+  } catch {
+    return new Error(String(cause));
+  }
 };
 
 /**

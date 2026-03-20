@@ -41,7 +41,7 @@ import {
 const DEFAULTS = Object.freeze({
   containerName: "colibri-stellar-test-ledger",
   imageName: "stellar/quickstart",
-  imageVersion: SupportedImageVersions.LASTEST,
+  imageVersion: SupportedImageVersions.LATEST,
   network: NetworkEnv.LOCAL,
   limits: ResourceLimits.TESTNET,
   useRunningLedger: false,
@@ -95,7 +95,7 @@ export class StellarTestLedger implements IStellarTestLedger {
   public readonly containerImageName: string;
 
   /** The Docker image tag used to start the ledger. */
-  public readonly containerImageVersion: SupportedImageVersions | string;
+  public readonly containerImageVersion: SupportedImageVersions;
 
   private readonly useRunningLedger: boolean;
   private readonly emitContainerLogs: boolean;
@@ -163,7 +163,7 @@ export class StellarTestLedger implements IStellarTestLedger {
 
     if (
       !Object.values(SupportedImageVersions).includes(
-        this.containerImageVersion as SupportedImageVersions,
+        this.containerImageVersion,
       )
     ) {
       throw new INVALID_CONFIGURATION({
