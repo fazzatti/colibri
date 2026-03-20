@@ -17,7 +17,7 @@ import {
 import {
   NetworkEnv,
   ResourceLimits,
-  SupportedImageVersions,
+  type SupportedImageVersions,
   type TestLedgerOptions,
 } from "@/quickstart/types.ts";
 import type { ContainerInspectInfo, DockerClientLike } from "@/quickstart/runtime.ts";
@@ -64,8 +64,9 @@ const createMockContainer = (
 
   const container = {
     id: options?.id || inspectInfo.Id,
-    start: async () => {
+    start: () => {
       state.startCalls += 1;
+      return Promise.resolve();
     },
     stop: (
       _opts: Record<string, unknown>,
@@ -74,16 +75,17 @@ const createMockContainer = (
       state.stopCalls += 1;
       callback(options?.stopError);
     },
-    remove: async (removeOptions?: Record<string, unknown>) => {
+    remove: (removeOptions?: Record<string, unknown>) => {
       state.removeCalls.push(removeOptions || {});
+      return Promise.resolve();
     },
-    inspect: async () => {
+    inspect: () => {
       if (options?.inspectError) {
-        throw options.inspectError;
+        return Promise.reject(options.inspectError);
       }
-      return inspectInfo;
+      return Promise.resolve(inspectInfo);
     },
-    logs: async () => logStream,
+    logs: () => Promise.resolve(logStream),
   } as unknown as Container;
 
   return { container, state, logStream };
@@ -102,16 +104,17 @@ const createDockerHarness = (
   const dockerClient: DockerClientLike & {
     createContainer: (options: Record<string, unknown>) => Promise<Container>;
   } = {
-    listContainers: async () => listContainers,
+    listContainers: () => Promise.resolve(listContainers),
     getContainer: (id: string) => containers.get(id)!,
     getVolume: (name: string) => ({
-      remove: async () => {
+      remove: () => {
         removedVolumes.push(name);
+        return Promise.resolve();
       },
     }),
-    createContainer: async (options: Record<string, unknown>) => {
+    createContainer: (options: Record<string, unknown>) => {
       createCalls.push(options);
-      return created.container;
+      return Promise.resolve(created.container);
     },
     pull: (_image, _options, callback) => {
       pullCalls += 1;
@@ -377,9 +380,8 @@ Deno.test("public APIs wrap unexpected underlying failures in quickstart errors"
   const harness = createDockerHarness();
   const ledger = new TestLedger(undefined, harness.dockerClient);
 
-  harness.dockerClient.createContainer = async () => {
-    throw new Error("cannot create");
-  };
+  harness.dockerClient.createContainer = () =>
+    Promise.reject(new Error("cannot create"));
 
   const startError = await assertRejects(
     () => ledger.start(true),

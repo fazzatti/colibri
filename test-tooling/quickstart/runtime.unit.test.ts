@@ -94,13 +94,14 @@ const createFakeContainer = (
 
   return {
     id,
-    inspect: async () => inspectInfo,
-    remove: async (removeOptions?: Record<string, unknown>) => {
+    inspect: () => Promise.resolve(inspectInfo),
+    remove: (removeOptions?: Record<string, unknown>) => {
       options?.onRemove?.(removeOptions || {});
+      return Promise.resolve();
     },
     stop: (_opts: Record<string, unknown>, callback: (error?: unknown) => void) =>
       callback(options?.stopError),
-    logs: async () => logStream,
+    logs: () => Promise.resolve(logStream),
   } as unknown as Container;
 };
 
@@ -109,7 +110,7 @@ Deno.test("hasContainerName and findContainerByName match Docker names", async (
     Names: ["/colibri-stellar-test-ledger"],
   } as ContainerInfo;
   const dockerClient = {
-    listContainers: async () => [target],
+    listContainers: () => Promise.resolve([target]),
   } as unknown as DockerClientLike;
 
   assertEquals(hasContainerName(target, "colibri-stellar-test-ledger"), true);
@@ -125,12 +126,13 @@ Deno.test("hasContainerName and findContainerByName match Docker names", async (
     () =>
       findContainerByName("broken", {
         dockerClient: {
-          listContainers: async () => {
-            throw new CONTAINER_ERROR({
-              message: "already wrapped",
-              details: "wrapped",
-            });
-          },
+          listContainers: () =>
+            Promise.reject(
+              new CONTAINER_ERROR({
+                message: "already wrapped",
+                details: "wrapped",
+              })
+            ),
         } as unknown as DockerClientLike,
       }),
     CONTAINER_ERROR,
@@ -172,11 +174,12 @@ Deno.test("removeContainerAndVolumes stops running containers and removes only v
   const dockerClient = {
     getContainer: () => container,
     getVolume: (name: string) => ({
-      remove: async () => {
+      remove: () => {
         if (name === "broken-volume") {
-          throw new Error("broken");
+          return Promise.reject(new Error("broken"));
         }
         removedVolumes.push(name);
+        return Promise.resolve();
       },
     }),
   } as unknown as DockerClientLike;
@@ -207,7 +210,7 @@ Deno.test("removeContainerAndVolumes handles stopped containers with no mounts",
   const dockerClient = {
     getContainer: () => container,
     getVolume: () => ({
-      remove: async () => undefined,
+      remove: () => Promise.resolve(undefined),
     }),
   } as unknown as DockerClientLike;
 
@@ -219,9 +222,7 @@ Deno.test("removeContainerAndVolumes handles stopped containers with no mounts",
 Deno.test("removeContainerAndVolumes wraps unexpected failures", async () => {
   const dockerClient = {
     getContainer: () => ({
-      inspect: async () => {
-        throw new Error("inspect failed");
-      },
+      inspect: () => Promise.reject(new Error("inspect failed")),
     }),
   } as unknown as DockerClientLike;
 
@@ -454,8 +455,9 @@ Deno.test("pullImage retries and eventually succeeds or fails", async () => {
 
   const result = await pullImage("stellar/quickstart:latest", {
     retries: 2,
-    sleepFn: async (delay) => {
+    sleepFn: (delay) => {
       delays.push(delay);
+      return Promise.resolve();
     },
     dockerClient: {
       pull: (
@@ -550,9 +552,7 @@ Deno.test("streamContainerLogs filters noise and accepts string and binary chunk
 Deno.test("streamContainerLogs wraps attachment failures", async () => {
   const { logger } = createLoggerSpy();
   const container = {
-    logs: async () => {
-      throw new Error("attach failed");
-    },
+    logs: () => Promise.reject(new Error("attach failed")),
   } as unknown as Container;
 
   const error = await assertRejects(
@@ -579,22 +579,25 @@ Deno.test("waitForLedgerReady succeeds after transient failures", async () => {
   await waitForLedgerReady({
     containerId: "container-id",
     dockerClient,
-    sleepFn: async () => {
+    sleepFn: () => {
       sleepCalls += 1;
+      return Promise.resolve();
     },
-    fetchFn: async (input) => {
+    fetchFn: (input) => {
       fetchCalls += 1;
       const url = String(input);
 
       if (fetchCalls === 1) {
-        return new Response("booting", { status: 503 });
+        return Promise.resolve(new Response("booting", { status: 503 }));
       }
 
       if (url.endsWith("/rpc")) {
-        return new Response('{"status":"healthy"}', { status: 200 });
+        return Promise.resolve(
+          new Response('{"status":"healthy"}', { status: 200 })
+        );
       }
 
-      return new Response("ok", { status: 200 });
+      return Promise.resolve(new Response("ok", { status: 200 }));
     },
   });
 
@@ -626,7 +629,7 @@ Deno.test("waitForLedgerReady times out with both Error and string failures", as
         } as unknown as DockerClientLike,
         timeoutMs: 15,
         nowFn: stalledNow,
-        sleepFn: async () => undefined,
+        sleepFn: () => Promise.resolve(undefined),
       }),
     READINESS_ERROR,
     "Container is not running"
@@ -647,10 +650,8 @@ Deno.test("waitForLedgerReady times out with both Error and string failures", as
         } as unknown as DockerClientLike,
         timeoutMs: 15,
         nowFn: throwingNow,
-        sleepFn: async () => undefined,
-        fetchFn: async () => {
-          throw "boom";
-        },
+        sleepFn: () => Promise.resolve(undefined),
+        fetchFn: () => Promise.reject("boom"),
       }),
     READINESS_ERROR,
     '"boom"'
@@ -673,14 +674,16 @@ Deno.test("waitForLedgerReady times out when the RPC endpoint is unhealthy", asy
         } as unknown as DockerClientLike,
         timeoutMs: 15,
         nowFn: rpcNow,
-        sleepFn: async () => undefined,
-        fetchFn: async (input) => {
+        sleepFn: () => Promise.resolve(undefined),
+        fetchFn: (input) => {
           const url = String(input);
           if (url.endsWith("/rpc")) {
-            return new Response('{"status":"starting"}', { status: 200 });
+            return Promise.resolve(
+              new Response('{"status":"starting"}', { status: 200 })
+            );
           }
 
-          return new Response("ok", { status: 200 });
+          return Promise.resolve(new Response("ok", { status: 200 }));
         },
       }),
     READINESS_ERROR,
