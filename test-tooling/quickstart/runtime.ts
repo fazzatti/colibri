@@ -88,7 +88,11 @@ const formatError = (error: unknown): string => {
     return error.message;
   }
 
-  return JSON.stringify(error);
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
 };
 
 /**

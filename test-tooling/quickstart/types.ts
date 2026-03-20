@@ -103,7 +103,7 @@ export interface TestLedgerOptions {
    *
    * Supported tags are listed in `SupportedImageVersions`.
    */
-  readonly containerImageVersion?: SupportedImageVersions | string;
+  readonly containerImageVersion?: SupportedImageVersions;
 
   /**
    * Stream container stdout/stderr into the configured logger.
@@ -140,7 +140,7 @@ export enum NetworkEnv {
  */
 export enum SupportedImageVersions {
   /** Tracks the latest published quickstart image. */
-  LASTEST = "latest",
+  LATEST = "latest",
   /** Tracks the latest `v425` quickstart build. */
   V425_LATEST = "v425-latest",
   /** Tracks the latest `pr757` quickstart build. */

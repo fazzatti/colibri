@@ -15,7 +15,7 @@ import { findContainerByName } from "@/quickstart/runtime.ts";
 import type { SupportedImageVersions } from "@/quickstart/types.ts";
 import type { Container } from "dockerode";
 
-describe("StellarTestLEdger", () => {
+describe("StellarTestLedger", () => {
   const logLevel: LogLevelDesc = "silent";
   const stellarTestLedger = new StellarTestLedger({ logLevel });
 
