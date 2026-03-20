@@ -1,0 +1,188 @@
+import {
+  assertEquals,
+  assertExists,
+  assertThrows,
+} from "@std/assert";
+import { realpathSync } from "node:fs";
+import { Code, DOCKER_CONFIGURATION_ERROR } from "@/quickstart/error.ts";
+import {
+  autoDetectDockerOptions,
+  createDockerClient,
+  parseDockerHost,
+  resolveDockerOptions,
+  resolveSocketCandidatePaths,
+} from "@/quickstart/docker.ts";
+
+Deno.test("parseDockerHost supports unix, npipe, plain paths, tcp, and https", () => {
+  assertEquals(parseDockerHost("unix:///tmp/docker.sock"), {
+    socketPath: "/tmp/docker.sock",
+  });
+  assertEquals(parseDockerHost("npipe://./pipe/docker_engine"), {
+    socketPath: "./pipe/docker_engine",
+  });
+  assertEquals(parseDockerHost("/tmp/docker.sock"), {
+    socketPath: "/tmp/docker.sock",
+  });
+  assertEquals(parseDockerHost("tcp://docker.example:2375"), {
+    protocol: "http",
+    host: "docker.example",
+    port: 2375,
+  });
+  assertEquals(parseDockerHost("tcp://docker.example"), {
+    protocol: "http",
+    host: "docker.example",
+    port: 2375,
+  });
+  assertEquals(parseDockerHost("https://docker.example"), {
+    protocol: "https",
+    host: "docker.example",
+    port: 2376,
+  });
+});
+
+Deno.test("parseDockerHost rejects empty and unsupported values", () => {
+  const emptyError = assertThrows(
+    () => parseDockerHost("   "),
+    DOCKER_CONFIGURATION_ERROR,
+  );
+  assertEquals(emptyError.code, Code.DOCKER_CONFIGURATION_ERROR);
+
+  const protocolError = assertThrows(
+    () => parseDockerHost("ssh://docker.example"),
+    DOCKER_CONFIGURATION_ERROR,
+  );
+  assertEquals(protocolError.code, Code.DOCKER_CONFIGURATION_ERROR);
+});
+
+Deno.test("resolveSocketCandidatePaths deduplicates symlinked paths", async () => {
+  const tempDir = await Deno.makeTempDir();
+  const socketFile = `${tempDir}/docker.sock`;
+  const symlinkFile = `${tempDir}/docker-link.sock`;
+
+  await Deno.writeTextFile(socketFile, "");
+  await Deno.symlink(socketFile, symlinkFile);
+
+  try {
+    const paths = resolveSocketCandidatePaths([
+      socketFile,
+      symlinkFile,
+      `${tempDir}/missing.sock`,
+    ]);
+
+    assertEquals(paths, [realpathSync(socketFile)]);
+  } finally {
+    await Deno.remove(tempDir, { recursive: true });
+  }
+});
+
+Deno.test("autoDetectDockerOptions handles zero, one, and many candidates", async () => {
+  assertEquals(autoDetectDockerOptions([]), undefined);
+
+  const tempDir = await Deno.makeTempDir();
+  const first = `${tempDir}/one.sock`;
+  const second = `${tempDir}/two.sock`;
+
+  await Deno.writeTextFile(first, "");
+  await Deno.writeTextFile(second, "");
+
+  try {
+    assertEquals(autoDetectDockerOptions([first]), {
+      socketPath: realpathSync(first),
+    });
+
+    const error = assertThrows(
+      () => autoDetectDockerOptions([first, second]),
+      DOCKER_CONFIGURATION_ERROR,
+    );
+    assertEquals(error.code, Code.DOCKER_CONFIGURATION_ERROR);
+  } finally {
+    await Deno.remove(tempDir, { recursive: true });
+  }
+});
+
+Deno.test("resolveDockerOptions honors explicit options and DOCKER_HOST", () => {
+  const previousDockerHost = Deno.env.get("DOCKER_HOST");
+  Deno.env.delete("DOCKER_HOST");
+
+  try {
+    assertEquals(
+      resolveDockerOptions({
+        dockerOptions: { host: "docker.internal", port: 2375 },
+      }),
+      {
+        host: "docker.internal",
+        port: 2375,
+      }
+    );
+
+    assertEquals(
+      resolveDockerOptions({
+        dockerOptions: { host: "docker.internal", port: 2375 },
+        dockerSocketPath: "/tmp/docker.sock",
+      }),
+      {
+        host: "docker.internal",
+        port: 2375,
+        socketPath: "/tmp/docker.sock",
+      }
+    );
+
+    assertEquals(
+      resolveDockerOptions({ dockerSocketPath: "/tmp/docker.sock" }),
+      {
+        socketPath: "/tmp/docker.sock",
+      }
+    );
+
+    Deno.env.set("DOCKER_HOST", "unix:///tmp/from-env.sock");
+    assertEquals(resolveDockerOptions(), {
+      socketPath: "/tmp/from-env.sock",
+    });
+  } finally {
+    if (previousDockerHost) {
+      Deno.env.set("DOCKER_HOST", previousDockerHost);
+    } else {
+      Deno.env.delete("DOCKER_HOST");
+    }
+  }
+});
+
+Deno.test("resolveDockerOptions can use injected auto-detection dependencies", () => {
+  assertEquals(
+    resolveDockerOptions(undefined, {
+      dockerHost: undefined,
+      autoDetectDockerOptions: () => ({ socketPath: "/tmp/docker.sock" }),
+    }),
+    {
+      socketPath: "/tmp/docker.sock",
+    }
+  );
+
+  assertEquals(
+    resolveDockerOptions(undefined, {
+      dockerHost: undefined,
+      autoDetectDockerOptions: () => undefined,
+    }),
+    {}
+  );
+});
+
+Deno.test("resolveDockerOptions rejects conflicting socket settings", () => {
+  const error = assertThrows(
+    () =>
+      resolveDockerOptions({
+        dockerOptions: { socketPath: "/tmp/one.sock" },
+        dockerSocketPath: "/tmp/two.sock",
+      }),
+    DOCKER_CONFIGURATION_ERROR,
+  );
+  assertEquals(error.code, Code.DOCKER_CONFIGURATION_ERROR);
+});
+
+Deno.test("createDockerClient instantiates a Dockerode client", () => {
+  const client = createDockerClient({
+    dockerOptions: { socketPath: "/tmp/docker.sock" },
+  });
+
+  assertExists(client);
+});
