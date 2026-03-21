@@ -54,6 +54,10 @@
 
 - [SEP-10](packages/sep10.md)
 
+## @colibri/test-tooling
+
+- [Test Tooling](packages/test-tooling.md)
+
 ## Plugins
 
 - [Plugins](packages/plugins/README.md)

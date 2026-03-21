@@ -29,6 +29,7 @@ Colibri is organized into separate packages so projects can select only the tool
 | **@colibri/core**            | Core primitives for Stellar/Soroban development | [![JSR](https://jsr.io/badges/@colibri/core)](https://jsr.io/@colibri/core)                       |
 | **@colibri/sep10**           | SEP-10 Web Authentication client                | [![JSR](https://jsr.io/badges/@colibri/sep10)](https://jsr.io/@colibri/sep10)                     |
 | **@colibri/rpc-streamer**    | Real-time and historical data streaming         | [![JSR](https://jsr.io/badges/@colibri/rpc-streamer)](https://jsr.io/@colibri/rpc-streamer)       |
+| **@colibri/test-tooling**    | Docker-backed integration test harnesses        | [![JSR](https://jsr.io/badges/@colibri/test-tooling)](https://jsr.io/@colibri/test-tooling)       |
 | **@colibri/plugin-fee-bump** | Fee bump plugin for sponsored transactions      | [![JSR](https://jsr.io/badges/@colibri/plugin-fee-bump)](https://jsr.io/@colibri/plugin-fee-bump) |
 
 ## Quick Example
