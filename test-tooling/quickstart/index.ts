@@ -107,6 +107,7 @@ export class StellarTestLedger implements IStellarTestLedger {
   private readonly log: LoggerLike;
   private readonly logLevel: LogLevelDesc;
   private readonly dockerConnection: DockerConnectionConfig;
+  private dockerClientCache: ReturnType<typeof createDockerClient> | undefined;
 
   /** The currently tracked Docker container, if one has been started or attached. */
   public container: Container | undefined;
@@ -219,7 +220,7 @@ export class StellarTestLedger implements IStellarTestLedger {
    * Creates the Docker client used by this instance.
    */
   protected getDockerClient() {
-    return createDockerClient(this.dockerConnection);
+    return this.dockerClientCache ??= createDockerClient(this.dockerConnection);
   }
 
   /**
@@ -472,6 +473,8 @@ export class StellarTestLedger implements IStellarTestLedger {
         const inspectInfo = await this.getContainerInfo();
         const publishedPorts = inspectInfo.NetworkSettings.Ports?.["8000/tcp"];
 
+        // Reused ledgers may be reachable via Docker/container networking only.
+        // Only run HTTP readiness checks when Docker published the quickstart port.
         if (publishedPorts && publishedPorts.length > 0) {
           await this.waitUntilReady(containerInfo.Id);
         }

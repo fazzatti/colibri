@@ -1,5 +1,6 @@
 import {
   assertEquals,
+  assertInstanceOf,
   assertRejects,
   assertStrictEquals,
   assertThrows,
@@ -305,6 +306,40 @@ Deno.test("getPublicPort validates mappings", () => {
     CONTAINER_ERROR,
   );
   assertStrictEquals(invalidPortError.code, Code.CONTAINER_ERROR);
+
+  const zeroPortError = assertThrows(
+    () =>
+      getPublicPort(
+        8000,
+        createInspectInfo({
+          NetworkSettings: {
+            Ports: {
+              "8000/tcp": [{ HostPort: "0" }],
+            },
+            Networks: {},
+          },
+        }),
+      ),
+    CONTAINER_ERROR,
+  );
+  assertStrictEquals(zeroPortError.code, Code.CONTAINER_ERROR);
+
+  const outOfRangePortError = assertThrows(
+    () =>
+      getPublicPort(
+        8000,
+        createInspectInfo({
+          NetworkSettings: {
+            Ports: {
+              "8000/tcp": [{ HostPort: "70000" }],
+            },
+            Networks: {},
+          },
+        }),
+      ),
+    CONTAINER_ERROR,
+  );
+  assertStrictEquals(outOfRangePortError.code, Code.CONTAINER_ERROR);
 });
 
 Deno.test("getContainerIpAddress returns the first network IP and validates missing networks", () => {
@@ -736,6 +771,32 @@ Deno.test("streamContainerLogs wraps attachment failures", async () => {
     "Failed to stream container logs.",
   );
   assertStrictEquals(error.code, Code.CONTAINER_ERROR);
+});
+
+Deno.test("streamContainerLogs flushes buffered data and logs stream errors", async () => {
+  const stream = new EventEmitter();
+  const { logger, messages } = createLoggerSpy();
+  const container = createFakeContainer(createInspectInfo(), {
+    logStream: stream,
+  });
+
+  await streamContainerLogs({
+    container,
+    logger,
+    tag: "[ledger]",
+  });
+
+  stream.emit("data", new TextEncoder().encode("plain"));
+  const emitted = stream.emit("error", new Error("stream failed"));
+
+  assertEquals(emitted, true);
+  assertEquals(messages.debug, [["[ledger] plain"]]);
+  assertEquals(messages.error.length, 1);
+  assertInstanceOf(messages.error[0][0], CONTAINER_ERROR);
+  assertStrictEquals(
+    (messages.error[0][0] as CONTAINER_ERROR).code,
+    Code.CONTAINER_ERROR,
+  );
 });
 
 Deno.test("waitForLedgerReady succeeds after transient failures", async () => {

@@ -77,6 +77,7 @@ type WaitForLedgerReadyOptions = RuntimeConfig & {
 
 const QUICKSTART_PORT = 8000;
 const DOCKER_LOG_HEADER_LENGTH = 8;
+const MAX_TCP_PORT = 65535;
 
 /**
  * Sleeps for the given number of milliseconds.
@@ -387,11 +388,14 @@ export const getPublicPort = (
   }
 
   const publicPort = Number(mapping[0].HostPort);
-  if (!Number.isInteger(publicPort)) {
+  if (
+    !Number.isInteger(publicPort) || publicPort < 1 ||
+    publicPort > MAX_TCP_PORT
+  ) {
     throw new CONTAINER_ERROR({
       message: `Invalid public port mapping for ${key}.`,
       details:
-        "Docker reported a host port mapping, but the value was not a valid integer.",
+        "Docker reported a host port mapping, but the value was not a valid TCP port in the range 1-65535.",
       data: {
         containerId: containerInfo.Id,
         privatePort,
@@ -564,20 +568,35 @@ export const streamContainerLogs = async (options: {
     });
     const ignoredMessages = new Set(["\r\n", "+\r\n", ".\r\n"]);
     const decoder = createDockerLogDecoder();
+    const logMessage = (message: string | undefined) => {
+      if (message && !ignoredMessages.has(message)) {
+        options.logger.debug(`${options.tag} ${message}`);
+      }
+    };
 
     logStream.on("data", (chunk: Uint8Array | string) => {
       for (const message of decoder.decodeChunk(chunk)) {
-        if (!ignoredMessages.has(message)) {
-          options.logger.debug(`${options.tag} ${message}`);
-        }
+        logMessage(message);
       }
     });
 
     logStream.on("end", () => {
-      const message = decoder.flush();
-      if (message && !ignoredMessages.has(message)) {
-        options.logger.debug(`${options.tag} ${message}`);
-      }
+      logMessage(decoder.flush());
+    });
+
+    logStream.on("error", (error: unknown) => {
+      logMessage(decoder.flush());
+      options.logger.error(
+        ensureQuickstartError(
+          error,
+          new CONTAINER_ERROR({
+            message: "Error while streaming container logs.",
+            details:
+              "Docker emitted an error while quickstart was following the container log stream.",
+            cause: error,
+          }),
+        ),
+      );
     });
   } catch (error) {
     throw ensureQuickstartError(

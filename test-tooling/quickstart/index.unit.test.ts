@@ -231,6 +231,20 @@ Deno.test("constructor preserves numeric TRACE log levels", () => {
   }
 });
 
+Deno.test("constructor reuses the same Docker client instance", () => {
+  class ExposedLedger extends StellarTestLedger {
+    public exposeDockerClient() {
+      return this.getDockerClient();
+    }
+  }
+
+  const ledger = new ExposedLedger({
+    dockerOptions: { socketPath: "/var/run/docker.sock" },
+  });
+
+  assertStrictEquals(ledger.exposeDockerClient(), ledger.exposeDockerClient());
+});
+
 Deno.test("getContainer throws before the ledger starts", () => {
   const harness = createDockerHarness();
   const ledger = new TestLedger(undefined, harness.dockerClient);

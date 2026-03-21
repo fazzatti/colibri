@@ -19,6 +19,10 @@ type ResolveDockerOptionsDependencies = {
   readonly autoDetectDockerOptions?: () => Dockerode.DockerOptions | undefined;
 };
 
+type ResolvePublishedPortHostDependencies = {
+  readonly dockerHost?: string;
+};
+
 const COMMON_DOCKER_SOCKET_PATHS = [
   "/var/run/docker.sock",
   `${homedir()}/.docker/run/docker.sock`,
@@ -187,7 +191,9 @@ export const resolveDockerOptions = (
     return { socketPath: dockerSocketPath };
   }
 
-  const dockerHost = dependencies?.dockerHost ?? process.env.DOCKER_HOST;
+  const dockerHost = dependencies && "dockerHost" in dependencies
+    ? dependencies.dockerHost
+    : process.env.DOCKER_HOST;
   if (dockerHost) {
     return parseDockerHost(dockerHost);
   }
@@ -203,6 +209,7 @@ export const resolveDockerOptions = (
  */
 export const resolvePublishedPortHost = (
   config?: DockerConnectionConfig,
+  dependencies?: ResolvePublishedPortHostDependencies,
 ): string => {
   const dockerSocketPath = config?.dockerSocketPath?.trim();
   const dockerOptions = config?.dockerOptions;
@@ -213,7 +220,9 @@ export const resolvePublishedPortHost = (
 
   let host = dockerOptions?.host?.trim();
   if (!host) {
-    const dockerHost = process.env.DOCKER_HOST?.trim();
+    const dockerHost = (dependencies && "dockerHost" in dependencies
+      ? dependencies.dockerHost
+      : process.env.DOCKER_HOST)?.trim();
     if (dockerHost) {
       const parsed = parseDockerHost(dockerHost);
       if (parsed.socketPath) {
