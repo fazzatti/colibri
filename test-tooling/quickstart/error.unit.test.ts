@@ -62,6 +62,22 @@ Deno.test("quickstart errors normalize Error, string, and object causes", () => 
   });
   assertStrictEquals(imageError.meta.cause?.message, '{"status":"bad"}');
   assertEquals(imageError.meta.data, {});
+
+  const circularCause: { label: string; self?: unknown; toString(): string } = {
+    label: "circular",
+    toString() {
+      return "circular-cause";
+    },
+  };
+  circularCause.self = circularCause;
+
+  const fallbackCauseError = new IMAGE_ERROR({
+    message: "Image pull failed.",
+    details: "The daemon rejected the request.",
+    cause: circularCause,
+  });
+  assertStrictEquals(fallbackCauseError.meta.cause?.message, "circular-cause");
+  assertEquals(fallbackCauseError.meta.data, {});
 });
 
 Deno.test("readiness errors include custom payload data", () => {

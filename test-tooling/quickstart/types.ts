@@ -58,19 +58,19 @@ export interface TestLedgerOptions {
    *
    * Only `NetworkEnv.LOCAL` is currently supported.
    */
-  network?: NetworkEnv;
+  readonly network?: NetworkEnv;
 
   /**
    * Soroban resource limits profile to apply.
    *
    * Only `ResourceLimits.TESTNET` is currently supported.
    */
-  limits?: ResourceLimits;
+  readonly limits?: ResourceLimits;
 
   /**
    * Reuse an already-running named ledger instead of creating a new container.
    */
-  useRunningLedger?: boolean;
+  readonly useRunningLedger?: boolean;
 
   /**
    * Custom logger implementation used for lifecycle diagnostics.

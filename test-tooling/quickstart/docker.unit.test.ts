@@ -1,8 +1,4 @@
-import {
-  assertEquals,
-  assertExists,
-  assertThrows,
-} from "@std/assert";
+import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { realpathSync } from "node:fs";
 import { Code, DOCKER_CONFIGURATION_ERROR } from "@/quickstart/error.ts";
 import {
@@ -10,6 +6,7 @@ import {
   createDockerClient,
   parseDockerHost,
   resolveDockerOptions,
+  resolvePublishedPortHost,
   resolveSocketCandidatePaths,
 } from "@/quickstart/docker.ts";
 
@@ -112,7 +109,7 @@ Deno.test("resolveDockerOptions honors explicit options and DOCKER_HOST", () => 
       {
         host: "docker.internal",
         port: 2375,
-      }
+      },
     );
 
     assertEquals(
@@ -124,14 +121,14 @@ Deno.test("resolveDockerOptions honors explicit options and DOCKER_HOST", () => 
         host: "docker.internal",
         port: 2375,
         socketPath: "/tmp/docker.sock",
-      }
+      },
     );
 
     assertEquals(
       resolveDockerOptions({ dockerSocketPath: "/tmp/docker.sock" }),
       {
         socketPath: "/tmp/docker.sock",
-      }
+      },
     );
 
     Deno.env.set("DOCKER_HOST", "unix:///tmp/from-env.sock");
@@ -155,7 +152,7 @@ Deno.test("resolveDockerOptions can use injected auto-detection dependencies", (
     }),
     {
       socketPath: "/tmp/docker.sock",
-    }
+    },
   );
 
   assertEquals(
@@ -163,7 +160,41 @@ Deno.test("resolveDockerOptions can use injected auto-detection dependencies", (
       dockerHost: undefined,
       autoDetectDockerOptions: () => undefined,
     }),
-    {}
+    {},
+  );
+});
+
+Deno.test("resolvePublishedPortHost uses the Docker daemon host when needed", () => {
+  assertEquals(resolvePublishedPortHost(), "127.0.0.1");
+  assertEquals(
+    resolvePublishedPortHost({
+      dockerOptions: { socketPath: "/var/run/docker.sock" },
+    }),
+    "127.0.0.1",
+  );
+  assertEquals(
+    resolvePublishedPortHost({
+      dockerOptions: { host: "docker.internal", port: 2375 },
+    }),
+    "docker.internal",
+  );
+  assertEquals(
+    resolvePublishedPortHost({
+      dockerOptions: { port: 2375 },
+    }),
+    "127.0.0.1",
+  );
+  assertEquals(
+    resolvePublishedPortHost({
+      dockerOptions: { host: "0.0.0.0", port: 2375 },
+    }),
+    "127.0.0.1",
+  );
+  assertEquals(
+    resolvePublishedPortHost({
+      dockerOptions: { host: "::1", port: 2375 },
+    }),
+    "[::1]",
   );
 });
 

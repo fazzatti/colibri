@@ -1,5 +1,9 @@
 import type { Container, ContainerInfo } from "dockerode";
-import { createDockerClient, type DockerConnectionConfig } from "@/quickstart/docker.ts";
+import {
+  createDockerClient,
+  type DockerConnectionConfig,
+  resolvePublishedPortHost,
+} from "@/quickstart/docker.ts";
 import {
   CONTAINER_ERROR,
   IMAGE_ERROR,
@@ -8,8 +12,8 @@ import {
 } from "@/quickstart/error.ts";
 import {
   createLogger,
-  type LogLevelDesc,
   type LoggerLike,
+  type LogLevelDesc,
 } from "@/quickstart/logging.ts";
 
 /**
@@ -72,6 +76,7 @@ type WaitForLedgerReadyOptions = RuntimeConfig & {
 };
 
 const QUICKSTART_PORT = 8000;
+const DOCKER_LOG_HEADER_LENGTH = 8;
 
 /**
  * Sleeps for the given number of milliseconds.
@@ -119,6 +124,82 @@ const getDockerClient = (
     config?.dockerClient ||
     (createDockerClient(config) as unknown as DockerClientLike)
   );
+};
+
+const concatBytes = (
+  left: Uint8Array<ArrayBufferLike>,
+  right: Uint8Array<ArrayBufferLike>,
+): Uint8Array<ArrayBufferLike> => {
+  const combined = new Uint8Array(left.length + right.length);
+  combined.set(left);
+  combined.set(right, left.length);
+  return combined;
+};
+
+const createDockerLogDecoder = () => {
+  const textDecoder = new TextDecoder();
+  let pending: Uint8Array<ArrayBufferLike> = new Uint8Array();
+
+  const decodeChunk = (chunk: Uint8Array | string): string[] => {
+    if (typeof chunk === "string") {
+      return [chunk];
+    }
+
+    pending = concatBytes(pending, chunk);
+    const messages: string[] = [];
+
+    while (pending.length > 0) {
+      if (pending.length < DOCKER_LOG_HEADER_LENGTH) {
+        break;
+      }
+
+      const streamType = pending[0];
+      const isHeader = (streamType === 1 || streamType === 2) &&
+        pending[1] === 0 &&
+        pending[2] === 0 &&
+        pending[3] === 0;
+
+      if (!isHeader) {
+        messages.push(textDecoder.decode(pending));
+        pending = new Uint8Array();
+        break;
+      }
+
+      const payloadLength = (pending[4] << 24) |
+        (pending[5] << 16) |
+        (pending[6] << 8) |
+        pending[7];
+      const frameLength = DOCKER_LOG_HEADER_LENGTH + payloadLength;
+
+      if (pending.length < frameLength) {
+        break;
+      }
+
+      messages.push(
+        textDecoder.decode(
+          pending.subarray(DOCKER_LOG_HEADER_LENGTH, frameLength),
+        ),
+      );
+      pending = pending.subarray(frameLength);
+    }
+
+    return messages;
+  };
+
+  const flush = (): string | undefined => {
+    if (pending.length === 0) {
+      return undefined;
+    }
+
+    const message = textDecoder.decode(pending);
+    pending = new Uint8Array();
+    return message;
+  };
+
+  return {
+    decodeChunk,
+    flush,
+  };
 };
 
 /**
@@ -432,13 +513,19 @@ export const streamContainerLogs = async (options: {
       stdout: true,
     });
     const ignoredMessages = new Set(["\r\n", "+\r\n", ".\r\n"]);
-    const textDecoder = new TextDecoder();
+    const decoder = createDockerLogDecoder();
 
     logStream.on("data", (chunk: Uint8Array | string) => {
-      const message =
-        typeof chunk === "string" ? chunk : textDecoder.decode(chunk);
+      for (const message of decoder.decodeChunk(chunk)) {
+        if (!ignoredMessages.has(message)) {
+          options.logger.debug(`${options.tag} ${message}`);
+        }
+      }
+    });
 
-      if (!ignoredMessages.has(message)) {
+    logStream.on("end", () => {
+      const message = decoder.flush();
+      if (message && !ignoredMessages.has(message)) {
         options.logger.debug(`${options.tag} ${message}`);
       }
     });
@@ -466,7 +553,7 @@ export const waitForLedgerReady = async (
   const sleepFn = options.sleepFn || sleep;
   const nowFn = options.nowFn || Date.now;
   const timeoutMs = options.timeoutMs ?? 180000;
-  const host = options.host || "127.0.0.1";
+  const host = options.host || resolvePublishedPortHost(options);
   const deadline = nowFn() + timeoutMs;
 
   let lastError: unknown;
@@ -478,7 +565,8 @@ export const waitForLedgerReady = async (
 
       if (!inspectInfo.State.Running) {
         throw new READINESS_ERROR({
-          message: `Container is not running (status: ${inspectInfo.State.Status}).`,
+          message:
+            `Container is not running (status: ${inspectInfo.State.Status}).`,
           details:
             "The quickstart container stopped before Horizon and Soroban RPC became ready.",
           data: {
@@ -544,7 +632,9 @@ export const waitForLedgerReady = async (
   }
 
   throw new READINESS_ERROR({
-    message: `waitForLedgerReady timed out after ${timeoutMs}ms: ${formatError(lastError)}`,
+    message: `waitForLedgerReady timed out after ${timeoutMs}ms: ${
+      formatError(lastError)
+    }`,
     details:
       "Quickstart did not expose a healthy Horizon and Soroban RPC pair before the timeout elapsed.",
     data: {
