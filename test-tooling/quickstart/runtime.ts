@@ -126,73 +126,123 @@ const getDockerClient = (
   );
 };
 
-const concatBytes = (
-  left: Uint8Array<ArrayBufferLike>,
-  right: Uint8Array<ArrayBufferLike>,
-): Uint8Array<ArrayBufferLike> => {
-  const combined = new Uint8Array(left.length + right.length);
-  combined.set(left);
-  combined.set(right, left.length);
-  return combined;
-};
-
 const createDockerLogDecoder = () => {
   const textDecoder = new TextDecoder();
-  let pending: Uint8Array<ArrayBufferLike> = new Uint8Array();
+  let buffer = new Uint8Array(0);
+  let readOffset = 0;
+  let writeOffset = 0;
+
+  const reset = () => {
+    buffer = new Uint8Array(0);
+    readOffset = 0;
+    writeOffset = 0;
+  };
+
+  const ensureCapacity = (additional: number) => {
+    if (buffer.length - writeOffset >= additional) {
+      return;
+    }
+
+    const unreadLength = writeOffset - readOffset;
+    if (
+      readOffset > 0 && (buffer.length - unreadLength) >= additional
+    ) {
+      buffer.copyWithin(0, readOffset, writeOffset);
+      writeOffset = unreadLength;
+      readOffset = 0;
+      return;
+    }
+
+    let capacity = Math.max(8192, buffer.length);
+    while ((capacity - unreadLength) < additional) {
+      capacity *= 2;
+    }
+
+    const nextBuffer = new Uint8Array(capacity);
+    if (unreadLength > 0) {
+      nextBuffer.set(buffer.subarray(readOffset, writeOffset));
+    }
+
+    buffer = nextBuffer;
+    readOffset = 0;
+    writeOffset = unreadLength;
+  };
+
+  const appendChunk = (chunk: Uint8Array) => {
+    if (chunk.length === 0) {
+      return;
+    }
+
+    ensureCapacity(chunk.length);
+    buffer.set(chunk, writeOffset);
+    writeOffset += chunk.length;
+  };
 
   const decodeChunk = (chunk: Uint8Array | string): string[] => {
     if (typeof chunk === "string") {
       return [chunk];
     }
 
-    pending = concatBytes(pending, chunk);
+    appendChunk(chunk);
     const messages: string[] = [];
 
-    while (pending.length > 0) {
-      if (pending.length < DOCKER_LOG_HEADER_LENGTH) {
+    while (writeOffset > readOffset) {
+      const available = writeOffset - readOffset;
+      if (available < DOCKER_LOG_HEADER_LENGTH) {
         break;
       }
 
-      const streamType = pending[0];
+      const streamType = buffer[readOffset];
       const isHeader = (streamType === 1 || streamType === 2) &&
-        pending[1] === 0 &&
-        pending[2] === 0 &&
-        pending[3] === 0;
+        buffer[readOffset + 1] === 0 &&
+        buffer[readOffset + 2] === 0 &&
+        buffer[readOffset + 3] === 0;
 
       if (!isHeader) {
-        messages.push(textDecoder.decode(pending));
-        pending = new Uint8Array();
+        messages.push(
+          textDecoder.decode(buffer.subarray(readOffset, writeOffset)),
+        );
+        reset();
         break;
       }
 
-      const payloadLength = ((pending[4] << 24) |
-        (pending[5] << 16) |
-        (pending[6] << 8) |
-        pending[7]) >>> 0;
+      const payloadLength = ((buffer[readOffset + 4] << 24) |
+        (buffer[readOffset + 5] << 16) |
+        (buffer[readOffset + 6] << 8) |
+        buffer[readOffset + 7]) >>> 0;
       const frameLength = DOCKER_LOG_HEADER_LENGTH + payloadLength;
 
-      if (pending.length < frameLength) {
+      if (available < frameLength) {
         break;
       }
 
       messages.push(
         textDecoder.decode(
-          pending.subarray(DOCKER_LOG_HEADER_LENGTH, frameLength),
+          buffer.subarray(
+            readOffset + DOCKER_LOG_HEADER_LENGTH,
+            readOffset + frameLength,
+          ),
         ),
       );
-      pending = pending.subarray(frameLength);
+      readOffset += frameLength;
+    }
+
+    if (readOffset === writeOffset) {
+      reset();
     }
 
     return messages;
   };
 
   const flush = (): string | undefined => {
-    if (pending.length === 0) {
+    if (readOffset === writeOffset) {
       return undefined;
     }
 
-    const message = textDecoder.decode(pending);
-    pending = new Uint8Array();
+    const message = textDecoder.decode(
+      buffer.subarray(readOffset, writeOffset),
+    );
+    reset();
     return message;
   };
 

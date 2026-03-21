@@ -204,13 +204,26 @@ export const resolveDockerOptions = (
 export const resolvePublishedPortHost = (
   config?: DockerConnectionConfig,
 ): string => {
-  const dockerOptions = resolveDockerOptions(config);
+  const dockerSocketPath = config?.dockerSocketPath?.trim();
+  const dockerOptions = config?.dockerOptions;
 
-  if (dockerOptions.socketPath) {
+  if (dockerSocketPath || dockerOptions?.socketPath?.trim()) {
     return DEFAULT_PUBLISHED_PORT_HOST;
   }
 
-  const host = dockerOptions.host?.trim();
+  let host = dockerOptions?.host?.trim();
+  if (!host) {
+    const dockerHost = process.env.DOCKER_HOST?.trim();
+    if (dockerHost) {
+      const parsed = parseDockerHost(dockerHost);
+      if (parsed.socketPath) {
+        return DEFAULT_PUBLISHED_PORT_HOST;
+      }
+
+      host = parsed.host?.trim();
+    }
+  }
+
   if (!host) {
     return DEFAULT_PUBLISHED_PORT_HOST;
   }

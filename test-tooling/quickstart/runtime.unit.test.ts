@@ -635,6 +635,83 @@ Deno.test("streamContainerLogs buffers partial docker frames until the payload c
   assertEquals(messages.debug, [["[ledger] split-frame"]]);
 });
 
+Deno.test("streamContainerLogs compacts buffered partial frames before appending more data", async () => {
+  const stream = new EventEmitter();
+  const { logger, messages } = createLoggerSpy();
+  const container = createFakeContainer(createInspectInfo(), {
+    logStream: stream,
+  });
+  const firstMessage = "a".repeat(4000);
+  const secondMessage = "b".repeat(4500);
+  const firstFrame = createDockerLogFrame(firstMessage);
+  const secondFrame = createDockerLogFrame(secondMessage);
+  const secondFrameSplitOffset = 4080;
+  const initialChunk = new Uint8Array(
+    firstFrame.length + secondFrameSplitOffset,
+  );
+
+  initialChunk.set(firstFrame);
+  initialChunk.set(
+    secondFrame.subarray(0, secondFrameSplitOffset),
+    firstFrame.length,
+  );
+
+  await streamContainerLogs({
+    container,
+    logger,
+    tag: "[ledger]",
+  });
+
+  stream.emit("data", initialChunk);
+  assertEquals(messages.debug, [[`[ledger] ${firstMessage}`]]);
+
+  stream.emit("data", secondFrame.subarray(secondFrameSplitOffset));
+  assertEquals(messages.debug, [
+    [`[ledger] ${firstMessage}`],
+    [`[ledger] ${secondMessage}`],
+  ]);
+});
+
+Deno.test("streamContainerLogs grows buffered partial frames when compaction is insufficient", async () => {
+  const stream = new EventEmitter();
+  const { logger, messages } = createLoggerSpy();
+  const container = createFakeContainer(createInspectInfo(), {
+    logStream: stream,
+  });
+  const firstMessage = "a".repeat(4000);
+  const secondMessage = "b".repeat(9000);
+  const firstFrame = createDockerLogFrame(firstMessage);
+  const secondFrame = createDockerLogFrame(secondMessage);
+  const secondFrameSplitOffset = 4080;
+  const initialChunk = new Uint8Array(
+    firstFrame.length + secondFrameSplitOffset,
+  );
+
+  initialChunk.set(firstFrame);
+  initialChunk.set(
+    secondFrame.subarray(0, secondFrameSplitOffset),
+    firstFrame.length,
+  );
+
+  await streamContainerLogs({
+    container,
+    logger,
+    tag: "[ledger]",
+  });
+
+  stream.emit("data", new Uint8Array());
+  assertEquals(messages.debug, []);
+
+  stream.emit("data", initialChunk);
+  assertEquals(messages.debug, [[`[ledger] ${firstMessage}`]]);
+
+  stream.emit("data", secondFrame.subarray(secondFrameSplitOffset));
+  assertEquals(messages.debug, [
+    [`[ledger] ${firstMessage}`],
+    [`[ledger] ${secondMessage}`],
+  ]);
+});
+
 Deno.test("streamContainerLogs wraps attachment failures", async () => {
   const { logger } = createLoggerSpy();
   const container = {

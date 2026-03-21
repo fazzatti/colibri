@@ -168,9 +168,15 @@ Deno.test("resolvePublishedPortHost uses the Docker daemon host when needed", ()
   const previousDockerHost = Deno.env.get("DOCKER_HOST");
 
   try {
-    Deno.env.set("DOCKER_HOST", "tcp://127.0.0.1:2375");
+    Deno.env.delete("DOCKER_HOST");
 
     assertEquals(resolvePublishedPortHost(), "127.0.0.1");
+    assertEquals(
+      resolvePublishedPortHost({
+        dockerSocketPath: "/var/run/docker.sock",
+      }),
+      "127.0.0.1",
+    );
     assertEquals(
       resolvePublishedPortHost({
         dockerOptions: { socketPath: "/var/run/docker.sock" },
@@ -201,6 +207,12 @@ Deno.test("resolvePublishedPortHost uses the Docker daemon host when needed", ()
       }),
       "[::1]",
     );
+
+    Deno.env.set("DOCKER_HOST", "unix:///tmp/from-env.sock");
+    assertEquals(resolvePublishedPortHost(), "127.0.0.1");
+
+    Deno.env.set("DOCKER_HOST", "tcp://docker.internal:2375");
+    assertEquals(resolvePublishedPortHost(), "docker.internal");
   } finally {
     if (previousDockerHost === undefined) {
       Deno.env.delete("DOCKER_HOST");
