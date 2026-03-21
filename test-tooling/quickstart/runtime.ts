@@ -659,7 +659,23 @@ export const waitForLedgerReady = async (
       });
       const rpcBody = await rpcResponse.text();
 
-      if (!rpcResponse.ok || !rpcBody.includes("healthy")) {
+      let healthStatus: string | undefined;
+      try {
+        const parsed = JSON.parse(rpcBody) as {
+          result?: { status?: unknown };
+        };
+        if (
+          parsed &&
+          parsed.result &&
+          typeof parsed.result.status === "string"
+        ) {
+          healthStatus = parsed.result.status;
+        }
+      } catch {
+        // If the body is not valid JSON, treat it as not healthy below.
+      }
+
+      if (!rpcResponse.ok || healthStatus !== "healthy") {
         throw new READINESS_ERROR({
           message:
             `RPC is not ready yet (status: ${rpcResponse.status}, body: ${rpcBody}).`,

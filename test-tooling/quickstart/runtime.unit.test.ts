@@ -756,7 +756,10 @@ Deno.test("waitForLedgerReady succeeds after transient failures", async () => {
 
       if (url.endsWith("/rpc")) {
         return Promise.resolve(
-          new Response('{"status":"healthy"}', { status: 200 }),
+          new Response(
+            '{"jsonrpc":"2.0","id":8675309,"result":{"status":"healthy"}}',
+            { status: 200 },
+          ),
         );
       }
 
@@ -786,7 +789,10 @@ Deno.test("waitForLedgerReady uses the configured Docker host when no override i
 
       if (url.endsWith("/rpc")) {
         return Promise.resolve(
-          new Response('{"status":"healthy"}', { status: 200 }),
+          new Response(
+            '{"jsonrpc":"2.0","id":8675309,"result":{"status":"healthy"}}',
+            { status: 200 },
+          ),
         );
       }
 
@@ -903,7 +909,10 @@ Deno.test("waitForLedgerReady times out when the RPC endpoint is unhealthy", asy
           const url = String(input);
           if (url.endsWith("/rpc")) {
             return Promise.resolve(
-              new Response('{"status":"starting"}', { status: 200 }),
+              new Response(
+                '{"jsonrpc":"2.0","id":8675309,"result":{"status":"starting"}}',
+                { status: 200 },
+              ),
             );
           }
 
