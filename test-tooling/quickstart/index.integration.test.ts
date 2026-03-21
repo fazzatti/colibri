@@ -1,12 +1,12 @@
 import {
-  assertInstanceOf,
-  assertStrictEquals,
-  assertExists,
-  assertRejects,
   assertEquals,
+  assertExists,
+  assertInstanceOf,
+  assertRejects,
+  assertStrictEquals,
 } from "@std/assert";
 
-import { describe, it, afterAll } from "@std/testing/bdd";
+import { afterAll, describe, it } from "@std/testing/bdd";
 import { resolveDockerOptions } from "@/quickstart/docker.ts";
 import { Code, INVALID_CONFIGURATION } from "@/quickstart/error.ts";
 import type { LogLevelDesc } from "@/quickstart/logging.ts";
@@ -55,24 +55,16 @@ describe("StellarTestLedger", () => {
 
   describe("Features", () => {
     it("discovers Docker automatically when no client is injected", async () => {
-      const previousDockerHost = Deno.env.get("DOCKER_HOST");
-      Deno.env.delete("DOCKER_HOST");
+      const dockerOptions = resolveDockerOptions(undefined, {
+        dockerHost: undefined,
+      });
+      assertExists(dockerOptions.socketPath);
 
-      try {
-        const dockerOptions = resolveDockerOptions();
-        assertExists(dockerOptions.socketPath);
-
-        const missingContainer = await findContainerByName(
-          `missing-${crypto.randomUUID()}`
-        );
-        assertEquals(missingContainer, undefined);
-      } finally {
-        if (previousDockerHost) {
-          Deno.env.set("DOCKER_HOST", previousDockerHost);
-        } else {
-          Deno.env.delete("DOCKER_HOST");
-        }
-      }
+      const missingContainer = await findContainerByName(
+        `missing-${crypto.randomUUID()}`,
+        { dockerOptions },
+      );
+      assertEquals(missingContainer, undefined);
     });
 
     it("starts/stops/destroys a valid docker container", async () => {

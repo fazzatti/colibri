@@ -98,50 +98,43 @@ Deno.test("autoDetectDockerOptions handles zero, one, and many candidates", asyn
 });
 
 Deno.test("resolveDockerOptions honors explicit options and DOCKER_HOST", () => {
-  const previousDockerHost = Deno.env.get("DOCKER_HOST");
-  Deno.env.delete("DOCKER_HOST");
+  assertEquals(
+    resolveDockerOptions({
+      dockerOptions: { host: "docker.internal", port: 2375 },
+    }),
+    {
+      host: "docker.internal",
+      port: 2375,
+    },
+  );
 
-  try {
-    assertEquals(
-      resolveDockerOptions({
-        dockerOptions: { host: "docker.internal", port: 2375 },
-      }),
-      {
-        host: "docker.internal",
-        port: 2375,
-      },
-    );
+  assertEquals(
+    resolveDockerOptions({
+      dockerOptions: { host: "docker.internal", port: 2375 },
+      dockerSocketPath: "/tmp/docker.sock",
+    }),
+    {
+      host: "docker.internal",
+      port: 2375,
+      socketPath: "/tmp/docker.sock",
+    },
+  );
 
-    assertEquals(
-      resolveDockerOptions({
-        dockerOptions: { host: "docker.internal", port: 2375 },
-        dockerSocketPath: "/tmp/docker.sock",
-      }),
-      {
-        host: "docker.internal",
-        port: 2375,
-        socketPath: "/tmp/docker.sock",
-      },
-    );
+  assertEquals(
+    resolveDockerOptions({ dockerSocketPath: "/tmp/docker.sock" }),
+    {
+      socketPath: "/tmp/docker.sock",
+    },
+  );
 
-    assertEquals(
-      resolveDockerOptions({ dockerSocketPath: "/tmp/docker.sock" }),
-      {
-        socketPath: "/tmp/docker.sock",
-      },
-    );
-
-    Deno.env.set("DOCKER_HOST", "unix:///tmp/from-env.sock");
-    assertEquals(resolveDockerOptions(), {
+  assertEquals(
+    resolveDockerOptions(undefined, {
+      dockerHost: "unix:///tmp/from-env.sock",
+    }),
+    {
       socketPath: "/tmp/from-env.sock",
-    });
-  } finally {
-    if (previousDockerHost) {
-      Deno.env.set("DOCKER_HOST", previousDockerHost);
-    } else {
-      Deno.env.delete("DOCKER_HOST");
-    }
-  }
+    },
+  );
 });
 
 Deno.test("resolveDockerOptions can use injected auto-detection dependencies", () => {
@@ -165,61 +158,62 @@ Deno.test("resolveDockerOptions can use injected auto-detection dependencies", (
 });
 
 Deno.test("resolvePublishedPortHost uses the Docker daemon host when needed", () => {
-  const previousDockerHost = Deno.env.get("DOCKER_HOST");
-
-  try {
-    Deno.env.delete("DOCKER_HOST");
-
-    assertEquals(resolvePublishedPortHost(), "127.0.0.1");
-    assertEquals(
-      resolvePublishedPortHost({
-        dockerSocketPath: "/var/run/docker.sock",
-      }),
-      "127.0.0.1",
-    );
-    assertEquals(
-      resolvePublishedPortHost({
-        dockerOptions: { socketPath: "/var/run/docker.sock" },
-      }),
-      "127.0.0.1",
-    );
-    assertEquals(
-      resolvePublishedPortHost({
-        dockerOptions: { host: "docker.internal", port: 2375 },
-      }),
-      "docker.internal",
-    );
-    assertEquals(
-      resolvePublishedPortHost({
-        dockerOptions: { port: 2375 },
-      }),
-      "127.0.0.1",
-    );
-    assertEquals(
-      resolvePublishedPortHost({
-        dockerOptions: { host: "0.0.0.0", port: 2375 },
-      }),
-      "127.0.0.1",
-    );
-    assertEquals(
-      resolvePublishedPortHost({
-        dockerOptions: { host: "::1", port: 2375 },
-      }),
-      "[::1]",
-    );
-
-    Deno.env.set("DOCKER_HOST", "unix:///tmp/from-env.sock");
-    assertEquals(resolvePublishedPortHost(), "127.0.0.1");
-
-    Deno.env.set("DOCKER_HOST", "tcp://docker.internal:2375");
-    assertEquals(resolvePublishedPortHost(), "docker.internal");
-  } finally {
-    if (previousDockerHost === undefined) {
-      Deno.env.delete("DOCKER_HOST");
-    } else {
-      Deno.env.set("DOCKER_HOST", previousDockerHost);
-    }
-  }
+  assertEquals(
+    resolvePublishedPortHost(undefined, {
+      dockerHost: undefined,
+    }),
+    "127.0.0.1",
+  );
+  assertEquals(
+    resolvePublishedPortHost({
+      dockerSocketPath: "/var/run/docker.sock",
+    }),
+    "127.0.0.1",
+  );
+  assertEquals(
+    resolvePublishedPortHost({
+      dockerOptions: { socketPath: "/var/run/docker.sock" },
+    }),
+    "127.0.0.1",
+  );
+  assertEquals(
+    resolvePublishedPortHost({
+      dockerOptions: { host: "docker.internal", port: 2375 },
+    }),
+    "docker.internal",
+  );
+  assertEquals(
+    resolvePublishedPortHost({
+      dockerOptions: { port: 2375 },
+    }, {
+      dockerHost: undefined,
+    }),
+    "127.0.0.1",
+  );
+  assertEquals(
+    resolvePublishedPortHost({
+      dockerOptions: { host: "0.0.0.0", port: 2375 },
+    }),
+    "127.0.0.1",
+  );
+  assertEquals(
+    resolvePublishedPortHost({
+      dockerOptions: { host: "::1", port: 2375 },
+    }),
+    "[::1]",
+  );
+  assertEquals(
+    resolvePublishedPortHost(undefined, {
+      dockerHost: "unix:///tmp/from-env.sock",
+    }),
+    "127.0.0.1",
+  );
+  assertEquals(
+    resolvePublishedPortHost(undefined, {
+      dockerHost: "tcp://docker.internal:2375",
+    }),
+    "docker.internal",
+  );
 });
 
 Deno.test("resolveDockerOptions rejects conflicting socket settings", () => {
