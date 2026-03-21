@@ -468,7 +468,14 @@ export class StellarTestLedger implements IStellarTestLedger {
 
         this.containerId = containerInfo.Id;
         this.container = this.getDockerClient().getContainer(containerInfo.Id);
-        await this.waitUntilReady(containerInfo.Id);
+
+        const inspectInfo = await this.getContainerInfo();
+        const publishedPorts = inspectInfo.NetworkSettings.Ports?.["8000/tcp"];
+
+        if (publishedPorts && publishedPorts.length > 0) {
+          await this.waitUntilReady(containerInfo.Id);
+        }
+
         return this.container;
       }
 

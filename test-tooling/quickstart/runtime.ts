@@ -165,10 +165,10 @@ const createDockerLogDecoder = () => {
         break;
       }
 
-      const payloadLength = (pending[4] << 24) |
+      const payloadLength = ((pending[4] << 24) |
         (pending[5] << 16) |
         (pending[6] << 8) |
-        pending[7];
+        pending[7]) >>> 0;
       const frameLength = DOCKER_LOG_HEADER_LENGTH + payloadLength;
 
       if (pending.length < frameLength) {

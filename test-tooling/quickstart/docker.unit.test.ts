@@ -165,37 +165,49 @@ Deno.test("resolveDockerOptions can use injected auto-detection dependencies", (
 });
 
 Deno.test("resolvePublishedPortHost uses the Docker daemon host when needed", () => {
-  assertEquals(resolvePublishedPortHost(), "127.0.0.1");
-  assertEquals(
-    resolvePublishedPortHost({
-      dockerOptions: { socketPath: "/var/run/docker.sock" },
-    }),
-    "127.0.0.1",
-  );
-  assertEquals(
-    resolvePublishedPortHost({
-      dockerOptions: { host: "docker.internal", port: 2375 },
-    }),
-    "docker.internal",
-  );
-  assertEquals(
-    resolvePublishedPortHost({
-      dockerOptions: { port: 2375 },
-    }),
-    "127.0.0.1",
-  );
-  assertEquals(
-    resolvePublishedPortHost({
-      dockerOptions: { host: "0.0.0.0", port: 2375 },
-    }),
-    "127.0.0.1",
-  );
-  assertEquals(
-    resolvePublishedPortHost({
-      dockerOptions: { host: "::1", port: 2375 },
-    }),
-    "[::1]",
-  );
+  const previousDockerHost = Deno.env.get("DOCKER_HOST");
+
+  try {
+    Deno.env.set("DOCKER_HOST", "tcp://127.0.0.1:2375");
+
+    assertEquals(resolvePublishedPortHost(), "127.0.0.1");
+    assertEquals(
+      resolvePublishedPortHost({
+        dockerOptions: { socketPath: "/var/run/docker.sock" },
+      }),
+      "127.0.0.1",
+    );
+    assertEquals(
+      resolvePublishedPortHost({
+        dockerOptions: { host: "docker.internal", port: 2375 },
+      }),
+      "docker.internal",
+    );
+    assertEquals(
+      resolvePublishedPortHost({
+        dockerOptions: { port: 2375 },
+      }),
+      "127.0.0.1",
+    );
+    assertEquals(
+      resolvePublishedPortHost({
+        dockerOptions: { host: "0.0.0.0", port: 2375 },
+      }),
+      "127.0.0.1",
+    );
+    assertEquals(
+      resolvePublishedPortHost({
+        dockerOptions: { host: "::1", port: 2375 },
+      }),
+      "[::1]",
+    );
+  } finally {
+    if (previousDockerHost === undefined) {
+      Deno.env.delete("DOCKER_HOST");
+    } else {
+      Deno.env.set("DOCKER_HOST", previousDockerHost);
+    }
+  }
 });
 
 Deno.test("resolveDockerOptions rejects conflicting socket settings", () => {

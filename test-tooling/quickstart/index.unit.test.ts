@@ -221,7 +221,10 @@ Deno.test("getContainer throws before the ledger starts", () => {
 
 Deno.test("start creates a named container and exposes network information", async () => {
   const harness = createDockerHarness();
-  const ledger = new TestLedger(undefined, harness.dockerClient);
+  const ledger = new TestLedger(
+    { dockerOptions: { socketPath: "/var/run/docker.sock" } },
+    harness.dockerClient,
+  );
 
   await withHealthyFetch(async () => {
     const container = await ledger.start();
@@ -308,6 +311,49 @@ Deno.test("start reuses a running named container when useRunningLedger is enabl
     assertEquals(harness.pullCalls, 0);
     assertEquals(harness.createCalls.length, 0);
     assertEquals(fetchCalls >= 2, true);
+  } finally {
+    fetchStub.restore();
+  }
+});
+
+Deno.test("start can reuse a running named container without published ports", async () => {
+  const harness = createDockerHarness();
+  const existing = createMockContainer(
+    createInspectInfo({
+      NetworkSettings: {
+        Ports: {},
+        Networks: {
+          bridge: { IPAddress: "172.20.0.9" },
+        },
+      },
+    }),
+    {
+      id: "running-container-no-ports",
+    },
+  );
+  harness.containers.set(existing.container.id, existing.container);
+  harness.listContainers.push({
+    Id: "running-container-no-ports",
+    Image: "stellar/quickstart:latest",
+    State: "running",
+    Names: ["/colibri-stellar-test-ledger"],
+  } as ContainerInfo);
+
+  const ledger = new TestLedger(
+    { useRunningLedger: true },
+    harness.dockerClient,
+  );
+  let fetchCalls = 0;
+  const fetchStub = stub(globalThis, "fetch", () => {
+    fetchCalls += 1;
+    return Promise.resolve(new Response("ok", { status: 200 }));
+  });
+
+  try {
+    const attached = await ledger.start();
+
+    assertStrictEquals(attached, existing.container);
+    assertEquals(fetchCalls, 0);
   } finally {
     fetchStub.restore();
   }
