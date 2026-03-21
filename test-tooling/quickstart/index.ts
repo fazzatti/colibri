@@ -189,7 +189,7 @@ export class StellarTestLedger implements IStellarTestLedger {
     this.useRunningLedger = isBooleanStrict(options?.useRunningLedger)
       ? (options?.useRunningLedger as boolean)
       : DEFAULTS.useRunningLedger;
-    this.logLevel = options?.logLevel || DEFAULTS.logLevel;
+    this.logLevel = options?.logLevel ?? DEFAULTS.logLevel;
     this.emitContainerLogs = isBooleanStrict(options?.emitContainerLogs)
       ? (options?.emitContainerLogs as boolean)
       : DEFAULTS.emitContainerLogs;
