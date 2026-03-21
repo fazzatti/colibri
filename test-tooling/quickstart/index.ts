@@ -437,6 +437,8 @@ export class StellarTestLedger implements IStellarTestLedger {
    * ```
    */
   public async start(omitPull = false): Promise<Container> {
+    let createdContainer: Container | undefined;
+
     try {
       if (this.useRunningLedger) {
         const containerInfo = await this.findNamedContainer();
@@ -508,10 +510,11 @@ export class StellarTestLedger implements IStellarTestLedger {
       }
 
       const container = await this.createContainer();
-      await container.start();
-
+      createdContainer = container;
       this.container = container;
       this.containerId = container.id;
+
+      await container.start();
 
       if (this.emitContainerLogs) {
         await this.streamContainerLogs(container);
@@ -520,6 +523,25 @@ export class StellarTestLedger implements IStellarTestLedger {
       await this.waitUntilReady(container.id);
       return container;
     } catch (error) {
+      if (createdContainer) {
+        try {
+          if (createdContainer.id) {
+            await this.removeContainerById(createdContainer.id);
+          } else {
+            await createdContainer.remove({ v: true, force: true });
+          }
+        } catch {
+          // Startup cleanup is best-effort; preserve the original startup error.
+        } finally {
+          if (this.container === createdContainer) {
+            this.container = undefined;
+          }
+          if (this.containerId === createdContainer.id) {
+            this.containerId = undefined;
+          }
+        }
+      }
+
       throw ensureQuickstartError(
         error,
         new CONTAINER_ERROR({
@@ -574,12 +596,17 @@ export class StellarTestLedger implements IStellarTestLedger {
    * @throws {CONTAINER_ERROR} If Docker rejects the remove request.
    */
   public async destroy(): Promise<void> {
-    if (this.useRunningLedger || !this.containerId) {
+    if (this.useRunningLedger || (!this.containerId && !this.container)) {
       return;
     }
 
     try {
-      await this.removeContainerById(this.containerId);
+      if (this.containerId) {
+        await this.removeContainerById(this.containerId);
+      } else if (this.container) {
+        await this.container.remove({ v: true, force: true });
+      }
+
       this.container = undefined;
       this.containerId = undefined;
     } catch (error) {

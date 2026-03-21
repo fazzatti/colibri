@@ -547,6 +547,94 @@ Deno.test("start rejects on stale named container image mismatches and pull fail
   assertStrictEquals(failedPullError.code, Code.IMAGE_ERROR);
 });
 
+Deno.test("start cleans up a newly created container when startup readiness fails", async () => {
+  const inspectInfo = createInspectInfo({
+    Id: "startup-failure",
+    Mounts: [{ Type: "volume", Name: "startup-failure-volume" }],
+  });
+  const harness = createDockerHarness(inspectInfo);
+  class FailingStartLedger extends TestLedger {
+    protected override waitUntilReady() {
+      return Promise.reject(new Error("not ready"));
+    }
+  }
+
+  const ledger = new FailingStartLedger(undefined, harness.dockerClient);
+
+  const startError = await assertRejects(
+    () => ledger.start(true),
+    CONTAINER_ERROR,
+    "Failed to start the Stellar test ledger.",
+  );
+
+  assertStrictEquals(startError.code, Code.CONTAINER_ERROR);
+  assertEquals(harness.created.state.startCalls, 1);
+  assertEquals(harness.created.state.stopCalls, 1);
+  assertEquals(harness.created.state.removeCalls, [{ v: true, force: true }]);
+  assertEquals(harness.removedVolumes, ["startup-failure-volume"]);
+  assertEquals(ledger.container, undefined);
+  assertEquals(ledger.containerId, undefined);
+});
+
+Deno.test("start cleans up a newly created container without an id when startup fails", async () => {
+  const harness = createDockerHarness();
+  const created = createMockContainer(createInspectInfo({ Id: "ephemeral" }), {
+    omitId: true,
+  });
+  harness.dockerClient.createContainer = () =>
+    Promise.resolve(created.container);
+  class FailingStartLedger extends TestLedger {
+    protected override waitUntilReady() {
+      return Promise.reject(new Error("not ready"));
+    }
+  }
+  const ledger = new FailingStartLedger(undefined, harness.dockerClient);
+
+  const startError = await assertRejects(
+    () => ledger.start(true),
+    CONTAINER_ERROR,
+    "Failed to start the Stellar test ledger.",
+  );
+
+  assertStrictEquals(startError.code, Code.CONTAINER_ERROR);
+  assertEquals(created.state.startCalls, 1);
+  assertEquals(created.state.removeCalls, [{ v: true, force: true }]);
+  assertEquals(ledger.container, undefined);
+  assertEquals(ledger.containerId, undefined);
+});
+
+Deno.test("start preserves the startup error when cleanup also fails", async () => {
+  const harness = createDockerHarness();
+  const created = createMockContainer(
+    createInspectInfo({ Id: "cleanup-broken" }),
+    {
+      id: "cleanup-broken",
+      inspectError: new Error("cannot inspect cleanup"),
+    },
+  );
+  harness.containers.set("cleanup-broken", created.container);
+  harness.dockerClient.createContainer = () =>
+    Promise.resolve(created.container);
+
+  class FailingStartLedger extends TestLedger {
+    protected override waitUntilReady() {
+      return Promise.reject(new Error("not ready"));
+    }
+  }
+
+  const ledger = new FailingStartLedger(undefined, harness.dockerClient);
+
+  const startError = await assertRejects(
+    () => ledger.start(true),
+    CONTAINER_ERROR,
+    "Failed to start the Stellar test ledger.",
+  );
+
+  assertStrictEquals(startError.code, Code.CONTAINER_ERROR);
+  assertEquals(ledger.container, undefined);
+  assertEquals(ledger.containerId, undefined);
+});
+
 Deno.test("public APIs wrap unexpected underlying failures in quickstart errors", async () => {
   const harness = createDockerHarness();
   const ledger = new TestLedger(undefined, harness.dockerClient);
@@ -664,6 +752,22 @@ Deno.test("stop and destroy act on the tracked container", async () => {
   assertEquals(tracked.state.stopCalls, 2);
   assertEquals(tracked.state.removeCalls, [{ v: true, force: true }]);
   assertEquals(harness.removedVolumes, ["tracked-volume"]);
+  assertEquals(ledger.container, undefined);
+  assertEquals(ledger.containerId, undefined);
+});
+
+Deno.test("destroy removes a tracked container without an id", async () => {
+  const harness = createDockerHarness();
+  const ledger = new TestLedger(undefined, harness.dockerClient);
+  const tracked = createMockContainer(createInspectInfo({ Id: "ephemeral" }), {
+    omitId: true,
+  });
+
+  ledger.container = tracked.container;
+
+  await ledger.destroy();
+
+  assertEquals(tracked.state.removeCalls, [{ v: true, force: true }]);
   assertEquals(ledger.container, undefined);
   assertEquals(ledger.containerId, undefined);
 });
