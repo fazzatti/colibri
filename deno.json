@@ -1,8 +1,15 @@
 {
-  "workspace": ["./core", "./rpc-streamer", "./sep10", "./plugins/*"],
+  "workspace": [
+    "./core",
+    "./rpc-streamer",
+    "./sep10",
+    "./plugins/*",
+    "./test-tooling"
+  ],
   "nodeModulesDir": "auto",
   "imports": {
     "jsr:@colibri/core": "./core",
+    "jsr:@colibri/test-tooling": "./test-tooling",
     "colibri-internal/": "./_internal/",
     "colibri-tools/": "./_tools/",
     "stellar-sdk": "npm:@stellar/stellar-sdk@^14.6.1",
@@ -16,7 +23,7 @@
     "@std/dotenv": "jsr:@std/dotenv@^0.225.6"
   },
   "tasks": {
-    "check": "deno check core/mod.ts rpc-streamer/mod.ts sep10/mod.ts plugins/fee-bump/mod.ts",
+    "check": "deno check core/mod.ts rpc-streamer/mod.ts sep10/mod.ts plugins/fee-bump/mod.ts test-tooling/mod.ts",
     "test": "deno test -A --parallel --clean --ignore='_*/' --coverage=coverage",
     "test:unit": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.integration.test.ts' --ignore='**/*.testnet.integration.test.ts' --coverage=coverage",
     "test:integration": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.unit.test.ts' --coverage=coverage",
