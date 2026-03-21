@@ -49,6 +49,13 @@ const createDockerLogFrame = (message: string, streamType = 1): Uint8Array => {
   return frame;
 };
 
+const createRpcHealthResponse = (status: string): string =>
+  JSON.stringify({
+    jsonrpc: "2.0",
+    id: 8675309,
+    result: { status },
+  });
+
 const createLoggerSpy = () => {
   const messages = {
     debug: [] as unknown[][],
@@ -756,10 +763,7 @@ Deno.test("waitForLedgerReady succeeds after transient failures", async () => {
 
       if (url.endsWith("/rpc")) {
         return Promise.resolve(
-          new Response(
-            '{"jsonrpc":"2.0","id":8675309,"result":{"status":"healthy"}}',
-            { status: 200 },
-          ),
+          new Response(createRpcHealthResponse("healthy"), { status: 200 }),
         );
       }
 
@@ -789,10 +793,7 @@ Deno.test("waitForLedgerReady uses the configured Docker host when no override i
 
       if (url.endsWith("/rpc")) {
         return Promise.resolve(
-          new Response(
-            '{"jsonrpc":"2.0","id":8675309,"result":{"status":"healthy"}}',
-            { status: 200 },
-          ),
+          new Response(createRpcHealthResponse("healthy"), { status: 200 }),
         );
       }
 
@@ -909,10 +910,42 @@ Deno.test("waitForLedgerReady times out when the RPC endpoint is unhealthy", asy
           const url = String(input);
           if (url.endsWith("/rpc")) {
             return Promise.resolve(
-              new Response(
-                '{"jsonrpc":"2.0","id":8675309,"result":{"status":"starting"}}',
-                { status: 200 },
-              ),
+              new Response(createRpcHealthResponse("starting"), {
+                status: 200,
+              }),
+            );
+          }
+
+          return Promise.resolve(new Response("ok", { status: 200 }));
+        },
+      }),
+    READINESS_ERROR,
+    "RPC is not ready yet",
+  );
+  assertStrictEquals(rpcError.code, Code.READINESS_ERROR);
+});
+
+Deno.test("waitForLedgerReady treats invalid RPC health JSON as unhealthy", async () => {
+  const rpcNow = (() => {
+    const values = [0, 0, 10, 20];
+    return () => values.shift() ?? 20;
+  })();
+
+  const rpcError = await assertRejects(
+    () =>
+      waitForLedgerReady({
+        containerId: "container-id",
+        dockerClient: {
+          getContainer: () => createFakeContainer(createInspectInfo()),
+        } as unknown as DockerClientLike,
+        timeoutMs: 15,
+        nowFn: rpcNow,
+        sleepFn: () => Promise.resolve(undefined),
+        fetchFn: (input) => {
+          const url = String(input);
+          if (url.endsWith("/rpc")) {
+            return Promise.resolve(
+              new Response("definitely-not-json", { status: 200 }),
             );
           }
 

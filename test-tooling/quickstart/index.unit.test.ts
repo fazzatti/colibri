@@ -14,6 +14,7 @@ import {
   IMAGE_ERROR,
   INVALID_CONFIGURATION,
 } from "@/quickstart/error.ts";
+import { LogLevel } from "@/quickstart/logging.ts";
 import {
   NetworkEnv,
   ResourceLimits,
@@ -95,6 +96,12 @@ const createMockContainer = (
   return { container, state, logStream };
 };
 
+const HEALTHY_RPC_RESPONSE = JSON.stringify({
+  jsonrpc: "2.0",
+  id: 8675309,
+  result: { status: "healthy" },
+});
+
 const createDockerHarness = (
   createdInspectInfo: ContainerInspectInfo = createInspectInfo(),
 ) => {
@@ -174,7 +181,7 @@ const withHealthyFetch = async (fn: () => Promise<void>) => {
       const url = String(input);
       if (url.endsWith("/rpc")) {
         return Promise.resolve(
-          new Response('{"status":"healthy"}', { status: 200 }),
+          new Response(HEALTHY_RPC_RESPONSE, { status: 200 }),
         );
       }
       return Promise.resolve(new Response("ok", { status: 200 }));
@@ -209,6 +216,19 @@ Deno.test("constructor validates supported options", () => {
     INVALID_CONFIGURATION,
   );
   assertStrictEquals(imageError.code, Code.INVALID_CONFIGURATION);
+});
+
+Deno.test("constructor preserves numeric TRACE log levels", () => {
+  const debugStub = stub(console, "debug", () => undefined);
+
+  try {
+    new StellarTestLedger({ logLevel: LogLevel.TRACE });
+
+    assertEquals(debugStub.calls.length, 1);
+    assertEquals(debugStub.calls[0].args[1], "Initialized");
+  } finally {
+    debugStub.restore();
+  }
 });
 
 Deno.test("getContainer throws before the ledger starts", () => {
@@ -296,7 +316,7 @@ Deno.test("start reuses a running named container when useRunningLedger is enabl
       const url = String(input);
       if (url.endsWith("/rpc")) {
         return Promise.resolve(
-          new Response('{"status":"healthy"}', { status: 200 }),
+          new Response(HEALTHY_RPC_RESPONSE, { status: 200 }),
         );
       }
 

@@ -658,7 +658,6 @@ export const waitForLedgerReady = async (
         }),
       });
       const rpcBody = await rpcResponse.text();
-
       let healthStatus: string | undefined;
       try {
         const parsed = JSON.parse(rpcBody) as {
