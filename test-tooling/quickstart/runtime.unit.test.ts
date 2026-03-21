@@ -14,6 +14,8 @@ import {
   READINESS_ERROR,
 } from "@/quickstart/error.ts";
 import {
+  type ContainerInspectInfo,
+  type DockerClientLike,
   findContainerByName,
   getContainerIpAddress,
   getPublicPort,
@@ -24,16 +26,28 @@ import {
   stopContainer,
   streamContainerLogs,
   waitForLedgerReady,
-  type ContainerInspectInfo,
-  type DockerClientLike,
 } from "@/quickstart/runtime.ts";
 
 type PullCallback = (
   error: unknown,
-  stream?: NodeJS.ReadableStream
+  stream?: NodeJS.ReadableStream,
 ) => void;
 type FollowProgressCallback = (error: unknown, output: unknown[]) => void;
 type FollowProgressEvent = { progress?: string; status?: string };
+
+const createDockerLogFrame = (message: string, streamType = 1): Uint8Array => {
+  const payload = new TextEncoder().encode(message);
+  const frame = new Uint8Array(8 + payload.length);
+
+  frame[0] = streamType;
+  frame[4] = (payload.length >>> 24) & 0xff;
+  frame[5] = (payload.length >>> 16) & 0xff;
+  frame[6] = (payload.length >>> 8) & 0xff;
+  frame[7] = payload.length & 0xff;
+  frame.set(payload, 8);
+
+  return frame;
+};
 
 const createLoggerSpy = () => {
   const messages = {
@@ -57,7 +71,7 @@ const createLoggerSpy = () => {
 };
 
 const createInspectInfo = (
-  overrides: Partial<ContainerInspectInfo> = {}
+  overrides: Partial<ContainerInspectInfo> = {},
 ): ContainerInspectInfo => {
   return {
     Id: "container-id",
@@ -87,7 +101,7 @@ const createFakeContainer = (
     stopError?: unknown;
     logStream?: EventEmitter;
     onRemove?: (options: Record<string, unknown>) => void;
-  }
+  },
 ): Container => {
   const id = options?.id || inspectInfo.Id;
   const logStream = options?.logStream || new EventEmitter();
@@ -99,8 +113,10 @@ const createFakeContainer = (
       options?.onRemove?.(removeOptions || {});
       return Promise.resolve();
     },
-    stop: (_opts: Record<string, unknown>, callback: (error?: unknown) => void) =>
-      callback(options?.stopError),
+    stop: (
+      _opts: Record<string, unknown>,
+      callback: (error?: unknown) => void,
+    ) => callback(options?.stopError),
     logs: () => Promise.resolve(logStream),
   } as unknown as Container;
 };
@@ -118,9 +134,12 @@ Deno.test("hasContainerName and findContainerByName match Docker names", async (
   assertEquals(hasContainerName({} as ContainerInfo, "missing"), false);
   assertEquals(
     await findContainerByName("colibri-stellar-test-ledger", { dockerClient }),
-    target
+    target,
   );
-  assertEquals(await findContainerByName("missing", { dockerClient }), undefined);
+  assertEquals(
+    await findContainerByName("missing", { dockerClient }),
+    undefined,
+  );
 
   const wrappedError = await assertRejects(
     () =>
@@ -131,12 +150,12 @@ Deno.test("hasContainerName and findContainerByName match Docker names", async (
               new CONTAINER_ERROR({
                 message: "already wrapped",
                 details: "wrapped",
-              })
+              }),
             ),
         } as unknown as DockerClientLike,
       }),
     CONTAINER_ERROR,
-    "already wrapped"
+    "already wrapped",
   );
   assertStrictEquals(wrappedError.code, Code.CONTAINER_ERROR);
 });
@@ -149,10 +168,10 @@ Deno.test("stopContainer resolves and rejects based on the Docker callback", asy
       stopContainer(
         createFakeContainer(createInspectInfo(), {
           stopError: new Error("failed"),
-        })
+        }),
       ),
     CONTAINER_ERROR,
-    "failed"
+    "failed",
   );
   assertStrictEquals(error.code, Code.CONTAINER_ERROR);
 });
@@ -229,7 +248,7 @@ Deno.test("removeContainerAndVolumes wraps unexpected failures", async () => {
   const error = await assertRejects(
     () => removeContainerAndVolumes("container-id", { dockerClient }),
     CONTAINER_ERROR,
-    "Failed to remove Docker container."
+    "Failed to remove Docker container.",
   );
   assertStrictEquals(error.code, Code.CONTAINER_ERROR);
 });
@@ -243,9 +262,9 @@ Deno.test("getPublicPort validates mappings", () => {
         8000,
         createInspectInfo({
           NetworkSettings: { Ports: {}, Networks: {} },
-        })
+        }),
       ),
-    CONTAINER_ERROR
+    CONTAINER_ERROR,
   );
   assertStrictEquals(missingMappingError.code, Code.CONTAINER_ERROR);
 
@@ -257,9 +276,9 @@ Deno.test("getPublicPort validates mappings", () => {
           NetworkSettings: {
             Networks: {},
           },
-        })
+        }),
       ),
-    CONTAINER_ERROR
+    CONTAINER_ERROR,
   );
   assertStrictEquals(missingPortsError.code, Code.CONTAINER_ERROR);
 
@@ -274,9 +293,9 @@ Deno.test("getPublicPort validates mappings", () => {
             },
             Networks: {},
           },
-        })
+        }),
       ),
-    CONTAINER_ERROR
+    CONTAINER_ERROR,
   );
   assertStrictEquals(invalidPortError.code, Code.CONTAINER_ERROR);
 });
@@ -292,9 +311,9 @@ Deno.test("getContainerIpAddress returns the first network IP and validates miss
             Ports: {},
             Networks: {},
           },
-        })
+        }),
       ),
-    CONTAINER_ERROR
+    CONTAINER_ERROR,
   );
   assertStrictEquals(emptyNetworksError.code, Code.CONTAINER_ERROR);
 
@@ -305,9 +324,9 @@ Deno.test("getContainerIpAddress returns the first network IP and validates miss
           NetworkSettings: {
             Ports: {},
           },
-        })
+        }),
       ),
-    CONTAINER_ERROR
+    CONTAINER_ERROR,
   );
   assertStrictEquals(undefinedNetworksError.code, Code.CONTAINER_ERROR);
 });
@@ -322,14 +341,14 @@ Deno.test("pullImageOnce handles pull errors, missing streams, and success", asy
           pull: (
             _image: string,
             _options: Record<string, unknown>,
-            callback: PullCallback
+            callback: PullCallback,
           ) => callback(new Error("no pull")),
           modem: { followProgress: () => undefined },
         } as unknown as DockerClientLike,
         logger,
       }),
     IMAGE_ERROR,
-    "no pull"
+    "no pull",
   );
   assertStrictEquals(pullError.code, Code.IMAGE_ERROR);
 
@@ -340,13 +359,13 @@ Deno.test("pullImageOnce handles pull errors, missing streams, and success", asy
           pull: (
             _image: string,
             _options: Record<string, unknown>,
-            callback: PullCallback
+            callback: PullCallback,
           ) => callback(undefined, undefined),
           modem: { followProgress: () => undefined },
         } as unknown as DockerClientLike,
         logger,
       }),
-    IMAGE_ERROR
+    IMAGE_ERROR,
   );
   assertStrictEquals(noStreamError.code, Code.IMAGE_ERROR);
 
@@ -355,14 +374,17 @@ Deno.test("pullImageOnce handles pull errors, missing streams, and success", asy
       pull: (
         _image: string,
         _options: Record<string, unknown>,
-        callback: PullCallback
+        callback: PullCallback,
       ) =>
-        callback(undefined, new EventEmitter() as unknown as NodeJS.ReadableStream),
+        callback(
+          undefined,
+          new EventEmitter() as unknown as NodeJS.ReadableStream,
+        ),
       modem: {
         followProgress: (
           _stream: NodeJS.ReadableStream,
           onFinished: FollowProgressCallback,
-          onProgress?: (event: FollowProgressEvent) => void
+          onProgress?: (event: FollowProgressEvent) => void,
         ) => {
           onProgress?.({ status: "Downloading" });
           onFinished(undefined, ["done"]);
@@ -386,23 +408,23 @@ Deno.test("pullImageOnce surfaces progress errors and throttles progress logs", 
           pull: (
             _image: string,
             _options: Record<string, unknown>,
-            callback: PullCallback
+            callback: PullCallback,
           ) =>
             callback(
               undefined,
-              new EventEmitter() as unknown as NodeJS.ReadableStream
+              new EventEmitter() as unknown as NodeJS.ReadableStream,
             ),
           modem: {
             followProgress: (
               _stream: NodeJS.ReadableStream,
-              onFinished: FollowProgressCallback
+              onFinished: FollowProgressCallback,
             ) => onFinished(new Error("progress failed"), []),
           },
         } as unknown as DockerClientLike,
         logger,
       }),
     IMAGE_ERROR,
-    "progress failed"
+    "progress failed",
   );
   assertStrictEquals(progressError.code, Code.IMAGE_ERROR);
 
@@ -415,17 +437,17 @@ Deno.test("pullImageOnce surfaces progress errors and throttles progress logs", 
         pull: (
           _image: string,
           _options: Record<string, unknown>,
-          callback: PullCallback
+          callback: PullCallback,
         ) =>
           callback(
             undefined,
-            new EventEmitter() as unknown as NodeJS.ReadableStream
+            new EventEmitter() as unknown as NodeJS.ReadableStream,
           ),
         modem: {
           followProgress: (
             _stream: NodeJS.ReadableStream,
             onFinished: FollowProgressCallback,
-            onProgress?: (event: FollowProgressEvent) => void
+            onProgress?: (event: FollowProgressEvent) => void,
           ) => {
             onProgress?.({ status: "Downloading" });
             onProgress?.({ status: "Ignored" });
@@ -463,7 +485,7 @@ Deno.test("pullImage retries and eventually succeeds or fails", async () => {
       pull: (
         _image: string,
         _options: Record<string, unknown>,
-        callback: PullCallback
+        callback: PullCallback,
       ) => {
         attempts += 1;
         if (attempts < 2) {
@@ -471,14 +493,14 @@ Deno.test("pullImage retries and eventually succeeds or fails", async () => {
         } else {
           callback(
             undefined,
-            new EventEmitter() as unknown as NodeJS.ReadableStream
+            new EventEmitter() as unknown as NodeJS.ReadableStream,
           );
         }
       },
       modem: {
         followProgress: (
           _stream: NodeJS.ReadableStream,
-          onFinished: FollowProgressCallback
+          onFinished: FollowProgressCallback,
         ) => onFinished(undefined, ["ok"]),
       },
     } as unknown as DockerClientLike,
@@ -497,13 +519,13 @@ Deno.test("pullImage retries and eventually succeeds or fails", async () => {
           pull: (
             _image: string,
             _options: Record<string, unknown>,
-            callback: PullCallback
+            callback: PullCallback,
           ) => callback(new Error("fatal")),
           modem: { followProgress: () => undefined },
         } as unknown as DockerClientLike,
       }),
     IMAGE_ERROR,
-    "fatal"
+    "fatal",
   );
   assertStrictEquals(fatalError.code, Code.IMAGE_ERROR);
 
@@ -511,13 +533,16 @@ Deno.test("pullImage retries and eventually succeeds or fails", async () => {
     pull: (
       _image: string,
       _options: Record<string, unknown>,
-      callback: PullCallback
+      callback: PullCallback,
     ) =>
-      callback(undefined, new EventEmitter() as unknown as NodeJS.ReadableStream),
+      callback(
+        undefined,
+        new EventEmitter() as unknown as NodeJS.ReadableStream,
+      ),
     modem: {
       followProgress: (
         _stream: NodeJS.ReadableStream,
-        onFinished: FollowProgressCallback
+        onFinished: FollowProgressCallback,
       ) => onFinished(undefined, ["one-shot"]),
     },
   } as unknown as DockerClientLike;
@@ -527,14 +552,16 @@ Deno.test("pullImage retries and eventually succeeds or fails", async () => {
       retries: -1,
       dockerClient: zeroRetryClient,
     }),
-    ["one-shot"]
+    ["one-shot"],
   );
 });
 
-Deno.test("streamContainerLogs filters noise and accepts string and binary chunks", async () => {
+Deno.test("streamContainerLogs demultiplexes docker frames and accepts strings", async () => {
   const stream = new EventEmitter();
   const { logger, messages } = createLoggerSpy();
-  const container = createFakeContainer(createInspectInfo(), { logStream: stream });
+  const container = createFakeContainer(createInspectInfo(), {
+    logStream: stream,
+  });
 
   await streamContainerLogs({
     container,
@@ -543,10 +570,146 @@ Deno.test("streamContainerLogs filters noise and accepts string and binary chunk
   });
 
   stream.emit("data", "\r\n");
-  stream.emit("data", new TextEncoder().encode("hello"));
+  stream.emit("data", createDockerLogFrame("hello"));
   stream.emit("data", "world");
+  stream.emit("end");
 
   assertEquals(messages.debug, [["[ledger] hello"], ["[ledger] world"]]);
+});
+
+Deno.test("streamContainerLogs flushes partial plain binary chunks on end", async () => {
+  const stream = new EventEmitter();
+  const { logger, messages } = createLoggerSpy();
+  const container = createFakeContainer(createInspectInfo(), {
+    logStream: stream,
+  });
+
+  await streamContainerLogs({
+    container,
+    logger,
+    tag: "[ledger]",
+  });
+
+  stream.emit("data", new TextEncoder().encode("plain"));
+  stream.emit("end");
+
+  assertEquals(messages.debug, [["[ledger] plain"]]);
+});
+
+Deno.test("streamContainerLogs falls back when binary chunks are not docker frames", async () => {
+  const stream = new EventEmitter();
+  const { logger, messages } = createLoggerSpy();
+  const container = createFakeContainer(createInspectInfo(), {
+    logStream: stream,
+  });
+
+  await streamContainerLogs({
+    container,
+    logger,
+    tag: "[ledger]",
+  });
+
+  stream.emit("data", new TextEncoder().encode("plain-binary"));
+
+  assertEquals(messages.debug, [["[ledger] plain-binary"]]);
+});
+
+Deno.test("streamContainerLogs buffers partial docker frames until the payload completes", async () => {
+  const stream = new EventEmitter();
+  const { logger, messages } = createLoggerSpy();
+  const container = createFakeContainer(createInspectInfo(), {
+    logStream: stream,
+  });
+  const frame = createDockerLogFrame("split-frame");
+
+  await streamContainerLogs({
+    container,
+    logger,
+    tag: "[ledger]",
+  });
+
+  stream.emit("data", frame.subarray(0, 10));
+  assertEquals(messages.debug, []);
+
+  stream.emit("data", frame.subarray(10));
+  assertEquals(messages.debug, [["[ledger] split-frame"]]);
+});
+
+Deno.test("streamContainerLogs compacts buffered partial frames before appending more data", async () => {
+  const stream = new EventEmitter();
+  const { logger, messages } = createLoggerSpy();
+  const container = createFakeContainer(createInspectInfo(), {
+    logStream: stream,
+  });
+  const firstMessage = "a".repeat(4000);
+  const secondMessage = "b".repeat(4500);
+  const firstFrame = createDockerLogFrame(firstMessage);
+  const secondFrame = createDockerLogFrame(secondMessage);
+  const secondFrameSplitOffset = 4080;
+  const initialChunk = new Uint8Array(
+    firstFrame.length + secondFrameSplitOffset,
+  );
+
+  initialChunk.set(firstFrame);
+  initialChunk.set(
+    secondFrame.subarray(0, secondFrameSplitOffset),
+    firstFrame.length,
+  );
+
+  await streamContainerLogs({
+    container,
+    logger,
+    tag: "[ledger]",
+  });
+
+  stream.emit("data", initialChunk);
+  assertEquals(messages.debug, [[`[ledger] ${firstMessage}`]]);
+
+  stream.emit("data", secondFrame.subarray(secondFrameSplitOffset));
+  assertEquals(messages.debug, [
+    [`[ledger] ${firstMessage}`],
+    [`[ledger] ${secondMessage}`],
+  ]);
+});
+
+Deno.test("streamContainerLogs grows buffered partial frames when compaction is insufficient", async () => {
+  const stream = new EventEmitter();
+  const { logger, messages } = createLoggerSpy();
+  const container = createFakeContainer(createInspectInfo(), {
+    logStream: stream,
+  });
+  const firstMessage = "a".repeat(4000);
+  const secondMessage = "b".repeat(9000);
+  const firstFrame = createDockerLogFrame(firstMessage);
+  const secondFrame = createDockerLogFrame(secondMessage);
+  const secondFrameSplitOffset = 4080;
+  const initialChunk = new Uint8Array(
+    firstFrame.length + secondFrameSplitOffset,
+  );
+
+  initialChunk.set(firstFrame);
+  initialChunk.set(
+    secondFrame.subarray(0, secondFrameSplitOffset),
+    firstFrame.length,
+  );
+
+  await streamContainerLogs({
+    container,
+    logger,
+    tag: "[ledger]",
+  });
+
+  stream.emit("data", new Uint8Array());
+  assertEquals(messages.debug, []);
+
+  stream.emit("data", initialChunk);
+  assertEquals(messages.debug, [[`[ledger] ${firstMessage}`]]);
+
+  stream.emit("data", secondFrame.subarray(secondFrameSplitOffset));
+  assertEquals(messages.debug, [
+    [`[ledger] ${firstMessage}`],
+    [`[ledger] ${secondMessage}`],
+  ]);
 });
 
 Deno.test("streamContainerLogs wraps attachment failures", async () => {
@@ -563,7 +726,7 @@ Deno.test("streamContainerLogs wraps attachment failures", async () => {
         tag: "[ledger]",
       }),
     CONTAINER_ERROR,
-    "Failed to stream container logs."
+    "Failed to stream container logs.",
   );
   assertStrictEquals(error.code, Code.CONTAINER_ERROR);
 });
@@ -593,7 +756,7 @@ Deno.test("waitForLedgerReady succeeds after transient failures", async () => {
 
       if (url.endsWith("/rpc")) {
         return Promise.resolve(
-          new Response('{"status":"healthy"}', { status: 200 })
+          new Response('{"status":"healthy"}', { status: 200 }),
         );
       }
 
@@ -603,6 +766,38 @@ Deno.test("waitForLedgerReady succeeds after transient failures", async () => {
 
   assertEquals(fetchCalls >= 3, true);
   assertEquals(sleepCalls, 1);
+});
+
+Deno.test("waitForLedgerReady uses the configured Docker host when no override is provided", async () => {
+  const inspectInfo = createInspectInfo();
+  const dockerClient = {
+    getContainer: () => createFakeContainer(inspectInfo),
+  } as unknown as DockerClientLike;
+  const requestedUrls: string[] = [];
+
+  await waitForLedgerReady({
+    containerId: "container-id",
+    dockerClient,
+    dockerOptions: { host: "docker.internal", port: 2375 },
+    sleepFn: () => Promise.resolve(),
+    fetchFn: (input) => {
+      const url = String(input);
+      requestedUrls.push(url);
+
+      if (url.endsWith("/rpc")) {
+        return Promise.resolve(
+          new Response('{"status":"healthy"}', { status: 200 }),
+        );
+      }
+
+      return Promise.resolve(new Response("ok", { status: 200 }));
+    },
+  });
+
+  assertEquals(requestedUrls, [
+    "http://docker.internal:18000",
+    "http://docker.internal:18000/rpc",
+  ]);
 });
 
 Deno.test("waitForLedgerReady times out with both Error and string failures", async () => {
@@ -624,7 +819,7 @@ Deno.test("waitForLedgerReady times out with both Error and string failures", as
                   Status: "exited",
                   ExitCode: 1,
                 },
-              })
+              }),
             ),
         } as unknown as DockerClientLike,
         timeoutMs: 15,
@@ -632,7 +827,7 @@ Deno.test("waitForLedgerReady times out with both Error and string failures", as
         sleepFn: () => Promise.resolve(undefined),
       }),
     READINESS_ERROR,
-    "Container is not running"
+    "Container is not running",
   );
   assertStrictEquals(stoppedError.code, Code.READINESS_ERROR);
 
@@ -654,9 +849,38 @@ Deno.test("waitForLedgerReady times out with both Error and string failures", as
         fetchFn: () => Promise.reject("boom"),
       }),
     READINESS_ERROR,
-    '"boom"'
+    '"boom"',
   );
   assertStrictEquals(stringCauseError.code, Code.READINESS_ERROR);
+
+  const weirdNow = (() => {
+    const values = [0, 0, 10, 20];
+    return () => values.shift() ?? 20;
+  })();
+  const circularCause: { label: string; self?: unknown; toString(): string } = {
+    label: "circular",
+    toString() {
+      return "circular-runtime";
+    },
+  };
+  circularCause.self = circularCause;
+
+  const objectCauseError = await assertRejects(
+    () =>
+      waitForLedgerReady({
+        containerId: "container-id",
+        dockerClient: {
+          getContainer: () => createFakeContainer(createInspectInfo()),
+        } as unknown as DockerClientLike,
+        timeoutMs: 15,
+        nowFn: weirdNow,
+        sleepFn: () => Promise.resolve(undefined),
+        fetchFn: () => Promise.reject(circularCause),
+      }),
+    READINESS_ERROR,
+    "circular-runtime",
+  );
+  assertStrictEquals(objectCauseError.code, Code.READINESS_ERROR);
 });
 
 Deno.test("waitForLedgerReady times out when the RPC endpoint is unhealthy", async () => {
@@ -679,7 +903,7 @@ Deno.test("waitForLedgerReady times out when the RPC endpoint is unhealthy", asy
           const url = String(input);
           if (url.endsWith("/rpc")) {
             return Promise.resolve(
-              new Response('{"status":"starting"}', { status: 200 })
+              new Response('{"status":"starting"}', { status: 200 }),
             );
           }
 
@@ -687,7 +911,7 @@ Deno.test("waitForLedgerReady times out when the RPC endpoint is unhealthy", asy
         },
       }),
     READINESS_ERROR,
-    "RPC is not ready yet"
+    "RPC is not ready yet",
   );
   assertStrictEquals(rpcError.code, Code.READINESS_ERROR);
 });

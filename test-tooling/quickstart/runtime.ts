@@ -1,5 +1,9 @@
 import type { Container, ContainerInfo } from "dockerode";
-import { createDockerClient, type DockerConnectionConfig } from "@/quickstart/docker.ts";
+import {
+  createDockerClient,
+  type DockerConnectionConfig,
+  resolvePublishedPortHost,
+} from "@/quickstart/docker.ts";
 import {
   CONTAINER_ERROR,
   IMAGE_ERROR,
@@ -8,8 +12,8 @@ import {
 } from "@/quickstart/error.ts";
 import {
   createLogger,
-  type LogLevelDesc,
   type LoggerLike,
+  type LogLevelDesc,
 } from "@/quickstart/logging.ts";
 
 /**
@@ -72,6 +76,7 @@ type WaitForLedgerReadyOptions = RuntimeConfig & {
 };
 
 const QUICKSTART_PORT = 8000;
+const DOCKER_LOG_HEADER_LENGTH = 8;
 
 /**
  * Sleeps for the given number of milliseconds.
@@ -119,6 +124,132 @@ const getDockerClient = (
     config?.dockerClient ||
     (createDockerClient(config) as unknown as DockerClientLike)
   );
+};
+
+const createDockerLogDecoder = () => {
+  const textDecoder = new TextDecoder();
+  let buffer = new Uint8Array(0);
+  let readOffset = 0;
+  let writeOffset = 0;
+
+  const reset = () => {
+    buffer = new Uint8Array(0);
+    readOffset = 0;
+    writeOffset = 0;
+  };
+
+  const ensureCapacity = (additional: number) => {
+    if (buffer.length - writeOffset >= additional) {
+      return;
+    }
+
+    const unreadLength = writeOffset - readOffset;
+    if (
+      readOffset > 0 && (buffer.length - unreadLength) >= additional
+    ) {
+      buffer.copyWithin(0, readOffset, writeOffset);
+      writeOffset = unreadLength;
+      readOffset = 0;
+      return;
+    }
+
+    let capacity = Math.max(8192, buffer.length);
+    while ((capacity - unreadLength) < additional) {
+      capacity *= 2;
+    }
+
+    const nextBuffer = new Uint8Array(capacity);
+    if (unreadLength > 0) {
+      nextBuffer.set(buffer.subarray(readOffset, writeOffset));
+    }
+
+    buffer = nextBuffer;
+    readOffset = 0;
+    writeOffset = unreadLength;
+  };
+
+  const appendChunk = (chunk: Uint8Array) => {
+    if (chunk.length === 0) {
+      return;
+    }
+
+    ensureCapacity(chunk.length);
+    buffer.set(chunk, writeOffset);
+    writeOffset += chunk.length;
+  };
+
+  const decodeChunk = (chunk: Uint8Array | string): string[] => {
+    if (typeof chunk === "string") {
+      return [chunk];
+    }
+
+    appendChunk(chunk);
+    const messages: string[] = [];
+
+    while (writeOffset > readOffset) {
+      const available = writeOffset - readOffset;
+      if (available < DOCKER_LOG_HEADER_LENGTH) {
+        break;
+      }
+
+      const streamType = buffer[readOffset];
+      const isHeader = (streamType === 1 || streamType === 2) &&
+        buffer[readOffset + 1] === 0 &&
+        buffer[readOffset + 2] === 0 &&
+        buffer[readOffset + 3] === 0;
+
+      if (!isHeader) {
+        messages.push(
+          textDecoder.decode(buffer.subarray(readOffset, writeOffset)),
+        );
+        reset();
+        break;
+      }
+
+      const payloadLength = ((buffer[readOffset + 4] << 24) |
+        (buffer[readOffset + 5] << 16) |
+        (buffer[readOffset + 6] << 8) |
+        buffer[readOffset + 7]) >>> 0;
+      const frameLength = DOCKER_LOG_HEADER_LENGTH + payloadLength;
+
+      if (available < frameLength) {
+        break;
+      }
+
+      messages.push(
+        textDecoder.decode(
+          buffer.subarray(
+            readOffset + DOCKER_LOG_HEADER_LENGTH,
+            readOffset + frameLength,
+          ),
+        ),
+      );
+      readOffset += frameLength;
+    }
+
+    if (readOffset === writeOffset) {
+      reset();
+    }
+
+    return messages;
+  };
+
+  const flush = (): string | undefined => {
+    if (readOffset === writeOffset) {
+      return undefined;
+    }
+
+    const message = textDecoder.decode(
+      buffer.subarray(readOffset, writeOffset),
+    );
+    reset();
+    return message;
+  };
+
+  return {
+    decodeChunk,
+    flush,
+  };
 };
 
 /**
@@ -432,13 +563,19 @@ export const streamContainerLogs = async (options: {
       stdout: true,
     });
     const ignoredMessages = new Set(["\r\n", "+\r\n", ".\r\n"]);
-    const textDecoder = new TextDecoder();
+    const decoder = createDockerLogDecoder();
 
     logStream.on("data", (chunk: Uint8Array | string) => {
-      const message =
-        typeof chunk === "string" ? chunk : textDecoder.decode(chunk);
+      for (const message of decoder.decodeChunk(chunk)) {
+        if (!ignoredMessages.has(message)) {
+          options.logger.debug(`${options.tag} ${message}`);
+        }
+      }
+    });
 
-      if (!ignoredMessages.has(message)) {
+    logStream.on("end", () => {
+      const message = decoder.flush();
+      if (message && !ignoredMessages.has(message)) {
         options.logger.debug(`${options.tag} ${message}`);
       }
     });
@@ -466,7 +603,7 @@ export const waitForLedgerReady = async (
   const sleepFn = options.sleepFn || sleep;
   const nowFn = options.nowFn || Date.now;
   const timeoutMs = options.timeoutMs ?? 180000;
-  const host = options.host || "127.0.0.1";
+  const host = options.host || resolvePublishedPortHost(options);
   const deadline = nowFn() + timeoutMs;
 
   let lastError: unknown;
@@ -478,7 +615,8 @@ export const waitForLedgerReady = async (
 
       if (!inspectInfo.State.Running) {
         throw new READINESS_ERROR({
-          message: `Container is not running (status: ${inspectInfo.State.Status}).`,
+          message:
+            `Container is not running (status: ${inspectInfo.State.Status}).`,
           details:
             "The quickstart container stopped before Horizon and Soroban RPC became ready.",
           data: {
@@ -544,7 +682,9 @@ export const waitForLedgerReady = async (
   }
 
   throw new READINESS_ERROR({
-    message: `waitForLedgerReady timed out after ${timeoutMs}ms: ${formatError(lastError)}`,
+    message: `waitForLedgerReady timed out after ${timeoutMs}ms: ${
+      formatError(lastError)
+    }`,
     details:
       "Quickstart did not expose a healthy Horizon and Soroban RPC pair before the timeout elapsed.",
     data: {

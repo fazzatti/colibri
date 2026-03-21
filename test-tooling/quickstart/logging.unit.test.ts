@@ -1,6 +1,10 @@
 import { assertStrictEquals } from "@std/assert";
 import { assertSpyCalls, stub } from "@std/testing/mock";
-import { createLogger, LogLevel, type LoggerLike } from "@/quickstart/logging.ts";
+import {
+  createLogger,
+  type LoggerLike,
+  LogLevel,
+} from "@/quickstart/logging.ts";
 
 Deno.test("createLogger returns the provided logger unchanged", () => {
   const logger: LoggerLike = {
@@ -13,7 +17,7 @@ Deno.test("createLogger returns the provided logger unchanged", () => {
 
   assertStrictEquals(
     createLogger({ label: "custom", level: "info", logger }),
-    logger
+    logger,
   );
 });
 
@@ -63,6 +67,31 @@ Deno.test("console logger falls back to warn on unknown levels", () => {
     const logger = createLogger({
       label: "fallback",
       level: "LOUD" as never,
+    });
+
+    logger.debug("debug");
+    logger.info("info");
+    logger.warn("warn");
+
+    assertSpyCalls(debugStub, 0);
+    assertSpyCalls(infoStub, 0);
+    assertSpyCalls(warnStub, 1);
+  } finally {
+    debugStub.restore();
+    infoStub.restore();
+    warnStub.restore();
+  }
+});
+
+Deno.test("console logger falls back to warn on unknown numeric levels", () => {
+  const debugStub = stub(console, "debug");
+  const infoStub = stub(console, "info");
+  const warnStub = stub(console, "warn");
+
+  try {
+    const logger = createLogger({
+      label: "fallback-number",
+      level: 999 as never,
     });
 
     logger.debug("debug");

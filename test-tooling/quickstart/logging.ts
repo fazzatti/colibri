@@ -61,7 +61,7 @@ const LOG_LEVEL_WEIGHT: Record<LogLevelName, number> = {
  */
 const normalizeLogLevel = (level: LogLevelDesc = "warn"): LogLevelName => {
   if (typeof level === "number") {
-    return LOG_LEVEL_NUMBER_TO_NAME[level];
+    return LOG_LEVEL_NUMBER_TO_NAME[level] ?? "warn";
   }
 
   const normalized = level.toLowerCase();

@@ -1,8 +1,13 @@
-import type { Container, ContainerCreateOptions, ContainerInfo } from "dockerode";
+import type {
+  Container,
+  ContainerCreateOptions,
+  ContainerInfo,
+} from "dockerode";
 import {
   createDockerClient,
-  resolveDockerOptions,
   type DockerConnectionConfig,
+  resolveDockerOptions,
+  resolvePublishedPortHost,
 } from "@/quickstart/docker.ts";
 import {
   CONTAINER_ERROR,
@@ -10,14 +15,14 @@ import {
   QuickstartError,
 } from "@/quickstart/error.ts";
 import {
+  type ContainerInspectInfo,
   findContainerByName,
   getContainerIpAddress,
   getPublicPort,
   pullImage,
   removeContainerAndVolumes,
-  streamContainerLogs,
   stopContainer,
-  type ContainerInspectInfo,
+  streamContainerLogs,
   waitForLedgerReady,
 } from "@/quickstart/runtime.ts";
 import {
@@ -28,14 +33,14 @@ import {
   type TestLedgerOptions,
 } from "@/quickstart/types.ts";
 import {
+  isBooleanStrict,
   type NetworkConfig,
   NetworkConfig as ColibriNetworkConfig,
-  isBooleanStrict,
 } from "@colibri/core";
 import {
   createLogger,
-  type LogLevelDesc,
   type LoggerLike,
+  type LogLevelDesc,
 } from "@/quickstart/logging.ts";
 
 const DEFAULTS = Object.freeze({
@@ -141,7 +146,8 @@ export class StellarTestLedger implements IStellarTestLedger {
         option: "network",
         value: network,
         supportedValues: [NetworkEnv.LOCAL],
-        message: `StellarTestLedger#constructor() network ${network} not supported.`,
+        message:
+          `StellarTestLedger#constructor() network ${network} not supported.`,
         details:
           "The quickstart harness currently supports only the local standalone network profile.",
       });
@@ -152,14 +158,15 @@ export class StellarTestLedger implements IStellarTestLedger {
         option: "limits",
         value: limits,
         supportedValues: [ResourceLimits.TESTNET],
-        message: `StellarTestLedger#constructor() limits ${limits} not supported.`,
+        message:
+          `StellarTestLedger#constructor() limits ${limits} not supported.`,
         details:
           "The quickstart harness currently supports only the testnet resource limits profile.",
       });
     }
 
-    this.containerImageVersion =
-      options?.containerImageVersion || DEFAULTS.imageVersion;
+    this.containerImageVersion = options?.containerImageVersion ||
+      DEFAULTS.imageVersion;
 
     if (
       !Object.values(SupportedImageVersions).includes(
@@ -292,7 +299,6 @@ export class StellarTestLedger implements IStellarTestLedger {
       },
       HostConfig: {
         PublishAllPorts: true,
-        Privileged: true,
       },
     };
 
@@ -386,7 +392,7 @@ export class StellarTestLedger implements IStellarTestLedger {
     try {
       const containerInfo = await this.getContainerInfo();
       const publicPort = getPublicPort(8000, containerInfo);
-      const domain = "127.0.0.1";
+      const domain = resolvePublishedPortHost(this.dockerConnection);
 
       return ColibriNetworkConfig.CustomNet({
         networkPassphrase: "Standalone Network ; February 2017",
@@ -462,12 +468,28 @@ export class StellarTestLedger implements IStellarTestLedger {
 
         this.containerId = containerInfo.Id;
         this.container = this.getDockerClient().getContainer(containerInfo.Id);
+
+        const inspectInfo = await this.getContainerInfo();
+        const publishedPorts = inspectInfo.NetworkSettings.Ports?.["8000/tcp"];
+
+        if (publishedPorts && publishedPorts.length > 0) {
+          await this.waitUntilReady(containerInfo.Id);
+        }
+
         return this.container;
       }
 
       if (this.container) {
-        await stopContainer(this.container);
-        await this.container.remove({ force: true });
+        const trackedContainerId = this.containerId ||
+          (this.container as { id?: string }).id;
+
+        if (trackedContainerId) {
+          await this.removeContainerById(trackedContainerId);
+        } else {
+          await stopContainer(this.container);
+          await this.container.remove({ v: true, force: true });
+        }
+
         this.container = undefined;
         this.containerId = undefined;
       }

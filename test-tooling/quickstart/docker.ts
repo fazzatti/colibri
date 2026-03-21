@@ -26,6 +26,8 @@ const COMMON_DOCKER_SOCKET_PATHS = [
   `${homedir()}/.colima/default/docker.sock`,
 ];
 
+const DEFAULT_PUBLISHED_PORT_HOST = "127.0.0.1";
+
 /**
  * Parses a `DOCKER_HOST` value into Dockerode options.
  */
@@ -192,6 +194,45 @@ export const resolveDockerOptions = (
 
   return (dependencies?.autoDetectDockerOptions || autoDetectDockerOptions)() ||
     {};
+};
+
+/**
+ * Resolves the host clients should use to reach ports published by the Docker daemon.
+ *
+ * Local socket and wildcard-host configurations are normalized to loopback.
+ */
+export const resolvePublishedPortHost = (
+  config?: DockerConnectionConfig,
+): string => {
+  const dockerSocketPath = config?.dockerSocketPath?.trim();
+  const dockerOptions = config?.dockerOptions;
+
+  if (dockerSocketPath || dockerOptions?.socketPath?.trim()) {
+    return DEFAULT_PUBLISHED_PORT_HOST;
+  }
+
+  let host = dockerOptions?.host?.trim();
+  if (!host) {
+    const dockerHost = process.env.DOCKER_HOST?.trim();
+    if (dockerHost) {
+      const parsed = parseDockerHost(dockerHost);
+      if (parsed.socketPath) {
+        return DEFAULT_PUBLISHED_PORT_HOST;
+      }
+
+      host = parsed.host?.trim();
+    }
+  }
+
+  if (!host) {
+    return DEFAULT_PUBLISHED_PORT_HOST;
+  }
+
+  if (host === "0.0.0.0" || host === "::") {
+    return DEFAULT_PUBLISHED_PORT_HOST;
+  }
+
+  return host.includes(":") && !host.startsWith("[") ? `[${host}]` : host;
 };
 
 /**

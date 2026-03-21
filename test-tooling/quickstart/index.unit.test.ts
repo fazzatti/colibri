@@ -20,10 +20,13 @@ import {
   type SupportedImageVersions,
   type TestLedgerOptions,
 } from "@/quickstart/types.ts";
-import type { ContainerInspectInfo, DockerClientLike } from "@/quickstart/runtime.ts";
+import type {
+  ContainerInspectInfo,
+  DockerClientLike,
+} from "@/quickstart/runtime.ts";
 
 const createInspectInfo = (
-  overrides: Partial<ContainerInspectInfo> = {}
+  overrides: Partial<ContainerInspectInfo> = {},
 ): ContainerInspectInfo => {
   return {
     Id: "ledger-container",
@@ -50,10 +53,11 @@ const createMockContainer = (
   inspectInfo: ContainerInspectInfo,
   options?: {
     id?: string;
+    omitId?: boolean;
     logStream?: EventEmitter;
     stopError?: unknown;
     inspectError?: unknown;
-  }
+  },
 ) => {
   const logStream = options?.logStream || new EventEmitter();
   const state = {
@@ -63,14 +67,14 @@ const createMockContainer = (
   };
 
   const container = {
-    id: options?.id || inspectInfo.Id,
+    id: options?.omitId ? undefined : options?.id || inspectInfo.Id,
     start: () => {
       state.startCalls += 1;
       return Promise.resolve();
     },
     stop: (
       _opts: Record<string, unknown>,
-      callback: (error?: unknown) => void
+      callback: (error?: unknown) => void,
     ) => {
       state.stopCalls += 1;
       callback(options?.stopError);
@@ -92,10 +96,13 @@ const createMockContainer = (
 };
 
 const createDockerHarness = (
-  createdInspectInfo: ContainerInspectInfo = createInspectInfo()
+  createdInspectInfo: ContainerInspectInfo = createInspectInfo(),
 ) => {
   const created = createMockContainer(createdInspectInfo);
-  const containers = new Map<string, Container>([[created.container.id, created.container]]);
+  const containers = new Map<string, Container>([[
+    created.container.id,
+    created.container,
+  ]]);
   const listContainers: ContainerInfo[] = [];
   const createCalls: Record<string, unknown>[] = [];
   const removedVolumes: string[] = [];
@@ -118,7 +125,10 @@ const createDockerHarness = (
     },
     pull: (_image, _options, callback) => {
       pullCalls += 1;
-      callback(undefined, new EventEmitter() as unknown as NodeJS.ReadableStream);
+      callback(
+        undefined,
+        new EventEmitter() as unknown as NodeJS.ReadableStream,
+      );
     },
     modem: {
       followProgress: (_stream, onFinished) => onFinished(undefined, []),
@@ -146,7 +156,7 @@ class TestLedger extends StellarTestLedger {
     options: TestLedgerOptions | undefined,
     private readonly dockerClient: DockerClientLike & {
       createContainer: (options: Record<string, unknown>) => Promise<Container>;
-    }
+    },
   ) {
     super(options);
   }
@@ -157,13 +167,19 @@ class TestLedger extends StellarTestLedger {
 }
 
 const withHealthyFetch = async (fn: () => Promise<void>) => {
-  const fetchStub = stub(globalThis, "fetch", (input: string | URL | Request) => {
-    const url = String(input);
-    if (url.endsWith("/rpc")) {
-      return Promise.resolve(new Response('{"status":"healthy"}', { status: 200 }));
-    }
-    return Promise.resolve(new Response("ok", { status: 200 }));
-  });
+  const fetchStub = stub(
+    globalThis,
+    "fetch",
+    (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("/rpc")) {
+        return Promise.resolve(
+          new Response('{"status":"healthy"}', { status: 200 }),
+        );
+      }
+      return Promise.resolve(new Response("ok", { status: 200 }));
+    },
+  );
 
   try {
     await fn();
@@ -205,7 +221,10 @@ Deno.test("getContainer throws before the ledger starts", () => {
 
 Deno.test("start creates a named container and exposes network information", async () => {
   const harness = createDockerHarness();
-  const ledger = new TestLedger(undefined, harness.dockerClient);
+  const ledger = new TestLedger(
+    { dockerOptions: { socketPath: "/var/run/docker.sock" } },
+    harness.dockerClient,
+  );
 
   await withHealthyFetch(async () => {
     const container = await ledger.start();
@@ -216,12 +235,22 @@ Deno.test("start creates a named container and exposes network information", asy
     assertEquals(ledger.fullContainerImageName, "stellar/quickstart:latest");
     assertEquals(harness.createCalls[0].name, "colibri-stellar-test-ledger");
     assertEquals(harness.createCalls[0].Image, "stellar/quickstart:latest");
-    assertEquals(harness.createCalls[0].Cmd, ["--local", "--limits", "testnet"]);
+    assertEquals(harness.createCalls[0].Cmd, [
+      "--local",
+      "--limits",
+      "testnet",
+    ]);
+    assertEquals(harness.createCalls[0].HostConfig, {
+      PublishAllPorts: true,
+    });
 
     const networkConfig = await ledger.getNetworkConfiguration();
     assertEquals(networkConfig.horizonUrl, "http://127.0.0.1:18000");
     assertEquals(networkConfig.rpcUrl, "http://127.0.0.1:18000/rpc");
-    assertEquals(networkConfig.friendbotUrl, "http://127.0.0.1:18000/friendbot");
+    assertEquals(
+      networkConfig.friendbotUrl,
+      "http://127.0.0.1:18000/friendbot",
+    );
     assertEquals(await ledger.getContainerIpAddress(), "172.20.0.9");
   });
 });
@@ -230,7 +259,7 @@ Deno.test("start can skip pull and optionally stream logs", async () => {
   const harness = createDockerHarness();
   const ledger = new TestLedger(
     { emitContainerLogs: true, containerName: "custom-ledger" },
-    harness.dockerClient
+    harness.dockerClient,
   );
 
   await withHealthyFetch(async () => {
@@ -254,23 +283,91 @@ Deno.test("start reuses a running named container when useRunningLedger is enabl
     Names: ["/colibri-stellar-test-ledger"],
   } as ContainerInfo);
 
-  const ledger = new TestLedger({ useRunningLedger: true }, harness.dockerClient);
-  const attached = await ledger.start();
+  const ledger = new TestLedger(
+    { useRunningLedger: true },
+    harness.dockerClient,
+  );
+  let fetchCalls = 0;
+  const fetchStub = stub(
+    globalThis,
+    "fetch",
+    (input: string | URL | Request) => {
+      fetchCalls += 1;
+      const url = String(input);
+      if (url.endsWith("/rpc")) {
+        return Promise.resolve(
+          new Response('{"status":"healthy"}', { status: 200 }),
+        );
+      }
 
-  assertStrictEquals(attached, existing.container);
-  assertEquals(harness.pullCalls, 0);
-  assertEquals(harness.createCalls.length, 0);
+      return Promise.resolve(new Response("ok", { status: 200 }));
+    },
+  );
+
+  try {
+    const attached = await ledger.start();
+
+    assertStrictEquals(attached, existing.container);
+    assertEquals(harness.pullCalls, 0);
+    assertEquals(harness.createCalls.length, 0);
+    assertEquals(fetchCalls >= 2, true);
+  } finally {
+    fetchStub.restore();
+  }
+});
+
+Deno.test("start can reuse a running named container without published ports", async () => {
+  const harness = createDockerHarness();
+  const existing = createMockContainer(
+    createInspectInfo({
+      NetworkSettings: {
+        Ports: {},
+        Networks: {
+          bridge: { IPAddress: "172.20.0.9" },
+        },
+      },
+    }),
+    {
+      id: "running-container-no-ports",
+    },
+  );
+  harness.containers.set(existing.container.id, existing.container);
+  harness.listContainers.push({
+    Id: "running-container-no-ports",
+    Image: "stellar/quickstart:latest",
+    State: "running",
+    Names: ["/colibri-stellar-test-ledger"],
+  } as ContainerInfo);
+
+  const ledger = new TestLedger(
+    { useRunningLedger: true },
+    harness.dockerClient,
+  );
+  let fetchCalls = 0;
+  const fetchStub = stub(globalThis, "fetch", () => {
+    fetchCalls += 1;
+    return Promise.resolve(new Response("ok", { status: 200 }));
+  });
+
+  try {
+    const attached = await ledger.start();
+
+    assertStrictEquals(attached, existing.container);
+    assertEquals(fetchCalls, 0);
+  } finally {
+    fetchStub.restore();
+  }
 });
 
 Deno.test("start rejects when the running ledger cannot be reused safely", async () => {
   const missingHarness = createDockerHarness();
   const missingLedger = new TestLedger(
     { useRunningLedger: true },
-    missingHarness.dockerClient
+    missingHarness.dockerClient,
   );
   const missingError = await assertRejects(
     () => missingLedger.start(),
-    CONTAINER_ERROR
+    CONTAINER_ERROR,
   );
   assertStrictEquals(missingError.code, Code.CONTAINER_ERROR);
 
@@ -283,11 +380,11 @@ Deno.test("start rejects when the running ledger cannot be reused safely", async
   } as ContainerInfo);
   const wrongImageLedger = new TestLedger(
     { useRunningLedger: true },
-    wrongImageHarness.dockerClient
+    wrongImageHarness.dockerClient,
   );
   const wrongImageError = await assertRejects(
     () => wrongImageLedger.start(),
-    CONTAINER_ERROR
+    CONTAINER_ERROR,
   );
   assertStrictEquals(wrongImageError.code, Code.CONTAINER_ERROR);
 
@@ -300,11 +397,11 @@ Deno.test("start rejects when the running ledger cannot be reused safely", async
   } as ContainerInfo);
   const stoppedLedger = new TestLedger(
     { useRunningLedger: true },
-    stoppedHarness.dockerClient
+    stoppedHarness.dockerClient,
   );
   const stoppedError = await assertRejects(
     () => stoppedLedger.start(),
-    CONTAINER_ERROR
+    CONTAINER_ERROR,
   );
   assertStrictEquals(stoppedError.code, Code.CONTAINER_ERROR);
 });
@@ -338,13 +435,50 @@ Deno.test("start removes stale named containers and existing tracked containers 
   const previous = createMockContainer(createInspectInfo({ Id: "previous" }), {
     id: "previous",
   });
+  trackedHarness.containers.set("previous", previous.container);
   trackedLedger.container = previous.container;
   trackedLedger.containerId = "previous";
   await withHealthyFetch(async () => {
     await trackedLedger.start();
   });
   assertEquals(previous.state.stopCalls, 1);
-  assertEquals(previous.state.removeCalls, [{ force: true }]);
+  assertEquals(previous.state.removeCalls, [{ v: true, force: true }]);
+});
+
+Deno.test("start removes a tracked container without an id using direct Docker cleanup", async () => {
+  const harness = createDockerHarness();
+  const ledger = new TestLedger(undefined, harness.dockerClient);
+  const previous = createMockContainer(createInspectInfo({ Id: "ephemeral" }), {
+    omitId: true,
+  });
+
+  ledger.container = previous.container;
+
+  await withHealthyFetch(async () => {
+    await ledger.start();
+  });
+
+  assertEquals(previous.state.stopCalls, 1);
+  assertEquals(previous.state.removeCalls, [{ v: true, force: true }]);
+});
+
+Deno.test("getNetworkConfiguration uses the Docker daemon host for remote connections", async () => {
+  const harness = createDockerHarness();
+  const ledger = new TestLedger(
+    { dockerOptions: { host: "docker.internal", port: 2375 } },
+    harness.dockerClient,
+  );
+
+  ledger.container = harness.created.container;
+  ledger.containerId = "ledger-container";
+
+  const networkConfig = await ledger.getNetworkConfiguration();
+  assertEquals(networkConfig.horizonUrl, "http://docker.internal:18000");
+  assertEquals(networkConfig.rpcUrl, "http://docker.internal:18000/rpc");
+  assertEquals(
+    networkConfig.friendbotUrl,
+    "http://docker.internal:18000/friendbot",
+  );
 });
 
 Deno.test("start rejects on stale named container image mismatches and pull failures", async () => {
@@ -355,10 +489,13 @@ Deno.test("start rejects on stale named container image mismatches and pull fail
     State: "exited",
     Names: ["/colibri-stellar-test-ledger"],
   } as ContainerInfo);
-  const mismatchLedger = new TestLedger(undefined, mismatchHarness.dockerClient);
+  const mismatchLedger = new TestLedger(
+    undefined,
+    mismatchHarness.dockerClient,
+  );
   const mismatchError = await assertRejects(
     () => mismatchLedger.start(),
-    CONTAINER_ERROR
+    CONTAINER_ERROR,
   );
   assertStrictEquals(mismatchError.code, Code.CONTAINER_ERROR);
 
@@ -366,12 +503,12 @@ Deno.test("start rejects on stale named container image mismatches and pull fail
   failedPullHarness.pullFailure = new Error("pull failed");
   const failedPullLedger = new TestLedger(
     { logLevel: "silent" },
-    failedPullHarness.dockerClient
+    failedPullHarness.dockerClient,
   );
   const failedPullError = await assertRejects(
     () => failedPullLedger.start(),
     IMAGE_ERROR,
-    "pull failed"
+    "pull failed",
   );
   assertStrictEquals(failedPullError.code, Code.IMAGE_ERROR);
 });
@@ -386,26 +523,29 @@ Deno.test("public APIs wrap unexpected underlying failures in quickstart errors"
   const startError = await assertRejects(
     () => ledger.start(true),
     CONTAINER_ERROR,
-    "Failed to start the Stellar test ledger."
+    "Failed to start the Stellar test ledger.",
   );
   assertStrictEquals(startError.code, Code.CONTAINER_ERROR);
 
-  const noNetworkLedger = new TestLedger(undefined, createDockerHarness(
-    createInspectInfo({
-      NetworkSettings: { Ports: {}, Networks: {} },
-    })
-  ).dockerClient);
+  const noNetworkLedger = new TestLedger(
+    undefined,
+    createDockerHarness(
+      createInspectInfo({
+        NetworkSettings: { Ports: {}, Networks: {} },
+      }),
+    ).dockerClient,
+  );
 
   noNetworkLedger.container = createMockContainer(
     createInspectInfo({
       NetworkSettings: { Ports: {}, Networks: {} },
-    })
+    }),
   ).container;
   noNetworkLedger.containerId = "ledger-container";
 
   const ipError = await assertRejects(
     () => noNetworkLedger.getContainerIpAddress(),
-    CONTAINER_ERROR
+    CONTAINER_ERROR,
   );
   assertStrictEquals(ipError.code, Code.CONTAINER_ERROR);
 
@@ -418,7 +558,7 @@ Deno.test("public APIs wrap unexpected underlying failures in quickstart errors"
   const networkError = await assertRejects(
     () => inspectFailureLedger.getNetworkConfiguration(),
     CONTAINER_ERROR,
-    "Failed to build network configuration for the test ledger."
+    "Failed to build network configuration for the test ledger.",
   );
   assertStrictEquals(networkError.code, Code.CONTAINER_ERROR);
 
@@ -430,22 +570,28 @@ Deno.test("public APIs wrap unexpected underlying failures in quickstart errors"
 
   const stopError = await assertRejects(
     () => stopFailureLedger.stop(),
-    CONTAINER_ERROR
+    CONTAINER_ERROR,
   );
   assertStrictEquals(stopError.code, Code.CONTAINER_ERROR);
 
   const destroyHarness = createDockerHarness();
-  const brokenTracked = createMockContainer(createInspectInfo({ Id: "broken" }), {
-    id: "broken",
-    inspectError: new Error("cannot inspect"),
-  });
+  const brokenTracked = createMockContainer(
+    createInspectInfo({ Id: "broken" }),
+    {
+      id: "broken",
+      inspectError: new Error("cannot inspect"),
+    },
+  );
   destroyHarness.containers.set("broken", brokenTracked.container);
-  const destroyFailureLedger = new TestLedger(undefined, destroyHarness.dockerClient);
+  const destroyFailureLedger = new TestLedger(
+    undefined,
+    destroyHarness.dockerClient,
+  );
   destroyFailureLedger.containerId = "broken";
 
   const destroyError = await assertRejects(
     () => destroyFailureLedger.destroy(),
-    CONTAINER_ERROR
+    CONTAINER_ERROR,
   );
   assertStrictEquals(destroyError.code, Code.CONTAINER_ERROR);
 });
@@ -459,7 +605,7 @@ Deno.test("stop and destroy are no-ops when there is nothing to do", async () =>
 
   const runningLedger = new TestLedger(
     { useRunningLedger: true },
-    harness.dockerClient
+    harness.dockerClient,
   );
   await runningLedger.stop();
   await runningLedger.destroy();
