@@ -1,10 +1,9 @@
 {
   "name": "@colibri/test-tooling",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "imports": {
     "@/": "./",
-    "@colibri/core": "jsr:@colibri/core@^0.17.2",
     "dockerode": "npm:dockerode@3.3.3"
   },
   "exports": {
@@ -14,16 +13,7 @@
     "plugins": ["../_tools/lint/enum-requires-own-file.ts"]
   },
   "publish": {
-    "include": [
-      "mod.ts",
-      "quickstart/docker.ts",
-      "quickstart/error.ts",
-      "quickstart/index.ts",
-      "quickstart/logging.ts",
-      "quickstart/runtime.ts",
-      "quickstart/types.ts",
-      "README.md",
-      "LICENSE"
-    ]
+    "include": ["./**/*.ts", "./README.md", "./LICENSE", "./deno.json"],
+    "exclude": ["./**/*.test.ts"]
   }
 }

@@ -7,17 +7,32 @@ import {
 } from "@std/assert";
 
 import { afterAll, describe, it } from "@std/testing/bdd";
+import {
+  initializeWithFriendbot,
+  LocalSigner,
+  NativeAccount,
+  NetworkConfig,
+  PIPE_ClassicTransaction,
+} from "@colibri/core";
 import { resolveDockerOptions } from "@/quickstart/docker.ts";
 import { Code, INVALID_CONFIGURATION } from "@/quickstart/error.ts";
 import type { LogLevelDesc } from "@/quickstart/logging.ts";
 import { StellarTestLedger } from "@/quickstart/index.ts";
 import { findContainerByName } from "@/quickstart/runtime.ts";
-import type { SupportedImageVersions } from "@/quickstart/types.ts";
+import {
+  SupportedImageVersions,
+  type SupportedImageVersions as SupportedImageVersionsType,
+} from "@/quickstart/types.ts";
 import type { Container } from "dockerode";
+import { Asset, Operation } from "stellar-sdk";
 
 describe("StellarTestLedger", () => {
   const logLevel: LogLevelDesc = "silent";
-  const stellarTestLedger = new StellarTestLedger({ logLevel });
+  const stellarTestLedger = new StellarTestLedger({
+    logLevel,
+    containerName: "colibri-stellar-test-ledger-stable",
+    containerImageVersion: SupportedImageVersions.V425_LATEST,
+  });
 
   afterAll(async () => {
     await stellarTestLedger.stop();
@@ -44,7 +59,8 @@ describe("StellarTestLedger", () => {
 
       return assertRejects(async () => {
         return await new StellarTestLedger({
-          containerImageVersion: "nope" as unknown as SupportedImageVersions,
+          containerImageVersion:
+            "nope" as unknown as SupportedImageVersionsType,
         });
       }).then((error) => {
         assertInstanceOf(error, INVALID_CONFIGURATION);
@@ -71,17 +87,81 @@ describe("StellarTestLedger", () => {
       const container: Container = await stellarTestLedger.start();
       assertExists(container);
 
-      const networkConfig = await stellarTestLedger.getNetworkConfiguration();
-      assertExists(networkConfig);
-      assertExists(networkConfig.horizonUrl);
-      assertExists(networkConfig.networkPassphrase);
-      assertExists(networkConfig.rpcUrl);
-      assertExists(networkConfig.friendbotUrl);
+      const networkDetails = await stellarTestLedger.getNetworkDetails();
+      assertExists(networkDetails);
+      assertExists(networkDetails.horizonUrl);
+      assertExists(networkDetails.networkPassphrase);
+      assertExists(networkDetails.rpcUrl);
+      assertExists(networkDetails.friendbotUrl);
 
-      const horizonResponse = await fetch(networkConfig.horizonUrl as string);
+      const horizonResponse = await fetch(networkDetails.horizonUrl as string);
       assertExists(horizonResponse);
       assertStrictEquals(horizonResponse.status, 200);
       await horizonResponse.text();
+    });
+
+    it("returns a latest-image network config that is immediately usable for Friendbot and classic transactions", async () => {
+      const latestLedger = new StellarTestLedger({
+        containerName: "colibri-stellar-test-ledger-latest",
+        containerImageVersion: SupportedImageVersions.LATEST,
+        logLevel,
+      });
+      const sender = NativeAccount.fromMasterSigner(
+        LocalSigner.generateRandom(),
+      );
+      const recipient = NativeAccount.fromMasterSigner(
+        LocalSigner.generateRandom(),
+      );
+
+      try {
+        await latestLedger.start();
+
+        const networkDetails = await latestLedger.getNetworkDetails();
+        assertStrictEquals(networkDetails.allowHttp, true);
+        const networkConfig = NetworkConfig.CustomNet(networkDetails);
+
+        await initializeWithFriendbot(
+          networkConfig.friendbotUrl!,
+          sender.address(),
+          {
+            rpcUrl: networkConfig.rpcUrl!,
+            allowHttp: networkConfig.allowHttp,
+          },
+        );
+        await initializeWithFriendbot(
+          networkConfig.friendbotUrl!,
+          recipient.address(),
+          {
+            rpcUrl: networkConfig.rpcUrl!,
+            allowHttp: networkConfig.allowHttp,
+          },
+        );
+
+        const pipeline = PIPE_ClassicTransaction.create({ networkConfig });
+        const result = await pipeline.run({
+          operations: [
+            Operation.payment({
+              source: sender.address(),
+              destination: recipient.address(),
+              asset: Asset.native(),
+              amount: "1",
+            }),
+          ],
+          config: {
+            fee: "10000000",
+            timeout: 30,
+            source: sender.address(),
+            signers: [sender.signer()],
+          },
+        });
+
+        assertExists(result);
+        assertExists(result.hash);
+        assertExists(result.response);
+      } finally {
+        await latestLedger.stop();
+        await latestLedger.destroy();
+      }
     });
   });
 });

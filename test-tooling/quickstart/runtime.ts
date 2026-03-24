@@ -71,8 +71,13 @@ type WaitForLedgerReadyOptions = RuntimeConfig & {
   timeoutMs?: number;
   host?: string;
   fetchFn?: typeof fetch;
+  friendbotReadyFn?: (probe: FriendbotReadinessProbe) => Promise<void>;
   sleepFn?: (ms: number) => Promise<void>;
   nowFn?: () => number;
+};
+
+type FriendbotReadinessProbe = {
+  friendbotUrl: string;
 };
 
 const QUICKSTART_PORT = 8000;
@@ -125,6 +130,27 @@ const getDockerClient = (
     config?.dockerClient ||
     (createDockerClient(config) as unknown as DockerClientLike)
   );
+};
+
+const waitForFriendbotReady = async (
+  probe: FriendbotReadinessProbe,
+  fetchFn: typeof fetch = fetch,
+): Promise<void> => {
+  const response = await fetchFn(probe.friendbotUrl);
+  const body = await response.text();
+
+  if (response.status === 200 || response.status === 400) {
+    return;
+  }
+
+  throw new Error(
+    `Friendbot is not ready yet (status: ${response.status}, body: ${body}).`,
+  );
+};
+
+const isTerminalReadinessError = (error: unknown): boolean => {
+  return error instanceof READINESS_ERROR &&
+    error.meta.data.terminal === true;
 };
 
 const createDockerLogDecoder = () => {
@@ -612,7 +638,7 @@ export const streamContainerLogs = async (options: {
 };
 
 /**
- * Polls Horizon and Soroban RPC until the quickstart ledger is ready.
+ * Polls Horizon, Soroban RPC, and Friendbot until the quickstart ledger is ready.
  */
 export const waitForLedgerReady = async (
   options: WaitForLedgerReadyOptions,
@@ -623,6 +649,8 @@ export const waitForLedgerReady = async (
   const nowFn = options.nowFn || Date.now;
   const timeoutMs = options.timeoutMs ?? 180000;
   const host = options.host || resolvePublishedPortHost(options);
+  const friendbotReadyFn = options.friendbotReadyFn ||
+    ((probe: FriendbotReadinessProbe) => waitForFriendbotReady(probe, fetchFn));
   const deadline = nowFn() + timeoutMs;
 
   let lastError: unknown;
@@ -642,6 +670,7 @@ export const waitForLedgerReady = async (
             containerId: options.containerId,
             status: inspectInfo.State.Status,
             exitCode: inspectInfo.State.ExitCode,
+            terminal: true,
           },
         });
       }
@@ -708,9 +737,18 @@ export const waitForLedgerReady = async (
         });
       }
 
+      await friendbotReadyFn({
+        friendbotUrl: `${baseUrl}/friendbot`,
+      });
+
       return;
     } catch (error) {
       lastError = error;
+
+      if (isTerminalReadinessError(error)) {
+        throw error;
+      }
+
       await sleepFn(1000);
     }
   }
@@ -720,7 +758,7 @@ export const waitForLedgerReady = async (
       formatError(lastError)
     }`,
     details:
-      "Quickstart did not expose a healthy Horizon and Soroban RPC pair before the timeout elapsed.",
+      "Quickstart did not expose a healthy Horizon, Soroban RPC, and usable Friendbot before the timeout elapsed.",
     data: {
       containerId: options.containerId,
       timeoutMs,

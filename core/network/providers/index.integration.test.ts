@@ -29,14 +29,18 @@ describe("RPC Provider Health Checks", disableSanitizeConfig, () => {
   describe("Gateway", () => {
     it("MainNet should be healthy", async () => {
       const config = Gateway.MainNet();
-      const server = new Server(config.rpcUrl);
+      const server = new Server(config.rpcUrl, {
+        allowHttp: config.allowHttp ?? false,
+      });
       const health = (await server.getHealth()) as GetHealthResponse;
       assertEquals(health.status, "healthy");
     });
 
     it("TestNet should be healthy", async () => {
       const config = Gateway.TestNet();
-      const server = new Server(config.rpcUrl);
+      const server = new Server(config.rpcUrl, {
+        allowHttp: config.allowHttp ?? false,
+      });
       const health = (await server.getHealth()) as GetHealthResponse;
       assertEquals(health.status, "healthy");
     });
@@ -45,7 +49,9 @@ describe("RPC Provider Health Checks", disableSanitizeConfig, () => {
   describe("Lightsail", () => {
     it("MainNet should be healthy", async () => {
       const config = Lightsail.MainNet();
-      const server = new Server(config.rpcUrl);
+      const server = new Server(config.rpcUrl, {
+        allowHttp: config.allowHttp ?? false,
+      });
       const health = (await server.getHealth()) as GetHealthResponse;
       assertEquals(health.status, "healthy");
     });
@@ -58,7 +64,9 @@ describe("RPC Provider Health Checks", disableSanitizeConfig, () => {
       );
 
       const config = Lightsail.MainNet(QUASAR_API_KEY);
-      const server = new Server(config.rpcUrl);
+      const server = new Server(config.rpcUrl, {
+        allowHttp: config.allowHttp ?? false,
+      });
       const health = (await server.getHealth()) as GetHealthResponse;
       assertEquals(health.status, "healthy");
     });
@@ -67,14 +75,18 @@ describe("RPC Provider Health Checks", disableSanitizeConfig, () => {
   describe("Nodies", () => {
     it("MainNet should be healthy", async () => {
       const config = Nodies.MainNet();
-      const server = new Server(config.rpcUrl);
+      const server = new Server(config.rpcUrl, {
+        allowHttp: config.allowHttp ?? false,
+      });
       const health = (await server.getHealth()) as GetHealthResponse;
       assertEquals(health.status, "healthy");
     });
 
     it("TestNet should be healthy", async () => {
       const config = Nodies.TestNet();
-      const server = new Server(config.rpcUrl);
+      const server = new Server(config.rpcUrl, {
+        allowHttp: config.allowHttp ?? false,
+      });
       const health = (await server.getHealth()) as GetHealthResponse;
       assertEquals(health.status, "healthy");
     });

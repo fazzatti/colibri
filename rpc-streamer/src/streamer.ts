@@ -17,14 +17,14 @@ import type { EventStreamerConfig } from "@/variants/event/types.ts";
 import { createLedgerStreamer } from "@/variants/ledger/index.ts";
 import type { LedgerStreamerConfig } from "@/variants/ledger/types.ts";
 import type {
-  DataHandler,
-  CheckpointHandler,
-  ErrorHandler,
-  LiveStartOptions,
+  ArchiveIngestFunc,
   ArchiveStartOptions,
   AutoStartOptions,
+  CheckpointHandler,
+  DataHandler,
+  ErrorHandler,
   LiveIngestFunc,
-  ArchiveIngestFunc,
+  LiveStartOptions,
   RPCStreamerConfig,
 } from "@/types.ts";
 
@@ -84,9 +84,14 @@ export class RPCStreamer<T> {
    * @throws {INVALID_CONFIG} If pagingIntervalMs exceeds waitLedgerIntervalMs
    */
   constructor(config: RPCStreamerConfig<T>) {
-    this._rpc = new Server(config.rpcUrl);
-    if (config.archiveRpcUrl)
-      this._archiveRpc = new Server(config.archiveRpcUrl);
+    this._rpc = new Server(config.rpcUrl, {
+      allowHttp: config.allowHttp ?? false,
+    });
+    if (config.archiveRpcUrl) {
+      this._archiveRpc = new Server(config.archiveRpcUrl, {
+        allowHttp: config.archiveAllowHttp ?? config.allowHttp ?? false,
+      });
+    }
 
     this._ingestLive = config.ingestLive;
     this._ingestArchive = config.ingestArchive;
@@ -94,14 +99,18 @@ export class RPCStreamer<T> {
     if (isDefined(config.options)) {
       const options = config.options;
       if (isDefined(options.limit)) this._limit = options.limit;
-      if (isDefined(options.waitLedgerIntervalMs))
+      if (isDefined(options.waitLedgerIntervalMs)) {
         this._waitLedgerIntervalMs = options.waitLedgerIntervalMs;
-      if (isDefined(options.pagingIntervalMs))
+      }
+      if (isDefined(options.pagingIntervalMs)) {
         this._pagingIntervalMs = options.pagingIntervalMs;
-      if (isDefined(options.archivalIntervalMs))
+      }
+      if (isDefined(options.archivalIntervalMs)) {
         this._archivalIntervalMs = options.archivalIntervalMs;
-      if (isDefined(options.skipLedgerWaitIfBehind))
+      }
+      if (isDefined(options.skipLedgerWaitIfBehind)) {
         this._skipLedgerWaitIfBehind = options.skipLedgerWaitIfBehind;
+      }
     }
 
     if (this._pagingIntervalMs > this._waitLedgerIntervalMs) {
@@ -164,9 +173,10 @@ export class RPCStreamer<T> {
   /**
    * Sets the archive RPC server by URL.
    * @param archiveRpcUrl - URL of the archive RPC server
+   * @param allowHttp - Allow HTTP for the archive RPC server
    */
-  public setArchiveRpc(archiveRpcUrl: string): void {
-    this._archiveRpc = new Server(archiveRpcUrl);
+  public setArchiveRpc(archiveRpcUrl: string, allowHttp = false): void {
+    this._archiveRpc = new Server(archiveRpcUrl, { allowHttp });
   }
 
   /**
@@ -327,8 +337,8 @@ export class RPCStreamer<T> {
         }
 
         try {
-          const { nextLedger, shouldWait, hitStopLedger } =
-            await this._ingestLive(
+          const { nextLedger, shouldWait, hitStopLedger } = await this
+            ._ingestLive(
               this._rpc,
               currentLedger,
               onData,
@@ -570,8 +580,8 @@ export class RPCStreamer<T> {
         }
 
         try {
-          const { nextLedger, shouldWait, hitStopLedger } =
-            await this._ingestLive(
+          const { nextLedger, shouldWait, hitStopLedger } = await this
+            ._ingestLive(
               this._rpc,
               currentLedger,
               onData,

@@ -10,10 +10,10 @@ import { StellarAssetContract } from "@/asset/sac/index.ts";
 import {
   Asset,
   AuthClawbackEnabledFlag,
+  type AuthFlag,
   AuthRevocableFlag,
   Operation,
   xdr,
-  type AuthFlag,
 } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import { toStellarAssetCanonicalString } from "@/asset/sep11/index.ts";
@@ -82,10 +82,14 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
   };
 
   beforeAll(async () => {
-    await initializeWithFriendbot(networkConfig.friendbotUrl, issuer.address(), {
-      rpcUrl: networkConfig.rpcUrl,
-      allowHttp: networkConfig.allowHttp,
-    });
+    await initializeWithFriendbot(
+      networkConfig.friendbotUrl,
+      issuer.address(),
+      {
+        rpcUrl: networkConfig.rpcUrl,
+        allowHttp: networkConfig.allowHttp,
+      },
+    );
     await initializeWithFriendbot(networkConfig.friendbotUrl, userA.address(), {
       rpcUrl: networkConfig.rpcUrl,
       allowHttp: networkConfig.allowHttp,
@@ -331,7 +335,9 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
   describe("Allowance operations", () => {
     it("approves and checks allowance", async () => {
       const allowanceAmount = 5_000_0000000n; // 5K COLIBRI
-      const rpc = new Server(networkConfig.rpcUrl);
+      const rpc = new Server(networkConfig.rpcUrl, {
+        allowHttp: networkConfig.allowHttp ?? false,
+      });
       const currentLedger = (await rpc.getLatestLedger()).sequence;
       const expirationLedger = currentLedger + 1000; // ~83 minutes
 
@@ -414,7 +420,9 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
     it("burns tokens using burnFrom", async () => {
       // Set up a new allowance for burning
       const burnAllowance = 500_0000000n; // 500 COLIBRI
-      const rpc = new Server(networkConfig.rpcUrl);
+      const rpc = new Server(networkConfig.rpcUrl, {
+        allowHttp: networkConfig.allowHttp ?? false,
+      });
       const currentLedger = (await rpc.getLatestLedger()).sequence;
       const expirationLedger = currentLedger + 1000;
 

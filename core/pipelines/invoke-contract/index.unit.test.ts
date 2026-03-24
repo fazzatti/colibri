@@ -8,12 +8,12 @@ import * as E from "@/pipelines/invoke-contract/error.ts";
 import { createInvokeContractPipeline } from "@/pipelines/invoke-contract/index.ts";
 import type { SimulateTransactionOutput } from "@/processes/simulate-transaction/types.ts";
 import {
-  INVOKE_CONTRACT_INPUT_STEP_ID,
-  inputToBuild,
-  signAuthEntriesToAssemble,
-  simulateToSignAuthEntries,
   envSignReqToSignEnvelope,
+  inputToBuild,
+  INVOKE_CONTRACT_INPUT_STEP_ID,
+  signAuthEntriesToAssemble,
   signEnvelopeToSendTransaction,
+  simulateToSignAuthEntries,
 } from "@/pipelines/invoke-contract/connectors.ts";
 import type { InvokeContractInput } from "@/pipelines/invoke-contract/types.ts";
 import type { EnvelopeSigningRequirementsOutput } from "@/processes/envelope-signing-requirements/types.ts";
@@ -47,6 +47,19 @@ describe("createInvokeContractPipeline", () => {
 
       assertEquals(pipeline.id, "InvokeContractPipeline");
     });
+
+    it("accepts HTTP rpcUrl when allowHttp is true", () => {
+      const networkConfig: NetworkConfig = NetworkConfig.CustomNet({
+        networkPassphrase: "Standalone Network ; February 2017",
+        rpcUrl: "http://127.0.0.1:8000/rpc",
+        allowHttp: true,
+        type: NetworkType.TESTNET,
+      });
+
+      const pipeline = createInvokeContractPipeline({ networkConfig });
+
+      assertEquals(pipeline.id, "InvokeContractPipeline");
+    });
   });
 
   describe("Connectors", () => {
@@ -66,7 +79,7 @@ describe("createInvokeContractPipeline", () => {
 
         const connector = inputToBuild(
           mockRpc,
-          networkConfig.networkPassphrase
+          networkConfig.networkPassphrase,
         );
         assertEquals(typeof connector, "function");
 
@@ -172,7 +185,7 @@ describe("createInvokeContractPipeline", () => {
         assertExists(result);
         assertEquals(
           result.signatureRequirements,
-          mockEnvelopeSigningReqOutput
+          mockEnvelopeSigningReqOutput,
         );
         assertEquals(result.transaction, mockAssembleOutput);
         assertEquals(result.signers, mockInputStep.config.signers);
@@ -215,7 +228,7 @@ describe("createInvokeContractPipeline", () => {
         const mockNetworkPassphrase = "mockNetworkPassphrase";
         const connector = simulateToSignAuthEntries(
           mockRpc,
-          mockNetworkPassphrase
+          mockNetworkPassphrase,
         );
 
         const context = createRunContext();
@@ -260,7 +273,7 @@ describe("createInvokeContractPipeline", () => {
         const mockNetworkPassphrase = "mockNetworkPassphrase";
         const connector = simulateToSignAuthEntries(
           mockRpc,
-          mockNetworkPassphrase
+          mockNetworkPassphrase,
         );
 
         const context = createRunContext();
@@ -295,7 +308,7 @@ describe("createInvokeContractPipeline", () => {
           createInvokeContractPipeline({
             networkConfig: undefined as unknown as NetworkConfig,
           }),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
     });
 
@@ -306,7 +319,7 @@ describe("createInvokeContractPipeline", () => {
 
       assertThrows(
         () => createInvokeContractPipeline({ networkConfig }),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
     });
 
@@ -317,7 +330,7 @@ describe("createInvokeContractPipeline", () => {
 
       assertThrows(
         () => createInvokeContractPipeline({ networkConfig }),
-        E.MISSING_RPC_URL
+        E.MISSING_RPC_URL,
       );
     });
 
@@ -326,7 +339,7 @@ describe("createInvokeContractPipeline", () => {
 
       assertThrows(
         () => createInvokeContractPipeline({ networkConfig }),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
     });
 
@@ -338,7 +351,7 @@ describe("createInvokeContractPipeline", () => {
       });
       assertThrows(
         () => createInvokeContractPipeline({ networkConfig }),
-        E.UNEXPECTED_ERROR
+        E.UNEXPECTED_ERROR,
       );
     });
   });
