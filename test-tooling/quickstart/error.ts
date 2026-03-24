@@ -80,7 +80,7 @@ export abstract class QuickstartError<
   readonly domain = "tools";
   readonly code: CodeType;
   readonly source = "@colibri/test-tooling/quickstart";
-  readonly details?: string;
+  readonly details: string;
   readonly diagnostic?: Diagnostic;
   readonly meta: Meta<DataType>;
 
