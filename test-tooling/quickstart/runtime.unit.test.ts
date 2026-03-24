@@ -986,6 +986,7 @@ Deno.test("waitForLedgerReady fails fast when the container exits", async () => 
   );
 
   assertStrictEquals(stoppedError.code, Code.READINESS_ERROR);
+  assertEquals(stoppedError.meta.data.terminal, true);
   assertEquals(sleepCalls, 0);
 });
 

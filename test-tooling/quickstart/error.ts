@@ -56,6 +56,20 @@ const normalizeCause = (cause?: unknown): Error | null => {
   }
 };
 
+const serializeCause = (
+  cause: Error | null,
+): { name: string; message: string; stack?: string } | null => {
+  if (!cause) {
+    return null;
+  }
+
+  return {
+    name: cause.name,
+    message: cause.message,
+    stack: cause.stack,
+  };
+};
+
 /**
  * Base class for all quickstart-specific errors.
  */
@@ -93,7 +107,10 @@ export abstract class QuickstartError<
       source: this.source,
       details: this.details,
       diagnostic: this.diagnostic,
-      meta: this.meta,
+      meta: {
+        ...this.meta,
+        cause: serializeCause(this.meta.cause),
+      },
     };
   }
 }

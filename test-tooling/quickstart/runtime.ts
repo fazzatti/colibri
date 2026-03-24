@@ -150,7 +150,7 @@ const waitForFriendbotReady = async (
 
 const isTerminalReadinessError = (error: unknown): boolean => {
   return error instanceof READINESS_ERROR &&
-    error.message.startsWith("Container is not running");
+    error.meta.data.terminal === true;
 };
 
 const createDockerLogDecoder = () => {
@@ -670,6 +670,7 @@ export const waitForLedgerReady = async (
             containerId: options.containerId,
             status: inspectInfo.State.Status,
             exitCode: inspectInfo.State.ExitCode,
+            terminal: true,
           },
         });
       }

@@ -1,5 +1,6 @@
 import {
   assertEquals,
+  assertExists,
   assertInstanceOf,
   assertStrictEquals,
 } from "@std/assert";
@@ -77,6 +78,25 @@ Deno.test("quickstart errors serialize to JSON", () => {
       },
     },
   });
+});
+
+Deno.test("quickstart errors serialize causes as plain JSON-safe objects", () => {
+  const error = new DOCKER_CONFIGURATION_ERROR({
+    message: "Docker config failed.",
+    details: "Bad socket.",
+    cause: new Error("boom"),
+  });
+
+  const serialized = error.toJSON() as {
+    meta: {
+      cause: { name: string; message: string; stack?: string } | null;
+    };
+  };
+
+  assertStrictEquals(serialized.meta.cause?.name, "Error");
+  assertStrictEquals(serialized.meta.cause?.message, "boom");
+  assertExists(serialized.meta.cause?.stack);
+  assertEquals(typeof serialized.meta.cause?.stack, "string");
 });
 
 Deno.test("quickstart errors normalize Error, string, and object causes", () => {
