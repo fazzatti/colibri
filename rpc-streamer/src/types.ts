@@ -166,8 +166,12 @@ export interface ArchiveIngestContext {
 export interface RPCStreamerConfig<T> {
   /** URL of the Soroban RPC server for live streaming */
   rpcUrl: string;
+  /** Allow HTTP for the live RPC server (default: false) */
+  allowHttp?: boolean;
   /** Optional URL of an archive RPC server for historical ingestion */
   archiveRpcUrl?: string;
+  /** Allow HTTP for the archive RPC server (defaults to allowHttp or false) */
+  archiveAllowHttp?: boolean;
   /** Callback for live ingestion logic (required for startLive and start) */
   ingestLive?: LiveIngestFunc<T>;
   /** Callback for archive ingestion logic (required for startArchive and start with archive) */

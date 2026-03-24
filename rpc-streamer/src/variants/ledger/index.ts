@@ -5,12 +5,12 @@
  */
 
 import type { Server } from "stellar-sdk/rpc";
-import { Ledger, isDefined } from "@colibri/core";
+import { isDefined, Ledger } from "@colibri/core";
 import { RPCStreamer } from "@/streamer.ts";
 import type {
+  ArchiveIngestContext,
   DataHandler,
   LiveIngestionResult,
-  ArchiveIngestContext,
 } from "@/types.ts";
 import type { LedgerStreamerConfig } from "./types.ts";
 
@@ -167,7 +167,9 @@ export function createLedgerStreamer(
 
   return new RPCStreamer<Ledger>({
     rpcUrl: config.rpcUrl,
+    allowHttp: config.allowHttp,
     archiveRpcUrl: config.archiveRpcUrl,
+    archiveAllowHttp: config.archiveAllowHttp,
     ingestLive,
     ingestArchive,
     options: config.options,

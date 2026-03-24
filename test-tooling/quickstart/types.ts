@@ -1,4 +1,3 @@
-import type { NetworkConfig } from "@colibri/core";
 import type Dockerode from "dockerode";
 import type { Container } from "dockerode";
 import type { LoggerLike, LogLevelDesc } from "@/quickstart/logging.ts";
@@ -8,15 +7,36 @@ export type { LoggerLike, LogLevelDesc } from "@/quickstart/logging.ts";
 export type { Container };
 
 /**
+ * Connection details for a running quickstart ledger.
+ */
+export interface NetworkDetails {
+  /** Stellar standalone network passphrase exposed by quickstart. */
+  readonly networkPassphrase: string;
+  /** Soroban RPC endpoint. */
+  readonly rpcUrl: string;
+  /** Horizon endpoint. */
+  readonly horizonUrl: string;
+  /** Friendbot endpoint. */
+  readonly friendbotUrl: string;
+  /** Quickstart exposes plain HTTP endpoints locally. */
+  readonly allowHttp: true;
+}
+
+/**
  * Common interface exposed by quickstart-backed ledgers.
  */
 export interface IStellarTestLedger {
   /**
-   * Resolves the network configuration for the running quickstart instance.
+   * Resolves the network details for the running quickstart instance.
    *
-   * @returns A Colibri `NetworkConfig` pointing at the running ledger.
+   * @returns The plain connection payload for the running ledger.
    */
-  getNetworkConfiguration(): Promise<NetworkConfig>;
+  getNetworkDetails(): Promise<NetworkDetails>;
+
+  /**
+   * Resolves the network details for the running quickstart instance.
+   */
+  getNetworkConfiguration(): Promise<NetworkDetails>;
 
   /**
    * Returns the tracked Docker container instance.
@@ -104,6 +124,13 @@ export interface TestLedgerOptions {
    * Supported tags are listed in `SupportedImageVersions`.
    */
   readonly containerImageVersion?: SupportedImageVersions;
+
+  /**
+   * Custom Docker image tag to use instead of a supported preset.
+   *
+   * Mutually exclusive with `containerImageVersion`.
+   */
+  readonly customContainerImageVersion?: string;
 
   /**
    * Stream container stdout/stderr into the configured logger.

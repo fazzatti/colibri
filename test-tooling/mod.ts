@@ -14,7 +14,7 @@
  * const ledger = new StellarTestLedger();
  * await ledger.start();
  *
- * const network = await ledger.getNetworkConfiguration();
+ * const network = await ledger.getNetworkDetails();
  * console.log(network.rpcUrl);
  *
  * await ledger.stop();

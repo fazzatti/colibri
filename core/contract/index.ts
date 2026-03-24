@@ -1,6 +1,6 @@
 import {
-  Contract as StellarContract,
   Address,
+  Contract as StellarContract,
   Operation,
   xdr,
 } from "stellar-sdk";
@@ -12,8 +12,8 @@ import {
   PIPE_InvokeContract,
 } from "@/pipelines/invoke-contract/index.ts";
 import {
-  type ReadFromContractPipeline,
   PIPE_ReadFromContract,
+  type ReadFromContractPipeline,
 } from "@/pipelines/read-from-contract/index.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 import { assert } from "@/common/assert/assert.ts";
@@ -51,13 +51,15 @@ export class Contract {
         networkPassphrase: networkConfig && networkConfig.networkPassphrase,
         contractConfig: contractConfig,
       },
-      (argName: string) => new E.MISSING_ARG(argName)
+      (argName: string) => new E.MISSING_ARG(argName),
     );
 
     this.networkConfig = networkConfig;
     if (!rpc) {
       assert(networkConfig && networkConfig.rpcUrl, new E.MISSING_RPC_URL());
-      rpc = new Server(networkConfig.rpcUrl, { allowHttp: networkConfig.allowHttp });
+      rpc = new Server(networkConfig.rpcUrl, {
+        allowHttp: networkConfig.allowHttp ?? false,
+      });
     }
 
     this.rpc = rpc;
@@ -78,7 +80,7 @@ export class Contract {
     if (contractId) {
       assert(
         StrKey.isContractId(contractId),
-        new E.INVALID_CONTRACT_ID(contractId)
+        new E.INVALID_CONTRACT_ID(contractId),
       );
       this.contractId = contractId;
     }
@@ -89,8 +91,8 @@ export class Contract {
       this.wasmHash = wasmHash;
     }
 
-    const hasValidContractConfig =
-      this.contractId || this.wasm || this.wasmHash;
+    const hasValidContractConfig = this.contractId || this.wasm ||
+      this.wasmHash;
 
     assert(hasValidContractConfig, new E.INVALID_CONTRACT_CONFIG());
   }
@@ -106,7 +108,7 @@ export class Contract {
   protected require(arg: "wasmHash"): string;
   protected require(arg: "contractId"): ContractId;
   protected require(
-    arg: "spec" | "contractId" | "wasm" | "wasmHash"
+    arg: "spec" | "contractId" | "wasm" | "wasmHash",
   ): ContractId | Spec | Buffer | string {
     assert(this[arg], new E.MISSING_REQUIRED_PROPERTY(arg));
     return this[arg];
@@ -155,12 +157,12 @@ export class Contract {
       xdr.LedgerKey.contractCode(
         new xdr.LedgerKeyContractCode({
           hash: Buffer.from(this.getWasmHash(), "hex"),
-        })
-      )
+        }),
+      ),
     )) as Api.GetLedgerEntriesResponse;
 
     const contractCode = ledgerEntries.entries.find(
-      (entry) => entry.key.switch().name === "contractCode"
+      (entry) => entry.key.switch().name === "contractCode",
     );
 
     assert(contractCode, new E.CONTRACT_CODE_NOT_FOUND(this.getWasmHash()));
@@ -168,20 +170,22 @@ export class Contract {
     return contractCode as Api.LedgerEntryResult;
   }
 
-  public async getContractInstanceLedgerEntry(): Promise<Api.LedgerEntryResult> {
+  public async getContractInstanceLedgerEntry(): Promise<
+    Api.LedgerEntryResult
+  > {
     const footprint = this.getContractFootprint();
 
     const ledgerEntries = (await this.rpc.getLedgerEntries(
-      footprint
+      footprint,
     )) as Api.GetLedgerEntriesResponse;
 
     const contractInstance = ledgerEntries.entries.find(
-      (entry) => entry.key.switch().name === "contractData"
+      (entry) => entry.key.switch().name === "contractData",
     );
 
     assert(
       contractInstance,
-      new E.CONTRACT_INSTANCE_NOT_FOUND(this.getContractId())
+      new E.CONTRACT_INSTANCE_NOT_FOUND(this.getContractId()),
     );
     return contractInstance as Api.LedgerEntryResult;
   }
@@ -198,10 +202,9 @@ export class Contract {
    * @description - Uploads the contract wasm to the network and stores the wasm hash in this contract instance.
    *
    * @requires - The wasm file buffer to be set in the contract engine.
-   *
-   * */
+   */
   public async uploadWasm(
-    config: TransactionConfig
+    config: TransactionConfig,
   ): Promise<InvokeContractOutput> {
     const wasm = this.getWasm();
 
@@ -231,8 +234,7 @@ export class Contract {
    * @description - Deploys a new instance of the contract to the network and stores the contract id in the contract instance.
    *
    * @requires - The wasm hash to be set in the contract instance.
-   *
-   * */
+   */
   public async deploy<T>({
     config,
     constructorArgs,
@@ -264,7 +266,7 @@ export class Contract {
       });
 
       this.contractId = getContractIdFromGetTransactionResponse(
-        result.response
+        result.response,
       );
 
       return result;
@@ -274,7 +276,6 @@ export class Contract {
   }
 
   /**
-   *
    * @param {void} args - No arguments.
    *
    * @returns {Promise<void>} - The output of the invocation.
@@ -287,7 +288,7 @@ export class Contract {
     const wasmModule = await WebAssembly.compile(wasm as BufferSource);
     const xdrSections = WebAssembly.Module.customSections(
       wasmModule,
-      "contractspecv0"
+      "contractspecv0",
     );
 
     assert(xdrSections.length > 0, new E.MISSING_SPEC_IN_WASM());
@@ -302,7 +303,6 @@ export class Contract {
   }
 
   /**
-   *
    * @param {void} args - No arguments.
    *
    * @returns {Promise<void>} - The output of the invocation.
@@ -326,7 +326,6 @@ export class Contract {
   }
 
   /**
-   *
    * @param {void} args - No arguments.
    *
    * @returns {Promise<void>} - The output of the invocation.
@@ -356,7 +355,6 @@ export class Contract {
   //
 
   /**
-   *
    * @args {SorobanSimulateArgs<object>} args - The arguments for the invocation.
    * @param {string} args.method - The method to invoke as it is identified in the contract.
    * @param {object} args.methodArgs - The arguments for the method invocation.
@@ -366,7 +364,6 @@ export class Contract {
    *
    * @description - Simulate an invocation of a contract method that does not alter the state of the contract.
    * This function does not require any signers. It builds a transaction, simulates it, and extracts the output of the invocation from the simulation.
-   *
    */
   public async read({
     method,
@@ -392,7 +389,6 @@ export class Contract {
   }
 
   /**
-   *
    * @param {string} method - The method to invoke as it is identified in the contract.
    * @param {object} .methodArgs - The arguments for the method invocation.
    * @param {TransactionConfig} config - The transaction configuration object to use in this transaction.
@@ -401,7 +397,6 @@ export class Contract {
    *
    * @description - Invokes a contract method that alters the state of the contract.
    * This function requires signers. It builds a transaction, simulates it, signs it, submits it to the network, and extracts the output of the invocation from the processed transaction.
-   *
    */
   public async invoke({
     method,
@@ -431,7 +426,6 @@ export class Contract {
   }
 
   /**
-   *
    * @param {object} operationArgs - The raw arguments for the operation.
    * @param {string} operationArgs.function - The function name to invoke.
    * @param {xdr.ScVal[]} operationArgs.args - The arguments for the function invocation as ScVal array.
@@ -442,7 +436,6 @@ export class Contract {
    *
    * @description - Invokes a contract method that alters the state of the contract.
    * This function requires signers. It builds a transaction, simulates it, signs it, submits it to the network, and extracts the output of the invocation from the processed transaction.
-   *
    */
   public async invokeRaw({
     operationArgs,
@@ -466,7 +459,6 @@ export class Contract {
   }
 
   /**
-   *
    * @param {string} method - The method to invoke as it is identified in the contract.
    * @param {xdr.ScVal[]} methodArgs - The arguments for the method invocation in ScVal array.
    *
@@ -474,7 +466,6 @@ export class Contract {
    * encoded as ScVal array.
    *
    * @description - Simulate an invocation of a contract method that does not alter the state of the contract.
-   *
    */
   public async readRaw({
     method,

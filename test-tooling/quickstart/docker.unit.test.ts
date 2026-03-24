@@ -110,12 +110,16 @@ Deno.test("resolveDockerOptions honors explicit options and DOCKER_HOST", () => 
 
   assertEquals(
     resolveDockerOptions({
-      dockerOptions: { host: "docker.internal", port: 2375 },
+      dockerOptions: {
+        host: "docker.internal",
+        port: 2375,
+        protocol: "http",
+        version: "v1.42",
+      },
       dockerSocketPath: "/tmp/docker.sock",
     }),
     {
-      host: "docker.internal",
-      port: 2375,
+      version: "v1.42",
       socketPath: "/tmp/docker.sock",
     },
   );
@@ -181,6 +185,12 @@ Deno.test("resolvePublishedPortHost uses the Docker daemon host when needed", ()
       dockerOptions: { host: "docker.internal", port: 2375 },
     }),
     "docker.internal",
+  );
+  assertEquals(
+    resolvePublishedPortHost({
+      dockerOptions: { host: "http://192.168.1.10", port: 2375 },
+    }),
+    "192.168.1.10",
   );
   assertEquals(
     resolvePublishedPortHost({
