@@ -32,6 +32,37 @@ const COMMON_DOCKER_SOCKET_PATHS = [
 
 const DEFAULT_PUBLISHED_PORT_HOST = "127.0.0.1";
 
+const stripRemoteDockerConnectionFields = (
+  dockerOptions: Dockerode.DockerOptions,
+): Dockerode.DockerOptions => {
+  const {
+    host: _host,
+    port: _port,
+    protocol: _protocol,
+    socketPath: _socketPath,
+    ...remainingOptions
+  } = dockerOptions;
+
+  return remainingOptions;
+};
+
+const normalizePublishedPortHost = (host: string): string => {
+  const value = host.trim();
+
+  if (!value) {
+    return value;
+  }
+
+  if (!value.includes("://")) {
+    return value;
+  }
+
+  const parsed = parseDockerHost(value);
+  return parsed.socketPath
+    ? DEFAULT_PUBLISHED_PORT_HOST
+    : (parsed.host?.trim() || DEFAULT_PUBLISHED_PORT_HOST);
+};
+
 /**
  * Parses a `DOCKER_HOST` value into Dockerode options.
  */
@@ -183,7 +214,10 @@ export const resolveDockerOptions = (
 
   if (dockerOptions && Object.keys(dockerOptions).length > 0) {
     return dockerSocketPath
-      ? { ...dockerOptions, socketPath: dockerSocketPath }
+      ? {
+        ...stripRemoteDockerConnectionFields(dockerOptions),
+        socketPath: dockerSocketPath,
+      }
       : dockerOptions;
   }
 
@@ -218,7 +252,9 @@ export const resolvePublishedPortHost = (
     return DEFAULT_PUBLISHED_PORT_HOST;
   }
 
-  let host = dockerOptions?.host?.trim();
+  let host = dockerOptions?.host
+    ? normalizePublishedPortHost(dockerOptions.host)
+    : undefined;
   if (!host) {
     const dockerHost = (dependencies && "dockerHost" in dependencies
       ? dependencies.dockerHost
