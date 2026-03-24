@@ -222,7 +222,7 @@ export class StellarTestLedger implements IStellarTestLedger {
 
       this.containerImageVersion = customContainerImageVersion;
     } else {
-      this.containerImageVersion = options?.containerImageVersion ||
+      this.containerImageVersion = options?.containerImageVersion ??
         DEFAULTS.imageVersion;
 
       if (

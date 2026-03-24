@@ -217,6 +217,15 @@ Deno.test("constructor validates supported options", () => {
   );
   assertStrictEquals(imageError.code, Code.INVALID_CONFIGURATION);
 
+  const emptyImageError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        containerImageVersion: "" as SupportedImageVersions,
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(emptyImageError.code, Code.INVALID_CONFIGURATION);
+
   const conflictingImageError = assertThrows(
     () =>
       new StellarTestLedger({
