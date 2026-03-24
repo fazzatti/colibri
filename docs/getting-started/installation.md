@@ -37,10 +37,10 @@ This will add the packages to your `deno.json` imports map:
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^0.17.2",
+    "@colibri/core": "jsr:@colibri/core@^0.17.3",
     "@colibri/sep10": "jsr:@colibri/sep10@^0.5.2",
-    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.2.2",
-    "@colibri/test-tooling": "jsr:@colibri/test-tooling@^0.1.0",
+    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.2.3",
+    "@colibri/test-tooling": "jsr:@colibri/test-tooling@^0.2.0",
     "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.9.2"
   }
 }
@@ -51,9 +51,9 @@ This will add the packages to your `deno.json` imports map:
 You can also import directly from JSR URLs:
 
 ```typescript
-import { LocalSigner, NetworkConfig } from "jsr:@colibri/core@^0.17.2";
-import { RPCStreamer } from "jsr:@colibri/rpc-streamer@^0.2.2";
-import { StellarTestLedger } from "jsr:@colibri/test-tooling@^0.1.0";
+import { LocalSigner, NetworkConfig } from "jsr:@colibri/core@^0.17.3";
+import { RPCStreamer } from "jsr:@colibri/rpc-streamer@^0.2.3";
+import { StellarTestLedger } from "jsr:@colibri/test-tooling@^0.2.0";
 ```
 
 ## Package Overview

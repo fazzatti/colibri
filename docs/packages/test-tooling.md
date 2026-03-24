@@ -3,9 +3,9 @@
 The `@colibri/test-tooling` package provides Docker-backed test infrastructure
 for Colibri packages.
 
-Its current public API is centered on `StellarTestLedger`, a harness that
-starts, reuses, inspects, stops, and destroys a Stellar Quickstart container for
-integration tests.
+Its current public API is centered on `StellarTestLedger`, a Docker-backed
+harness that starts, reuses, inspects, stops, and destroys a Stellar Quickstart
+instance for integration tests.
 
 ## Installation
 
@@ -29,7 +29,7 @@ const ledger = new StellarTestLedger();
 try {
   await ledger.start();
 
-  const network = await ledger.getNetworkConfiguration();
+  const network = await ledger.getNetworkDetails();
   console.log(network.rpcUrl);
 } finally {
   await ledger.stop();
@@ -37,9 +37,9 @@ try {
 }
 ```
 
-`start()` waits until both Horizon and Soroban RPC are ready before returning.
-If you have already pulled the required image, `start(true)` skips the image
-pull step.
+`start()` waits until Horizon, Soroban RPC, and Friendbot are ready before
+returning. If you have already pulled the required image, `start(true)` skips
+the image pull step.
 
 ## Reusing an Existing Container
 
@@ -55,7 +55,7 @@ const ledger = new StellarTestLedger({
 });
 
 await ledger.start();
-const network = await ledger.getNetworkConfiguration();
+const network = await ledger.getNetworkDetails();
 console.log(network.horizonUrl);
 ```
 
@@ -98,12 +98,17 @@ const ledger = new StellarTestLedger({
 - Only `NetworkEnv.LOCAL` is currently supported
 - Only `ResourceLimits.TESTNET` is currently supported
 - Supported image tags are `latest`, `v425-latest`, and `pr757-latest`
+- Arbitrary image tags are also supported via `customContainerImageVersion`
 - The default container name is `colibri-stellar-test-ledger`
+- `start(true)` skips the image pull step
 
 ## Configuration Options
 
 - `containerName` controls the Docker container name used for create or reuse
-- `containerImageName` and `containerImageVersion` select the quickstart image
+- `containerImageName` and `containerImageVersion` select a supported quickstart
+  image preset
+- `customContainerImageVersion` selects an arbitrary quickstart image tag and is
+  mutually exclusive with `containerImageVersion`
 - `useRunningLedger` attaches to an existing named container instead of creating
   a new one
 - `dockerOptions` and `dockerSocketPath` override Docker endpoint discovery
@@ -118,8 +123,9 @@ const ledger = new StellarTestLedger({
 
 - `new StellarTestLedger(options)` creates a quickstart ledger manager
 - `ledger.start(omitPull?)` starts or reuses the Docker container and waits
-  until Horizon and RPC are ready
-- `ledger.getNetworkConfiguration()` returns a Colibri `NetworkConfig`
+  until Horizon, RPC, and Friendbot are ready
+- `ledger.getNetworkDetails()` returns the plain connection payload for the
+  running ledger
 - `ledger.getContainer()` returns the Dockerode container instance
 - `ledger.getContainerIpAddress()` returns the container IP reported by Docker
 - `ledger.stop()` stops the tracked container without deleting it
@@ -147,8 +153,8 @@ const ledger = new StellarTestLedger({
 
 ## Error Handling
 
-The package standardizes its runtime failures with quickstart-specific
-`ColibriError` subclasses exported from the package root:
+The package standardizes its runtime failures with quickstart-specific error
+subclasses exported from the package root:
 
 - `INVALID_CONFIGURATION`
 - `DOCKER_CONFIGURATION_ERROR`
