@@ -35,8 +35,6 @@ export interface IStellarTestLedger {
 
   /**
    * Resolves the network details for the running quickstart instance.
-   *
-   * @deprecated Use `getNetworkDetails()` instead.
    */
   getNetworkConfiguration(): Promise<NetworkDetails>;
 

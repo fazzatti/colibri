@@ -169,10 +169,27 @@ export class StellarTestLedger implements IStellarTestLedger {
       });
     }
 
-    const customContainerImageVersion = options?.customContainerImageVersion
-      ?.trim();
+    const rawCustomContainerImageVersion =
+      options?.customContainerImageVersion;
     const usesCustomContainerImageVersion =
-      typeof options?.customContainerImageVersion === "string";
+      typeof rawCustomContainerImageVersion === "string";
+    const customContainerImageVersion = usesCustomContainerImageVersion
+      ? rawCustomContainerImageVersion.trim()
+      : undefined;
+
+    if (
+      rawCustomContainerImageVersion !== undefined &&
+      !usesCustomContainerImageVersion
+    ) {
+      throw new INVALID_CONFIGURATION({
+        option: "customContainerImageVersion",
+        value: rawCustomContainerImageVersion,
+        message:
+          "StellarTestLedger#constructor() customContainerImageVersion must be a string.",
+        details:
+          "Provide a Docker image tag string when overriding the supported image version presets.",
+      });
+    }
 
     if (
       options?.containerImageVersion !== undefined &&
@@ -461,8 +478,6 @@ export class StellarTestLedger implements IStellarTestLedger {
 
   /**
    * Resolves the network details for the running quickstart services.
-   *
-   * @deprecated Use `getNetworkDetails()` instead.
    */
   public async getNetworkConfiguration(): Promise<NetworkDetails> {
     return await this.getNetworkDetails();

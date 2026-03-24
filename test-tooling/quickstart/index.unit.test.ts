@@ -235,6 +235,18 @@ Deno.test("constructor validates supported options", () => {
     INVALID_CONFIGURATION,
   );
   assertStrictEquals(emptyCustomImageError.code, Code.INVALID_CONFIGURATION);
+
+  const nonStringCustomImageError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        customContainerImageVersion: 42 as unknown as string,
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(
+    nonStringCustomImageError.code,
+    Code.INVALID_CONFIGURATION,
+  );
 });
 
 Deno.test("constructor preserves numeric TRACE log levels", () => {
