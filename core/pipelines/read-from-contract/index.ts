@@ -25,12 +25,14 @@ const createReadFromContractPipeline = ({
         networkConfig,
         networkPassphrase: networkConfig && networkConfig.networkPassphrase,
       },
-      (argName: string) => new E.MISSING_ARG(argName)
+      (argName: string) => new E.MISSING_ARG(argName),
     );
 
     if (!rpc) {
       assert(networkConfig && networkConfig.rpcUrl, new E.MISSING_RPC_URL());
-      rpc = new Server(networkConfig.rpcUrl!);
+      rpc = new Server(networkConfig.rpcUrl!, {
+        allowHttp: networkConfig.allowHttp ?? false,
+      });
     }
     const BuildTransaction = createBuildTransactionStep();
     const SimulateTransaction = createSimulateTransactionStep();

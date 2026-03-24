@@ -1,5 +1,6 @@
 import {
   assertEquals,
+  assertExists,
   assertInstanceOf,
   assertStrictEquals,
 } from "@std/assert";
@@ -14,7 +15,7 @@ import {
   READINESS_ERROR,
 } from "@/quickstart/error.ts";
 
-Deno.test("quickstart errors expose consistent Colibri metadata", () => {
+Deno.test("quickstart errors expose consistent metadata", () => {
   const error = new INVALID_CONFIGURATION({
     option: "network",
     value: "testnet",
@@ -35,6 +36,67 @@ Deno.test("quickstart errors expose consistent Colibri metadata", () => {
       supportedValues: ["local"],
     },
   });
+});
+
+Deno.test("quickstart errors serialize to JSON", () => {
+  class TEST_ERROR extends QuickstartError<"TEST_ERROR", { option: string }> {
+    constructor() {
+      super({
+        code: "TEST_ERROR",
+        message: "Invalid network option.",
+        details: "Only local ledgers are supported.",
+        diagnostic: {
+          rootCause: "Unsupported network profile.",
+          suggestion: "Use the local quickstart network.",
+          materials: ["https://example.com/quickstart"],
+        },
+        data: {
+          option: "network",
+        },
+      });
+    }
+  }
+
+  const error = new TEST_ERROR();
+
+  assertEquals(error.toJSON(), {
+    name: "QuickstartError TEST_ERROR",
+    domain: "tools",
+    code: "TEST_ERROR",
+    message: "Invalid network option.",
+    source: "@colibri/test-tooling/quickstart",
+    details: "Only local ledgers are supported.",
+    diagnostic: {
+      rootCause: "Unsupported network profile.",
+      suggestion: "Use the local quickstart network.",
+      materials: ["https://example.com/quickstart"],
+    },
+    meta: {
+      cause: null,
+      data: {
+        option: "network",
+      },
+    },
+  });
+});
+
+Deno.test("quickstart errors serialize causes as plain JSON-safe objects", () => {
+  const error = new DOCKER_CONFIGURATION_ERROR({
+    message: "Docker config failed.",
+    details: "Bad socket.",
+    cause: new Error("boom"),
+  });
+
+  const serialized = error.toJSON() as {
+    meta: {
+      cause: { name: string; message: string; stack?: string } | null;
+    };
+  };
+
+  assertStrictEquals(serialized.meta.cause?.name, "Error");
+  assertStrictEquals(serialized.meta.cause?.message, "boom");
+  assertExists(serialized.meta.cause?.stack);
+  assertEquals(typeof serialized.meta.cause?.stack, "string");
 });
 
 Deno.test("quickstart errors normalize Error, string, and object causes", () => {

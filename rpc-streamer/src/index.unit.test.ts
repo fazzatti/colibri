@@ -5,15 +5,15 @@ import { type Stub, stub } from "@std/testing/mock";
 import { Server } from "stellar-sdk/rpc";
 import { RPCStreamer } from "@/streamer.ts";
 import type {
-  LiveIngestionResult,
   ArchiveIngestContext,
-  LiveIngestFunc,
   ArchiveIngestFunc,
+  LiveIngestFunc,
+  LiveIngestionResult,
 } from "@/types.ts";
 import {
+  ERROR_DESCRIPTIONS,
   RPCStreamerError,
   RPCStreamerErrorCode,
-  ERROR_DESCRIPTIONS,
 } from "@/errors.ts";
 import { createEventStreamer } from "@/variants/event/index.ts";
 import { createLedgerStreamer } from "@/variants/ledger/index.ts";
@@ -24,6 +24,8 @@ import { createLedgerStreamer } from "@/variants/ledger/index.ts";
 
 const TEST_RPC_URL = "https://test-rpc.example.com";
 const TEST_ARCHIVE_RPC_URL = "https://archive-rpc.example.com";
+const TEST_HTTP_RPC_URL = "http://127.0.0.1:8000/rpc";
+const TEST_HTTP_ARCHIVE_RPC_URL = "http://127.0.0.1:8000/archive-rpc";
 
 // =============================================================================
 // Mock Helpers
@@ -321,6 +323,20 @@ describe("RPCStreamer", () => {
       assertEquals(streamer.archiveRpc, undefined);
     });
 
+    it("accepts HTTP RPC URLs when allowHttp is enabled", () => {
+      const streamer = new RPCStreamer<string>({
+        rpcUrl: TEST_HTTP_RPC_URL,
+        allowHttp: true,
+        archiveRpcUrl: TEST_HTTP_ARCHIVE_RPC_URL,
+        archiveAllowHttp: true,
+        ingestLive: createMockLiveIngest(),
+        ingestArchive: createMockArchiveIngest(),
+      });
+
+      assertEquals(streamer.isRunning, false);
+      assertEquals(streamer.archiveRpc !== undefined, true);
+    });
+
     it("creates streamer with archive RPC", () => {
       const streamer = new RPCStreamer<string>({
         rpcUrl: TEST_RPC_URL,
@@ -466,6 +482,17 @@ describe("RPCStreamer", () => {
       streamer.setArchiveRpc(TEST_ARCHIVE_RPC_URL);
       assertEquals(streamer.archiveRpc !== undefined, true);
     });
+
+    it("accepts HTTP archive RPC URLs when allowHttp is enabled", () => {
+      const streamer = new RPCStreamer<string>({
+        rpcUrl: TEST_RPC_URL,
+        ingestLive: createMockLiveIngest(),
+        ingestArchive: createMockArchiveIngest(),
+      });
+
+      streamer.setArchiveRpc(TEST_HTTP_ARCHIVE_RPC_URL, true);
+      assertEquals(streamer.archiveRpc !== undefined, true);
+    });
   });
 
   describe("stop", () => {
@@ -477,8 +504,10 @@ describe("RPCStreamer", () => {
       });
 
       // Stub getHealth
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse()),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () => Promise.resolve(createMockHealthResponse()),
       );
       stubs.push(healthStub);
 
@@ -516,8 +545,10 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse()),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () => Promise.resolve(createMockHealthResponse()),
       );
       stubs.push(healthStub);
 
@@ -542,8 +573,10 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse()),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () => Promise.resolve(createMockHealthResponse()),
       );
       stubs.push(healthStub);
 
@@ -583,8 +616,11 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse({ status: "unhealthy" })),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () =>
+          Promise.resolve(createMockHealthResponse({ status: "unhealthy" })),
       );
       stubs.push(healthStub);
 
@@ -608,8 +644,7 @@ describe("RPCStreamer", () => {
             oldestLedger: 90000,
             latestLedger: 100000,
           }),
-        ),
-      );
+        ));
       stubs.push(healthStub);
 
       await assertRejects(
@@ -632,8 +667,7 @@ describe("RPCStreamer", () => {
             oldestLedger: 90000,
             latestLedger: 100000,
           }),
-        ),
-      );
+        ));
       stubs.push(healthStub);
 
       await assertRejects(
@@ -651,8 +685,10 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse()),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () => Promise.resolve(createMockHealthResponse()),
       );
       stubs.push(healthStub);
 
@@ -683,8 +719,11 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse({ latestLedger: 98765 })),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () =>
+          Promise.resolve(createMockHealthResponse({ latestLedger: 98765 })),
       );
       stubs.push(healthStub);
 
@@ -700,8 +739,10 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.reject(new Error("Connection refused")),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () => Promise.reject(new Error("Connection refused")),
       );
       stubs.push(healthStub);
 
@@ -735,8 +776,10 @@ describe("RPCStreamer", () => {
         options: { waitLedgerIntervalMs: 10, pagingIntervalMs: 5 },
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse()),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () => Promise.resolve(createMockHealthResponse()),
       );
       stubs.push(healthStub);
 
@@ -759,8 +802,10 @@ describe("RPCStreamer", () => {
         options: { waitLedgerIntervalMs: 100 },
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse()),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () => Promise.resolve(createMockHealthResponse()),
       );
       stubs.push(healthStub);
 
@@ -783,8 +828,10 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse()),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () => Promise.resolve(createMockHealthResponse()),
       );
       stubs.push(healthStub);
 
@@ -985,8 +1032,10 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse()),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () => Promise.resolve(createMockHealthResponse()),
       );
       stubs.push(healthStub);
 
@@ -1013,8 +1062,11 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse({ status: "unhealthy" })),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () =>
+          Promise.resolve(createMockHealthResponse({ status: "unhealthy" })),
       );
       stubs.push(healthStub);
 
@@ -1031,8 +1083,10 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse()),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () => Promise.resolve(createMockHealthResponse()),
       );
       stubs.push(healthStub);
 
@@ -1056,8 +1110,7 @@ describe("RPCStreamer", () => {
             oldestLedger: 90000,
             latestLedger: 100000,
           }),
-        ),
-      );
+        ));
       stubs.push(healthStub);
 
       await assertRejects(
@@ -1075,8 +1128,10 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse()),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () => Promise.resolve(createMockHealthResponse()),
       );
       stubs.push(healthStub);
 
@@ -1105,8 +1160,7 @@ describe("RPCStreamer", () => {
             oldestLedger: 90000,
             latestLedger: 100000,
           }),
-        ),
-      );
+        ));
       stubs.push(healthStub);
 
       await assertRejects(
@@ -1129,8 +1183,7 @@ describe("RPCStreamer", () => {
             oldestLedger: 90000,
             latestLedger: 100000,
           }),
-        ),
-      );
+        ));
       stubs.push(healthStub);
 
       await assertRejects(
@@ -1155,8 +1208,11 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse({ latestLedger: 98765 })),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () =>
+          Promise.resolve(createMockHealthResponse({ latestLedger: 98765 })),
       );
       stubs.push(healthStub);
 
@@ -1172,8 +1228,10 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.reject(new Error("Connection refused")),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () => Promise.reject(new Error("Connection refused")),
       );
       stubs.push(healthStub);
 
@@ -1190,8 +1248,8 @@ describe("RPCStreamer", () => {
         rpcUrl: TEST_RPC_URL,
         ingestLive: async (_rpc, ledgerSequence, _onData, stopLedger) => {
           ingestCount++;
-          const hitStop =
-            stopLedger !== undefined && ledgerSequence >= stopLedger;
+          const hitStop = stopLedger !== undefined &&
+            ledgerSequence >= stopLedger;
           return {
             nextLedger: ledgerSequence + 1,
             shouldWait: true, // Always says to wait
@@ -1236,8 +1294,8 @@ describe("RPCStreamer", () => {
         rpcUrl: TEST_RPC_URL,
         ingestLive: async (_rpc, ledgerSequence, _onData, stopLedger) => {
           ingestCount++;
-          const hitStop =
-            stopLedger !== undefined && ledgerSequence >= stopLedger;
+          const hitStop = stopLedger !== undefined &&
+            ledgerSequence >= stopLedger;
           return {
             nextLedger: ledgerSequence + 1,
             shouldWait: true,
@@ -1505,8 +1563,7 @@ describe("RPCStreamer", () => {
             oldestLedger: 90000, // oldestAvailable = 90002
             latestLedger: 100000,
           }),
-        ),
-      );
+        ));
       stubs.push(healthStub);
 
       // startLedger=85000, stopLedger=88000
@@ -1532,8 +1589,8 @@ describe("RPCStreamer", () => {
         rpcUrl: TEST_RPC_URL,
         ingestLive: async (_rpc, ledgerSequence, _onData, stopLedger) => {
           const next = ledgerSequence + 1;
-          const hitStop =
-            stopLedger !== undefined && ledgerSequence >= stopLedger;
+          const hitStop = stopLedger !== undefined &&
+            ledgerSequence >= stopLedger;
           return {
             nextLedger: next,
             shouldWait: false,
@@ -1543,8 +1600,10 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse()),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () => Promise.resolve(createMockHealthResponse()),
       );
       stubs.push(healthStub);
 
@@ -1570,8 +1629,8 @@ describe("RPCStreamer", () => {
       const streamer = new RPCStreamer<string>({
         rpcUrl: TEST_RPC_URL,
         ingestLive: async (_rpc, ledgerSequence, _onData, stopLedger) => {
-          const hitStop =
-            stopLedger !== undefined && ledgerSequence >= stopLedger;
+          const hitStop = stopLedger !== undefined &&
+            ledgerSequence >= stopLedger;
           return {
             nextLedger: ledgerSequence + 1,
             shouldWait: false,
@@ -1581,8 +1640,10 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse()),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () => Promise.resolve(createMockHealthResponse()),
       );
       stubs.push(healthStub);
 
@@ -1674,8 +1735,8 @@ describe("RPCStreamer", () => {
             throw new Error("Transient error");
           }
           await onData(`data-${callCount}`);
-          const hitStop =
-            stopLedger !== undefined && ledgerSequence >= stopLedger;
+          const hitStop = stopLedger !== undefined &&
+            ledgerSequence >= stopLedger;
           return {
             nextLedger: ledgerSequence + 1,
             shouldWait: false,
@@ -1685,8 +1746,10 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse()),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () => Promise.resolve(createMockHealthResponse()),
       );
       stubs.push(healthStub);
 
@@ -1717,8 +1780,10 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse()),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () => Promise.resolve(createMockHealthResponse()),
       );
       stubs.push(healthStub);
 
@@ -1736,8 +1801,10 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse()),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () => Promise.resolve(createMockHealthResponse()),
       );
       stubs.push(healthStub);
 
@@ -1763,8 +1830,8 @@ describe("RPCStreamer", () => {
           if (callCount === 1) {
             throw new Error("Live error");
           }
-          const hitStop =
-            stopLedger !== undefined && ledgerSequence >= stopLedger;
+          const hitStop = stopLedger !== undefined &&
+            ledgerSequence >= stopLedger;
           return {
             nextLedger: ledgerSequence + 1,
             shouldWait: false,
@@ -1774,8 +1841,10 @@ describe("RPCStreamer", () => {
         ingestArchive: createMockArchiveIngest(),
       });
 
-      const healthStub = stub(streamer.rpc, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse()),
+      const healthStub = stub(
+        streamer.rpc,
+        "getHealth",
+        () => Promise.resolve(createMockHealthResponse()),
       );
       stubs.push(healthStub);
 
@@ -1815,8 +1884,7 @@ describe("RPCStreamer", () => {
             oldestLedger: 90000,
             latestLedger: 100000,
           }),
-        ),
-      );
+        ));
       stubs.push(healthStub);
 
       await streamer.start(async () => {}, {
@@ -1846,8 +1914,7 @@ describe("RPCStreamer", () => {
             oldestLedger: 90000,
             latestLedger: 100000,
           }),
-        ),
-      );
+        ));
       stubs.push(healthStub);
 
       await assertRejects(
@@ -2180,8 +2247,10 @@ describe("RPCStreamer error rethrow paths (forced coverage)", () => {
       ingestArchive: createMockArchiveIngest(),
     });
 
-    const healthStub = stub(streamer.rpc, "getHealth", () =>
-      Promise.resolve(createMockHealthResponse()),
+    const healthStub = stub(
+      streamer.rpc,
+      "getHealth",
+      () => Promise.resolve(createMockHealthResponse()),
     );
     stubs.push(healthStub);
 
@@ -2201,8 +2270,10 @@ describe("RPCStreamer error rethrow paths (forced coverage)", () => {
       ingestArchive: createMockArchiveIngest(),
     });
 
-    const healthStub = stub(streamer.rpc, "getHealth", () =>
-      Promise.resolve(createMockHealthResponse()),
+    const healthStub = stub(
+      streamer.rpc,
+      "getHealth",
+      () => Promise.resolve(createMockHealthResponse()),
     );
     stubs.push(healthStub);
 
@@ -2228,8 +2299,10 @@ describe("RPCStreamer error rethrow paths (forced coverage)", () => {
       },
     });
 
-    const healthStub = stub(streamer.rpc, "getHealth", () =>
-      Promise.resolve(createMockHealthResponse({ oldestLedger: 90000 })),
+    const healthStub = stub(
+      streamer.rpc,
+      "getHealth",
+      () => Promise.resolve(createMockHealthResponse({ oldestLedger: 90000 })),
     );
     stubs.push(healthStub);
 
@@ -2253,8 +2326,10 @@ describe("RPCStreamer error rethrow paths (forced coverage)", () => {
       },
     });
 
-    const healthStub = stub(streamer.rpc, "getHealth", () =>
-      Promise.resolve(createMockHealthResponse({ oldestLedger: 90000 })),
+    const healthStub = stub(
+      streamer.rpc,
+      "getHealth",
+      () => Promise.resolve(createMockHealthResponse({ oldestLedger: 90000 })),
     );
     stubs.push(healthStub);
 
@@ -2277,8 +2352,10 @@ describe("RPCStreamer error rethrow paths (forced coverage)", () => {
       ingestArchive: createMockArchiveIngest(),
     });
 
-    const healthStub = stub(streamer.rpc, "getHealth", () =>
-      Promise.resolve(createMockHealthResponse()),
+    const healthStub = stub(
+      streamer.rpc,
+      "getHealth",
+      () => Promise.resolve(createMockHealthResponse()),
     );
     stubs.push(healthStub);
 
@@ -2298,8 +2375,10 @@ describe("RPCStreamer error rethrow paths (forced coverage)", () => {
       ingestArchive: createMockArchiveIngest(),
     });
 
-    const healthStub = stub(streamer.rpc, "getHealth", () =>
-      Promise.resolve(createMockHealthResponse()),
+    const healthStub = stub(
+      streamer.rpc,
+      "getHealth",
+      () => Promise.resolve(createMockHealthResponse()),
     );
     stubs.push(healthStub);
 
@@ -2345,8 +2424,10 @@ describe("RPCStreamer stopLedger guard paths (forced coverage)", () => {
       ingestArchive: createMockArchiveIngest(),
     });
 
-    const healthStub = stub(streamer.rpc, "getHealth", () =>
-      Promise.resolve(createMockHealthResponse({ latestLedger: 100000 })),
+    const healthStub = stub(
+      streamer.rpc,
+      "getHealth",
+      () => Promise.resolve(createMockHealthResponse({ latestLedger: 100000 })),
     );
     stubs.push(healthStub);
 
@@ -2386,8 +2467,7 @@ describe("RPCStreamer stopLedger guard paths (forced coverage)", () => {
     const healthStub = stub(streamer.rpc, "getHealth", () =>
       Promise.resolve(
         createMockHealthResponse({ oldestLedger: 90000, latestLedger: 100000 }),
-      ),
-    );
+      ));
     stubs.push(healthStub);
 
     await streamer.start(
@@ -2421,8 +2501,7 @@ describe("RPCStreamer stopLedger guard paths (forced coverage)", () => {
     const healthStub = stub(streamer.rpc, "getHealth", () =>
       Promise.resolve(
         createMockHealthResponse({ oldestLedger: 90000, latestLedger: 100000 }),
-      ),
-    );
+      ));
     stubs.push(healthStub);
 
     await streamer.start(

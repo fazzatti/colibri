@@ -216,6 +216,46 @@ Deno.test("constructor validates supported options", () => {
     INVALID_CONFIGURATION,
   );
   assertStrictEquals(imageError.code, Code.INVALID_CONFIGURATION);
+
+  const emptyImageError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        containerImageVersion: "" as SupportedImageVersions,
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(emptyImageError.code, Code.INVALID_CONFIGURATION);
+
+  const conflictingImageError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        containerImageVersion: "latest" as SupportedImageVersions,
+        customContainerImageVersion: "custom-tag",
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(conflictingImageError.code, Code.INVALID_CONFIGURATION);
+
+  const emptyCustomImageError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        customContainerImageVersion: "   ",
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(emptyCustomImageError.code, Code.INVALID_CONFIGURATION);
+
+  const nonStringCustomImageError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        customContainerImageVersion: 42 as unknown as string,
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(
+    nonStringCustomImageError.code,
+    Code.INVALID_CONFIGURATION,
+  );
 });
 
 Deno.test("constructor preserves numeric TRACE log levels", () => {
@@ -243,6 +283,16 @@ Deno.test("constructor reuses the same Docker client instance", () => {
   });
 
   assertStrictEquals(ledger.exposeDockerClient(), ledger.exposeDockerClient());
+});
+
+Deno.test("constructor accepts a custom container image version", () => {
+  const ledger = new StellarTestLedger({
+    containerImageName: "stellar/quickstart",
+    customContainerImageVersion: "v999-custom",
+  });
+
+  assertEquals(ledger.containerImageVersion, "v999-custom");
+  assertEquals(ledger.fullContainerImageName, "stellar/quickstart:v999-custom");
 });
 
 Deno.test("getContainer throws before the ledger starts", () => {
@@ -278,11 +328,11 @@ Deno.test("start creates a named container and exposes network information", asy
       PublishAllPorts: true,
     });
 
-    const networkConfig = await ledger.getNetworkConfiguration();
-    assertEquals(networkConfig.horizonUrl, "http://127.0.0.1:18000");
-    assertEquals(networkConfig.rpcUrl, "http://127.0.0.1:18000/rpc");
+    const networkDetails = await ledger.getNetworkDetails();
+    assertEquals(networkDetails.horizonUrl, "http://127.0.0.1:18000");
+    assertEquals(networkDetails.rpcUrl, "http://127.0.0.1:18000/rpc");
     assertEquals(
-      networkConfig.friendbotUrl,
+      networkDetails.friendbotUrl,
       "http://127.0.0.1:18000/friendbot",
     );
     assertEquals(await ledger.getContainerIpAddress(), "172.20.0.9");
@@ -496,7 +546,7 @@ Deno.test("start removes a tracked container without an id using direct Docker c
   assertEquals(previous.state.removeCalls, [{ v: true, force: true }]);
 });
 
-Deno.test("getNetworkConfiguration uses the Docker daemon host for remote connections", async () => {
+Deno.test("getNetworkDetails uses the Docker daemon host for remote connections", async () => {
   const harness = createDockerHarness();
   const ledger = new TestLedger(
     { dockerOptions: { host: "docker.internal", port: 2375 } },
@@ -506,13 +556,29 @@ Deno.test("getNetworkConfiguration uses the Docker daemon host for remote connec
   ledger.container = harness.created.container;
   ledger.containerId = "ledger-container";
 
-  const networkConfig = await ledger.getNetworkConfiguration();
-  assertEquals(networkConfig.horizonUrl, "http://docker.internal:18000");
-  assertEquals(networkConfig.rpcUrl, "http://docker.internal:18000/rpc");
+  const networkDetails = await ledger.getNetworkDetails();
+  assertEquals(networkDetails.horizonUrl, "http://docker.internal:18000");
+  assertEquals(networkDetails.rpcUrl, "http://docker.internal:18000/rpc");
   assertEquals(
-    networkConfig.friendbotUrl,
+    networkDetails.friendbotUrl,
     "http://docker.internal:18000/friendbot",
   );
+});
+
+Deno.test("getNetworkConfiguration delegates to getNetworkDetails", async () => {
+  const harness = createDockerHarness();
+  const ledger = new TestLedger(undefined, harness.dockerClient);
+
+  ledger.container = harness.created.container;
+  ledger.containerId = "ledger-container";
+
+  assertEquals(await ledger.getNetworkConfiguration(), {
+    networkPassphrase: "Standalone Network ; February 2017",
+    rpcUrl: "http://127.0.0.1:18000/rpc",
+    horizonUrl: "http://127.0.0.1:18000",
+    friendbotUrl: "http://127.0.0.1:18000/friendbot",
+    allowHttp: true,
+  });
 });
 
 Deno.test("start rejects on stale named container image mismatches and pull failures", async () => {
@@ -678,9 +744,9 @@ Deno.test("public APIs wrap unexpected underlying failures in quickstart errors"
   inspectFailureLedger.containerId = "inspect-failure";
 
   const networkError = await assertRejects(
-    () => inspectFailureLedger.getNetworkConfiguration(),
+    () => inspectFailureLedger.getNetworkDetails(),
     CONTAINER_ERROR,
-    "Failed to build network configuration for the test ledger.",
+    "Failed to build network details for the test ledger.",
   );
   assertStrictEquals(networkError.code, Code.CONTAINER_ERROR);
 
