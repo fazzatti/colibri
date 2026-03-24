@@ -810,6 +810,7 @@ Deno.test("waitForLedgerReady succeeds after transient failures", async () => {
   await waitForLedgerReady({
     containerId: "container-id",
     dockerClient,
+    friendbotReadyFn: () => Promise.resolve(),
     sleepFn: () => {
       sleepCalls += 1;
       return Promise.resolve();
@@ -865,7 +866,54 @@ Deno.test("waitForLedgerReady uses the configured Docker host when no override i
   assertEquals(requestedUrls, [
     "http://docker.internal:18000",
     "http://docker.internal:18000/rpc",
+    "http://docker.internal:18000/friendbot",
   ]);
+});
+
+Deno.test("waitForLedgerReady waits for Friendbot to return a non-5xx response", async () => {
+  const inspectInfo = createInspectInfo();
+  const requestedUrls: string[] = [];
+  let sleepCalls = 0;
+  const dockerClient = {
+    getContainer: () => createFakeContainer(inspectInfo),
+  } as unknown as DockerClientLike;
+
+  await waitForLedgerReady({
+    containerId: "container-id",
+    dockerClient,
+    sleepFn: () => {
+      sleepCalls += 1;
+      return Promise.resolve();
+    },
+    fetchFn: (input) => {
+      const url = String(input);
+      requestedUrls.push(url);
+
+      if (url.endsWith("/rpc")) {
+        return Promise.resolve(
+          new Response(createRpcHealthResponse("healthy"), { status: 200 }),
+        );
+      }
+
+      if (url.endsWith("/friendbot")) {
+        if (sleepCalls === 0) {
+          return Promise.resolve(new Response("bad gateway", { status: 502 }));
+        }
+
+        return Promise.resolve(
+          new Response("Missing addr query parameter", { status: 400 }),
+        );
+      }
+
+      return Promise.resolve(new Response("ok", { status: 200 }));
+    },
+  });
+
+  assertEquals(sleepCalls, 1);
+  assertEquals(
+    requestedUrls.includes("http://127.0.0.1:18000/friendbot"),
+    true,
+  );
 });
 
 Deno.test("waitForLedgerReady times out with both Error and string failures", async () => {
@@ -984,6 +1032,44 @@ Deno.test("waitForLedgerReady times out when the RPC endpoint is unhealthy", asy
     "RPC is not ready yet",
   );
   assertStrictEquals(rpcError.code, Code.READINESS_ERROR);
+});
+
+Deno.test("waitForLedgerReady times out when Friendbot cannot fund accounts", async () => {
+  const friendbotNow = (() => {
+    const values = [0, 0, 10, 20];
+    return () => values.shift() ?? 20;
+  })();
+
+  const friendbotError = await assertRejects(
+    () =>
+      waitForLedgerReady({
+        containerId: "container-id",
+        dockerClient: {
+          getContainer: () => createFakeContainer(createInspectInfo()),
+        } as unknown as DockerClientLike,
+        timeoutMs: 15,
+        nowFn: friendbotNow,
+        sleepFn: () => Promise.resolve(undefined),
+        fetchFn: (input) => {
+          const url = String(input);
+          if (url.endsWith("/rpc")) {
+            return Promise.resolve(
+              new Response(createRpcHealthResponse("healthy"), {
+                status: 200,
+              }),
+            );
+          }
+
+          return Promise.resolve(new Response("ok", { status: 200 }));
+        },
+        friendbotReadyFn: () =>
+          Promise.reject(new Error("friendbot still returning 502")),
+      }),
+    READINESS_ERROR,
+    "friendbot still returning 502",
+  );
+
+  assertStrictEquals(friendbotError.code, Code.READINESS_ERROR);
 });
 
 Deno.test("waitForLedgerReady treats invalid RPC health JSON as unhealthy", async () => {

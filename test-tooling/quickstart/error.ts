@@ -1,5 +1,8 @@
-import { ColibriError } from "@colibri/core";
-import type { Diagnostic } from "@colibri/core";
+export type Diagnostic = {
+  rootCause: string;
+  suggestion: string;
+  materials?: string[];
+};
 
 /**
  * Error metadata carried by quickstart errors.
@@ -12,14 +15,15 @@ export type Meta<DataType = unknown> = {
 /**
  * Constructor shape shared by all quickstart errors.
  */
-export type QuickstartErrorShape<CodeType extends string, DataType = unknown> = {
-  code: CodeType;
-  message: string;
-  details: string;
-  diagnostic?: Diagnostic;
-  cause?: unknown;
-  data: DataType;
-};
+export type QuickstartErrorShape<CodeType extends string, DataType = unknown> =
+  {
+    code: CodeType;
+    message: string;
+    details: string;
+    diagnostic?: Diagnostic;
+    cause?: unknown;
+    data: DataType;
+  };
 
 /**
  * Error codes emitted by the Stellar quickstart test harness.
@@ -58,9 +62,13 @@ const normalizeCause = (cause?: unknown): Error | null => {
 export abstract class QuickstartError<
   CodeType extends string = Code,
   DataType = unknown,
-> extends ColibriError<CodeType, Meta<DataType>> {
-  override readonly source = "@colibri/test-tooling/quickstart";
-  override readonly meta: Meta<DataType>;
+> extends Error {
+  readonly domain = "tools";
+  readonly code: CodeType;
+  readonly source = "@colibri/test-tooling/quickstart";
+  readonly details?: string;
+  readonly diagnostic?: Diagnostic;
+  readonly meta: Meta<DataType>;
 
   constructor(args: QuickstartErrorShape<CodeType, DataType>) {
     const meta: Meta<DataType> = {
@@ -68,17 +76,25 @@ export abstract class QuickstartError<
       data: args.data,
     };
 
-    super({
-      domain: "tools",
-      source: "@colibri/test-tooling/quickstart",
-      code: args.code,
-      message: args.message,
-      details: args.details,
-      diagnostic: args.diagnostic,
-      meta,
-    });
-
+    super(args.message);
+    this.name = `QuickstartError ${args.code}`;
+    this.code = args.code;
+    this.details = args.details;
+    this.diagnostic = args.diagnostic;
     this.meta = meta;
+  }
+
+  toJSON(): Record<string, unknown> {
+    return {
+      name: this.name,
+      domain: this.domain,
+      code: this.code,
+      message: this.message,
+      source: this.source,
+      details: this.details,
+      diagnostic: this.diagnostic,
+      meta: this.meta,
+    };
   }
 }
 

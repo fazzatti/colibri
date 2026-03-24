@@ -7,16 +7,16 @@
 import type { Server } from "stellar-sdk/rpc";
 import {
   Event,
-  type EventHandler,
   type EventFilter,
-  parseEventsFromLedgerCloseMeta,
+  type EventHandler,
   isDefined,
+  parseEventsFromLedgerCloseMeta,
 } from "@colibri/core";
 import { RPCStreamer } from "@/streamer.ts";
 import type {
+  ArchiveIngestContext,
   DataHandler,
   LiveIngestionResult,
-  ArchiveIngestContext,
 } from "@/types.ts";
 import type { EventStreamerConfig } from "./types.ts";
 
@@ -50,10 +50,10 @@ function createLiveIngestor(
       const response = cursor
         ? await rpc.getEvents({ cursor, filters: rawFilters, limit })
         : await rpc.getEvents({
-            startLedger: ledgerSequence,
-            filters: rawFilters,
-            limit,
-          });
+          startLedger: ledgerSequence,
+          filters: rawFilters,
+          limit,
+        });
 
       // Process each event
       for (const eventResponse of response.events) {
@@ -218,7 +218,9 @@ export function createEventStreamer(
 
   return new RPCStreamer<Event>({
     rpcUrl: config.rpcUrl,
+    allowHttp: config.allowHttp,
     archiveRpcUrl: config.archiveRpcUrl,
+    archiveAllowHttp: config.archiveAllowHttp,
     ingestLive,
     ingestArchive,
     options: config.options,

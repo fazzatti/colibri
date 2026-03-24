@@ -27,16 +27,12 @@ import {
 } from "@/quickstart/runtime.ts";
 import {
   type IStellarTestLedger,
+  type NetworkDetails,
   NetworkEnv,
   ResourceLimits,
   SupportedImageVersions,
   type TestLedgerOptions,
 } from "@/quickstart/types.ts";
-import {
-  isBooleanStrict,
-  type NetworkConfig,
-  NetworkConfig as ColibriNetworkConfig,
-} from "@colibri/core";
 import {
   createLogger,
   type LoggerLike,
@@ -55,6 +51,12 @@ const DEFAULTS = Object.freeze({
 });
 
 const QUICKSTART_CMD = ["--local", "--limits", "testnet"] as const;
+const STANDALONE_NETWORK_PASSPHRASE =
+  "Standalone Network ; February 2017" as const;
+
+const isBooleanStrict = (value: unknown): value is boolean => {
+  return typeof value === "boolean";
+};
 
 const ensureQuickstartError = <T extends QuickstartError>(
   error: unknown,
@@ -71,8 +73,8 @@ const ensureQuickstartError = <T extends QuickstartError>(
  * Manages a Docker-backed Stellar Quickstart instance for tests.
  *
  * The class can either start a new container or attach to an already-running
- * named container. Once started, it exposes a ready-to-use Colibri
- * `NetworkConfig` for the embedded Horizon and Soroban RPC endpoints.
+ * named container. Once started, it exposes the connection details for the
+ * embedded Horizon, Soroban RPC, and Friendbot endpoints.
  *
  * @example
  * ```ts
@@ -84,7 +86,7 @@ const ensureQuickstartError = <T extends QuickstartError>(
  * });
  *
  * await ledger.start();
- * const network = await ledger.getNetworkConfiguration();
+ * const network = await ledger.getNetworkDetails();
  *
  * console.log(network.rpcUrl);
  *
@@ -100,7 +102,7 @@ export class StellarTestLedger implements IStellarTestLedger {
   public readonly containerImageName: string;
 
   /** The Docker image tag used to start the ledger. */
-  public readonly containerImageVersion: SupportedImageVersions;
+  public readonly containerImageVersion: string;
 
   private readonly useRunningLedger: boolean;
   private readonly emitContainerLogs: boolean;
@@ -121,7 +123,8 @@ export class StellarTestLedger implements IStellarTestLedger {
    * @param options - Ledger startup options.
    *   - `containerName`: Optional Docker container name.
    *   - `containerImageName`: Optional Docker image repository, defaults to `stellar/quickstart`.
-   *   - `containerImageVersion`: Optional Docker image tag, defaults to `latest`.
+   *   - `containerImageVersion`: Optional supported Docker image tag, defaults to `latest`.
+   *   - `customContainerImageVersion`: Optional arbitrary Docker image tag.
    *   - `dockerOptions` / `dockerSocketPath`: Optional explicit Docker connection settings.
    *   - `useRunningLedger`: Reuse an existing named container instead of creating one.
    *   - `emitContainerLogs`: Forward container logs to the configured logger.
@@ -166,23 +169,60 @@ export class StellarTestLedger implements IStellarTestLedger {
       });
     }
 
-    this.containerImageVersion = options?.containerImageVersion ||
-      DEFAULTS.imageVersion;
+    const customContainerImageVersion = options?.customContainerImageVersion
+      ?.trim();
+    const usesCustomContainerImageVersion =
+      typeof options?.customContainerImageVersion === "string";
 
     if (
-      !Object.values(SupportedImageVersions).includes(
-        this.containerImageVersion,
-      )
+      options?.containerImageVersion !== undefined &&
+      usesCustomContainerImageVersion
     ) {
       throw new INVALID_CONFIGURATION({
         option: "containerImageVersion",
-        value: options?.containerImageVersion,
-        supportedValues: Object.values(SupportedImageVersions),
+        value: {
+          containerImageVersion: options.containerImageVersion,
+          customContainerImageVersion: options.customContainerImageVersion,
+        },
         message:
-          `StellarTestLedger#constructor() containerImageVersion ${options?.containerImageVersion} not supported.`,
+          "StellarTestLedger#constructor() containerImageVersion and customContainerImageVersion cannot both be set.",
         details:
-          "The requested quickstart image tag is not in the supported image version allow-list.",
+          "Choose either a supported image version preset or a custom image version string, but not both.",
       });
+    }
+
+    if (usesCustomContainerImageVersion) {
+      if (!customContainerImageVersion) {
+        throw new INVALID_CONFIGURATION({
+          option: "customContainerImageVersion",
+          value: options?.customContainerImageVersion,
+          message:
+            "StellarTestLedger#constructor() customContainerImageVersion must not be empty.",
+          details:
+            "Provide a non-empty Docker image tag when overriding the supported image version presets.",
+        });
+      }
+
+      this.containerImageVersion = customContainerImageVersion;
+    } else {
+      this.containerImageVersion = options?.containerImageVersion ||
+        DEFAULTS.imageVersion;
+
+      if (
+        !Object.values(SupportedImageVersions).includes(
+          this.containerImageVersion as SupportedImageVersions,
+        )
+      ) {
+        throw new INVALID_CONFIGURATION({
+          option: "containerImageVersion",
+          value: options?.containerImageVersion,
+          supportedValues: Object.values(SupportedImageVersions),
+          message:
+            `StellarTestLedger#constructor() containerImageVersion ${options?.containerImageVersion} not supported.`,
+          details:
+            "The requested quickstart image tag is not in the supported image version allow-list. Use customContainerImageVersion to opt into an arbitrary tag.",
+        });
+      }
     }
 
     this.containerName = options?.containerName || DEFAULTS.containerName;
@@ -219,7 +259,7 @@ export class StellarTestLedger implements IStellarTestLedger {
   /**
    * Creates the Docker client used by this instance.
    */
-  protected getDockerClient() {
+  protected getDockerClient(): ReturnType<typeof createDockerClient> {
     return this.dockerClientCache ??= createDockerClient(this.dockerConnection);
   }
 
@@ -375,9 +415,9 @@ export class StellarTestLedger implements IStellarTestLedger {
   }
 
   /**
-   * Builds a Colibri `NetworkConfig` for the running quickstart services.
+   * Builds the network details for the running quickstart services.
    *
-   * @returns A `NetworkConfig` pointing at Horizon, Soroban RPC, and Friendbot.
+   * @returns The plain connection payload for Horizon, Soroban RPC, and Friendbot.
    * @throws {CONTAINER_ERROR} If the ledger has not started or the published port is unavailable.
    *
    * @example
@@ -385,30 +425,30 @@ export class StellarTestLedger implements IStellarTestLedger {
    * const ledger = new StellarTestLedger();
    * await ledger.start();
    *
-   * const network = await ledger.getNetworkConfiguration();
+   * const network = await ledger.getNetworkDetails();
    * console.log(network.horizonUrl);
    * ```
    */
-  public async getNetworkConfiguration(): Promise<NetworkConfig> {
+  public async getNetworkDetails(): Promise<NetworkDetails> {
     try {
       const containerInfo = await this.getContainerInfo();
       const publicPort = getPublicPort(8000, containerInfo);
       const domain = resolvePublishedPortHost(this.dockerConnection);
 
-      return ColibriNetworkConfig.CustomNet({
-        networkPassphrase: "Standalone Network ; February 2017",
+      return {
+        networkPassphrase: STANDALONE_NETWORK_PASSPHRASE,
         rpcUrl: `http://${domain}:${publicPort}/rpc`,
         horizonUrl: `http://${domain}:${publicPort}`,
         friendbotUrl: `http://${domain}:${publicPort}/friendbot`,
         allowHttp: true,
-      });
+      };
     } catch (error) {
       throw ensureQuickstartError(
         error,
         new CONTAINER_ERROR({
-          message: "Failed to build network configuration for the test ledger.",
+          message: "Failed to build network details for the test ledger.",
           details:
-            "Quickstart could not resolve the container port mapping needed to build a Colibri NetworkConfig.",
+            "Quickstart could not resolve the container port mapping needed to build the network details payload.",
           data: {
             containerId: this.containerId,
             containerName: this.containerName,
@@ -417,6 +457,15 @@ export class StellarTestLedger implements IStellarTestLedger {
         }),
       );
     }
+  }
+
+  /**
+   * Resolves the network details for the running quickstart services.
+   *
+   * @deprecated Use `getNetworkDetails()` instead.
+   */
+  public async getNetworkConfiguration(): Promise<NetworkDetails> {
+    return await this.getNetworkDetails();
   }
 
   /**

@@ -14,7 +14,7 @@ import {
   READINESS_ERROR,
 } from "@/quickstart/error.ts";
 
-Deno.test("quickstart errors expose consistent Colibri metadata", () => {
+Deno.test("quickstart errors expose consistent metadata", () => {
   const error = new INVALID_CONFIGURATION({
     option: "network",
     value: "testnet",
@@ -33,6 +33,48 @@ Deno.test("quickstart errors expose consistent Colibri metadata", () => {
       option: "network",
       value: "testnet",
       supportedValues: ["local"],
+    },
+  });
+});
+
+Deno.test("quickstart errors serialize to JSON", () => {
+  class TEST_ERROR extends QuickstartError<"TEST_ERROR", { option: string }> {
+    constructor() {
+      super({
+        code: "TEST_ERROR",
+        message: "Invalid network option.",
+        details: "Only local ledgers are supported.",
+        diagnostic: {
+          rootCause: "Unsupported network profile.",
+          suggestion: "Use the local quickstart network.",
+          materials: ["https://example.com/quickstart"],
+        },
+        data: {
+          option: "network",
+        },
+      });
+    }
+  }
+
+  const error = new TEST_ERROR();
+
+  assertEquals(error.toJSON(), {
+    name: "QuickstartError TEST_ERROR",
+    domain: "tools",
+    code: "TEST_ERROR",
+    message: "Invalid network option.",
+    source: "@colibri/test-tooling/quickstart",
+    details: "Only local ledgers are supported.",
+    diagnostic: {
+      rootCause: "Unsupported network profile.",
+      suggestion: "Use the local quickstart network.",
+      materials: ["https://example.com/quickstart"],
+    },
+    meta: {
+      cause: null,
+      data: {
+        option: "network",
+      },
     },
   });
 });

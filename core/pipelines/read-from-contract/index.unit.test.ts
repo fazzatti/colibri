@@ -22,6 +22,19 @@ describe("createReadFromContractPipeline", () => {
       assertEquals(pipeline.id, "ReadFromContractPipeline");
     });
 
+    it("accepts HTTP rpcUrl when allowHttp is true", () => {
+      const networkConfig: NetworkConfig = NetworkConfig.CustomNet({
+        networkPassphrase: "Standalone Network ; February 2017",
+        rpcUrl: "http://127.0.0.1:8000/rpc",
+        allowHttp: true,
+        type: NetworkType.TESTNET,
+      });
+
+      const pipeline = createReadFromContractPipeline({ networkConfig });
+
+      assertEquals(pipeline.id, "ReadFromContractPipeline");
+    });
+
     it("inputToBuild: converts input to BuildTransactionInput", () => {
       const networkConfig: NetworkConfig = NetworkConfig.TestNet();
       const input: ReadFromContractInput = {
@@ -48,7 +61,7 @@ describe("createReadFromContractPipeline", () => {
           createReadFromContractPipeline({
             networkConfig: undefined as unknown as NetworkConfig,
           }),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
     });
 
@@ -59,7 +72,7 @@ describe("createReadFromContractPipeline", () => {
 
       assertThrows(
         () => createReadFromContractPipeline({ networkConfig }),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
     });
 
@@ -70,7 +83,7 @@ describe("createReadFromContractPipeline", () => {
 
       assertThrows(
         () => createReadFromContractPipeline({ networkConfig }),
-        E.MISSING_RPC_URL
+        E.MISSING_RPC_URL,
       );
     });
 
@@ -79,7 +92,7 @@ describe("createReadFromContractPipeline", () => {
 
       assertThrows(
         () => createReadFromContractPipeline({ networkConfig }),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
     });
 
@@ -91,7 +104,7 @@ describe("createReadFromContractPipeline", () => {
       });
       assertThrows(
         () => createReadFromContractPipeline({ networkConfig }),
-        E.UNEXPECTED_ERROR
+        E.UNEXPECTED_ERROR,
       );
     });
   });

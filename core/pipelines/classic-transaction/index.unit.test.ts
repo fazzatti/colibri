@@ -43,6 +43,19 @@ describe("createClassicTransactionPipeline", () => {
 
       assertEquals(pipeline.id, "ClassicTransactionPipeline");
     });
+
+    it("accepts HTTP rpcUrl when allowHttp is true", () => {
+      const networkConfig: NetworkConfig = NetworkConfig.CustomNet({
+        networkPassphrase: "Standalone Network ; February 2017",
+        rpcUrl: "http://127.0.0.1:8000/rpc",
+        allowHttp: true,
+        type: NetworkType.TESTNET,
+      });
+
+      const pipeline = createClassicTransactionPipeline({ networkConfig });
+
+      assertEquals(pipeline.id, "ClassicTransactionPipeline");
+    });
   });
 
   describe("Connectors", () => {
@@ -62,7 +75,7 @@ describe("createClassicTransactionPipeline", () => {
 
         const connector = inputToBuild(
           mockRpc,
-          networkConfig.networkPassphrase
+          networkConfig.networkPassphrase,
         );
         assertEquals(typeof connector, "function");
 
@@ -118,7 +131,7 @@ describe("createClassicTransactionPipeline", () => {
         assertExists(result);
         assertEquals(
           result.signatureRequirements,
-          mockEnvelopeSigningReqOutput
+          mockEnvelopeSigningReqOutput,
         );
         assertEquals(result.transaction, mockBuildOutput);
         assertEquals(result.signers, mockInputStep.config.signers);
@@ -165,7 +178,7 @@ describe("createClassicTransactionPipeline", () => {
           createClassicTransactionPipeline({
             networkConfig: undefined as unknown as NetworkConfig,
           }),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
     });
 
@@ -176,7 +189,7 @@ describe("createClassicTransactionPipeline", () => {
 
       assertThrows(
         () => createClassicTransactionPipeline({ networkConfig }),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
     });
 
@@ -187,7 +200,7 @@ describe("createClassicTransactionPipeline", () => {
 
       assertThrows(
         () => createClassicTransactionPipeline({ networkConfig }),
-        E.MISSING_RPC_URL
+        E.MISSING_RPC_URL,
       );
     });
 
@@ -196,7 +209,7 @@ describe("createClassicTransactionPipeline", () => {
 
       assertThrows(
         () => createClassicTransactionPipeline({ networkConfig }),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
     });
 
@@ -208,7 +221,7 @@ describe("createClassicTransactionPipeline", () => {
       });
       assertThrows(
         () => createClassicTransactionPipeline({ networkConfig }),
-        E.UNEXPECTED_ERROR
+        E.UNEXPECTED_ERROR,
       );
     });
   });
