@@ -139,15 +139,18 @@ const waitForFriendbotReady = async (
   const response = await fetchFn(probe.friendbotUrl);
   const body = await response.text();
 
-  if (
-    response.status === 200 || (response.status >= 400 && response.status < 500)
-  ) {
+  if (response.status === 200 || response.status === 400) {
     return;
   }
 
   throw new Error(
     `Friendbot is not ready yet (status: ${response.status}, body: ${body}).`,
   );
+};
+
+const isTerminalReadinessError = (error: unknown): boolean => {
+  return error instanceof READINESS_ERROR &&
+    error.message.startsWith("Container is not running");
 };
 
 const createDockerLogDecoder = () => {
@@ -740,6 +743,11 @@ export const waitForLedgerReady = async (
       return;
     } catch (error) {
       lastError = error;
+
+      if (isTerminalReadinessError(error)) {
+        throw error;
+      }
+
       await sleepFn(1000);
     }
   }
