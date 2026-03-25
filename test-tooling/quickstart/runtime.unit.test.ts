@@ -168,6 +168,21 @@ Deno.test("hasContainerName and findContainerByName match Docker names", async (
   assertStrictEquals(wrappedError.code, Code.CONTAINER_ERROR);
 });
 
+Deno.test("runtime helpers can create a real Docker client when none is injected", async () => {
+  const missingSocketPath =
+    `/tmp/colibri-missing-docker-${crypto.randomUUID()}.sock`;
+
+  const error = await assertRejects(
+    () =>
+      findContainerByName("missing", {
+        dockerOptions: { socketPath: missingSocketPath },
+      }),
+    CONTAINER_ERROR,
+  );
+
+  assertStrictEquals(error.code, Code.CONTAINER_ERROR);
+});
+
 Deno.test("stopContainer resolves and rejects based on the Docker callback", async () => {
   await stopContainer(createFakeContainer(createInspectInfo()));
 

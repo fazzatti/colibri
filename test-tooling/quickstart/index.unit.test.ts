@@ -422,6 +422,13 @@ Deno.test("constructor validates remaining service and storage edge cases", () =
   assertEquals(ephemeralLedger.storage, {
     mode: QuickstartStorageModes.EPHEMERAL,
   });
+
+  const implicitEphemeralLedger = new StellarTestLedger({
+    storage: {} as TestLedgerOptions["storage"],
+  });
+  assertEquals(implicitEphemeralLedger.storage, {
+    mode: QuickstartStorageModes.EPHEMERAL,
+  });
 });
 
 Deno.test("constructor preserves numeric TRACE log levels", () => {
