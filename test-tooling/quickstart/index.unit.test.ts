@@ -634,9 +634,27 @@ Deno.test("start can skip pull and optionally stream logs", async () => {
 
 Deno.test("start reuses a running named container when useRunningLedger is enabled", async () => {
   const harness = createDockerHarness();
-  const existing = createMockContainer(createInspectInfo(), {
-    id: "running-container",
-  });
+  const existing = createMockContainer(
+    createInspectInfo({
+      Config: {
+        Env: [],
+        Cmd: [
+          "--enable",
+          [
+            QuickstartServices.RPC,
+            QuickstartServices.HORIZON,
+            QuickstartServices.CORE,
+          ].join(","),
+          "--limits",
+          ResourceLimits.TESTNET,
+          "--local",
+        ],
+      },
+    }),
+    {
+      id: "running-container",
+    },
+  );
   harness.containers.set(existing.container.id, existing.container);
   harness.listContainers.push({
     Id: "running-container",
@@ -800,6 +818,79 @@ Deno.test("start rejects when the running ledger cannot be reused safely", async
     CONTAINER_ERROR,
   );
   assertStrictEquals(mismatchedConfigError.code, Code.CONTAINER_ERROR);
+
+  const mismatchedLimitsHarness = createDockerHarness();
+  const mismatchedLimitsInspect = createInspectInfo({
+    Config: {
+      Env: [],
+      Cmd: [
+        "--local",
+        "--limits",
+        ResourceLimits.DEFAULT,
+        "--enable",
+        DEFAULT_ENABLED_SERVICES.join(","),
+      ],
+    },
+  });
+  const mismatchedLimits = createMockContainer(mismatchedLimitsInspect, {
+    id: "running-mismatched-limits",
+  });
+  mismatchedLimitsHarness.containers.set(
+    mismatchedLimits.container.id,
+    mismatchedLimits.container,
+  );
+  mismatchedLimitsHarness.listContainers.push({
+    Id: "running-mismatched-limits",
+    Image: "stellar/quickstart:latest",
+    State: "running",
+    Names: ["/colibri-stellar-test-ledger"],
+  } as ContainerInfo);
+  const mismatchedLimitsLedger = new TestLedger(
+    { useRunningLedger: true },
+    mismatchedLimitsHarness.dockerClient,
+  );
+  const mismatchedLimitsError = await assertRejects(
+    () => mismatchedLimitsLedger.start(),
+    CONTAINER_ERROR,
+  );
+  assertStrictEquals(mismatchedLimitsError.code, Code.CONTAINER_ERROR);
+
+  const extraFlagHarness = createDockerHarness();
+  const extraFlagInspect = createInspectInfo({
+    Config: {
+      Env: [],
+      Cmd: [
+        "--local",
+        "--limits",
+        ResourceLimits.TESTNET,
+        "--enable",
+        DEFAULT_ENABLED_SERVICES.join(","),
+        "--verbose",
+      ],
+    },
+  });
+  const extraFlag = createMockContainer(extraFlagInspect, {
+    id: "running-extra-flag",
+  });
+  extraFlagHarness.containers.set(
+    extraFlag.container.id,
+    extraFlag.container,
+  );
+  extraFlagHarness.listContainers.push({
+    Id: "running-extra-flag",
+    Image: "stellar/quickstart:latest",
+    State: "running",
+    Names: ["/colibri-stellar-test-ledger"],
+  } as ContainerInfo);
+  const extraFlagLedger = new TestLedger(
+    { useRunningLedger: true },
+    extraFlagHarness.dockerClient,
+  );
+  const extraFlagError = await assertRejects(
+    () => extraFlagLedger.start(),
+    CONTAINER_ERROR,
+  );
+  assertStrictEquals(extraFlagError.code, Code.CONTAINER_ERROR);
 
   const missingConfigHarness = createDockerHarness();
   const missingConfigInspect = createInspectInfo({

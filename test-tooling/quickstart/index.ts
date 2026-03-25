@@ -78,6 +78,7 @@ const NETWORK_PASSPHRASES = Object.freeze(
 );
 
 const VALID_SERVICES = new Set<string>(Object.values(QuickstartServices));
+const VALID_NETWORK_FLAGS = new Set<string>(Object.values(NETWORK_FLAGS));
 const HTTP_EXPOSED_SERVICES = new Set<string>([
   QuickstartServices.HORIZON,
   QuickstartServices.RPC,
@@ -494,12 +495,92 @@ const buildQuickstartCommand = (
   return command;
 };
 
+type ParsedQuickstartCommand = {
+  readonly networkFlag: string;
+  readonly limits?: string;
+  readonly enabledServices: ReadonlySet<string>;
+};
+
+const parseQuickstartCommand = (
+  command: readonly string[],
+): ParsedQuickstartCommand | null => {
+  let networkFlag: string | undefined;
+  let limits: string | undefined;
+  let enabledServices: ReadonlySet<string> | undefined;
+
+  for (let index = 0; index < command.length;) {
+    const token = command[index];
+
+    if (VALID_NETWORK_FLAGS.has(token)) {
+      if (networkFlag) {
+        return null;
+      }
+
+      networkFlag = token;
+      index += 1;
+      continue;
+    }
+
+    if (token === "--limits") {
+      if (limits !== undefined || index + 1 >= command.length) {
+        return null;
+      }
+
+      limits = command[index + 1];
+      index += 2;
+      continue;
+    }
+
+    if (token === "--enable") {
+      if (enabledServices !== undefined || index + 1 >= command.length) {
+        return null;
+      }
+
+      const services = command[index + 1].split(",")
+        .map((service) => service.trim())
+        .filter(Boolean);
+
+      if (
+        services.length === 0 ||
+        services.some((service) => !VALID_SERVICES.has(service))
+      ) {
+        return null;
+      }
+
+      enabledServices = new Set(services);
+      index += 2;
+      continue;
+    }
+
+    return null;
+  }
+
+  if (!networkFlag || !enabledServices) {
+    return null;
+  }
+
+  return {
+    networkFlag,
+    limits,
+    enabledServices,
+  };
+};
+
 const commandsMatch = (
   expected: readonly string[],
   actual: readonly string[],
 ): boolean => {
-  return expected.length === actual.length &&
-    expected.every((value, index) => value === actual[index]);
+  const parsedExpected = parseQuickstartCommand(expected);
+  const parsedActual = parseQuickstartCommand(actual);
+
+  return parsedExpected !== null &&
+    parsedActual !== null &&
+    parsedExpected.networkFlag === parsedActual.networkFlag &&
+    parsedExpected.limits === parsedActual.limits &&
+    parsedExpected.enabledServices.size === parsedActual.enabledServices.size &&
+    [...parsedExpected.enabledServices].every((service) =>
+      parsedActual.enabledServices.has(service)
+    );
 };
 
 /**
