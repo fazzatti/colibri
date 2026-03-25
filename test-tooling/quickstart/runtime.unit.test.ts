@@ -168,6 +168,21 @@ Deno.test("hasContainerName and findContainerByName match Docker names", async (
   assertStrictEquals(wrappedError.code, Code.CONTAINER_ERROR);
 });
 
+Deno.test("runtime helpers can create a real Docker client when none is injected", async () => {
+  const missingSocketPath =
+    `/tmp/colibri-missing-docker-${crypto.randomUUID()}.sock`;
+
+  const error = await assertRejects(
+    () =>
+      findContainerByName("missing", {
+        dockerOptions: { socketPath: missingSocketPath },
+      }),
+    CONTAINER_ERROR,
+  );
+
+  assertStrictEquals(error.code, Code.CONTAINER_ERROR);
+});
+
 Deno.test("stopContainer resolves and rejects based on the Docker callback", async () => {
   await stopContainer(createFakeContainer(createInspectInfo()));
 
@@ -870,6 +885,30 @@ Deno.test("waitForLedgerReady uses the configured Docker host when no override i
   ]);
 });
 
+Deno.test("waitForLedgerReady returns immediately when no readiness checks are requested", async () => {
+  let fetchCalls = 0;
+
+  await waitForLedgerReady({
+    containerId: "container-id",
+    dockerClient: {
+      getContainer: () => createFakeContainer(createInspectInfo()),
+    } as unknown as DockerClientLike,
+    readiness: {
+      horizon: false,
+      rpc: false,
+      friendbot: false,
+      lab: false,
+      ledgerMeta: false,
+    },
+    fetchFn: () => {
+      fetchCalls += 1;
+      return Promise.resolve(new Response("unexpected", { status: 500 }));
+    },
+  });
+
+  assertEquals(fetchCalls, 0);
+});
+
 Deno.test("waitForLedgerReady waits for Friendbot to return a known ready response", async () => {
   const inspectInfo = createInspectInfo();
   const requestedUrls: string[] = [];
@@ -956,6 +995,86 @@ Deno.test("waitForLedgerReady retries when Friendbot returns an unexpected 4xx",
   assertEquals(sleepCalls, 1);
 });
 
+Deno.test("waitForLedgerReady retries when Lab is not ready yet", async () => {
+  const labNow = (() => {
+    const values = [0, 0, 10, 20];
+    return () => values.shift() ?? 20;
+  })();
+
+  const labError = await assertRejects(
+    () =>
+      waitForLedgerReady({
+        containerId: "container-id",
+        dockerClient: {
+          getContainer: () => createFakeContainer(createInspectInfo()),
+        } as unknown as DockerClientLike,
+        timeoutMs: 15,
+        nowFn: labNow,
+        sleepFn: () => Promise.resolve(undefined),
+        readiness: {
+          horizon: false,
+          rpc: false,
+          friendbot: false,
+          lab: true,
+          ledgerMeta: false,
+        },
+        fetchFn: (input) => {
+          const url = String(input);
+          if (url.endsWith("/lab")) {
+            return Promise.resolve(new Response("missing", { status: 404 }));
+          }
+
+          return Promise.resolve(new Response("ok", { status: 200 }));
+        },
+      }),
+    READINESS_ERROR,
+    "Lab is not ready yet",
+  );
+
+  assertStrictEquals(labError.code, Code.READINESS_ERROR);
+});
+
+Deno.test("waitForLedgerReady retries when ledger meta is not ready yet", async () => {
+  const ledgerMetaNow = (() => {
+    const values = [0, 0, 10, 20];
+    return () => values.shift() ?? 20;
+  })();
+
+  const ledgerMetaError = await assertRejects(
+    () =>
+      waitForLedgerReady({
+        containerId: "container-id",
+        dockerClient: {
+          getContainer: () => createFakeContainer(createInspectInfo()),
+        } as unknown as DockerClientLike,
+        timeoutMs: 15,
+        nowFn: ledgerMetaNow,
+        sleepFn: () => Promise.resolve(undefined),
+        readiness: {
+          horizon: false,
+          rpc: false,
+          friendbot: false,
+          lab: false,
+          ledgerMeta: true,
+        },
+        fetchFn: (input) => {
+          const url = String(input);
+          if (url.endsWith("/ledger-meta/.config.json")) {
+            return Promise.resolve(
+              new Response("not available", { status: 404 }),
+            );
+          }
+
+          return Promise.resolve(new Response("ok", { status: 200 }));
+        },
+      }),
+    READINESS_ERROR,
+    "Ledger meta is not ready yet",
+  );
+
+  assertStrictEquals(ledgerMetaError.code, Code.READINESS_ERROR);
+});
+
 Deno.test("waitForLedgerReady fails fast when the container exits", async () => {
   let sleepCalls = 0;
 
@@ -976,6 +1095,13 @@ Deno.test("waitForLedgerReady fails fast when the container exits", async () => 
             ),
         } as unknown as DockerClientLike,
         timeoutMs: 1000,
+        readiness: {
+          horizon: true,
+          rpc: true,
+          friendbot: true,
+          lab: true,
+          ledgerMeta: true,
+        },
         sleepFn: () => {
           sleepCalls += 1;
           return Promise.resolve(undefined);
@@ -986,8 +1112,51 @@ Deno.test("waitForLedgerReady fails fast when the container exits", async () => 
   );
 
   assertStrictEquals(stoppedError.code, Code.READINESS_ERROR);
+  assertEquals(
+    stoppedError.details,
+    "The quickstart container stopped before the requested services became ready: Horizon, Soroban RPC, Friendbot, Stellar Lab, ledger meta.",
+  );
   assertEquals(stoppedError.meta.data.terminal, true);
   assertEquals(sleepCalls, 0);
+});
+
+Deno.test("waitForLedgerReady reports the configured flow when no readiness checks are requested and the container exits", async () => {
+  const stoppedError = await assertRejects(
+    () =>
+      waitForLedgerReady({
+        containerId: "container-id",
+        dockerClient: {
+          getContainer: () =>
+            createFakeContainer(
+              createInspectInfo({
+                State: {
+                  Running: false,
+                  Status: "exited",
+                  ExitCode: 1,
+                },
+              }),
+            ),
+        } as unknown as DockerClientLike,
+        timeoutMs: 1000,
+        readiness: {
+          horizon: false,
+          rpc: false,
+          friendbot: false,
+          lab: false,
+          ledgerMeta: false,
+        },
+        sleepFn: () => Promise.resolve(undefined),
+      }),
+    READINESS_ERROR,
+    "Container is not running",
+  );
+
+  assertStrictEquals(stoppedError.code, Code.READINESS_ERROR);
+  assertEquals(
+    stoppedError.details,
+    "The quickstart container stopped before the configured readiness flow could complete.",
+  );
+  assertEquals(stoppedError.meta.data.terminal, true);
 });
 
 Deno.test("waitForLedgerReady times out with string and object failures", async () => {

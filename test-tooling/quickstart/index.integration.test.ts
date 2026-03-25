@@ -19,10 +19,6 @@ import { Code, INVALID_CONFIGURATION } from "@/quickstart/error.ts";
 import type { LogLevelDesc } from "@/quickstart/logging.ts";
 import { StellarTestLedger } from "@/quickstart/index.ts";
 import { findContainerByName } from "@/quickstart/runtime.ts";
-import {
-  SupportedImageVersions,
-  type SupportedImageVersions as SupportedImageVersionsType,
-} from "@/quickstart/types.ts";
 import type { Container } from "dockerode";
 import { Asset, Operation } from "stellar-sdk";
 
@@ -31,7 +27,7 @@ describe("StellarTestLedger", () => {
   const stellarTestLedger = new StellarTestLedger({
     logLevel,
     containerName: "colibri-stellar-test-ledger-stable",
-    containerImageVersion: SupportedImageVersions.V425_LATEST,
+    containerImageVersion: "v425-latest",
   });
 
   afterAll(async () => {
@@ -59,8 +55,7 @@ describe("StellarTestLedger", () => {
 
       return assertRejects(async () => {
         return await new StellarTestLedger({
-          containerImageVersion:
-            "nope" as unknown as SupportedImageVersionsType,
+          containerImageVersion: "",
         });
       }).then((error) => {
         assertInstanceOf(error, INVALID_CONFIGURATION);
@@ -100,10 +95,10 @@ describe("StellarTestLedger", () => {
       await horizonResponse.text();
     });
 
-    it("returns a latest-image network config that is immediately usable for Friendbot and classic transactions", async () => {
+    it("returns an arbitrary-tag network config that is immediately usable for Friendbot and classic transactions", async () => {
       const latestLedger = new StellarTestLedger({
-        containerName: "colibri-stellar-test-ledger-latest",
-        containerImageVersion: SupportedImageVersions.LATEST,
+        containerName: "colibri-stellar-test-ledger-arbitrary-tag",
+        containerImageVersion: "v425-latest",
         logLevel,
       });
       const sender = NativeAccount.fromMasterSigner(

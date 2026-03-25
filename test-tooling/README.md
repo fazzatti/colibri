@@ -2,9 +2,9 @@
 
 Test infrastructure helpers for Colibri packages.
 
-The current public API is centered on `StellarTestLedger`, a Docker-backed
-harness that starts, reuses, inspects, stops, and destroys a Stellar Quickstart
-instance for integration tests.
+The main public API is `StellarTestLedger`, a Docker-backed harness that starts,
+reuses, inspects, stops, and destroys a Stellar Quickstart instance for
+integration tests.
 
 ## Installation
 
@@ -18,7 +18,7 @@ deno add jsr:@colibri/test-tooling
 - Permission to pull the `stellar/quickstart` image
 - An environment where local Docker-backed integration tests are allowed to run
 
-## Quick start
+## Quick Start
 
 ```ts
 import { StellarTestLedger } from "jsr:@colibri/test-tooling";
@@ -28,15 +28,179 @@ const ledger = new StellarTestLedger();
 try {
   await ledger.start();
 
-  const network = await ledger.getNetworkDetails();
-  console.log(network.rpcUrl);
+  const details = await ledger.getNetworkDetails();
+  console.log(details.rpcUrl);
 } finally {
   await ledger.stop();
   await ledger.destroy();
 }
 ```
 
-## Reusing an existing container
+By default, `StellarTestLedger` starts a local standalone Quickstart container
+with:
+
+- `containerImageVersion: "latest"`
+- `network: NetworkEnv.LOCAL`
+- `limits: ResourceLimits.TESTNET`
+- `enabledServices: ["core", "horizon", "rpc"]`
+- ephemeral storage
+
+`start()` waits only for the services implied by the selected network and
+enabled services. For the default local setup, that means Horizon, Soroban RPC,
+and Friendbot are ready before `start()` resolves.
+
+## Image Variants
+
+Use `containerImageVersion` for any Quickstart tag string.
+
+For the common moving tags, use `QuickstartImageTags`:
+
+```ts
+import {
+  QuickstartImageTags,
+  StellarTestLedger,
+} from "jsr:@colibri/test-tooling";
+
+const ledger = new StellarTestLedger({
+  containerImageVersion: QuickstartImageTags.TESTING,
+});
+```
+
+For pinned builds or older tag shapes, pass the tag directly:
+
+```ts
+const ledger = new StellarTestLedger({
+  containerImageVersion: "v632-b942.1-testing",
+});
+```
+
+This package intentionally does not allow-list all tag formats. Quickstart
+publishes moving aliases, immutable build tags, and may introduce new tag shapes
+over time.
+
+## Network Variants
+
+Quickstart network mode is selected with `network`:
+
+```ts
+import {
+  NetworkEnv,
+  QuickstartServices,
+  StellarTestLedger,
+} from "jsr:@colibri/test-tooling";
+
+const ledger = new StellarTestLedger({
+  network: NetworkEnv.TESTNET,
+  enabledServices: [
+    QuickstartServices.HORIZON,
+    QuickstartServices.RPC,
+    QuickstartServices.LAB,
+  ] as const,
+});
+```
+
+Supported network modes:
+
+- `NetworkEnv.LOCAL`: fastest and best for deterministic tests
+- `NetworkEnv.TESTNET`: supported, but startup can take longer because
+  Quickstart must sync external network state
+- `NetworkEnv.FUTURENET`: supported, but startup can also take longer for the
+  same reason
+
+`limits` only applies to `NetworkEnv.LOCAL`.
+
+## Service Variants
+
+Use `enabledServices` to control the Quickstart `--enable` set:
+
+```ts
+import {
+  QuickstartServices,
+  StellarTestLedger,
+} from "jsr:@colibri/test-tooling";
+
+const ledger = new StellarTestLedger({
+  enabledServices: [
+    QuickstartServices.RPC,
+    QuickstartServices.GALEXIE,
+  ] as const,
+});
+
+await ledger.start();
+const details = await ledger.getNetworkDetails();
+
+console.log(details.rpcUrl);
+console.log(details.horizonUrl);
+console.log(details.friendbotUrl);
+console.log(details.ledgerMetaUrl);
+```
+
+The returned `getNetworkDetails()` shape follows the selected network and
+service tuple. To keep the narrowest TypeScript type, pass `enabledServices` as
+`const`.
+
+Quickstart service URLs are exposed through published HTTP ports, so
+`getNetworkDetails()` always includes `allowHttp: true`.
+
+Examples:
+
+- Local default services return `horizonUrl`, `rpcUrl`, and `friendbotUrl`
+- Local `enabledServices: [QuickstartServices.RPC] as const` returns
+  `horizonUrl`, `rpcUrl`, and `friendbotUrl`
+- Local
+  `enabledServices: [QuickstartServices.RPC, QuickstartServices.GALEXIE]
+  as const`
+  also returns `ledgerMetaUrl`
+- Futurenet `enabledServices: [QuickstartServices.LAB] as const` returns
+  `labUrl`, `transactionsExplorerUrl`, and `friendbotUrl`
+
+Notes:
+
+- `QuickstartServices.GALEXIE` is local-only
+- `QuickstartServices.GALEXIE` must be paired with `QuickstartServices.RPC`
+- core-only service selections are rejected because this harness resolves the
+  Quickstart HTTP surface, not raw Stellar Core admin ports
+
+## Stellar Lab And Ledger Meta
+
+When Lab is enabled, `getNetworkDetails()` includes:
+
+- `labUrl`
+- `transactionsExplorerUrl`
+
+When Galexie is enabled on local mode, `getNetworkDetails()` includes:
+
+- `ledgerMetaUrl`
+
+## Persistent Mode
+
+Use `storage` to switch from the default ephemeral container to a mounted
+persistent volume:
+
+```ts
+import {
+  QuickstartStorageModes,
+  StellarTestLedger,
+} from "jsr:@colibri/test-tooling";
+
+const ledger = new StellarTestLedger({
+  storage: {
+    mode: QuickstartStorageModes.PERSISTENT,
+    hostPath: "/absolute/path/to/stellar-data",
+  },
+});
+```
+
+Persistent mode mounts `hostPath` into `/opt/stellar`.
+
+Use it carefully:
+
+- Quickstart's on-disk layout can change between image releases
+- first-time initialization of an empty persistent directory can be more
+  operationally sensitive than ephemeral mode
+- pinned image tags are safer than moving tags when reusing persistent data
+
+## Reusing An Existing Container
 
 If you already have a matching quickstart container running, you can attach to
 it by name instead of starting a new one:
@@ -50,8 +214,8 @@ const ledger = new StellarTestLedger({
 });
 
 await ledger.start();
-const network = await ledger.getNetworkDetails();
-console.log(network.horizonUrl);
+const details = await ledger.getNetworkDetails();
+console.log(details.horizonUrl);
 ```
 
 When `useRunningLedger` is enabled:
@@ -61,7 +225,7 @@ When `useRunningLedger` is enabled:
 - `stop()` and `destroy()` become no-ops so the harness does not shut down or
   delete a container it did not create
 
-## Docker configuration
+## Docker Configuration
 
 `StellarTestLedger` resolves Docker in this order:
 
@@ -88,22 +252,14 @@ const ledger = new StellarTestLedger({
 });
 ```
 
-## Current constraints
-
-- Only `NetworkEnv.LOCAL` is currently supported
-- Only `ResourceLimits.TESTNET` is currently supported
-- Supported image tags are `latest`, `v425-latest`, and `pr757-latest`
-- Arbitrary image tags are also supported via `customContainerImageVersion`
-- The default container name is `colibri-stellar-test-ledger`
-- `start(true)` skips the image pull step
-
 ## Options
 
 - `containerName` controls the Docker container name used for create/reuse
-- `containerImageName` and `containerImageVersion` select a supported quickstart
-  image preset
-- `customContainerImageVersion` selects an arbitrary quickstart image tag and is
-  mutually exclusive with `containerImageVersion`
+- `containerImageName` and `containerImageVersion` select the Quickstart image
+- `network` selects local, testnet, or futurenet mode
+- `limits` selects the local standalone resource profile
+- `enabledServices` controls the Quickstart `--enable` list
+- `storage` switches between ephemeral and persistent mode
 - `useRunningLedger` attaches to an existing named container instead of creating
   one
 - `dockerOptions` and `dockerSocketPath` override Docker endpoint discovery
@@ -114,19 +270,20 @@ const ledger = new StellarTestLedger({
 - `logLevel` configures the built-in fallback logger and is ignored when
   `logger` is provided
 
-## API summary
+## API Summary
 
 - `new StellarTestLedger(options)` creates a quickstart ledger manager
 - `ledger.start(omitPull?)` starts or reuses the Docker container and waits
-  until Horizon, RPC, and Friendbot are ready
-- `ledger.getNetworkDetails()` returns the plain connection payload for the
-  running ledger
+  until the requested services are ready
+- `ledger.getNetworkDetails()` returns the plain service payload for the running
+  ledger
+- `ledger.getNetworkConfiguration()` is an alias of `getNetworkDetails()`
 - `ledger.getContainer()` returns the Dockerode container instance
 - `ledger.getContainerIpAddress()` returns the container IP reported by Docker
 - `ledger.stop()` stops the tracked container without deleting it
 - `ledger.destroy()` removes the tracked container and its named volumes
 
-## Custom logging
+## Custom Logging
 
 If you want to integrate with your own logger, pass a `LoggerLike`
 implementation:

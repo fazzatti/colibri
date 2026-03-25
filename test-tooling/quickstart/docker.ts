@@ -58,9 +58,7 @@ const normalizePublishedPortHost = (host: string): string => {
   }
 
   const parsed = parseDockerHost(value);
-  return parsed.socketPath
-    ? DEFAULT_PUBLISHED_PORT_HOST
-    : (parsed.host?.trim() || DEFAULT_PUBLISHED_PORT_HOST);
+  return parsed.socketPath ? DEFAULT_PUBLISHED_PORT_HOST : parsed.host!.trim();
 };
 
 /**
