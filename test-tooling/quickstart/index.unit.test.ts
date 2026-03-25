@@ -250,6 +250,16 @@ Deno.test("constructor validates supported options", () => {
   );
   assertStrictEquals(legacyImageError.code, Code.INVALID_CONFIGURATION);
 
+  const legacyUndefinedImageLedger = new StellarTestLedger({
+    ...({
+      customContainerImageVersion: undefined,
+    } as Record<string, unknown>),
+  });
+  assertEquals(
+    legacyUndefinedImageLedger.containerImageVersion,
+    QuickstartImageTags.LATEST,
+  );
+
   const nonStringImageError = assertThrows(
     () =>
       new StellarTestLedger({
@@ -319,6 +329,18 @@ Deno.test("constructor validates supported options", () => {
 });
 
 Deno.test("constructor validates remaining service and storage edge cases", () => {
+  const arrayOptionsError = assertThrows(
+    () => new StellarTestLedger([] as unknown as TestLedgerOptions),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(arrayOptionsError.code, Code.INVALID_CONFIGURATION);
+
+  const nullOptionsError = assertThrows(
+    () => new StellarTestLedger(null as unknown as TestLedgerOptions),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(nullOptionsError.code, Code.INVALID_CONFIGURATION);
+
   const invalidLocalLimitsError = assertThrows(
     () =>
       new StellarTestLedger({

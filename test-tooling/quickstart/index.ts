@@ -99,7 +99,7 @@ const isBooleanStrict = (value: unknown): value is boolean => {
 };
 
 const isObject = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null;
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 
 const isPersistentStorage = (
@@ -145,10 +145,15 @@ const normalizeStringOption = (
 };
 
 const normalizeImageVersion = (options?: Record<string, unknown>): string => {
-  if (options && Object.hasOwn(options, "customContainerImageVersion")) {
+  const legacyImageVersion = options?.customContainerImageVersion;
+  if (
+    options &&
+    Object.hasOwn(options, "customContainerImageVersion") &&
+    legacyImageVersion !== undefined
+  ) {
     throw new INVALID_CONFIGURATION({
       option: "customContainerImageVersion",
-      value: options.customContainerImageVersion,
+      value: legacyImageVersion,
       message:
         "StellarTestLedger#constructor() customContainerImageVersion is no longer supported.",
       details:
@@ -685,9 +690,19 @@ export class StellarTestLedger<
    *   storage, or image value is provided.
    */
   constructor(options?: TestLedgerOptions<Network, Services>) {
-    const rawOptions = options && isObject(options)
-      ? (options as Record<string, unknown>)
-      : undefined;
+    if (options !== undefined && !isObject(options)) {
+      throw new INVALID_CONFIGURATION({
+        option: "options",
+        value: options,
+        message: "StellarTestLedger#constructor() options must be an object.",
+        details:
+          "Provide an options object when configuring a test ledger, or omit the argument to use the default quickstart settings.",
+      });
+    }
+
+    const rawOptions = options as Record<string, unknown> | undefined;
+    const typedOptions = options as TestLedgerOptions<Network, Services>
+      | undefined;
 
     const network = normalizeNetwork(rawOptions?.network) as Network;
     const limits = normalizeLimits(network, rawOptions?.limits);
@@ -715,12 +730,12 @@ export class StellarTestLedger<
       DEFAULTS.imageName,
       "Provide a Docker image repository string such as stellar/quickstart or omit the option to use the default quickstart image name.",
     );
-    this.useRunningLedger = isBooleanStrict(options?.useRunningLedger)
-      ? options.useRunningLedger
+    this.useRunningLedger = isBooleanStrict(typedOptions?.useRunningLedger)
+      ? typedOptions.useRunningLedger
       : DEFAULTS.useRunningLedger;
-    this.logLevel = options?.logLevel ?? DEFAULTS.logLevel;
-    this.emitContainerLogs = isBooleanStrict(options?.emitContainerLogs)
-      ? options.emitContainerLogs
+    this.logLevel = typedOptions?.logLevel ?? DEFAULTS.logLevel;
+    this.emitContainerLogs = isBooleanStrict(typedOptions?.emitContainerLogs)
+      ? typedOptions.emitContainerLogs
       : DEFAULTS.emitContainerLogs;
     this.readinessChecks = resolveReadinessChecks(network, enabledServices);
     this.quickstartCommand = buildQuickstartCommand(
@@ -730,14 +745,14 @@ export class StellarTestLedger<
     );
     this.dockerConnection = {
       dockerOptions: resolveDockerOptions({
-        dockerOptions: options?.dockerOptions,
-        dockerSocketPath: options?.dockerSocketPath,
+        dockerOptions: typedOptions?.dockerOptions,
+        dockerSocketPath: typedOptions?.dockerSocketPath,
       }),
     };
     this.log = createLogger({
       level: this.logLevel,
       label: "StellarTestLedger",
-      logger: options?.logger,
+      logger: typedOptions?.logger,
     });
 
     this.log.debug("Initialized");
