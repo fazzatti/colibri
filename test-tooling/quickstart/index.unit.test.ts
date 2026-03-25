@@ -16,9 +16,13 @@ import {
 } from "@/quickstart/error.ts";
 import { LogLevel } from "@/quickstart/logging.ts";
 import {
+  DEFAULT_ENABLED_SERVICES,
   NetworkEnv,
+  QuickstartImageTags,
+  type QuickstartService,
+  QuickstartServices,
+  QuickstartStorageModes,
   ResourceLimits,
-  type SupportedImageVersions,
   type TestLedgerOptions,
 } from "@/quickstart/types.ts";
 import type {
@@ -158,9 +162,13 @@ const createDockerHarness = (
   };
 };
 
-class TestLedger extends StellarTestLedger {
+class TestLedger<
+  const Network extends NetworkEnv = NetworkEnv.LOCAL,
+  const Services extends readonly QuickstartService[] =
+    typeof DEFAULT_ENABLED_SERVICES,
+> extends StellarTestLedger<Network, Services> {
   constructor(
-    options: TestLedgerOptions | undefined,
+    options: TestLedgerOptions<Network, Services> | undefined,
     private readonly dockerClient: DockerClientLike & {
       createContainer: (options: Record<string, unknown>) => Promise<Container>;
     },
@@ -197,65 +205,107 @@ const withHealthyFetch = async (fn: () => Promise<void>) => {
 
 Deno.test("constructor validates supported options", () => {
   const networkError = assertThrows(
-    () => new StellarTestLedger({ network: NetworkEnv.TESTNET as never }),
+    () => new StellarTestLedger({ network: "pubnet" as never }),
     INVALID_CONFIGURATION,
   );
   assertStrictEquals(networkError.code, Code.INVALID_CONFIGURATION);
 
   const limitsError = assertThrows(
-    () => new StellarTestLedger({ limits: ResourceLimits.DEFAULT as never }),
+    () =>
+      new StellarTestLedger({
+        network: NetworkEnv.TESTNET,
+        limits: ResourceLimits.DEFAULT,
+      }),
     INVALID_CONFIGURATION,
   );
   assertStrictEquals(limitsError.code, Code.INVALID_CONFIGURATION);
 
-  const imageError = assertThrows(
-    () =>
-      new StellarTestLedger({
-        containerImageVersion: "bad-version" as SupportedImageVersions,
-      }),
-    INVALID_CONFIGURATION,
-  );
-  assertStrictEquals(imageError.code, Code.INVALID_CONFIGURATION);
-
   const emptyImageError = assertThrows(
     () =>
       new StellarTestLedger({
-        containerImageVersion: "" as SupportedImageVersions,
+        containerImageVersion: "",
       }),
     INVALID_CONFIGURATION,
   );
   assertStrictEquals(emptyImageError.code, Code.INVALID_CONFIGURATION);
 
-  const conflictingImageError = assertThrows(
+  const legacyImageError = assertThrows(
     () =>
       new StellarTestLedger({
-        containerImageVersion: "latest" as SupportedImageVersions,
-        customContainerImageVersion: "custom-tag",
+        ...({
+          customContainerImageVersion: "legacy-tag",
+        } as Record<string, unknown>),
       }),
     INVALID_CONFIGURATION,
   );
-  assertStrictEquals(conflictingImageError.code, Code.INVALID_CONFIGURATION);
+  assertStrictEquals(legacyImageError.code, Code.INVALID_CONFIGURATION);
 
-  const emptyCustomImageError = assertThrows(
+  const nonStringImageError = assertThrows(
     () =>
       new StellarTestLedger({
-        customContainerImageVersion: "   ",
+        containerImageVersion: 42 as unknown as string,
       }),
     INVALID_CONFIGURATION,
   );
-  assertStrictEquals(emptyCustomImageError.code, Code.INVALID_CONFIGURATION);
+  assertStrictEquals(nonStringImageError.code, Code.INVALID_CONFIGURATION);
 
-  const nonStringCustomImageError = assertThrows(
+  const emptyServicesError = assertThrows(
     () =>
       new StellarTestLedger({
-        customContainerImageVersion: 42 as unknown as string,
+        enabledServices: [],
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(emptyServicesError.code, Code.INVALID_CONFIGURATION);
+
+  const coreOnlyServicesError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        enabledServices: [QuickstartServices.CORE] as const,
       }),
     INVALID_CONFIGURATION,
   );
   assertStrictEquals(
-    nonStringCustomImageError.code,
+    coreOnlyServicesError.code,
     Code.INVALID_CONFIGURATION,
   );
+
+  const nonLocalGalexieError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        network: NetworkEnv.TESTNET,
+        enabledServices: [
+          QuickstartServices.RPC,
+          QuickstartServices.GALEXIE,
+        ] as const,
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(nonLocalGalexieError.code, Code.INVALID_CONFIGURATION);
+
+  const galexieWithoutRpcError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        enabledServices: [
+          QuickstartServices.CORE,
+          QuickstartServices.GALEXIE,
+        ] as const,
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(galexieWithoutRpcError.code, Code.INVALID_CONFIGURATION);
+
+  const storagePathError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        storage: {
+          mode: QuickstartStorageModes.PERSISTENT,
+          hostPath: "relative/path",
+        },
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(storagePathError.code, Code.INVALID_CONFIGURATION);
 });
 
 Deno.test("constructor preserves numeric TRACE log levels", () => {
@@ -285,14 +335,34 @@ Deno.test("constructor reuses the same Docker client instance", () => {
   assertStrictEquals(ledger.exposeDockerClient(), ledger.exposeDockerClient());
 });
 
-Deno.test("constructor accepts a custom container image version", () => {
+Deno.test("constructor accepts arbitrary image tags through containerImageVersion", () => {
   const ledger = new StellarTestLedger({
     containerImageName: "stellar/quickstart",
-    customContainerImageVersion: "v999-custom",
+    containerImageVersion: "v999-custom",
   });
 
   assertEquals(ledger.containerImageVersion, "v999-custom");
   assertEquals(ledger.fullContainerImageName, "stellar/quickstart:v999-custom");
+});
+
+Deno.test("constructor accepts non-local networks and persistent storage", () => {
+  const futureLedger = new StellarTestLedger({
+    network: NetworkEnv.FUTURENET,
+    enabledServices: [QuickstartServices.LAB] as const,
+  });
+  assertEquals(futureLedger.network, NetworkEnv.FUTURENET);
+  assertEquals(futureLedger.limits, undefined);
+
+  const persistentLedger = new StellarTestLedger({
+    storage: {
+      mode: QuickstartStorageModes.PERSISTENT,
+      hostPath: "/tmp/colibri-quickstart-persistent",
+    },
+  });
+  assertEquals(persistentLedger.storage, {
+    mode: QuickstartStorageModes.PERSISTENT,
+    hostPath: "/tmp/colibri-quickstart-persistent",
+  });
 });
 
 Deno.test("getContainer throws before the ledger starts", () => {
@@ -323,6 +393,8 @@ Deno.test("start creates a named container and exposes network information", asy
       "--local",
       "--limits",
       "testnet",
+      "--enable",
+      DEFAULT_ENABLED_SERVICES.join(","),
     ]);
     assertEquals(harness.createCalls[0].HostConfig, {
       PublishAllPorts: true,
@@ -336,6 +408,43 @@ Deno.test("start creates a named container and exposes network information", asy
       "http://127.0.0.1:18000/friendbot",
     );
     assertEquals(await ledger.getContainerIpAddress(), "172.20.0.9");
+  });
+});
+
+Deno.test("start uses the selected network, services, and storage mode", async () => {
+  const harness = createDockerHarness();
+  const ledger = new TestLedger(
+    {
+      network: NetworkEnv.TESTNET,
+      containerImageVersion: QuickstartImageTags.TESTING,
+      enabledServices: [QuickstartServices.LAB] as const,
+      storage: {
+        mode: QuickstartStorageModes.PERSISTENT,
+        hostPath: "/tmp/colibri-ledger-data",
+      },
+    },
+    harness.dockerClient,
+  );
+
+  const fetchStub = stub(globalThis, "fetch", () => {
+    return Promise.resolve(new Response("ok", { status: 200 }));
+  });
+
+  try {
+    await ledger.start(true);
+  } finally {
+    fetchStub.restore();
+  }
+
+  assertEquals(harness.createCalls[0].Image, "stellar/quickstart:testing");
+  assertEquals(harness.createCalls[0].Cmd, [
+    "--testnet",
+    "--enable",
+    QuickstartServices.LAB,
+  ]);
+  assertEquals(harness.createCalls[0].HostConfig, {
+    PublishAllPorts: true,
+    Binds: ["/tmp/colibri-ledger-data:/opt/stellar"],
   });
 });
 
@@ -577,6 +686,48 @@ Deno.test("getNetworkConfiguration delegates to getNetworkDetails", async () => 
     rpcUrl: "http://127.0.0.1:18000/rpc",
     horizonUrl: "http://127.0.0.1:18000",
     friendbotUrl: "http://127.0.0.1:18000/friendbot",
+    allowHttp: true,
+  });
+});
+
+Deno.test("getNetworkDetails follows the selected network and service tuple", async () => {
+  const harness = createDockerHarness();
+  const localLedger = new TestLedger(
+    {
+      enabledServices: [
+        QuickstartServices.RPC,
+        QuickstartServices.GALEXIE,
+      ] as const,
+    },
+    harness.dockerClient,
+  );
+  localLedger.container = harness.created.container;
+  localLedger.containerId = "ledger-container";
+
+  assertEquals(await localLedger.getNetworkDetails(), {
+    networkPassphrase: "Standalone Network ; February 2017",
+    rpcUrl: "http://127.0.0.1:18000/rpc",
+    horizonUrl: "http://127.0.0.1:18000",
+    friendbotUrl: "http://127.0.0.1:18000/friendbot",
+    ledgerMetaUrl: "http://127.0.0.1:18000/ledger-meta",
+    allowHttp: true,
+  });
+
+  const futureLedger = new TestLedger(
+    {
+      network: NetworkEnv.FUTURENET,
+      enabledServices: [QuickstartServices.LAB] as const,
+    },
+    harness.dockerClient,
+  );
+  futureLedger.container = harness.created.container;
+  futureLedger.containerId = "ledger-container";
+
+  assertEquals(await futureLedger.getNetworkDetails(), {
+    networkPassphrase: "Test SDF Future Network ; October 2022",
+    friendbotUrl: "http://127.0.0.1:18000/friendbot",
+    labUrl: "http://127.0.0.1:18000/lab",
+    transactionsExplorerUrl: "http://127.0.0.1:18000/lab/transactions-explorer",
     allowHttp: true,
   });
 });
