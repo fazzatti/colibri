@@ -308,6 +308,122 @@ Deno.test("constructor validates supported options", () => {
   assertStrictEquals(storagePathError.code, Code.INVALID_CONFIGURATION);
 });
 
+Deno.test("constructor validates remaining service and storage edge cases", () => {
+  const invalidLocalLimitsError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        limits: "impossible" as ResourceLimits,
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(
+    invalidLocalLimitsError.code,
+    Code.INVALID_CONFIGURATION,
+  );
+
+  const nonArrayServicesError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        enabledServices: "rpc" as unknown as readonly QuickstartService[],
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(
+    nonArrayServicesError.code,
+    Code.INVALID_CONFIGURATION,
+  );
+
+  const nonStringServiceError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        enabledServices: [42 as unknown as QuickstartService],
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(nonStringServiceError.code, Code.INVALID_CONFIGURATION);
+
+  const unsupportedServiceError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        enabledServices: ["hubble" as QuickstartService],
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(unsupportedServiceError.code, Code.INVALID_CONFIGURATION);
+
+  const nonObjectStorageError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        storage: "persistent" as unknown as TestLedgerOptions["storage"],
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(nonObjectStorageError.code, Code.INVALID_CONFIGURATION);
+
+  const unsupportedStorageModeError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        storage: {
+          mode: "sidecar",
+        } as unknown as TestLedgerOptions["storage"],
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(
+    unsupportedStorageModeError.code,
+    Code.INVALID_CONFIGURATION,
+  );
+
+  const ephemeralHostPathError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        storage: {
+          mode: QuickstartStorageModes.EPHEMERAL,
+          hostPath: "/tmp/should-not-exist",
+        } as unknown as TestLedgerOptions["storage"],
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(ephemeralHostPathError.code, Code.INVALID_CONFIGURATION);
+
+  const nonStringPersistentHostPathError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        storage: {
+          mode: QuickstartStorageModes.PERSISTENT,
+          hostPath: 42,
+        } as unknown as TestLedgerOptions["storage"],
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(
+    nonStringPersistentHostPathError.code,
+    Code.INVALID_CONFIGURATION,
+  );
+
+  const emptyPersistentHostPathError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        storage: {
+          mode: QuickstartStorageModes.PERSISTENT,
+          hostPath: "   ",
+        },
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(
+    emptyPersistentHostPathError.code,
+    Code.INVALID_CONFIGURATION,
+  );
+
+  const ephemeralLedger = new StellarTestLedger({
+    storage: { mode: QuickstartStorageModes.EPHEMERAL },
+  });
+  assertEquals(ephemeralLedger.storage, {
+    mode: QuickstartStorageModes.EPHEMERAL,
+  });
+});
+
 Deno.test("constructor preserves numeric TRACE log levels", () => {
   const debugStub = stub(console, "debug", () => undefined);
 
