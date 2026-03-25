@@ -818,6 +818,7 @@ Deno.test("start rejects when the running ledger cannot be reused safely", async
     CONTAINER_ERROR,
   );
   assertStrictEquals(mismatchedConfigError.code, Code.CONTAINER_ERROR);
+  assertThrows(() => mismatchedConfigLedger.getContainer(), CONTAINER_ERROR);
 
   const mismatchedLimitsHarness = createDockerHarness();
   const mismatchedLimitsInspect = createInspectInfo({

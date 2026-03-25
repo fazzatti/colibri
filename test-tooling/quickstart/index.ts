@@ -1061,12 +1061,15 @@ export class StellarTestLedger<
           });
         }
 
-        this.containerId = containerInfo.Id;
-        this.container = this.getDockerClient().getContainer(containerInfo.Id);
-
-        const inspectInfo = await this.getContainerInfo();
+        const reusedContainer = this.getDockerClient().getContainer(
+          containerInfo.Id,
+        );
+        const inspectInfo = await reusedContainer.inspect() as ContainerInspectInfo;
         this.ensureExpectedNamedContainerConfig(inspectInfo);
         const publishedPorts = inspectInfo.NetworkSettings.Ports?.["8000/tcp"];
+
+        this.containerId = containerInfo.Id;
+        this.container = reusedContainer;
 
         // Reused ledgers may be reachable only through Docker/container
         // networking. Only run HTTP readiness checks when Docker published the
