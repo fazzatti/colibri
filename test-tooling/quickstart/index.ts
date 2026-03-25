@@ -118,6 +118,31 @@ const ensureQuickstartError = <T extends QuickstartError>(
   return fallback;
 };
 
+const normalizeStringOption = (
+  options: Record<string, unknown> | undefined,
+  option: "containerName" | "containerImageName",
+  fallback: string,
+  details: string,
+): string => {
+  const rawValue = options?.[option];
+
+  if (rawValue === undefined) {
+    return fallback;
+  }
+
+  if (typeof rawValue !== "string") {
+    throw new INVALID_CONFIGURATION({
+      option,
+      value: rawValue,
+      message: `StellarTestLedger#constructor() ${option} must be a string.`,
+      details,
+    });
+  }
+
+  const value = rawValue.trim();
+  return value || fallback;
+};
+
 const normalizeImageVersion = (options?: Record<string, unknown>): string => {
   if (options && Object.hasOwn(options, "customContainerImageVersion")) {
     throw new INVALID_CONFIGURATION({
@@ -334,7 +359,9 @@ const normalizeEnabledServices = (
 
 const normalizeStorage = (value: unknown): QuickstartStorage => {
   if (value === undefined) {
-    return DEFAULTS.storage;
+    return {
+      mode: QuickstartStorageModes.EPHEMERAL,
+    };
   }
 
   if (!isObject(value)) {
@@ -467,6 +494,14 @@ const buildQuickstartCommand = (
   return command;
 };
 
+const commandsMatch = (
+  expected: readonly string[],
+  actual: readonly string[],
+): boolean => {
+  return expected.length === actual.length &&
+    expected.every((value, index) => value === actual[index]);
+};
+
 /**
  * Manages a Docker-backed Stellar Quickstart instance for tests.
  *
@@ -587,8 +622,18 @@ export class StellarTestLedger<
     this.storage = storage;
     this.containerImageVersion = normalizeImageVersion(rawOptions);
 
-    this.containerName = options?.containerName ?? DEFAULTS.containerName;
-    this.containerImageName = options?.containerImageName ?? DEFAULTS.imageName;
+    this.containerName = normalizeStringOption(
+      rawOptions,
+      "containerName",
+      DEFAULTS.containerName,
+      "Provide a Docker container name string or omit the option to use the default quickstart container name.",
+    );
+    this.containerImageName = normalizeStringOption(
+      rawOptions,
+      "containerImageName",
+      DEFAULTS.imageName,
+      "Provide a Docker image repository string such as stellar/quickstart or omit the option to use the default quickstart image name.",
+    );
     this.useRunningLedger = isBooleanStrict(options?.useRunningLedger)
       ? options.useRunningLedger
       : DEFAULTS.useRunningLedger;
@@ -655,6 +700,44 @@ export class StellarTestLedger<
           containerName: this.containerName,
           expectedImage: this.fullContainerImageName,
           actualImage: containerInfo.Image,
+        },
+      });
+    }
+  }
+
+  /**
+   * Ensures a reused named container was started with the expected quickstart flags.
+   */
+  protected ensureExpectedNamedContainerConfig(
+    inspectInfo: ContainerInspectInfo,
+  ): void {
+    const actualCommand = inspectInfo.Config.Cmd;
+
+    if (!Array.isArray(actualCommand)) {
+      throw new CONTAINER_ERROR({
+        message:
+          `StellarTestLedger could not validate the quickstart command for "${this.containerName}".`,
+        details:
+          "Docker inspection did not expose the container command needed to verify the reused quickstart configuration.",
+        data: {
+          containerName: this.containerName,
+          containerId: inspectInfo.Id,
+          expectedCommand: this.quickstartCommand,
+        },
+      });
+    }
+
+    if (!commandsMatch(this.quickstartCommand, actualCommand)) {
+      throw new CONTAINER_ERROR({
+        message:
+          `StellarTestLedger found "${this.containerName}" with a different quickstart configuration.`,
+        details:
+          "A running container matched the requested name and image, but it was started with different quickstart flags than this ledger instance expects.",
+        data: {
+          containerName: this.containerName,
+          containerId: inspectInfo.Id,
+          expectedCommand: this.quickstartCommand,
+          actualCommand,
         },
       });
     }
@@ -901,6 +984,7 @@ export class StellarTestLedger<
         this.container = this.getDockerClient().getContainer(containerInfo.Id);
 
         const inspectInfo = await this.getContainerInfo();
+        this.ensureExpectedNamedContainerConfig(inspectInfo);
         const publishedPorts = inspectInfo.NetworkSettings.Ports?.["8000/tcp"];
 
         // Reused ledgers may be reachable only through Docker/container

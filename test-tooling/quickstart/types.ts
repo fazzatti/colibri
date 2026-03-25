@@ -79,6 +79,7 @@ export const DEFAULT_ENABLED_SERVICES = [
 ] as const;
 
 type DefaultEnabledServices = typeof DEFAULT_ENABLED_SERVICES;
+type EmptyShape = Record<PropertyKey, never>;
 
 /**
  * Storage modes supported by Quickstart containers.
@@ -186,29 +187,29 @@ export type NetworkDetails<
       /** Soroban RPC endpoint. */
       readonly rpcUrl: string;
     }
-    : {})
+    : EmptyShape)
   & (HasHorizon<Network, Services> extends true ? {
       /** Horizon endpoint. */
       readonly horizonUrl: string;
     }
-    : {})
+    : EmptyShape)
   & (HasFriendbot<Network, Services> extends true ? {
       /** Friendbot endpoint. */
       readonly friendbotUrl: string;
     }
-    : {})
+    : EmptyShape)
   & (HasLab<Services> extends true ? {
       /** Stellar Lab endpoint. */
       readonly labUrl: string;
       /** Embedded Lab transaction explorer endpoint. */
       readonly transactionsExplorerUrl: string;
     }
-    : {})
+    : EmptyShape)
   & (HasLedgerMeta<Network, Services> extends true ? {
       /** Local ledger meta endpoint exposed by Galexie. */
       readonly ledgerMetaUrl: string;
     }
-    : {});
+    : EmptyShape);
 
 /**
  * Common interface exposed by quickstart-backed ledgers.

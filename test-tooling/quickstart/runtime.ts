@@ -57,6 +57,7 @@ export type ContainerInspectInfo = {
   }>;
   Config: {
     Env?: string[];
+    Cmd?: string[];
   };
 };
 

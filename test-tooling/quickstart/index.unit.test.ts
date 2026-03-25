@@ -1,5 +1,6 @@
 import {
   assertEquals,
+  assertNotStrictEquals,
   assertRejects,
   assertStrictEquals,
   assertThrows,
@@ -49,7 +50,16 @@ const createInspectInfo = (
       },
     },
     Mounts: [],
-    Config: { Env: [] },
+    Config: {
+      Env: [],
+      Cmd: [
+        "--local",
+        "--limits",
+        "testnet",
+        "--enable",
+        DEFAULT_ENABLED_SERVICES.join(","),
+      ],
+    },
     ...overrides,
   };
 };
@@ -431,6 +441,42 @@ Deno.test("constructor validates remaining service and storage edge cases", () =
   });
 });
 
+Deno.test("constructor normalizes empty container identifiers and returns fresh storage defaults", () => {
+  const ledger = new StellarTestLedger({
+    containerName: "   ",
+    containerImageName: "",
+  });
+  assertEquals(ledger.containerName, "colibri-stellar-test-ledger");
+  assertEquals(ledger.containerImageName, "stellar/quickstart");
+
+  const first = new StellarTestLedger();
+  const second = new StellarTestLedger();
+
+  assertNotStrictEquals(first.storage, second.storage);
+  assertEquals(first.storage, { mode: QuickstartStorageModes.EPHEMERAL });
+  assertEquals(second.storage, { mode: QuickstartStorageModes.EPHEMERAL });
+});
+
+Deno.test("constructor rejects non-string container identifiers", () => {
+  const nameError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        containerName: 42 as unknown as string,
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(nameError.code, Code.INVALID_CONFIGURATION);
+
+  const imageNameError = assertThrows(
+    () =>
+      new StellarTestLedger({
+        containerImageName: 42 as unknown as string,
+      }),
+    INVALID_CONFIGURATION,
+  );
+  assertStrictEquals(imageNameError.code, Code.INVALID_CONFIGURATION);
+});
+
 Deno.test("constructor preserves numeric TRACE log levels", () => {
   const debugStub = stub(console, "debug", () => undefined);
 
@@ -720,6 +766,67 @@ Deno.test("start rejects when the running ledger cannot be reused safely", async
     CONTAINER_ERROR,
   );
   assertStrictEquals(stoppedError.code, Code.CONTAINER_ERROR);
+
+  const mismatchedConfigHarness = createDockerHarness();
+  const mismatchedInspect = createInspectInfo({
+    Config: {
+      Env: [],
+      Cmd: [
+        "--testnet",
+        "--enable",
+        DEFAULT_ENABLED_SERVICES.join(","),
+      ],
+    },
+  });
+  const mismatchedConfig = createMockContainer(mismatchedInspect, {
+    id: "running-mismatched-config",
+  });
+  mismatchedConfigHarness.containers.set(
+    mismatchedConfig.container.id,
+    mismatchedConfig.container,
+  );
+  mismatchedConfigHarness.listContainers.push({
+    Id: "running-mismatched-config",
+    Image: "stellar/quickstart:latest",
+    State: "running",
+    Names: ["/colibri-stellar-test-ledger"],
+  } as ContainerInfo);
+  const mismatchedConfigLedger = new TestLedger(
+    { useRunningLedger: true },
+    mismatchedConfigHarness.dockerClient,
+  );
+  const mismatchedConfigError = await assertRejects(
+    () => mismatchedConfigLedger.start(),
+    CONTAINER_ERROR,
+  );
+  assertStrictEquals(mismatchedConfigError.code, Code.CONTAINER_ERROR);
+
+  const missingConfigHarness = createDockerHarness();
+  const missingConfigInspect = createInspectInfo({
+    Config: { Env: [] },
+  });
+  const missingConfig = createMockContainer(missingConfigInspect, {
+    id: "running-missing-config",
+  });
+  missingConfigHarness.containers.set(
+    missingConfig.container.id,
+    missingConfig.container,
+  );
+  missingConfigHarness.listContainers.push({
+    Id: "running-missing-config",
+    Image: "stellar/quickstart:latest",
+    State: "running",
+    Names: ["/colibri-stellar-test-ledger"],
+  } as ContainerInfo);
+  const missingConfigLedger = new TestLedger(
+    { useRunningLedger: true },
+    missingConfigHarness.dockerClient,
+  );
+  const missingConfigError = await assertRejects(
+    () => missingConfigLedger.start(),
+    CONTAINER_ERROR,
+  );
+  assertStrictEquals(missingConfigError.code, Code.CONTAINER_ERROR);
 });
 
 Deno.test("start removes stale named containers and existing tracked containers before recreating", async () => {
