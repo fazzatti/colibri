@@ -32,7 +32,16 @@ export const QuickstartImageTags = {
  * Use `QuickstartImageTags` for the common moving tags, or pass any other
  * Docker tag string such as an immutable Quickstart build tag.
  */
-export type QuickstartImageVersion = string;
+export type QuickstartKnownImageTag =
+  (typeof QuickstartImageTags)[keyof typeof QuickstartImageTags];
+
+/**
+ * Literal-union-plus-string keeps editor suggestions for known tags while
+ * still allowing any arbitrary Docker tag string.
+ */
+export type QuickstartImageVersion =
+  | QuickstartKnownImageTag
+  | (string & Record<never, never>);
 
 /**
  * Services that can be explicitly enabled through Quickstart's `--enable`
