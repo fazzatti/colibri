@@ -95,10 +95,10 @@ describe("StellarTestLedger", () => {
       await horizonResponse.text();
     });
 
-    it("returns a pinned-build network config that is immediately usable for Friendbot and classic transactions", async () => {
+    it("returns an arbitrary-tag network config that is immediately usable for Friendbot and classic transactions", async () => {
       const latestLedger = new StellarTestLedger({
-        containerName: "colibri-stellar-test-ledger-build-tag",
-        containerImageVersion: "v632-b942.1-latest",
+        containerName: "colibri-stellar-test-ledger-arbitrary-tag",
+        containerImageVersion: "v425-latest",
         logLevel,
       });
       const sender = NativeAccount.fromMasterSigner(
