@@ -1096,9 +1096,9 @@ Deno.test("waitForLedgerReady fails fast when the container exits", async () => 
         } as unknown as DockerClientLike,
         timeoutMs: 1000,
         readiness: {
-          horizon: false,
+          horizon: true,
           rpc: true,
-          friendbot: false,
+          friendbot: true,
           lab: true,
           ledgerMeta: true,
         },
@@ -1114,10 +1114,49 @@ Deno.test("waitForLedgerReady fails fast when the container exits", async () => 
   assertStrictEquals(stoppedError.code, Code.READINESS_ERROR);
   assertEquals(
     stoppedError.details,
-    "The quickstart container stopped before the requested services became ready: Soroban RPC, Stellar Lab, ledger meta.",
+    "The quickstart container stopped before the requested services became ready: Horizon, Soroban RPC, Friendbot, Stellar Lab, ledger meta.",
   );
   assertEquals(stoppedError.meta.data.terminal, true);
   assertEquals(sleepCalls, 0);
+});
+
+Deno.test("waitForLedgerReady reports the configured flow when no readiness checks are requested and the container exits", async () => {
+  const stoppedError = await assertRejects(
+    () =>
+      waitForLedgerReady({
+        containerId: "container-id",
+        dockerClient: {
+          getContainer: () =>
+            createFakeContainer(
+              createInspectInfo({
+                State: {
+                  Running: false,
+                  Status: "exited",
+                  ExitCode: 1,
+                },
+              }),
+            ),
+        } as unknown as DockerClientLike,
+        timeoutMs: 1000,
+        readiness: {
+          horizon: false,
+          rpc: false,
+          friendbot: false,
+          lab: false,
+          ledgerMeta: false,
+        },
+        sleepFn: () => Promise.resolve(undefined),
+      }),
+    READINESS_ERROR,
+    "Container is not running",
+  );
+
+  assertStrictEquals(stoppedError.code, Code.READINESS_ERROR);
+  assertEquals(
+    stoppedError.details,
+    "The quickstart container stopped before the configured readiness flow could complete.",
+  );
+  assertEquals(stoppedError.meta.data.terminal, true);
 });
 
 Deno.test("waitForLedgerReady times out with string and object failures", async () => {

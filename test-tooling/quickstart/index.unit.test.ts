@@ -855,6 +855,258 @@ Deno.test("start rejects when the running ledger cannot be reused safely", async
   );
   assertStrictEquals(mismatchedLimitsError.code, Code.CONTAINER_ERROR);
 
+  const duplicateNetworkHarness = createDockerHarness();
+  const duplicateNetworkInspect = createInspectInfo({
+    Config: {
+      Env: [],
+      Cmd: [
+        "--local",
+        "--testnet",
+        "--enable",
+        DEFAULT_ENABLED_SERVICES.join(","),
+      ],
+    },
+  });
+  const duplicateNetwork = createMockContainer(duplicateNetworkInspect, {
+    id: "running-duplicate-network",
+  });
+  duplicateNetworkHarness.containers.set(
+    duplicateNetwork.container.id,
+    duplicateNetwork.container,
+  );
+  duplicateNetworkHarness.listContainers.push({
+    Id: "running-duplicate-network",
+    Image: "stellar/quickstart:latest",
+    State: "running",
+    Names: ["/colibri-stellar-test-ledger"],
+  } as ContainerInfo);
+  const duplicateNetworkLedger = new TestLedger(
+    { useRunningLedger: true },
+    duplicateNetworkHarness.dockerClient,
+  );
+  const duplicateNetworkError = await assertRejects(
+    () => duplicateNetworkLedger.start(),
+    CONTAINER_ERROR,
+  );
+  assertStrictEquals(duplicateNetworkError.code, Code.CONTAINER_ERROR);
+
+  const duplicateLimitsHarness = createDockerHarness();
+  const duplicateLimitsInspect = createInspectInfo({
+    Config: {
+      Env: [],
+      Cmd: [
+        "--local",
+        "--limits",
+        ResourceLimits.TESTNET,
+        "--limits",
+        ResourceLimits.DEFAULT,
+        "--enable",
+        DEFAULT_ENABLED_SERVICES.join(","),
+      ],
+    },
+  });
+  const duplicateLimits = createMockContainer(duplicateLimitsInspect, {
+    id: "running-duplicate-limits",
+  });
+  duplicateLimitsHarness.containers.set(
+    duplicateLimits.container.id,
+    duplicateLimits.container,
+  );
+  duplicateLimitsHarness.listContainers.push({
+    Id: "running-duplicate-limits",
+    Image: "stellar/quickstart:latest",
+    State: "running",
+    Names: ["/colibri-stellar-test-ledger"],
+  } as ContainerInfo);
+  const duplicateLimitsLedger = new TestLedger(
+    { useRunningLedger: true },
+    duplicateLimitsHarness.dockerClient,
+  );
+  const duplicateLimitsError = await assertRejects(
+    () => duplicateLimitsLedger.start(),
+    CONTAINER_ERROR,
+  );
+  assertStrictEquals(duplicateLimitsError.code, Code.CONTAINER_ERROR);
+
+  const duplicateEnableHarness = createDockerHarness();
+  const duplicateEnableInspect = createInspectInfo({
+    Config: {
+      Env: [],
+      Cmd: [
+        "--local",
+        "--limits",
+        ResourceLimits.TESTNET,
+        "--enable",
+        DEFAULT_ENABLED_SERVICES.join(","),
+        "--enable",
+        DEFAULT_ENABLED_SERVICES.join(","),
+      ],
+    },
+  });
+  const duplicateEnable = createMockContainer(duplicateEnableInspect, {
+    id: "running-duplicate-enable",
+  });
+  duplicateEnableHarness.containers.set(
+    duplicateEnable.container.id,
+    duplicateEnable.container,
+  );
+  duplicateEnableHarness.listContainers.push({
+    Id: "running-duplicate-enable",
+    Image: "stellar/quickstart:latest",
+    State: "running",
+    Names: ["/colibri-stellar-test-ledger"],
+  } as ContainerInfo);
+  const duplicateEnableLedger = new TestLedger(
+    { useRunningLedger: true },
+    duplicateEnableHarness.dockerClient,
+  );
+  const duplicateEnableError = await assertRejects(
+    () => duplicateEnableLedger.start(),
+    CONTAINER_ERROR,
+  );
+  assertStrictEquals(duplicateEnableError.code, Code.CONTAINER_ERROR);
+
+  const emptyEnableHarness = createDockerHarness();
+  const emptyEnableInspect = createInspectInfo({
+    Config: {
+      Env: [],
+      Cmd: [
+        "--local",
+        "--limits",
+        ResourceLimits.TESTNET,
+        "--enable",
+        "",
+      ],
+    },
+  });
+  const emptyEnable = createMockContainer(emptyEnableInspect, {
+    id: "running-empty-enable",
+  });
+  emptyEnableHarness.containers.set(
+    emptyEnable.container.id,
+    emptyEnable.container,
+  );
+  emptyEnableHarness.listContainers.push({
+    Id: "running-empty-enable",
+    Image: "stellar/quickstart:latest",
+    State: "running",
+    Names: ["/colibri-stellar-test-ledger"],
+  } as ContainerInfo);
+  const emptyEnableLedger = new TestLedger(
+    { useRunningLedger: true },
+    emptyEnableHarness.dockerClient,
+  );
+  const emptyEnableError = await assertRejects(
+    () => emptyEnableLedger.start(),
+    CONTAINER_ERROR,
+  );
+  assertStrictEquals(emptyEnableError.code, Code.CONTAINER_ERROR);
+
+  const invalidServiceHarness = createDockerHarness();
+  const invalidServiceInspect = createInspectInfo({
+    Config: {
+      Env: [],
+      Cmd: [
+        "--local",
+        "--limits",
+        ResourceLimits.TESTNET,
+        "--enable",
+        `${DEFAULT_ENABLED_SERVICES.join(",")},invalid`,
+      ],
+    },
+  });
+  const invalidService = createMockContainer(invalidServiceInspect, {
+    id: "running-invalid-service",
+  });
+  invalidServiceHarness.containers.set(
+    invalidService.container.id,
+    invalidService.container,
+  );
+  invalidServiceHarness.listContainers.push({
+    Id: "running-invalid-service",
+    Image: "stellar/quickstart:latest",
+    State: "running",
+    Names: ["/colibri-stellar-test-ledger"],
+  } as ContainerInfo);
+  const invalidServiceLedger = new TestLedger(
+    { useRunningLedger: true },
+    invalidServiceHarness.dockerClient,
+  );
+  const invalidServiceError = await assertRejects(
+    () => invalidServiceLedger.start(),
+    CONTAINER_ERROR,
+  );
+  assertStrictEquals(invalidServiceError.code, Code.CONTAINER_ERROR);
+
+  const missingNetworkHarness = createDockerHarness();
+  const missingNetworkInspect = createInspectInfo({
+    Config: {
+      Env: [],
+      Cmd: [
+        "--limits",
+        ResourceLimits.TESTNET,
+        "--enable",
+        DEFAULT_ENABLED_SERVICES.join(","),
+      ],
+    },
+  });
+  const missingNetwork = createMockContainer(missingNetworkInspect, {
+    id: "running-missing-network",
+  });
+  missingNetworkHarness.containers.set(
+    missingNetwork.container.id,
+    missingNetwork.container,
+  );
+  missingNetworkHarness.listContainers.push({
+    Id: "running-missing-network",
+    Image: "stellar/quickstart:latest",
+    State: "running",
+    Names: ["/colibri-stellar-test-ledger"],
+  } as ContainerInfo);
+  const missingNetworkLedger = new TestLedger(
+    { useRunningLedger: true },
+    missingNetworkHarness.dockerClient,
+  );
+  const missingNetworkError = await assertRejects(
+    () => missingNetworkLedger.start(),
+    CONTAINER_ERROR,
+  );
+  assertStrictEquals(missingNetworkError.code, Code.CONTAINER_ERROR);
+
+  const missingEnableHarness = createDockerHarness();
+  const missingEnableInspect = createInspectInfo({
+    Config: {
+      Env: [],
+      Cmd: [
+        "--local",
+        "--limits",
+        ResourceLimits.TESTNET,
+      ],
+    },
+  });
+  const missingEnable = createMockContainer(missingEnableInspect, {
+    id: "running-missing-enable",
+  });
+  missingEnableHarness.containers.set(
+    missingEnable.container.id,
+    missingEnable.container,
+  );
+  missingEnableHarness.listContainers.push({
+    Id: "running-missing-enable",
+    Image: "stellar/quickstart:latest",
+    State: "running",
+    Names: ["/colibri-stellar-test-ledger"],
+  } as ContainerInfo);
+  const missingEnableLedger = new TestLedger(
+    { useRunningLedger: true },
+    missingEnableHarness.dockerClient,
+  );
+  const missingEnableError = await assertRejects(
+    () => missingEnableLedger.start(),
+    CONTAINER_ERROR,
+  );
+  assertStrictEquals(missingEnableError.code, Code.CONTAINER_ERROR);
+
   const extraFlagHarness = createDockerHarness();
   const extraFlagInspect = createInspectInfo({
     Config: {
