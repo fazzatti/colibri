@@ -194,6 +194,12 @@ Deno.test("resolvePublishedPortHost uses the Docker daemon host when needed", ()
   );
   assertEquals(
     resolvePublishedPortHost({
+      dockerOptions: { host: "unix:///tmp/docker.sock" as unknown as string },
+    }),
+    "127.0.0.1",
+  );
+  assertEquals(
+    resolvePublishedPortHost({
       dockerOptions: { host: "   ", port: 2375 },
     }, {
       dockerHost: undefined,
