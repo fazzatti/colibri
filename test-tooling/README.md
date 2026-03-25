@@ -139,6 +139,9 @@ The returned `getNetworkDetails()` shape follows the selected network and
 service tuple. To keep the narrowest TypeScript type, pass `enabledServices` as
 `const`.
 
+Quickstart service URLs are exposed through published HTTP ports, so
+`getNetworkDetails()` always includes `allowHttp: true`.
+
 Examples:
 
 - Local default services return `horizonUrl`, `rpcUrl`, and `friendbotUrl`

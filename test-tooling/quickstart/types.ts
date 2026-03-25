@@ -180,7 +180,7 @@ export type NetworkDetails<
   & {
     /** Stellar network passphrase exposed by the selected Quickstart network. */
     readonly networkPassphrase: string;
-    /** Quickstart exposes plain HTTP endpoints locally. */
+    /** Quickstart exposes plain HTTP endpoints through published ports. */
     readonly allowHttp: true;
   }
   & (HasRpc<Services> extends true ? {
