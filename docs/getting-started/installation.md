@@ -40,7 +40,7 @@ This will add the packages to your `deno.json` imports map:
     "@colibri/core": "jsr:@colibri/core@^0.17.3",
     "@colibri/sep10": "jsr:@colibri/sep10@^0.5.2",
     "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.2.3",
-    "@colibri/test-tooling": "jsr:@colibri/test-tooling@^0.2.0",
+    "@colibri/test-tooling": "jsr:@colibri/test-tooling@^0.3.0",
     "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.9.2"
   }
 }
@@ -53,7 +53,7 @@ You can also import directly from JSR URLs:
 ```typescript
 import { LocalSigner, NetworkConfig } from "jsr:@colibri/core@^0.17.3";
 import { RPCStreamer } from "jsr:@colibri/rpc-streamer@^0.2.3";
-import { StellarTestLedger } from "jsr:@colibri/test-tooling@^0.2.0";
+import { StellarTestLedger } from "jsr:@colibri/test-tooling@^0.3.0";
 ```
 
 ## Package Overview
@@ -79,7 +79,7 @@ them, and exchanging them for JWTs.
 ### [@colibri/test-tooling](../packages/test-tooling.md)
 
 Docker-backed integration test helpers centered on `StellarTestLedger`, a
-harness for managing local Stellar Quickstart ledgers in automated tests.
+harness for managing Stellar Quickstart ledgers in automated tests.
 
 ### [Plugins](../packages/plugins/)
 
