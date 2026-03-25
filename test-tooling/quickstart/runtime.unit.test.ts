@@ -1095,6 +1095,13 @@ Deno.test("waitForLedgerReady fails fast when the container exits", async () => 
             ),
         } as unknown as DockerClientLike,
         timeoutMs: 1000,
+        readiness: {
+          horizon: false,
+          rpc: true,
+          friendbot: false,
+          lab: true,
+          ledgerMeta: true,
+        },
         sleepFn: () => {
           sleepCalls += 1;
           return Promise.resolve(undefined);
@@ -1105,6 +1112,10 @@ Deno.test("waitForLedgerReady fails fast when the container exits", async () => 
   );
 
   assertStrictEquals(stoppedError.code, Code.READINESS_ERROR);
+  assertEquals(
+    stoppedError.details,
+    "The quickstart container stopped before the requested services became ready: Soroban RPC, Stellar Lab, ledger meta.",
+  );
   assertEquals(stoppedError.meta.data.terminal, true);
   assertEquals(sleepCalls, 0);
 });

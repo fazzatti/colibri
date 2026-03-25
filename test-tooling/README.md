@@ -141,8 +141,7 @@ service tuple. To keep the narrowest TypeScript type, pass `enabledServices` as
 
 Examples:
 
-- Local default services return `horizonUrl`, `rpcUrl`, `friendbotUrl`,
-  `labUrl`, and `transactionsExplorerUrl`
+- Local default services return `horizonUrl`, `rpcUrl`, and `friendbotUrl`
 - Local `enabledServices: [QuickstartServices.RPC] as const` returns
   `horizonUrl`, `rpcUrl`, and `friendbotUrl`
 - Local

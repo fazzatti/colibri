@@ -163,6 +163,46 @@ const isTerminalReadinessError = (error: unknown): boolean => {
     error.meta.data.terminal === true;
 };
 
+const getRequestedReadinessTargets = (
+  readiness: Required<ReadinessChecks>,
+): string[] => {
+  const targets: string[] = [];
+
+  if (readiness.horizon) {
+    targets.push("Horizon");
+  }
+
+  if (readiness.rpc) {
+    targets.push("Soroban RPC");
+  }
+
+  if (readiness.friendbot) {
+    targets.push("Friendbot");
+  }
+
+  if (readiness.lab) {
+    targets.push("Stellar Lab");
+  }
+
+  if (readiness.ledgerMeta) {
+    targets.push("ledger meta");
+  }
+
+  return targets;
+};
+
+const getContainerStoppedReadinessDetails = (
+  readiness: Required<ReadinessChecks>,
+): string => {
+  const targets = getRequestedReadinessTargets(readiness);
+
+  if (targets.length === 0) {
+    return "The quickstart container stopped before the configured readiness flow could complete.";
+  }
+
+  return `The quickstart container stopped before the requested services became ready: ${targets.join(", ")}.`;
+};
+
 const createDockerLogDecoder = () => {
   const textDecoder = new TextDecoder();
   let buffer = new Uint8Array(0);
@@ -681,8 +721,7 @@ export const waitForLedgerReady = async (
         throw new READINESS_ERROR({
           message:
             `Container is not running (status: ${inspectInfo.State.Status}).`,
-          details:
-            "The quickstart container stopped before Horizon and Soroban RPC became ready.",
+          details: getContainerStoppedReadinessDetails(readiness),
           data: {
             containerId: options.containerId,
             status: inspectInfo.State.Status,
