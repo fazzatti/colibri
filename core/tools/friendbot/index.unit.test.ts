@@ -4,6 +4,7 @@ import { stub } from "@std/testing/mock";
 import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
 import * as E from "@/tools/friendbot/error.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+import { Server } from "stellar-sdk/rpc";
 
 describe("initializeWithFriendbot", () => {
   const TEST_PUBLIC =
@@ -60,6 +61,100 @@ describe("initializeWithFriendbot", () => {
         E.UNEXPECTED
       );
     } finally {
+      fetchStub.restore();
+    }
+  });
+
+  it("treats an already funded response as success and waits for RPC visibility", async () => {
+    const fetchStub = stub(globalThis, "fetch", () =>
+      Promise.resolve(
+        new Response("account already funded to starting balance", {
+          status: 400,
+        }),
+      )
+    );
+    const getAccountStub = stub(
+      Server.prototype,
+      "getAccount",
+      () => Promise.resolve({} as never),
+    );
+
+    try {
+      const result = await initializeWithFriendbot(FRIENDBOT_URL, TEST_PUBLIC, {
+        rpcUrl: "https://rpc.example.com",
+      });
+
+      assertEquals(result, undefined);
+      assertEquals(getAccountStub.calls.length, 1);
+    } finally {
+      getAccountStub.restore();
+      fetchStub.restore();
+    }
+  });
+
+  it("retries RPC propagation until the funded account becomes visible", async () => {
+    const fetchStub = stub(globalThis, "fetch", () =>
+      Promise.resolve(new Response("OK", { status: 200 }))
+    );
+    let attempts = 0;
+    const getAccountStub = stub(
+      Server.prototype,
+      "getAccount",
+      () => {
+        attempts++;
+        if (attempts === 1) {
+          return Promise.reject(new Error("not visible yet"));
+        }
+
+        return Promise.resolve({} as never);
+      },
+    );
+
+    try {
+      const result = await initializeWithFriendbot(FRIENDBOT_URL, TEST_PUBLIC, {
+        rpcUrl: "https://rpc.example.com",
+        pollIntervalInMs: 0,
+      });
+
+      assertEquals(result, undefined);
+      assertEquals(attempts, 2);
+      assertEquals(getAccountStub.calls.length, 2);
+    } finally {
+      getAccountStub.restore();
+      fetchStub.restore();
+    }
+  });
+
+  it("throws UNEXPECTED when RPC propagation times out", async () => {
+    const fetchStub = stub(globalThis, "fetch", () =>
+      Promise.resolve(new Response("OK", { status: 200 }))
+    );
+    const getAccountStub = stub(
+      Server.prototype,
+      "getAccount",
+      () => Promise.reject(new Error("not visible yet")),
+    );
+    const nowValues = [0, 0, 2];
+    const dateNowStub = stub(Date, "now", () => nowValues.shift() ?? 2);
+
+    try {
+      const error = await assertRejects(
+        () =>
+          initializeWithFriendbot(FRIENDBOT_URL, TEST_PUBLIC, {
+            rpcUrl: "https://rpc.example.com",
+            timeoutInMs: 1,
+            pollIntervalInMs: 0,
+          }),
+        E.UNEXPECTED,
+      );
+
+      assertEquals(
+        error.meta.cause?.message,
+        `Account ${TEST_PUBLIC} was funded but did not become visible on RPC within 1ms.`,
+      );
+    } finally {
+      dateNowStub.restore();
+      getAccountStub.restore();
       fetchStub.restore();
     }
   });

@@ -1,6 +1,6 @@
 {
-  "name": "@colibri/plugin-fee-bump",
-  "version": "0.9.3",
+  "name": "@colibri/plugin-channel-accounts",
+  "version": "0.1.0",
   "exports": "./mod.ts",
   "license": "MIT",
   "publish": {
@@ -8,6 +8,6 @@
   },
   "imports": {
     "@/": "./src/",
-    "jsr:@colibri/core": "jsr:@colibri/core@^0.18.0"
+    "@colibri/core": "jsr:@colibri/core@^0.18.0"
   }
 }

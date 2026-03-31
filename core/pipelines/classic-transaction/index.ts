@@ -23,7 +23,7 @@ import {
 } from "@/steps/index.ts";
 import { CLASSIC_TRANSACTION_INPUT_STEP_ID } from "@/pipelines/classic-transaction/connectors.ts";
 
-const PIPELINE_NAME = "ClassicTransactionPipeline";
+export const CLASSIC_TRANSACTION_PIPELINE_ID = "ClassicTransactionPipeline";
 
 const createClassicTransactionPipeline = ({
   networkConfig,
@@ -74,7 +74,7 @@ const createClassicTransactionPipeline = ({
     ] as const;
 
     const classicPipe = pipe([...pipelineSteps], {
-      id: PIPELINE_NAME,
+      id: CLASSIC_TRANSACTION_PIPELINE_ID,
     });
 
     return classicPipe;
@@ -87,11 +87,7 @@ const createClassicTransactionPipeline = ({
 };
 
 export { createClassicTransactionPipeline };
-
-const PIPE_ClassicTransaction = {
-  create: createClassicTransactionPipeline,
-  name: PIPELINE_NAME,
-  errors: E,
-};
-
-export { PIPE_ClassicTransaction };
+export type ClassicTransactionPipeline = ReturnType<
+  typeof createClassicTransactionPipeline
+>;
+export { ERROR_PIPE_CLTX } from "@/pipelines/classic-transaction/error.ts";

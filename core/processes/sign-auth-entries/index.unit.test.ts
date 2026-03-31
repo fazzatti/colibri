@@ -40,6 +40,19 @@ const makeAccountAuthEntry = (account: Address) =>
     rootInvocation: makeInvocation(),
   });
 
+const makeSignedAccountAuthEntry = (account: Address) =>
+  new xdr.SorobanAuthorizationEntry({
+    credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
+      new xdr.SorobanAddressCredentials({
+        address: account.toScAddress(),
+        nonce: new xdr.Int64(0),
+        signatureExpirationLedger: 0,
+        signature: xdr.ScVal.scvU32(7),
+      })
+    ),
+    rootInvocation: makeInvocation(),
+  });
+
 const makeScAddressAuthEntry = (address: xdr.ScAddress) =>
   new xdr.SorobanAuthorizationEntry({
     credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
@@ -122,6 +135,20 @@ describe("SignAuthEntries", () => {
     assertEquals(out.length, 1);
     assertEquals(signer.calls, 1);
     assertEquals(signer.lastValidUntil, 1120);
+  });
+
+  it("returns an empty array when there are no auth entries to process", async () => {
+    const signer = makeSigner(Address.account(Buffer.alloc(32, 33)).toString());
+
+    const out = await signAuthEntries({
+      auth: [],
+      signers: [signer],
+      rpc: makeRpc(),
+      networkPassphrase,
+    });
+
+    assertEquals(out, []);
+    assertEquals(signer.calls, 0);
   });
 
   it("signs multiple entries with matching signers only", async () => {
@@ -318,5 +345,42 @@ describe("SignAuthEntries", () => {
 
     assertEquals(out.length, 0);
     assertEquals(signer.calls, 0);
+  });
+
+  it("signs contract-address auth entries with a matching contract signer", async () => {
+    const contract = Address.contract(Buffer.alloc(32, 29));
+    const entry = makeScAddressAuthEntry(contract.toScAddress());
+    const signer = makeSigner(Address.account(Buffer.alloc(32, 30)).toString());
+    signer.signsFor = (target) => target === contract.toString();
+
+    const out = await signAuthEntries({
+      auth: [entry],
+      signers: [signer],
+      rpc: makeRpc(),
+      networkPassphrase,
+    });
+
+    assertEquals(out.length, 1);
+    assertEquals(signer.calls, 1);
+    assertEquals(out[0].toXDR("base64"), entry.toXDR("base64"));
+  });
+
+  it("preserves already-signed auth entries while signing the remaining unsigned ones", async () => {
+    const signedAccount = Address.account(Buffer.alloc(32, 31));
+    const unsignedAccount = Address.account(Buffer.alloc(32, 32));
+    const signedEntry = makeSignedAccountAuthEntry(signedAccount);
+    const unsignedEntry = makeAccountAuthEntry(unsignedAccount);
+    const signer = makeSigner(unsignedAccount.toString());
+
+    const out = await signAuthEntries({
+      auth: [signedEntry, unsignedEntry],
+      signers: [signer],
+      rpc: makeRpc(),
+      networkPassphrase,
+    });
+
+    assertEquals(out.length, 2);
+    assertEquals(out[0].toXDR("base64"), signedEntry.toXDR("base64"));
+    assertEquals(signer.calls, 1);
   });
 });

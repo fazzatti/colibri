@@ -9,21 +9,26 @@ import { describe, it } from "@std/testing/bdd";
 import type { Server } from "stellar-sdk/rpc";
 import { pipe, step } from "convee";
 import {
-  PIPE_InvokeContract,
+  createInvokeContractPipeline,
+  INVOKE_CONTRACT_PIPELINE_ID,
   isFeeBumpTransaction,
-  NativeAccount,
   LocalSigner,
+  NativeAccount,
   NetworkConfig,
   steps,
 } from "@colibri/core";
-import { PLG_FeeBump } from "@/index.ts";
+import {
+  createFeeBumpPlugin,
+  FEE_BUMP_PLUGIN_ID,
+  FEE_BUMP_PLUGIN_TARGET,
+} from "@/index.ts";
 import * as E from "@/error.ts";
 import {
-  Operation,
-  TransactionBuilder,
   Account,
   type FeeBumpTransaction,
+  Operation,
   type Transaction,
+  TransactionBuilder,
 } from "stellar-sdk";
 import type { PluginInput } from "@/types.ts";
 
@@ -49,7 +54,7 @@ describe("FeeBump Plugin", () => {
   };
 
   const createPlugin = () =>
-    PLG_FeeBump.create({
+    createFeeBumpPlugin({
       networkConfig,
       feeBumpConfig: {
         source: feeBumpSource.address(),
@@ -73,25 +78,25 @@ describe("FeeBump Plugin", () => {
       const plugin = createPlugin();
 
       assertExists(plugin);
-      assertEquals(plugin.id, PLG_FeeBump.name);
-      assertEquals(plugin.target, PLG_FeeBump.target);
+      assertEquals(plugin.id, FEE_BUMP_PLUGIN_ID);
+      assertEquals(plugin.target, FEE_BUMP_PLUGIN_TARGET);
     });
 
     it("attaches the plugin to the invoke pipeline", () => {
       const plugin = createPlugin();
-      const invokePipe = PIPE_InvokeContract.create({ networkConfig });
+      const invokePipe = createInvokeContractPipeline({ networkConfig });
 
       invokePipe.use(plugin);
 
       assertExists(invokePipe);
-      assertEquals(invokePipe.id, PIPE_InvokeContract.name);
+      assertEquals(invokePipe.id, INVOKE_CONTRACT_PIPELINE_ID);
       assertEquals(invokePipe.plugins.length, 1);
       const [attachedPlugin] = Array.from(
         invokePipe.plugins as unknown as readonly typeof plugin[],
       );
       assertExists(attachedPlugin);
-      assertEquals(attachedPlugin.id, PLG_FeeBump.name);
-      assertEquals(attachedPlugin.target, PLG_FeeBump.target);
+      assertEquals(attachedPlugin.id, FEE_BUMP_PLUGIN_ID);
+      assertEquals(attachedPlugin.target, FEE_BUMP_PLUGIN_TARGET);
     });
   });
 
@@ -170,7 +175,7 @@ describe("FeeBump Plugin", () => {
     it("throws MISSING_ARG when required creation arguments are missing", () => {
       assertThrows(
         () =>
-          PLG_FeeBump.create({
+          createFeeBumpPlugin({
             networkConfig,
           } as any),
         E.MISSING_ARG,
@@ -178,7 +183,7 @@ describe("FeeBump Plugin", () => {
 
       assertThrows(
         () =>
-          PLG_FeeBump.create({
+          createFeeBumpPlugin({
             feeBumpConfig: {
               source: feeBumpSource.address(),
               fee: "10000000",
@@ -192,7 +197,7 @@ describe("FeeBump Plugin", () => {
     it("propagates pipeline creation validation errors", () => {
       assertThrows(
         () =>
-          PLG_FeeBump.create({
+          createFeeBumpPlugin({
             networkConfig: null as unknown as NetworkConfig,
             feeBumpConfig: {
               source: feeBumpSource.address(),

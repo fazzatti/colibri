@@ -28,7 +28,7 @@ import {
 } from "@/steps/index.ts";
 import { INVOKE_CONTRACT_INPUT_STEP_ID } from "@/pipelines/invoke-contract/connectors.ts";
 
-export const PIPELINE_NAME = "InvokeContractPipeline";
+export const INVOKE_CONTRACT_PIPELINE_ID = "InvokeContractPipeline";
 
 const createInvokeContractPipeline = ({
   networkConfig,
@@ -92,7 +92,7 @@ const createInvokeContractPipeline = ({
     ] as const;
 
     const invokePipe = pipe([...pipelineSteps], {
-      id: PIPELINE_NAME,
+      id: INVOKE_CONTRACT_PIPELINE_ID,
     });
 
     return invokePipe;
@@ -105,14 +105,7 @@ const createInvokeContractPipeline = ({
 };
 
 export { createInvokeContractPipeline };
-
-const PIPE_InvokeContract = {
-  create: createInvokeContractPipeline,
-  name: PIPELINE_NAME,
-  errors: E,
-};
-
-export { PIPE_InvokeContract };
 export type InvokeContractPipeline = ReturnType<
-  typeof PIPE_InvokeContract.create
+  typeof createInvokeContractPipeline
 >;
+export { ERROR_PIPE_INVC } from "@/pipelines/invoke-contract/error.ts";

@@ -10,7 +10,10 @@
  * - Per-instance caching (different instances don't share cache)
  * - Optional TTL (time-to-live) for cache expiration
  * - **Active eviction** via `evictOnExpiry` option for memory management
+ * - Runtime-resolved `enabled`, `ttl`, `evictOnExpiry`, and `cacheRejected`
+ *   options based on the current instance
  * - Custom key functions for method argument hashing
+ * - Rejected promises are evicted by default so later calls can retry
  * - Can be disabled for testing/debugging
  *
  * @example Basic usage
@@ -60,7 +63,11 @@
  * ```
  */
 
-import type { DecoratorContext, MemoizeOptions } from "./types.ts";
+import type {
+  DecoratorContext,
+  MemoizeOptionResolver,
+  MemoizeOptions,
+} from "./types.ts";
 
 /**
  * Default key function for method arguments.
@@ -77,12 +84,44 @@ const defaultKeyFn = (...args: unknown[]): string => {
   return JSON.stringify(args);
 };
 
+type RuntimeOptionArgs = unknown[];
+
+const resolveOption = <Value>(
+  option:
+    | MemoizeOptionResolver<
+      Value,
+      Record<string | symbol, unknown>,
+      RuntimeOptionArgs
+    >
+    | undefined,
+  self: Record<string | symbol, unknown>,
+  ...args: RuntimeOptionArgs
+): Value | undefined => {
+  if (typeof option === "function") {
+    return (
+      option as (
+        self: Record<string | symbol, unknown>,
+        ...args: RuntimeOptionArgs
+      ) => Value
+    )(self, ...args);
+  }
+
+  return option;
+};
+
+const isPromiseLike = (value: unknown): value is PromiseLike<unknown> =>
+  (typeof value === "object" || typeof value === "function") &&
+  value !== null &&
+  "then" in value &&
+  typeof value.then === "function";
+
 /**
  * Memoize decorator factory.
  *
  * Creates a decorator that caches the result of a getter or method.
  * The cache is stored per-instance, so different instances maintain
- * separate caches.
+ * separate caches. Runtime-resolved options receive the current instance
+ * (and method arguments for methods) on every access.
  *
  * @param options - Configuration options for memoization
  * @returns A decorator function that can be applied to getters or methods
@@ -111,32 +150,51 @@ const defaultKeyFn = (...args: unknown[]): string => {
  * ```
  */
 export function memoize(options: MemoizeOptions = {}) {
-  const { enabled = true, ttl, keyFn = defaultKeyFn } = options;
+  const {
+    enabled = true,
+    ttl,
+    keyFn = defaultKeyFn,
+    cacheRejected = false,
+  } = options;
 
-  // Extract evictOnExpiry, handling both union variants
-  // When ttl is present, evictOnExpiry might be set
-  // When ttl is absent, evictOnExpiry is 'never' type (won't exist at runtime)
-  const evictOnExpiry =
-    "evictOnExpiry" in options && options.evictOnExpiry === true ? true : false;
+  const evictOnExpiry = "evictOnExpiry" in options
+    ? options.evictOnExpiry
+    : undefined;
 
   // deno-lint-ignore no-explicit-any
   return function <T extends (...args: any[]) => any>(
     target: T,
-    context: DecoratorContext
+    context: DecoratorContext,
   ): T | void {
-    // If disabled, return original unchanged
-    if (!enabled) {
+    // Preserve the current static-disabled shortcut while still supporting
+    // runtime-resolved options when a function is provided.
+    if (enabled === false) {
       return target;
     }
 
     const propertyKey = context.name;
 
     if (context.kind === "getter") {
-      return memoizeGetter(target, propertyKey, ttl, evictOnExpiry) as T;
+      return memoizeGetter(
+        target,
+        propertyKey,
+        enabled,
+        ttl,
+        evictOnExpiry,
+        cacheRejected,
+      ) as T;
     }
 
     if (context.kind === "method") {
-      return memoizeMethod(target, propertyKey, ttl, keyFn, evictOnExpiry) as T;
+      return memoizeMethod(
+        target,
+        propertyKey,
+        enabled,
+        ttl,
+        keyFn,
+        evictOnExpiry,
+        cacheRejected,
+      ) as T;
     }
 
     // Not a getter or method - return unchanged
@@ -161,40 +219,60 @@ export function memoize(options: MemoizeOptions = {}) {
 function memoizeGetter<T>(
   originalGetter: () => T,
   propertyKey: string | symbol,
-  ttl?: number,
-  evictOnExpiry?: boolean
+  enabled: MemoizeOptions["enabled"],
+  ttl: MemoizeOptions["ttl"],
+  evictOnExpiry: MemoizeOptions["evictOnExpiry"],
+  cacheRejected: MemoizeOptions["cacheRejected"],
 ): () => T {
   // Create unique symbols for this specific property
   const cacheKey = Symbol(`memoize:${String(propertyKey)}:cache`);
   const timestampKey = Symbol(`memoize:${String(propertyKey)}:timestamp`);
   const timerKey = Symbol(`memoize:${String(propertyKey)}:timer`);
 
+  const clearCache = (instance: Record<symbol, unknown>) => {
+    if (instance[timerKey] !== undefined) {
+      clearTimeout(instance[timerKey] as number);
+      delete instance[timerKey];
+    }
+    delete instance[cacheKey];
+    delete instance[timestampKey];
+  };
+
   return function (this: Record<symbol, unknown>): T {
+    const isEnabled = resolveOption(enabled, this) ?? true;
+    if (!isEnabled) {
+      return originalGetter.call(this);
+    }
+
     const now = Date.now();
     const cachedAt = this[timestampKey] as number | undefined;
+    const resolvedTtl = resolveOption(ttl, this);
 
     // Check if we have a valid cached value
     const hasCachedValue = cacheKey in this;
-    const isExpired =
-      ttl !== undefined && cachedAt !== undefined && now - cachedAt > ttl;
+    const isExpired = resolvedTtl !== undefined &&
+      cachedAt !== undefined &&
+      now - cachedAt > resolvedTtl;
 
     if (!hasCachedValue || isExpired) {
-      // Clear any existing eviction timer before re-caching
-      if (this[timerKey] !== undefined) {
-        clearTimeout(this[timerKey] as number);
-        delete this[timerKey];
-      }
+      clearCache(this);
 
-      this[cacheKey] = originalGetter.call(this);
+      const result = originalGetter.call(this);
+      const shouldCacheRejected = resolveOption(cacheRejected, this) ?? false;
+      this[cacheKey] = isPromiseLike(result) && !shouldCacheRejected
+        ? Promise.resolve(result).catch((error) => {
+          clearCache(this);
+          throw error;
+        })
+        : result;
       this[timestampKey] = now;
 
       // Schedule active eviction if enabled
-      if (ttl !== undefined && evictOnExpiry === true) {
+      const shouldEvictOnExpiry = resolveOption(evictOnExpiry, this) ?? false;
+      if (resolvedTtl !== undefined && shouldEvictOnExpiry) {
         const timerId = setTimeout(() => {
-          delete this[cacheKey];
-          delete this[timestampKey];
-          delete this[timerKey];
-        }, ttl);
+          clearCache(this);
+        }, resolvedTtl);
 
         this[timerKey] = timerId;
       }
@@ -222,9 +300,11 @@ function memoizeGetter<T>(
 function memoizeMethod<T extends (...args: unknown[]) => unknown>(
   originalMethod: T,
   propertyKey: string | symbol,
-  ttl?: number,
+  enabled: MemoizeOptions["enabled"],
+  ttl: MemoizeOptions["ttl"],
   keyFn: (...args: unknown[]) => string = defaultKeyFn,
-  evictOnExpiry?: boolean
+  evictOnExpiry: MemoizeOptions["evictOnExpiry"],
+  cacheRejected: MemoizeOptions["cacheRejected"],
 ): T {
   // Create unique symbols for this specific property
   const cacheMapKey = Symbol(`memoize:${String(propertyKey)}:cache`);
@@ -235,6 +315,11 @@ function memoizeMethod<T extends (...args: unknown[]) => unknown>(
     this: Record<symbol, Map<string, unknown>>,
     ...args: unknown[]
   ): unknown {
+    const isEnabled = resolveOption(enabled, this, ...args) ?? true;
+    if (!isEnabled) {
+      return originalMethod.apply(this, args);
+    }
+
     // Initialize cache maps if needed
     if (!(cacheMapKey in this)) {
       this[cacheMapKey] = new Map();
@@ -252,31 +337,49 @@ function memoizeMethod<T extends (...args: unknown[]) => unknown>(
     const key = keyFn(...args);
     const now = Date.now();
     const cachedAt = timestampsMap.get(key) as number | undefined;
+    const resolvedTtl = resolveOption(ttl, this, ...args);
 
-    // Check if we have a valid cached value
-    const hasCachedValue = cacheMap.has(key);
-    const isExpired =
-      ttl !== undefined && cachedAt !== undefined && now - cachedAt > ttl;
-
-    if (!hasCachedValue || isExpired) {
-      // Clear any existing eviction timer for this specific argument key
+    const clearCacheEntry = () => {
       const existingTimer = timersMap.get(key);
       if (existingTimer !== undefined) {
         clearTimeout(existingTimer);
         timersMap.delete(key);
       }
 
+      cacheMap.delete(key);
+      timestampsMap.delete(key);
+    };
+
+    // Check if we have a valid cached value
+    const hasCachedValue = cacheMap.has(key);
+    const isExpired = resolvedTtl !== undefined &&
+      cachedAt !== undefined &&
+      now - cachedAt > resolvedTtl;
+
+    if (!hasCachedValue || isExpired) {
+      clearCacheEntry();
+
       const result = originalMethod.apply(this, args);
-      cacheMap.set(key, result);
+      const shouldCacheRejected = resolveOption(cacheRejected, this, ...args) ??
+        false;
+      cacheMap.set(
+        key,
+        isPromiseLike(result) && !shouldCacheRejected
+          ? Promise.resolve(result).catch((error) => {
+            clearCacheEntry();
+            throw error;
+          })
+          : result,
+      );
       timestampsMap.set(key, now);
 
       // Schedule active eviction for this specific argument key
-      if (ttl !== undefined && evictOnExpiry === true) {
+      const shouldEvictOnExpiry = resolveOption(evictOnExpiry, this, ...args) ??
+        false;
+      if (resolvedTtl !== undefined && shouldEvictOnExpiry) {
         const timerId = setTimeout(() => {
-          cacheMap.delete(key);
-          timestampsMap.delete(key);
-          timersMap.delete(key);
-        }, ttl);
+          clearCacheEntry();
+        }, resolvedTtl);
 
         timersMap.set(key, timerId);
       }

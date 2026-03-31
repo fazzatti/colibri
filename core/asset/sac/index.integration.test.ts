@@ -17,9 +17,9 @@ import {
 } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import { toStellarAssetCanonicalString } from "@/asset/sep11/index.ts";
-import { PIPE_ClassicTransaction } from "@/pipelines/classic-transaction/index.ts";
+import { createClassicTransactionPipeline } from "@/pipelines/classic-transaction/index.ts";
 import type { Signer } from "@/signer/types.ts";
-import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 import * as SACError from "@/asset/sac/error.ts";
 
 describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
@@ -34,7 +34,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
     networkConfig: NetworkConfig,
     config: TransactionConfig,
   ) => {
-    const pipe = PIPE_ClassicTransaction.create({ networkConfig });
+    const pipe = createClassicTransactionPipeline({ networkConfig });
     const op = Operation.setOptions({
       source: publicKey,
       setFlags: (AuthRevocableFlag | AuthClawbackEnabledFlag) as AuthFlag,
@@ -49,7 +49,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
     networkConfig: NetworkConfig,
     config: TransactionConfig,
   ) => {
-    const pipe = PIPE_ClassicTransaction.create({ networkConfig });
+    const pipe = createClassicTransactionPipeline({ networkConfig });
     const operations: xdr.Operation[] = [];
 
     for (const user of users) {
@@ -72,7 +72,9 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
   const code = "COLIBRI";
 
   const asset = new Asset(code, issuer.address());
-  const contractId = asset.contractId(networkConfig.networkPassphrase);
+  const contractId = asset.contractId(
+    networkConfig.networkPassphrase,
+  ) as ContractId;
 
   const txConfig: TransactionConfig = {
     fee: "10000000", // 1 XLM
@@ -108,17 +110,29 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
   });
 
   describe("Core features and initialization", () => {
-    it("Instantiates SAC with minimal payload", () => {
-      colibriSAC = new StellarAssetContract({
-        code: code,
+    it("Instantiates SAC from classic asset identity", () => {
+      colibriSAC = StellarAssetContract.fromAsset({
+        code,
         issuer: issuer.address(),
-        networkConfig: networkConfig,
+        networkConfig,
       });
 
       assertExists(colibriSAC);
       assertEquals(colibriSAC.code, code);
       assertEquals(colibriSAC.contractId, contractId);
       assertEquals(colibriSAC.isNativeXLM(), false);
+    });
+
+    it("Instantiates SAC from contract id only", () => {
+      const contractOnlySAC = StellarAssetContract.fromContractId({
+        contractId,
+        networkConfig,
+      });
+
+      assertExists(contractOnlySAC);
+      assertEquals(contractOnlySAC.contractId, contractId);
+      assertEquals(contractOnlySAC.code, undefined);
+      assertEquals(contractOnlySAC.isNativeXLM(), false);
     });
 
     it("Instantiates SAC for native XLM using static method", () => {
@@ -136,13 +150,23 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
     });
 
     it("Deploys the SAC contract for a new asset", async () => {
-      await colibriSAC.deploy(txConfig);
+      colibriSAC = await StellarAssetContract.deploy({
+        code,
+        issuer: issuer.address(),
+        networkConfig,
+        config: txConfig,
+      });
       assertEquals(colibriSAC.contractId, contractId);
     });
 
     it("Handles attempting to deploy the SAC contract for a deployed asset", async () => {
-      await colibriSAC.deploy(txConfig);
-      assertEquals(colibriSAC.contractId, contractId);
+      const deployedSAC = await StellarAssetContract.deploy({
+        code,
+        issuer: issuer.address(),
+        networkConfig,
+        config: txConfig,
+      });
+      assertEquals(deployedSAC.contractId, contractId);
     });
 
     it("Reads from descriptive contract functions", async () => {
@@ -481,13 +505,13 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
       assertEquals((error.meta.data as { argName: string }).argName, "testArg");
     });
 
-    it("FAILED_TO_WRAP_ASSET error has correct structure", () => {
+    it("FAILED_TO_DEPLOY_CONTRACT error has correct structure", () => {
       const testAsset = new Asset("TEST", issuer.address());
       const cause = new Error("Test cause");
-      const error = new SACError.FAILED_TO_WRAP_ASSET(testAsset, cause);
+      const error = new SACError.FAILED_TO_DEPLOY_CONTRACT(testAsset, cause);
 
-      assertEquals(error.code, SACError.Code.FAILED_TO_WRAP_ASSET);
-      assertEquals(error.message, "Failed to wrap asset");
+      assertEquals(error.code, SACError.Code.FAILED_TO_DEPLOY_CONTRACT);
+      assertEquals(error.message, "Failed to deploy Stellar Asset Contract");
       assertEquals(error.meta.cause, cause);
       const data = error.meta.data as {
         asset: { code: string; issuer: string };

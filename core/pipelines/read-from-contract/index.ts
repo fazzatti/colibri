@@ -13,7 +13,7 @@ import {
   createSimulateTransactionStep,
 } from "@/steps/index.ts";
 
-export const PIPELINE_NAME = "ReadFromContractPipeline";
+export const READ_FROM_CONTRACT_PIPELINE_ID = "ReadFromContractPipeline";
 
 const createReadFromContractPipeline = ({
   networkConfig,
@@ -48,7 +48,7 @@ const createReadFromContractPipeline = ({
     ] as const;
 
     const readPipe = pipe([...pipelineSteps], {
-      id: PIPELINE_NAME,
+      id: READ_FROM_CONTRACT_PIPELINE_ID,
     });
 
     return readPipe;
@@ -61,14 +61,7 @@ const createReadFromContractPipeline = ({
 };
 
 export { createReadFromContractPipeline };
-
-const PIPE_ReadFromContract = {
-  create: createReadFromContractPipeline,
-  name: PIPELINE_NAME,
-  errors: E,
-};
-
-export { PIPE_ReadFromContract };
 export type ReadFromContractPipeline = ReturnType<
-  typeof PIPE_ReadFromContract.create
+  typeof createReadFromContractPipeline
 >;
+export { ERROR_PIPE_RFC } from "@/pipelines/read-from-contract/error.ts";

@@ -1,12 +1,8 @@
 import { pipe, step } from "convee";
-import {
-  ColibriError,
-  assertRequiredArgs,
-  steps,
-} from "@colibri/core";
+import { assertRequiredArgs, ColibriError, steps } from "@colibri/core";
 import {
   type CreateFeeBumpPipelineArgs,
-  PIPELINE_NAME,
+  FEE_BUMP_PIPELINE_ID,
 } from "@/pipeline/types.ts";
 import {
   envSignReqToSignEnvelope,
@@ -26,17 +22,17 @@ const createFeeBumpPipeline = ({
         networkPassphrase: networkConfig && networkConfig.networkPassphrase,
         feeBumpConfig,
       },
-      (argName: string) => new E.MISSING_ARG(argName)
+      (argName: string) => new E.MISSING_ARG(argName),
     );
 
     const inputStep = inputToBuild(
       networkConfig.networkPassphrase,
-      feeBumpConfig
+      feeBumpConfig,
     );
 
     const WrapFeeBump = steps.createWrapFeeBumpStep();
-    const EnvelopeSigningRequirements =
-      steps.createEnvelopeSigningRequirementsStep();
+    const EnvelopeSigningRequirements = steps
+      .createEnvelopeSigningRequirementsStep();
     const SignEnvelope = steps.createSignEnvelopeStep();
 
     const pipelineSteps = [
@@ -49,7 +45,7 @@ const createFeeBumpPipeline = ({
     ] as const;
 
     const feeBumpPipe = pipe([...pipelineSteps], {
-      id: PIPELINE_NAME,
+      id: FEE_BUMP_PIPELINE_ID,
     });
 
     return feeBumpPipe;
@@ -62,11 +58,4 @@ const createFeeBumpPipeline = ({
 };
 
 export { createFeeBumpPipeline };
-
-const PIPE_FeeBump = {
-  create: createFeeBumpPipeline,
-  name: PIPELINE_NAME,
-  errors: E,
-};
-
-export { PIPE_FeeBump };
+export type FeeBumpPipeline = ReturnType<typeof createFeeBumpPipeline>;

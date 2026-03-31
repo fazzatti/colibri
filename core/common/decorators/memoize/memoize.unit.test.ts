@@ -2,7 +2,7 @@
  * Memoize Decorator Unit Tests
  */
 
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { memoize } from "@/common/decorators/memoize/index.ts";
@@ -118,6 +118,103 @@ describe("memoize decorator", disableSanitizeConfig, () => {
       assertEquals(instance.value, 3);
       assertEquals(callCount, 3);
     });
+
+    it("supports runtime-enabled getters", () => {
+      class TestClass {
+        callCount = 0;
+
+        constructor(readonly options: { cacheEnabled: boolean }) {}
+
+        @memoize({
+          enabled: (self: TestClass) => self.options.cacheEnabled,
+        })
+        get value(): number {
+          this.callCount++;
+          return this.callCount;
+        }
+      }
+
+      const instance = new TestClass({ cacheEnabled: false });
+
+      assertEquals(instance.value, 1);
+      assertEquals(instance.value, 2);
+
+      instance.options.cacheEnabled = true;
+      assertEquals(instance.value, 3);
+      assertEquals(instance.value, 3);
+      assertEquals(instance.callCount, 3);
+    });
+
+    it("falls back to enabled=true and cacheRejected=false when runtime getters return undefined", async () => {
+      class TestClass {
+        callCount = 0;
+
+        @memoize({
+          enabled: (() => undefined) as unknown as (
+            self: TestClass,
+          ) => boolean,
+          cacheRejected: (() => undefined) as unknown as (
+            self: TestClass,
+          ) => boolean,
+        })
+        get value(): Promise<number> {
+          this.callCount++;
+          if (this.callCount === 1) {
+            return Promise.reject(new Error("boom"));
+          }
+
+          return Promise.resolve(42);
+        }
+      }
+
+      const instance = new TestClass();
+
+      await assertRejects(() => instance.value, Error, "boom");
+      assertEquals(await instance.value, 42);
+      assertEquals(instance.callCount, 2);
+    });
+
+    it("evicts rejected promises returned by getters by default", async () => {
+      class TestClass {
+        callCount = 0;
+
+        @memoize()
+        get value(): Promise<number> {
+          this.callCount++;
+          if (this.callCount === 1) {
+            return Promise.reject(new Error("boom"));
+          }
+
+          return Promise.resolve(42);
+        }
+      }
+
+      const instance = new TestClass();
+
+      await assertRejects(() => instance.value, Error, "boom");
+      assertEquals(instance.callCount, 1);
+
+      assertEquals(await instance.value, 42);
+      assertEquals(instance.callCount, 2);
+    });
+
+    it("can keep rejected getter promises cached when configured", async () => {
+      class TestClass {
+        callCount = 0;
+
+        @memoize({ cacheRejected: true })
+        get value(): Promise<number> {
+          this.callCount++;
+          return Promise.reject(new Error("boom"));
+        }
+      }
+
+      const instance = new TestClass();
+
+      await assertRejects(() => instance.value, Error, "boom");
+      await assertRejects(() => instance.value, Error, "boom");
+      assertEquals(instance.callCount, 1);
+    });
   });
 
   // =============================================================================
@@ -229,6 +326,67 @@ describe("memoize decorator", disableSanitizeConfig, () => {
       assertEquals(callCount, 3);
     });
 
+    it("supports runtime-enabled methods and runtime TTL", async () => {
+      class TestClass {
+        callCount = 0;
+
+        constructor(
+          readonly options: { cacheEnabled: boolean; ttl?: number },
+        ) {}
+
+        @memoize({
+          enabled: (self: TestClass) => self.options.cacheEnabled,
+          ttl: (self: TestClass) => self.options.ttl,
+        })
+        compute(): number {
+          this.callCount++;
+          return this.callCount;
+        }
+      }
+
+      const instance = new TestClass({ cacheEnabled: false });
+
+      assertEquals(instance.compute(), 1);
+      assertEquals(instance.compute(), 2);
+
+      instance.options.cacheEnabled = true;
+      instance.options.ttl = 0;
+
+      assertEquals(instance.compute(), 3);
+      await delay(1);
+      assertEquals(instance.compute(), 4);
+      assertEquals(instance.callCount, 4);
+    });
+
+    it("falls back to enabled=true and cacheRejected=false when runtime methods return undefined", async () => {
+      class TestClass {
+        callCount = 0;
+
+        @memoize({
+          enabled: (() => undefined) as unknown as (
+            self: TestClass,
+          ) => boolean,
+          cacheRejected: (() => undefined) as unknown as (
+            self: TestClass,
+          ) => boolean,
+        })
+        load(id: string): Promise<string> {
+          this.callCount++;
+          if (this.callCount === 1) {
+            return Promise.reject(new Error(`failed:${id}`));
+          }
+
+          return Promise.resolve(`${id}:${this.callCount}`);
+        }
+      }
+
+      const instance = new TestClass();
+
+      await assertRejects(() => instance.load("a"), Error, "failed:a");
+      assertEquals(await instance.load("a"), "a:2");
+      assertEquals(instance.callCount, 2);
+    });
+
     it("supports custom key function", () => {
       let callCount = 0;
 
@@ -254,6 +412,50 @@ describe("memoize decorator", disableSanitizeConfig, () => {
       // Different first argument - new key, recomputes
       assertEquals(instance.compute(2, 2), 4);
       assertEquals(callCount, 2);
+    });
+
+    it("evicts rejected promises returned by methods by default", async () => {
+      class TestClass {
+        callCount = 0;
+
+        @memoize()
+        load(id: string): Promise<string> {
+          this.callCount++;
+          if (this.callCount === 1) {
+            return Promise.reject(new Error(`failed:${id}`));
+          }
+
+          return Promise.resolve(`${id}:${this.callCount}`);
+        }
+      }
+
+      const instance = new TestClass();
+
+      await assertRejects(() => instance.load("a"), Error, "failed:a");
+      assertEquals(instance.callCount, 1);
+
+      assertEquals(await instance.load("a"), "a:2");
+      assertEquals(instance.callCount, 2);
+    });
+
+    it("can keep rejected method promises cached when configured", async () => {
+      class TestClass {
+        callCount = 0;
+
+        @memoize({
+          cacheRejected: (self: TestClass) => self.callCount >= 0,
+        })
+        load(id: string): Promise<string> {
+          this.callCount++;
+          return Promise.reject(new Error(`failed:${id}`));
+        }
+      }
+
+      const instance = new TestClass();
+
+      await assertRejects(() => instance.load("a"), Error, "failed:a");
+      await assertRejects(() => instance.load("a"), Error, "failed:a");
+      assertEquals(instance.callCount, 1);
     });
 
     it("handles methods with no arguments", () => {
@@ -877,11 +1079,11 @@ describe("memoize decorator", disableSanitizeConfig, () => {
         // Cache with same ID (different name shouldn't matter)
         assertEquals(
           instance.fetchUser({ id: "1", name: "Alice" }),
-          "User: Alice"
+          "User: Alice",
         );
         assertEquals(
           instance.fetchUser({ id: "1", name: "DIFFERENT" }),
-          "User: Alice"
+          "User: Alice",
         );
         assertEquals(callLog.length, 1); // Cached by ID
 

@@ -8,11 +8,11 @@ import { Server } from "stellar-sdk/rpc";
 import { Spec } from "stellar-sdk/contract";
 import { Buffer } from "buffer";
 import {
+  createInvokeContractPipeline,
   type InvokeContractPipeline,
-  PIPE_InvokeContract,
 } from "@/pipelines/invoke-contract/index.ts";
 import {
-  PIPE_ReadFromContract,
+  createReadFromContractPipeline,
   type ReadFromContractPipeline,
 } from "@/pipelines/read-from-contract/index.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
@@ -63,11 +63,11 @@ export class Contract {
     }
 
     this.rpc = rpc;
-    this.invokePipe = PIPE_InvokeContract.create({
+    this.invokePipe = createInvokeContractPipeline({
       networkConfig,
       rpc,
     });
-    this.readPipe = PIPE_ReadFromContract.create({
+    this.readPipe = createReadFromContractPipeline({
       networkConfig,
       rpc,
     });
