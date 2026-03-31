@@ -7,8 +7,8 @@ import {
   type Signer,
   StrKey,
 } from "@colibri/core";
-import { Operation, TransactionBuilder, type Transaction } from "stellar-sdk";
-import { Api, Server } from "stellar-sdk/rpc";
+import { Operation } from "stellar-sdk";
+import { Server } from "stellar-sdk/rpc";
 import { appendUniqueSigners } from "@/shared/signers.ts";
 import {
   type ChannelAccount,
@@ -66,69 +66,30 @@ const sponsorCanSignChannel = async (
   });
 };
 
-const delay = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
-
-const signTransactionWithSigners = async (
-  transaction: Transaction,
-  signers: readonly Signer[],
-  networkPassphrase: string,
-): Promise<Transaction> => {
-  let signedTransaction = transaction;
-
-  for (const signer of signers) {
-    signedTransaction = TransactionBuilder.fromXDR(
-      await signer.signTransaction(signedTransaction),
+const createChannelProxySigner = (
+  signer: Signer,
+  channel: ChannelAccount,
+): Signer => ({
+  publicKey: () => channel.address(),
+  sign: (data) => signer.sign(data),
+  signTransaction: (transaction) => signer.signTransaction(transaction),
+  signSorobanAuthEntry: (authEntry, validUntilLedgerSeq, networkPassphrase) =>
+    signer.signSorobanAuthEntry(
+      authEntry,
+      validUntilLedgerSeq,
       networkPassphrase,
-    ) as Transaction;
-  }
+    ),
+  signsFor: (target) => target === channel.address(),
+});
 
-  return signedTransaction;
-};
-
-const submitTransaction = async (
-  rpc: Server,
-  transaction: Transaction,
-  timeoutInSeconds: number,
-): Promise<void> => {
-  const sendResponse = await rpc.sendTransaction(transaction);
-
-  if (sendResponse.status === "ERROR") {
-    throw new Error(
-      `Transaction processing error: ${sendResponse.errorResult ?? "unknown"}`,
-    );
-  }
-
-  if (sendResponse.status === "DUPLICATE") {
-    throw new Error(`Duplicate transaction: ${sendResponse.hash}`);
-  }
-
-  if (sendResponse.status === "TRY_AGAIN_LATER") {
-    throw new Error(`Transaction throttled: ${sendResponse.hash}`);
-  }
-
-  if (sendResponse.status !== "PENDING") {
-    throw new Error(`Unexpected transaction status: ${sendResponse.status}`);
-  }
-
-  const deadline = Date.now() + timeoutInSeconds * 1000;
-
-  while (Date.now() < deadline) {
-    const response = await rpc.getTransaction(sendResponse.hash);
-
-    if (response.status === Api.GetTransactionStatus.SUCCESS) {
-      return;
-    }
-
-    if (response.status === Api.GetTransactionStatus.FAILED) {
-      throw new Error(`Transaction failed: ${sendResponse.hash}`);
-    }
-
-    await delay(500);
-  }
-
-  throw new Error(`Transaction timed out: ${sendResponse.hash}`);
-};
+const chunkChannels = (
+  channels: readonly ChannelAccount[],
+  size: number,
+): ChannelAccount[][] =>
+  Array.from(
+    { length: Math.ceil(channels.length / size) },
+    (_, index) => channels.slice(index * size, (index + 1) * size),
+  );
 
 /**
  * Opens and closes sponsored Stellar channel accounts for later pipeline reuse.
@@ -282,33 +243,36 @@ export class ChannelAccounts {
     if (channels.length === 0) return;
 
     try {
+      const pipeline = createClassicTransactionPipeline(
+        createClassicPipelineArgs({ networkConfig, rpc }),
+      );
       const closeRpc = resolveRpc({ networkConfig, rpc });
+      const sponsorSigner = sponsor.signer();
 
-      for (const channel of channels) {
-        const signers = await sponsorCanSignChannel(closeRpc, sponsor, channel)
-          ? appendUniqueSigners(config.signers, sponsor.signer())
-          : appendUniqueSigners(config.signers, channel.signer());
-        const sourceAccount = await closeRpc.getAccount(config.source);
-        const transaction = new TransactionBuilder(sourceAccount, {
-          fee: config.fee,
-          networkPassphrase: networkConfig.networkPassphrase,
-        })
-          .addOperation(
+      for (const channelBatch of chunkChannels(
+        channels,
+        MAX_CHANNELS_PER_TRANSACTION,
+      )) {
+        const closeSigners = await Promise.all(
+          channelBatch.map(async (channel) =>
+            await sponsorCanSignChannel(closeRpc, sponsor, channel)
+              ? createChannelProxySigner(sponsorSigner, channel)
+              : channel.signer()
+          ),
+        );
+
+        await pipeline.run({
+          operations: channelBatch.map((channel) =>
             Operation.accountMerge({
               source: channel.address(),
               destination: sponsor.address(),
-            }),
-          )
-          .setTimeout(config.timeout)
-          .build();
-
-        const signedTransaction = await signTransactionWithSigners(
-          transaction,
-          signers,
-          networkConfig.networkPassphrase,
-        );
-
-        await submitTransaction(closeRpc, signedTransaction, config.timeout);
+            })
+          ),
+          config: {
+            ...config,
+            signers: appendUniqueSigners(config.signers, ...closeSigners),
+          },
+        });
       }
     } catch (error) {
       if (error instanceof ColibriError) throw error;
