@@ -180,9 +180,7 @@ describe("memoize decorator", disableSanitizeConfig, () => {
         callCount = 0;
 
         @memoize({
-          enabled: (() => undefined) as unknown as (
-            self: TestClass,
-          ) => boolean,
+          enabled: (() => undefined) as unknown as (self: TestClass) => boolean,
           cacheRejected: (() => undefined) as unknown as (
             self: TestClass,
           ) => boolean,
@@ -397,7 +395,7 @@ describe("memoize decorator", disableSanitizeConfig, () => {
         @memoize({
           enabled: (self: TestClass) => self.options.cacheEnabled,
         })
-        compute(key: string): number {
+        compute(_key: string): number {
           this.callCount++;
           return this.callCount;
         }
@@ -423,9 +421,7 @@ describe("memoize decorator", disableSanitizeConfig, () => {
         callCount = 0;
 
         @memoize({
-          enabled: (() => undefined) as unknown as (
-            self: TestClass,
-          ) => boolean,
+          enabled: (() => undefined) as unknown as (self: TestClass) => boolean,
           cacheRejected: (() => undefined) as unknown as (
             self: TestClass,
           ) => boolean,
@@ -1175,7 +1171,7 @@ describe("memoize decorator", disableSanitizeConfig, () => {
         // Manually manipulate timestamp to force expiry
         const symbols = Object.getOwnPropertySymbols(instance);
         const timestampsMapSymbol = symbols.find((s) =>
-          s.description?.includes("timestamps")
+          s.description?.includes("timestamps"),
         ); // plural!
         if (timestampsMapSymbol) {
           // deno-lint-ignore no-explicit-any
@@ -1266,7 +1262,7 @@ describe("memoize decorator", disableSanitizeConfig, () => {
         // Find the timestamp symbol by iterating over the instance's symbols
         const symbols = Object.getOwnPropertySymbols(instance);
         const timestampSymbol = symbols.find((s) =>
-          s.description?.includes("timestamp")
+          s.description?.includes("timestamp"),
         );
         if (timestampSymbol) {
           // Set timestamp to 6 seconds ago (past the 5000ms TTL)
