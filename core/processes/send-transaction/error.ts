@@ -6,6 +6,9 @@ import { parseErrorResult } from "@/common/helpers/xdr/parse-error-result.ts";
 import { parseEvents } from "@/common/helpers/xdr/parse-events.ts";
 import type { SendTransactionInput } from "@/processes/send-transaction/types.ts";
 
+/**
+ * Stable error codes emitted by the send-transaction process.
+ */
 export enum Code {
   UNEXPECTED_ERROR = "STX_000",
   MISSING_ARG = "STX_001",
@@ -21,14 +24,27 @@ export enum Code {
   TRANSACTION_NOT_FOUND = "STX_011",
 }
 
+/**
+ * Base class for send-transaction process errors.
+ */
 export abstract class SendTransactionError extends ProcessError<
   Code,
   SendTransactionInput
 > {
+  /** Source identifier for send-transaction process failures. */
   override readonly source = "@colibri/core/processes/send-transaction";
 }
 
+/**
+ * Raised when send-transaction fails unexpectedly.
+ */
 export class UNEXPECTED_ERROR extends SendTransactionError {
+  /**
+   * Creates an unexpected send-transaction error.
+   *
+   * @param input - Original process input.
+   * @param cause - Underlying unexpected error.
+   */
   constructor(input: SendTransactionInput, cause: Error) {
     super({
       code: Code.UNEXPECTED_ERROR,
@@ -40,7 +56,16 @@ export class UNEXPECTED_ERROR extends SendTransactionError {
   }
 }
 
+/**
+ * Raised when a required send-transaction input field is missing.
+ */
 export class MISSING_ARG extends SendTransactionError {
+  /**
+   * Creates a missing-argument error.
+   *
+   * @param input - Original process input.
+   * @param argName - Missing argument name.
+   */
   constructor(input: SendTransactionInput, argName: string) {
     super({
       code: Code.MISSING_ARG,
@@ -51,7 +76,16 @@ export class MISSING_ARG extends SendTransactionError {
   }
 }
 
+/**
+ * Raised when the transaction cannot be submitted to RPC.
+ */
 export class FAIL_TO_SEND_TRANSACTION extends SendTransactionError {
+  /**
+   * Creates a transaction-submission error.
+   *
+   * @param input - Original process input.
+   * @param cause - Underlying RPC submission failure.
+   */
   constructor(input: SendTransactionInput, cause: Error) {
     super({
       code: Code.FAIL_TO_SEND_TRANSACTION,
@@ -64,7 +98,16 @@ export class FAIL_TO_SEND_TRANSACTION extends SendTransactionError {
   }
 }
 
+/**
+ * Raised when the polling timeout is below the supported minimum.
+ */
 export class TIMEOUT_TOO_LOW extends SendTransactionError {
+  /**
+   * Creates a timeout validation error.
+   *
+   * @param input - Original process input.
+   * @param timeoutInSeconds - Invalid timeout value.
+   */
   constructor(input: SendTransactionInput, timeoutInSeconds: number) {
     super({
       code: Code.TIMEOUT_TOO_LOW,
@@ -75,7 +118,16 @@ export class TIMEOUT_TOO_LOW extends SendTransactionError {
   }
 }
 
+/**
+ * Raised when the polling interval is below the supported minimum.
+ */
 export class WAIT_INTERVAL_TOO_LOW extends SendTransactionError {
+  /**
+   * Creates a wait-interval validation error.
+   *
+   * @param input - Original process input.
+   * @param waitIntervalInMs - Invalid polling interval.
+   */
   constructor(input: SendTransactionInput, waitIntervalInMs: number) {
     super({
       code: Code.WAIT_INTERVAL_TOO_LOW,
@@ -86,7 +138,16 @@ export class WAIT_INTERVAL_TOO_LOW extends SendTransactionError {
   }
 }
 
+/**
+ * Raised when the submitted transaction is a duplicate.
+ */
 export class DUPLICATE_TRANSACTION extends SendTransactionError {
+  /**
+   * Creates a duplicate-transaction error.
+   *
+   * @param input - Original process input.
+   * @param txHash - Duplicate transaction hash.
+   */
   constructor(input: SendTransactionInput, txHash: string) {
     super({
       code: Code.DUPLICATE_TRANSACTION,
@@ -103,7 +164,16 @@ export class DUPLICATE_TRANSACTION extends SendTransactionError {
   }
 }
 
+/**
+ * Raised when the network asks the caller to retry later.
+ */
 export class TRY_AGAIN_LATER extends SendTransactionError {
+  /**
+   * Creates a retry-later error.
+   *
+   * @param input - Original process input.
+   * @param txHash - Transaction hash awaiting retry.
+   */
   constructor(input: SendTransactionInput, txHash: string) {
     super({
       code: Code.TRY_AGAIN_LATER,
@@ -120,7 +190,11 @@ export class TRY_AGAIN_LATER extends SendTransactionError {
   }
 }
 
+/**
+ * Raised when RPC returns the `ERROR` transaction status.
+ */
 export class ERROR_STATUS extends SendTransactionError {
+  /** Structured metadata captured from an RPC `ERROR` result. */
   override readonly meta: {
     data: {
       input: SendTransactionInput;
@@ -130,6 +204,14 @@ export class ERROR_STATUS extends SendTransactionError {
     cause: null;
   };
 
+  /**
+   * Creates an error-status transaction failure.
+   *
+   * @param input - Original process input.
+   * @param txHash - Transaction hash.
+   * @param errorResult - Optional transaction result XDR.
+   * @param diagnosticEvents - Optional diagnostic event list.
+   */
   constructor(
     input: SendTransactionInput,
     txHash: string,
@@ -163,7 +245,17 @@ export class ERROR_STATUS extends SendTransactionError {
   }
 }
 
+/**
+ * Raised when RPC returns an unsupported transaction status.
+ */
 export class UNEXPECTED_STATUS extends SendTransactionError {
+  /**
+   * Creates an unexpected-status error.
+   *
+   * @param input - Original process input.
+   * @param txHash - Transaction hash.
+   * @param status - Unsupported status value.
+   */
   constructor(input: SendTransactionInput, txHash: string, status: string) {
     super({
       code: Code.UNEXPECTED_STATUS,
@@ -180,7 +272,17 @@ export class UNEXPECTED_STATUS extends SendTransactionError {
   }
 }
 
+/**
+ * Raised when polling transaction status fails.
+ */
 export class FAILED_TO_GET_TRANSACTION_STATUS extends SendTransactionError {
+  /**
+   * Creates a polling failure error.
+   *
+   * @param input - Original process input.
+   * @param txHash - Transaction hash.
+   * @param error - Underlying polling error.
+   */
   constructor(input: SendTransactionInput, txHash: string, error: Error) {
     super({
       code: Code.FAILED_TO_GET_TRANSACTION_STATUS,
@@ -198,7 +300,11 @@ export class FAILED_TO_GET_TRANSACTION_STATUS extends SendTransactionError {
   }
 }
 
+/**
+ * Raised when a submitted transaction reaches the failed terminal state.
+ */
 export class TRANSACTION_FAILED extends SendTransactionError {
+  /** Structured metadata captured from a failed transaction response. */
   override readonly meta: {
     data: {
       input: SendTransactionInput;
@@ -211,6 +317,13 @@ export class TRANSACTION_FAILED extends SendTransactionError {
     cause: null;
   };
 
+  /**
+   * Creates a transaction-failed error.
+   *
+   * @param input - Original process input.
+   * @param txHash - Transaction hash.
+   * @param response - Failed RPC response payload.
+   */
   constructor(
     input: SendTransactionInput,
     txHash: string,
@@ -247,7 +360,16 @@ export class TRANSACTION_FAILED extends SendTransactionError {
   }
 }
 
+/**
+ * Raised when a transaction hash cannot be found on the network.
+ */
 export class TRANSACTION_NOT_FOUND extends SendTransactionError {
+  /**
+   * Creates a transaction-not-found error.
+   *
+   * @param input - Original process input.
+   * @param txHash - Missing transaction hash.
+   */
   constructor(input: SendTransactionInput, txHash: string) {
     super({
       code: Code.TRANSACTION_NOT_FOUND,
@@ -264,6 +386,9 @@ export class TRANSACTION_NOT_FOUND extends SendTransactionError {
   }
 }
 
+/**
+ * Send-transaction error constructors indexed by stable code.
+ */
 export const ERROR_BY_CODE = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.MISSING_ARG]: MISSING_ARG,

@@ -1,5 +1,5 @@
-import type { xdr } from "stellar-sdk";
 import type { BoundedArray } from "@/common/helpers/bounded-array.ts";
+import type { ScValLike } from "@/common/types/index.ts";
 import type { EventType } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 
@@ -54,5 +54,12 @@ export type TopicFilter =
   | [Segment, Segment, Segment, Segment]
   | [Segment, Segment, Segment, DoubleWildcard];
 
-export type Segment = "*" | xdr.ScVal;
+/**
+ * A single topic segment matcher.
+ */
+export type Segment = "*" | ScValLike;
+
+/**
+ * Wildcard that matches the current and every remaining topic segment.
+ */
 export type DoubleWildcard = "**";

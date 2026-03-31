@@ -28,12 +28,74 @@ import {
 } from "@/steps/index.ts";
 import { INVOKE_CONTRACT_INPUT_STEP_ID } from "@/pipelines/invoke-contract/connectors.ts";
 
+/** Stable id of the invoke-contract pipeline. */
 export const INVOKE_CONTRACT_PIPELINE_ID = "InvokeContractPipeline";
 
+/**
+ * Builds the invoke-contract pipeline with fully inferred step types.
+ */
+const buildInvokeContractPipeline = ({
+  networkConfig,
+  rpc,
+}: CreateInvokeContractPipelineArgs & { rpc: Server }) => {
+  const inputStep = step(
+    (input: InvokeContractInput) => input,
+    { id: INVOKE_CONTRACT_INPUT_STEP_ID },
+  );
+  const buildInputStep = step(
+    inputToBuild(rpc, networkConfig.networkPassphrase),
+    { id: "invoke-contract-build-input" as const },
+  );
+  const connectBuildToSimulate = buildToSimulate(rpc);
+  const connectSimulateToSignAuthEntries = simulateToSignAuthEntries(
+    rpc,
+    networkConfig.networkPassphrase,
+  );
+  const connectSignEnvelopeToSend = signEnvelopeToSendTransaction(rpc);
+
+  const BuildTransaction = createBuildTransactionStep();
+  const SimulateTransaction = createSimulateTransactionStep();
+  const SignAuthEntries = createSignAuthEntriesStep();
+  const AssembleTransaction = createAssembleTransactionStep();
+  const EnvelopeSigningRequirements = createEnvelopeSigningRequirementsStep();
+  const SignEnvelope = createSignEnvelopeStep();
+  const SendTransaction = createSendTransactionStep();
+
+  const pipelineSteps = [
+    inputStep,
+    buildInputStep,
+    BuildTransaction,
+    connectBuildToSimulate,
+    SimulateTransaction,
+    connectSimulateToSignAuthEntries,
+    SignAuthEntries,
+    signAuthEntriesToAssemble(),
+    AssembleTransaction,
+    assembleToEnvelopeSigningRequirements,
+    EnvelopeSigningRequirements,
+    envSignReqToSignEnvelope(),
+    SignEnvelope,
+    connectSignEnvelopeToSend,
+    SendTransaction,
+  ] as const;
+
+  return pipe([...pipelineSteps], {
+    id: INVOKE_CONTRACT_PIPELINE_ID,
+  });
+};
+
+/**
+ * Creates the invoke-contract pipeline.
+ *
+ * @param args Pipeline dependencies and network configuration.
+ * @returns Configured invoke-contract pipeline.
+ */
 const createInvokeContractPipeline = ({
   networkConfig,
   rpc,
-}: CreateInvokeContractPipelineArgs) => {
+}: CreateInvokeContractPipelineArgs): ReturnType<
+  typeof buildInvokeContractPipeline
+> => {
   try {
     assertRequiredArgs(
       {
@@ -49,53 +111,7 @@ const createInvokeContractPipeline = ({
         allowHttp: networkConfig.allowHttp ?? false,
       });
     }
-
-    const inputStep = step(
-      (input: InvokeContractInput) => input,
-      { id: INVOKE_CONTRACT_INPUT_STEP_ID },
-    );
-    const buildInputStep = step(
-      inputToBuild(rpc, networkConfig.networkPassphrase),
-      { id: "invoke-contract-build-input" as const },
-    );
-    const connectBuildToSimulate = buildToSimulate(rpc);
-    const connectSimulateToSignAuthEntries = simulateToSignAuthEntries(
-      rpc,
-      networkConfig.networkPassphrase,
-    );
-    const connectSignEnvelopeToSend = signEnvelopeToSendTransaction(rpc);
-
-    const BuildTransaction = createBuildTransactionStep();
-    const SimulateTransaction = createSimulateTransactionStep();
-    const SignAuthEntries = createSignAuthEntriesStep();
-    const AssembleTransaction = createAssembleTransactionStep();
-    const EnvelopeSigningRequirements = createEnvelopeSigningRequirementsStep();
-    const SignEnvelope = createSignEnvelopeStep();
-    const SendTransaction = createSendTransactionStep();
-
-    const pipelineSteps = [
-      inputStep,
-      buildInputStep,
-      BuildTransaction,
-      connectBuildToSimulate,
-      SimulateTransaction,
-      connectSimulateToSignAuthEntries,
-      SignAuthEntries,
-      signAuthEntriesToAssemble(),
-      AssembleTransaction,
-      assembleToEnvelopeSigningRequirements,
-      EnvelopeSigningRequirements,
-      envSignReqToSignEnvelope(),
-      SignEnvelope,
-      connectSignEnvelopeToSend,
-      SendTransaction,
-    ] as const;
-
-    const invokePipe = pipe([...pipelineSteps], {
-      id: INVOKE_CONTRACT_PIPELINE_ID,
-    });
-
-    return invokePipe;
+    return buildInvokeContractPipeline({ networkConfig, rpc });
   } catch (error) {
     if (error instanceof ColibriError) {
       throw error;
@@ -105,6 +121,7 @@ const createInvokeContractPipeline = ({
 };
 
 export { createInvokeContractPipeline };
+/** Runtime type returned by {@link createInvokeContractPipeline}. */
 export type InvokeContractPipeline = ReturnType<
   typeof createInvokeContractPipeline
 >;

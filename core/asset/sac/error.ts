@@ -29,8 +29,14 @@ export abstract class SACError<Code extends string> extends ColibriError<
   Code,
   Meta
 > {
+  /** Structured metadata attached to the error. */
   override readonly meta: Meta;
 
+  /**
+   * Creates a new SAC error.
+   *
+   * @param args Error construction payload.
+   */
   constructor(args: SACErrorShape<Code>) {
     const meta = {
       cause: args.cause || null,
@@ -80,6 +86,11 @@ export enum Code {
  * Raised when a required SAC argument is missing.
  */
 export class MISSING_ARG extends SACError<Code> {
+  /**
+   * Creates the error.
+   *
+   * @param argName Missing argument name.
+   */
   constructor(argName: string) {
     super({
       code: Code.MISSING_ARG,
@@ -95,6 +106,12 @@ export class MISSING_ARG extends SACError<Code> {
  * Raised when the SAC deployment for a classic asset fails.
  */
 export class FAILED_TO_DEPLOY_CONTRACT extends SACError<Code> {
+  /**
+   * Creates the error.
+   *
+   * @param asset Asset whose SAC deployment failed.
+   * @param cause Underlying deployment failure.
+   */
   constructor(asset: Asset, cause: Error) {
     super({
       code: Code.FAILED_TO_DEPLOY_CONTRACT,
@@ -116,6 +133,12 @@ export class FAILED_TO_DEPLOY_CONTRACT extends SACError<Code> {
  * Raised when a deployment response resolves to an unexpected contract id.
  */
 export class UNMATCHED_CONTRACT_ID extends SACError<Code> {
+  /**
+   * Creates the error.
+   *
+   * @param expected Expected deterministic contract id.
+   * @param found Contract id returned by the network.
+   */
   constructor(expected: string, found: string) {
     super({
       code: Code.UNMATCHED_CONTRACT_ID,
@@ -131,6 +154,11 @@ export class UNMATCHED_CONTRACT_ID extends SACError<Code> {
  * Raised when a SAC read path returns no value where one was expected.
  */
 export class MISSING_RETURN_VALUE extends SACError<Code> {
+  /**
+   * Creates the error.
+   *
+   * @param functionName Contract method that returned no value.
+   */
   constructor(functionName: string) {
     super({
       code: Code.MISSING_RETURN_VALUE,

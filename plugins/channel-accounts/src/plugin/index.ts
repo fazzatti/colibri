@@ -40,6 +40,10 @@ type ChannelAccountsRuntimePlugin =
     PipeContext<InvokeContractPipeline["steps"]>
   >;
 
+type ChannelAccountsPublicPlugin = ChannelAccountsRuntimePlugin & {
+  targets(stepId: string): boolean;
+};
+
 const targetsPipeline = (
   target: ChannelAccountsPluginTarget | undefined,
   stepId: string,
@@ -74,7 +78,7 @@ const releaseChannelIfAllocated = (
  */
 export const createChannelAccountsPlugin = (
   args: CreateChannelAccountsPluginArgs = {},
-) => {
+): ChannelAccountsPublicPlugin => {
   const { channels, target } = args;
   const pool = new ChannelAccountsPool(channels);
   const controls: ChannelAccountsPluginControls = {
@@ -121,5 +125,5 @@ export const createChannelAccountsPlugin = (
     has(runtime, prop) {
       return prop === "targets" || prop in controls || prop in runtime;
     },
-  }) as unknown as ChannelAccountsRuntimePlugin;
+  }) as unknown as ChannelAccountsPublicPlugin;
 };

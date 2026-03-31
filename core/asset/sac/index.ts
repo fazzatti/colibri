@@ -14,9 +14,9 @@ import {
   type OperationOptions,
   scValToNative,
 } from "stellar-sdk";
-import type { xdr } from "stellar-sdk";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { Api } from "stellar-sdk/rpc";
+import type { LedgerKeyLike } from "@/common/types/index.ts";
 
 import { StrKey } from "@/strkeys/index.ts";
 import { assert } from "@/common/assert/assert.ts";
@@ -208,6 +208,7 @@ export class StellarAssetContract {
   static NativeXLM(
     args: StellarAssetContractNativeArgs,
   ): StellarAssetContract;
+  /** @internal */
   static NativeXLM(
     networkConfig: Contract["networkConfig"],
   ): StellarAssetContract;
@@ -315,6 +316,7 @@ export class StellarAssetContract {
     );
   }
 
+  /** @internal */
   private async deploy(config: TransactionConfig): Promise<void> {
     if (!this.code) {
       throw new E.MISSING_ARG("code");
@@ -382,7 +384,8 @@ export class StellarAssetContract {
    * // Use in transaction building for footprint hints
    * ```
    */
-  public getContractFootprint(): xdr.LedgerKey {
+  /** @internal */
+  public getContractFootprint(): LedgerKeyLike {
     return this.contract.getContractFootprint();
   }
 
@@ -400,6 +403,7 @@ export class StellarAssetContract {
    * console.log("Contract key:", entry.key);
    * ```
    */
+  /** @internal */
   public async getContractInstanceLedgerEntry(): Promise<
     Api.LedgerEntryResult
   > {

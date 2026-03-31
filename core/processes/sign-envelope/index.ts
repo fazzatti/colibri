@@ -6,6 +6,7 @@ import type {
 import * as E from "@/processes/sign-envelope/error.ts";
 import { assert } from "@/common/assert/assert.ts";
 
+/** Signs a transaction envelope according to precomputed signature requirements. */
 export const signEnvelope = async (
   input: SignEnvelopeInput
 ): Promise<SignEnvelopeOutput> => {
@@ -45,4 +46,5 @@ export const signEnvelope = async (
     throw new E.UNEXPECTED_ERROR(input, e as Error);
   }
 };
-export { E as SignEnvelopeErrors };
+/** Error constructors emitted by {@link signEnvelope}. */
+export const SignEnvelopeErrors: typeof E = E;

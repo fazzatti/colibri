@@ -1,5 +1,6 @@
 import type { xdr } from "stellar-sdk";
 
+/** @internal */
 export type AuthEntryParams = {
   credentials: {
     address: string;
@@ -10,6 +11,7 @@ export type AuthEntryParams = {
   rootInvocation: InvocationParams;
 };
 
+/** @internal */
 export type InvocationParams = {
   function: {
     contractAddress: string;
@@ -19,6 +21,7 @@ export type InvocationParams = {
   subInvocations?: InvocationParams[];
 };
 
+/** @internal */
 export type FnArg = {
   value: unknown;
   type: string;
@@ -33,6 +36,7 @@ export type FnArg = {
  * This is a recursive type that represents all possible Soroban values
  * in their most natural TypeScript form.
  */
+/** @internal */
 export type ScValParsed =
   | null // void
   | boolean // bool
@@ -45,9 +49,11 @@ export type ScValParsed =
   | ScValRecord; // map with string keys, struct
 
 /** Map with arbitrary key types */
+/** @internal */
 export interface ScValMap extends Map<ScValParsed, ScValParsed> {}
 
 /** Object with string keys (structs, maps with symbol keys) */
+/** @internal */
 export interface ScValRecord {
   [key: string]: ScValParsed;
 }
@@ -56,6 +62,7 @@ export interface ScValRecord {
 // ScVal Type Names (for discrimination if needed)
 // ============================================================================
 
+/** @internal */
 export type ScValTypeName =
   | "void"
   | "bool"

@@ -11,10 +11,18 @@ import {
 } from "@/pipeline/connectors.ts";
 import * as E from "@/error.ts";
 
+/**
+ * Creates the internal pipeline used to wrap and sign fee-bump transactions.
+ *
+ * @param args - Pipeline construction arguments.
+ * @returns A configured fee-bump pipeline.
+ * @throws {E.MISSING_ARG} If a required argument is missing.
+ * @throws {E.UNEXPECTED_ERROR} If pipeline creation fails unexpectedly.
+ */
 const createFeeBumpPipeline = ({
   networkConfig,
   feeBumpConfig,
-}: CreateFeeBumpPipelineArgs) => {
+}: CreateFeeBumpPipelineArgs): ReturnType<typeof pipe> => {
   try {
     assertRequiredArgs(
       {
@@ -57,5 +65,12 @@ const createFeeBumpPipeline = ({
   }
 };
 
+/**
+ * Internal runtime pipeline returned by {@link createFeeBumpPipeline}.
+ */
 export { createFeeBumpPipeline };
+
+/**
+ * Internal runtime pipeline returned by {@link createFeeBumpPipeline}.
+ */
 export type FeeBumpPipeline = ReturnType<typeof createFeeBumpPipeline>;

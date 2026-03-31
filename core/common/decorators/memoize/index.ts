@@ -149,7 +149,12 @@ const isPromiseLike = (value: unknown): value is PromiseLike<unknown> =>
  * }
  * ```
  */
-export function memoize(options: MemoizeOptions = {}) {
+export function memoize(
+  options: MemoizeOptions = {},
+): <T>(
+  target: T,
+  context: DecoratorContext,
+) => T | void {
   const {
     enabled = true,
     ttl,
@@ -161,8 +166,7 @@ export function memoize(options: MemoizeOptions = {}) {
     ? options.evictOnExpiry
     : undefined;
 
-  // deno-lint-ignore no-explicit-any
-  return function <T extends (...args: any[]) => any>(
+  return function <T>(
     target: T,
     context: DecoratorContext,
   ): T | void {
@@ -176,7 +180,7 @@ export function memoize(options: MemoizeOptions = {}) {
 
     if (context.kind === "getter") {
       return memoizeGetter(
-        target,
+        target as () => unknown,
         propertyKey,
         enabled,
         ttl,
@@ -187,7 +191,7 @@ export function memoize(options: MemoizeOptions = {}) {
 
     if (context.kind === "method") {
       return memoizeMethod(
-        target,
+        target as (...args: unknown[]) => unknown,
         propertyKey,
         enabled,
         ttl,

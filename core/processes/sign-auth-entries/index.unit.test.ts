@@ -7,10 +7,11 @@ import { signAuthEntries } from "@/processes/sign-auth-entries/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import type { Signer } from "@/signer/types.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
+import type { SorobanAuthorizationEntryLike } from "@/common/types/index.ts";
 
 type MockSigner = Signer & {
   calls: number;
-  lastEntry?: xdr.SorobanAuthorizationEntry;
+  lastEntry?: SorobanAuthorizationEntryLike;
   lastValidUntil?: number;
 };
 
@@ -75,10 +76,10 @@ const makeSourceAuthEntry = () =>
 const makeSigner = (
   publicKey: string,
   behavior?: (
-    entry: xdr.SorobanAuthorizationEntry,
+    entry: SorobanAuthorizationEntryLike,
     validUntil: number,
     passphrase: string
-  ) => Promise<xdr.SorobanAuthorizationEntry>
+  ) => Promise<SorobanAuthorizationEntryLike>
 ): MockSigner => {
   const pub = publicKey as Ed25519PublicKey;
   const sign: Signer["sign"] = (b: Buffer): Buffer => {

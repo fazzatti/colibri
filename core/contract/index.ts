@@ -29,21 +29,44 @@ import type { Api } from "stellar-sdk/rpc";
 import type { OperationOptions } from "stellar-sdk";
 import type { ContractId } from "@/strkeys/types.ts";
 import type { NetworkConfig } from "@/network/index.ts";
+import type {
+  BinaryData,
+  LedgerKeyLike,
+  ScValLike,
+  SorobanAuthorizationEntryLike,
+} from "@/common/types/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { InvokeContractOutput } from "@/pipelines/invoke-contract/types.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import type { ReadFromContractOutput } from "@/pipelines/read-from-contract/types.ts";
+
+/**
+ * High-level client for interacting with a Soroban contract.
+ */
 export class Contract {
+  /** @internal */
   readonly rpc: Server;
+  /** Network configuration backing the contract client. */
   readonly networkConfig: NetworkConfig;
+  /** Read-only pipeline used to simulate contract calls. */
   readonly readPipe: ReadFromContractPipeline;
+  /** Invocation pipeline used for state-changing contract calls. */
   readonly invokePipe: InvokeContractPipeline;
 
+  /** @internal */
   protected spec?: Spec;
+  /** @internal */
   protected wasm?: Buffer;
+  /** @internal */
   protected wasmHash?: string;
+  /** @internal */
   protected contractId?: ContractId;
 
+  /**
+   * Creates a contract client bound to the provided network and contract configuration.
+   *
+   * @param args - Client configuration including network settings and contract identity.
+   */
   constructor({ networkConfig, rpc, contractConfig }: ContractConstructorArgs) {
     assertRequiredArgs(
       {
@@ -103,10 +126,15 @@ export class Contract {
   //
   //
 
+  /** @internal */
   protected require(arg: "spec"): Spec;
+  /** @internal */
   protected require(arg: "wasm"): Buffer;
+  /** @internal */
   protected require(arg: "wasmHash"): string;
+  /** @internal */
   protected require(arg: "contractId"): ContractId;
+  /** @internal */
   protected require(
     arg: "spec" | "contractId" | "wasm" | "wasmHash",
   ): ContractId | Spec | Buffer | string {
@@ -114,14 +142,17 @@ export class Contract {
     return this[arg];
   }
 
+  /** @internal */
   protected requireNo(arg: "spec" | "contractId" | "wasm" | "wasmHash"): void {
     assert(!this[arg], new E.PROPERTY_ALREADY_SET(arg));
   }
 
+  /** @internal */
   protected requireNoContractId(): void {
     this.requireNo("contractId");
   }
 
+  /** @internal */
   protected requireNoSpec(): void {
     this.requireNo("spec");
   }
@@ -132,26 +163,34 @@ export class Contract {
   //
   //
 
+  /** Returns the contract id bound to this client. */
   public getContractId(): ContractId {
     return this.require("contractId");
   }
 
+  /** @internal */
   public getSpec(): Spec {
     return this.require("spec");
   }
 
-  public getWasm(): Buffer {
+  /**
+   * Returns the contract wasm currently associated with this client.
+   */
+  public getWasm(): Uint8Array {
     return this.require("wasm");
   }
 
+  /** Returns the wasm hash currently associated with this client. */
   public getWasmHash(): string {
     return this.require("wasmHash");
   }
 
-  public getContractFootprint(): xdr.LedgerKey {
+  /** @internal */
+  public getContractFootprint(): LedgerKeyLike {
     return new StellarContract(this.getContractId()).getFootprint();
   }
 
+  /** @internal */
   public async getContractCodeLedgerEntry(): Promise<Api.LedgerEntryResult> {
     const ledgerEntries = (await this.rpc.getLedgerEntries(
       xdr.LedgerKey.contractCode(
@@ -170,13 +209,14 @@ export class Contract {
     return contractCode as Api.LedgerEntryResult;
   }
 
+  /** @internal */
   public async getContractInstanceLedgerEntry(): Promise<
     Api.LedgerEntryResult
   > {
     const footprint = this.getContractFootprint();
 
     const ledgerEntries = (await this.rpc.getLedgerEntries(
-      footprint,
+      footprint as xdr.LedgerKey,
     )) as Api.GetLedgerEntriesResponse;
 
     const contractInstance = ledgerEntries.entries.find(
@@ -242,7 +282,7 @@ export class Contract {
   }: {
     config: TransactionConfig;
     constructorArgs?: T;
-    salt?: Buffer;
+    salt?: BinaryData;
   }): Promise<InvokeContractOutput> {
     const wasmHash = this.getWasmHash();
 
@@ -371,7 +411,7 @@ export class Contract {
   }: {
     method: string;
     methodArgs?: object | undefined;
-  }) {
+  }): Promise<unknown> {
     const contractId = this.getContractId();
 
     const encodedArgs = methodArgs
@@ -406,7 +446,7 @@ export class Contract {
   }: {
     method: string;
     methodArgs?: object;
-    auth?: xdr.SorobanAuthorizationEntry[];
+    auth?: SorobanAuthorizationEntryLike[];
     config: TransactionConfig;
   }): Promise<InvokeContractOutput> {
     const contractId = this.getContractId();
@@ -419,7 +459,7 @@ export class Contract {
       function: method,
       contract: contractId,
       args: encodedArgs || [],
-      auth: auth,
+      auth: auth as xdr.SorobanAuthorizationEntry[] | undefined,
     });
 
     return await this.invokePipe.run({ config, operations: [operation] });
@@ -437,6 +477,7 @@ export class Contract {
    * @description - Invokes a contract method that alters the state of the contract.
    * This function requires signers. It builds a transaction, simulates it, signs it, submits it to the network, and extracts the output of the invocation from the processed transaction.
    */
+  /** @internal */
   public async invokeRaw({
     operationArgs,
     config,
@@ -460,7 +501,7 @@ export class Contract {
 
   /**
    * @param {string} method - The method to invoke as it is identified in the contract.
-   * @param {xdr.ScVal[]} methodArgs - The arguments for the method invocation in ScVal array.
+   * @param {ScValLike[]} methodArgs - The arguments for the method invocation in ScVal array.
    *
    * @returns {Promise<ReadFromContractOutput>} The returned value of the simulated invocation
    * encoded as ScVal array.
@@ -472,14 +513,14 @@ export class Contract {
     methodArgs,
   }: {
     method: string;
-    methodArgs?: xdr.ScVal[] | undefined;
+    methodArgs?: ScValLike[] | undefined;
   }): Promise<ReadFromContractOutput> {
     const contractId = this.getContractId();
 
     const operation = Operation.invokeContractFunction({
       function: method,
       contract: contractId,
-      args: methodArgs || [],
+      args: (methodArgs as xdr.ScVal[] | undefined) || [],
     });
 
     return await this.readPipe.run({ operations: [operation] });

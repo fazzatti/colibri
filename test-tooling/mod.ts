@@ -38,3 +38,6 @@
 export * from "@/quickstart/index.ts";
 export * from "@/quickstart/types.ts";
 export * from "@/quickstart/error.ts";
+export type { DockerClient } from "@/quickstart/docker.ts";
+export type { LogLevelName, LogLevelNumber } from "@/quickstart/logging.ts";
+export type { ContainerInspectInfo } from "@/quickstart/runtime.ts";

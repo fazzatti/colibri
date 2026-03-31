@@ -11,8 +11,13 @@ import type {
 } from "@/network/types.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
 
+/** Preset provider helpers for commonly used public Stellar RPC networks. */
 export * as NetworkProviders from "@/network/providers/index.ts";
 
+/**
+ * Mutable network configuration implementation with preset constructors for
+ * Stellar Mainnet, Testnet, Futurenet, and custom networks.
+ */
 export class NetworkConfig implements INetworkConfig {
   private _type: NetworkType;
   private _networkPassphrase: string;
@@ -33,6 +38,12 @@ export class NetworkConfig implements INetworkConfig {
     this._networkPassphrase = networkPassphrase;
   }
 
+  /**
+   * Creates a Testnet configuration.
+   *
+   * @param args - Optional endpoint overrides.
+   * @returns A fully resolved Testnet configuration.
+   */
   static TestNet(args?: TestNetNetCustomConfig): NetworkConfig & TestNetConfig {
     const { rpcUrl, archiveRpcUrl, horizonUrl, friendbotUrl, allowHttp } =
       args || {};
@@ -57,6 +68,12 @@ export class NetworkConfig implements INetworkConfig {
     return config as NetworkConfig & TestNetConfig;
   }
 
+  /**
+   * Creates a Futurenet configuration.
+   *
+   * @param args - Optional endpoint overrides.
+   * @returns A fully resolved Futurenet configuration.
+   */
   static FutureNet(
     args?: FutureNetCustomConfig
   ): NetworkConfig & FutureNetConfig {
@@ -83,6 +100,12 @@ export class NetworkConfig implements INetworkConfig {
     return config as NetworkConfig & FutureNetConfig;
   }
 
+  /**
+   * Creates a Mainnet configuration.
+   *
+   * @param args - Optional endpoint overrides.
+   * @returns A fully resolved Mainnet configuration.
+   */
   static MainNet(args?: MainNetCustomConfig): NetworkConfig & MainNetConfig {
     const { rpcUrl, archiveRpcUrl, horizonUrl, allowHttp } = args || {};
 
@@ -103,6 +126,12 @@ export class NetworkConfig implements INetworkConfig {
     return config as NetworkConfig & MainNetConfig;
   }
 
+  /**
+   * Creates a custom network configuration.
+   *
+   * @param payload - Required passphrase and optional endpoint overrides.
+   * @returns A fully resolved custom network configuration.
+   */
   static CustomNet(payload: {
     networkPassphrase: string;
     type?: NetworkType;
@@ -143,13 +172,21 @@ export class NetworkConfig implements INetworkConfig {
    * @throws {Error} If the requested property is not set
    * @private
    */
+  /** @internal */
   private require(arg: "_type"): NetworkType;
+  /** @internal */
   private require(arg: "_networkPassphrase"): string;
+  /** @internal */
   private require(arg: "_rpcUrl"): string;
+  /** @internal */
   private require(arg: "_archiveRpcUrl"): string;
+  /** @internal */
   private require(arg: "_horizonUrl"): string;
+  /** @internal */
   private require(arg: "_friendbotUrl"): string;
+  /** @internal */
   private require(arg: "_allowHttp"): boolean;
+  /** @internal */
   private require(
     arg:
       | "_type"
@@ -166,6 +203,7 @@ export class NetworkConfig implements INetworkConfig {
     );
   }
 
+  /** @internal */
   private requireNo(
     arg:
       | "_type"
@@ -189,60 +227,74 @@ export class NetworkConfig implements INetworkConfig {
   //
   //
 
+  /** Returns the configured network kind. */
   get type(): NetworkType {
     return this.require("_type");
   }
 
+  /** Sets the network kind once for a newly constructed custom config. */
   set type(value: NetworkType) {
     this.requireNo("_type");
     this._type = value;
   }
 
+  /** Returns the configured Stellar network passphrase. */
   get networkPassphrase(): string {
     return this.require("_networkPassphrase");
   }
 
+  /** Sets the network passphrase once for a newly constructed custom config. */
   set networkPassphrase(value: string) {
     this.requireNo("_networkPassphrase");
     this._networkPassphrase = value;
   }
 
+  /** Returns the configured Soroban RPC endpoint, when available. */
   get rpcUrl(): string | undefined {
     return this._rpcUrl;
   }
 
+  /** Sets the Soroban RPC endpoint when one was not already configured. */
   set rpcUrl(value: string) {
     this.requireNo("_rpcUrl");
     this._rpcUrl = value;
   }
 
+  /** Returns the configured archive RPC endpoint, when available. */
   get archiveRpcUrl(): string | undefined {
     return this._archiveRpcUrl;
   }
+  /** Sets the archive RPC endpoint when one was not already configured. */
   set archiveRpcUrl(value: string) {
     this.requireNo("_archiveRpcUrl");
     this._archiveRpcUrl = value;
   }
 
+  /** Returns the configured Horizon endpoint, when available. */
   get horizonUrl(): string | undefined {
     return this._horizonUrl;
   }
+  /** Sets the Horizon endpoint when one was not already configured. */
   set horizonUrl(value: string) {
     this.requireNo("_horizonUrl");
     this._horizonUrl = value;
   }
 
+  /** Returns the configured Friendbot endpoint, when available. */
   get friendbotUrl(): string | undefined {
     return this._friendbotUrl;
   }
+  /** Sets the Friendbot endpoint when one was not already configured. */
   set friendbotUrl(value: string) {
     this.requireNo("_friendbotUrl");
     this._friendbotUrl = value;
   }
 
+  /** Returns whether HTTP URLs are allowed for this network. */
   get allowHttp(): boolean | undefined {
     return this._allowHttp;
   }
+  /** Sets the HTTP allowance flag when one was not already configured. */
   set allowHttp(value: boolean) {
     this.requireNo("_allowHttp");
     this._allowHttp = value;
@@ -253,6 +305,7 @@ export class NetworkConfig implements INetworkConfig {
   //==========================================
   //
   //
+  /** Returns `true` when this configuration matches the built-in Testnet preset. */
   isTestNet(): this is TestNetConfig {
     return (
       this.type === NetworkType.TESTNET &&
@@ -260,6 +313,7 @@ export class NetworkConfig implements INetworkConfig {
     );
   }
 
+  /** Returns `true` when this configuration matches the built-in Futurenet preset. */
   isFutureNet(): this is FutureNetConfig {
     return (
       this.type === NetworkType.FUTURENET &&
@@ -267,6 +321,7 @@ export class NetworkConfig implements INetworkConfig {
     );
   }
 
+  /** Returns `true` when this configuration matches the built-in Mainnet preset. */
   isMainNet(): this is MainNetConfig {
     return (
       this.type === NetworkType.MAINNET &&
@@ -274,12 +329,19 @@ export class NetworkConfig implements INetworkConfig {
     );
   }
 
+  /** Returns `true` when this configuration does not match a built-in preset. */
   isCustomNet(): this is CustomNetworkConfig {
     if (this.type === NetworkType.CUSTOM) return true;
     return !this.isTestNet() && !this.isFutureNet() && !this.isMainNet();
   }
 }
 
+/**
+ * Returns `true` when a value looks like a {@link NetworkConfig} instance.
+ *
+ * @param obj - Candidate value.
+ * @returns Whether the candidate exposes the required network fields.
+ */
 export const isNetworkConfig = (obj: unknown): obj is NetworkConfig => {
   return (
     typeof obj === "object" &&

@@ -23,6 +23,11 @@ export abstract class ChannelAccountsError extends ColibriError<Code> {
  * Wraps unexpected non-Colibri exceptions raised by the package internals.
  */
 export class UNEXPECTED_ERROR extends ChannelAccountsError {
+  /**
+   * Creates an unexpected-error wrapper for a caught internal failure.
+   *
+   * @param cause - Underlying error thrown by the runtime.
+   */
   constructor(cause: Error) {
     super({
       domain: "plugins",
@@ -39,6 +44,11 @@ export class UNEXPECTED_ERROR extends ChannelAccountsError {
  * Raised when a required argument is omitted from a public API call.
  */
 export class MISSING_ARG extends ChannelAccountsError {
+  /**
+   * Creates a missing-argument error.
+   *
+   * @param argName - Name of the missing argument.
+   */
   constructor(argName: string) {
     super({
       domain: "plugins",
@@ -55,6 +65,13 @@ export class MISSING_ARG extends ChannelAccountsError {
  * Raised when channel creation requests an out-of-bounds number of channels.
  */
 export class INVALID_NUMBER_OF_CHANNELS extends ChannelAccountsError {
+  /**
+   * Creates an invalid-channel-count error.
+   *
+   * @param numberOfChannels - Requested channel count.
+   * @param min - Inclusive minimum accepted by the API.
+   * @param max - Inclusive maximum accepted by the API.
+   */
   constructor(
     numberOfChannels: number,
     min = 1,
@@ -78,6 +95,11 @@ export class INVALID_NUMBER_OF_CHANNELS extends ChannelAccountsError {
  * Raised when a plugin run tries to release a channel that is not allocated.
  */
 export class CHANNEL_NOT_ALLOCATED extends ChannelAccountsError {
+  /**
+   * Creates a missing-allocation error for a pipeline run.
+   *
+   * @param runId - Identifier of the pipeline run attempting the release.
+   */
   constructor(runId: string) {
     super({
       domain: "plugins",

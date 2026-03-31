@@ -9,13 +9,14 @@ import type { SignAuthEntriesInput } from "@/processes/sign-auth-entries/types.t
 import { NetworkConfig } from "@/network/index.ts";
 import type { Signer } from "@/signer/types.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+import type { SorobanAuthorizationEntryLike } from "@/common/types/index.ts";
 
 describe("SignAuthEntries", () => {
   const { networkPassphrase } = NetworkConfig.TestNet();
 
   type MockSigner = Signer & {
     calls: number;
-    lastEntry?: xdr.SorobanAuthorizationEntry;
+    lastEntry?: SorobanAuthorizationEntryLike;
     lastValidUntil?: number;
   };
 
@@ -48,10 +49,10 @@ describe("SignAuthEntries", () => {
   const makeSigner = (
     publicKey: string,
     behavior?: (
-      entry: xdr.SorobanAuthorizationEntry,
+      entry: SorobanAuthorizationEntryLike,
       validUntil: number,
       passphrase: string
-    ) => Promise<xdr.SorobanAuthorizationEntry>
+    ) => Promise<SorobanAuthorizationEntryLike>
   ): MockSigner => {
     const signTransaction: Signer["signTransaction"] = async (
       ..._args: Parameters<Signer["signTransaction"]>

@@ -54,9 +54,6 @@ export type MemoizePolicy = {
   evictOnExpiry?: boolean;
 };
 
-/**
- * Resolves an option from a literal value or dynamically from the instance and call arguments.
- */
 type BivariantResolver<Value, This, Args extends unknown[]> = {
   bivarianceHack(self: This, ...args: Args): Value;
 }["bivarianceHack"];
@@ -64,6 +61,7 @@ type BivariantResolver<Value, This, Args extends unknown[]> = {
 /**
  * Resolves a memoize option from either a literal value or a function that is
  * evaluated against the current instance and method arguments at runtime.
+ * @internal
  */
 export type MemoizeOptionResolver<
   Value,
@@ -71,9 +69,6 @@ export type MemoizeOptionResolver<
   Args extends unknown[] = unknown[],
 > = Value | BivariantResolver<Value, This, Args>;
 
-/**
- * Base options shared by all memoize configurations.
- */
 interface MemoizeOptionsBase<
   This = unknown,
   Args extends unknown[] = unknown[],
@@ -151,9 +146,6 @@ interface MemoizeOptionsBase<
   cacheRejected?: MemoizeOptionResolver<boolean, This, Args>;
 }
 
-/**
- * Options when TTL is specified - allows evictOnExpiry.
- */
 interface MemoizeOptionsWithTtl<
   This = unknown,
   Args extends unknown[] = unknown[],
@@ -217,9 +209,6 @@ interface MemoizeOptionsWithTtl<
   evictOnExpiry?: MemoizeOptionResolver<boolean, This, Args>;
 }
 
-/**
- * Options when TTL is not specified - evictOnExpiry is not allowed.
- */
 interface MemoizeOptionsWithoutTtl<
   This = unknown,
   Args extends unknown[] = unknown[],
@@ -256,6 +245,7 @@ interface MemoizeOptionsWithoutTtl<
  * ```typescript
  * @memoize({ evictOnExpiry: true })              // ❌ Error: requires ttl!
  * ```
+ * @internal
  */
 export type MemoizeOptions<
   This = unknown,

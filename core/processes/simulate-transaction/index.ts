@@ -6,6 +6,7 @@ import * as E from "@/processes/simulate-transaction/error.ts";
 
 import { Api } from "stellar-sdk/rpc";
 
+/** Simulates a built transaction against Stellar RPC. */
 export const simulateTransaction = async (
   input: SimulateTransactionInput
 ): Promise<SimulateTransactionOutput> => {
@@ -47,4 +48,5 @@ export const simulateTransaction = async (
     throw new E.UNEXPECTED_ERROR(input, e as Error);
   }
 };
-export { E as SimulateTransactionErrors };
+/** Error constructors emitted by {@link simulateTransaction}. */
+export const SimulateTransactionErrors: typeof E = E;

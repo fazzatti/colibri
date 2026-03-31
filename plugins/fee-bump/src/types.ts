@@ -3,15 +3,29 @@ import type {
   NetworkConfig,
   SendTransactionInput,
 } from "@colibri/core";
-import { steps } from "@colibri/core";
 export * from "@/pipeline/types.ts";
 
+/**
+ * Stable identifier used by the fee-bump plugin.
+ */
 export const FEE_BUMP_PLUGIN_ID = "FeeBumpPlugin";
-export const FEE_BUMP_PLUGIN_TARGET = steps.SEND_TRANSACTION_STEP_ID;
 
-export type FeeBumpPluginArgs = {
+/**
+ * Pipeline target id handled by the fee-bump plugin.
+ */
+export const FEE_BUMP_PLUGIN_TARGET = "send-transaction";
+
+/**
+ * Arguments accepted by {@link createFeeBumpPlugin}.
+ */
+export interface FeeBumpPluginArgs {
+  /** Network configuration used to build the fee-bump envelope. */
   networkConfig: NetworkConfig;
+  /** Fee-bump configuration describing the fee payer and signers. */
   feeBumpConfig: FeeBumpConfig;
-};
+}
 
+/**
+ * Input shape intercepted by the fee-bump plugin.
+ */
 export type PluginInput = SendTransactionInput;

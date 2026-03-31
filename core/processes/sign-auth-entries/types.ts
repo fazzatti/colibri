@@ -2,6 +2,7 @@ import type { xdr } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
 import type { Signer } from "@/signer/types.ts";
 
+/** @internal */
 export type SignAuthEntriesInput = {
   auth: xdr.SorobanAuthorizationEntry[];
   signers: Signer[];
@@ -11,6 +12,7 @@ export type SignAuthEntriesInput = {
   removeUnsigned?: boolean; // optional flag to remove unsigned entries in the auth array, defaults to false
 };
 
+/** @internal */
 export type LedgerValidity =
   | {
       validForLedgers: number;
@@ -20,4 +22,5 @@ export type LedgerValidity =
     }
   | { validUntilLedgerSeq: number };
 
+/** @internal */
 export type SignAuthEntriesOutput = xdr.SorobanAuthorizationEntry[];

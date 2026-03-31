@@ -13,12 +13,46 @@ import {
   createSimulateTransactionStep,
 } from "@/steps/index.ts";
 
+/** Stable id of the read-from-contract pipeline. */
 export const READ_FROM_CONTRACT_PIPELINE_ID = "ReadFromContractPipeline";
 
+/**
+ * Builds the read-from-contract pipeline with fully inferred step types.
+ */
+const buildReadFromContractPipeline = ({
+  networkConfig,
+  rpc,
+}: CreateReadFromContractPipelineArgs & { rpc: Server }) => {
+  const BuildTransaction = createBuildTransactionStep();
+  const SimulateTransaction = createSimulateTransactionStep();
+
+  const pipelineSteps = [
+    step(inputToBuild(networkConfig.networkPassphrase), {
+      id: "read-from-contract-input" as const,
+    }),
+    BuildTransaction,
+    buildToSimulate(rpc),
+    SimulateTransaction,
+    simulateToRetval,
+  ] as const;
+
+  return pipe([...pipelineSteps], {
+    id: READ_FROM_CONTRACT_PIPELINE_ID,
+  });
+};
+
+/**
+ * Creates the read-from-contract pipeline.
+ *
+ * @param args Pipeline dependencies and network configuration.
+ * @returns Configured read-from-contract pipeline.
+ */
 const createReadFromContractPipeline = ({
   networkConfig,
   rpc,
-}: CreateReadFromContractPipelineArgs) => {
+}: CreateReadFromContractPipelineArgs): ReturnType<
+  typeof buildReadFromContractPipeline
+> => {
   try {
     assertRequiredArgs(
       {
@@ -34,24 +68,7 @@ const createReadFromContractPipeline = ({
         allowHttp: networkConfig.allowHttp ?? false,
       });
     }
-    const BuildTransaction = createBuildTransactionStep();
-    const SimulateTransaction = createSimulateTransactionStep();
-
-    const pipelineSteps = [
-      step(inputToBuild(networkConfig.networkPassphrase), {
-        id: "read-from-contract-input" as const,
-      }),
-      BuildTransaction,
-      buildToSimulate(rpc),
-      SimulateTransaction,
-      simulateToRetval,
-    ] as const;
-
-    const readPipe = pipe([...pipelineSteps], {
-      id: READ_FROM_CONTRACT_PIPELINE_ID,
-    });
-
-    return readPipe;
+    return buildReadFromContractPipeline({ networkConfig, rpc });
   } catch (error) {
     if (error instanceof ColibriError) {
       throw error;
@@ -61,6 +78,7 @@ const createReadFromContractPipeline = ({
 };
 
 export { createReadFromContractPipeline };
+/** Runtime type returned by {@link createReadFromContractPipeline}. */
 export type ReadFromContractPipeline = ReturnType<
   typeof createReadFromContractPipeline
 >;

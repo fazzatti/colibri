@@ -9,6 +9,7 @@ enum ErrorCode {
 
 const baseErrorSource = "@colibri/core/helpers/transaction";
 
+/** Returns the remaining transaction timeout in seconds or milliseconds. */
 export const getTransactionTimeout = (
   tx: Transaction | FeeBumpTransaction,
   unit: "seconds" | "milliseconds" = "seconds"
@@ -43,6 +44,7 @@ export const getTransactionTimeout = (
   }
 };
 
+/** Extracts classic operations from a built transaction envelope. */
 export const getOperationsFromTransaction = (
   transaction: Transaction
 ): xdr.Operation[] => {
@@ -63,10 +65,12 @@ export const getOperationsFromTransaction = (
   }
 };
 
+/** Returns the Stellar operation type name for a raw operation. */
 export const getOperationType = (op: xdr.Operation): string => {
   return op.body().switch().name;
 };
 
+/** Returns the ordered list of operation type names contained in a transaction. */
 export const getOperationTypesFromTransaction = (
   transaction: Transaction
 ): string[] => {

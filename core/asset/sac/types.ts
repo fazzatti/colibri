@@ -23,18 +23,12 @@ export type StellarAssetContractOptions = {
   cache?: MemoizePolicy;
 };
 
-/**
- * Shared constructor/runtime arguments for SAC client creation.
- */
 type StellarAssetContractBaseArgs = {
   networkConfig: NetworkConfig;
   rpc?: Server;
   options?: StellarAssetContractOptions;
 };
 
-/**
- * Asset identity used to deterministically derive a SAC contract id.
- */
 type StellarAssetIdentity =
   | {
     code: string;
@@ -50,6 +44,7 @@ type StellarAssetIdentity =
  * A SAC client can be created either from the classic asset identity
  * (`code` + `issuer`, or a `stellar-sdk` `Asset`) or from a known contract id.
  */
+/** @internal */
 export type StellarAssetContractConstructorArgs =
   | (StellarAssetContractBaseArgs & StellarAssetIdentity)
   | (StellarAssetContractBaseArgs & {
@@ -59,6 +54,7 @@ export type StellarAssetContractConstructorArgs =
 /**
  * Arguments for creating a SAC client from a classic asset identity.
  */
+/** @internal */
 export type StellarAssetContractFromAssetArgs =
   & StellarAssetContractBaseArgs
   & StellarAssetIdentity;
@@ -66,6 +62,7 @@ export type StellarAssetContractFromAssetArgs =
 /**
  * Arguments for creating a SAC client from an existing contract id.
  */
+/** @internal */
 export type StellarAssetContractFromContractIdArgs =
   & StellarAssetContractBaseArgs
   & {
@@ -75,17 +72,20 @@ export type StellarAssetContractFromContractIdArgs =
 /**
  * Arguments for creating the native XLM SAC client.
  */
+/** @internal */
 export type StellarAssetContractNativeArgs = StellarAssetContractBaseArgs;
 
 /**
  * Arguments for deploying a classic asset into its SAC representation.
  */
+/** @internal */
 export type DeployStellarAssetContractArgs =
   & StellarAssetContractFromAssetArgs
   & {
     config: TransactionConfig;
   };
 
+/** @internal */
 export type BaseInvocation = {
   config: TransactionConfig;
   auth?: xdr.SorobanAuthorizationEntry[];
@@ -128,6 +128,7 @@ export enum Method {
 /**
  * Input types for SAC contract methods that require arguments.
  */
+/** @internal */
 export type ContractInput = {
   // Token Interface
   [Method.Allowance]: {
@@ -188,6 +189,7 @@ export type ContractInput = {
 /**
  * Output types for SAC contract methods.
  */
+/** @internal */
 export type ContractOutput = {
   // Descriptive Interface (read-only)
   [Method.Decimals]: number;

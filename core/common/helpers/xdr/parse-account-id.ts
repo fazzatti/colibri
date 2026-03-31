@@ -11,6 +11,7 @@ import type { xdr } from "stellar-sdk";
  * ```ts
  * parseAccountId(account); // "GXXXX..."
  * ```
+ * @internal
  */
 export function parseAccountId(accountXdr: xdr.AccountId): string {
   return StrKey.encodeEd25519PublicKey(accountXdr.ed25519());

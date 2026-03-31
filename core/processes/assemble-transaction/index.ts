@@ -13,6 +13,7 @@ import {
 } from "@/common/helpers/transaction.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 
+/** Reassembles simulated Soroban auth entries into a final transaction envelope. */
 export const assembleTransaction = async (
   input: AssembleTransactionInput
 ): Promise<AssembleTransactionOutput> => {
@@ -92,4 +93,5 @@ export const assembleTransaction = async (
     throw new E.UNEXPECTED_ERROR(input, e as Error);
   }
 };
-export { E as AssembleTransactionErrors };
+/** Error constructors emitted by {@link assembleTransaction}. */
+export const AssembleTransactionErrors: typeof E = E;
