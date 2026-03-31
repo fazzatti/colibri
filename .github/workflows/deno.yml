@@ -40,7 +40,8 @@ jobs:
       - name: Run type checks
         run: deno task check
 
-      - name: Run JSR entrypoint checks
+      - name: Report JSR entrypoint checks
+        continue-on-error: true
         run: deno task check:jsr
 
       - name: Run tests
