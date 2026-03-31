@@ -1,4 +1,5 @@
-import type { xdr } from "stellar-sdk";
+import { xdr } from "stellar-sdk";
+import { Buffer } from "buffer";
 import { parseScVal, parseScVals } from "@/common/helpers/xdr/scval.ts";
 import type { ScValParsed } from "@/common/helpers/xdr/types.ts";
 import type {
@@ -42,6 +43,10 @@ export class Event implements IEvent {
   scvalTopics: ScValLike[];
   /** Raw event payload emitted by the contract. */
   scvalValue: ScValLike;
+  /** Normalized SDK topic values used by the parsing helpers. */
+  private readonly _xdrTopics: xdr.ScVal[];
+  /** Normalized SDK value used by the parsing helpers. */
+  private readonly _xdrValue: xdr.ScVal;
 
   /**
    * Creates a normalized event wrapper.
@@ -74,8 +79,10 @@ export class Event implements IEvent {
     this.operationIndex = args.operationIndex;
     this.inSuccessfulContractCall = args.inSuccessfulContractCall;
     this.txHash = args.txHash;
-    this.scvalTopics = args.topic;
-    this.scvalValue = args.value;
+    this._xdrTopics = args.topic.map(toXdrScVal);
+    this._xdrValue = toXdrScVal(args.value);
+    this.scvalTopics = this._xdrTopics;
+    this.scvalValue = this._xdrValue;
   }
 
   /**
@@ -83,7 +90,7 @@ export class Event implements IEvent {
    * Computed on each access (not cached).
    */
   get topics(): ScValParsed[] {
-    return parseScVals(this.scvalTopics as xdr.ScVal[]);
+    return parseScVals(this._xdrTopics);
   }
 
   /**
@@ -91,7 +98,7 @@ export class Event implements IEvent {
    * Computed on each access (not cached).
    */
   get value(): ScValParsed {
-    return parseScVal(this.scvalValue as xdr.ScVal);
+    return parseScVal(this._xdrValue);
   }
 
   /**
@@ -131,3 +138,12 @@ export class Event implements IEvent {
     });
   }
 }
+
+const toXdrScVal = (value: ScValLike): xdr.ScVal => {
+  const serialized = value.toXDR("base64");
+  const base64 = typeof serialized === "string"
+    ? serialized
+    : Buffer.from(serialized).toString("base64");
+
+  return xdr.ScVal.fromXDR(base64, "base64");
+};

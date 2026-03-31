@@ -1,4 +1,4 @@
-import { Account, type Asset, Keypair, MuxedAccount, xdr } from "stellar-sdk";
+import { Account, Keypair, MuxedAccount, xdr } from "stellar-sdk";
 import { assert } from "@/common/assert/assert.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import { isMuxedId } from "@/common/type-guards/is-muxed-id.ts";
@@ -115,7 +115,7 @@ export class NativeAccount implements INativeAccount {
     const trustlineLedgerKey = xdr.LedgerKey.trustline(
       new xdr.LedgerKeyTrustLine({
         accountId: Keypair.fromPublicKey(this._publicKey).xdrAccountId(),
-        asset: (asset as Asset).toTrustLineXDRObject(),
+        asset: asset.toTrustLineXDRObject() as xdr.TrustLineAsset,
       })
     );
 
