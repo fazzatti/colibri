@@ -1,339 +1,205 @@
 # Stellar Asset Contract
 
-The `StellarAssetContract` class provides a high-level client for interacting with Stellar Asset Contracts (SAC), which bridge classic Stellar assets with Soroban smart contracts.
+`StellarAssetContract` is Colibri's high-level client for Stellar Asset
+Contracts (SACs), the built-in Soroban contracts that bridge classic Stellar
+assets into the Soroban ecosystem.
 
-SACs implement the [SEP-41](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0041.md) token interface and are defined in [CAP-0046-06](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0046-06.md).
+SACs implement the token interface used by Stellar's built-in asset wrapper and
+are defined in [CAP-0046-06](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0046-06.md).
 
 ## Overview
 
-Stellar Asset Contracts enable classic Stellar assets (like USDC, XLM, or any issued asset) to be used within Soroban smart contracts. The contract ID is deterministically derived from the asset code, issuer, and network passphrase.
+A SAC client is always bound to a contract id. You can create that client from:
 
-## Creating a SAC Instance
+- a known `contractId`
+- a classic asset identity (`code` + `issuer`)
+- a `stellar-sdk` `Asset`
+- the native XLM asset
 
-```typescript
-import { StellarAssetContract, NetworkConfig } from "@colibri/core";
+## Creating A SAC Client
 
-const sac = new StellarAssetContract({
+### From A Classic Asset
+
+```ts
+import { NetworkConfig, StellarAssetContract } from "@colibri/core";
+
+const sac = StellarAssetContract.fromAsset({
+  networkConfig: NetworkConfig.TestNet(),
   code: "USDC",
   issuer: "GCNY5OXYSY4FKHOPT2SPOQZAOEIGXB5LBYW3HVU3OWSTQITS65M5RCNY",
+});
+
+console.log(sac.contractId);
+```
+
+### From A Known Contract Id
+
+```ts
+const sac = StellarAssetContract.fromContractId({
+  networkConfig: NetworkConfig.TestNet(),
+  contractId: "CBI...",
+});
+```
+
+### Native XLM
+
+```ts
+const sac = StellarAssetContract.NativeXLM({
   networkConfig: NetworkConfig.TestNet(),
 });
-
-// The contract ID is automatically calculated
-console.log("Contract ID:", sac.contractId);
 ```
 
-## Deploying the Contract
+### Constructor Form
 
-Before using the SAC, it must be deployed on the network. This operation creates the Stellar Asset Contract for the classic asset:
+You can also instantiate directly:
 
-```typescript
-import { LocalSigner } from "@colibri/core";
-
-const signer = LocalSigner.fromSecret("SXXX...");
-
-await sac.deploy({
-  fee: "10000000",
-  timeout: 30,
-  source: signer.publicKey(),
-  signers: [signer],
+```ts
+const sac = new StellarAssetContract({
+  networkConfig: NetworkConfig.TestNet(),
+  contractId: "CBI...",
 });
-
-console.log("SAC deployed successfully!");
 ```
 
-{% hint style="info" %}
-If the contract has already been deployed, `deploy()` will detect the existing contract and return successfully without throwing an error.
-{% endhint %}
+## Deploying A SAC
 
-## Reading Token Information
+The deployment flow is a static factory that returns a ready client:
 
-### Metadata
+```ts
+import { LocalSigner, NetworkConfig, StellarAssetContract } from "@colibri/core";
 
-```typescript
-// Get token decimals (always 7 for SAC)
+const signer = LocalSigner.fromSecret("S...");
+
+const sac = await StellarAssetContract.deploy({
+  networkConfig: NetworkConfig.TestNet(),
+  code: "USDC",
+  issuer: "GCNY5OXYSY4FKHOPT2SPOQZAOEIGXB5LBYW3HVU3OWSTQITS65M5RCNY",
+  config: {
+    fee: "10000000",
+    timeout: 30,
+    source: signer.publicKey(),
+    signers: [signer],
+  },
+});
+```
+
+If the SAC already exists, deployment treats the existing contract id as a
+successful outcome as long as it matches the deterministic expected id.
+
+## Metadata Reads And Caching
+
+`StellarAssetContract` accepts optional runtime behavior under `options`.
+
+```ts
+const sac = StellarAssetContract.fromContractId({
+  networkConfig,
+  contractId,
+  options: {
+    cache: {
+      enabled: true,
+      ttl: 60_000,
+      cacheRejected: false,
+      evictOnExpiry: false,
+    },
+  },
+});
+```
+
+The cache policy currently applies to:
+
+- `decimals()`
+- `name()`
+- `symbol()`
+
+Example:
+
+```ts
 const decimals = await sac.decimals();
-console.log(decimals); // 7
-
-// Get token name (returns "CODE:ISSUER" format)
 const name = await sac.name();
-console.log(name); // "USDC:GCNY5OXYSY4FKHOPT2SPOQZAOEIGXB5LBYW3HVU3OWSTQITS65M5RCNY"
-
-// Get token symbol (asset code)
 const symbol = await sac.symbol();
-console.log(symbol); // "USDC"
 ```
 
-### Balances and Allowances
+## Common Read Methods
 
-```typescript
-// Check balance (returns bigint with 7 decimal places)
+```ts
 const balance = await sac.balance({ id: userAddress });
-// Prefer string formatting over Number(bigint) to avoid precision loss.
-import { toDecimals } from "@colibri/core";
-console.log(`Balance: ${toDecimals(balance, 7)} tokens`);
-
-// Check allowance
 const allowance = await sac.allowance({
   from: ownerAddress,
   spender: spenderAddress,
 });
-console.log(`Allowance: ${allowance}`);
-
-// Check authorization status
 const isAuthorized = await sac.authorized({ id: userAddress });
-console.log(`Authorized: ${isAuthorized}`);
-
-// Get current admin
 const admin = await sac.admin();
-console.log(`Admin: ${admin}`);
 ```
 
-## Token Operations
+## Common Write Methods
 
 ### Transfer
 
-Transfer tokens from one address to another:
-
-```typescript
+```ts
 await sac.transfer({
   from: senderAddress,
   to: recipientAddress,
-  amount: 100_0000000n, // 100 tokens (7 decimals)
-  config: {
-    fee: "10000000",
-    timeout: 30,
-    source: senderAddress,
-    signers: [senderSigner],
-  },
+  amount: 100_0000000n,
+  config,
 });
 ```
 
 ### Approve
 
-Set an allowance for delegated transfers:
-
-```typescript
-// Get current ledger for expiration calculation
-const rpc = new Server(networkConfig.rpcUrl);
-const currentLedger = (await rpc.getLatestLedger()).sequence;
-
+```ts
 await sac.approve({
   from: ownerAddress,
   spender: spenderAddress,
-  amount: 1000_0000000n, // 1000 tokens
-  expirationLedger: currentLedger + 1000, // ~83 minutes
-  config: {
-    fee: "10000000",
-    timeout: 30,
-    source: ownerAddress,
-    signers: [ownerSigner],
-  },
+  amount: 1000_0000000n,
+  expirationLedger: currentLedger + 1000,
+  config,
 });
 ```
 
-### Transfer From (Delegated)
+### Admin Operations
 
-Transfer tokens on behalf of another address using an allowance:
-
-```typescript
-await sac.transferFrom({
-  spender: spenderAddress,
-  from: ownerAddress,
-  to: recipientAddress,
-  amount: 50_0000000n, // 50 tokens
-  config: {
-    fee: "10000000",
-    timeout: 30,
-    source: spenderAddress,
-    signers: [spenderSigner],
-  },
-});
-```
-
-### Burn
-
-Destroy tokens (permanently remove from circulation):
-
-```typescript
-await sac.burn({
-  from: holderAddress,
-  amount: 100_0000000n,
-  config: {
-    fee: "10000000",
-    timeout: 30,
-    source: holderAddress,
-    signers: [holderSigner],
-  },
-});
-```
-
-### Burn From (Delegated)
-
-Burn tokens on behalf of another address:
-
-```typescript
-await sac.burnFrom({
-  spender: spenderAddress,
-  from: ownerAddress,
-  amount: 25_0000000n,
-  config: {
-    fee: "10000000",
-    timeout: 30,
-    source: spenderAddress,
-    signers: [spenderSigner],
-  },
-});
-```
-
-## Admin Operations
-
-Admin operations require the current admin's authorization (initially the asset issuer).
-
-### Mint
-
-Create new tokens:
-
-```typescript
+```ts
 await sac.mint({
   to: recipientAddress,
-  amount: 1_000_000_0000000n, // 1,000,000 tokens
-  config: {
-    fee: "10000000",
-    timeout: 30,
-    source: adminAddress,
-    signers: [adminSigner],
-  },
+  amount: 1_000_000_0000000n,
+  config,
 });
-```
 
-### Set Admin
-
-Transfer admin rights to a new address:
-
-```typescript
 await sac.setAdmin({
   newAdmin: newAdminAddress,
-  config: {
-    fee: "10000000",
-    timeout: 30,
-    source: currentAdminAddress,
-    signers: [currentAdminSigner],
-  },
+  config,
 });
 ```
 
-### Set Authorized
+## Advanced Usage With Plugins
 
-Enable or disable authorization for an address (for assets with `AUTH_REQUIRED` flag):
+SAC remains a composed high-level client. When you need pipeline-level control,
+attach plugins to the owned invoke pipeline:
 
-```typescript
-await sac.setAuthorized({
-  id: userAddress,
-  authorize: true, // or false to revoke
-  config: {
-    fee: "10000000",
-    timeout: 30,
-    source: adminAddress,
-    signers: [adminSigner],
-  },
-});
+```ts
+import { createChannelAccountsPlugin } from "@colibri/plugin-channel-accounts";
+
+sac.contract.invokePipe.use(createChannelAccountsPlugin({ channels }));
 ```
-
-### Clawback
-
-Recover tokens from an address (for assets with `AUTH_CLAWBACK_ENABLED` flag):
-
-```typescript
-await sac.clawback({
-  from: targetAddress,
-  amount: 500_0000000n,
-  config: {
-    fee: "10000000",
-    timeout: 30,
-    source: adminAddress,
-    signers: [adminSigner],
-  },
-});
-```
-
-## Method Reference
-
-### Read Methods
-
-| Method                         | Parameters | Returns   | Description                  |
-| ------------------------------ | ---------- | --------- | ---------------------------- |
-| `decimals()`                   | —          | `number`  | Returns decimals (always 7)  |
-| `name()`                       | —          | `string`  | Returns "CODE:ISSUER" format |
-| `symbol()`                     | —          | `string`  | Returns asset code           |
-| `balance({ id })`              | address    | `bigint`  | Returns balance              |
-| `allowance({ from, spender })` | addresses  | `bigint`  | Returns remaining allowance  |
-| `authorized({ id })`           | address    | `boolean` | Returns authorization status |
-| `admin()`                      | —          | `string`  | Returns admin address        |
-
-### Invoke Methods
-
-| Method                                                         | Parameters                        | Description        |
-| -------------------------------------------------------------- | --------------------------------- | ------------------ |
-| `approve({ from, spender, amount, expirationLedger, config })` | addresses, amount, ledger, config | Sets allowance     |
-| `transfer({ from, to, amount, config })`                       | addresses, amount, config         | Transfers tokens   |
-| `transferFrom({ spender, from, to, amount, config })`          | addresses, amount, config         | Delegated transfer |
-| `burn({ from, amount, config })`                               | address, amount, config           | Burns tokens       |
-| `burnFrom({ spender, from, amount, config })`                  | addresses, amount, config         | Delegated burn     |
-
-### Admin Methods
-
-| Method                                     | Parameters               | Description            |
-| ------------------------------------------ | ------------------------ | ---------------------- |
-| `setAdmin({ newAdmin, config })`           | address, config          | Transfers admin rights |
-| `setAuthorized({ id, authorize, config })` | address, boolean, config | Sets authorization     |
-| `mint({ to, amount, config })`             | address, amount, config  | Creates new tokens     |
-| `clawback({ from, amount, config })`       | address, amount, config  | Recovers tokens        |
-
-## Properties
-
-| Property     | Type               | Description                      |
-| ------------ | ------------------ | -------------------------------- |
-| `code`       | `string`           | The asset code                   |
-| `issuer`     | `Ed25519PublicKey` | The issuer's public key          |
-| `contractId` | `ContractId`       | The deterministic contract ID    |
-| `contract`   | `Contract`         | The underlying Contract instance |
 
 ## Errors
 
-| Code      | Class                   | Description                        |
-| --------- | ----------------------- | ---------------------------------- |
-| `SAC_001` | `FAILED_TO_WRAP_ASSET`  | Asset contract deployment failed   |
-| `SAC_002` | `UNMATCHED_CONTRACT_ID` | Deployed ID doesn't match expected |
-| `SAC_003` | `MISSING_RETURN_VALUE`  | Contract method returned no value  |
-
-```typescript
-import { SACError } from "@colibri/core";
-
-try {
-  await sac.deploy(config);
-} catch (error) {
-  if (error instanceof SACError.FAILED_TO_WRAP_ASSET) {
-    console.error("Deployment failed:", error.message);
-  }
-  if (error instanceof SACError.UNMATCHED_CONTRACT_ID) {
-    console.error("Expected:", error.meta.data.expected);
-    console.error("Received:", error.meta.data.deployed);
-  }
-}
-```
+| Code      | Class                        | Description                                  |
+| --------- | ---------------------------- | -------------------------------------------- |
+| `SAC_001` | `MISSING_ARG`                | Required SAC argument missing                |
+| `SAC_002` | `FAILED_TO_DEPLOY_CONTRACT`  | SAC deployment failed                        |
+| `SAC_003` | `UNMATCHED_CONTRACT_ID`      | Network returned a different contract id     |
+| `SAC_004` | `MISSING_RETURN_VALUE`       | Expected contract return value missing       |
 
 ## Notes
 
-- **Decimals**: All SACs use 7 decimal places, matching classic Stellar assets
-- **Amounts**: All amounts are `bigint` base units. Use `fromDecimals("100", 7)` / `toDecimals(amount, 7)` to convert safely
-- **Authorization**: The `from` address must sign/authorize most operations
-- **Admin**: Initially the asset issuer; can be transferred via `setAdmin`
-- **Deterministic IDs**: Contract IDs are deterministically derived from the asset and network
+- `isNativeXLM()` checks whether this SAC represents the native XLM asset
+- `decimals()` still reads from the contract instead of hardcoding the value,
+  which keeps the client consistent with on-chain behavior
+- the underlying `Contract` is exposed as `sac.contract` for advanced usage
 
-## See Also
+## Next Steps
 
-- [SEP-11](sep-11.md) — Asset string format
-- [Contract](../contract.md) — General contract interactions
-- [SEP-41](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0041.md) — Token interface spec
-- [CAP-0046-06](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0046-06.md) — SAC spec
+- [Contract](../contract.md) — Generic Soroban contract client
+- [SEP-11](sep-11.md) — Classic asset string utilities
+- [SAC Events](../../events/standardized-events/sac.md) — Event templates for
+  wrapped assets

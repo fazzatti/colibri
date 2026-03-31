@@ -1,6 +1,8 @@
 # Core Package Overview
 
-The `@colibri/core` package is the foundation of the Colibri toolkit. It provides all the essential primitives for building Stellar and Soroban applications.
+`@colibri/core` is the foundation package for the Colibri toolkit. It exposes
+the main clients, transaction configuration types, low-level process
+functions, step factories, built-in pipelines, event helpers, and tooling.
 
 ## Installation
 
@@ -8,63 +10,57 @@ The `@colibri/core` package is the foundation of the Colibri toolkit. It provide
 deno add jsr:@colibri/core
 ```
 
-## Architecture at a Glance
+## Architecture At A Glance
 
-The core package is organized around a few clear boundaries:
-
-- **Processes** are raw single-purpose functions such as `buildTransaction` and `sendTransaction`
-- **Steps** are `convee` wrappers with stable ids exposed under `steps`
-- **Pipelines** are composed flows such as `PIPE_InvokeContract`
-- **Auth** and **address** hold reusable domain logic that should not live in pipelines
-- **Errors** are typed and stable across all modules
+- **Processes** are raw single-purpose functions such as `buildTransaction`
+  and `sendTransaction`
+- **Steps** are `convee` wrappers with stable ids under `steps`
+- **Pipelines** are built with `create*Pipeline(...)` factory functions
+- **Clients** such as `Contract` and `StellarAssetContract` own those
+  pipelines internally
+- **Errors** are typed, stable, and source-aware
 
 ## Quick Import Examples
 
 ### Network Setup
 
-```typescript
+```ts
 import { NetworkConfig, NetworkProviders } from "@colibri/core";
 
-// Use built-in defaults
 const testnet = NetworkConfig.TestNet();
-const mainnet = NetworkConfig.MainNet();
-
-// Use a specific provider (with archive support)
 const lightsail = NetworkProviders.Lightsail.MainNet();
 ```
 
 ### Account Management
 
-```typescript
-import { NativeAccount, LocalSigner } from "@colibri/core";
+```ts
+import { LocalSigner, NativeAccount } from "@colibri/core";
 
-// From address
-const account = NativeAccount.fromAddress("GABC...");
-
-// From signer
 const signer = LocalSigner.fromSecret("S...");
-const signableAccount = NativeAccount.fromMasterSigner(signer);
+const account = NativeAccount.fromMasterSigner(signer);
 ```
 
 ### Transaction Pipelines
 
-```typescript
-import { PIPE_InvokeContract, LocalSigner, NetworkConfig } from "@colibri/core";
+```ts
+import {
+  createInvokeContractPipeline,
+  LocalSigner,
+  NetworkConfig,
+} from "@colibri/core";
 import { Operation } from "stellar-sdk";
 
 const network = NetworkConfig.TestNet();
 const signer = LocalSigner.fromSecret("S...");
 
-// Create and run the pipeline
-const pipeline = PIPE_InvokeContract.create({ networkConfig: network });
+const pipeline = createInvokeContractPipeline({ networkConfig: network });
+
 const result = await pipeline.run({
   operations: [
     Operation.invokeContractFunction({
       contract: "CABC...",
       function: "transfer",
-      args: [
-        /* ScVal args */
-      ],
+      args: [],
     }),
   ],
   config: {
@@ -76,129 +72,91 @@ const result = await pipeline.run({
 });
 ```
 
+### High-Level Clients
+
+```ts
+import { Contract, NetworkConfig, StellarAssetContract } from "@colibri/core";
+
+const network = NetworkConfig.TestNet();
+
+const contract = new Contract({
+  networkConfig: network,
+  contractConfig: { contractId: "CABC..." },
+});
+
+const sac = StellarAssetContract.fromContractId({
+  networkConfig: network,
+  contractId: "CBI...",
+});
+```
+
 ### Event Parsing
 
-```typescript
-import { SACEvents, EventFilter, EventType } from "@colibri/core";
+```ts
+import { EventFilter, EventType, SACEvents } from "@colibri/core";
 
-// Create a filter for transfer events
 const filter = new EventFilter({
   contractIds: ["C..."],
   type: EventType.Contract,
   topics: [SACEvents.TransferEvent.toTopicFilter()],
 });
 
-// Parse a raw event into a typed object
 const transfer = SACEvents.TransferEvent.fromEvent(rawEvent);
 console.log(transfer.from, transfer.to, transfer.amount);
 ```
 
-### Ledger Parsing
-
-```typescript
-import { Ledger } from "@colibri/core";
-
-// Parse ledger data from RPC response
-const response = await rpc.getLedgers({
-  startLedger: 1000,
-  pagination: { limit: 1 },
-});
-const ledger = Ledger.fromEntry(response.ledgers[0]);
-
-console.log(`Ledger ${ledger.sequence} (version: ${ledger.version})`);
-console.log(`Transactions: ${ledger.transactions.length}`);
-
-// Access transaction details
-for (const tx of ledger.transactions) {
-  console.log(`TX ${tx.hash}: ${tx.operationCount} operations`);
-  for (const op of tx.operations) {
-    console.log(`  - ${op.type}`);
-  }
-}
-```
-
-### Error Handling
-
-```typescript
-import { ColibriError } from "@colibri/core";
-
-// All pipeline operations can throw ColibriError
-try {
-  const result = await pipeline.run({...});
-  console.log("TX Hash:", result.hash);
-} catch (error) {
-  if (error instanceof ColibriError) {
-    // Handle specific error codes
-    console.log("Error code:", error.code);
-    console.log("Details:", error.details);
-  }
-}
-```
-
 ## Type Exports
 
-The core package exports both runtime values and types:
+`@colibri/core` exports both runtime values and type-only symbols:
 
-```typescript
-// Runtime exports
+```ts
 import {
-  NetworkConfig,
-  LocalSigner,
-  NativeAccount,
+  Contract,
   EventFilter,
+  LocalSigner,
+  NetworkConfig,
   SACEvents,
-  Ledger,
-  PIPE_InvokeContract,
+  createInvokeContractPipeline,
   steps,
-  address,
-  auth,
 } from "@colibri/core";
 
-// Type-only exports
 import type {
-  Ed25519PublicKey,
-  Ed25519SecretKey,
   ContractId,
+  Ed25519PublicKey,
+  MemoizePolicy,
   Signer,
-  NetworkType,
-  EventHandler,
+  TransactionConfig,
 } from "@colibri/core";
 ```
 
 ## Error Handling
 
-Colibri uses a structured error system with unique codes:
-
-```typescript
+```ts
 import { ColibriError } from "@colibri/core";
 
 try {
-  const result = await pipeline.run({...});
+  await contract.invoke({ method, methodArgs, config });
 } catch (error) {
   if (error instanceof ColibriError) {
-    console.log("Code:", error.code);       // e.g., "BTX_003"
-    console.log("Source:", error.source);   // e.g., "@colibri/core/processes/build-transaction"
-    console.log("Message:", error.message);
-    console.log("Details:", error.details);
+    console.log(error.code);
+    console.log(error.source);
+    console.log(error.details);
   }
 }
 ```
 
-## Processes, Steps, and Pipelines
+## Choosing A Layer
 
-Most transaction flows use the same progression:
-
-- call raw process functions when you need isolated behavior
-- use `steps` when you need stable orchestration ids or plugin targets
-- use `PIPE_*` factories when you want the end-to-end flows Colibri ships with
-
-This keeps business logic in plain functions while leaving `convee` details at the orchestration boundary.
+- use high-level clients when you want ergonomics and a stable object-oriented
+  interface
+- use `create*Pipeline(...)` when you want to attach plugins or own the flow
+- use `steps` when you need stable orchestration ids
+- use raw processes when you want isolated single-purpose behavior
 
 ## Next Steps
 
-- [Error Handling](error.md) — Understand the error system
-- [Pipelines](pipelines/README.md) — Build transaction workflows
-- [Steps](steps.md) — See the orchestration wrappers and stable ids
-- [Processes](processes/README.md) — Work with the raw building blocks
-- [Events Overview](../events/overview.md) — Parse and filter contract events
-- [RPC Streamer](../packages/rpc-streamer.md) — Stream ledgers and events
+- [Contract](contract.md) — High-level Soroban client
+- [Stellar Asset Contract](asset/stellar-asset-contract.md) — SAC-specific
+  client
+- [Pipelines](pipelines/README.md) — Built-in write and read flows
+- [Error Handling](error.md) — Typed error model

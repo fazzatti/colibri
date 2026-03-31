@@ -1,106 +1,94 @@
 # Installation
 
-Colibri packages are published to [JSR](https://jsr.io/) (JavaScript Registry)
-and designed for the Deno runtime.
+Colibri packages are published on [JSR](https://jsr.io/) and are designed for
+Deno-first TypeScript projects.
 
 ## Prerequisites
 
-- [Deno](https://deno.land/) v2.0 or later
+- [Deno](https://deno.land/) `v2.0` or later
 - A reachable Docker daemon such as Docker Desktop or OrbStack if you plan to
   use `@colibri/test-tooling`
 
 ## Installing Packages
 
-### Using Deno
-
-Add packages directly to your project using `deno add`:
+### Using `deno add`
 
 ```bash
-# Core package (required)
+# Core package
 deno add jsr:@colibri/core
 
-# SEP-10 authentication (optional)
+# Optional packages
 deno add jsr:@colibri/sep10
-
-# RPC Streamer (optional)
 deno add jsr:@colibri/rpc-streamer
-
-# Test Tooling (optional, for Docker-backed integration tests)
 deno add jsr:@colibri/test-tooling
-
-# Fee Bump Plugin (optional)
 deno add jsr:@colibri/plugin-fee-bump
+deno add jsr:@colibri/plugin-channel-accounts
 ```
 
-This will add the packages to your `deno.json` imports map:
+This will add imports similar to:
 
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^0.17.3",
-    "@colibri/sep10": "jsr:@colibri/sep10@^0.5.2",
-    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.2.3",
+    "@colibri/core": "jsr:@colibri/core@^0.18.0",
+    "@colibri/sep10": "jsr:@colibri/sep10@^0.5.3",
+    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.2.4",
     "@colibri/test-tooling": "jsr:@colibri/test-tooling@^0.3.0",
-    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.9.2"
+    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.9.3",
+    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^0.1.0"
   }
 }
 ```
 
-### Direct Import
+### Direct JSR Imports
 
-You can also import directly from JSR URLs:
-
-```typescript
-import { LocalSigner, NetworkConfig } from "jsr:@colibri/core@^0.17.3";
-import { RPCStreamer } from "jsr:@colibri/rpc-streamer@^0.2.3";
-import { StellarTestLedger } from "jsr:@colibri/test-tooling@^0.3.0";
+```ts
+import { Contract, NetworkConfig } from "jsr:@colibri/core";
+import { RPCStreamer } from "jsr:@colibri/rpc-streamer";
+import { StellarTestLedger } from "jsr:@colibri/test-tooling";
 ```
 
 ## Package Overview
 
 ### [@colibri/core](../core/overview.md)
 
-The foundation package containing all core primitives for Stellar and Soroban
-development: account management, contract client, network configuration,
-transaction pipelines and processes, event parsing, signers, and typed error
-handling.
+The main toolkit package. It includes account helpers, contract clients,
+transaction config types, typed errors, process functions, step factories, and
+the built-in pipeline factories such as `createInvokeContractPipeline(...)`.
 
 ### [@colibri/rpc-streamer](../packages/rpc-streamer.md)
 
-Generic RPC streaming framework for real-time and historical data ingestion
-(events, ledgers, or custom data types) with support for live streaming, archive
-fetching, and automatic mode switching.
+Streaming helpers for live and historical Stellar RPC ingestion.
 
 ### [@colibri/sep10](../packages/sep10.md)
 
-SEP-10 Web Authentication helpers for fetching challenge transactions, signing
-them, and exchanging them for JWTs.
+SEP-10 Web Authentication helpers for challenge fetching, signing, and token
+exchange.
 
 ### [@colibri/test-tooling](../packages/test-tooling.md)
 
-Docker-backed integration test helpers centered on `StellarTestLedger`, a
-harness for managing Stellar Quickstart ledgers in automated tests.
+Docker-backed integration helpers centered on `StellarTestLedger`.
 
-### [Plugins](../packages/plugins/)
+### [Plugins](../packages/plugins/README.md)
 
-Use case-specific plugins extend pipeline step behavior. Each plugin is
-published as its own package:
+Plugins extend pipeline step behavior for specific use cases:
 
-| Plugin                                      | Package                    | Description                                       |
-| ------------------------------------------- | -------------------------- | ------------------------------------------------- |
-| [Fee Bump](../packages/plugins/fee-bump.md) | `@colibri/plugin-fee-bump` | Wrap transactions for third-party fee sponsorship |
+| Plugin                                                        | Package                              | Description                                       |
+| ------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------- |
+| [Fee Bump](../packages/plugins/fee-bump.md)                   | `@colibri/plugin-fee-bump`           | Wrap outgoing transactions in a fee-bump envelope |
+| [Channel Accounts](../packages/plugins/channel-accounts.md)   | `@colibri/plugin-channel-accounts`   | Reuse sponsored channel accounts across write runs |
 
 ## Stellar SDK Dependency
 
-Colibri uses `@stellar/stellar-sdk` internally. You may need to import it
-directly for certain operations:
+Colibri stays close to `@stellar/stellar-sdk`, and many advanced flows still
+use SDK values directly:
 
-```typescript
-import { Keypair, xdr } from "npm:@stellar/stellar-sdk";
+```ts
+import { Operation, xdr } from "npm:@stellar/stellar-sdk";
 ```
 
-The SDK is re-exported through Colibri where needed, but for advanced XDR
-manipulation, you may want to add it explicitly:
+If you need low-level XDR manipulation or raw operation construction, add the
+SDK explicitly:
 
 ```bash
 deno add npm:@stellar/stellar-sdk
@@ -108,5 +96,5 @@ deno add npm:@stellar/stellar-sdk
 
 ## Next Steps
 
-- [Quick Start](quick-start.md) — Build your first transaction
-- [Architecture Overview](architecture.md) — Understand the design principles
+- [Quick Start](quick-start.md) — Build your first Soroban interaction
+- [Architecture Overview](architecture.md) — Understand the Colibri layers

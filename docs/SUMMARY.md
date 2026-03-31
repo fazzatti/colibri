@@ -62,6 +62,7 @@
 
 - [Plugins](packages/plugins/README.md)
   - [Fee Bump](packages/plugins/fee-bump.md)
+  - [Channel Accounts](packages/plugins/channel-accounts.md)
 
 ## Examples
 

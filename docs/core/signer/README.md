@@ -1,97 +1,76 @@
 # Signer
 
-The Signer module defines `Signer`—the standard interface used throughout Colibri for transaction and authorization signing. By defining a clear interface, anyone can build custom signers and key handling tools that integrate seamlessly with Colibri's pipelines and raw process functions.
+The Signer module defines `Signer`, the shared contract Colibri uses for
+transaction signing, auth-entry signing, and detached signature workflows.
 
 ## Signer Interface
 
-All signers in Colibri implement the `Signer` interface:
-
-```typescript
+```ts
 type Signer = {
-  /** Returns the public key for this signer */
   publicKey(): Ed25519PublicKey;
-
-  /** Signs arbitrary data and returns the signature as a Buffer */
-  sign(data: Buffer): Buffer;
-
-  /** Signs a transaction and returns its XDR string */
+  sign(data: Uint8Array): Uint8Array;
   signTransaction(
-    tx: Transaction | FeeBumpTransaction
+    tx: SignableTransaction,
   ): Promise<TransactionXDRBase64> | TransactionXDRBase64;
-
-  /** Signs a Soroban authorization entry */
   signSorobanAuthEntry(
-    authEntry: xdr.SorobanAuthorizationEntry,
+    authEntry: SorobanAuthorizationEntryLike,
     validUntilLedgerSeq: number,
-    networkPassphrase: string
-  ): Promise<xdr.SorobanAuthorizationEntry>;
-
-  /** Returns true if this signer can sign for the given target */
+    networkPassphrase: string,
+  ): Promise<SorobanAuthorizationEntryLike>;
   signsFor(target: Ed25519PublicKey | ContractId): boolean;
 };
 ```
 
 ## Using Signers
 
-Pass signers to pipelines via the `TransactionConfig`:
+Pass signers through `TransactionConfig`:
 
-```typescript
-import { PIPE_InvokeContract, NetworkConfig } from "@colibri/core";
+```ts
+import {
+  createInvokeContractPipeline,
+  NetworkConfig,
+} from "@colibri/core";
 
 const networkConfig = NetworkConfig.TestNet();
-const pipeline = PIPE_InvokeContract.create({ networkConfig });
+const pipeline = createInvokeContractPipeline({ networkConfig });
+
 const result = await pipeline.run({
-  operations: [...],
+  operations,
   config: {
     source: signer.publicKey(),
     fee: "100000",
     timeout: 30,
-    signers: [signer], // Signer handles both TX and auth signing
+    signers: [signer],
   },
 });
 ```
 
-## Multiple Signers
-
-For multi-signature transactions, pass multiple signers:
-
-```typescript
-config: {
-  source: signer1.publicKey(),
-  fee: "100000",
-  timeout: 30,
-  signers: [signer1, signer2], // Both signers will be used
-}
-```
-
 ## Implementing Custom Signers
 
-For hardware wallets, custodial services, or custom signing flows, implement the `Signer` interface:
-
-```typescript
+```ts
 class CustomSigner implements Signer {
   publicKey(): Ed25519PublicKey {
-    // Return the public key
+    throw new Error("Implement me");
   }
 
-  sign(data: Buffer): Buffer {
-    // Sign arbitrary data
+  sign(data: Uint8Array): Uint8Array {
+    throw new Error("Implement me");
   }
 
-  signTransaction(tx: Transaction | FeeBumpTransaction): TransactionXDRBase64 {
-    // Sign and return XDR
+  signTransaction(tx: SignableTransaction): TransactionXDRBase64 {
+    throw new Error("Implement me");
   }
 
   async signSorobanAuthEntry(
-    entry: xdr.SorobanAuthorizationEntry,
-    validUntil: number,
-    passphrase: string
-  ): Promise<xdr.SorobanAuthorizationEntry> {
-    // Sign Soroban auth entry
+    authEntry: SorobanAuthorizationEntryLike,
+    validUntilLedgerSeq: number,
+    networkPassphrase: string,
+  ): Promise<SorobanAuthorizationEntryLike> {
+    throw new Error("Implement me");
   }
 
   signsFor(target: Ed25519PublicKey | ContractId): boolean {
-    // Return true if this signer can sign for the target
+    throw new Error("Implement me");
   }
 }
 ```
@@ -100,10 +79,9 @@ class CustomSigner implements Signer {
 
 | Signer                         | Description                             |
 | ------------------------------ | --------------------------------------- |
-| [LocalSigner](local-signer.md) | Simple in-memory signer for convenience |
+| [LocalSigner](local-signer.md) | In-memory signer for development/testing |
 
 ## Next Steps
 
-- [LocalSigner](local-signer.md) — Built-in in-memory signer
-- [TransactionConfig](transaction-config.md) — Configuration that includes signers
-- [Pipelines](../pipelines/README.md) — Use signers in transaction workflows
+- [LocalSigner](local-signer.md) — Built-in signer implementation
+- [Transaction Config](../transaction-config.md) — Where signers are supplied

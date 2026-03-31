@@ -1,34 +1,31 @@
 # Classic Transaction Pipeline
 
-For classic Stellar operations (payments, account creation, etc.).
+`createClassicTransactionPipeline(...)` is the built-in write pipeline for
+classic Stellar operations such as payments, trustlines, and account settings.
 
 ## Composition
 
-This pipeline uses step wrappers around the following raw processes:
+This pipeline uses:
 
-1. [buildTransaction](../processes/build-transaction.md) — Creates the transaction
-2. [envelopeSigningRequirements](../processes/envelope-signing-requirements.md) — Determines required signatures
-3. [signEnvelope](../processes/sign-envelope.md) — Signs the transaction
-4. [sendTransaction](../processes/send-transaction.md) — Submits and waits for confirmation
-
-Between those steps, Colibri uses shared connectors to adapt pipeline input, signing requirements, and final output.
+1. [BuildTransaction](../processes/build-transaction.md)
+2. [EnvelopeSigningRequirements](../processes/envelope-signing-requirements.md)
+3. [SignEnvelope](../processes/sign-envelope.md)
+4. [SendTransaction](../processes/send-transaction.md)
 
 ## Usage
 
-```typescript
+```ts
 import {
-  PIPE_ClassicTransaction,
+  createClassicTransactionPipeline,
   LocalSigner,
   NetworkConfig,
 } from "@colibri/core";
-import { Operation, Asset } from "stellar-sdk";
+import { Asset, Operation } from "stellar-sdk";
 
 const signer = LocalSigner.fromSecret("S...");
 const network = NetworkConfig.TestNet();
 
-const pipeline = PIPE_ClassicTransaction.create({
-  networkConfig: network,
-});
+const pipeline = createClassicTransactionPipeline({ networkConfig: network });
 
 const result = await pipeline.run({
   operations: [
@@ -46,15 +43,12 @@ const result = await pipeline.run({
   },
 });
 
-console.log("Payment sent! TX:", result.hash);
+console.log(result.hash);
 ```
 
-## When to Use
+## Typical Use Cases
 
-Use this pipeline for classic Stellar operations:
-
-- Payments
-- Account creation
-- Trustline management
-- Offers and DEX operations
-- Account settings changes
+- payments
+- account creation
+- trustline and option changes
+- classic transactions that benefit from plugins such as channel accounts

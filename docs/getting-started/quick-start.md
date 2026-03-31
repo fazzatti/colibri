@@ -1,10 +1,9 @@
 # Quick Start
 
-This guide walks you through building and submitting your first Soroban contract invocation with Colibri.
+This guide walks through a first Soroban call using Colibri's high-level
+`Contract` client, then shows the equivalent pipeline-level flow.
 
 ## Setup
-
-First, make sure you have [installed](installation.md) the core package:
 
 ```bash
 deno add jsr:@colibri/core
@@ -12,38 +11,29 @@ deno add jsr:@colibri/core
 
 ## Your First Contract Call
 
-Let's invoke a simple contract method on TestNet using the `Contract` class:
-
-```typescript
+```ts
 import {
-  NetworkConfig,
-  LocalSigner,
   Contract,
   initializeWithFriendbot,
+  LocalSigner,
+  NetworkConfig,
 } from "@colibri/core";
 
-// 1. Configure the network
 const network = NetworkConfig.TestNet();
-
-// 2. Create a new random signer (or use an existing secret key)
 const signer = LocalSigner.generateRandom();
-console.log("Public Key:", signer.publicKey());
 
-// 3. Fund the account on TestNet using Friendbot
 await initializeWithFriendbot(network.friendbotUrl, signer.publicKey(), {
   rpcUrl: network.rpcUrl,
+  allowHttp: network.allowHttp,
 });
-console.log("Account funded!");
 
-// 4. Create a contract instance
-const contract = Contract.create({
+const contract = new Contract({
   networkConfig: network,
   contractConfig: {
     contractId: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
   },
 });
 
-// 5. Invoke a contract method
 const result = await contract.invoke({
   method: "hello",
   methodArgs: { to: "World" },
@@ -55,47 +45,42 @@ const result = await contract.invoke({
   },
 });
 
-// 6. Handle the result
-console.log("✅ Transaction successful!");
-console.log("   Hash:", result.hash);
-console.log("   Return Value:", result.returnValue);
+console.log("Transaction hash:", result.hash);
+console.log("Return value:", result.returnValue);
 ```
 
 ## Using Pipelines Directly
 
-For more control, use the pipeline API directly:
+Use a pipeline directly when you want to attach plugins or orchestrate the flow
+yourself:
 
-```typescript
+```ts
 import {
-  NetworkConfig,
-  LocalSigner,
-  PIPE_InvokeContract,
+  createInvokeContractPipeline,
   initializeWithFriendbot,
+  LocalSigner,
+  NetworkConfig,
 } from "@colibri/core";
 import { Operation } from "stellar-sdk";
 
-// Configure network and signer
 const network = NetworkConfig.TestNet();
 const signer = LocalSigner.generateRandom();
+
 await initializeWithFriendbot(network.friendbotUrl, signer.publicKey(), {
   rpcUrl: network.rpcUrl,
+  allowHttp: network.allowHttp,
 });
 
-// Create the pipeline
-const pipeline = PIPE_InvokeContract.create({
+const pipeline = createInvokeContractPipeline({
   networkConfig: network,
 });
 
-// Build the operation
 const operation = Operation.invokeContractFunction({
   contract: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
   function: "hello",
-  args: [
-    /* ScVal arguments */
-  ],
+  args: [],
 });
 
-// Run the pipeline
 const result = await pipeline.run({
   operations: [operation],
   config: {
@@ -106,26 +91,21 @@ const result = await pipeline.run({
   },
 });
 
-console.log("TX Hash:", result.hash);
+console.log(result.hash);
 ```
 
 ## Reading Contract State
 
-To read data from a contract without submitting a transaction:
-
-```typescript
+```ts
 import { Contract, NetworkConfig } from "@colibri/core";
 
-const network = NetworkConfig.TestNet();
-
-const contract = Contract.create({
-  networkConfig: network,
+const contract = new Contract({
+  networkConfig: NetworkConfig.TestNet(),
   contractConfig: {
     contractId: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
   },
 });
 
-// Read-only call (no transaction needed)
 const count = await contract.read({
   method: "get_count",
   methodArgs: {},
@@ -134,70 +114,67 @@ const count = await contract.read({
 console.log("Current count:", count);
 ```
 
-## Streaming Events
+## Adding A Plugin
 
-To listen for contract events in real-time:
+Pipelines can be extended with plugins such as fee sponsorship:
 
-```typescript
-import { RPCStreamer } from "@colibri/rpc-streamer";
-import { EventFilter, EventType, NetworkConfig, SACEvents } from "@colibri/core";
+```ts
+import {
+  createInvokeContractPipeline,
+  LocalSigner,
+  NetworkConfig,
+} from "@colibri/core";
+import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
 
 const network = NetworkConfig.TestNet();
+const sponsor = LocalSigner.fromSecret("S_SPONSOR...");
 
-// Create a filter for transfer events
-const filter = new EventFilter({
-  contractIds: ["CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA"],
-  type: EventType.Contract,
-  topics: [SACEvents.TransferEvent.toTopicFilter()],
-});
-
-// Create the streamer
-const streamer = RPCStreamer.event({
-  rpcUrl: network.rpcUrl,
-  filters: [filter],
-});
-
-// Start streaming
-await streamer.start((event) => {
-  const transfer = SACEvents.TransferEvent.fromEvent(event);
-  console.log(
-    `Transfer: ${transfer.from} → ${transfer.to}: ${transfer.amount}`,
-  );
-});
+const pipeline = createInvokeContractPipeline({ networkConfig: network });
+pipeline.use(
+  createFeeBumpPlugin({
+    networkConfig: network,
+    feeBumpConfig: {
+      source: sponsor.publicKey(),
+      fee: "1000000",
+      signers: [sponsor],
+    },
+  }),
+);
 ```
 
-## Understanding Error Handling
+High-level clients also expose the owned pipes when you need this:
 
-Colibri uses typed errors that extend `ColibriError`. Each error includes:
+```ts
+contract.invokePipe.use(plugin);
+```
 
-- `code` — Unique error code (e.g., `BTX_003`, `SIM_001`)
-- `message` — Human-readable message
-- `details` — Additional context
-- `diagnostic` — Suggestions and references (when available)
-- `meta.cause` — Original error if wrapped
+## Understanding Errors
 
-```typescript
+Colibri uses typed errors that extend `ColibriError`.
+
+```ts
 import { ColibriError } from "@colibri/core";
 
 try {
-  const result = await pipeline.run({...});
-  console.log("Success:", result.hash);
+  await contract.invoke({
+    method: "hello",
+    methodArgs: { to: "World" },
+    config,
+  });
 } catch (error) {
   if (error instanceof ColibriError) {
-    console.error("Error Code:", error.code);
-    console.error("Message:", error.message);
-    console.error("Details:", error.details);
-
-    if (error.diagnostic) {
-      console.error("Suggestion:", error.diagnostic.suggestion);
-    }
+    console.error(error.code);
+    console.error(error.message);
+    console.error(error.details);
   }
 }
 ```
 
 ## Next Steps
 
-- [Architecture Overview](architecture.md) — Understand pipelines, processes, and error handling
-- [Contract](../core/contract.md) — Deep dive into contract interactions
-- [Pipelines](../core/pipelines/README.md) — Learn about transaction pipelines
-- [Events](../events/overview.md) — Learn about event parsing and streaming
+- [Architecture Overview](architecture.md) — Understand processes, steps,
+  pipelines, and plugins
+- [Contract](../core/contract.md) — High-level contract client details
+- [Pipelines](../core/pipelines/README.md) — Built-in transaction workflows
+- [Plugins](../packages/plugins/README.md) — Attach optional behavior to write
+  flows

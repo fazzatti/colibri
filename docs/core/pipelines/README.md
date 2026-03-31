@@ -1,35 +1,48 @@
 # Pipelines
 
-Pipelines combine [processes](../processes/) with step wrappers and connectors into reusable workflows. They are built on [`convee`](https://jsr.io/@fifo/convee) and expose `PIPE_*` factories such as `PIPE_InvokeContract`.
+Pipelines combine [processes](../processes/README.md), step wrappers, and
+connectors into reusable transaction workflows. They are built on
+[`convee`](https://jsr.io/@fifo/convee).
 
-Each pipeline typically includes:
+Colibri exposes factory functions instead of wrapper objects:
 
-- **Input connectors** that normalize pipeline input into a process-friendly shape
-- **Step wrappers** around raw processes such as `buildTransaction` and `sendTransaction`
-- **Shared connectors** under `core/pipelines/shared/connectors`
-- **Pipeline-specific connectors** kept next to the owning pipeline
+- `createInvokeContractPipeline(...)`
+- `createReadFromContractPipeline(...)`
+- `createClassicTransactionPipeline(...)`
+
+Each pipeline also exports a stable `*_PIPELINE_ID` constant.
+
+## Common Structure
+
+Each built-in pipeline typically includes:
+
+- input connectors that normalize the public input shape
+- step wrappers around raw processes such as `buildTransaction` and
+  `sendTransaction`
+- shared connectors from `core/pipelines/shared/connectors`
+- pipeline-specific connectors beside the owning pipeline
 
 ## Plugins
 
 Plugins target a specific step id and are attached with `pipeline.use(...)`:
 
-```typescript
-import { PIPE_InvokeContract, NetworkConfig } from "@colibri/core";
-import { PLG_FeeBump } from "@colibri/plugin-fee-bump";
+```ts
+import { createInvokeContractPipeline, NetworkConfig } from "@colibri/core";
+import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
 
 const networkConfig = NetworkConfig.TestNet();
-const pipeline = PIPE_InvokeContract.create({ networkConfig });
+const pipeline = createInvokeContractPipeline({ networkConfig });
 
-const feeBumpPlugin = PLG_FeeBump.create({
-  networkConfig,
-  feeBumpConfig: {
-    source: sponsorAddress,
-    fee: "10000000",
-    signers: [sponsorSigner],
-  },
-});
-
-pipeline.use(feeBumpPlugin);
+pipeline.use(
+  createFeeBumpPlugin({
+    networkConfig,
+    feeBumpConfig: {
+      source: sponsorAddress,
+      fee: "10000000",
+      signers: [sponsorSigner],
+    },
+  }),
+);
 ```
 
-See [Plugins](../../packages/plugins/) for available plugins.
+For available plugins, see [Plugins](../../packages/plugins/README.md).

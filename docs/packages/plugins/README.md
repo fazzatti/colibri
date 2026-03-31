@@ -1,56 +1,51 @@
 # Plugins
 
-Plugins extend pipeline step behavior without modifying core logic. They let you inject custom functionality at specific orchestration points in a transaction flow.
+Plugins extend pipeline step behavior without modifying the core flow. They are
+attached with `pipeline.use(...)` and target stable step ids or pipeline ids.
 
-## How Plugins Work
+## Why Plugins?
 
-Plugins target a step id and wrap that step's lifecycle:
+Plugins are useful when you want to add behavior such as:
 
-```
-Pipe input → Step connector → [Plugin target step] → Step output
-```
-
-This architecture enables:
-
-- **Fee Coverage** — Wrap transactions with fee bumps so a separate account covers network fees
-- **Custom Signing** — Integrate hardware wallets or custodial signers
-- **Logging & Metrics** — Track transaction lifecycle events
-- **Validation** — Add custom checks before submission
+- fee sponsorship
+- channel-account source swapping
+- logging or metrics around a specific step
+- custom validation before submission
 
 ## Available Plugins
 
-| Plugin                  | Description                                      |
-| ----------------------- | ------------------------------------------------ |
-| [Fee Bump](fee-bump.md) | Wrap transactions so another account covers fees |
+| Plugin                                  | Description                                                   |
+| --------------------------------------- | ------------------------------------------------------------- |
+| [Fee Bump](fee-bump.md)                 | Wrap outgoing transactions in a fee-bump envelope             |
+| [Channel Accounts](channel-accounts.md) | Reuse sponsored channel accounts across classic/invoke writes |
 
-## Using Plugins
+## Using A Plugin
 
-Plugins are attached to a pipeline with `use(...)`:
-
-```typescript
-import { PIPE_InvokeContract, NetworkConfig } from "@colibri/core";
-import { PLG_FeeBump } from "@colibri/plugin-fee-bump";
+```ts
+import { createInvokeContractPipeline, NetworkConfig } from "@colibri/core";
+import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
 
 const networkConfig = NetworkConfig.TestNet();
-const pipeline = PIPE_InvokeContract.create({ networkConfig });
+const pipeline = createInvokeContractPipeline({ networkConfig });
 
-const plugin = PLG_FeeBump.create({
-  networkConfig,
-  feeBumpConfig: {
-    source: feeSourcePublicKey,
-    fee: "1000000",
-    signers: [feeSourceSigner],
-  },
-});
-
-pipeline.use(plugin);
+pipeline.use(
+  createFeeBumpPlugin({
+    networkConfig,
+    feeBumpConfig: {
+      source: feeSourcePublicKey,
+      fee: "1000000",
+      signers: [feeSourceSigner],
+    },
+  }),
+);
 ```
 
 ## Creating Custom Plugins
 
-Custom plugins are built with `convee` and target stable step ids exported by `@colibri/core`:
+Custom plugins are built with `convee` and target stable step ids from
+`@colibri/core`:
 
-```typescript
+```ts
 import { plugin } from "convee";
 import { steps } from "@colibri/core";
 

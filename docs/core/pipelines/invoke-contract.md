@@ -1,36 +1,32 @@
 # Invoke Contract Pipeline
 
-The most commonly used pipeline for Soroban contract interactions.
+`createInvokeContractPipeline(...)` is the main write pipeline for Soroban
+contract interactions.
 
 ## Composition
 
-This pipeline uses step wrappers around the following raw processes:
+This pipeline uses step wrappers around:
 
-1. [buildTransaction](../processes/build-transaction.md) — Creates the transaction
-2. [simulateTransaction](../processes/simulate-transaction.md) — Simulates to get resource estimates
-3. [signAuthEntries](../processes/sign-auth-entries.md) — Signs Soroban authorization entries
-4. [assembleTransaction](../processes/assemble-transaction.md) — Attaches simulation results
-5. [envelopeSigningRequirements](../processes/envelope-signing-requirements.md) — Determines required signatures
-6. [signEnvelope](../processes/sign-envelope.md) — Signs the transaction
-7. [sendTransaction](../processes/send-transaction.md) — Submits and waits for confirmation
+1. [BuildTransaction](../processes/build-transaction.md)
+2. [SimulateTransaction](../processes/simulate-transaction.md)
+3. [SignAuthEntries](../processes/sign-auth-entries.md)
+4. [AssembleTransaction](../processes/assemble-transaction.md)
+5. [EnvelopeSigningRequirements](../processes/envelope-signing-requirements.md)
+6. [SignEnvelope](../processes/sign-envelope.md)
+7. [SendTransaction](../processes/send-transaction.md)
 
-Shared and pipeline-specific connectors adapt the data between each step.
+## Creating The Pipeline
 
-## Creating the Pipeline
-
-```typescript
-import { PIPE_InvokeContract, NetworkConfig } from "@colibri/core";
+```ts
+import { createInvokeContractPipeline, NetworkConfig } from "@colibri/core";
 
 const network = NetworkConfig.TestNet();
-
-const pipeline = PIPE_InvokeContract.create({
-  networkConfig: network,
-});
+const pipeline = createInvokeContractPipeline({ networkConfig: network });
 ```
 
-## Running the Pipeline
+## Running The Pipeline
 
-```typescript
+```ts
 import { LocalSigner } from "@colibri/core";
 import { Operation } from "stellar-sdk";
 
@@ -41,9 +37,7 @@ const result = await pipeline.run({
     Operation.invokeContractFunction({
       contract: "CABC...",
       function: "transfer",
-      args: [
-        /* ScVal arguments */
-      ],
+      args: [],
     }),
   ],
   config: {
@@ -54,44 +48,12 @@ const result = await pipeline.run({
   },
 });
 
-console.log("TX Hash:", result.hash);
-console.log("Return Value:", result.returnValue);
+console.log(result.hash);
+console.log(result.returnValue);
 ```
 
-## Configuration
+## Typical Use Cases
 
-### TransactionConfig
-
-```typescript
-type TransactionConfig = {
-  source: Ed25519PublicKey;
-  fee: BaseFee;
-  timeout?: number;
-  signers: Signer[];
-  memo?: Memo;
-};
-```
-
-### Output
-
-```typescript
-type InvokeContractOutput = {
-  hash: string;
-  returnValue: xdr.ScVal | undefined;
-  response: Api.GetSuccessfulTransactionResponse;
-};
-```
-
-## Error Handling
-
-```typescript
-try {
-  const result = await pipeline.run({...});
-  console.log("Success:", result.hash);
-} catch (error) {
-  if (error instanceof ColibriError) {
-    console.log("Error code:", error.code);
-    console.log("Message:", error.message);
-  }
-}
-```
+- state-changing contract methods
+- flows where you want to attach plugins such as fee bump or channel accounts
+- lower-level orchestration beneath `Contract.invoke(...)`

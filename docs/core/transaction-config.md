@@ -1,8 +1,9 @@
 # Transaction Config
 
-`TransactionConfig` is the standard type used across all Colibri pipelines to configure transaction parameters. It's a well-defined type that any calling code can construct directly, making it easy to integrate Colibri into your application.
+`TransactionConfig` is the standard write-transaction configuration used across
+Colibri pipelines and high-level clients.
 
-```typescript
+```ts
 type TransactionConfig = {
   fee: BaseFee;
   source: Ed25519PublicKey;
@@ -17,23 +18,26 @@ type BaseFee = `${number}`;
 
 | Property  | Type               | Description                                        |
 | --------- | ------------------ | -------------------------------------------------- |
-| `fee`     | `BaseFee`          | Base fee in stroops as a string (e.g., `"100000"`) |
-| `source`  | `Ed25519PublicKey` | Source account public key (G...)                   |
+| `fee`     | `BaseFee`          | Base fee in stroops as a string                    |
+| `source`  | `Ed25519PublicKey` | Source account public key                          |
 | `timeout` | `number`           | Transaction timeout in seconds                     |
-| `signers` | `Signer[]`         | Array of signers to sign the transaction           |
-
-The `signers` array accepts any object implementing the [Signer](signer/README.md) interface, allowing you to integrate custom key management solutions.
+| `signers` | `Signer[]`         | Signers used for envelope and auth-entry signing   |
 
 ## Usage
 
-```typescript
-import { PIPE_InvokeContract, LocalSigner, NetworkConfig } from "@colibri/core";
+```ts
+import {
+  createInvokeContractPipeline,
+  LocalSigner,
+  NetworkConfig,
+} from "@colibri/core";
 import { Operation } from "stellar-sdk";
 
 const network = NetworkConfig.TestNet();
 const signer = LocalSigner.fromSecret("S...");
 
-const pipeline = PIPE_InvokeContract.create({ networkConfig: network });
+const pipeline = createInvokeContractPipeline({ networkConfig: network });
+
 const result = await pipeline.run({
   operations: [
     Operation.invokeContractFunction({
@@ -51,7 +55,17 @@ const result = await pipeline.run({
 });
 ```
 
+High-level clients use the same shape:
+
+```ts
+await contract.invoke({
+  method: "transfer",
+  methodArgs,
+  config,
+});
+```
+
 ## Next Steps
 
-- [Signer](signer/README.md) — Signer interface
-- [Pipelines](pipelines/README.md) — Use TransactionConfig in workflows
+- [Signer](signer/README.md) — Signer interface and implementations
+- [Pipelines](pipelines/README.md) — Write flows that accept `TransactionConfig`

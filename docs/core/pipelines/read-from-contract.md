@@ -1,47 +1,41 @@
 # Read From Contract Pipeline
 
-For read-only contract calls that don't modify state.
+`createReadFromContractPipeline(...)` is the read-only pipeline for contract
+calls that do not submit a transaction.
 
 ## Composition
 
-This pipeline uses step wrappers around:
+This pipeline uses:
 
-1. [buildTransaction](../processes/build-transaction.md) — Creates the transaction
-2. [simulateTransaction](../processes/simulate-transaction.md) — Simulates the operation
+1. [BuildTransaction](../processes/build-transaction.md)
+2. [SimulateTransaction](../processes/simulate-transaction.md)
 
-It then uses the shared `simulateToRetval` connector to return only the simulated contract value.
+The result is adapted through the shared `simulateToRetval` connector so the
+pipeline returns the simulated contract value directly.
 
 ## Usage
 
-```typescript
-import { PIPE_ReadFromContract, NetworkConfig } from "@colibri/core";
+```ts
+import { createReadFromContractPipeline, NetworkConfig } from "@colibri/core";
 import { Operation } from "stellar-sdk";
 
 const network = NetworkConfig.TestNet();
-
-const pipeline = PIPE_ReadFromContract.create({
-  networkConfig: network,
-});
+const pipeline = createReadFromContractPipeline({ networkConfig: network });
 
 const operation = Operation.invokeContractFunction({
   contract: "CABC...",
   function: "balance",
-  args: [
-    /* ScVal arguments */
-  ],
+  args: [],
 });
 
 const returnValue = await pipeline.run({
   operations: [operation],
 });
 
-console.log("Balance:", returnValue);
+console.log(returnValue);
 ```
 
-## When to Use
+## Typical Use Cases
 
-Use this pipeline when:
-
-- Reading contract state (balances, metadata, etc.)
-- No transaction submission is needed
-- You only need the simulated return value
+- reading balances, metadata, and configuration from Soroban contracts
+- low-level read orchestration beneath `Contract.read(...)`
