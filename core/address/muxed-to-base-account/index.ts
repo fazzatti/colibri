@@ -4,6 +4,7 @@ import * as E from "@/address/muxed-to-base-account/error.ts";
 import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
 import { StrKey } from "@/strkeys/index.ts";
 
+/** Converts a muxed address into its base Ed25519 account address. */
 export const muxedAddressToBaseAccount = (
   muxedAddress: MuxedAddress,
 ): Ed25519PublicKey => {

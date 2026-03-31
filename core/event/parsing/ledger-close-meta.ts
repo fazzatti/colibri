@@ -9,18 +9,21 @@ import * as E from "@/event/parsing/error.ts";
 import { assert } from "@/common/assert/assert.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
 
+/** Returns `true` when the metadata payload is version 1. */
 export const isLedgerCloseMetaV1 = (
   metadataXdr: xdr.LedgerCloseMeta,
 ): boolean => {
   return metadataXdr.switch() === 1;
 };
 
+/** Returns `true` when the metadata payload is version 2. */
 export const isLedgerCloseMetaV2 = (
   metadataXdr: xdr.LedgerCloseMeta,
 ): boolean => {
   return metadataXdr.switch() === 2;
 };
 
+/** Parses contract events from a ledger-close metadata payload. */
 export const parseEventsFromLedgerCloseMeta = async (
   metadataXdr: xdr.LedgerCloseMeta,
   onEvent: EventHandler,
@@ -124,6 +127,7 @@ export const parseEventsFromLedgerCloseMeta = async (
   }
 };
 
+/** Returns whether a parsed event should be included by the provided filters. */
 export const isIncludedInFilters = ({
   filters,
   contractId,

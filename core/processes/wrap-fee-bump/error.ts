@@ -1,6 +1,9 @@
 import type { WrapFeeBumpInput } from "@/processes/wrap-fee-bump/types.ts";
 import { ProcessError } from "@/processes/error.ts";
 
+/**
+ * Stable error codes emitted by the wrap-fee-bump process.
+ */
 export enum Code {
   UNEXPECTED_ERROR = "WFB_000",
 
@@ -13,14 +16,27 @@ export enum Code {
   FEE_TOO_LOW = "WFB_005",
 }
 
+/**
+ * Base class for wrap-fee-bump process errors.
+ */
 export abstract class WrapFeeBumpError extends ProcessError<
   Code,
   WrapFeeBumpInput
 > {
+  /** Source identifier for wrap-fee-bump failures. */
   override readonly source = "@colibri/core/processes/wrap-fee-bump";
 }
 
+/**
+ * Raised when wrapping a fee bump fails unexpectedly.
+ */
 export class UNEXPECTED_ERROR extends WrapFeeBumpError {
+  /**
+   * Creates an unexpected wrap-fee-bump error.
+   *
+   * @param input - Original process input.
+   * @param cause - Underlying unexpected error.
+   */
   constructor(input: WrapFeeBumpInput, cause: Error) {
     super({
       code: Code.UNEXPECTED_ERROR,
@@ -32,7 +48,16 @@ export class UNEXPECTED_ERROR extends WrapFeeBumpError {
   }
 }
 
+/**
+ * Raised when a required wrap-fee-bump input field is missing.
+ */
 export class MISSING_ARG extends WrapFeeBumpError {
+  /**
+   * Creates a missing-argument error.
+   *
+   * @param input - Original process input.
+   * @param argName - Missing argument name.
+   */
   constructor(input: WrapFeeBumpInput, argName: string) {
     super({
       code: Code.MISSING_ARG,
@@ -43,7 +68,15 @@ export class MISSING_ARG extends WrapFeeBumpError {
   }
 }
 
+/**
+ * Raised when the input transaction is already a fee-bump envelope.
+ */
 export class ALREADY_FEE_BUMP extends WrapFeeBumpError {
+  /**
+   * Creates an already-fee-bump error.
+   *
+   * @param input - Original process input.
+   */
   constructor(input: WrapFeeBumpInput) {
     super({
       code: Code.ALREADY_FEE_BUMP,
@@ -55,7 +88,15 @@ export class ALREADY_FEE_BUMP extends WrapFeeBumpError {
   }
 }
 
+/**
+ * Raised when the provided transaction is not a valid Stellar transaction.
+ */
 export class NOT_A_TRANSACTION extends WrapFeeBumpError {
+  /**
+   * Creates a transaction-shape validation error.
+   *
+   * @param input - Original process input.
+   */
   constructor(input: WrapFeeBumpInput) {
     super({
       code: Code.NOT_A_TRANSACTION,
@@ -67,7 +108,16 @@ export class NOT_A_TRANSACTION extends WrapFeeBumpError {
   }
 }
 
+/**
+ * Raised when the fee-bump envelope cannot be built.
+ */
 export class FAILED_TO_BUILD_FEE_BUMP extends WrapFeeBumpError {
+  /**
+   * Creates a fee-bump build error.
+   *
+   * @param input - Original process input.
+   * @param cause - Underlying build failure.
+   */
   constructor(input: WrapFeeBumpInput, cause: Error) {
     super({
       code: Code.FAILED_TO_BUILD_FEE_BUMP,
@@ -80,7 +130,15 @@ export class FAILED_TO_BUILD_FEE_BUMP extends WrapFeeBumpError {
   }
 }
 
+/**
+ * Raised when the provided fee-bump fee is too low.
+ */
 export class FEE_TOO_LOW extends WrapFeeBumpError {
+  /**
+   * Creates a low-fee validation error.
+   *
+   * @param input - Original process input.
+   */
   constructor(input: WrapFeeBumpInput) {
     super({
       code: Code.FEE_TOO_LOW,
@@ -91,6 +149,9 @@ export class FEE_TOO_LOW extends WrapFeeBumpError {
   }
 }
 
+/**
+ * Wrap-fee-bump error constructors indexed by stable code.
+ */
 export const ERROR_BY_CODE = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.ALREADY_FEE_BUMP]: ALREADY_FEE_BUMP,

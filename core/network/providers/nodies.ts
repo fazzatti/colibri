@@ -5,6 +5,7 @@
 
 import { NetworkConfig } from "@/network/index.ts";
 
+/** Nodies-backed network configuration presets. */
 export const Nodies = {
   MainNet: () =>
     NetworkConfig.MainNet({

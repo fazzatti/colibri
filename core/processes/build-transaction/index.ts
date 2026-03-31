@@ -8,6 +8,7 @@ import * as E from "@/processes/build-transaction/error.ts";
 import { Account, TransactionBuilder } from "stellar-sdk";
 import { assert } from "@/common/assert/assert.ts";
 
+/** Builds a transaction envelope from operations and transaction configuration. */
 export const buildTransaction = async (
   input: BuildTransactionInput
 ): Promise<BuildTransactionOutput> => {
@@ -165,4 +166,5 @@ const appendPreconditions = (
   return tx;
 };
 
-export { E as BuildTransactionErrors };
+/** Error constructors emitted by {@link buildTransaction}. */
+export const BuildTransactionErrors: typeof E = E;

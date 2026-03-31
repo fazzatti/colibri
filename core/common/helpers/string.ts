@@ -10,10 +10,12 @@ enum ErrorCode {
 
 const baseErrorSource = "@colibri/core/helpers";
 
+/** Returns `true` when the provided value is a string primitive or object. */
 export const isString = (val: unknown): val is string => {
   return typeof val === "string" || val instanceof String;
 };
 
+/** Returns `true` when the provided value is a non-empty, non-whitespace string. */
 export const isNonBlank = (val: unknown): val is string => {
   if (!isString(val)) {
     return false;
@@ -21,6 +23,7 @@ export const isNonBlank = (val: unknown): val is string => {
   return val.trim().length > 0;
 };
 
+/** Removes non-printable ASCII characters from a string. */
 export const dropNonPrintable = (val: string): string => {
   const fnTag = "Strings#dropNonPrintable()";
   isTruthy(isString(val), `${fnTag} Strings.isString(val)`);
@@ -29,6 +32,7 @@ export const dropNonPrintable = (val: string): string => {
 
 // Verifies that a string is indeed not a blank string.
 // Blank string can be one that only has whitespace characters for example.
+/** Asserts that a value is a non-blank string. */
 export const nonBlankString = (value: unknown, subject = "variable"): void => {
   if (typeof value !== "string" || value.trim().length === 0) {
     const message = `"${subject}" is a blank string. Need non-blank.`;

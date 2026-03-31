@@ -19,6 +19,7 @@ const alphanumeric = /^[a-zA-Z0-9]+$/;
 // DOMAIN REGEX
 const domain = /^(?!:\/\/)([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/;
 
+/** Common regular expressions used throughout Colibri validation helpers. */
 export const regex = {
   ed25519PublicKey,
   ed25519SecretKey,

@@ -1,11 +1,13 @@
 import { ColibriError } from "@/error/index.ts";
 import type { Diagnostic } from "@/error/types.ts";
 
+/** Metadata attached to event-parsing errors. */
 export type Meta = {
   cause: Error | null;
   data: unknown;
 };
 
+/** Constructor payload used by concrete event-parsing errors. */
 export type EventParsingErrorShape<Code extends string> = {
   code: Code;
   message: string;
@@ -15,10 +17,18 @@ export type EventParsingErrorShape<Code extends string> = {
   data: unknown;
 };
 
+/** Base error type for ledger-to-event parsing failures. */
 export abstract class EventParsingError extends ColibriError<Code, Meta> {
+  /** Stable source identifier for event parsing errors. */
   override readonly source = "@colibri/core/events/parsing";
+  /** Structured metadata attached to the error. */
   override readonly meta: Meta;
 
+  /**
+   * Creates a new event-parsing error.
+   *
+   * @param args Error construction payload.
+   */
   constructor(args: EventParsingErrorShape<Code>) {
     const meta = {
       cause: args.cause || null,
@@ -39,12 +49,15 @@ export abstract class EventParsingError extends ColibriError<Code, Meta> {
   }
 }
 
+/** Stable error codes emitted while parsing events from ledger metadata. */
 export enum Code {
   INVALID_LEDGER_CLOSE_META_XDR = "EVP_001",
   UNSUPPORTED_LEDGER_CLOSE_META_VERSION = "EVP_002",
 }
 
+/** Raised when ledger-close metadata cannot be decoded as XDR. */
 export class INVALID_LEDGER_CLOSE_META_XDR extends EventParsingError {
+  /** Creates the error. */
   constructor() {
     super({
       code: Code.INVALID_LEDGER_CLOSE_META_XDR,
@@ -56,7 +69,13 @@ export class INVALID_LEDGER_CLOSE_META_XDR extends EventParsingError {
   }
 }
 
+/** Raised when ledger-close metadata uses an unsupported version. */
 export class UNSUPPORTED_LEDGER_CLOSE_META_VERSION extends EventParsingError {
+  /**
+   * Creates the error.
+   *
+   * @param version Unsupported version number.
+   */
   constructor(version: number) {
     super({
       code: Code.UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
@@ -67,6 +86,7 @@ export class UNSUPPORTED_LEDGER_CLOSE_META_VERSION extends EventParsingError {
   }
 }
 
+/** Event-parsing error constructors indexed by stable code. */
 export const ERROR_EVP = {
   [Code.INVALID_LEDGER_CLOSE_META_XDR]: INVALID_LEDGER_CLOSE_META_XDR,
   [Code.UNSUPPORTED_LEDGER_CLOSE_META_VERSION]:

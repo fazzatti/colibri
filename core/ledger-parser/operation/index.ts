@@ -33,6 +33,7 @@ import type { Transaction } from "@/ledger-parser/transaction/index.ts";
  * ```
  */
 export class Operation {
+  /** Zero-based operation index within the parent transaction. */
   readonly index: number;
   private readonly transaction: Transaction;
   private readonly rawOperation: xdr.Operation;
@@ -229,14 +230,16 @@ export class Operation {
 
   // ========== Operation-specific parsers ==========
 
-  private parseCreateAccount(op: xdr.CreateAccountOp) {
+  /** @internal */
+  private parseCreateAccount(op: xdr.CreateAccountOp): unknown {
     return {
       destination: parseAccountId(op.destination()),
       startingBalance: op.startingBalance().toString(),
     };
   }
 
-  private parsePayment(op: xdr.PaymentOp) {
+  /** @internal */
+  private parsePayment(op: xdr.PaymentOp): unknown {
     return {
       destination: parseMuxedAccount(op.destination()),
       asset: parseAsset(op.asset()),
@@ -244,7 +247,10 @@ export class Operation {
     };
   }
 
-  private parsePathPaymentStrictReceive(op: xdr.PathPaymentStrictReceiveOp) {
+  /** @internal */
+  private parsePathPaymentStrictReceive(
+    op: xdr.PathPaymentStrictReceiveOp,
+  ): unknown {
     return {
       sendAsset: parseAsset(op.sendAsset()),
       sendMax: op.sendMax().toString(),
@@ -255,7 +261,10 @@ export class Operation {
     };
   }
 
-  private parsePathPaymentStrictSend(op: xdr.PathPaymentStrictSendOp) {
+  /** @internal */
+  private parsePathPaymentStrictSend(
+    op: xdr.PathPaymentStrictSendOp,
+  ): unknown {
     return {
       sendAsset: parseAsset(op.sendAsset()),
       sendAmount: op.sendAmount().toString(),
@@ -266,7 +275,8 @@ export class Operation {
     };
   }
 
-  private parseManageSellOffer(op: xdr.ManageSellOfferOp) {
+  /** @internal */
+  private parseManageSellOffer(op: xdr.ManageSellOfferOp): unknown {
     return {
       selling: parseAsset(op.selling()),
       buying: parseAsset(op.buying()),
@@ -279,7 +289,8 @@ export class Operation {
     };
   }
 
-  private parseManageBuyOffer(op: xdr.ManageBuyOfferOp) {
+  /** @internal */
+  private parseManageBuyOffer(op: xdr.ManageBuyOfferOp): unknown {
     return {
       selling: parseAsset(op.selling()),
       buying: parseAsset(op.buying()),
@@ -292,7 +303,10 @@ export class Operation {
     };
   }
 
-  private parseCreatePassiveSellOffer(op: xdr.CreatePassiveSellOfferOp) {
+  /** @internal */
+  private parseCreatePassiveSellOffer(
+    op: xdr.CreatePassiveSellOfferOp,
+  ): unknown {
     return {
       selling: parseAsset(op.selling()),
       buying: parseAsset(op.buying()),
@@ -304,7 +318,8 @@ export class Operation {
     };
   }
 
-  private parseSetOptions(op: xdr.SetOptionsOp) {
+  /** @internal */
+  private parseSetOptions(op: xdr.SetOptionsOp): unknown {
     return {
       inflationDest: op.inflationDest()
         ? parseAccountId(op.inflationDest()!)
@@ -325,14 +340,16 @@ export class Operation {
     };
   }
 
-  private parseChangeTrust(op: xdr.ChangeTrustOp) {
+  /** @internal */
+  private parseChangeTrust(op: xdr.ChangeTrustOp): unknown {
     return {
       line: parseChangeTrustAsset(op.line()),
       limit: op.limit().toString(),
     };
   }
 
-  private parseAllowTrust(op: xdr.AllowTrustOp) {
+  /** @internal */
+  private parseAllowTrust(op: xdr.AllowTrustOp): unknown {
     return {
       trustor: parseAccountId(op.trustor()),
       asset: op.asset().switch().name,
@@ -340,26 +357,32 @@ export class Operation {
     };
   }
 
-  private parseAccountMerge(destination: xdr.MuxedAccount) {
+  /** @internal */
+  private parseAccountMerge(destination: xdr.MuxedAccount): unknown {
     return {
       destination: parseMuxedAccount(destination),
     };
   }
 
-  private parseManageData(op: xdr.ManageDataOp) {
+  /** @internal */
+  private parseManageData(op: xdr.ManageDataOp): unknown {
     return {
       dataName: op.dataName().toString(),
       dataValue: op.dataValue() ? op.dataValue()!.toString("hex") : null,
     };
   }
 
-  private parseBumpSequence(op: xdr.BumpSequenceOp) {
+  /** @internal */
+  private parseBumpSequence(op: xdr.BumpSequenceOp): unknown {
     return {
       bumpTo: op.bumpTo().toString(),
     };
   }
 
-  private parseCreateClaimableBalance(op: xdr.CreateClaimableBalanceOp) {
+  /** @internal */
+  private parseCreateClaimableBalance(
+    op: xdr.CreateClaimableBalanceOp,
+  ): unknown {
     return {
       asset: parseAsset(op.asset()),
       amount: op.amount().toString(),
@@ -370,21 +393,26 @@ export class Operation {
     };
   }
 
-  private parseClaimClaimableBalance(op: xdr.ClaimClaimableBalanceOp) {
+  /** @internal */
+  private parseClaimClaimableBalance(
+    op: xdr.ClaimClaimableBalanceOp,
+  ): unknown {
     return {
       balanceId: op.balanceId().value().toString("hex"),
     };
   }
 
+  /** @internal */
   private parseBeginSponsoringFutureReserves(
     op: xdr.BeginSponsoringFutureReservesOp
-  ) {
+  ): unknown {
     return {
       sponsoredId: parseAccountId(op.sponsoredId()),
     };
   }
 
-  private parseRevokeSponsorship(op: xdr.RevokeSponsorshipOp) {
+  /** @internal */
+  private parseRevokeSponsorship(op: xdr.RevokeSponsorshipOp): unknown {
     const type = op.switch().name;
     if (type === "revokeSponsorshipLedgerEntry") {
       return {
@@ -399,7 +427,8 @@ export class Operation {
     }
   }
 
-  private parseClawback(op: xdr.ClawbackOp) {
+  /** @internal */
+  private parseClawback(op: xdr.ClawbackOp): unknown {
     return {
       asset: parseAsset(op.asset()),
       from: parseMuxedAccount(op.from()),
@@ -407,13 +436,17 @@ export class Operation {
     };
   }
 
-  private parseClawbackClaimableBalance(op: xdr.ClawbackClaimableBalanceOp) {
+  /** @internal */
+  private parseClawbackClaimableBalance(
+    op: xdr.ClawbackClaimableBalanceOp,
+  ): unknown {
     return {
       balanceId: op.balanceId().value().toString("hex"),
     };
   }
 
-  private parseSetTrustLineFlags(op: xdr.SetTrustLineFlagsOp) {
+  /** @internal */
+  private parseSetTrustLineFlags(op: xdr.SetTrustLineFlagsOp): unknown {
     return {
       trustor: parseAccountId(op.trustor()),
       asset: parseAsset(op.asset()),
@@ -422,7 +455,10 @@ export class Operation {
     };
   }
 
-  private parseLiquidityPoolDeposit(op: xdr.LiquidityPoolDepositOp) {
+  /** @internal */
+  private parseLiquidityPoolDeposit(
+    op: xdr.LiquidityPoolDepositOp,
+  ): unknown {
     const poolId = op.liquidityPoolId() as unknown as Uint8Array;
     const poolIdHex = Array.from(poolId)
       .map((b) => b.toString(16).padStart(2, "0"))
@@ -442,7 +478,10 @@ export class Operation {
     };
   }
 
-  private parseLiquidityPoolWithdraw(op: xdr.LiquidityPoolWithdrawOp) {
+  /** @internal */
+  private parseLiquidityPoolWithdraw(
+    op: xdr.LiquidityPoolWithdrawOp,
+  ): unknown {
     const poolId = op.liquidityPoolId() as unknown as Uint8Array;
     const poolIdHex = Array.from(poolId)
       .map((b) => b.toString(16).padStart(2, "0"))
@@ -455,20 +494,23 @@ export class Operation {
     };
   }
 
-  private parseInvokeHostFunction(op: xdr.InvokeHostFunctionOp) {
+  /** @internal */
+  private parseInvokeHostFunction(op: xdr.InvokeHostFunctionOp): unknown {
     return {
       hostFunction: op.hostFunction(),
       auth: op.auth(),
     };
   }
 
-  private parseExtendFootprintTtl(op: xdr.ExtendFootprintTtlOp) {
+  /** @internal */
+  private parseExtendFootprintTtl(op: xdr.ExtendFootprintTtlOp): unknown {
     return {
       extendTo: op.extendTo(),
     };
   }
 
-  private parseRestoreFootprint(_op: xdr.RestoreFootprintOp) {
+  /** @internal */
+  private parseRestoreFootprint(_op: xdr.RestoreFootprintOp): unknown {
     return {}; // No fields in RestoreFootprintOp
   }
 

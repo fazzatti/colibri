@@ -1,11 +1,17 @@
 import { ColibriError } from "@/error/index.ts";
 import type { Diagnostic } from "@/error/types.ts";
 
+/**
+ * Metadata stored on SEP-1 errors.
+ */
 export type Meta<DataType = unknown> = {
   cause: Error | null;
   data: DataType;
 };
 
+/**
+ * Shape accepted by {@link Sep1Error} constructors.
+ */
 export type Sep1ErrorShape<Code extends string, DataType = unknown> = {
   code: Code;
   message: string;
@@ -15,13 +21,23 @@ export type Sep1ErrorShape<Code extends string, DataType = unknown> = {
   data: DataType;
 };
 
+/**
+ * Base class for SEP-1 discovery and parsing errors.
+ */
 export abstract class Sep1Error<
   C extends string = Code,
   DataType = unknown
 > extends ColibriError<C, Meta<DataType>> {
+  /** Error source identifier for SEP-1 failures. */
   override readonly source = "@colibri/core/sep1";
+  /** Structured metadata attached to the error instance. */
   override readonly meta: Meta<DataType>;
 
+  /**
+   * Creates a SEP-1 error with Colibri-standard metadata.
+   *
+   * @param args - Error payload used to build the instance.
+   */
   constructor(args: Sep1ErrorShape<C, DataType>) {
     const meta: Meta<DataType> = {
       cause: args.cause || null,
@@ -42,6 +58,9 @@ export abstract class Sep1Error<
   }
 }
 
+/**
+ * Stable error codes emitted by the SEP-1 helper.
+ */
 export enum Code {
   FETCH_FAILED = "SEP1_001",
   INVALID_DOMAIN = "SEP1_002",
@@ -53,10 +72,21 @@ export enum Code {
   INVALID_ACCOUNT = "SEP1_008",
 }
 
+/**
+ * Raised when fetching `stellar.toml` fails.
+ */
 export class FETCH_FAILED extends Sep1Error<
   Code.FETCH_FAILED,
   { domain: string; statusCode?: number; statusText?: string }
 > {
+  /**
+   * Creates a fetch-failed error.
+   *
+   * @param domain - Domain being queried.
+   * @param cause - Underlying network error.
+   * @param statusCode - Optional HTTP status code.
+   * @param statusText - Optional HTTP status text.
+   */
   constructor(
     domain: string,
     cause?: Error,
@@ -83,10 +113,18 @@ export class FETCH_FAILED extends Sep1Error<
   }
 }
 
+/**
+ * Raised when the supplied domain is invalid.
+ */
 export class INVALID_DOMAIN extends Sep1Error<
   Code.INVALID_DOMAIN,
   { domain: string }
 > {
+  /**
+   * Creates an invalid-domain error.
+   *
+   * @param domain - Invalid domain value.
+   */
   constructor(domain: string) {
     super({
       code: Code.INVALID_DOMAIN,
@@ -106,10 +144,20 @@ export class INVALID_DOMAIN extends Sep1Error<
   }
 }
 
+/**
+ * Raised when `stellar.toml` content cannot be parsed as TOML.
+ */
 export class PARSE_ERROR extends Sep1Error<
   Code.PARSE_ERROR,
   { domain?: string; rawContent?: string }
 > {
+  /**
+   * Creates a parse-error instance.
+   *
+   * @param domain - Domain that supplied the content, when known.
+   * @param cause - Underlying TOML parsing error.
+   * @param rawContent - Raw content prefix captured for debugging.
+   */
   constructor(domain?: string, cause?: Error, rawContent?: string) {
     super({
       code: Code.PARSE_ERROR,
@@ -133,10 +181,20 @@ export class PARSE_ERROR extends Sep1Error<
   }
 }
 
+/**
+ * Raised when `stellar.toml` exceeds the SEP-1 size limit.
+ */
 export class FILE_TOO_LARGE extends Sep1Error<
   Code.FILE_TOO_LARGE,
   { domain: string; size: number; maxSize: number }
 > {
+  /**
+   * Creates a file-too-large error.
+   *
+   * @param domain - Domain serving the oversized file.
+   * @param size - Actual file size in bytes.
+   * @param maxSize - Maximum accepted size in bytes.
+   */
   constructor(domain: string, size: number, maxSize: number = 100 * 1024) {
     super({
       code: Code.FILE_TOO_LARGE,
@@ -155,10 +213,20 @@ export class FILE_TOO_LARGE extends Sep1Error<
   }
 }
 
+/**
+ * Raised when a signing key value is not a valid Stellar account id.
+ */
 export class INVALID_SIGNING_KEY extends Sep1Error<
   Code.INVALID_SIGNING_KEY,
   { domain?: string; field: string; value: string }
 > {
+  /**
+   * Creates an invalid-signing-key error.
+   *
+   * @param field - TOML field containing the invalid key.
+   * @param value - Invalid key value.
+   * @param domain - Domain being validated, when known.
+   */
   constructor(field: string, value: string, domain?: string) {
     super({
       code: Code.INVALID_SIGNING_KEY,
@@ -177,10 +245,21 @@ export class INVALID_SIGNING_KEY extends Sep1Error<
   }
 }
 
+/**
+ * Raised when a URL field in `stellar.toml` is invalid.
+ */
 export class INVALID_URL extends Sep1Error<
   Code.INVALID_URL,
   { domain?: string; field: string; value: string }
 > {
+  /**
+   * Creates an invalid-url error.
+   *
+   * @param field - TOML field containing the invalid URL.
+   * @param value - Invalid URL value.
+   * @param domain - Domain being validated, when known.
+   * @param requireHttps - Whether HTTPS is required for the field.
+   */
   constructor(
     field: string,
     value: string,
@@ -207,10 +286,19 @@ export class INVALID_URL extends Sep1Error<
   }
 }
 
+/**
+ * Raised when fetching `stellar.toml` times out.
+ */
 export class TIMEOUT extends Sep1Error<
   Code.TIMEOUT,
   { domain: string; timeoutMs: number }
 > {
+  /**
+   * Creates a timeout error.
+   *
+   * @param domain - Domain being queried.
+   * @param timeoutMs - Timeout threshold that was exceeded.
+   */
   constructor(domain: string, timeoutMs: number) {
     super({
       code: Code.TIMEOUT,
@@ -227,10 +315,21 @@ export class TIMEOUT extends Sep1Error<
   }
 }
 
+/**
+ * Raised when an account field in `stellar.toml` is invalid.
+ */
 export class INVALID_ACCOUNT extends Sep1Error<
   Code.INVALID_ACCOUNT,
   { domain?: string; field: string; value: string; index?: number }
 > {
+  /**
+   * Creates an invalid-account error.
+   *
+   * @param field - TOML field containing the invalid account.
+   * @param value - Invalid account value.
+   * @param domain - Domain being validated, when known.
+   * @param index - Optional array index for repeated account fields.
+   */
   constructor(field: string, value: string, domain?: string, index?: number) {
     const location = index !== undefined ? ` at index ${index}` : "";
     super({
@@ -250,6 +349,9 @@ export class INVALID_ACCOUNT extends Sep1Error<
   }
 }
 
+/**
+ * SEP-1 error constructors indexed by stable error code.
+ */
 export const ERROR_SEP1 = {
   [Code.FETCH_FAILED]: FETCH_FAILED,
   [Code.INVALID_DOMAIN]: INVALID_DOMAIN,

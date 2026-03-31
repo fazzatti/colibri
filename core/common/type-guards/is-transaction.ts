@@ -1,5 +1,6 @@
 import { type FeeBumpTransaction, Transaction } from "stellar-sdk";
 
+/** Returns `true` when the provided value is a classic Stellar transaction. */
 export const isTransaction = (
   tx: Transaction | FeeBumpTransaction
 ): tx is Transaction => {

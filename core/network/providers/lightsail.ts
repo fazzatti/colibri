@@ -15,6 +15,7 @@ import type { MainNetConfig, WithArchiveRPC } from "@/network/types.ts";
 const baseRpcUrl = "https://rpc-pro.lightsail.network/";
 const baseArchiveRpcUrl = "https://archive-rpc-pro.lightsail.network/";
 
+/** Lightsail-backed network configuration presets. */
 export const Lightsail = {
   MainNet: (apiKey?: string) => {
     if (isDefined(apiKey)) {

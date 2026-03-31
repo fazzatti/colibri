@@ -1,12 +1,15 @@
 import type { Buffer } from "buffer";
 import {
-  type Transaction,
-  type FeeBumpTransaction,
   authorizeEntry,
   Keypair,
   type xdr,
 } from "stellar-sdk";
-import type { TransactionXDRBase64 } from "@/common/types/index.ts";
+import type {
+  BinaryData,
+  SorobanAuthorizationEntryLike,
+  SignableTransaction,
+  TransactionXDRBase64,
+} from "@/common/types/index.ts";
 import type {
   ContractId,
   Ed25519PublicKey,
@@ -47,32 +50,34 @@ export class LocalSigner implements LocalSignerType {
    * Signs arbitrary data and returns the signature as a Buffer.
    * This method allows signing of data outside of transactions, such as challenges.
    */
-  sign: (data: Buffer) => Buffer;
+  sign: (data: BinaryData) => BinaryData;
 
   /**
    * Signs a classic or fee-bump transaction and returns its XDR (string).
    * The secret key never touches object properties; it is used only within the closure.
    */
   signTransaction: (
-    tx: Transaction | FeeBumpTransaction
+    tx: SignableTransaction
   ) => TransactionXDRBase64;
 
   /**
    * Signs a Soroban authorization entry (SAC-style), returning the signed entry.
    */
   signSorobanAuthEntry: (
-    entry: xdr.SorobanAuthorizationEntry,
+    entry: SorobanAuthorizationEntryLike,
     validUntil: number,
     passphrase: string
-  ) => Promise<xdr.SorobanAuthorizationEntry>;
+  ) => Promise<SorobanAuthorizationEntryLike>;
 
   /**
+   * Verifies a detached signature against raw payload bytes.
+   *
    *
    * @param {Buffer} data - The data to sign.
    * @param {Buffer} signature - The signature to verify.
    * @returns {boolean} True if the signature is valid, false otherwise.
    */
-  verifySignature: (data: Buffer, signature: Buffer) => boolean;
+  verifySignature: (data: BinaryData, signature: BinaryData) => boolean;
 
   /**
    * Best-effort zeroization and invalidation of the internal keypair handle.
@@ -107,18 +112,21 @@ export class LocalSigner implements LocalSignerType {
     this.publicKey = () => pub as Ed25519PublicKey;
     this.addTarget(this.publicKey());
 
-    this.sign = (data: Buffer): Buffer => {
+    this.sign = (data: BinaryData): BinaryData => {
       assert(isDefined(kp), new E.SIGNER_DESTROYED());
-      return kp.sign(data);
+      return kp.sign(data as Buffer);
     };
 
-    this.verifySignature = (data: Buffer, signature: Buffer): boolean => {
+    this.verifySignature = (
+      data: BinaryData,
+      signature: BinaryData,
+    ): boolean => {
       const keypair = Keypair.fromPublicKey(this.publicKey());
-      return keypair.verify(data, signature);
+      return keypair.verify(data as Buffer, signature as Buffer);
     };
 
     this.signTransaction = (
-      tx: Transaction | FeeBumpTransaction
+      tx: SignableTransaction
     ): TransactionXDRBase64 => {
       assert(isDefined(kp), new E.SIGNER_DESTROYED());
       tx.sign(kp);
@@ -126,12 +134,17 @@ export class LocalSigner implements LocalSignerType {
     };
 
     this.signSorobanAuthEntry = (
-      entry: xdr.SorobanAuthorizationEntry,
+      entry: SorobanAuthorizationEntryLike,
       validUntil: number,
       passphrase: string
-    ) => {
+    ): Promise<SorobanAuthorizationEntryLike> => {
       assert(isDefined(kp), new E.SIGNER_DESTROYED());
-      return authorizeEntry(entry, kp, validUntil, passphrase);
+      return authorizeEntry(
+        entry as xdr.SorobanAuthorizationEntry,
+        kp,
+        validUntil,
+        passphrase,
+      ) as Promise<SorobanAuthorizationEntryLike>;
     };
 
     this.destroy = () => {
@@ -201,7 +214,7 @@ export class LocalSigner implements LocalSignerType {
    * JSON representation intentionally includes **only** the public key.
    * This keeps logs/snapshots free of secrets by default.
    */
-  public toJSON() {
+  public toJSON(): { publicKey: Ed25519PublicKey } {
     return { publicKey: this.publicKey() };
   }
 

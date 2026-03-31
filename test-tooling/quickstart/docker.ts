@@ -5,6 +5,11 @@ import Dockerode from "dockerode";
 import { DOCKER_CONFIGURATION_ERROR } from "@/quickstart/error.ts";
 
 /**
+ * Docker client implementation used by quickstart helpers.
+ */
+export type DockerClient = Dockerode;
+
+/**
  * Docker connection settings accepted by quickstart helpers.
  */
 export type DockerConnectionConfig = {

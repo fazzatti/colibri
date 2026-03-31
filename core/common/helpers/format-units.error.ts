@@ -1,5 +1,8 @@
 import { ColibriError } from "@/error/index.ts";
 
+/**
+ * Stable error codes emitted by the format-units helper.
+ */
 export enum Code {
   INVALID_DECIMALS = "HLP_UNT_01",
   EMPTY_VALUE = "HLP_UNT_02",
@@ -11,6 +14,9 @@ export enum Code {
   INVALID_MAX_FRACTION_DIGITS = "HLP_UNT_08",
 }
 
+/**
+ * Structured helper-specific metadata carried by format-units errors.
+ */
 export type MetaData = {
   decimals?: number;
   value?: unknown;
@@ -18,11 +24,17 @@ export type MetaData = {
   maxFractionDigits?: number;
 };
 
+/**
+ * Metadata carried by format-units helper errors.
+ */
 export type Meta = {
   cause: Error | null;
   data: MetaData;
 };
 
+/**
+ * Constructor shape accepted by {@link FormatUnitsError}.
+ */
 export type FormatUnitsErrorShape = {
   code: Code;
   message: string;
@@ -31,11 +43,22 @@ export type FormatUnitsErrorShape = {
   cause?: Error;
 };
 
+/**
+ * Base class for format-units helper errors.
+ */
 export abstract class FormatUnitsError extends ColibriError<Code, Meta> {
+  /** Source identifier for format-units helper failures. */
   override readonly source = "@colibri/core/helpers/format-units";
+  /** Error domain for format-units helper failures. */
   override readonly domain = "helpers" as const;
+  /** Structured metadata carried by the helper error. */
   override readonly meta: Meta;
 
+  /**
+   * Creates a format-units helper error.
+   *
+   * @param args - Error payload and structured metadata.
+   */
   constructor(args: FormatUnitsErrorShape) {
     const meta: Meta = {
       cause: args.cause ?? null,
@@ -55,7 +78,15 @@ export abstract class FormatUnitsError extends ColibriError<Code, Meta> {
   }
 }
 
+/**
+ * Raised when the decimals argument is not a non-negative integer.
+ */
 export class INVALID_DECIMALS extends FormatUnitsError {
+  /**
+   * Creates an invalid-decimals error.
+   *
+   * @param decimals - Invalid decimals value.
+   */
   constructor(decimals: number) {
     super({
       code: Code.INVALID_DECIMALS,
@@ -67,7 +98,15 @@ export class INVALID_DECIMALS extends FormatUnitsError {
   }
 }
 
+/**
+ * Raised when the value to format is empty.
+ */
 export class EMPTY_VALUE extends FormatUnitsError {
+  /**
+   * Creates an empty-value error.
+   *
+   * @param value - Invalid value.
+   */
   constructor(value: unknown) {
     super({
       code: Code.EMPTY_VALUE,
@@ -79,7 +118,15 @@ export class EMPTY_VALUE extends FormatUnitsError {
   }
 }
 
+/**
+ * Raised when the input cannot be parsed as a decimal value.
+ */
 export class INVALID_DECIMAL_INPUT extends FormatUnitsError {
+  /**
+   * Creates an invalid-decimal-input error.
+   *
+   * @param value - Invalid decimal input.
+   */
   constructor(value: unknown) {
     super({
       code: Code.INVALID_DECIMAL_INPUT,
@@ -91,7 +138,17 @@ export class INVALID_DECIMAL_INPUT extends FormatUnitsError {
   }
 }
 
+/**
+ * Raised when the value has more fractional digits than allowed.
+ */
 export class TOO_MANY_FRACTION_DIGITS extends FormatUnitsError {
+  /**
+   * Creates a too-many-fraction-digits error.
+   *
+   * @param value - Original input value.
+   * @param decimals - Supported decimals count.
+   * @param fractionalDigits - Actual fractional digit count.
+   */
   constructor(value: unknown, decimals: number, fractionalDigits: number) {
     super({
       code: Code.TOO_MANY_FRACTION_DIGITS,
@@ -103,7 +160,15 @@ export class TOO_MANY_FRACTION_DIGITS extends FormatUnitsError {
   }
 }
 
+/**
+ * Raised when a numeric input is not finite.
+ */
 export class NON_FINITE_NUMBER extends FormatUnitsError {
+  /**
+   * Creates a non-finite-number error.
+   *
+   * @param value - Invalid numeric input.
+   */
   constructor(value: number) {
     super({
       code: Code.NON_FINITE_NUMBER,
@@ -115,7 +180,15 @@ export class NON_FINITE_NUMBER extends FormatUnitsError {
   }
 }
 
+/**
+ * Raised when scientific notation is malformed.
+ */
 export class INVALID_SCIENTIFIC_NOTATION extends FormatUnitsError {
+  /**
+   * Creates an invalid-scientific-notation error.
+   *
+   * @param value - Invalid scientific notation string.
+   */
   constructor(value: string) {
     super({
       code: Code.INVALID_SCIENTIFIC_NOTATION,
@@ -127,7 +200,15 @@ export class INVALID_SCIENTIFIC_NOTATION extends FormatUnitsError {
   }
 }
 
+/**
+ * Raised when a scientific-notation exponent is invalid.
+ */
 export class INVALID_SCIENTIFIC_EXPONENT extends FormatUnitsError {
+  /**
+   * Creates an invalid-scientific-exponent error.
+   *
+   * @param value - Invalid scientific notation string.
+   */
   constructor(value: string) {
     super({
       code: Code.INVALID_SCIENTIFIC_EXPONENT,
@@ -139,7 +220,15 @@ export class INVALID_SCIENTIFIC_EXPONENT extends FormatUnitsError {
   }
 }
 
+/**
+ * Raised when `maxFractionDigits` is not a non-negative integer.
+ */
 export class INVALID_MAX_FRACTION_DIGITS extends FormatUnitsError {
+  /**
+   * Creates an invalid-max-fraction-digits error.
+   *
+   * @param maxFractionDigits - Invalid fraction digit limit.
+   */
   constructor(maxFractionDigits: number) {
     super({
       code: Code.INVALID_MAX_FRACTION_DIGITS,
@@ -151,6 +240,9 @@ export class INVALID_MAX_FRACTION_DIGITS extends FormatUnitsError {
   }
 }
 
+/**
+ * Format-units helper errors indexed by stable code.
+ */
 export const ERROR_HLP_UNT = {
   [Code.INVALID_DECIMALS]: INVALID_DECIMALS,
   [Code.EMPTY_VALUE]: EMPTY_VALUE,

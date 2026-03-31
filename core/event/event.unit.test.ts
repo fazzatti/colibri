@@ -150,6 +150,28 @@ describe("Event", () => {
       assertEquals(topics[1], userAddress);
       assertEquals(topics[2], 42);
     });
+
+    it("normalizes xdr-like topic inputs before parsing", () => {
+      const event = new Event({
+        id: "0000000000000000000-0000000000",
+        type: EventType.Contract,
+        ledger: 12345,
+        ledgerClosedAt: "2024-01-01T00:00:00Z",
+        transactionIndex: 0,
+        operationIndex: 0,
+        inSuccessfulContractCall: true,
+        txHash: "abc123",
+        topic: [{
+          toXDR: () => xdr.ScVal.scvSymbol("normalized").toXDR("base64"),
+        }],
+        value: {
+          toXDR: () => xdr.ScVal.scvU32(7).toXDR("base64"),
+        },
+      });
+
+      assertEquals(event.topics, ["normalized"]);
+      assertEquals(event.value, 7);
+    });
   });
 
   describe("value getter", () => {

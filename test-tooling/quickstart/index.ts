@@ -6,6 +6,7 @@ import type {
 } from "dockerode";
 import {
   createDockerClient,
+  type DockerClient,
   type DockerConnectionConfig,
   resolveDockerOptions,
   resolvePublishedPortHost,
@@ -60,6 +61,17 @@ const DEFAULTS = Object.freeze({
     mode: QuickstartStorageModes.EPHEMERAL,
   } as const satisfies QuickstartStorage,
 });
+
+/**
+ * Docker client type used by `StellarTestLedger` internals.
+ */
+export type StellarTestLedgerDockerClient = DockerClient;
+
+/**
+ * Container inspection shape validated by `StellarTestLedger` when reusing
+ * named containers.
+ */
+export type StellarTestLedgerContainerInspectInfo = ContainerInspectInfo;
 
 const NETWORK_FLAGS = Object.freeze(
   {
@@ -629,7 +641,7 @@ const commandsMatch = (
  * ```
  */
 export class StellarTestLedger<
-  const Network extends NetworkEnv = typeof DEFAULTS.network,
+  const Network extends NetworkEnv = NetworkEnv.LOCAL,
   const Services extends readonly QuickstartService[] =
     typeof DEFAULT_ENABLED_SERVICES,
 > implements IStellarTestLedger<Network, Services> {
@@ -661,7 +673,7 @@ export class StellarTestLedger<
   private readonly dockerConnection: DockerConnectionConfig;
   private readonly quickstartCommand: string[];
   private readonly readinessChecks: ReadinessChecks;
-  private dockerClientCache: ReturnType<typeof createDockerClient> | undefined;
+  private dockerClientCache: StellarTestLedgerDockerClient | undefined;
 
   /** The currently tracked Docker container, if one has been started or attached. */
   public container: Container | undefined;
@@ -768,7 +780,7 @@ export class StellarTestLedger<
   /**
    * Creates the Docker client used by this instance.
    */
-  protected getDockerClient(): ReturnType<typeof createDockerClient> {
+  protected getDockerClient(): StellarTestLedgerDockerClient {
     return this.dockerClientCache ??= createDockerClient(this.dockerConnection);
   }
 
@@ -805,7 +817,7 @@ export class StellarTestLedger<
    * Ensures a reused named container was started with the expected quickstart flags.
    */
   protected ensureExpectedNamedContainerConfig(
-    inspectInfo: ContainerInspectInfo,
+    inspectInfo: StellarTestLedgerContainerInspectInfo,
   ): void {
     const actualCommand = inspectInfo.Config.Cmd;
 

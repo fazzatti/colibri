@@ -4,6 +4,7 @@ import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 import * as E from "@/tools/friendbot/error.ts";
 import { Server } from "stellar-sdk/rpc";
 
+/** Optional behavior overrides for Friendbot initialization. */
 export type InitializeWithFriendbotOptions = {
   rpcUrl?: string;
   allowHttp?: boolean;
@@ -40,6 +41,7 @@ const waitForRpcPropagation = async (
   );
 };
 
+/** Funds an account with Friendbot and optionally waits for RPC visibility. */
 export const initializeWithFriendbot = async (
   friendbotUrl: string,
   publicKey: Ed25519PublicKey,

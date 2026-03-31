@@ -719,7 +719,9 @@ export class SEP10Challenge {
    */
   sign(signer: Keypair | Signer): this {
     if (isSigner(signer)) {
-      const signature = signer.sign(Buffer.from(this._transaction.hash()));
+      const signature = Buffer.from(
+        signer.sign(Buffer.from(this._transaction.hash()))
+      );
       const hint = Keypair.fromPublicKey(signer.publicKey()).signatureHint();
       this._transaction.signatures.push(
         new xdr.DecoratedSignature({ hint, signature })

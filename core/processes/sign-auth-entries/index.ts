@@ -12,6 +12,7 @@ import { getAddressSignerFromAuthEntry } from "@/common/helpers/xdr/get-address-
 import { getAddressTypeFromAuthEntry } from "@/common/helpers/xdr/get-address-type-from-auth-entry.ts";
 import { ResultOrError } from "@/common/deferred/result-or-error.ts";
 
+/** Signs Soroban authorization entries with the provided signers. */
 export const signAuthEntries = async (
   input: SignAuthEntriesInput
 ): Promise<SignAuthEntriesOutput> => {
@@ -74,7 +75,7 @@ export const signAuthEntries = async (
             authEntry,
             validUntilLedgerSeq,
             networkPassphrase
-          );
+          ) as xdr.SorobanAuthorizationEntry;
         } catch (e) {
           throw new E.FAILED_TO_SIGN_AUTH_ENTRY(input, authEntry, e as Error);
         }
@@ -196,4 +197,5 @@ const separateSignedAndUnsignedAuthEntries = (
 
   return { signed, unsigned };
 };
-export { E as SignAuthEntriesErrors };
+/** Error constructors emitted by {@link signAuthEntries}. */
+export const SignAuthEntriesErrors: typeof E = E;

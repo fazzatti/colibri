@@ -46,8 +46,11 @@ import {
  * ```
  */
 export class Ledger {
+  /** Ledger sequence number. */
   readonly sequence: number;
+  /** Ledger hash. */
   readonly hash: string;
+  /** Raw ledger close timestamp as provided by RPC. */
   readonly ledgerCloseTime: string;
 
   private readonly headerXdr:
@@ -85,6 +88,7 @@ export class Ledger {
    *
    * @memoized - First access parses XDR, subsequent accesses return cached result
    */
+  /** @internal */
   @memoize()
   get header(): xdr.LedgerHeader {
     try {
@@ -105,6 +109,7 @@ export class Ledger {
    *
    * @memoized - First access parses XDR, subsequent accesses return cached result
    */
+  /** @internal */
   @memoize()
   get meta(): xdr.LedgerCloseMeta {
     try {

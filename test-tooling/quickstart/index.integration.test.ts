@@ -8,11 +8,11 @@ import {
 
 import { afterAll, describe, it } from "@std/testing/bdd";
 import {
+  createClassicTransactionPipeline,
   initializeWithFriendbot,
   LocalSigner,
   NativeAccount,
   NetworkConfig,
-  PIPE_ClassicTransaction,
 } from "@colibri/core";
 import { resolveDockerOptions } from "@/quickstart/docker.ts";
 import { Code, INVALID_CONFIGURATION } from "@/quickstart/error.ts";
@@ -132,7 +132,7 @@ describe("StellarTestLedger", () => {
           },
         );
 
-        const pipeline = PIPE_ClassicTransaction.create({ networkConfig });
+        const pipeline = createClassicTransactionPipeline({ networkConfig });
         const result = await pipeline.run({
           operations: [
             Operation.payment({

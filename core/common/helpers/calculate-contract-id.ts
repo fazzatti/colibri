@@ -11,7 +11,7 @@ import { StrKey } from "@/strkeys/index.ts";
 export function calculateContractId(
   networkPassphrase: string,
   sourceAddress: string,
-  salt: Buffer
+  salt: Uint8Array
 ): string {
   const networkId = hash(Buffer.from(networkPassphrase));
 
@@ -21,7 +21,7 @@ export function calculateContractId(
       contractIdPreimage: xdr.ContractIdPreimage.contractIdPreimageFromAddress(
         new xdr.ContractIdPreimageFromAddress({
           address: new Address(sourceAddress).toScAddress(),
-          salt,
+          salt: Buffer.from(salt),
         })
       ),
     })

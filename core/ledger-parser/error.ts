@@ -6,11 +6,13 @@
 import { ColibriError } from "@/error/index.ts";
 import type { Diagnostic } from "@/error/types.ts";
 
+/** Metadata attached to ledger-parser errors. */
 export type Meta = {
   cause: Error | null;
   data: unknown;
 };
 
+/** Constructor payload used by concrete ledger-parser errors. */
 export type LedgerParserErrorShape<Code extends string> = {
   code: Code;
   message: string;
@@ -27,9 +29,16 @@ export type LedgerParserErrorShape<Code extends string> = {
  * and context. All LedgerParser errors follow the Colibri standard pattern.
  */
 export abstract class LedgerParserError extends ColibriError<Code, Meta> {
+  /** Stable source identifier for ledger-parser errors. */
   override readonly source = "@colibri/core/ledger-parser";
+  /** Structured metadata attached to the error. */
   override readonly meta: Meta;
 
+  /**
+   * Creates a new ledger-parser error.
+   *
+   * @param args Error construction payload.
+   */
   constructor(args: LedgerParserErrorShape<Code>) {
     const meta = {
       cause: args.cause || null,
@@ -67,6 +76,11 @@ export enum Code {
  * Thrown when the LedgerEntry object is malformed.
  */
 export class INVALID_LEDGER_ENTRY extends LedgerParserError {
+  /**
+   * Creates the error.
+   *
+   * @param reason Explanation of why the ledger entry is invalid.
+   */
   constructor(reason: string) {
     super({
       code: Code.INVALID_LEDGER_ENTRY,
@@ -81,6 +95,11 @@ export class INVALID_LEDGER_ENTRY extends LedgerParserError {
  * Thrown when header XDR decoding fails.
  */
 export class INVALID_HEADER_XDR extends LedgerParserError {
+  /**
+   * Creates the error.
+   *
+   * @param cause Underlying XDR decoding failure.
+   */
   constructor(cause?: Error) {
     super({
       code: Code.INVALID_HEADER_XDR,
@@ -97,6 +116,11 @@ export class INVALID_HEADER_XDR extends LedgerParserError {
  * Thrown when metadata XDR decoding fails.
  */
 export class INVALID_METADATA_XDR extends LedgerParserError {
+  /**
+   * Creates the error.
+   *
+   * @param cause Underlying XDR decoding failure.
+   */
   constructor(cause?: Error) {
     super({
       code: Code.INVALID_METADATA_XDR,
@@ -115,6 +139,11 @@ export class INVALID_METADATA_XDR extends LedgerParserError {
  * Currently supports V0, V1, and V2. Future protocol upgrades may introduce new versions.
  */
 export class UNSUPPORTED_LEDGER_CLOSE_META_VERSION extends LedgerParserError {
+  /**
+   * Creates the error.
+   *
+   * @param version Unsupported ledger-close metadata version.
+   */
   constructor(version: string) {
     super({
       code: Code.UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
@@ -129,6 +158,13 @@ export class UNSUPPORTED_LEDGER_CLOSE_META_VERSION extends LedgerParserError {
  * Thrown when attempting to access transaction data that doesn't exist.
  */
 export class INVALID_TRANSACTION_INDEX extends LedgerParserError {
+  /**
+   * Creates the error.
+   *
+   * @param index Requested transaction index.
+   * @param ledgerSequence Ledger sequence containing the transactions.
+   * @param maxIndex Highest valid transaction index.
+   */
   constructor(index: number, ledgerSequence: number, maxIndex: number) {
     super({
       code: Code.INVALID_TRANSACTION_INDEX,
@@ -143,6 +179,13 @@ export class INVALID_TRANSACTION_INDEX extends LedgerParserError {
  * Thrown when attempting to access operation data that doesn't exist.
  */
 export class INVALID_OPERATION_INDEX extends LedgerParserError {
+  /**
+   * Creates the error.
+   *
+   * @param index Requested operation index.
+   * @param transactionIndex Parent transaction index.
+   * @param maxIndex Highest valid operation index.
+   */
   constructor(index: number, transactionIndex: number, maxIndex: number) {
     super({
       code: Code.INVALID_OPERATION_INDEX,
@@ -157,6 +200,11 @@ export class INVALID_OPERATION_INDEX extends LedgerParserError {
  * Thrown when encountering an unknown operation type.
  */
 export class UNSUPPORTED_OPERATION_TYPE extends LedgerParserError {
+  /**
+   * Creates the error.
+   *
+   * @param operationType Unsupported operation type identifier.
+   */
   constructor(operationType: string) {
     super({
       code: Code.UNSUPPORTED_OPERATION_TYPE,

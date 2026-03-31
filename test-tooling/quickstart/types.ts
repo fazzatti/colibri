@@ -78,8 +78,15 @@ export const DEFAULT_ENABLED_SERVICES = [
   QuickstartServices.RPC,
 ] as const;
 
-type DefaultEnabledServices = typeof DEFAULT_ENABLED_SERVICES;
-type EmptyShape = Record<PropertyKey, never>;
+/**
+ * Default service tuple enabled by `StellarTestLedger`.
+ */
+export type DefaultEnabledServices = typeof DEFAULT_ENABLED_SERVICES;
+
+/**
+ * Empty object helper used to omit unavailable network service fields.
+ */
+export type EmptyShape = Record<PropertyKey, never>;
 
 /**
  * Storage modes supported by Quickstart containers.
@@ -121,32 +128,50 @@ export type PersistentStorage = {
  */
 export type QuickstartStorage = EphemeralStorage | PersistentStorage;
 
-type IncludesAny<
+/**
+ * Returns `true` when a service tuple includes at least one candidate service.
+ */
+export type IncludesAny<
   Items extends readonly QuickstartService[],
   Candidate extends QuickstartService,
 > = [Extract<Candidate, Items[number]>] extends [never] ? false : true;
 
-type HasRpc<Services extends readonly QuickstartService[]> = IncludesAny<
+/**
+ * Resolves whether a service tuple exposes Soroban RPC.
+ */
+export type HasRpc<Services extends readonly QuickstartService[]> = IncludesAny<
   Services,
   typeof QuickstartServices.RPC
 >;
 
-type HasExplicitHorizon<Services extends readonly QuickstartService[]> =
+/**
+ * Resolves whether a service tuple explicitly enables Horizon.
+ */
+export type HasExplicitHorizon<Services extends readonly QuickstartService[]> =
   IncludesAny<Services, typeof QuickstartServices.HORIZON>;
 
-type HasHorizon<
+/**
+ * Resolves whether a network/service combination exposes Horizon.
+ */
+export type HasHorizon<
   Network extends NetworkEnv,
   Services extends readonly QuickstartService[],
 > = HasExplicitHorizon<Services> extends true ? true
   : Network extends NetworkEnv.LOCAL ? HasRpc<Services>
   : false;
 
-type HasLab<Services extends readonly QuickstartService[]> = IncludesAny<
+/**
+ * Resolves whether a service tuple exposes Stellar Lab.
+ */
+export type HasLab<Services extends readonly QuickstartService[]> = IncludesAny<
   Services,
   typeof QuickstartServices.LAB
 >;
 
-type HasFriendbot<
+/**
+ * Resolves whether a network/service combination exposes Friendbot.
+ */
+export type HasFriendbot<
   Network extends NetworkEnv,
   Services extends readonly QuickstartService[],
 > = Network extends NetworkEnv.LOCAL ? HasHorizon<Network, Services>
@@ -157,7 +182,10 @@ type HasFriendbot<
     | typeof QuickstartServices.LAB
   >;
 
-type HasLedgerMeta<
+/**
+ * Resolves whether a network/service combination exposes ledger meta.
+ */
+export type HasLedgerMeta<
   Network extends NetworkEnv,
   Services extends readonly QuickstartService[],
 > = Network extends NetworkEnv.LOCAL ? IncludesAny<

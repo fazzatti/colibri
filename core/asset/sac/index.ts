@@ -1,6 +1,9 @@
+// deno-coverage-ignore-start — Babel decorator helpers are injected at line 1 during transpilation; this excludes them from coverage
 import { Contract } from "@/contract/index.ts";
 import * as E from "@/asset/sac/error.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
+import { memoize } from "@/common/decorators/memoize/index.ts";
+// deno-coverage-ignore-stop
 import { getContractIdFromGetTransactionResponse } from "@/common/helpers/get-transaction-response.ts";
 import { getStellarAssetContractIdFromFailedSimulationResponse } from "@/common/helpers/failed-simulation-response.ts";
 import { SIMULATION_FAILED } from "@/processes/simulate-transaction/error.ts";
@@ -8,23 +11,88 @@ import {
   Asset,
   nativeToScVal,
   Operation,
-  scValToNative,
   type OperationOptions,
+  scValToNative,
 } from "stellar-sdk";
-import type { xdr } from "stellar-sdk";
-import type { NetworkConfig } from "@/network/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { Api } from "stellar-sdk/rpc";
+import type { LedgerKeyLike } from "@/common/types/index.ts";
 
 import { StrKey } from "@/strkeys/index.ts";
 import { assert } from "@/common/assert/assert.ts";
 import {
-  Method,
-  type ContractOutput,
   type BaseInvocation,
   type ContractInput,
+  type ContractOutput,
+  type DeployStellarAssetContractArgs,
+  Method,
+  type StellarAssetContractConstructorArgs,
+  type StellarAssetContractFromAssetArgs,
+  type StellarAssetContractFromContractIdArgs,
+  type StellarAssetContractNativeArgs,
+  type StellarAssetContractOptions,
 } from "@/asset/sac/types.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
+
+type ResolvedStellarAssetContractOptions = {
+  cache: {
+    enabled: boolean;
+    ttl?: number;
+    cacheRejected: boolean;
+    evictOnExpiry: boolean;
+  };
+};
+
+const resolveOptions = (
+  options?: StellarAssetContractOptions,
+): ResolvedStellarAssetContractOptions => ({
+  cache: {
+    enabled: options?.cache?.enabled ?? true,
+    ttl: options?.cache?.ttl,
+    cacheRejected: options?.cache?.cacheRejected ?? false,
+    evictOnExpiry: options?.cache?.evictOnExpiry ?? false,
+  },
+});
+
+const createAssetFromIdentity = (
+  code: string,
+  issuer: Ed25519PublicKey | "native",
+): Asset => issuer === "native" ? Asset.native() : new Asset(code, issuer);
+
+const resolveAssetIdentity = (
+  args: StellarAssetContractConstructorArgs,
+): {
+  code?: string;
+  issuer?: Ed25519PublicKey | "native";
+  contractId: ContractId;
+} => {
+  if ("contractId" in args) {
+    return { contractId: args.contractId };
+  }
+
+  if ("asset" in args) {
+    const issuer = args.asset.issuer
+      ? args.asset.issuer as Ed25519PublicKey
+      : "native";
+    const asset = issuer === "native" ? Asset.native() : args.asset;
+    return {
+      code: issuer === "native" ? "XLM" : asset.code,
+      issuer,
+      contractId: asset.contractId(
+        args.networkConfig.networkPassphrase,
+      ) as ContractId,
+    };
+  }
+
+  const asset = createAssetFromIdentity(args.code, args.issuer);
+  return {
+    code: args.code,
+    issuer: args.issuer,
+    contractId: asset.contractId(
+      args.networkConfig.networkPassphrase,
+    ) as ContractId,
+  };
+};
 
 /**
  * Client class for interacting with Stellar Asset Contracts (SAC).
@@ -34,23 +102,21 @@ import { isDefined } from "@/common/type-guards/is-defined.ts";
  * the Soroban ecosystem. SACs implement the SEP-41 token interface and are defined in CAP-0046-06.
  *
  * SACs bridge classic Stellar assets with Soroban smart contracts while maintaining
- * compatibility with the existing Stellar asset system. The contract ID is deterministically
- * derived from the asset code and issuer.
+ * compatibility with the existing Stellar asset system. A `StellarAssetContract`
+ * instance is always bound to a contract id. Asset identity metadata is optional
+ * and only needed when creating or deploying a SAC from a classic asset.
  *
  * @see {@link https://github.com/stellar/stellar-protocol/blob/master/core/cap-0046-06.md | CAP-0046-06}
  * @see {@link https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0041.md | SEP-41}
  *
  * @example
  * ```typescript
- * // Create a SAC client instance
- * const sac = new StellarAssetContract({
+ * const sac = await StellarAssetContract.deploy({
+ *   networkConfig: NetworkConfig.TestNet(),
  *   code: "USDC",
  *   issuer: "GCNY...",
- *   networkConfig: NetworkConfig.TestNet(),
+ *   config: txConfig,
  * });
- *
- * // Deploy the contract on the network
- * await sac.deploy(txConfig);
  *
  * // Read token info
  * const name = await sac.name();
@@ -71,17 +137,16 @@ import { isDefined } from "@/common/type-guards/is-defined.ts";
  */
 export class StellarAssetContract {
   /**
-   * The asset code (e.g., "USDC", "XLM").
-   * For credit assets, this is a 1-12 character alphanumeric string.
+   * The asset code when the client was created from a classic asset identity.
+   *
+   * This value is omitted when the client is created directly from `contractId`.
    */
-  readonly code: string;
+  readonly code?: string;
 
   /**
-   * The asset issuer, which can be either:
-   * - An Ed25519 public key (for credit assets), representing the Stellar account that issued the asset.
-   * - The string `"native"` (for the native XLM asset).
+   * The asset issuer when the client was created from a classic asset identity.
    */
-  private issuer: Ed25519PublicKey | "native";
+  private readonly issuer?: Ed25519PublicKey | "native";
 
   /**
    * The underlying Contract instance used for Soroban interactions.
@@ -95,44 +160,34 @@ export class StellarAssetContract {
    */
   readonly contractId: ContractId;
 
+  private readonly options: ResolvedStellarAssetContractOptions;
+
   /**
    * Creates a new StellarAssetContract instance.
    *
-   * The contract ID is automatically calculated from the asset code, issuer,
-   * and network passphrase using the deterministic SAC address derivation.
+   * This constructor accepts either a known `contractId` or a classic asset
+   * identity (`code` + `issuer`, or a `stellar-sdk` `Asset`) from which the
+   * SAC id can be deterministically derived.
    *
    * @param args - Constructor arguments
-   * @param args.networkConfig - Network configuration (TestNet, MainNet, or custom)
-   * @param args.code - The asset code (1-12 alphanumeric characters)
-   * @param args.issuer - The Ed25519 public key of the asset issuer
+   * @returns A SAC client bound to the resolved contract id
    *
    * @example
    * ```typescript
    * const sac = new StellarAssetContract({
-   *   code: "USDC",
-   *   issuer: "GCNY5OXYSY4FKHOPT2SPOQZAOEIGXB5LBYW3HVU3OWSTQITS65M5RCNY",
+   *   contractId: "CBI...",
    *   networkConfig: NetworkConfig.TestNet(),
    * });
    * ```
    */
-  constructor(args: {
-    networkConfig: NetworkConfig;
-    code: string;
-    issuer: Ed25519PublicKey | "native";
-  }) {
-    const { code, issuer, networkConfig } = args;
+  constructor(args: StellarAssetContractConstructorArgs) {
+    const { networkConfig, rpc, options } = args;
+    const { code, issuer, contractId } = resolveAssetIdentity(args);
 
-    this.contractId =
-      issuer === "native"
-        ? (Asset.native().contractId(
-            networkConfig.networkPassphrase
-          ) as ContractId)
-        : (new Asset(code, issuer).contractId(
-            networkConfig.networkPassphrase
-          ) as ContractId);
-
+    this.contractId = contractId;
     this.contract = new Contract({
       networkConfig,
+      rpc,
       contractConfig: {
         contractId: this.contractId,
       },
@@ -140,21 +195,114 @@ export class StellarAssetContract {
 
     this.code = code;
     this.issuer = issuer;
+    this.options = resolveOptions(options);
   }
 
   /**
    * Creates a StellarAssetContract instance for the native XLM asset.
    * This is a convenience method for working with the native asset SAC.
    *
-   * @param networkConfig - Network configuration (TestNet, MainNet, or custom)
+   * @param args - Network and runtime options for the client
    * @returns A StellarAssetContract instance for the native XLM asset
    */
-  static NativeXLM(networkConfig: NetworkConfig): StellarAssetContract {
+  static NativeXLM(
+    args: StellarAssetContractNativeArgs,
+  ): StellarAssetContract;
+  /** @internal */
+  static NativeXLM(
+    networkConfig: Contract["networkConfig"],
+  ): StellarAssetContract;
+  static NativeXLM(
+    argsOrNetworkConfig:
+      | StellarAssetContractNativeArgs
+      | Contract["networkConfig"],
+  ): StellarAssetContract {
+    const baseArgs = "networkConfig" in argsOrNetworkConfig
+      ? argsOrNetworkConfig
+      : { networkConfig: argsOrNetworkConfig };
+
     return new StellarAssetContract({
+      ...baseArgs,
       code: "XLM",
       issuer: "native",
-      networkConfig,
     });
+  }
+
+  /**
+   * Creates a SAC client from a classic asset identity.
+   *
+   * @param args - The classic asset identity and runtime configuration
+   * @returns A SAC client bound to the deterministically derived contract id
+   *
+   * @example
+   * ```typescript
+   * const sac = StellarAssetContract.fromAsset({
+   *   networkConfig: NetworkConfig.TestNet(),
+   *   code: "USDC",
+   *   issuer: issuerPublicKey,
+   * });
+   * ```
+   */
+  static fromAsset(
+    args: StellarAssetContractFromAssetArgs,
+  ): StellarAssetContract {
+    return new StellarAssetContract(args);
+  }
+
+  /**
+   * Creates a SAC client from an existing contract id.
+   *
+   * @param args - The contract id and runtime configuration
+   * @returns A SAC client bound to the provided contract id
+   *
+   * @example
+   * ```typescript
+   * const sac = StellarAssetContract.fromContractId({
+   *   networkConfig: NetworkConfig.TestNet(),
+   *   contractId: "CBI...",
+   * });
+   * ```
+   */
+  static fromContractId(
+    args: StellarAssetContractFromContractIdArgs,
+  ): StellarAssetContract {
+    return new StellarAssetContract(args);
+  }
+
+  /**
+   * Deploys the Stellar Asset Contract for a classic Stellar asset and returns
+   * a client bound to the resulting SAC contract id.
+   *
+   * @param args - The classic asset identity, transaction config, and runtime options
+   * @returns A deployed SAC client
+   *
+   * @throws {FAILED_TO_DEPLOY_CONTRACT} If the deployment fails for any reason other than
+   *         the contract already existing
+   * @throws {UNMATCHED_CONTRACT_ID} If the deployed contract ID doesn't match the expected ID
+   *
+   * @example
+   * ```typescript
+   * const sac = await StellarAssetContract.deploy({
+   *   networkConfig: NetworkConfig.TestNet(),
+   *   code: "USDC",
+   *   issuer: issuerPublicKey,
+   *   config: txConfig,
+   * });
+   * ```
+   */
+  static async deploy(
+    args: DeployStellarAssetContractArgs,
+  ): Promise<StellarAssetContract> {
+    const { config, ...assetArgs } = args;
+    const sac = StellarAssetContract.fromAsset(assetArgs);
+
+    await (
+      sac as unknown as {
+        deploy(config: TransactionConfig): Promise<void>;
+      }
+    ).deploy(config);
+
+    return sac;
   }
 
   /**
@@ -163,85 +311,62 @@ export class StellarAssetContract {
    * @returns `true` if the SAC is for native XLM, `false` otherwise
    */
   public isNativeXLM(): boolean {
-    return this.issuer === "native";
+    return this.contractId === Asset.native().contractId(
+      this.contract.networkConfig.networkPassphrase,
+    );
   }
 
-  /**
-   * Deploys the Stellar Asset Contract on the network.
-   *
-   * This operation creates the Stellar Asset Contract for the classic asset,
-   * enabling it to be used within Soroban smart contracts. If the contract
-   * has already been deployed, this method will detect the existing contract
-   * and return successfully.
-   *
-   * @param config - Transaction configuration including fee, timeout, source, and signers
-   * @returns The StellarAssetContract instance (for chaining)
-   *
-   * @throws {FAILED_TO_WRAP_ASSET} If the deployment fails for any reason other than
-   *         the contract already existing
-   * @throws {UNMATCHED_CONTRACT_ID} If the deployed contract ID doesn't match the expected ID
-   *
-   * @example
-   * ```typescript
-   * const sac = new StellarAssetContract({ code, issuer, networkConfig });
-   *
-   * // Deploy the contract
-   * await sac.deploy({
-   *   fee: "10000000",
-   *   timeout: 30,
-   *   source: issuerPublicKey,
-   *   signers: [issuerSigner],
-   * });
-   * ```
-   */
-  public async deploy(
-    config: TransactionConfig
-  ): Promise<StellarAssetContract> {
-    const asset = new Asset(this.code, this.issuer);
+  /** @internal */
+  private async deploy(config: TransactionConfig): Promise<void> {
+    if (!this.code) {
+      throw new E.MISSING_ARG("code");
+    }
+    if (!this.issuer) {
+      throw new E.MISSING_ARG("issuer");
+    }
+
+    const asset = createAssetFromIdentity(this.code, this.issuer);
 
     try {
-      const wrapOperation = Operation.createStellarAssetContract({
+      const deployOperation = Operation.createStellarAssetContract({
         asset: asset,
       } as OperationOptions.CreateStellarAssetContract);
 
       const result = await this.contract.invokePipe.run({
         config,
-        operations: [wrapOperation],
+        operations: [deployOperation],
       });
 
       const deployedContractId = getContractIdFromGetTransactionResponse(
-        result.response
+        result.response,
       );
 
       assert(
         StrKey.isContractId(deployedContractId) &&
           deployedContractId === this.contractId,
-        new E.UNMATCHED_CONTRACT_ID(this.contractId, deployedContractId)
+        new E.UNMATCHED_CONTRACT_ID(this.contractId, deployedContractId),
       );
-
-      return this;
     } catch (error) {
       if (error instanceof SIMULATION_FAILED) {
         try {
           const contractId =
             getStellarAssetContractIdFromFailedSimulationResponse(
-              error.meta.data.simulationResponse
+              error.meta.data.simulationResponse,
             );
 
           if (contractId) {
             assert(
               StrKey.isContractId(contractId) && contractId === this.contractId,
-              new E.UNMATCHED_CONTRACT_ID(this.contractId, contractId)
+              new E.UNMATCHED_CONTRACT_ID(this.contractId, contractId),
             );
-
-            return this;
+            return;
           }
         } catch (_innerError) {
           // Ignore inner errors related to extracting contract ID
         }
       }
 
-      throw new E.FAILED_TO_WRAP_ASSET(asset, error as Error);
+      throw new E.FAILED_TO_DEPLOY_CONTRACT(asset, error as Error);
     }
   }
 
@@ -259,7 +384,8 @@ export class StellarAssetContract {
    * // Use in transaction building for footprint hints
    * ```
    */
-  public getContractFootprint(): xdr.LedgerKey {
+  /** @internal */
+  public getContractFootprint(): LedgerKeyLike {
     return this.contract.getContractFootprint();
   }
 
@@ -277,7 +403,10 @@ export class StellarAssetContract {
    * console.log("Contract key:", entry.key);
    * ```
    */
-  public async getContractInstanceLedgerEntry(): Promise<Api.LedgerEntryResult> {
+  /** @internal */
+  public async getContractInstanceLedgerEntry(): Promise<
+    Api.LedgerEntryResult
+  > {
     return await this.contract.getContractInstanceLedgerEntry();
   }
 
@@ -289,7 +418,9 @@ export class StellarAssetContract {
    * Returns the number of decimals used by the token.
    *
    * For Stellar Asset Contracts, this is always 7 (same as classic Stellar assets).
-   * This means 1 token = 10,000,000 stroops (the smallest unit).
+   * This means 1 token = 10,000,000 stroops (the smallest unit). When
+   * `options.cache` is enabled for the instance, the first successful read is
+   * memoized using that cache policy.
    *
    * @returns The number of decimals (always 7 for SAC)
    *
@@ -303,6 +434,14 @@ export class StellarAssetContract {
    * const contractAmount = BigInt(humanAmount * 10 ** decimals);
    * ```
    */
+  @memoize({
+    enabled: (self: StellarAssetContract) => self.options.cache.enabled,
+    ttl: (self: StellarAssetContract) => self.options.cache.ttl,
+    cacheRejected: (self: StellarAssetContract) =>
+      self.options.cache.cacheRejected,
+    evictOnExpiry: (self: StellarAssetContract) =>
+      self.options.cache.evictOnExpiry,
+  })
   public async decimals(): Promise<ContractOutput[Method.Decimals]> {
     const result = await this.contract.readRaw({
       method: Method.Decimals,
@@ -318,6 +457,8 @@ export class StellarAssetContract {
    *
    * For Stellar Asset Contracts, this returns the canonical asset string
    * in the format "code:issuer" (e.g., "USDC:GCNY5OXYSY4FKHOPT2SPOQZAOEIGXB5LBYW3HVU3OWSTQITS65M5RCNY").
+   * When `options.cache` is enabled for the instance, the first successful read
+   * is memoized using that cache policy.
    *
    * @returns The token name in "code:issuer" format
    *
@@ -327,6 +468,14 @@ export class StellarAssetContract {
    * console.log(name); // "USDC:GCNY5OXYSY4FKHOPT2SPOQZAOEIGXB5LBYW3HVU3OWSTQITS65M5RCNY"
    * ```
    */
+  @memoize({
+    enabled: (self: StellarAssetContract) => self.options.cache.enabled,
+    ttl: (self: StellarAssetContract) => self.options.cache.ttl,
+    cacheRejected: (self: StellarAssetContract) =>
+      self.options.cache.cacheRejected,
+    evictOnExpiry: (self: StellarAssetContract) =>
+      self.options.cache.evictOnExpiry,
+  })
   public async name(): Promise<ContractOutput[Method.Name]> {
     const result = await this.contract.readRaw({
       method: Method.Name,
@@ -341,6 +490,8 @@ export class StellarAssetContract {
    * Returns the symbol of the token.
    *
    * For Stellar Asset Contracts, this is the asset code (e.g., "USDC", "XLM").
+   * When `options.cache` is enabled for the instance, the first successful read
+   * is memoized using that cache policy.
    *
    * @returns The token symbol (asset code)
    *
@@ -350,6 +501,14 @@ export class StellarAssetContract {
    * console.log(symbol); // "USDC"
    * ```
    */
+  @memoize({
+    enabled: (self: StellarAssetContract) => self.options.cache.enabled,
+    ttl: (self: StellarAssetContract) => self.options.cache.ttl,
+    cacheRejected: (self: StellarAssetContract) =>
+      self.options.cache.cacheRejected,
+    evictOnExpiry: (self: StellarAssetContract) =>
+      self.options.cache.evictOnExpiry,
+  })
   public async symbol(): Promise<ContractOutput[Method.Symbol]> {
     const result = await this.contract.readRaw({
       method: Method.Symbol,
