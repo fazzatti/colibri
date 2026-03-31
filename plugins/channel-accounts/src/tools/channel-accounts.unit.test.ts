@@ -83,8 +83,8 @@ describe("ChannelAccounts unit behavior", () => {
     assertEquals(result, undefined);
   });
 
-  it("rethrows Colibri errors raised while closing channels", async () => {
-    const error = await assertRejects(
+  it("wraps invalid close runtime errors", async () => {
+    await assertRejects(
       async () =>
         await ChannelAccounts.close({
           channels: [channel],
@@ -92,10 +92,8 @@ describe("ChannelAccounts unit behavior", () => {
           networkConfig: {} as never,
           config,
         }),
-      ColibriError,
+      E.UNEXPECTED_ERROR,
     );
-
-    assertEquals(error instanceof E.UNEXPECTED_ERROR, false);
   });
 
   it("wraps unexpected errors raised while closing channels", async () => {

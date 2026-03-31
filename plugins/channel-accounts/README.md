@@ -13,14 +13,15 @@ Colibri classic and Soroban transaction pipelines.
 
 ## Quick start
 
-Create channels, register them in the plugin, and attach the plugin to the
-pipeline you want to accelerate.
+Create channels, register them in the plugin, and pair them with a fee-bump
+plugin if you want zero-balance channels to submit transactions immediately.
 
 ```ts
 import {
   ChannelAccounts,
   createChannelAccountsPlugin,
 } from "@colibri/plugin-channel-accounts";
+import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
 import { createClassicTransactionPipeline, NetworkConfig } from "@colibri/core";
 
 const networkConfig = NetworkConfig.TestNet();
@@ -31,15 +32,23 @@ const channels = await ChannelAccounts.open({
   config,
 });
 
-const plugin = createChannelAccountsPlugin({ channels });
+const channelAccountsPlugin = createChannelAccountsPlugin({ channels });
+const feeBumpPlugin = createFeeBumpPlugin({
+  networkConfig,
+  feeBumpConfig: {
+    source: sponsor.address(),
+    fee: "10000000",
+    signers: [sponsor.signer()],
+  },
+});
 const pipeline = createClassicTransactionPipeline({ networkConfig });
-pipeline.use(plugin);
+pipeline.use(channelAccountsPlugin);
+pipeline.use(feeBumpPlugin);
 ```
 
 ## Opening channels
 
-`ChannelAccounts.open(...)` creates and funds a bounded set of sponsored channel
-accounts.
+`ChannelAccounts.open(...)` creates a bounded set of sponsored channel accounts.
 
 - `numberOfChannels` — number of channels to open
 - `sponsor` — account funding and sponsoring the channels
@@ -119,10 +128,12 @@ sac.contract.invokePipe.use(plugin);
 
 ## Notes
 
-- Channels are opened with a starting balance so they can act as transaction
-  sources without requiring a separate fee-bump layer.
-- Channel closing uses a direct channel-sourced `accountMerge`, which works even
-  when the sponsor was added as a signer during channel creation.
+- Channels are opened with `0` balance.
+- If you want zero-balance channels to submit transactions immediately, either
+  fund them separately or combine the pipeline with
+  `@colibri/plugin-fee-bump`.
+- Channel closing keeps the channel as the `accountMerge` operation source while
+  letting the caller-provided transaction config pay the network fee.
 - Adding the sponsor as a channel signer affects the on-chain account shape, but
   it does not yet make sponsor-only signing automatic through current Colibri
   pipeline signing requirements.

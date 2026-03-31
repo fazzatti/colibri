@@ -4,8 +4,11 @@ import {
   createClassicTransactionPipeline,
   LocalSigner,
   NativeAccount,
+  type Signer,
+  StrKey,
 } from "@colibri/core";
-import { Operation } from "stellar-sdk";
+import { Operation, TransactionBuilder, type Transaction } from "stellar-sdk";
+import { Api, Server } from "stellar-sdk/rpc";
 import { appendUniqueSigners } from "@/shared/signers.ts";
 import {
   type ChannelAccount,
@@ -27,17 +30,112 @@ const createClassicPipelineArgs = <
     ? { networkConfig: args.networkConfig, rpc: args.rpc }
     : { networkConfig: args.networkConfig };
 
+const resolveRpc = <
+  Args extends {
+    networkConfig: OpenChannelsArgs["networkConfig"];
+    rpc?: OpenChannelsArgs["rpc"];
+  },
+>(
+  args: Args,
+) =>
+  args.rpc ??
+  new Server(args.networkConfig.rpcUrl!, {
+    allowHttp: args.networkConfig.allowHttp ?? false,
+  });
+
 const createChannelAccount = (): ChannelAccount =>
   NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
 
-const DEFAULT_CHANNEL_STARTING_BALANCE = "10";
+const sponsorCanSignChannel = async (
+  rpc: Server,
+  sponsor: ChannelAccount,
+  channel: ChannelAccount,
+): Promise<boolean> => {
+  const accountEntry = await rpc.getAccountEntry(channel.address());
+
+  return accountEntry.signers().some((signer) => {
+    try {
+      return (
+        signer.weight() > 0 &&
+        StrKey.encodeEd25519PublicKey(signer.key().ed25519()) ===
+          sponsor.address()
+      );
+    } catch {
+      return false;
+    }
+  });
+};
+
+const delay = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+const signTransactionWithSigners = async (
+  transaction: Transaction,
+  signers: readonly Signer[],
+  networkPassphrase: string,
+): Promise<Transaction> => {
+  let signedTransaction = transaction;
+
+  for (const signer of signers) {
+    signedTransaction = TransactionBuilder.fromXDR(
+      await signer.signTransaction(signedTransaction),
+      networkPassphrase,
+    ) as Transaction;
+  }
+
+  return signedTransaction;
+};
+
+const submitTransaction = async (
+  rpc: Server,
+  transaction: Transaction,
+  timeoutInSeconds: number,
+): Promise<void> => {
+  const sendResponse = await rpc.sendTransaction(transaction);
+
+  if (sendResponse.status === "ERROR") {
+    throw new Error(
+      `Transaction processing error: ${sendResponse.errorResult ?? "unknown"}`,
+    );
+  }
+
+  if (sendResponse.status === "DUPLICATE") {
+    throw new Error(`Duplicate transaction: ${sendResponse.hash}`);
+  }
+
+  if (sendResponse.status === "TRY_AGAIN_LATER") {
+    throw new Error(`Transaction throttled: ${sendResponse.hash}`);
+  }
+
+  if (sendResponse.status !== "PENDING") {
+    throw new Error(`Unexpected transaction status: ${sendResponse.status}`);
+  }
+
+  const deadline = Date.now() + timeoutInSeconds * 1000;
+
+  while (Date.now() < deadline) {
+    const response = await rpc.getTransaction(sendResponse.hash);
+
+    if (response.status === Api.GetTransactionStatus.SUCCESS) {
+      return;
+    }
+
+    if (response.status === Api.GetTransactionStatus.FAILED) {
+      throw new Error(`Transaction failed: ${sendResponse.hash}`);
+    }
+
+    await delay(500);
+  }
+
+  throw new Error(`Transaction timed out: ${sendResponse.hash}`);
+};
 
 /**
  * Opens and closes sponsored Stellar channel accounts for later pipeline reuse.
  */
 export class ChannelAccounts {
   /**
-   * Opens, funds, and optionally augments a bounded set of channel accounts.
+   * Opens and optionally augments a bounded set of channel accounts.
    *
    * @param args - Channel creation arguments
    * @returns The created channel accounts, each paired with its signer
@@ -98,7 +196,7 @@ export class ChannelAccounts {
           Operation.createAccount({
             source: sponsor.address(),
             destination: channel.address(),
-            startingBalance: DEFAULT_CHANNEL_STARTING_BALANCE,
+            startingBalance: "0",
           }),
         ];
 
@@ -184,24 +282,33 @@ export class ChannelAccounts {
     if (channels.length === 0) return;
 
     try {
-      const pipeline = createClassicTransactionPipeline(
-        createClassicPipelineArgs({ networkConfig, rpc }),
-      );
+      const closeRpc = resolveRpc({ networkConfig, rpc });
 
       for (const channel of channels) {
-        await pipeline.run({
-          operations: [
+        const signers = await sponsorCanSignChannel(closeRpc, sponsor, channel)
+          ? appendUniqueSigners(config.signers, sponsor.signer())
+          : appendUniqueSigners(config.signers, channel.signer());
+        const sourceAccount = await closeRpc.getAccount(config.source);
+        const transaction = new TransactionBuilder(sourceAccount, {
+          fee: config.fee,
+          networkPassphrase: networkConfig.networkPassphrase,
+        })
+          .addOperation(
             Operation.accountMerge({
               source: channel.address(),
               destination: sponsor.address(),
             }),
-          ],
-          config: {
-            ...config,
-            source: channel.address(),
-            signers: appendUniqueSigners(config.signers, channel.signer()),
-          },
-        });
+          )
+          .setTimeout(config.timeout)
+          .build();
+
+        const signedTransaction = await signTransactionWithSigners(
+          transaction,
+          signers,
+          networkConfig.networkPassphrase,
+        );
+
+        await submitTransaction(closeRpc, signedTransaction, config.timeout);
       }
     } catch (error) {
       if (error instanceof ColibriError) throw error;

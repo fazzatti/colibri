@@ -74,8 +74,12 @@ describe("ChannelAccounts integration", disableSanitizeConfig, () => {
       });
 
       assertEquals(channels.length, 2);
-      await Promise.all(
-        channels.map((channel) => rpc.getAccount(channel.address())),
+      const accountEntries = await Promise.all(
+        channels.map((channel) => rpc.getAccountEntry(channel.address())),
+      );
+      assertEquals(
+        accountEntries.map((entry) => entry.balance().toString()),
+        ["0", "0"],
       );
 
       await ChannelAccounts.close({
