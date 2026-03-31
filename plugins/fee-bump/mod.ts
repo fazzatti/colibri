@@ -6,9 +6,17 @@
 
 export {
   createFeeBumpPlugin,
+  FEE_BUMP_PLUGIN_ID,
+  FEE_BUMP_PLUGIN_TARGET,
 } from "@/index.ts";
+export type {
+  FeeBumpPluginArgs,
+  FeeBumpPluginConfig,
+  FeeBumpPluginNetworkConfig,
+  FeeBumpPluginSigner,
+  FeeBumpSignableTransaction,
+} from "@/types.ts";
 export {
   Code,
   ERROR_PLG_FBP,
 } from "@/error.ts";
-export * from "@/types.ts";

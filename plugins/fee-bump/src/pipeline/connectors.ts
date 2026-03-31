@@ -1,12 +1,13 @@
 import { step, type StepThis } from "convee";
 import type {
   FeeBumpConfig,
+  SignEnvelopeInput,
   WrapFeeBumpInput,
   WrapFeeBumpOutput,
   EnvelopeSigningRequirementsInput,
   EnvelopeSigningRequirementsOutput,
-  SignEnvelopeInput,
 } from "@colibri/core";
+import type { FeeBumpPluginConfig } from "@/types.ts";
 import type { FeeBumpPipelineInput } from "@/pipeline/types.ts";
 import { ColibriError, steps } from "@colibri/core";
 
@@ -27,11 +28,15 @@ const getRequiredStepOutput = <Output>(
 
 export const inputToBuild = (
   networkPassphrase: string,
-  config: FeeBumpConfig,
+  config: FeeBumpPluginConfig,
 ) => {
   return (input: FeeBumpPipelineInput): WrapFeeBumpInput => {
     const { transaction } = input;
-    return { transaction, config, networkPassphrase };
+    return {
+      transaction,
+      config: config as FeeBumpConfig,
+      networkPassphrase,
+    };
   };
 };
 
@@ -42,13 +47,13 @@ export const wrapFeeBumpToEnvelopeSigningRequirements = (
 };
 
 export const envSignReqToSignEnvelope = (
-  config: FeeBumpConfig,
+  config: FeeBumpPluginConfig,
 ) =>
   step(function (
     this: StepThis,
     ...envelopeSigningRequirementsOutput: EnvelopeSigningRequirementsOutput
   ): SignEnvelopeInput {
-    const signers = config.signers;
+    const signers = config.signers as SignEnvelopeInput["signers"];
 
     const transaction = getRequiredStepOutput<WrapFeeBumpOutput>(
       this,

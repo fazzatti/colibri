@@ -1,4 +1,7 @@
-import type { FeeBumpConfig, NetworkConfig } from "@colibri/core";
+import type {
+  FeeBumpPluginConfig,
+  FeeBumpPluginNetworkConfig,
+} from "@/types.ts";
 import type { Transaction } from "stellar-sdk";
 
 /**
@@ -19,7 +22,7 @@ export interface FeeBumpPipelineInput {
  */
 export interface CreateFeeBumpPipelineArgs {
   /** Network configuration used while building the fee-bump transaction. */
-  networkConfig: NetworkConfig;
+  networkConfig: FeeBumpPluginNetworkConfig;
   /** Fee-bump configuration describing the fee source and signers. */
-  feeBumpConfig: FeeBumpConfig;
+  feeBumpConfig: FeeBumpPluginConfig;
 }

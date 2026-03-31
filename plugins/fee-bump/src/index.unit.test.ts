@@ -15,6 +15,7 @@ import {
   LocalSigner,
   NativeAccount,
   NetworkConfig,
+  type SendTransactionInput,
   type SendTransactionOutput,
   steps,
 } from "@colibri/core";
@@ -31,7 +32,8 @@ import {
   type Transaction,
   TransactionBuilder,
 } from "stellar-sdk";
-import type { PluginInput } from "@/types.ts";
+
+type PluginInput = SendTransactionInput;
 
 describe("FeeBump Plugin", () => {
   const networkConfig = NetworkConfig.TestNet();

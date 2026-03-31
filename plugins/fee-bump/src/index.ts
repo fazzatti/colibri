@@ -1,6 +1,7 @@
 import type {
   createClassicTransactionPipeline,
   createInvokeContractPipeline,
+  SendTransactionInput,
 } from "@colibri/core";
 import {
   plugin,
@@ -10,7 +11,6 @@ import {
   FEE_BUMP_PLUGIN_ID,
   FEE_BUMP_PLUGIN_TARGET,
   type FeeBumpPluginArgs,
-  type PluginInput,
 } from "@/types.ts";
 import { createFeeBumpPipeline } from "@/pipeline/pipeline.ts";
 import { assert, isTransaction } from "@colibri/core";
@@ -30,6 +30,8 @@ type SendTransactionStep<Pipeline extends { steps: readonly unknown[] }> =
 type FeeBumpRuntimePlugin =
   & PipeStepPlugin<SendTransactionStep<ClassicTransactionPipeline>, Error>
   & PipeStepPlugin<SendTransactionStep<InvokeContractPipeline>, Error>;
+
+type PluginInput = SendTransactionInput;
 
 /**
  * Creates a plugin that wraps outgoing transactions in a fee-bump envelope.
