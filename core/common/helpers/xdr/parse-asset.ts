@@ -16,6 +16,7 @@ import type { xdr } from "stellar-sdk";
  * ```ts
  * parseAsset(asset); // "native" or "USDC:GXXXX..."
  * ```
+ * @internal
  */
 export function parseAsset(assetXdr: xdr.Asset): StellarAssetCanonicalString {
   switch (assetXdr.switch().name) {

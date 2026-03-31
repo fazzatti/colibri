@@ -4,27 +4,105 @@
  */
 
 /**
- * Base options shared by all memoize configurations.
+ * Runtime cache policy shared by high-level tools that expose memoization controls.
+ *
+ * This shape is intentionally small so instances can opt into or out of caching
+ * without knowing decorator-specific implementation details.
+ *
+ * @example
+ * ```typescript
+ * class ContractClient {
+ *   constructor(
+ *     readonly options: { cache?: MemoizePolicy } = {},
+ *   ) {}
+ * }
+ * ```
  */
-interface MemoizeOptionsBase {
+export type MemoizePolicy = {
+  /**
+   * Whether caching is enabled for the associated cacheable methods.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+
+  /**
+   * Optional time-to-live in milliseconds.
+   *
+   * @example
+   * ```typescript
+   * const cache: MemoizePolicy = { ttl: 5_000 };
+   * ```
+   */
+  ttl?: number;
+
+  /**
+   * Whether rejected promises should remain cached.
+   *
+   * The default decorator behavior is to evict rejected promises so subsequent
+   * calls can retry.
+   *
+   * @default false
+   */
+  cacheRejected?: boolean;
+
+  /**
+   * Whether entries should be actively evicted when TTL expires.
+   *
+   * @default false
+   */
+  evictOnExpiry?: boolean;
+};
+
+type BivariantResolver<Value, This, Args extends unknown[]> = {
+  bivarianceHack(self: This, ...args: Args): Value;
+}["bivarianceHack"];
+
+/**
+ * Resolves a memoize option from either a literal value or a function that is
+ * evaluated against the current instance and method arguments at runtime.
+ * @internal
+ */
+export type MemoizeOptionResolver<
+  Value,
+  This = unknown,
+  Args extends unknown[] = unknown[],
+> = Value | BivariantResolver<Value, This, Args>;
+
+interface MemoizeOptionsBase<
+  This = unknown,
+  Args extends unknown[] = unknown[],
+> {
   /**
    * Whether memoization is enabled.
    *
    * When `false`, the original getter/method is called every time,
-   * bypassing the cache entirely. Useful for testing or debugging.
+   * bypassing the cache entirely. When a function is provided, the value is
+   * resolved on each call using the current instance.
    *
    * @default true
    *
    * @example
    * ```typescript
    * // Disable caching in test environment
-   * @memoize({ enabled: Deno.env.get('DENO_ENV') !== 'test' })
+   * @memoize({ enabled: Deno.env.get("DENO_ENV") !== "test" })
    * get expensiveComputation(): number {
    *   return this.compute();
    * }
+   *
+   * class Client {
+   *   constructor(readonly options: { cacheEnabled: boolean }) {}
+   *
+   *   @memoize({
+   *     enabled: (self) => self.options.cacheEnabled,
+   *   })
+   *   async load(): Promise<string> {
+   *     return await fetchConfig();
+   *   }
+   * }
    * ```
    */
-  enabled?: boolean;
+  enabled?: MemoizeOptionResolver<boolean, This, Args>;
 
   /**
    * Custom function to generate cache keys for method arguments.
@@ -55,18 +133,29 @@ interface MemoizeOptionsBase {
    * }
    * ```
    */
-  keyFn?: (...args: unknown[]) => string;
+  keyFn?: (...args: Args) => string;
+
+  /**
+   * Whether rejected promises should remain cached.
+   *
+   * By default, rejected promises are evicted from the cache so a later call can
+   * retry. When a function is provided, the behavior is resolved on each call.
+   *
+   * @default false
+   */
+  cacheRejected?: MemoizeOptionResolver<boolean, This, Args>;
 }
 
-/**
- * Options when TTL is specified - allows evictOnExpiry.
- */
-interface MemoizeOptionsWithTtl extends MemoizeOptionsBase {
+interface MemoizeOptionsWithTtl<
+  This = unknown,
+  Args extends unknown[] = unknown[],
+> extends MemoizeOptionsBase<This, Args> {
   /**
    * Time-to-live in milliseconds.
    *
    * After this duration, the cached value expires and will be recomputed
-   * on the next access.
+   * on the next access. When a function is provided, the TTL is resolved on each
+   * call using the current instance.
    *
    * @example
    * ```typescript
@@ -77,7 +166,7 @@ interface MemoizeOptionsWithTtl extends MemoizeOptionsBase {
    * }
    * ```
    */
-  ttl: number;
+  ttl: MemoizeOptionResolver<number | undefined, This, Args>;
 
   /**
    * Whether to actively evict cached values when TTL expires.
@@ -117,13 +206,13 @@ interface MemoizeOptionsWithTtl extends MemoizeOptionsBase {
    * }
    * ```
    */
-  evictOnExpiry?: boolean;
+  evictOnExpiry?: MemoizeOptionResolver<boolean, This, Args>;
 }
 
-/**
- * Options when TTL is not specified - evictOnExpiry is not allowed.
- */
-interface MemoizeOptionsWithoutTtl extends MemoizeOptionsBase {
+interface MemoizeOptionsWithoutTtl<
+  This = unknown,
+  Args extends unknown[] = unknown[],
+> extends MemoizeOptionsBase<This, Args> {
   /**
    * TTL is not specified.
    */
@@ -156,8 +245,12 @@ interface MemoizeOptionsWithoutTtl extends MemoizeOptionsBase {
  * ```typescript
  * @memoize({ evictOnExpiry: true })              // ❌ Error: requires ttl!
  * ```
+ * @internal
  */
-export type MemoizeOptions = MemoizeOptionsWithTtl | MemoizeOptionsWithoutTtl;
+export type MemoizeOptions<
+  This = unknown,
+  Args extends unknown[] = unknown[],
+> = MemoizeOptionsWithTtl<This, Args> | MemoizeOptionsWithoutTtl<This, Args>;
 
 /**
  * Context object provided by TC39 stage 3 decorators.

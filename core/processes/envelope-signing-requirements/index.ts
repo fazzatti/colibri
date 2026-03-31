@@ -16,6 +16,7 @@ import {
 import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
 import { StrKey } from "@/strkeys/index.ts";
 
+/** Computes the signer requirements for a classic or fee-bump transaction envelope. */
 export const envelopeSigningRequirements = (
   input: EnvelopeSigningRequirementsInput
 ): EnvelopeSigningRequirementsOutput => {
@@ -123,4 +124,5 @@ const removeConflictingRequirements = (
   return requirementsBundle;
 };
 
-export { E as EnvelopeSigningRequirementsErrors };
+/** Error constructors emitted by {@link envelopeSigningRequirements}. */
+export const EnvelopeSigningRequirementsErrors: typeof E = E;

@@ -1,6 +1,9 @@
 import type { EnvelopeSigningRequirementsInput } from "@/processes/envelope-signing-requirements/types.ts";
 import { ProcessError } from "@/processes/error.ts";
 
+/**
+ * Stable error codes emitted by the envelope-signing-requirements process.
+ */
 export enum Code {
   UNEXPECTED_ERROR = "ESR_000",
 
@@ -10,15 +13,28 @@ export enum Code {
   FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION = "ESR_003",
 }
 
+/**
+ * Base class for envelope-signing-requirements process errors.
+ */
 export abstract class EnvelopeSigningRequirementsError extends ProcessError<
   Code,
   EnvelopeSigningRequirementsInput
 > {
+  /** Source identifier for envelope-signing-requirements process failures. */
   override readonly source =
     "@colibri/core/processes/envelope-signing-requirements";
 }
 
+/**
+ * Raised when envelope-signing-requirements fails unexpectedly.
+ */
 export class UNEXPECTED_ERROR extends EnvelopeSigningRequirementsError {
+  /**
+   * Creates an unexpected envelope-signing-requirements error.
+   *
+   * @param input - Original process input.
+   * @param cause - Underlying unexpected error.
+   */
   constructor(input: EnvelopeSigningRequirementsInput, cause?: Error) {
     super({
       code: Code.UNEXPECTED_ERROR,
@@ -30,7 +46,15 @@ export class UNEXPECTED_ERROR extends EnvelopeSigningRequirementsError {
   }
 }
 
+/**
+ * Raised when the provided transaction type is unsupported.
+ */
 export class INVALID_TRANSACTION_TYPE extends EnvelopeSigningRequirementsError {
+  /**
+   * Creates an invalid-transaction-type error.
+   *
+   * @param input - Original process input.
+   */
   constructor(input: EnvelopeSigningRequirementsInput) {
     super({
       code: Code.INVALID_TRANSACTION_TYPE,
@@ -42,7 +66,16 @@ export class INVALID_TRANSACTION_TYPE extends EnvelopeSigningRequirementsError {
   }
 }
 
+/**
+ * Raised when fee-bump signing requirements cannot be processed.
+ */
 export class FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX extends EnvelopeSigningRequirementsError {
+  /**
+   * Creates a fee-bump requirements processing error.
+   *
+   * @param input - Original process input.
+   * @param e - Underlying processing error.
+   */
   constructor(input: EnvelopeSigningRequirementsInput, e: Error) {
     super({
       code: Code.FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX,
@@ -56,7 +89,16 @@ export class FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX extends EnvelopeSign
   }
 }
 
+/**
+ * Raised when standard transaction signing requirements cannot be processed.
+ */
 export class FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION extends EnvelopeSigningRequirementsError {
+  /**
+   * Creates a transaction requirements processing error.
+   *
+   * @param input - Original process input.
+   * @param e - Underlying processing error.
+   */
   constructor(input: EnvelopeSigningRequirementsInput, e: Error) {
     super({
       code: Code.FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION,
@@ -69,6 +111,9 @@ export class FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION extends EnvelopeSign
   }
 }
 
+/**
+ * Envelope-signing-requirements error constructors indexed by stable code.
+ */
 export const ERROR_BY_CODE = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.INVALID_TRANSACTION_TYPE]: INVALID_TRANSACTION_TYPE,

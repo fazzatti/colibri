@@ -1,31 +1,60 @@
-import type { Api } from "stellar-sdk/rpc";
-import type { xdr } from "stellar-sdk";
+import { xdr } from "stellar-sdk";
+import { Buffer } from "buffer";
 import { parseScVal, parseScVals } from "@/common/helpers/xdr/scval.ts";
 import type { ScValParsed } from "@/common/helpers/xdr/types.ts";
+import type {
+  RpcEventResponseLike,
+  ScValLike,
+} from "@/common/types/index.ts";
 import { isEventId, type EventId } from "@/event/event-id/index.ts";
 import { EventType, type IEvent } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
 import { StrKey } from "@/strkeys/index.ts";
 
-export class Event implements IEvent {
-  id: EventId;
+type EventConstructorArgs = Omit<RpcEventResponseLike, "type" | "contractId"> & {
   type: EventType;
-  ledger: number;
-  ledgerClosedAt: string;
-  transactionIndex: number;
-  operationIndex: number;
-  inSuccessfulContractCall: boolean;
-  txHash: string;
-  contractId?: ContractId | undefined;
-  scvalTopics: xdr.ScVal[];
-  scvalValue: xdr.ScVal;
+  contractId?: ContractId;
+};
 
+/**
+ * Normalized event wrapper for Stellar RPC event payloads.
+ */
+export class Event implements IEvent {
+  /** Stable event identifier. */
+  id: EventId;
+  /** High-level event category. */
+  type: EventType;
+  /** Ledger sequence that emitted the event. */
+  ledger: number;
+  /** Ledger close timestamp as returned by RPC. */
+  ledgerClosedAt: string;
+  /** Index of the transaction within the ledger. */
+  transactionIndex: number;
+  /** Index of the operation within the transaction. */
+  operationIndex: number;
+  /** Whether the event came from a successful contract call. */
+  inSuccessfulContractCall: boolean;
+  /** Transaction hash associated with the event. */
+  txHash: string;
+  /** Optional contract id that emitted the event. */
+  contractId?: ContractId | undefined;
+  /** Raw topic segments emitted by the event. */
+  scvalTopics: ScValLike[];
+  /** Raw event payload emitted by the contract. */
+  scvalValue: ScValLike;
+  /** Normalized SDK topic values used by the parsing helpers. */
+  private readonly _xdrTopics: xdr.ScVal[];
+  /** Normalized SDK value used by the parsing helpers. */
+  private readonly _xdrValue: xdr.ScVal;
+
+  /**
+   * Creates a normalized event wrapper.
+   *
+   * @param args Event payload fields.
+   */
   constructor(
-    args: Omit<Api.EventResponse, "type" | "contractId"> & {
-      type: EventType;
-      contractId?: ContractId;
-    }
+    args: EventConstructorArgs,
   ) {
     if (isDefined(args.contractId)) {
       const { contractId } = args;
@@ -50,8 +79,10 @@ export class Event implements IEvent {
     this.operationIndex = args.operationIndex;
     this.inSuccessfulContractCall = args.inSuccessfulContractCall;
     this.txHash = args.txHash;
-    this.scvalTopics = args.topic;
-    this.scvalValue = args.value;
+    this._xdrTopics = args.topic.map(toXdrScVal);
+    this._xdrValue = toXdrScVal(args.value);
+    this.scvalTopics = this._xdrTopics;
+    this.scvalValue = this._xdrValue;
   }
 
   /**
@@ -59,7 +90,7 @@ export class Event implements IEvent {
    * Computed on each access (not cached).
    */
   get topics(): ScValParsed[] {
-    return parseScVals(this.scvalTopics);
+    return parseScVals(this._xdrTopics);
   }
 
   /**
@@ -67,13 +98,13 @@ export class Event implements IEvent {
    * Computed on each access (not cached).
    */
   get value(): ScValParsed {
-    return parseScVal(this.scvalValue);
+    return parseScVal(this._xdrValue);
   }
 
   /**
    * Factory to create Event from RPC EventResponse.
    */
-  static fromEventResponse(response: Api.EventResponse): Event {
+  static fromEventResponse(response: RpcEventResponseLike): Event {
     let eventType: EventType;
     switch (response.type) {
       case "contract":
@@ -107,3 +138,12 @@ export class Event implements IEvent {
     });
   }
 }
+
+const toXdrScVal = (value: ScValLike): xdr.ScVal => {
+  const serialized = value.toXDR("base64");
+  const base64 = typeof serialized === "string"
+    ? serialized
+    : Buffer.from(serialized).toString("base64");
+
+  return xdr.ScVal.fromXDR(base64, "base64");
+};

@@ -16,6 +16,7 @@ import {
  * @param scv - The ScVal to parse
  * @returns The parsed TypeScript value
  * @throws Error if the ScVal type is not supported
+ * @internal
  */
 export function parseScVal(scv: xdr.ScVal): ScValParsed {
   const type = scv.switch();
@@ -146,6 +147,7 @@ function parseScValMap(entries: xdr.ScMapEntry[]): ScValRecord | ScValMap {
 
 /**
  * Get the type name of an ScVal.
+ * @internal
  */
 export function getScValTypeName(scv: xdr.ScVal): ScValTypeName {
   const type = scv.switch();
@@ -223,6 +225,7 @@ export function isScValMap(value: ScValParsed): value is ScValMap {
 /**
  * Check if a parsed value looks like a union (vec starting with a symbol).
  * Returns the tag and values if it is, undefined otherwise.
+ * @internal
  */
 export function asUnion(
   value: ScValParsed
@@ -242,6 +245,7 @@ export function asUnion(
 /**
  * Parse multiple ScVals (e.g., event topics).
  */
+/** @internal */
 export function parseScVals(scvs: xdr.ScVal[]): ScValParsed[] {
   return scvs.map(parseScVal);
 }

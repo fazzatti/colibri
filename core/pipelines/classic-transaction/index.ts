@@ -23,12 +23,61 @@ import {
 } from "@/steps/index.ts";
 import { CLASSIC_TRANSACTION_INPUT_STEP_ID } from "@/pipelines/classic-transaction/connectors.ts";
 
-const PIPELINE_NAME = "ClassicTransactionPipeline";
+/** Stable id of the classic transaction pipeline. */
+export const CLASSIC_TRANSACTION_PIPELINE_ID = "ClassicTransactionPipeline";
 
+/**
+ * Builds the classic transaction pipeline with fully inferred step types.
+ */
+const buildClassicTransactionPipeline = ({
+  networkConfig,
+  rpc,
+}: CreateClassicTransactionPipelineArgs & { rpc: Server }) => {
+  const inputStep = step(
+    (input: ClassicTransactionInput) => input,
+    { id: CLASSIC_TRANSACTION_INPUT_STEP_ID },
+  );
+  const buildInputStep = step(
+    inputToBuild(rpc, networkConfig.networkPassphrase),
+    { id: "classic-transaction-build-input" as const },
+  );
+  const connectSignEnvelopeToSend = signEnvelopeToSendTransaction(rpc);
+
+  const BuildTransaction = createBuildTransactionStep();
+  const EnvelopeSigningRequirements = createEnvelopeSigningRequirementsStep();
+  const SignEnvelope = createSignEnvelopeStep();
+  const SendTransaction = createSendTransactionStep();
+
+  const pipelineSteps = [
+    inputStep,
+    buildInputStep,
+    BuildTransaction,
+    buildToEnvelopeSigningRequirements,
+    EnvelopeSigningRequirements,
+    envSignReqToSignEnvelope(),
+    SignEnvelope,
+    connectSignEnvelopeToSend,
+    SendTransaction,
+    sendTransactionToPipeOutput,
+  ] as const;
+
+  return pipe([...pipelineSteps], {
+    id: CLASSIC_TRANSACTION_PIPELINE_ID,
+  });
+};
+
+/**
+ * Creates the classic transaction pipeline.
+ *
+ * @param args Pipeline dependencies and network configuration.
+ * @returns Configured classic transaction pipeline.
+ */
 const createClassicTransactionPipeline = ({
   networkConfig,
   rpc,
-}: CreateClassicTransactionPipelineArgs) => {
+}: CreateClassicTransactionPipelineArgs): ReturnType<
+  typeof buildClassicTransactionPipeline
+> => {
   try {
     assertRequiredArgs(
       {
@@ -44,40 +93,7 @@ const createClassicTransactionPipeline = ({
         allowHttp: networkConfig.allowHttp ?? false,
       });
     }
-
-    const inputStep = step(
-      (input: ClassicTransactionInput) => input,
-      { id: CLASSIC_TRANSACTION_INPUT_STEP_ID },
-    );
-    const buildInputStep = step(
-      inputToBuild(rpc, networkConfig.networkPassphrase),
-      { id: "classic-transaction-build-input" as const },
-    );
-    const connectSignEnvelopeToSend = signEnvelopeToSendTransaction(rpc);
-
-    const BuildTransaction = createBuildTransactionStep();
-    const EnvelopeSigningRequirements = createEnvelopeSigningRequirementsStep();
-    const SignEnvelope = createSignEnvelopeStep();
-    const SendTransaction = createSendTransactionStep();
-
-    const pipelineSteps = [
-      inputStep,
-      buildInputStep,
-      BuildTransaction,
-      buildToEnvelopeSigningRequirements,
-      EnvelopeSigningRequirements,
-      envSignReqToSignEnvelope(),
-      SignEnvelope,
-      connectSignEnvelopeToSend,
-      SendTransaction,
-      sendTransactionToPipeOutput,
-    ] as const;
-
-    const classicPipe = pipe([...pipelineSteps], {
-      id: PIPELINE_NAME,
-    });
-
-    return classicPipe;
+    return buildClassicTransactionPipeline({ networkConfig, rpc });
   } catch (error) {
     if (error instanceof ColibriError) {
       throw error;
@@ -87,11 +103,8 @@ const createClassicTransactionPipeline = ({
 };
 
 export { createClassicTransactionPipeline };
-
-const PIPE_ClassicTransaction = {
-  create: createClassicTransactionPipeline,
-  name: PIPELINE_NAME,
-  errors: E,
-};
-
-export { PIPE_ClassicTransaction };
+/** Runtime type returned by {@link createClassicTransactionPipeline}. */
+export type ClassicTransactionPipeline = ReturnType<
+  typeof createClassicTransactionPipeline
+>;
+export { ERROR_PIPE_CLTX } from "@/pipelines/classic-transaction/error.ts";

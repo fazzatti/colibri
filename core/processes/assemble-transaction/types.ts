@@ -1,5 +1,6 @@
 import type { SorobanDataBuilder, Transaction, xdr } from "stellar-sdk";
 
+/** @internal */
 export type AssembleTransactionInput = {
   transaction: Transaction;
   authEntries?: xdr.SorobanAuthorizationEntry[];
@@ -7,4 +8,5 @@ export type AssembleTransactionInput = {
   resourceFee: number;
 };
 
+/** @internal */
 export type AssembleTransactionOutput = Transaction;

@@ -1,5 +1,6 @@
 import { PipelineError } from "@/pipelines/error.ts";
 
+/** Stable error codes emitted while building the read-from-contract pipeline. */
 export enum Code {
   UNEXPECTED_ERROR = "PIPE_RFC_000",
   MISSING_ARG = "PIPE_RFC_001",
@@ -49,6 +50,7 @@ export class MISSING_RPC_URL extends ReadFromContractError {
     });
   }
 }
+/** Read-from-contract pipeline error constructors indexed by stable code. */
 export const ERROR_PIPE_RFC = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.MISSING_ARG]: MISSING_ARG,

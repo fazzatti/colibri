@@ -12,6 +12,7 @@ enum ErrorCode {
 //
 //  Useful in cases where you have an optional boolean parameter that you need
 //  to assign a default value to by determining if it had been set or not.
+/** Returns `true` only for literal boolean values. */
 export const isBooleanStrict = (val: unknown): boolean => {
   return val === true || val === false;
 };
@@ -21,6 +22,7 @@ export const isBooleanStrict = (val: unknown): boolean => {
 //  @param checkResult Determines the outcome of the check via it's truthyness.
 //  @param subjectOfCheck The error message if `checkResult` is falsy.
 //  @param code The code of the error if `checkResult is falsy.
+/** Asserts that a value is truthy. */
 export const isTruthy = (
   checkResult: unknown,
   subjectOfCheck = "variable"

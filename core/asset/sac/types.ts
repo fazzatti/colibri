@@ -1,10 +1,91 @@
 import type { xdr } from "stellar-sdk";
+import type { Asset } from "stellar-sdk";
 import type {
   Address,
   TransactionConfig,
 } from "@/common/types/transaction-config/types.ts";
+import type { MemoizePolicy } from "@/common/decorators/memoize/types.ts";
+import type { NetworkConfig } from "@/network/index.ts";
 import type { InvokeContractOutput } from "@/pipelines/invoke-contract/types.ts";
+import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
+import type { Server } from "stellar-sdk/rpc";
 
+/**
+ * Optional behavior modifiers for a `StellarAssetContract` instance.
+ */
+export type StellarAssetContractOptions = {
+  /**
+   * Memoization settings applied to stable descriptive reads.
+   *
+   * The current implementation applies this cache policy to `decimals()`,
+   * `name()`, and `symbol()`.
+   */
+  cache?: MemoizePolicy;
+};
+
+type StellarAssetContractBaseArgs = {
+  networkConfig: NetworkConfig;
+  rpc?: Server;
+  options?: StellarAssetContractOptions;
+};
+
+type StellarAssetIdentity =
+  | {
+    code: string;
+    issuer: Ed25519PublicKey | "native";
+  }
+  | {
+    asset: Asset;
+  };
+
+/**
+ * Constructor arguments for a `StellarAssetContract`.
+ *
+ * A SAC client can be created either from the classic asset identity
+ * (`code` + `issuer`, or a `stellar-sdk` `Asset`) or from a known contract id.
+ */
+/** @internal */
+export type StellarAssetContractConstructorArgs =
+  | (StellarAssetContractBaseArgs & StellarAssetIdentity)
+  | (StellarAssetContractBaseArgs & {
+    contractId: ContractId;
+  });
+
+/**
+ * Arguments for creating a SAC client from a classic asset identity.
+ */
+/** @internal */
+export type StellarAssetContractFromAssetArgs =
+  & StellarAssetContractBaseArgs
+  & StellarAssetIdentity;
+
+/**
+ * Arguments for creating a SAC client from an existing contract id.
+ */
+/** @internal */
+export type StellarAssetContractFromContractIdArgs =
+  & StellarAssetContractBaseArgs
+  & {
+    contractId: ContractId;
+  };
+
+/**
+ * Arguments for creating the native XLM SAC client.
+ */
+/** @internal */
+export type StellarAssetContractNativeArgs = StellarAssetContractBaseArgs;
+
+/**
+ * Arguments for deploying a classic asset into its SAC representation.
+ */
+/** @internal */
+export type DeployStellarAssetContractArgs =
+  & StellarAssetContractFromAssetArgs
+  & {
+    config: TransactionConfig;
+  };
+
+/** @internal */
 export type BaseInvocation = {
   config: TransactionConfig;
   auth?: xdr.SorobanAuthorizationEntry[];
@@ -47,6 +128,7 @@ export enum Method {
 /**
  * Input types for SAC contract methods that require arguments.
  */
+/** @internal */
 export type ContractInput = {
   // Token Interface
   [Method.Allowance]: {
@@ -107,6 +189,7 @@ export type ContractInput = {
 /**
  * Output types for SAC contract methods.
  */
+/** @internal */
 export type ContractOutput = {
   // Descriptive Interface (read-only)
   [Method.Decimals]: number;

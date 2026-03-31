@@ -1,5 +1,6 @@
 import type { SigningThreshold } from "@/signer/types.ts";
 
+/** Returns `true` when the number is a valid Stellar signing threshold. */
 export const isSigningThreshold = (
   value: number
 ): value is SigningThreshold => {
