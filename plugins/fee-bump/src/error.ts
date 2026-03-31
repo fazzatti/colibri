@@ -1,5 +1,7 @@
 import { PluginError } from "@colibri/core";
 
+const SOURCE = "@colibri/plugin-fee-bump";
+
 /**
  * Stable error codes emitted by the fee-bump plugin package.
  */
@@ -14,7 +16,7 @@ export enum Code {
  */
 export abstract class FeeBumpPluginError extends PluginError<Code, unknown> {
   /** Error source identifier for fee-bump plugin failures. */
-  override readonly source = "@colibri/core/plugins/fee-bump";
+  override readonly source = SOURCE;
 }
 
 /**

@@ -173,6 +173,12 @@ describe("FeeBump Plugin", () => {
   });
 
   describe("Error Handling", () => {
+    it("uses the plugin package identifier as the error source", () => {
+      const error = new E.MISSING_ARG("networkConfig");
+
+      assertEquals(error.source, "@colibri/plugin-fee-bump");
+    });
+
     it("throws NOT_A_TRANSACTION for invalid input", async () => {
       const plugin = createPlugin();
       const pluginPipe = createPluginTestPipe();

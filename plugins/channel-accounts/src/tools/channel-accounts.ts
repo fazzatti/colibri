@@ -199,7 +199,7 @@ export class ChannelAccounts {
           config: {
             ...config,
             source: channel.address(),
-            signers: [channel.signer()],
+            signers: appendUniqueSigners(config.signers, channel.signer()),
           },
         });
       }

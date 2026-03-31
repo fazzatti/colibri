@@ -8,7 +8,7 @@ import {
   initializeWithFriendbot,
   LocalSigner,
   NativeAccount,
-} from "@colibri/core/";
+} from "@colibri/core";
 import { createFeeBumpPlugin, FEE_BUMP_PLUGIN_ID } from "@/index.ts";
 import {
   createInvokeContractPipeline,
