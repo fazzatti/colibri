@@ -1,6 +1,12 @@
+/**
+ * Suggested debugging details attached to quickstart errors.
+ */
 export type Diagnostic = {
+  /** Human-readable root cause summary. */
   rootCause: string;
+  /** Concrete next step that may resolve the issue. */
   suggestion: string;
+  /** Optional supporting resources for deeper debugging. */
   materials?: string[];
 };
 
@@ -77,13 +83,24 @@ export abstract class QuickstartError<
   CodeType extends string = Code,
   DataType = unknown,
 > extends Error {
+  /** Error domain used by test-tooling quickstart failures. */
   readonly domain = "tools";
+  /** Stable quickstart-specific error code. */
   readonly code: CodeType;
+  /** Source identifier for quickstart failures. */
   readonly source = "@colibri/test-tooling/quickstart";
+  /** Human-readable error details. */
   readonly details: string;
+  /** Optional troubleshooting guidance. */
   readonly diagnostic?: Diagnostic;
+  /** Structured quickstart error metadata. */
   readonly meta: Meta<DataType>;
 
+  /**
+   * Creates a new quickstart error instance.
+   *
+   * @param args - Error code, message, details, and structured metadata.
+   */
   constructor(args: QuickstartErrorShape<CodeType, DataType>) {
     const meta: Meta<DataType> = {
       cause: normalizeCause(args.cause),
@@ -98,6 +115,11 @@ export abstract class QuickstartError<
     this.meta = meta;
   }
 
+  /**
+   * Serializes the quickstart error into a JSON-safe shape.
+   *
+   * @returns Serializable error data including normalized cause metadata.
+   */
   toJSON(): Record<string, unknown> {
     return {
       name: this.name,
@@ -126,6 +148,11 @@ export class INVALID_CONFIGURATION extends QuickstartError<
     supportedValues?: readonly unknown[];
   }
 > {
+  /**
+   * Creates an invalid-configuration error.
+   *
+   * @param args - Invalid option details and user-facing message content.
+   */
   constructor(args: {
     option: string;
     value: unknown;
@@ -155,6 +182,11 @@ export class DOCKER_CONFIGURATION_ERROR extends QuickstartError<
   Code.DOCKER_CONFIGURATION_ERROR,
   Record<string, unknown>
 > {
+  /**
+   * Creates a Docker configuration error.
+   *
+   * @param args - Error message, details, and optional diagnostic data.
+   */
   constructor(args: {
     message: string;
     details: string;
@@ -178,6 +210,11 @@ export class CONTAINER_ERROR extends QuickstartError<
   Code.CONTAINER_ERROR,
   Record<string, unknown>
 > {
+  /**
+   * Creates a container lifecycle error.
+   *
+   * @param args - Error message, details, and optional diagnostic data.
+   */
   constructor(args: {
     message: string;
     details: string;
@@ -201,6 +238,11 @@ export class IMAGE_ERROR extends QuickstartError<
   Code.IMAGE_ERROR,
   Record<string, unknown>
 > {
+  /**
+   * Creates a quickstart image error.
+   *
+   * @param args - Error message, details, and optional diagnostic data.
+   */
   constructor(args: {
     message: string;
     details: string;
@@ -224,6 +266,11 @@ export class READINESS_ERROR extends QuickstartError<
   Code.READINESS_ERROR,
   Record<string, unknown>
 > {
+  /**
+   * Creates a service readiness error.
+   *
+   * @param args - Error message, details, and optional diagnostic data.
+   */
   constructor(args: {
     message: string;
     details: string;

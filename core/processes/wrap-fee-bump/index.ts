@@ -9,6 +9,7 @@ import { isTransaction } from "@/common/type-guards/is-transaction.ts";
 import { assert } from "@/common/assert/assert.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 
+/** Wraps a classic transaction inside a fee-bump envelope. */
 export const wrapFeeBump = (input: WrapFeeBumpInput): WrapFeeBumpOutput => {
   try {
     const { transaction, config, networkPassphrase } = input;
@@ -53,4 +54,5 @@ export const wrapFeeBump = (input: WrapFeeBumpInput): WrapFeeBumpOutput => {
     throw new E.UNEXPECTED_ERROR(input, e as Error);
   }
 };
-export { E as WrapFeeBumpErrors };
+/** Error constructors emitted by {@link wrapFeeBump}. */
+export const WrapFeeBumpErrors: typeof E = E;

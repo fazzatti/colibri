@@ -1,7 +1,9 @@
 import * as E from "@/common/helpers/format-units.error.ts";
 
+/** Decimal-like inputs accepted by unit conversion helpers. */
 export type DecimalInput = string | number | bigint;
 
+/** Options for converting human-readable decimals into base units. */
 export type FromDecimalsOptions = {
   /**
    * What to do if the input has more fractional digits than `decimals`.
@@ -11,6 +13,7 @@ export type FromDecimalsOptions = {
   excessFraction?: "error" | "truncate";
 };
 
+/** Options for converting base units into human-readable decimals. */
 export type ToDecimalsOptions = {
   /** Remove trailing zeros in the fractional part (default: true). */
   trimTrailingZeros?: boolean;

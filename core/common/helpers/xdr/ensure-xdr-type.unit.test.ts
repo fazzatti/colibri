@@ -82,4 +82,21 @@ describe("ensureXdrType", () => {
       "unknown"
     );
   });
+
+  it("should normalize non-Error parse failures", () => {
+    const mockXdrType = {
+      name: "MockXdr",
+      fromXDR: () => {
+        throw "Parse failed";
+      },
+    };
+
+    const error = assertThrows(
+      // deno-lint-ignore no-explicit-any
+      () => ensureXdrType("AAAA", mockXdrType as any),
+      FAILED_TO_PARSE_XDR
+    );
+
+    assertEquals(error.meta?.cause, null);
+  });
 });

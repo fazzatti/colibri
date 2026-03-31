@@ -29,6 +29,7 @@ import { isDefined } from "@/common/type-guards/is-defined.ts";
  * ```
  */
 export class Transaction {
+  /** Transaction index within the containing ledger. */
   readonly index: number;
   private readonly ledger: Ledger;
   private readonly txMeta: xdr.TransactionMeta;

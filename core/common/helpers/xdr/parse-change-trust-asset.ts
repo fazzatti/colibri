@@ -33,6 +33,7 @@ export type ChangeTrustAssetString =
  * ```ts
  * parseChangeTrustAsset(asset); // "native", "USDC:GXXXX...", or "pool:abc123..."
  * ```
+ * @internal
  */
 export function parseChangeTrustAsset(
   assetXdr: xdr.ChangeTrustAsset

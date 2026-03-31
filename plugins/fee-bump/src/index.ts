@@ -1,36 +1,68 @@
-import { plugin } from "convee";
+import type {
+  createClassicTransactionPipeline,
+  createInvokeContractPipeline,
+  SendTransactionInput,
+} from "@colibri/core";
 import {
+  plugin,
+  type PipeStepPlugin,
+} from "convee";
+import {
+  FEE_BUMP_PLUGIN_ID,
+  FEE_BUMP_PLUGIN_TARGET,
   type FeeBumpPluginArgs,
-  PLUGIN_NAME,
-  type PluginInput,
 } from "@/types.ts";
-import { PIPE_FeeBump } from "@/pipeline/pipeline.ts";
-import { assert, isTransaction, steps } from "@colibri/core";
+import { createFeeBumpPipeline } from "@/pipeline/pipeline.ts";
+import { assert, isTransaction } from "@colibri/core";
 import * as E from "@/error.ts";
 
-const create = ({ networkConfig, feeBumpConfig }: FeeBumpPluginArgs) => {
-  const wrapperPipeline = PIPE_FeeBump.create({
+type ClassicTransactionPipeline = ReturnType<
+  typeof createClassicTransactionPipeline
+>;
+type InvokeContractPipeline = ReturnType<typeof createInvokeContractPipeline>;
+
+type SendTransactionStep<Pipeline extends { steps: readonly unknown[] }> =
+  Extract<
+    Pipeline["steps"][number],
+    { id: typeof FEE_BUMP_PLUGIN_TARGET }
+  >;
+
+type FeeBumpRuntimePlugin =
+  & PipeStepPlugin<SendTransactionStep<ClassicTransactionPipeline>, Error>
+  & PipeStepPlugin<SendTransactionStep<InvokeContractPipeline>, Error>;
+
+type PluginInput = SendTransactionInput;
+
+/**
+ * Creates a plugin that wraps outgoing transactions in a fee-bump envelope.
+ *
+ * @param args - Plugin configuration.
+ * @returns A plugin targeting the send-transaction step.
+ * @throws {E.MISSING_ARG} If a required plugin argument is missing.
+ * @throws {E.NOT_A_TRANSACTION} If the intercepted payload does not contain a transaction.
+ */
+export const createFeeBumpPlugin = ({
+  networkConfig,
+  feeBumpConfig,
+}: FeeBumpPluginArgs): FeeBumpRuntimePlugin => {
+  const wrapperPipeline = createFeeBumpPipeline({
     networkConfig,
     feeBumpConfig,
   });
 
   const feeBumpPlugin = plugin({
-    id: PLUGIN_NAME,
-    target: steps.SEND_TRANSACTION_STEP_ID,
+    id: FEE_BUMP_PLUGIN_ID,
+    target: FEE_BUMP_PLUGIN_TARGET,
   }).onInput(async (input: PluginInput): Promise<PluginInput> => {
-      const { transaction } = input;
+    const { transaction } = input;
 
-      assert(isTransaction(transaction), new E.NOT_A_TRANSACTION(transaction));
+    assert(isTransaction(transaction), new E.NOT_A_TRANSACTION(transaction));
 
-      const feeBumpTransaction = await wrapperPipeline({ transaction });
+    const feeBumpTransaction = await wrapperPipeline({ transaction });
 
-      return { ...input, transaction: feeBumpTransaction };
+    return { ...input, transaction: feeBumpTransaction };
   });
   return feeBumpPlugin;
 };
 
-export const PLG_FeeBump = {
-  create,
-  name: PLUGIN_NAME,
-  target: steps.SEND_TRANSACTION_STEP_ID,
-};
+export { FEE_BUMP_PLUGIN_ID, FEE_BUMP_PLUGIN_TARGET } from "@/types.ts";

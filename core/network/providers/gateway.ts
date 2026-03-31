@@ -5,6 +5,7 @@
 
 import { NetworkConfig } from "@/network/index.ts";
 
+/** Gateway.fm-backed network configuration presets. */
 export const Gateway = {
   MainNet: () =>
     NetworkConfig.MainNet({

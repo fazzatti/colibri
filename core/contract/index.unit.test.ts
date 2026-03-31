@@ -1,4 +1,8 @@
-import { assertEquals, assertExists, assertThrows } from "@std/assert";
+import {
+  assertEquals,
+  assertExists,
+  assertThrows,
+} from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Buffer } from "buffer";
 import { Contract } from "@/contract/index.ts";
@@ -7,6 +11,15 @@ import type { Server } from "stellar-sdk/rpc";
 import type { ContractConfig } from "@/contract/types.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { NetworkType } from "@/network/types.ts";
+import { Operation } from "stellar-sdk";
+import type { Spec } from "stellar-sdk/contract";
+import type { ContractId } from "@/strkeys/types.ts";
+
+class TestContract extends Contract {
+  public requireNoContractIdForTest(): void {
+    this.requireNoContractId();
+  }
+}
 
 describe("Contract", () => {
   describe("construction", () => {
@@ -156,6 +169,94 @@ describe("Contract", () => {
       assertThrows(
         () => contractWithWasmHash.getWasm(),
         E.MISSING_REQUIRED_PROPERTY
+      );
+    });
+  });
+
+  describe("helpers and execution paths", () => {
+    const networkConfig = NetworkConfig.CustomNet({
+      type: NetworkType.TESTNET,
+      networkPassphrase: "Test Network",
+    });
+    const mockRpc = {} as unknown as Server;
+
+    it("executes the protected requireNoContractId helper", () => {
+      const contract = new TestContract({
+        networkConfig,
+        contractConfig: {
+          wasm: Buffer.from("mock"),
+        },
+        rpc: mockRpc,
+      });
+
+      contract.requireNoContractIdForTest();
+
+      const contractWithId = new TestContract({
+        networkConfig,
+        contractConfig: {
+          contractId:
+            "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId,
+        },
+        rpc: mockRpc,
+      });
+
+      assertThrows(
+        () => contractWithId.requireNoContractIdForTest(),
+        E.PROPERTY_ALREADY_SET,
+      );
+    });
+
+    it("reads from a contract without method arguments", async () => {
+      let encodedArgsCallCount = 0;
+      const readResult = { ok: true };
+      const spec = {
+        funcArgsToScVals: () => {
+          encodedArgsCallCount++;
+          return [];
+        },
+        funcResToNative: (_method: string, result: unknown) => result,
+      } as unknown as Spec;
+      const contract = new Contract({
+        networkConfig,
+        contractConfig: {
+          contractId:
+            "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId,
+          spec,
+        },
+        rpc: mockRpc,
+      });
+
+      let runInput:
+        | { operations: ReturnType<typeof Operation.invokeContractFunction>[] }
+        | undefined;
+      Object.defineProperty(contract, "readPipe", {
+        value: {
+          run: (input: typeof runInput) => {
+            runInput = input ?? undefined;
+            return readResult;
+          },
+        },
+        configurable: true,
+      });
+
+      const result = await contract.read({
+        method: "hello",
+      });
+
+      assertEquals(result, readResult);
+      assertEquals(encodedArgsCallCount, 0);
+      assertExists(runInput);
+      assertEquals(runInput.operations.length, 1);
+
+      const expectedOperation = Operation.invokeContractFunction({
+        function: "hello",
+        contract:
+          "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+        args: [],
+      });
+      assertEquals(
+        runInput.operations[0].toXDR("base64"),
+        expectedOperation.toXDR("base64"),
       );
     });
   });

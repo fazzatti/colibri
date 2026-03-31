@@ -1,5 +1,8 @@
 import { AccountError } from "@/account/error.ts";
 
+/**
+ * Stable error codes emitted by the native-account helpers.
+ */
 export enum Code {
   // UNEXPECTED = "ACC_NAT_000", // Reserved for unexpected errors - not currently used in NativeAccount
   INVALID_ED25519_PUBLIC_KEY = "ACC_NAT_001",
@@ -8,9 +11,17 @@ export enum Code {
   MISSING_MASTER_SIGNER = "ACC_NAT_004",
   UNSUPPORTED_ADDRESS_TYPE = "ACC_NAT_005",
 }
+
+/**
+ * Metadata payload carried by native-account errors.
+ */
 export type MetaData = unknown;
 
+/**
+ * Base class for native-account errors.
+ */
 export abstract class NativeAccountError extends AccountError<Code, MetaData> {
+  /** Source identifier for native-account failures. */
   override readonly source = "@colibri/core/account/native";
 }
 
@@ -30,7 +41,15 @@ export abstract class NativeAccountError extends AccountError<Code, MetaData> {
 //   }
 // }
 
+/**
+ * Raised when the provided public key is not a valid Stellar ed25519 account id.
+ */
 export class INVALID_ED25519_PUBLIC_KEY extends NativeAccountError {
+  /**
+   * Creates an invalid-ed25519-public-key error.
+   *
+   * @param address - Invalid account public key.
+   */
   constructor(address: string) {
     super({
       code: Code.INVALID_ED25519_PUBLIC_KEY,
@@ -49,7 +68,15 @@ export class INVALID_ED25519_PUBLIC_KEY extends NativeAccountError {
   }
 }
 
+/**
+ * Raised when the provided muxed id is not a valid uint64 string.
+ */
 export class INVALID_MUXED_ID extends NativeAccountError {
+  /**
+   * Creates an invalid-muxed-id error.
+   *
+   * @param id - Invalid muxed id.
+   */
   constructor(id: string) {
     super({
       code: Code.INVALID_MUXED_ID,
@@ -68,7 +95,11 @@ export class INVALID_MUXED_ID extends NativeAccountError {
   }
 }
 
+/**
+ * Raised when generating a muxed address produces an invalid value.
+ */
 export class INVALID_MUXED_ADDRESS_GENERATED extends NativeAccountError {
+  /** Structured metadata describing the invalid muxed address output. */
   override readonly meta: {
     data: {
       muxedAddress: string;
@@ -78,6 +109,13 @@ export class INVALID_MUXED_ADDRESS_GENERATED extends NativeAccountError {
     cause: null;
   };
 
+  /**
+   * Creates an invalid-generated-muxed-address error.
+   *
+   * @param address - Invalid generated muxed address.
+   * @param id - Muxed id used to generate the address.
+   * @param baseAddress - Base account address used to generate the muxed address.
+   */
   constructor(address: string, id: string, baseAddress: string) {
     super({
       code: Code.INVALID_MUXED_ADDRESS_GENERATED,
@@ -97,7 +135,15 @@ export class INVALID_MUXED_ADDRESS_GENERATED extends NativeAccountError {
   }
 }
 
+/**
+ * Raised when a native account is used without a master signer.
+ */
 export class MISSING_MASTER_SIGNER extends NativeAccountError {
+  /**
+   * Creates a missing-master-signer error.
+   *
+   * @param address - Native account address missing its signer.
+   */
   constructor(address: string) {
     super({
       code: Code.MISSING_MASTER_SIGNER,
@@ -113,7 +159,15 @@ export class MISSING_MASTER_SIGNER extends NativeAccountError {
   }
 }
 
+/**
+ * Raised when the provided address type is unsupported by native accounts.
+ */
 export class UNSUPPORTED_ADDRESS_TYPE extends NativeAccountError {
+  /**
+   * Creates an unsupported-address-type error.
+   *
+   * @param address - Unsupported address value.
+   */
   constructor(address: string) {
     super({
       code: Code.UNSUPPORTED_ADDRESS_TYPE,
@@ -129,6 +183,9 @@ export class UNSUPPORTED_ADDRESS_TYPE extends NativeAccountError {
   }
 }
 
+/**
+ * Native-account error constructors indexed by stable code.
+ */
 export const ERROR_ACC_NAT = {
   // [Code.UNEXPECTED]: UNEXPECTED,
   [Code.INVALID_ED25519_PUBLIC_KEY]: INVALID_ED25519_PUBLIC_KEY,

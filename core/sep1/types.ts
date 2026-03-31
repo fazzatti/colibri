@@ -66,7 +66,10 @@ export interface StellarTomlGeneralInfo {
   /** The endpoint for clients to resolve stellar addresses via SEP-2 Federation Protocol */
   FEDERATION_SERVER?: string;
 
-  /** @deprecated The endpoint used for SEP-3 Compliance Protocol */
+  /**
+   * Legacy SEP-3 compliance endpoint.
+   * @deprecated Use newer SEP-specific auth and transfer endpoints instead.
+   */
   AUTH_SERVER?: string;
 
   /** The server used for SEP-6 Anchor/Client interoperability */
@@ -205,14 +208,10 @@ export interface StellarTomlPrincipal {
 // [[CURRENCIES]] list
 // =============================================================================
 
-/**
- * Currency/token status values
- */
+/** Availability state reported for a stellar.toml currency entry. */
 export type CurrencyStatus = "live" | "dead" | "test" | "private";
 
-/**
- * Anchor asset types
- */
+/** Asset categories supported by anchor-declared currencies. */
 export type AnchorAssetType =
   | "fiat"
   | "crypto"

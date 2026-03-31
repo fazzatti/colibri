@@ -1,8 +1,9 @@
-import type { xdr } from "stellar-sdk";
+import type { ScValLike } from "@/common/types/index.ts";
 import type { EventId } from "@/event/event-id/index.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import type { ScValParsed } from "@/common/helpers/xdr/types.ts";
 
+/** @internal */
 export interface IEvent {
   id: EventId;
   type: EventType;
@@ -13,18 +14,20 @@ export interface IEvent {
   inSuccessfulContractCall: boolean;
   txHash: string;
   contractId?: ContractId | undefined;
-  scvalTopics: xdr.ScVal[];
-  scvalValue: xdr.ScVal;
+  scvalTopics: ScValLike[];
+  scvalValue: ScValLike;
 
   topics: ScValParsed[];
   value: ScValParsed;
 }
 
+/** @internal */
 export enum EventType {
   Contract = "contract",
   System = "system",
 }
 
+/** @internal */
 export type EventHandler = (event: IEvent) => Promise<void> | void;
 
 /**
@@ -40,6 +43,7 @@ export type EventHandler = (event: IEvent) => Promise<void> | void;
  * Supported field types in event schemas.
  * Maps to ScVal types and their TypeScript equivalents.
  */
+/** @internal */
 export type SchemaFieldType =
   | "address"
   | "bool"
@@ -62,6 +66,7 @@ export type SchemaFieldType =
 /**
  * A field definition in an event schema.
  */
+/** @internal */
 export interface SchemaField {
   readonly name: string;
   readonly type: SchemaFieldType;
@@ -80,6 +85,7 @@ export interface SchemaField {
  *   value: { name: "amount", type: "i128" },
  * } as const satisfies EventSchema;
  */
+/** @internal */
 export interface EventSchema {
   /** The event name (first topic, must be a symbol) */
   readonly name: string;
@@ -92,6 +98,7 @@ export interface EventSchema {
 /**
  * Maps schema field types to their TypeScript equivalents.
  */
+/** @internal */
 export type FieldTypeToTs<T extends SchemaFieldType> = T extends "address"
   ? string
   : T extends "bool"
@@ -115,12 +122,14 @@ export type FieldTypeToTs<T extends SchemaFieldType> = T extends "address"
 /**
  * Extracts field names from schema topics.
  */
+/** @internal */
 export type TopicFieldNames<S extends EventSchema> =
   S["topics"][number]["name"];
 
 /**
  * Extracts all field names from schema (topics + value).
  */
+/** @internal */
 export type AllFieldNames<S extends EventSchema> =
   | TopicFieldNames<S>
   | S["value"]["name"];
@@ -128,6 +137,7 @@ export type AllFieldNames<S extends EventSchema> =
 /**
  * Gets the field type for a given field name in the schema.
  */
+/** @internal */
 export type FieldTypeFor<
   S extends EventSchema,
   N extends AllFieldNames<S>
@@ -141,6 +151,7 @@ export type FieldTypeFor<
  * Creates a record type from schema with field names as keys
  * and their TypeScript types as values.
  */
+/** @internal */
 export type FieldsFromSchema<S extends EventSchema> = {
   [K in AllFieldNames<S>]: FieldTypeFor<S, K>;
 };
@@ -148,6 +159,7 @@ export type FieldsFromSchema<S extends EventSchema> = {
 /**
  * Partial fields for topic filter (all optional).
  */
+/** @internal */
 export type TopicFilterArgs<S extends EventSchema> = {
   [K in TopicFieldNames<S>]?: FieldTypeFor<S, K>;
 };

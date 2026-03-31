@@ -1,6 +1,9 @@
 import type { BuildTransactionInput } from "@/processes/build-transaction/types.ts";
 import { ProcessError } from "@/processes/error.ts";
 
+/**
+ * Stable error codes emitted by the build-transaction process.
+ */
 export enum Code {
   UNEXPECTED_ERROR = "BTX_000",
   INVALID_BASE_FEE = "BTX_001",
@@ -16,14 +19,27 @@ export enum Code {
   RPC_REQUIRED_TO_LOAD_ACCOUNT = "BTX_011",
 }
 
+/**
+ * Base class for build-transaction process errors.
+ */
 export abstract class BuildTransactionError extends ProcessError<
   Code,
   BuildTransactionInput
 > {
+  /** Source identifier for build-transaction process failures. */
   override readonly source = "@colibri/core/processes/build-transaction";
 }
 
+/**
+ * Raised when build-transaction fails unexpectedly.
+ */
 export class UNEXPECTED_ERROR extends BuildTransactionError {
+  /**
+   * Creates an unexpected build-transaction error.
+   *
+   * @param input - Original process input.
+   * @param cause - Underlying unexpected error.
+   */
   constructor(input: BuildTransactionInput, cause: Error) {
     super({
       code: Code.UNEXPECTED_ERROR,
@@ -35,7 +51,15 @@ export class UNEXPECTED_ERROR extends BuildTransactionError {
   }
 }
 
+/**
+ * Raised when the provided base fee cannot be parsed.
+ */
 export class INVALID_BASE_FEE_ERROR extends BuildTransactionError {
+  /**
+   * Creates an invalid-base-fee error.
+   *
+   * @param input - Original process input.
+   */
   constructor(input: BuildTransactionInput) {
     super({
       code: Code.INVALID_BASE_FEE,
@@ -55,7 +79,15 @@ export class INVALID_BASE_FEE_ERROR extends BuildTransactionError {
   }
 }
 
+/**
+ * Raised when the provided base fee is below the supported minimum.
+ */
 export class BASE_FEE_TOO_LOW_ERROR extends BuildTransactionError {
+  /**
+   * Creates a low-base-fee error.
+   *
+   * @param input - Original process input.
+   */
   constructor(input: BuildTransactionInput) {
     super({
       code: Code.BASE_FEE_TOO_LOW,
@@ -74,7 +106,16 @@ export class BASE_FEE_TOO_LOW_ERROR extends BuildTransactionError {
   }
 }
 
+/**
+ * Raised when the source account cannot be loaded.
+ */
 export class COULD_NOT_LOAD_ACCOUNT_ERROR extends BuildTransactionError {
+  /**
+   * Creates an account-loading error.
+   *
+   * @param input - Original process input.
+   * @param cause - Underlying account lookup error.
+   */
   constructor(input: BuildTransactionInput, cause: Error) {
     super({
       code: Code.COULD_NOT_LOAD_SOURCE_ACCOUNT,
@@ -95,7 +136,16 @@ export class COULD_NOT_LOAD_ACCOUNT_ERROR extends BuildTransactionError {
   }
 }
 
+/**
+ * Raised when the transaction builder cannot be created.
+ */
 export class COULD_NOT_CREATE_TRANSACTION_BUILDER_ERROR extends BuildTransactionError {
+  /**
+   * Creates a transaction-builder creation error.
+   *
+   * @param input - Original process input.
+   * @param cause - Underlying builder creation error.
+   */
   constructor(input: BuildTransactionInput, cause: Error) {
     super({
       code: Code.COULD_NOT_CREATE_TRANSACTION_BUILDER,
@@ -107,7 +157,16 @@ export class COULD_NOT_CREATE_TRANSACTION_BUILDER_ERROR extends BuildTransaction
   }
 }
 
+/**
+ * Raised when Soroban data cannot be attached to the builder.
+ */
 export class COULD_NOT_SET_SOROBAN_DATA_ERROR extends BuildTransactionError {
+  /**
+   * Creates a Soroban-data attachment error.
+   *
+   * @param input - Original process input.
+   * @param cause - Underlying Soroban-data error.
+   */
   constructor(input: BuildTransactionInput, cause: Error) {
     super({
       code: Code.COULD_NOT_SET_SOROBAN_DATA,
@@ -119,7 +178,16 @@ export class COULD_NOT_SET_SOROBAN_DATA_ERROR extends BuildTransactionError {
   }
 }
 
+/**
+ * Raised when the transaction envelope cannot be built.
+ */
 export class COULD_NOT_BUILD_TRANSACTION_ERROR extends BuildTransactionError {
+  /**
+   * Creates a transaction build error.
+   *
+   * @param input - Original process input.
+   * @param cause - Underlying build error.
+   */
   constructor(input: BuildTransactionInput, cause: Error) {
     super({
       code: Code.COULD_NOT_BUILD_TRANSACTION,
@@ -132,7 +200,16 @@ export class COULD_NOT_BUILD_TRANSACTION_ERROR extends BuildTransactionError {
   }
 }
 
+/**
+ * Raised when a source account cannot be initialized with the provided sequence.
+ */
 export class COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE_ERROR extends BuildTransactionError {
+  /**
+   * Creates an invalid-sequence initialization error.
+   *
+   * @param input - Original process input.
+   * @param cause - Underlying sequence parsing or SDK error.
+   */
   constructor(input: BuildTransactionInput, cause: Error) {
     super({
       code: Code.COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE,
@@ -150,7 +227,15 @@ export class COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE_ERROR extends BuildTrans
   }
 }
 
+/**
+ * Raised when mutually exclusive time constraints are configured together.
+ */
 export class CONFLICTING_TIME_CONSTRAINTS_ERROR extends BuildTransactionError {
+  /**
+   * Creates a conflicting-time-constraints error.
+   *
+   * @param input - Original process input.
+   */
   constructor(input: BuildTransactionInput) {
     super({
       code: Code.CONFLICTING_TIME_CONSTRAINTS,
@@ -168,7 +253,16 @@ export class CONFLICTING_TIME_CONSTRAINTS_ERROR extends BuildTransactionError {
   }
 }
 
+/**
+ * Raised when transaction preconditions cannot be applied to the builder.
+ */
 export class FAILED_TO_SET_PRECONDITIONS_ERROR extends BuildTransactionError {
+  /**
+   * Creates a failed-preconditions error.
+   *
+   * @param input - Original process input.
+   * @param cause - Underlying precondition error.
+   */
   constructor(input: BuildTransactionInput, cause: Error) {
     super({
       code: Code.FAILED_TO_SET_PRECONDITIONS,
@@ -186,7 +280,15 @@ export class FAILED_TO_SET_PRECONDITIONS_ERROR extends BuildTransactionError {
   }
 }
 
+/**
+ * Raised when no operations are provided to build a transaction.
+ */
 export class NO_OPERATIONS_PROVIDED_ERROR extends BuildTransactionError {
+  /**
+   * Creates a no-operations-provided error.
+   *
+   * @param input - Original process input.
+   */
   constructor(input: BuildTransactionInput) {
     super({
       code: Code.NO_OPERATIONS_PROVIDED,
@@ -203,7 +305,15 @@ export class NO_OPERATIONS_PROVIDED_ERROR extends BuildTransactionError {
   }
 }
 
+/**
+ * Raised when RPC is required to load the source account but missing.
+ */
 export class RPC_REQUIRED_TO_LOAD_ACCOUNT_ERROR extends BuildTransactionError {
+  /**
+   * Creates an RPC-required error.
+   *
+   * @param input - Original process input.
+   */
   constructor(input: BuildTransactionInput) {
     super({
       code: Code.RPC_REQUIRED_TO_LOAD_ACCOUNT,
@@ -221,6 +331,9 @@ export class RPC_REQUIRED_TO_LOAD_ACCOUNT_ERROR extends BuildTransactionError {
   }
 }
 
+/**
+ * Build-transaction error constructors indexed by stable code.
+ */
 export const ERROR_BY_CODE = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.INVALID_BASE_FEE]: INVALID_BASE_FEE_ERROR,

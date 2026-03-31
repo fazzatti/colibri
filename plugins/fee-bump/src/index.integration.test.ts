@@ -4,38 +4,39 @@ import { afterEach, beforeAll, describe, it } from "@std/testing/bdd";
 import { Asset, Operation } from "stellar-sdk";
 import { Api } from "stellar-sdk/rpc";
 import {
-  initializeWithFriendbot,
-  NativeAccount,
-  LocalSigner,
   type Ed25519PublicKey,
-} from "@colibri/core/";
-import { PLG_FeeBump } from "@/index.ts";
+  initializeWithFriendbot,
+  LocalSigner,
+  NativeAccount,
+} from "@colibri/core";
+import { createFeeBumpPlugin, FEE_BUMP_PLUGIN_ID } from "@/index.ts";
 import {
+  createInvokeContractPipeline,
+  INVOKE_CONTRACT_PIPELINE_ID,
   NetworkConfig,
-  PIPE_InvokeContract,
-  type TransactionConfig,
   steps,
+  type TransactionConfig,
 } from "@colibri/core";
 
 describe(
   "[Testnet] FeeBump Plugin",
   disableSanitizeConfig,
-
   () => {
     const networkConfig = NetworkConfig.TestNet();
 
     const xlmContractId = Asset.native().contractId(
-      networkConfig.networkPassphrase
+      networkConfig.networkPassphrase,
     );
 
-    let invokePipe: ReturnType<typeof PIPE_InvokeContract.create> | undefined =
-      undefined;
+    let invokePipe:
+      | ReturnType<typeof createInvokeContractPipeline>
+      | undefined = undefined;
     // Inner tx source and fee-bump payer
     const innerSource = NativeAccount.fromMasterSigner(
-      LocalSigner.generateRandom()
+      LocalSigner.generateRandom(),
     );
     const feeBumpSource = NativeAccount.fromMasterSigner(
-      LocalSigner.generateRandom()
+      LocalSigner.generateRandom(),
     );
 
     beforeAll(async () => {
@@ -56,7 +57,7 @@ describe(
         },
       );
 
-      invokePipe = PIPE_InvokeContract.create({
+      invokePipe = createInvokeContractPipeline({
         networkConfig,
       });
     });
@@ -67,7 +68,7 @@ describe(
 
     describe("Construction", () => {
       it("should initialize the plugin", () => {
-        const plugin = PLG_FeeBump.create({
+        const plugin = createFeeBumpPlugin({
           networkConfig,
           feeBumpConfig: {
             source: feeBumpSource.address(),
@@ -77,11 +78,11 @@ describe(
         });
 
         assertExists(plugin);
-        assertEquals(plugin.id, PLG_FeeBump.name);
+        assertEquals(plugin.id, FEE_BUMP_PLUGIN_ID);
       });
 
       it("should add the plugin to the SendTransaction process", () => {
-        const plugin = PLG_FeeBump.create({
+        const plugin = createFeeBumpPlugin({
           networkConfig,
           feeBumpConfig: {
             source: feeBumpSource.address(),
@@ -90,7 +91,7 @@ describe(
           },
         });
 
-        invokePipe = PIPE_InvokeContract.create({
+        invokePipe = createInvokeContractPipeline({
           networkConfig,
         });
 
@@ -98,19 +99,19 @@ describe(
         invokePipe.use(plugin);
 
         assertExists(invokePipe);
-        assertEquals(invokePipe.id, PIPE_InvokeContract.name);
+        assertEquals(invokePipe.id, INVOKE_CONTRACT_PIPELINE_ID);
         assertEquals(invokePipe.plugins.length, 1);
         const [attachedPlugin] = Array.from(
           invokePipe.plugins as unknown as readonly typeof plugin[],
         );
         assertExists(attachedPlugin);
-        assertEquals(attachedPlugin.id, PLG_FeeBump.name);
+        assertEquals(attachedPlugin.id, FEE_BUMP_PLUGIN_ID);
         assertEquals(attachedPlugin.target, steps.SEND_TRANSACTION_STEP_ID);
       });
     });
     describe("Execute", () => {
       it("should wrap and run a successful fee bump transaction", async () => {
-        const plugin = PLG_FeeBump.create({
+        const plugin = createFeeBumpPlugin({
           networkConfig,
           feeBumpConfig: {
             source: feeBumpSource.address(),
@@ -126,9 +127,9 @@ describe(
           signers: [innerSource.signer()],
         };
         assertExists(plugin);
-        assertEquals(plugin.id, "FeeBumpPlugin");
+        assertEquals(plugin.id, FEE_BUMP_PLUGIN_ID);
 
-        invokePipe = PIPE_InvokeContract.create({
+        invokePipe = createInvokeContractPipeline({
           networkConfig,
         });
         assertEquals(invokePipe.plugins.length, 0);
@@ -150,5 +151,5 @@ describe(
         assertEquals(res.response.status, Api.GetTransactionStatus.SUCCESS);
       });
     });
-  }
+  },
 );

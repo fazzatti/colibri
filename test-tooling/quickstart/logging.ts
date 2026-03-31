@@ -10,8 +10,16 @@ export const LogLevel = {
   SILENT: 5,
 } as const;
 
-type LogLevelName = "trace" | "debug" | "info" | "warn" | "error" | "silent";
-type LogLevelNumber = (typeof LogLevel)[keyof typeof LogLevel];
+/**
+ * Lowercase log level names accepted by quickstart logging helpers.
+ */
+export type LogLevelName =
+  "trace" | "debug" | "info" | "warn" | "error" | "silent";
+
+/**
+ * Numeric log level values used by quickstart logging helpers.
+ */
+export type LogLevelNumber = (typeof LogLevel)[keyof typeof LogLevel];
 
 /**
  * Accepted log level formats for quickstart logging.
@@ -25,10 +33,15 @@ export type LogLevelDesc =
  * Minimal logger contract accepted by `StellarTestLedger`.
  */
 export type LoggerLike = {
+  /** Logs an error-level message. */
   error(...msg: unknown[]): void;
+  /** Logs a warning-level message. */
   warn(...msg: unknown[]): void;
+  /** Logs an info-level message. */
   info(...msg: unknown[]): void;
+  /** Logs a debug-level message. */
   debug(...msg: unknown[]): void;
+  /** Logs a trace-level message. */
   trace(...msg: unknown[]): void;
 };
 

@@ -319,7 +319,7 @@ describe("LocalSigner", () => {
 
       // Verify using stellar-sdk Keypair
       const keypair = Keypair.fromPublicKey(TEST_PUBLIC);
-      assert(keypair.verify(data, signature));
+      assert(keypair.verify(data, Buffer.from(signature)));
     });
 
     it("produces different signatures for different data", () => {
@@ -330,7 +330,10 @@ describe("LocalSigner", () => {
       const sig1 = signer.sign(data1);
       const sig2 = signer.sign(data2);
 
-      assertNotEquals(sig1.toString("hex"), sig2.toString("hex"));
+      assertNotEquals(
+        Buffer.from(sig1).toString("hex"),
+        Buffer.from(sig2).toString("hex")
+      );
     });
 
     it("throws after destroy", () => {
@@ -547,4 +550,3 @@ describe("LocalSigner", () => {
     });
   });
 });
-

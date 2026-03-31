@@ -3,32 +3,64 @@ import type { Memo, Transaction, xdr } from "stellar-sdk";
 import type { BaseFee } from "@/common/types/transaction-config/types.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 
+/**
+ * Input accepted by the build-transaction process.
+ */
+/** @internal */
 export type BuildTransactionInput = {
+  /** Operations that will be added to the transaction envelope. */
   operations: xdr.Operation[];
+  /** Source account for the transaction. */
   source: Ed25519PublicKey;
+  /** Base fee in stroops. */
   baseFee: BaseFee;
+  /** Stellar network passphrase. */
   networkPassphrase: string;
+  /** Optional Soroban data or encoded Soroban data payload. */
   sorobanData?: string | xdr.SorobanTransactionData;
+  /** Optional memo attached to the transaction. */
   memo?: Memo;
+  /** Optional transaction preconditions. */
   preconditions?: TransactionPreconditions;
 } & (WithRpc | WithoutRpc);
 
+/**
+ * Output returned by the build-transaction process.
+ */
+/** @internal */
 export type BuildTransactionOutput = Transaction;
 
+/**
+ * Supported RPC and sequence-number input variants accepted by the builder.
+ */
+/** @internal */
 export type RpcVariants =
   | { rpc?: never; sequence?: never }
   | WithRpc
   | WithoutRpc;
 
+/**
+ * Build-transaction input variant that loads sequence data from RPC.
+ */
+/** @internal */
 export type WithRpc = {
   rpc: Server;
   sequence?: never;
 };
+
+/**
+ * Build-transaction input variant that provides the sequence directly.
+ */
+/** @internal */
 export type WithoutRpc = {
   rpc?: never;
   sequence: string;
 };
 
+/**
+ * Preconditions supported by the build-transaction process.
+ */
+/** @internal */
 export type TransactionPreconditions = {
   ledgerBounds?: LedgerBounds;
 
@@ -68,6 +100,10 @@ export type TransactionPreconditions = {
 // a window in ledger sequence, minLedger inclusive, maxLedger exclusive,
 // 0 means no upper limit, it combines with timeBounds and everything else
 // using AND, so all windows must be true at the same time.
+/**
+ * Inclusive/exclusive ledger window used by transaction preconditions.
+ */
+/** @internal */
 export type LedgerBounds = {
   minLedger?: number;
   maxLedger?: number; // maxLedger can be 0
@@ -77,6 +113,10 @@ export type LedgerBounds = {
 // 0 means open, builder needs both set or you use setTimeout which
 // fills maxTime, validity fails as too early or too late outside
 // this window.
+/**
+ * Time window used by transaction preconditions.
+ */
+/** @internal */
 export type TimeBounds = {
   // unix seconds, maxTime can be 0
   minTime?: Date | number;
@@ -85,6 +125,10 @@ export type TimeBounds = {
 
 // sets maxTime, minTime=0
 // The stellar-sdk uses 0 as infinite.
+/**
+ * Relative timeout, in seconds, used to derive transaction time bounds.
+ */
+/** @internal */
 export type Timeout = number;
 
 // Merge the two types below so you don't
@@ -95,4 +139,7 @@ type TimeBasedPreconditions =
   | { timeoutSeconds: Timeout; timeBounds?: never }
   | { timeBounds: TimeBounds; timeoutSeconds?: never };
 
+/**
+ * Sentinel value meaning “no upper bound”.
+ */
 export const NO_LIMIT = 0; // 0 means no limit

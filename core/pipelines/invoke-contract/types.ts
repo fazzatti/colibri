@@ -4,14 +4,17 @@ import type { TransactionConfig } from "@/common/types/transaction-config/types.
 import type { NetworkConfig } from "@/network/index.ts";
 import type { SendTransactionOutput } from "@/processes/send-transaction/types.ts";
 
+/** @internal */
 export type CreateInvokeContractPipelineArgs = {
   networkConfig: NetworkConfig;
   rpc?: Server;
 };
 
+/** @internal */
 export type InvokeContractInput = {
   operations: xdr.Operation[];
   config: TransactionConfig;
 };
 
+/** @internal */
 export type InvokeContractOutput = SendTransactionOutput;

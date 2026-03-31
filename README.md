@@ -80,6 +80,21 @@ npm install @colibri/plugin-fee-bump
 
 ---
 
+### [@colibri/plugin-channel-accounts](./plugins/channel-accounts)
+
+A plugin and channel management helper for reusing sponsored Stellar channel
+accounts across classic and Soroban transaction pipelines.
+
+```sh
+deno add jsr:@colibri/plugin-channel-accounts
+# or
+npm install @colibri/plugin-channel-accounts
+```
+
+[View Documentation →](./plugins/channel-accounts/README.md)
+
+---
+
 ### [@colibri/rpc-streamer](./rpc-streamer)
 
 A real-time event streaming client for Stellar/Soroban that supports live
@@ -144,9 +159,9 @@ and testability.
 
 - **Pipelines (The "What")**: Orchestrators that chain processes together to
   achieve a high-level business goal.
-  - _Example:_ `PIPE_InvokeContract` composes build, simulate, sign-auth,
-    assemble, envelope-signing-requirements, sign-envelope, and send steps into
-    one write flow.
+  - _Example:_ `createInvokeContractPipeline(...)` composes build, simulate,
+    sign-auth, assemble, envelope-signing-requirements, sign-envelope, and send
+    steps into one write flow.
 
 This composition allows us to swap parts easily. For instance, the `FeeBump`
 plugin targets the `SendTransaction` step and wraps the outgoing transaction
@@ -168,7 +183,8 @@ specific use cases and highly specialized, bullet-proof building blocks.
   - Extensions (Fee Bump), specialized clients (Contract, Signer), and event
     streaming.
 - **Layer 3: Pipelines**
-  - High-level workflows (`PIPE_InvokeContract`, `PIPE_ReadFromContract`).
+  - High-level workflows (`createInvokeContractPipeline`,
+    `createReadFromContractPipeline`).
 - **Layer 2: Steps & Processes**
   - Plain process functions plus `convee` step wrappers with stable ids.
 - **Layer 1: Core**

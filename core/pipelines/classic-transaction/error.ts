@@ -1,5 +1,6 @@
 import { PipelineError } from "@/pipelines/error.ts";
 
+/** Stable error codes emitted while building the classic transaction pipeline. */
 export enum Code {
   UNEXPECTED_ERROR = "PIPE_CLTX_000",
   MISSING_ARG = "PIPE_CLTX_001",
@@ -51,6 +52,7 @@ export class MISSING_RPC_URL extends ClassicTransactionError {
   }
 }
 
+/** Classic transaction pipeline error constructors indexed by stable code. */
 export const ERROR_PIPE_CLTX = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.MISSING_ARG]: MISSING_ARG,

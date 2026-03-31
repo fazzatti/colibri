@@ -5,6 +5,7 @@ import { softTryToXDR } from "@/common/helpers/xdr/soft-try-to-xdr.ts";
 import { parseEvents } from "@/common/helpers/xdr/parse-events.ts";
 import { parseErrorResult } from "@/common/helpers/xdr/parse-error-result.ts";
 
+/** Aggregated XDR helper namespace. */
 export const xdr = {
   ...authEntries,
   getAddressTypeFromAuthEntry,

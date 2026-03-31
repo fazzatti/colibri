@@ -11,6 +11,7 @@ import { assert } from "@/common/assert/assert.ts";
 import { getTransactionTimeout } from "@/common/helpers/transaction.ts";
 import { ResultOrError } from "@/common/deferred/result-or-error.ts";
 
+/** Submits a signed transaction to Stellar RPC and waits for a terminal result. */
 export const sendTransaction = async (
   input: SendTransactionInput
 ): Promise<SendTransactionOutput> => {
@@ -132,4 +133,5 @@ const getTransactionRecursively = async (
   }
   return ResultOrError.wrapVal(getTxResponse);
 };
-export { E as SendTransactionErrors };
+/** Error constructors emitted by {@link sendTransaction}. */
+export const SendTransactionErrors: typeof E = E;

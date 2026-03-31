@@ -1,11 +1,17 @@
 import { ColibriError } from "@/error/index.ts";
 import type { Diagnostic } from "@/error/types.ts";
 
+/**
+ * Metadata stored on contract errors.
+ */
 export type Meta = {
   cause: Error | null;
   data: unknown;
 };
 
+/**
+ * Shape accepted by {@link ContractError} constructors.
+ */
 export type ContractErrorShape<Code extends string> = {
   code: Code;
   message: string;
@@ -15,12 +21,21 @@ export type ContractErrorShape<Code extends string> = {
   data: unknown;
 };
 
+/**
+ * Base class for contract-module errors.
+ */
 export abstract class ContractError<Code extends string> extends ColibriError<
   Code,
   Meta
 > {
+  /** Structured metadata attached to the error instance. */
   override readonly meta: Meta;
 
+  /**
+   * Creates a contract error with Colibri-standard metadata.
+   *
+   * @param args - Error payload used to build the instance.
+   */
   constructor(args: ContractErrorShape<Code>) {
     const meta = {
       cause: args.cause || null,
@@ -41,6 +56,9 @@ export abstract class ContractError<Code extends string> extends ColibriError<
   }
 }
 
+/**
+ * Stable error codes emitted by the contract module.
+ */
 export enum Code {
   UNEXPECTED_ERROR = "CONTR_000",
   MISSING_ARG = "CONTR_001",
@@ -70,7 +88,15 @@ export enum Code {
 //   }
 // }
 
+/**
+ * Raised when a required contract constructor argument is missing.
+ */
 export class MISSING_ARG extends ContractError<Code> {
+  /**
+   * Creates a missing-argument contract error.
+   *
+   * @param argName - Name of the missing argument.
+   */
   constructor(argName: string) {
     super({
       code: Code.MISSING_ARG,
@@ -81,7 +107,11 @@ export class MISSING_ARG extends ContractError<Code> {
   }
 }
 
+/**
+ * Raised when no RPC server can be derived for the contract instance.
+ */
 export class MISSING_RPC_URL extends ContractError<Code> {
+  /** Creates a missing-RPC-URL contract error. */
   constructor() {
     super({
       code: Code.MISSING_RPC_URL,
@@ -98,7 +128,11 @@ export class MISSING_RPC_URL extends ContractError<Code> {
   }
 }
 
+/**
+ * Raised when contract construction does not provide usable contract identity.
+ */
 export class INVALID_CONTRACT_CONFIG extends ContractError<Code> {
+  /** Creates an invalid-contract-config error. */
   constructor() {
     super({
       code: Code.INVALID_CONTRACT_CONFIG,
@@ -109,7 +143,15 @@ export class INVALID_CONTRACT_CONFIG extends ContractError<Code> {
   }
 }
 
+/**
+ * Raised when uploading WASM binaries fails.
+ */
 export class FAILED_TO_UPLOAD_WASM extends ContractError<Code> {
+  /**
+   * Creates a failed-upload error.
+   *
+   * @param cause - Underlying upload failure.
+   */
   constructor(cause: Error) {
     super({
       code: Code.FAILED_TO_UPLOAD_WASM,
@@ -121,7 +163,15 @@ export class FAILED_TO_UPLOAD_WASM extends ContractError<Code> {
   }
 }
 
+/**
+ * Raised when a required contract property has not been initialized.
+ */
 export class MISSING_REQUIRED_PROPERTY extends ContractError<Code> {
+  /**
+   * Creates a missing-property error.
+   *
+   * @param propertyName - Missing property name.
+   */
   constructor(propertyName: string) {
     super({
       code: Code.MISSING_REQUIRED_PROPERTY,
@@ -136,7 +186,11 @@ export class MISSING_REQUIRED_PROPERTY extends ContractError<Code> {
   }
 }
 
+/**
+ * Raised when the loaded WASM does not contain a contract specification.
+ */
 export class MISSING_SPEC_IN_WASM extends ContractError<Code> {
+  /** Creates a missing-spec-in-wasm error. */
   constructor() {
     super({
       code: Code.MISSING_SPEC_IN_WASM,
@@ -151,7 +205,15 @@ export class MISSING_SPEC_IN_WASM extends ContractError<Code> {
   }
 }
 
+/**
+ * Raised when deploying a contract fails.
+ */
 export class FAILED_TO_DEPLOY_CONTRACT extends ContractError<Code> {
+  /**
+   * Creates a failed-deploy error.
+   *
+   * @param cause - Underlying deployment failure.
+   */
   constructor(cause: Error) {
     super({
       code: Code.FAILED_TO_DEPLOY_CONTRACT,
@@ -163,7 +225,15 @@ export class FAILED_TO_DEPLOY_CONTRACT extends ContractError<Code> {
   }
 }
 
+/**
+ * Raised when code tries to mutate an immutable contract property.
+ */
 export class PROPERTY_ALREADY_SET extends ContractError<Code> {
+  /**
+   * Creates a property-already-set error.
+   *
+   * @param propertyName - Immutable property name.
+   */
   constructor(propertyName: string) {
     super({
       code: Code.PROPERTY_ALREADY_SET,
@@ -178,7 +248,15 @@ export class PROPERTY_ALREADY_SET extends ContractError<Code> {
   }
 }
 
+/**
+ * Raised when a contract instance ledger entry cannot be found.
+ */
 export class CONTRACT_INSTANCE_NOT_FOUND extends ContractError<Code> {
+  /**
+   * Creates a missing-contract-instance error.
+   *
+   * @param contractId - Contract id that was looked up.
+   */
   constructor(contractId: string) {
     super({
       code: Code.CONTRACT_INSTANCE_NOT_FOUND,
@@ -193,7 +271,15 @@ export class CONTRACT_INSTANCE_NOT_FOUND extends ContractError<Code> {
   }
 }
 
+/**
+ * Raised when uploaded contract code cannot be found on chain.
+ */
 export class CONTRACT_CODE_NOT_FOUND extends ContractError<Code> {
+  /**
+   * Creates a missing-contract-code error.
+   *
+   * @param wasmHash - WASM hash used for the lookup.
+   */
   constructor(wasmHash: string) {
     super({
       code: Code.CONTRACT_CODE_NOT_FOUND,
@@ -208,7 +294,15 @@ export class CONTRACT_CODE_NOT_FOUND extends ContractError<Code> {
   }
 }
 
+/**
+ * Raised when a contract id does not match the expected format.
+ */
 export class INVALID_CONTRACT_ID extends ContractError<Code> {
+  /**
+   * Creates an invalid-contract-id error.
+   *
+   * @param contractId - Invalid contract id value.
+   */
   constructor(contractId: string) {
     super({
       code: Code.INVALID_CONTRACT_ID,
@@ -223,6 +317,9 @@ export class INVALID_CONTRACT_ID extends ContractError<Code> {
   }
 }
 
+/**
+ * Contract error constructors indexed by stable error code.
+ */
 export const ERROR_CONTR = {
   // [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.MISSING_ARG]: MISSING_ARG,

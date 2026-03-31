@@ -6,26 +6,34 @@ import {
   assertThrows,
 } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import type { Server } from "stellar-sdk/rpc";
+import type { Api, Server } from "stellar-sdk/rpc";
 import { pipe, step } from "convee";
 import {
-  PIPE_InvokeContract,
+  createInvokeContractPipeline,
+  INVOKE_CONTRACT_PIPELINE_ID,
   isFeeBumpTransaction,
-  NativeAccount,
   LocalSigner,
+  NativeAccount,
   NetworkConfig,
+  type SendTransactionInput,
+  type SendTransactionOutput,
   steps,
 } from "@colibri/core";
-import { PLG_FeeBump } from "@/index.ts";
+import {
+  createFeeBumpPlugin,
+  FEE_BUMP_PLUGIN_ID,
+  FEE_BUMP_PLUGIN_TARGET,
+} from "@/index.ts";
 import * as E from "@/error.ts";
 import {
-  Operation,
-  TransactionBuilder,
   Account,
   type FeeBumpTransaction,
+  Operation,
   type Transaction,
+  TransactionBuilder,
 } from "stellar-sdk";
-import type { PluginInput } from "@/types.ts";
+
+type PluginInput = SendTransactionInput;
 
 describe("FeeBump Plugin", () => {
   const networkConfig = NetworkConfig.TestNet();
@@ -49,7 +57,7 @@ describe("FeeBump Plugin", () => {
   };
 
   const createPlugin = () =>
-    PLG_FeeBump.create({
+    createFeeBumpPlugin({
       networkConfig,
       feeBumpConfig: {
         source: feeBumpSource.address(),
@@ -58,12 +66,24 @@ describe("FeeBump Plugin", () => {
       },
     });
 
-  const createPluginTestPipe = () =>
+  const createPluginTestPipe = (
+    onInput?: (input: PluginInput) => void,
+  ) =>
     pipe(
       [
-        step((input: PluginInput) => input, {
-          id: steps.SEND_TRANSACTION_STEP_ID,
-        }),
+        step(
+          (input: PluginInput): SendTransactionOutput => {
+            onInput?.(input);
+            return {
+              hash: "mock-hash",
+              returnValue: undefined,
+              response: {} as Api.GetSuccessfulTransactionResponse,
+            };
+          },
+          {
+            id: steps.SEND_TRANSACTION_STEP_ID,
+          },
+        ),
       ] as const,
       { id: "FeeBumpPluginTestPipe" as const },
     );
@@ -73,32 +93,35 @@ describe("FeeBump Plugin", () => {
       const plugin = createPlugin();
 
       assertExists(plugin);
-      assertEquals(plugin.id, PLG_FeeBump.name);
-      assertEquals(plugin.target, PLG_FeeBump.target);
+      assertEquals(plugin.id, FEE_BUMP_PLUGIN_ID);
+      assertEquals(plugin.target, FEE_BUMP_PLUGIN_TARGET);
     });
 
     it("attaches the plugin to the invoke pipeline", () => {
       const plugin = createPlugin();
-      const invokePipe = PIPE_InvokeContract.create({ networkConfig });
+      const invokePipe = createInvokeContractPipeline({ networkConfig });
 
       invokePipe.use(plugin);
 
       assertExists(invokePipe);
-      assertEquals(invokePipe.id, PIPE_InvokeContract.name);
+      assertEquals(invokePipe.id, INVOKE_CONTRACT_PIPELINE_ID);
       assertEquals(invokePipe.plugins.length, 1);
       const [attachedPlugin] = Array.from(
         invokePipe.plugins as unknown as readonly typeof plugin[],
       );
       assertExists(attachedPlugin);
-      assertEquals(attachedPlugin.id, PLG_FeeBump.name);
-      assertEquals(attachedPlugin.target, PLG_FeeBump.target);
+      assertEquals(attachedPlugin.id, FEE_BUMP_PLUGIN_ID);
+      assertEquals(attachedPlugin.target, FEE_BUMP_PLUGIN_TARGET);
     });
   });
 
   describe("Execute", () => {
     it("wraps a transaction in a fee bump transaction", async () => {
       const plugin = createPlugin();
-      const pluginPipe = createPluginTestPipe();
+      const received: { input?: PluginInput } = {};
+      const pluginPipe = createPluginTestPipe((input) => {
+        received.input = input;
+      });
       pluginPipe.use(plugin);
       const mockTransaction = createTestTransaction();
 
@@ -108,22 +131,29 @@ describe("FeeBump Plugin", () => {
       });
 
       assertExists(result);
-      assertExists(result.transaction);
-      assertEquals(isFeeBumpTransaction(result.transaction), true);
+      const interceptedInput = received.input;
+      if (!interceptedInput) {
+        throw new Error("Expected the fee-bump plugin to reach the step input");
+      }
+      assertEquals(isFeeBumpTransaction(interceptedInput.transaction), true);
       assertEquals(
-        (result.transaction as FeeBumpTransaction).feeSource,
+        (interceptedInput.transaction as FeeBumpTransaction).feeSource,
         feeBumpSource.address(),
       );
-      assertEquals(result.transaction.fee, "20000000");
+      assertEquals(interceptedInput.transaction.fee, "20000000");
       assertEquals(
-        (result.transaction as FeeBumpTransaction).innerTransaction.toXDR(),
+        (interceptedInput.transaction as FeeBumpTransaction).innerTransaction
+          .toXDR(),
         mockTransaction.toXDR(),
       );
     });
 
     it("preserves non-transaction input fields", async () => {
       const plugin = createPlugin();
-      const pluginPipe = createPluginTestPipe();
+      const received: { input?: PluginInput } = {};
+      const pluginPipe = createPluginTestPipe((input) => {
+        received.input = input;
+      });
       pluginPipe.use(plugin);
       const mockTransaction = createTestTransaction();
       const mockRpc = { someRpcProperty: true } as any;
@@ -134,13 +164,23 @@ describe("FeeBump Plugin", () => {
       });
 
       assertExists(result);
-      assertEquals(result.rpc, mockRpc);
-      assertEquals(result.transaction !== mockTransaction, true);
-      assertEquals(isFeeBumpTransaction(result.transaction), true);
+      const interceptedInput = received.input;
+      if (!interceptedInput) {
+        throw new Error("Expected the fee-bump plugin to reach the step input");
+      }
+      assertEquals(interceptedInput.rpc, mockRpc);
+      assertEquals(interceptedInput.transaction !== mockTransaction, true);
+      assertEquals(isFeeBumpTransaction(interceptedInput.transaction), true);
     });
   });
 
   describe("Error Handling", () => {
+    it("uses the plugin package identifier as the error source", () => {
+      const error = new E.MISSING_ARG("networkConfig");
+
+      assertEquals(error.source, "@colibri/plugin-fee-bump");
+    });
+
     it("throws NOT_A_TRANSACTION for invalid input", async () => {
       const plugin = createPlugin();
       const pluginPipe = createPluginTestPipe();
@@ -170,7 +210,7 @@ describe("FeeBump Plugin", () => {
     it("throws MISSING_ARG when required creation arguments are missing", () => {
       assertThrows(
         () =>
-          PLG_FeeBump.create({
+          createFeeBumpPlugin({
             networkConfig,
           } as any),
         E.MISSING_ARG,
@@ -178,7 +218,7 @@ describe("FeeBump Plugin", () => {
 
       assertThrows(
         () =>
-          PLG_FeeBump.create({
+          createFeeBumpPlugin({
             feeBumpConfig: {
               source: feeBumpSource.address(),
               fee: "10000000",
@@ -192,7 +232,7 @@ describe("FeeBump Plugin", () => {
     it("propagates pipeline creation validation errors", () => {
       assertThrows(
         () =>
-          PLG_FeeBump.create({
+          createFeeBumpPlugin({
             networkConfig: null as unknown as NetworkConfig,
             feeBumpConfig: {
               source: feeBumpSource.address(),

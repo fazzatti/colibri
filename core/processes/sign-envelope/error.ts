@@ -2,6 +2,9 @@ import type { SignEnvelopeInput } from "@/processes/sign-envelope/types.ts";
 import { ProcessError } from "@/processes/error.ts";
 import type { Signer } from "@/signer/types.ts";
 
+/**
+ * Stable error codes emitted by the sign-envelope process.
+ */
 export enum Code {
   UNEXPECTED_ERROR = "SEN_000",
   NO_REQUIREMENTS = "SEN_001",
@@ -10,14 +13,27 @@ export enum Code {
   FAILED_TO_SIGN_TRANSACTION = "SEN_004",
 }
 
+/**
+ * Base class for sign-envelope process errors.
+ */
 export abstract class SignEnvelopeError extends ProcessError<
   Code,
   SignEnvelopeInput
 > {
+  /** Source identifier for sign-envelope process failures. */
   override readonly source = "@colibri/core/processes/sign-envelope";
 }
 
+/**
+ * Raised when sign-envelope fails unexpectedly.
+ */
 export class UNEXPECTED_ERROR extends SignEnvelopeError {
+  /**
+   * Creates an unexpected sign-envelope error.
+   *
+   * @param input - Original process input.
+   * @param cause - Underlying unexpected error.
+   */
   constructor(input: SignEnvelopeInput, cause: Error) {
     super({
       code: Code.UNEXPECTED_ERROR,
@@ -29,7 +45,15 @@ export class UNEXPECTED_ERROR extends SignEnvelopeError {
   }
 }
 
+/**
+ * Raised when signature requirements are missing.
+ */
 export class NO_REQUIREMENTS extends SignEnvelopeError {
+  /**
+   * Creates a missing-requirements error.
+   *
+   * @param input - Original process input.
+   */
   constructor(input: SignEnvelopeInput) {
     super({
       code: Code.NO_REQUIREMENTS,
@@ -41,7 +65,15 @@ export class NO_REQUIREMENTS extends SignEnvelopeError {
   }
 }
 
+/**
+ * Raised when no signers are available for signing.
+ */
 export class NO_SIGNERS extends SignEnvelopeError {
+  /**
+   * Creates a missing-signers error.
+   *
+   * @param input - Original process input.
+   */
   constructor(input: SignEnvelopeInput) {
     super({
       code: Code.NO_SIGNERS,
@@ -52,7 +84,17 @@ export class NO_SIGNERS extends SignEnvelopeError {
   }
 }
 
+/**
+ * Raised when the required signer cannot be found among the provided signers.
+ */
 export class SIGNER_NOT_FOUND extends SignEnvelopeError {
+  /**
+   * Creates a signer-not-found error.
+   *
+   * @param input - Original process input.
+   * @param publicKey - Required public key.
+   * @param availableSigners - Signers available to the process.
+   */
   constructor(
     input: SignEnvelopeInput,
     publicKey: string,
@@ -71,7 +113,17 @@ export class SIGNER_NOT_FOUND extends SignEnvelopeError {
   }
 }
 
+/**
+ * Raised when a signer fails to sign the transaction envelope.
+ */
 export class FAILED_TO_SIGN_TRANSACTION extends SignEnvelopeError {
+  /**
+   * Creates a transaction-signing error.
+   *
+   * @param input - Original process input.
+   * @param publicKey - Signer public key that failed.
+   * @param cause - Underlying signing error.
+   */
   constructor(input: SignEnvelopeInput, publicKey: string, cause: Error) {
     super({
       code: Code.FAILED_TO_SIGN_TRANSACTION,
@@ -94,6 +146,9 @@ export class FAILED_TO_SIGN_TRANSACTION extends SignEnvelopeError {
 //   }
 // }
 
+/**
+ * Sign-envelope error constructors indexed by stable code.
+ */
 export const ERROR_BY_CODE = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.NO_REQUIREMENTS]: NO_REQUIREMENTS,

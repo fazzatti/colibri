@@ -220,6 +220,7 @@ const stellarSdkStr = {
   decodeMed25519PublicKey: StellarSdkStrKey.decodeMed25519PublicKey,
 };
 
+/** StrKey validation, detection, and encoding helpers. */
 export const StrKey = {
   ...stellarSdkStr, // Re-exporting from stellar-sdk for full validation
 

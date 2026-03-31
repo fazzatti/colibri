@@ -31,6 +31,7 @@ const setSourceSigner = (
   });
 };
 
+/** Returns the signer threshold required for a classic Stellar operation. */
 export const getRequiredOperationThresholdForClassicOperation = (
   operation: Operation,
 ): SignatureRequirementRaw | void => {

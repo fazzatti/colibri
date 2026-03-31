@@ -14,6 +14,7 @@ import type { xdr } from "stellar-sdk";
  * ```ts
  * parseMuxedAccount(muxed); // "GXXXX..." or "MXXXX..."
  * ```
+ * @internal
  */
 export function parseMuxedAccount(muxedXdr: xdr.MuxedAccount): string {
   switch (muxedXdr.switch().name) {

@@ -3,12 +3,14 @@ import { getOperationsFromTransaction } from "@/common/helpers/transaction.ts";
 import { isTransaction } from "@/common/type-guards/is-transaction.ts";
 import { isFeeBumpTransaction } from "@/common/type-guards/is-fee-bump-transaction.ts";
 
+/** Operation names treated as Soroban smart-contract operations. */
 export const SMART_CONTRACT_OPERATIONS = [
   "invokeHostFunction",
   "extendFootprintTtl",
   "restoreFootprint",
 ];
 
+/** Returns `true` when the transaction carries exactly one Soroban operation. */
 export const isSmartContractTransaction = (
   transaction: Transaction | FeeBumpTransaction,
   softCheckFeebump: boolean = false // when true, it will allow feebump transactions and check their inner transaction

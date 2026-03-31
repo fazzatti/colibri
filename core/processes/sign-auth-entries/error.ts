@@ -2,6 +2,9 @@ import type { xdr } from "stellar-sdk";
 import type { SignAuthEntriesInput } from "@/processes/sign-auth-entries/types.ts";
 import { ProcessError } from "@/processes/error.ts";
 
+/**
+ * Stable error codes emitted by the sign-auth-entries process.
+ */
 export enum Code {
   UNEXPECTED_ERROR = "SAE_000",
   MISSING_ARG = "SAE_001",
@@ -13,14 +16,27 @@ export enum Code {
   FAILED_TO_SIGN_AUTH_ENTRY = "SAE_007",
 }
 
+/**
+ * Base class for sign-auth-entries process errors.
+ */
 export abstract class SignAuthEntriesError extends ProcessError<
   Code,
   SignAuthEntriesInput
 > {
+  /** Source identifier for sign-auth-entries process failures. */
   override readonly source = "@colibri/core/processes/sign-auth-entries";
 }
 
+/**
+ * Raised when sign-auth-entries fails unexpectedly.
+ */
 export class UNEXPECTED_ERROR extends SignAuthEntriesError {
+  /**
+   * Creates an unexpected sign-auth-entries error.
+   *
+   * @param input - Original process input.
+   * @param cause - Underlying unexpected error.
+   */
   constructor(input: SignAuthEntriesInput, cause?: Error) {
     super({
       code: Code.UNEXPECTED_ERROR,
@@ -32,7 +48,16 @@ export class UNEXPECTED_ERROR extends SignAuthEntriesError {
   }
 }
 
+/**
+ * Raised when a required sign-auth-entries input field is missing.
+ */
 export class MISSING_ARG extends SignAuthEntriesError {
+  /**
+   * Creates a missing-argument error.
+   *
+   * @param input - Original process input.
+   * @param argName - Missing argument name.
+   */
   constructor(input: SignAuthEntriesInput, argName: string) {
     super({
       code: Code.MISSING_ARG,
@@ -43,7 +68,16 @@ export class MISSING_ARG extends SignAuthEntriesError {
   }
 }
 
+/**
+ * Raised when `validUntilLedgerSeq` is below the supported minimum.
+ */
 export class VALID_UNTIL_LEDGER_SEQ_TOO_LOW extends SignAuthEntriesError {
+  /**
+   * Creates an invalid-ledger-sequence error.
+   *
+   * @param input - Original process input.
+   * @param validUntilLedgerSeq - Invalid ledger sequence value.
+   */
   constructor(input: SignAuthEntriesInput, validUntilLedgerSeq: number) {
     super({
       code: Code.VALID_UNTIL_LEDGER_SEQ_TOO_LOW,
@@ -54,7 +88,16 @@ export class VALID_UNTIL_LEDGER_SEQ_TOO_LOW extends SignAuthEntriesError {
   }
 }
 
+/**
+ * Raised when `validForLedgers` is below the supported minimum.
+ */
 export class VALID_FOR_LEDGERS_TOO_LOW extends SignAuthEntriesError {
+  /**
+   * Creates an invalid-ledger-window error.
+   *
+   * @param input - Original process input.
+   * @param validForLedgers - Invalid ledger count.
+   */
   constructor(input: SignAuthEntriesInput, validForLedgers: number) {
     super({
       code: Code.VALID_FOR_LEDGERS_TOO_LOW,
@@ -65,7 +108,16 @@ export class VALID_FOR_LEDGERS_TOO_LOW extends SignAuthEntriesError {
   }
 }
 
+/**
+ * Raised when `validForSeconds` is below the supported minimum.
+ */
 export class VALID_FOR_SECONDS_TOO_LOW extends SignAuthEntriesError {
+  /**
+   * Creates an invalid-seconds-window error.
+   *
+   * @param input - Original process input.
+   * @param validForSeconds - Invalid validity duration in seconds.
+   */
   constructor(input: SignAuthEntriesInput, validForSeconds: number) {
     super({
       code: Code.VALID_FOR_SECONDS_TOO_LOW,
@@ -76,7 +128,16 @@ export class VALID_FOR_SECONDS_TOO_LOW extends SignAuthEntriesError {
   }
 }
 
+/**
+ * Raised when the latest ledger cannot be fetched from RPC.
+ */
 export class FAILED_TO_FETCH_LATEST_LEDGER extends SignAuthEntriesError {
+  /**
+   * Creates a latest-ledger lookup error.
+   *
+   * @param input - Original process input.
+   * @param cause - RPC failure returned while loading the latest ledger.
+   */
   constructor(input: SignAuthEntriesInput, cause: Error) {
     super({
       code: Code.FAILED_TO_FETCH_LATEST_LEDGER,
@@ -89,7 +150,11 @@ export class FAILED_TO_FETCH_LATEST_LEDGER extends SignAuthEntriesError {
   }
 }
 
+/**
+ * Raised when the required signer for an auth entry cannot be found.
+ */
 export class MISSING_SIGNER extends SignAuthEntriesError {
+  /** Structured metadata describing the missing signer failure. */
   override readonly meta: {
     data: {
       input: SignAuthEntriesInput;
@@ -97,6 +162,14 @@ export class MISSING_SIGNER extends SignAuthEntriesError {
     };
     cause: null;
   };
+
+  /**
+   * Creates a missing-signer error.
+   *
+   * @param input - Original process input.
+   * @param requiredSigner - Required signer public key.
+   * @param authEntry - Authorization entry that could not be satisfied.
+   */
   constructor(
     input: SignAuthEntriesInput,
     requiredSigner: string,
@@ -118,7 +191,11 @@ export class MISSING_SIGNER extends SignAuthEntriesError {
   }
 }
 
+/**
+ * Raised when signing an authorization entry fails.
+ */
 export class FAILED_TO_SIGN_AUTH_ENTRY extends SignAuthEntriesError {
+  /** Structured metadata describing the failed auth-entry signature. */
   override readonly meta: {
     data: {
       input: SignAuthEntriesInput;
@@ -127,6 +204,13 @@ export class FAILED_TO_SIGN_AUTH_ENTRY extends SignAuthEntriesError {
     cause: Error;
   };
 
+  /**
+   * Creates an auth-entry signing failure.
+   *
+   * @param input - Original process input.
+   * @param entry - Authorization entry that failed to sign.
+   * @param cause - Underlying signing error.
+   */
   constructor(
     input: SignAuthEntriesInput,
     entry: xdr.SorobanAuthorizationEntry,
@@ -156,6 +240,9 @@ export class FAILED_TO_SIGN_AUTH_ENTRY extends SignAuthEntriesError {
   }
 }
 
+/**
+ * Sign-auth-entries error constructors indexed by stable code.
+ */
 export const ERROR_BY_CODE = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.MISSING_ARG]: MISSING_ARG,
