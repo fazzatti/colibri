@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://jsr.io/@colibri/core" title="@Colibri/core">
-    <img alt="@Colibri" src="./_internal/img/colibri-logo-light.jpg" alt="Colibri Logo" width="300" />
+    <img alt="@Colibri" src="./_internal/img/colibri-logo-light.png" alt="Colibri Logo" width="300" />
   </a>
   <br />
   <h1>@colibri</h1>
@@ -147,7 +147,6 @@ and testability.
 
 - **Processes (The "How")**: Atomic functions that do one thing well. They are
   plain reusable building blocks, independent from orchestration.
-
   - _Example:_ `signAuthEntries` takes Soroban auth entries plus signers and
     returns signed authorization entries.
   - _Example:_ `simulateTransaction` takes a transaction, sends it to the RPC,
