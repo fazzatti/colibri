@@ -47,21 +47,33 @@ export class LocalSigner implements LocalSignerType {
   secretKey: () => Ed25519SecretKey;
 
   /**
-   * Signs arbitrary data and returns the signature as a Buffer.
-   * This method allows signing of data outside of transactions, such as challenges.
+   * Signs arbitrary payload bytes and returns the detached signature bytes.
+   *
+   * This method is intended for non-transaction payloads such as SEP-10
+   * challenges or other signed messages.
+   *
+   * @param data - Payload bytes to sign.
+   * @returns Detached signature bytes.
    */
   sign: (data: BinaryData) => BinaryData;
 
   /**
-   * Signs a classic or fee-bump transaction and returns its XDR (string).
-   * The secret key never touches object properties; it is used only within the closure.
+   * Signs a classic or fee-bump transaction envelope.
+   *
+   * @param tx - Transaction envelope to sign.
+   * @returns Signed transaction XDR as base64 text.
    */
   signTransaction: (
     tx: SignableTransaction
   ) => TransactionXDRBase64;
 
   /**
-   * Signs a Soroban authorization entry (SAC-style), returning the signed entry.
+   * Signs a Soroban authorization entry and returns the signed entry.
+   *
+   * @param entry - Authorization entry to sign.
+   * @param validUntil - Ledger sequence at which the authorization expires.
+   * @param passphrase - Network passphrase used for signing.
+   * @returns Signed authorization entry.
    */
   signSorobanAuthEntry: (
     entry: SorobanAuthorizationEntryLike,
@@ -70,12 +82,11 @@ export class LocalSigner implements LocalSignerType {
   ) => Promise<SorobanAuthorizationEntryLike>;
 
   /**
-   * Verifies a detached signature against raw payload bytes.
+   * Verifies a detached signature against payload bytes.
    *
-   *
-   * @param {Buffer} data - The data to sign.
-   * @param {Buffer} signature - The signature to verify.
-   * @returns {boolean} True if the signature is valid, false otherwise.
+   * @param data - Payload bytes to verify.
+   * @param signature - Detached signature bytes.
+   * @returns `true` when the signature is valid, otherwise `false`.
    */
   verifySignature: (data: BinaryData, signature: BinaryData) => boolean;
 
