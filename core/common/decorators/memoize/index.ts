@@ -245,6 +245,7 @@ function memoizeGetter<T>(
   return function (this: Record<symbol, unknown>): T {
     const isEnabled = resolveOption(enabled, this) ?? true;
     if (!isEnabled) {
+      clearCache(this);
       return originalGetter.call(this);
     }
 
@@ -319,11 +320,6 @@ function memoizeMethod<T extends (...args: unknown[]) => unknown>(
     this: Record<symbol, Map<string, unknown>>,
     ...args: unknown[]
   ): unknown {
-    const isEnabled = resolveOption(enabled, this, ...args) ?? true;
-    if (!isEnabled) {
-      return originalMethod.apply(this, args);
-    }
-
     // Initialize cache maps if needed
     if (!(cacheMapKey in this)) {
       this[cacheMapKey] = new Map();
@@ -353,6 +349,12 @@ function memoizeMethod<T extends (...args: unknown[]) => unknown>(
       cacheMap.delete(key);
       timestampsMap.delete(key);
     };
+
+    const isEnabled = resolveOption(enabled, this, ...args) ?? true;
+    if (!isEnabled) {
+      clearCacheEntry();
+      return originalMethod.apply(this, args);
+    }
 
     // Check if we have a valid cached value
     const hasCachedValue = cacheMap.has(key);

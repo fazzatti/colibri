@@ -145,6 +145,36 @@ describe("memoize decorator", disableSanitizeConfig, () => {
       assertEquals(instance.callCount, 3);
     });
 
+    it("clears stale getter cache entries when runtime caching is disabled", () => {
+      class TestClass {
+        callCount = 0;
+
+        constructor(readonly options: { cacheEnabled: boolean }) {}
+
+        @memoize({
+          enabled: (self: TestClass) => self.options.cacheEnabled,
+        })
+        get value(): number {
+          this.callCount++;
+          return this.callCount;
+        }
+      }
+
+      const instance = new TestClass({ cacheEnabled: true });
+
+      assertEquals(instance.value, 1);
+      assertEquals(instance.value, 1);
+
+      instance.options.cacheEnabled = false;
+      assertEquals(instance.value, 2);
+      assertEquals(instance.value, 3);
+
+      instance.options.cacheEnabled = true;
+      assertEquals(instance.value, 4);
+      assertEquals(instance.value, 4);
+      assertEquals(instance.callCount, 4);
+    });
+
     it("falls back to enabled=true and cacheRejected=false when runtime getters return undefined", async () => {
       class TestClass {
         callCount = 0;
@@ -355,6 +385,36 @@ describe("memoize decorator", disableSanitizeConfig, () => {
       assertEquals(instance.compute(), 3);
       await delay(1);
       assertEquals(instance.compute(), 4);
+      assertEquals(instance.callCount, 4);
+    });
+
+    it("clears stale method cache entries when runtime caching is disabled", () => {
+      class TestClass {
+        callCount = 0;
+
+        constructor(readonly options: { cacheEnabled: boolean }) {}
+
+        @memoize({
+          enabled: (self: TestClass) => self.options.cacheEnabled,
+        })
+        compute(key: string): number {
+          this.callCount++;
+          return this.callCount;
+        }
+      }
+
+      const instance = new TestClass({ cacheEnabled: true });
+
+      assertEquals(instance.compute("same"), 1);
+      assertEquals(instance.compute("same"), 1);
+
+      instance.options.cacheEnabled = false;
+      assertEquals(instance.compute("same"), 2);
+      assertEquals(instance.compute("same"), 3);
+
+      instance.options.cacheEnabled = true;
+      assertEquals(instance.compute("same"), 4);
+      assertEquals(instance.compute("same"), 4);
       assertEquals(instance.callCount, 4);
     });
 
