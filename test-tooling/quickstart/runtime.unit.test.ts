@@ -1253,75 +1253,75 @@ describe("Quickstart runtime helpers", () => {
     );
     assertStrictEquals(rpcError.code, Code.READINESS_ERROR);
   });
-});
 
-it("waitForLedgerReady times out when Friendbot cannot fund accounts", async () => {
-  const friendbotNow = (() => {
-    const values = [0, 0, 10, 20];
-    return () => values.shift() ?? 20;
-  })();
+  it("waitForLedgerReady times out when Friendbot cannot fund accounts", async () => {
+    const friendbotNow = (() => {
+      const values = [0, 0, 10, 20];
+      return () => values.shift() ?? 20;
+    })();
 
-  const friendbotError = await assertRejects(
-    () =>
-      waitForLedgerReady({
-        containerId: "container-id",
-        dockerClient: {
-          getContainer: () => createFakeContainer(createInspectInfo()),
-        } as unknown as DockerClientLike,
-        timeoutMs: 15,
-        nowFn: friendbotNow,
-        sleepFn: () => Promise.resolve(undefined),
-        fetchFn: (input) => {
-          const url = String(input);
-          if (url.endsWith("/rpc")) {
-            return Promise.resolve(
-              new Response(createRpcHealthResponse("healthy"), {
-                status: 200,
-              }),
-            );
-          }
+    const friendbotError = await assertRejects(
+      () =>
+        waitForLedgerReady({
+          containerId: "container-id",
+          dockerClient: {
+            getContainer: () => createFakeContainer(createInspectInfo()),
+          } as unknown as DockerClientLike,
+          timeoutMs: 15,
+          nowFn: friendbotNow,
+          sleepFn: () => Promise.resolve(undefined),
+          fetchFn: (input) => {
+            const url = String(input);
+            if (url.endsWith("/rpc")) {
+              return Promise.resolve(
+                new Response(createRpcHealthResponse("healthy"), {
+                  status: 200,
+                }),
+              );
+            }
 
-          return Promise.resolve(new Response("ok", { status: 200 }));
-        },
-        friendbotReadyFn: () =>
-          Promise.reject(new Error("friendbot still returning 502")),
-      }),
-    READINESS_ERROR,
-    "friendbot still returning 502",
-  );
+            return Promise.resolve(new Response("ok", { status: 200 }));
+          },
+          friendbotReadyFn: () =>
+            Promise.reject(new Error("friendbot still returning 502")),
+        }),
+      READINESS_ERROR,
+      "friendbot still returning 502",
+    );
 
-  assertStrictEquals(friendbotError.code, Code.READINESS_ERROR);
-});
+    assertStrictEquals(friendbotError.code, Code.READINESS_ERROR);
+  });
 
-it("waitForLedgerReady treats invalid RPC health JSON as unhealthy", async () => {
-  const rpcNow = (() => {
-    const values = [0, 0, 10, 20];
-    return () => values.shift() ?? 20;
-  })();
+  it("waitForLedgerReady treats invalid RPC health JSON as unhealthy", async () => {
+    const rpcNow = (() => {
+      const values = [0, 0, 10, 20];
+      return () => values.shift() ?? 20;
+    })();
 
-  const rpcError = await assertRejects(
-    () =>
-      waitForLedgerReady({
-        containerId: "container-id",
-        dockerClient: {
-          getContainer: () => createFakeContainer(createInspectInfo()),
-        } as unknown as DockerClientLike,
-        timeoutMs: 15,
-        nowFn: rpcNow,
-        sleepFn: () => Promise.resolve(undefined),
-        fetchFn: (input) => {
-          const url = String(input);
-          if (url.endsWith("/rpc")) {
-            return Promise.resolve(
-              new Response("definitely-not-json", { status: 200 }),
-            );
-          }
+    const rpcError = await assertRejects(
+      () =>
+        waitForLedgerReady({
+          containerId: "container-id",
+          dockerClient: {
+            getContainer: () => createFakeContainer(createInspectInfo()),
+          } as unknown as DockerClientLike,
+          timeoutMs: 15,
+          nowFn: rpcNow,
+          sleepFn: () => Promise.resolve(undefined),
+          fetchFn: (input) => {
+            const url = String(input);
+            if (url.endsWith("/rpc")) {
+              return Promise.resolve(
+                new Response("definitely-not-json", { status: 200 }),
+              );
+            }
 
-          return Promise.resolve(new Response("ok", { status: 200 }));
-        },
-      }),
-    READINESS_ERROR,
-    "RPC is not ready yet",
-  );
-  assertStrictEquals(rpcError.code, Code.READINESS_ERROR);
+            return Promise.resolve(new Response("ok", { status: 200 }));
+          },
+        }),
+      READINESS_ERROR,
+      "RPC is not ready yet",
+    );
+    assertStrictEquals(rpcError.code, Code.READINESS_ERROR);
+  });
 });

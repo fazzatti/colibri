@@ -59,84 +59,84 @@ describe("Quickstart logging", () => {
       errorStub.restore();
     }
   });
-});
 
-it("console logger falls back to warn on unknown levels", () => {
-  const debugStub = stub(console, "debug");
-  const infoStub = stub(console, "info");
-  const warnStub = stub(console, "warn");
+  it("console logger falls back to warn on unknown levels", () => {
+    const debugStub = stub(console, "debug");
+    const infoStub = stub(console, "info");
+    const warnStub = stub(console, "warn");
 
-  try {
-    const logger = createLogger({
-      label: "fallback",
-      level: "LOUD" as never,
-    });
+    try {
+      const logger = createLogger({
+        label: "fallback",
+        level: "LOUD" as never,
+      });
 
-    logger.debug("debug");
-    logger.info("info");
-    logger.warn("warn");
+      logger.debug("debug");
+      logger.info("info");
+      logger.warn("warn");
 
-    assertSpyCalls(debugStub, 0);
-    assertSpyCalls(infoStub, 0);
-    assertSpyCalls(warnStub, 1);
-  } finally {
-    debugStub.restore();
-    infoStub.restore();
-    warnStub.restore();
-  }
-});
+      assertSpyCalls(debugStub, 0);
+      assertSpyCalls(infoStub, 0);
+      assertSpyCalls(warnStub, 1);
+    } finally {
+      debugStub.restore();
+      infoStub.restore();
+      warnStub.restore();
+    }
+  });
 
-it("console logger falls back to warn on unknown numeric levels", () => {
-  const debugStub = stub(console, "debug");
-  const infoStub = stub(console, "info");
-  const warnStub = stub(console, "warn");
+  it("console logger falls back to warn on unknown numeric levels", () => {
+    const debugStub = stub(console, "debug");
+    const infoStub = stub(console, "info");
+    const warnStub = stub(console, "warn");
 
-  try {
-    const logger = createLogger({
-      label: "fallback-number",
-      level: 999 as never,
-    });
+    try {
+      const logger = createLogger({
+        label: "fallback-number",
+        level: 999 as never,
+      });
 
-    logger.debug("debug");
-    logger.info("info");
-    logger.warn("warn");
+      logger.debug("debug");
+      logger.info("info");
+      logger.warn("warn");
 
-    assertSpyCalls(debugStub, 0);
-    assertSpyCalls(infoStub, 0);
-    assertSpyCalls(warnStub, 1);
-  } finally {
-    debugStub.restore();
-    infoStub.restore();
-    warnStub.restore();
-  }
-});
+      assertSpyCalls(debugStub, 0);
+      assertSpyCalls(infoStub, 0);
+      assertSpyCalls(warnStub, 1);
+    } finally {
+      debugStub.restore();
+      infoStub.restore();
+      warnStub.restore();
+    }
+  });
 
-it("console logger accepts string levels and trace logs use console.debug", () => {
-  const debugStub = stub(console, "debug");
-  const infoStub = stub(console, "info");
-  const warnStub = stub(console, "warn");
-  const errorStub = stub(console, "error");
+  it("console logger accepts string levels and trace logs use console.debug", () => {
+    const debugStub = stub(console, "debug");
+    const infoStub = stub(console, "info");
+    const warnStub = stub(console, "warn");
+    const errorStub = stub(console, "error");
 
-  try {
-    const logger = createLogger({ label: "trace", level: "TRACE" });
+    try {
+      const logger = createLogger({ label: "trace", level: "TRACE" });
 
-    logger.trace("trace");
-    logger.debug("debug");
-    logger.info("info");
-    logger.warn("warn");
-    logger.error("error");
+      logger.trace("trace");
+      logger.debug("debug");
+      logger.info("info");
+      logger.warn("warn");
+      logger.error("error");
 
-    assertSpyCalls(debugStub, 2);
-    assertSpyCalls(infoStub, 1);
-    assertSpyCalls(warnStub, 1);
-    assertSpyCalls(errorStub, 1);
+      assertSpyCalls(debugStub, 2);
+      assertSpyCalls(infoStub, 1);
+      assertSpyCalls(warnStub, 1);
+      assertSpyCalls(errorStub, 1);
 
-    const tracePrefix = debugStub.calls[0].args[0] as string;
-    assertStrictEquals(tracePrefix.includes("TRACE (trace):"), true);
-  } finally {
-    debugStub.restore();
-    infoStub.restore();
-    warnStub.restore();
-    errorStub.restore();
-  }
+      const tracePrefix = debugStub.calls[0].args[0] as string;
+      assertStrictEquals(tracePrefix.includes("TRACE (trace):"), true);
+    } finally {
+      debugStub.restore();
+      infoStub.restore();
+      warnStub.restore();
+      errorStub.restore();
+    }
+  });
 });
