@@ -1,29 +1,21 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { assertEquals, assertExists, assertRejects } from "@std/assert";
-import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
+import { beforeAll, describe, it } from "@std/testing/bdd";
 import {
   initializeWithFriendbot,
   LocalSigner,
   NativeAccount,
   NetworkConfig,
-  type NetworkConfig as NetworkConfigType,
   StrKey,
   type TransactionConfig,
 } from "@colibri/core";
-import { StellarTestLedger } from "@colibri/test-tooling";
 import { Server } from "stellar-sdk/rpc";
 import { ChannelAccounts } from "@/index.ts";
 
-describe("ChannelAccounts integration", disableSanitizeConfig, () => {
-  const ledger = new StellarTestLedger({
-    containerName: `colibri-plugin-channel-accounts-${crypto.randomUUID()}`,
-    containerImageVersion: "latest",
-    logLevel: "silent",
-  });
-
+describe("[Testnet] ChannelAccounts integration", disableSanitizeConfig, () => {
   const sponsor = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
+  const networkConfig = NetworkConfig.TestNet();
 
-  let networkConfig: NetworkConfigType;
   let sponsorConfig: TransactionConfig;
   let rpc: Server;
 
@@ -37,13 +29,9 @@ describe("ChannelAccounts integration", disableSanitizeConfig, () => {
         rpcUrl: networkConfig.rpcUrl!,
         allowHttp: networkConfig.allowHttp,
       },
-    );
+  );
 
   beforeAll(async () => {
-    await ledger.start();
-
-    const networkDetails = await ledger.getNetworkDetails();
-    networkConfig = NetworkConfig.CustomNet(networkDetails);
     rpc = new Server(networkConfig.rpcUrl!, {
       allowHttp: networkConfig.allowHttp ?? false,
     });
@@ -58,11 +46,6 @@ describe("ChannelAccounts integration", disableSanitizeConfig, () => {
     };
   });
 
-  afterAll(async () => {
-    await ledger.stop();
-    await ledger.destroy();
-  });
-
   describe("ChannelAccounts", () => {
     it("opens and closes sponsored channel accounts", async () => {
       const channels = await ChannelAccounts.open({
@@ -74,8 +57,12 @@ describe("ChannelAccounts integration", disableSanitizeConfig, () => {
       });
 
       assertEquals(channels.length, 2);
-      await Promise.all(
-        channels.map((channel) => rpc.getAccount(channel.address())),
+      const accountEntries = await Promise.all(
+        channels.map((channel) => rpc.getAccountEntry(channel.address())),
+      );
+      assertEquals(
+        accountEntries.map((entry) => entry.balance().toString()),
+        ["0", "0"],
       );
 
       await ChannelAccounts.close({

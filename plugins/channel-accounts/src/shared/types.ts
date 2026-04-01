@@ -35,7 +35,7 @@ export const CHANNEL_ACCOUNTS_PLUGIN_TARGETS = [
 ] as const satisfies readonly ChannelAccountsPluginTarget[];
 
 /**
- * Maximum number of channel accounts that can be opened in a single setup transaction.
+ * Maximum number of channel accounts handled in a single setup or close transaction batch.
  */
 export const MAX_CHANNELS_PER_TRANSACTION = 15;
 
@@ -90,7 +90,7 @@ export type ChannelAccountsPluginControls = {
 };
 
 /**
- * Arguments for opening and funding new channel accounts.
+ * Arguments for opening new channel accounts.
  */
 export type OpenChannelsArgs = {
   numberOfChannels: number;

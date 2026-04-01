@@ -172,6 +172,30 @@ describe("Event", () => {
       assertEquals(event.topics, ["normalized"]);
       assertEquals(event.value, 7);
     });
+
+    it("normalizes xdr-like topic inputs when they return raw bytes", () => {
+      const normalizedTopic = xdr.ScVal.scvSymbol("bytes-normalized");
+      const normalizedValue = xdr.ScVal.scvU32(9);
+      const event = new Event({
+        id: "0000000000000000000-0000000000",
+        type: EventType.Contract,
+        ledger: 12345,
+        ledgerClosedAt: "2024-01-01T00:00:00Z",
+        transactionIndex: 0,
+        operationIndex: 0,
+        inSuccessfulContractCall: true,
+        txHash: "abc123",
+        topic: [{
+          toXDR: () => normalizedTopic.toXDR(),
+        }],
+        value: {
+          toXDR: () => normalizedValue.toXDR(),
+        },
+      });
+
+      assertEquals(event.topics, ["bytes-normalized"]);
+      assertEquals(event.value, 9);
+    });
   });
 
   describe("value getter", () => {
