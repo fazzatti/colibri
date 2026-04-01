@@ -4,10 +4,11 @@ import {
   createClassicTransactionPipeline,
   LocalSigner,
   NativeAccount,
+  type SignableTransaction,
   type Signer,
   StrKey,
 } from "@colibri/core";
-import { Operation } from "stellar-sdk";
+import { Operation, type xdr } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import { appendUniqueSigners } from "@/shared/signers.ts";
 import {
@@ -66,13 +67,30 @@ const sponsorCanSignChannel = async (
   });
 };
 
+type SignableTransactionWithSignatures = SignableTransaction & {
+  signatures: xdr.DecoratedSignature[];
+  toXDR(format: "base64"): string;
+};
+
 const createChannelProxySigner = (
   signer: Signer,
   channel: ChannelAccount,
-): Signer => ({
+): Signer => {
+  const signerHint = StrKey.decodeEd25519PublicKey(signer.publicKey()).slice(-4);
+
+  return {
   publicKey: () => channel.address(),
   sign: (data) => signer.sign(data),
-  signTransaction: (transaction) => signer.signTransaction(transaction),
+  signTransaction: (transaction) => {
+    const signableTransaction = transaction as SignableTransactionWithSignatures;
+    const alreadySigned = signableTransaction.signatures.some((signature) =>
+      signature.hint().every((byte, index) => byte === signerHint[index])
+    );
+
+    return alreadySigned
+      ? signableTransaction.toXDR("base64")
+      : signer.signTransaction(transaction);
+  },
   signSorobanAuthEntry: (authEntry, validUntilLedgerSeq, networkPassphrase) =>
     signer.signSorobanAuthEntry(
       authEntry,
@@ -80,7 +98,8 @@ const createChannelProxySigner = (
       networkPassphrase,
     ),
   signsFor: (target) => target === channel.address(),
-});
+  };
+};
 
 const chunkChannels = (
   channels: readonly ChannelAccount[],
