@@ -1,11 +1,3 @@
-/**
- * Public entrypoint for `@colibri/core`.
- *
- * It re-exports the primary account, contract, network, event, process,
- * pipeline, signer, and tooling APIs.
- *
- * @module
- */
 export * from "@/account/native/index.ts";
 export type * from "@/account/types.ts";
 export type * from "@/account/native/types.ts";
