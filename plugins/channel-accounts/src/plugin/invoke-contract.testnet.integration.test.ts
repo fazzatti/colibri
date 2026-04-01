@@ -11,11 +11,13 @@ import {
 } from "@colibri/core";
 import {
   Asset,
+  FeeBumpTransaction,
   Operation,
   type Transaction,
   TransactionBuilder,
   type xdr,
 } from "stellar-sdk";
+import { createFeeBumpPlugin } from "../../../fee-bump/mod.ts";
 import { ChannelAccounts, createChannelAccountsPlugin } from "@/index.ts";
 
 const asEnvelopeXdr = (
@@ -26,11 +28,18 @@ const asEnvelopeXdr = (
 const parseSubmittedTransaction = (
   envelopeXdr: string | xdr.TransactionEnvelope,
   networkPassphrase: string,
-): Transaction =>
+): Transaction | FeeBumpTransaction =>
   TransactionBuilder.fromXDR(
     asEnvelopeXdr(envelopeXdr),
     networkPassphrase,
-  ) as Transaction;
+  ) as Transaction | FeeBumpTransaction;
+
+const getInnerTransaction = (
+  transaction: Transaction | FeeBumpTransaction,
+): Transaction =>
+  transaction instanceof FeeBumpTransaction
+    ? transaction.innerTransaction
+    : transaction;
 
 describe(
   "[Testnet] InvokeContract channel accounts plugin",
@@ -87,9 +96,18 @@ describe(
       const plugin = createChannelAccountsPlugin({
         channels: [channel],
       });
+      const feeBumpPlugin = createFeeBumpPlugin({
+        networkConfig,
+        feeBumpConfig: {
+          source: sponsor.address(),
+          fee: "20000000",
+          signers: [sponsor.signer()],
+        },
+      });
 
       const pipeline = createInvokeContractPipeline({ networkConfig });
       pipeline.use(plugin);
+      pipeline.use(feeBumpPlugin);
 
       const xlmContractId = Asset.native().contractId(
         networkConfig.networkPassphrase,
@@ -115,8 +133,9 @@ describe(
         result.response.envelopeXdr,
         networkConfig.networkPassphrase,
       );
+      const innerTransaction = getInnerTransaction(transaction);
 
-      assertEquals(transaction.source, channel.address());
+      assertEquals(innerTransaction.source, channel.address());
       assertEquals(plugin.getChannels().map((item) => item.address()), [
         channel.address(),
       ]);

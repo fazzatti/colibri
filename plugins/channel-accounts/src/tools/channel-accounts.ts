@@ -2,8 +2,6 @@ import {
   assertRequiredArgs,
   ColibriError,
   createClassicTransactionPipeline,
-  LocalSigner,
-  NativeAccount,
 } from "@colibri/core";
 import { Operation } from "stellar-sdk";
 import { appendUniqueSigners } from "@/shared/signers.ts";
@@ -13,31 +11,22 @@ import {
   MAX_CHANNELS_PER_TRANSACTION,
   type OpenChannelsArgs,
 } from "@/shared/types.ts";
+import {
+  chunkChannels,
+  createChannelAccount,
+  createChannelProxySigner,
+  createClassicPipelineArgs,
+  resolveRpc,
+  sponsorCanSignChannel,
+} from "@/tools/helpers.ts";
 import * as E from "@/shared/error.ts";
-
-const createClassicPipelineArgs = <
-  Args extends {
-    networkConfig: OpenChannelsArgs["networkConfig"];
-    rpc?: OpenChannelsArgs["rpc"];
-  },
->(
-  args: Args,
-) =>
-  args.rpc
-    ? { networkConfig: args.networkConfig, rpc: args.rpc }
-    : { networkConfig: args.networkConfig };
-
-const createChannelAccount = (): ChannelAccount =>
-  NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
-
-const DEFAULT_CHANNEL_STARTING_BALANCE = "10";
 
 /**
  * Opens and closes sponsored Stellar channel accounts for later pipeline reuse.
  */
 export class ChannelAccounts {
   /**
-   * Opens, funds, and optionally augments a bounded set of channel accounts.
+   * Opens and optionally augments a bounded set of channel accounts.
    *
    * @param args - Channel creation arguments
    * @returns The created channel accounts, each paired with its signer
@@ -98,7 +87,7 @@ export class ChannelAccounts {
           Operation.createAccount({
             source: sponsor.address(),
             destination: channel.address(),
-            startingBalance: DEFAULT_CHANNEL_STARTING_BALANCE,
+            startingBalance: "0",
           }),
         ];
 
@@ -187,19 +176,31 @@ export class ChannelAccounts {
       const pipeline = createClassicTransactionPipeline(
         createClassicPipelineArgs({ networkConfig, rpc }),
       );
+      const closeRpc = resolveRpc({ networkConfig, rpc });
+      const sponsorSigner = sponsor.signer();
 
-      for (const channel of channels) {
+      for (const channelBatch of chunkChannels(
+        channels,
+        MAX_CHANNELS_PER_TRANSACTION,
+      )) {
+        const closeSigners = await Promise.all(
+          channelBatch.map(async (channel) =>
+            await sponsorCanSignChannel(closeRpc, sponsor, channel)
+              ? createChannelProxySigner(sponsorSigner, channel)
+              : channel.signer()
+          ),
+        );
+
         await pipeline.run({
-          operations: [
+          operations: channelBatch.map((channel) =>
             Operation.accountMerge({
               source: channel.address(),
               destination: sponsor.address(),
-            }),
-          ],
+            })
+          ),
           config: {
             ...config,
-            source: channel.address(),
-            signers: appendUniqueSigners(config.signers, channel.signer()),
+            signers: appendUniqueSigners(config.signers, ...closeSigners),
           },
         });
       }

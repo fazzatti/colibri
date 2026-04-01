@@ -12,12 +12,14 @@ import {
 } from "@colibri/core";
 import { StellarTestLedger } from "@colibri/test-tooling";
 import {
+  FeeBumpTransaction,
   Operation,
   type Transaction,
   TransactionBuilder,
   type xdr,
 } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
+import { createFeeBumpPlugin } from "../../../fee-bump/mod.ts";
 import {
   type ChannelAccount,
   ChannelAccounts,
@@ -32,11 +34,18 @@ const asEnvelopeXdr = (
 const parseSubmittedTransaction = (
   envelopeXdr: string | xdr.TransactionEnvelope,
   networkPassphrase: string,
-): Transaction =>
+): Transaction | FeeBumpTransaction =>
   TransactionBuilder.fromXDR(
     asEnvelopeXdr(envelopeXdr),
     networkPassphrase,
-  ) as Transaction;
+  ) as Transaction | FeeBumpTransaction;
+
+const getInnerTransaction = (
+  transaction: Transaction | FeeBumpTransaction,
+): Transaction =>
+  transaction instanceof FeeBumpTransaction
+    ? transaction.innerTransaction
+    : transaction;
 
 const sortAddresses = (addresses: readonly string[]) => [...addresses].sort();
 
@@ -131,12 +140,21 @@ describe(
         const plugin = createChannelAccountsPlugin({
           channels,
         });
+        const feeBumpPlugin = createFeeBumpPlugin({
+          networkConfig,
+          feeBumpConfig: {
+            source: sponsor.address(),
+            fee: "20000000",
+            signers: [sponsor.signer()],
+          },
+        });
 
         const pipeline = createClassicTransactionPipeline({
           networkConfig,
           rpc,
         });
         pipeline.use(plugin);
+        pipeline.use(feeBumpPlugin);
 
         const result = await pipeline.run({
           operations: [
@@ -156,9 +174,10 @@ describe(
           result.response.envelopeXdr,
           networkConfig.networkPassphrase,
         );
+        const innerTransaction = getInnerTransaction(transaction);
 
-        assertEquals(transaction.source, channel.address());
-        assertEquals(transaction.operations[0].source, actor.address());
+        assertEquals(innerTransaction.source, channel.address());
+        assertEquals(innerTransaction.operations[0].source, actor.address());
         assertEquals(
           plugin.getChannels().map((item) => item.address()),
           [channel.address()],
@@ -181,12 +200,21 @@ describe(
         const plugin = createChannelAccountsPlugin({
           channels,
         });
+        const feeBumpPlugin = createFeeBumpPlugin({
+          networkConfig,
+          feeBumpConfig: {
+            source: sponsor.address(),
+            fee: "20000000",
+            signers: [sponsor.signer()],
+          },
+        });
 
         const pipeline = createClassicTransactionPipeline({
           networkConfig,
           rpc,
         });
         pipeline.use(plugin);
+        pipeline.use(feeBumpPlugin);
 
         const parallelResults = await Promise.all(
           Array.from({ length: 10 }, (_, index) =>
@@ -213,7 +241,7 @@ describe(
             networkConfig.networkPassphrase,
           );
 
-          return transaction.source;
+          return getInnerTransaction(transaction).source;
         });
 
         assertEquals(
@@ -240,11 +268,12 @@ describe(
           followUpResult.response.envelopeXdr,
           networkConfig.networkPassphrase,
         );
+        const followUpInnerTransaction = getInnerTransaction(followUpTransaction);
 
         assertEquals(
           channels
             .map((channel) => String(channel.address()))
-            .includes(String(followUpTransaction.source)),
+            .includes(String(followUpInnerTransaction.source)),
           true,
         );
         assertEquals(
