@@ -2,14 +2,8 @@ import {
   assertRequiredArgs,
   ColibriError,
   createClassicTransactionPipeline,
-  LocalSigner,
-  NativeAccount,
-  type SignableTransaction,
-  type Signer,
-  StrKey,
 } from "@colibri/core";
-import { Operation, type xdr } from "stellar-sdk";
-import { Server } from "stellar-sdk/rpc";
+import { Operation } from "stellar-sdk";
 import { appendUniqueSigners } from "@/shared/signers.ts";
 import {
   type ChannelAccount,
@@ -17,98 +11,15 @@ import {
   MAX_CHANNELS_PER_TRANSACTION,
   type OpenChannelsArgs,
 } from "@/shared/types.ts";
+import {
+  chunkChannels,
+  createChannelAccount,
+  createChannelProxySigner,
+  createClassicPipelineArgs,
+  resolveRpc,
+  sponsorCanSignChannel,
+} from "@/tools/helpers.ts";
 import * as E from "@/shared/error.ts";
-
-const createClassicPipelineArgs = <
-  Args extends {
-    networkConfig: OpenChannelsArgs["networkConfig"];
-    rpc?: OpenChannelsArgs["rpc"];
-  },
->(
-  args: Args,
-) =>
-  args.rpc
-    ? { networkConfig: args.networkConfig, rpc: args.rpc }
-    : { networkConfig: args.networkConfig };
-
-const resolveRpc = <
-  Args extends {
-    networkConfig: OpenChannelsArgs["networkConfig"];
-    rpc?: OpenChannelsArgs["rpc"];
-  },
->(
-  args: Args,
-) =>
-  args.rpc ??
-  new Server(args.networkConfig.rpcUrl!, {
-    allowHttp: args.networkConfig.allowHttp ?? false,
-  });
-
-const createChannelAccount = (): ChannelAccount =>
-  NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
-
-const sponsorCanSignChannel = async (
-  rpc: Server,
-  sponsor: ChannelAccount,
-  channel: ChannelAccount,
-): Promise<boolean> => {
-  const accountEntry = await rpc.getAccountEntry(channel.address());
-
-  return accountEntry.signers().some((signer) => {
-    try {
-      return (
-        signer.weight() > 0 &&
-        StrKey.encodeEd25519PublicKey(signer.key().ed25519()) ===
-          sponsor.address()
-      );
-    } catch {
-      return false;
-    }
-  });
-};
-
-type SignableTransactionWithSignatures = SignableTransaction & {
-  signatures: xdr.DecoratedSignature[];
-  toXDR(format: "base64"): string;
-};
-
-const createChannelProxySigner = (
-  signer: Signer,
-  channel: ChannelAccount,
-): Signer => {
-  const signerHint = StrKey.decodeEd25519PublicKey(signer.publicKey()).slice(-4);
-
-  return {
-  publicKey: () => channel.address(),
-  sign: (data) => signer.sign(data),
-  signTransaction: (transaction) => {
-    const signableTransaction = transaction as SignableTransactionWithSignatures;
-    const alreadySigned = signableTransaction.signatures.some((signature) =>
-      signature.hint().every((byte, index) => byte === signerHint[index])
-    );
-
-    return alreadySigned
-      ? signableTransaction.toXDR("base64")
-      : signer.signTransaction(transaction);
-  },
-  signSorobanAuthEntry: (authEntry, validUntilLedgerSeq, networkPassphrase) =>
-    signer.signSorobanAuthEntry(
-      authEntry,
-      validUntilLedgerSeq,
-      networkPassphrase,
-    ),
-  signsFor: (target) => target === channel.address(),
-  };
-};
-
-const chunkChannels = (
-  channels: readonly ChannelAccount[],
-  size: number,
-): ChannelAccount[][] =>
-  Array.from(
-    { length: Math.ceil(channels.length / size) },
-    (_, index) => channels.slice(index * size, (index + 1) * size),
-  );
 
 /**
  * Opens and closes sponsored Stellar channel accounts for later pipeline reuse.
