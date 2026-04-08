@@ -223,11 +223,22 @@ function decodeContractExecutable(
   }
 }
 
+function isBigIntLike(value: unknown): value is { toBigInt(): bigint } {
+  return typeof value === "object" &&
+    value !== null &&
+    "toBigInt" in value &&
+    typeof (value as { toBigInt?: unknown }).toBigInt === "function";
+}
+
+function isBigIntLikeArray(
+  value: ConfigSettingValue,
+): value is readonly { toBigInt(): bigint }[] {
+  return Array.isArray(value) && value.every(isBigIntLike);
+}
+
 function normalizeConfigSettingValue(value: ConfigSettingValue): ConfigSettingValue {
-  if (Array.isArray(value) && value.every((item) =>
-    typeof item === "object" && item !== null && "toBigInt" in item
-  )) {
-    return value.map((item) => item.toBigInt()) as bigint[];
+  if (isBigIntLikeArray(value)) {
+    return value.map((item) => item.toBigInt());
   }
 
   return value;

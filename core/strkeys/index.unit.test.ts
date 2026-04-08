@@ -670,14 +670,14 @@ describe("StrKey", () => {
       });
 
       const encoded = StrKey.encodeSignedPayload(signerPayload.toXDR());
-      assertEquals(StrKey.isSignedPayload(encoded), true);
+      assertEquals(StrKey.isValidSignedPayload(encoded), true);
     });
 
     it("encodes ed25519 secret seeds", () => {
       const secret = StrKey.encodeEd25519SecretSeed(
         Keypair.random().rawSecretKey(),
       );
-      assertEquals(StrKey.isEd25519SecretKey(secret), true);
+      assertEquals(StrKey.isValidEd25519SecretSeed(secret), true);
     });
   });
 });

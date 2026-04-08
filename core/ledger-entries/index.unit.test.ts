@@ -466,6 +466,64 @@ describe("LedgerEntries", () => {
       }
       assertEquals(entry.balance, 10n);
     });
+
+    it("accepts ledger keys whose serializer returns raw bytes for base64 requests", async () => {
+      const responseKey = buildAccountLedgerKey({
+        accountId: ACCOUNT_ID,
+      }) as unknown as xdr.LedgerKey;
+      const requestKey = buildAccountLedgerKey({
+        accountId: ACCOUNT_ID,
+      }) as unknown as xdr.LedgerKey;
+      const originalToXdr = requestKey.toXDR.bind(requestKey);
+      const accountEntry = new xdr.AccountEntry({
+        accountId: Keypair.fromPublicKey(ACCOUNT_ID).xdrAccountId(),
+        balance: xdr.Int64.fromString("10"),
+        seqNum: xdr.Int64.fromString("1"),
+        numSubEntries: 0,
+        inflationDest: null,
+        flags: 0,
+        homeDomain: "",
+        thresholds: Buffer.from([0, 0, 0, 0]),
+        signers: [],
+        ext: new xdr.AccountEntryExt(0),
+      });
+
+      Object.defineProperty(requestKey, "toXDR", {
+        value: (format?: "raw" | "hex" | "base64") => {
+          if (format === "base64") {
+            return originalToXdr("raw");
+          }
+
+          if (format === "hex") {
+            return originalToXdr("hex");
+          }
+
+          return originalToXdr("raw");
+        },
+      });
+
+      const ledger = new LedgerEntries({
+        rpc: {
+          getLedgerEntries: () => Promise.resolve({
+            entries: [
+              makeResult(
+                responseKey,
+                xdr.LedgerEntryData.account(accountEntry),
+              ),
+            ],
+            latestLedger: 1,
+          }),
+        } as unknown as Server,
+      });
+
+      const [entry] = await ledger.getMany([requestKey] as const);
+
+      assertEquals(entry?.type, "account");
+      if (!entry || entry.type !== "account") {
+        throw new Error("expected account entry");
+      }
+      assertEquals(entry.balance, 10n);
+    });
   });
 
   describe("key builders", () => {

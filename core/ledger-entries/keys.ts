@@ -3,6 +3,7 @@ import { Buffer } from "buffer";
 import type { LedgerKeyLike } from "@/common/types/index.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import * as E from "@/ledger-entries/error.ts";
+import { decodeByteFormBase64, toRawXdrBuffer } from "@/ledger-entries/xdr.ts";
 import type {
   AccountLedgerEntry,
   AccountLedgerKey,
@@ -45,8 +46,6 @@ import type {
 import type { Sha256Hash } from "@/strkeys/types.ts";
 
 const HEX_32_BYTE_REGEX = /^[0-9a-f]{64}$/i;
-const BASE64_REGEX =
-  /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
 
 const CONFIG_SETTING_ID_BUILDERS: Record<
   ConfigSettingIdName,
@@ -89,30 +88,7 @@ const CONFIG_SETTING_ID_BUILDERS: Record<
 function brandLedgerKey<TEntry extends AnyLedgerEntry>(
   key: xdr.LedgerKey,
 ): TypedLedgerKey<TEntry> {
-  return key as TypedLedgerKey<TEntry>;
-}
-
-function toRawXdrBuffer(value: LedgerKeyLike): Buffer {
-  const encoded = value.toXDR("base64");
-  return typeof encoded === "string"
-    ? Buffer.from(encoded, "base64")
-    : Buffer.from(encoded);
-}
-
-function decodeByteFormBase64(value: Uint8Array): string | null {
-  try {
-    const decoded = new TextDecoder("utf-8", { fatal: true }).decode(value);
-    if (
-      BASE64_REGEX.test(decoded) &&
-      Buffer.from(decoded, "base64").toString("base64") === decoded
-    ) {
-      return decoded;
-    }
-  } catch {
-    // Fall through and treat the payload as raw bytes.
-  }
-
-  return null;
+  return key as unknown as TypedLedgerKey<TEntry>;
 }
 
 function normalizeScVal(value: { toXDR(format?: "raw" | "hex" | "base64"): string | Uint8Array }): xdr.ScVal {

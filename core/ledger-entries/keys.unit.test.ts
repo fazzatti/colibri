@@ -14,6 +14,12 @@ import {
   buildTtlLedgerKey,
   hashLedgerKey,
 } from "@/ledger-entries/index.ts";
+import type {
+  AccountLedgerEntry,
+  AccountLedgerKey,
+  AnyLedgerEntry,
+  EntryFromLedgerKey,
+} from "@/ledger-entries/types.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import type {
   ClaimableBalanceId,
@@ -25,6 +31,17 @@ const ACCOUNT_ID = Keypair.random().publicKey() as Ed25519PublicKey;
 const CONTRACT_ID = StrKey.encodeContract(Buffer.alloc(32, 3)) as ContractId;
 const KNOWN_ISSUE_INVALID_CLAIMABLE_BALANCE_ID =
   "BAAT6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGXACA" as ClaimableBalanceId;
+
+type Assert<T extends true> = T;
+type IsEqual<A, B> = (<T>() => T extends A ? 1 : 2) extends
+  (<T>() => T extends B ? 1 : 2) ? true : false;
+
+type _TypedAccountKeyInfersEntry = Assert<
+  IsEqual<EntryFromLedgerKey<AccountLedgerKey>, AccountLedgerEntry>
+>;
+type _UnbrandedLedgerKeyFallsBackToUnion = Assert<
+  IsEqual<EntryFromLedgerKey<xdr.LedgerKey>, AnyLedgerEntry>
+>;
 
 describe("LedgerEntries key builders", () => {
   it("covers non-default builder branches", () => {
@@ -158,6 +175,27 @@ describe("LedgerEntries key builders", () => {
     }) as unknown as xdr.LedgerKey & LedgerKeyLike;
     Object.defineProperty(key, "toXDR", {
       value: () => new Uint8Array([1, 2, 3, 4]),
+    });
+
+    const hash = hashLedgerKey(key);
+
+    assertEquals(StrKey.isSha256Hash(hash), true);
+  });
+
+  it("hashes ledger keys whose base64 serialization returns bytes", () => {
+    const key = buildAccountLedgerKey({
+      accountId: ACCOUNT_ID,
+    }) as unknown as xdr.LedgerKey & LedgerKeyLike;
+    const originalToXdr = key.toXDR.bind(key);
+
+    Object.defineProperty(key, "toXDR", {
+      value: (format?: "raw" | "hex" | "base64") => {
+        if (format === "base64") {
+          return new TextEncoder().encode(String(originalToXdr("base64")));
+        }
+
+        return originalToXdr(format ?? "raw");
+      },
     });
 
     const hash = hashLedgerKey(key);

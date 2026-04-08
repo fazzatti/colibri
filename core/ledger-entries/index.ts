@@ -1,4 +1,3 @@
-import { Buffer } from "buffer";
 import { Server } from "stellar-sdk/rpc";
 import type { Api } from "stellar-sdk/rpc";
 import type { xdr } from "stellar-sdk";
@@ -20,6 +19,7 @@ import {
   decodeLedgerEntryForKey,
   detectLedgerEntryKindFromKey,
 } from "@/ledger-entries/decode.ts";
+import { toBase64Xdr } from "@/ledger-entries/xdr.ts";
 import type {
   AccountLedgerEntry,
   BuildAccountLedgerKeyArgs,
@@ -49,35 +49,6 @@ import type {
 
 export * from "@/ledger-entries/types.ts";
 export * from "@/ledger-entries/keys.ts";
-
-const BASE64_REGEX =
-  /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
-
-function decodeByteFormBase64(value: Uint8Array): string | null {
-  try {
-    const decoded = new TextDecoder("utf-8", { fatal: true }).decode(value);
-    if (
-      BASE64_REGEX.test(decoded) &&
-      Buffer.from(decoded, "base64").toString("base64") === decoded
-    ) {
-      return decoded;
-    }
-  } catch {
-    // Fall through and treat the payload as raw XDR bytes.
-  }
-
-  return null;
-}
-
-function toBase64Xdr(key: LedgerKeyLike): string {
-  const encoded = key.toXDR("base64");
-  if (typeof encoded === "string") {
-    return encoded;
-  }
-
-  const byteFormBase64 = decodeByteFormBase64(encoded);
-  return byteFormBase64 ?? Buffer.from(encoded).toString("base64");
-}
 
 /**
  * High-level RPC helper for reading and decoding Stellar ledger entries.

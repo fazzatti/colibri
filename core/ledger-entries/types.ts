@@ -355,7 +355,9 @@ export type ContractExecutableView =
 export type ConfigSettingValue =
   | number
   | bigint[]
-  | unknown;
+  | readonly { toBigInt(): bigint }[]
+  | readonly XdrSerializable[]
+  | XdrSerializable;
 
 /**
  * Shared metadata preserved on all decoded ledger-entry results.
@@ -553,7 +555,7 @@ export declare const LEDGER_KEY_BRAND: unique symbol;
  * At runtime this is still a plain Stellar SDK ledger-key object.
  */
 export type TypedLedgerKey<TEntry extends AnyLedgerEntry> = LedgerKeyLike & {
-  readonly [LEDGER_KEY_BRAND]?: TEntry;
+  readonly [LEDGER_KEY_BRAND]: TEntry;
 };
 
 /** Typed account ledger key. */
