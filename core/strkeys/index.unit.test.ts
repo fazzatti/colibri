@@ -1,46 +1,48 @@
 import { assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
+import { Buffer } from "buffer";
+import { Keypair, xdr } from "stellar-sdk";
 import { StrKey } from "@/strkeys/index.ts";
-import { StrkeyPrefix, StrkeyName } from "@/strkeys/types.ts";
+import { StrkeyName, StrkeyPrefix } from "@/strkeys/types.ts";
 
 describe("StrKey", () => {
   describe("getStrkeyTypeName", () => {
     it("returns correct type name for each prefix", () => {
       assertEquals(
         StrKey.getStrkeyTypeName(StrkeyPrefix.Ed25519PublicKey),
-        "ed25519PublicKey"
+        "ed25519PublicKey",
       );
       assertEquals(
         StrKey.getStrkeyTypeName(StrkeyPrefix.Ed25519SecretKey),
-        "ed25519SecretKey"
+        "ed25519SecretKey",
       );
       assertEquals(
         StrKey.getStrkeyTypeName(StrkeyPrefix.Med25519PublicKey),
-        "med25519PublicKey"
+        "med25519PublicKey",
       );
       assertEquals(
         StrKey.getStrkeyTypeName(StrkeyPrefix.PreAuthTx),
-        "preAuthTx"
+        "preAuthTx",
       );
       assertEquals(
         StrKey.getStrkeyTypeName(StrkeyPrefix.Sha256Hash),
-        "sha256Hash"
+        "sha256Hash",
       );
       assertEquals(
         StrKey.getStrkeyTypeName(StrkeyPrefix.SignedPayload),
-        "signedPayload"
+        "signedPayload",
       );
       assertEquals(
         StrKey.getStrkeyTypeName(StrkeyPrefix.ContractId),
-        "contract"
+        "contract",
       );
       assertEquals(
         StrKey.getStrkeyTypeName(StrkeyPrefix.LiquidityPoolId),
-        "liquidityPool"
+        "liquidityPool",
       );
       assertEquals(
         StrKey.getStrkeyTypeName(StrkeyPrefix.ClaimableBalanceId),
-        "claimableBalance"
+        "claimableBalance",
       );
     });
   });
@@ -49,81 +51,81 @@ describe("StrKey", () => {
     it("detects G prefix (Ed25519 public key)", () => {
       assertEquals(
         StrKey.detectStrkeyType(
-          "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+          "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
         ),
-        StrkeyName.G
+        StrkeyName.G,
       );
     });
 
     it("detects S prefix (Ed25519 secret key)", () => {
       assertEquals(
         StrKey.detectStrkeyType(
-          "SBU2RRGLXH3E5CQHTD3ODLDF2BWDCYUSSBLLZ5GNW7JXHDIYKXZWHOKR"
+          "SBU2RRGLXH3E5CQHTD3ODLDF2BWDCYUSSBLLZ5GNW7JXHDIYKXZWHOKR",
         ),
-        StrkeyName.S
+        StrkeyName.S,
       );
     });
 
     it("detects M prefix (Muxed address)", () => {
       assertEquals(
         StrKey.detectStrkeyType(
-          "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUQ"
+          "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUQ",
         ),
-        StrkeyName.M
+        StrkeyName.M,
       );
     });
 
     it("detects T prefix (PreAuthTx)", () => {
       assertEquals(
         StrKey.detectStrkeyType(
-          "TBU2RRGLXH3E5CQHTD3ODLDF2BWDCYUSSBLLZ5GNW7JXHDIYKXZWHXL7"
+          "TBU2RRGLXH3E5CQHTD3ODLDF2BWDCYUSSBLLZ5GNW7JXHDIYKXZWHXL7",
         ),
-        StrkeyName.T
+        StrkeyName.T,
       );
     });
 
     it("detects X prefix (HashX)", () => {
       assertEquals(
         StrKey.detectStrkeyType(
-          "XBU2RRGLXH3E5CQHTD3ODLDF2BWDCYUSSBLLZ5GNW7JXHDIYKXZWGTOG"
+          "XBU2RRGLXH3E5CQHTD3ODLDF2BWDCYUSSBLLZ5GNW7JXHDIYKXZWGTOG",
         ),
-        StrkeyName.X
+        StrkeyName.X,
       );
     });
 
     it("detects P prefix (Signed payload)", () => {
       assertEquals(
         StrKey.detectStrkeyType(
-          "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAQACAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUPB6IBZGM"
+          "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAQACAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUPB6IBZGM",
         ),
-        StrkeyName.P
+        StrkeyName.P,
       );
     });
 
     it("detects C prefix (Contract)", () => {
       assertEquals(
         StrKey.detectStrkeyType(
-          "CA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUWDA"
+          "CA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUWDA",
         ),
-        StrkeyName.C
+        StrkeyName.C,
       );
     });
 
     it("detects L prefix (Liquidity pool)", () => {
       assertEquals(
         StrKey.detectStrkeyType(
-          "LA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUPJN"
+          "LA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUPJN",
         ),
-        StrkeyName.L
+        StrkeyName.L,
       );
     });
 
     it("detects B prefix (Claimable balance)", () => {
       assertEquals(
         StrKey.detectStrkeyType(
-          "BAAD6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGR4TU"
+          "BAAD6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGR4TU",
         ),
-        StrkeyName.B
+        StrkeyName.B,
       );
     });
 
@@ -140,24 +142,24 @@ describe("StrKey", () => {
       it("accepts valid G addresses", () => {
         assertEquals(
           StrKey.isEd25519PublicKey(
-            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
           ),
-          true
+          true,
         );
         assertEquals(
           StrKey.isEd25519PublicKey(
-            "GBBM6BKZPEHWYO3E3YKREDPQXMS4VK35YLNU7NFBRI26RAN7GI5POFBB"
+            "GBBM6BKZPEHWYO3E3YKREDPQXMS4VK35YLNU7NFBRI26RAN7GI5POFBB",
           ),
-          true
+          true,
         );
       });
 
       it("rejects wrong prefix", () => {
         assertEquals(
           StrKey.isEd25519PublicKey(
-            "SA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+            "SA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
           ),
-          false
+          false,
         );
       });
 
@@ -165,18 +167,18 @@ describe("StrKey", () => {
         assertEquals(StrKey.isEd25519PublicKey("GAAAAAAAACGC6"), false);
         assertEquals(
           StrKey.isEd25519PublicKey(
-            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZA"
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZA",
           ),
-          false
+          false,
         );
       });
 
       it("rejects invalid base32 characters", () => {
         assertEquals(
           StrKey.isEd25519PublicKey(
-            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJV1G8"
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJV1G8",
           ),
-          false
+          false,
         );
       });
     });
@@ -185,24 +187,24 @@ describe("StrKey", () => {
       it("accepts valid S addresses", () => {
         assertEquals(
           StrKey.isEd25519SecretKey(
-            "SBU2RRGLXH3E5CQHTD3ODLDF2BWDCYUSSBLLZ5GNW7JXHDIYKXZWHOKR"
+            "SBU2RRGLXH3E5CQHTD3ODLDF2BWDCYUSSBLLZ5GNW7JXHDIYKXZWHOKR",
           ),
-          true
+          true,
         );
         assertEquals(
           StrKey.isEd25519SecretKey(
-            "SAB5556L5AN5KSR5WF7UOEFDCIODEWEO7H2UR4S5R62DFTQOGLKOVZDY"
+            "SAB5556L5AN5KSR5WF7UOEFDCIODEWEO7H2UR4S5R62DFTQOGLKOVZDY",
           ),
-          true
+          true,
         );
       });
 
       it("rejects wrong prefix", () => {
         assertEquals(
           StrKey.isEd25519SecretKey(
-            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
           ),
-          false
+          false,
         );
       });
 
@@ -210,9 +212,9 @@ describe("StrKey", () => {
         assertEquals(StrKey.isEd25519SecretKey("SABC234567890"), false);
         assertEquals(
           StrKey.isEd25519SecretKey(
-            "SAFGAMN5Z6IHVI3IVEPIILS7ITZDYSCEPLN4FN5Z3IY63DRH4CIYEV"
+            "SAFGAMN5Z6IHVI3IVEPIILS7ITZDYSCEPLN4FN5Z3IY63DRH4CIYEV",
           ),
-          false
+          false,
         );
       });
     });
@@ -221,24 +223,24 @@ describe("StrKey", () => {
       it("accepts valid M addresses", () => {
         assertEquals(
           StrKey.isMuxedAddress(
-            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUQ"
+            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUQ",
           ),
-          true
+          true,
         );
         assertEquals(
           StrKey.isMuxedAddress(
-            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVAAAAAAAAAAAAAJLK"
+            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVAAAAAAAAAAAAAJLK",
           ),
-          true
+          true,
         );
       });
 
       it("rejects wrong prefix", () => {
         assertEquals(
           StrKey.isMuxedAddress(
-            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
           ),
-          false
+          false,
         );
       });
     });
@@ -247,18 +249,18 @@ describe("StrKey", () => {
       it("accepts valid P addresses", () => {
         assertEquals(
           StrKey.isSignedPayload(
-            "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAQACAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUPB6IBZGM"
+            "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAQACAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUPB6IBZGM",
           ),
-          true
+          true,
         );
       });
 
       it("rejects wrong prefix", () => {
         assertEquals(
           StrKey.isSignedPayload(
-            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
           ),
-          false
+          false,
         );
       });
     });
@@ -267,18 +269,18 @@ describe("StrKey", () => {
       it("accepts valid C addresses", () => {
         assertEquals(
           StrKey.isContractId(
-            "CA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQGAXE"
+            "CA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQGAXE",
           ),
-          true
+          true,
         );
       });
 
       it("rejects wrong prefix", () => {
         assertEquals(
           StrKey.isContractId(
-            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
           ),
-          false
+          false,
         );
       });
     });
@@ -287,18 +289,18 @@ describe("StrKey", () => {
       it("accepts valid T addresses", () => {
         assertEquals(
           StrKey.isPreAuthTx(
-            "TBU2RRGLXH3E5CQHTD3ODLDF2BWDCYUSSBLLZ5GNW7JXHDIYKXZWHXL7"
+            "TBU2RRGLXH3E5CQHTD3ODLDF2BWDCYUSSBLLZ5GNW7JXHDIYKXZWHXL7",
           ),
-          true
+          true,
         );
       });
 
       it("rejects wrong prefix", () => {
         assertEquals(
           StrKey.isPreAuthTx(
-            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
           ),
-          false
+          false,
         );
       });
     });
@@ -307,18 +309,18 @@ describe("StrKey", () => {
       it("accepts valid X addresses", () => {
         assertEquals(
           StrKey.isSha256Hash(
-            "XBU2RRGLXH3E5CQHTD3ODLDF2BWDCYUSSBLLZ5GNW7JXHDIYKXZWGTOG"
+            "XBU2RRGLXH3E5CQHTD3ODLDF2BWDCYUSSBLLZ5GNW7JXHDIYKXZWGTOG",
           ),
-          true
+          true,
         );
       });
 
       it("rejects wrong prefix", () => {
         assertEquals(
           StrKey.isSha256Hash(
-            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
           ),
-          false
+          false,
         );
       });
     });
@@ -327,9 +329,9 @@ describe("StrKey", () => {
       it("accepts valid L addresses", () => {
         assertEquals(
           StrKey.isLiquidityPoolId(
-            "LA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUPJN"
+            "LA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUPJN",
           ),
-          true
+          true,
         );
       });
     });
@@ -338,9 +340,9 @@ describe("StrKey", () => {
       it("accepts valid B addresses", () => {
         assertEquals(
           StrKey.isClaimableBalanceId(
-            "BAAD6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGR4TU"
+            "BAAD6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGR4TU",
           ),
-          true
+          true,
         );
       });
     });
@@ -351,42 +353,42 @@ describe("StrKey", () => {
       it("validates valid Ed25519 public keys", () => {
         assertEquals(
           StrKey.isValidEd25519PublicKey(
-            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
           ),
-          true
+          true,
         );
         assertEquals(
           StrKey.isValidEd25519PublicKey(
-            "GBBM6BKZPEHWYO3E3YKREDPQXMS4VK35YLNU7NFBRI26RAN7GI5POFBB"
+            "GBBM6BKZPEHWYO3E3YKREDPQXMS4VK35YLNU7NFBRI26RAN7GI5POFBB",
           ),
-          true
+          true,
         );
       });
 
       it("rejects invalid length (congruent to 1 mod 8)", () => {
         assertEquals(
           StrKey.isValidEd25519PublicKey(
-            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZA"
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZA",
           ),
-          false
+          false,
         );
       });
 
       it("rejects invalid algorithm (low 3 bits are 7)", () => {
         assertEquals(
           StrKey.isValidEd25519PublicKey(
-            "G47QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVP2I"
+            "G47QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVP2I",
           ),
-          false
+          false,
         );
       });
 
       it("rejects invalid checksum", () => {
         assertEquals(
           StrKey.isValidEd25519PublicKey(
-            "GBPXXOA5N4JYPESHAADMQKBPWZWQDQ64ZV6ZL2S3LAGW4SY7NTCMWIVT"
+            "GBPXXOA5N4JYPESHAADMQKBPWZWQDQ64ZV6ZL2S3LAGW4SY7NTCMWIVT",
           ),
-          false
+          false,
         );
       });
 
@@ -397,28 +399,28 @@ describe("StrKey", () => {
       it("rejects base-32 yielding wrong byte count (36 not 35)", () => {
         assertEquals(
           StrKey.isValidEd25519PublicKey(
-            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUACUSI"
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUACUSI",
           ),
-          false
+          false,
         );
       });
 
       it("rejects when decoded data encodes to different string", () => {
         assertEquals(
           StrKey.isValidEd25519PublicKey(
-            "GBPXX0A5N4JYPESHAADMQKBPWZWQDQ64ZV6ZL2S3LAGW4SY7NTCMWIVL"
+            "GBPXX0A5N4JYPESHAADMQKBPWZWQDQ64ZV6ZL2S3LAGW4SY7NTCMWIVL",
             //    ^ note the '0' (zero) instead of 'O' (letter O)
             // This might decode, but re-encoding produces a different string
           ),
-          false
+          false,
         );
         assertEquals(
           StrKey.isValidEd25519PublicKey(
-            "GCFZB6L25D26RQFDWSSBDEYQ32JHLRMTT44ZYE3DZQUTYOL7WY43PLBG++"
+            "GCFZB6L25D26RQFDWSSBDEYQ32JHLRMTT44ZYE3DZQUTYOL7WY43PLBG++",
             //                                                              ^^ invalid chars
             // The ++ is clearly not valid base32
           ),
-          false
+          false,
         );
       });
     });
@@ -427,24 +429,24 @@ describe("StrKey", () => {
       it("validates valid Ed25519 secret keys", () => {
         assertEquals(
           StrKey.isValidEd25519SecretSeed(
-            "SBU2RRGLXH3E5CQHTD3ODLDF2BWDCYUSSBLLZ5GNW7JXHDIYKXZWHOKR"
+            "SBU2RRGLXH3E5CQHTD3ODLDF2BWDCYUSSBLLZ5GNW7JXHDIYKXZWHOKR",
           ),
-          true
+          true,
         );
         assertEquals(
           StrKey.isValidEd25519SecretSeed(
-            "SAB5556L5AN5KSR5WF7UOEFDCIODEWEO7H2UR4S5R62DFTQOGLKOVZDY"
+            "SAB5556L5AN5KSR5WF7UOEFDCIODEWEO7H2UR4S5R62DFTQOGLKOVZDY",
           ),
-          true
+          true,
         );
       });
 
       it("rejects when format check fails (wrong prefix)", () => {
         assertEquals(
           StrKey.isValidEd25519SecretSeed(
-            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
           ),
-          false
+          false,
         );
       });
     });
@@ -453,60 +455,60 @@ describe("StrKey", () => {
       it("validates valid muxed addresses", () => {
         assertEquals(
           StrKey.isValidMuxedAddress(
-            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUQ"
+            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUQ",
           ),
-          true
+          true,
         );
         assertEquals(
           StrKey.isValidMuxedAddress(
-            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVAAAAAAAAAAAAAJLK"
+            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVAAAAAAAAAAAAAJLK",
           ),
-          true
+          true,
         );
       });
 
       it("rejects unused trailing bit not zero", () => {
         assertEquals(
           StrKey.isValidMuxedAddress(
-            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUR"
+            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUR",
           ),
-          false
+          false,
         );
       });
 
       it("rejects invalid algorithm (low 3 bits are 7)", () => {
         assertEquals(
           StrKey.isValidMuxedAddress(
-            "M47QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUQ"
+            "M47QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUQ",
           ),
-          false
+          false,
         );
       });
 
       it("rejects padding bytes", () => {
         assertEquals(
           StrKey.isValidMuxedAddress(
-            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUK==="
+            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUK===",
           ),
-          false
+          false,
         );
       });
 
       it("rejects invalid checksum", () => {
         assertEquals(
           StrKey.isValidMuxedAddress(
-            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUO"
+            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUO",
           ),
-          false
+          false,
         );
       });
 
       it("rejects muxed with wrong decoded byte count (44 not 43)", () => {
         assertEquals(
           StrKey.isValidMuxedAddress(
-            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVAAAAAAAAAAAAAAV75I"
+            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVAAAAAAAAAAAAAAV75I",
           ),
-          false
+          false,
         );
       });
     });
@@ -515,24 +517,24 @@ describe("StrKey", () => {
       it("validates valid signed payloads", () => {
         assertEquals(
           StrKey.isValidSignedPayload(
-            "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAQACAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUPB6IBZGM"
+            "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAQACAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUPB6IBZGM",
           ),
-          true
+          true,
         );
         assertEquals(
           StrKey.isValidSignedPayload(
-            "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAOQCAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUAAAAFGBU"
+            "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAOQCAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUAAAAFGBU",
           ),
-          true
+          true,
         );
       });
 
       it("rejects when format check fails (wrong prefix)", () => {
         assertEquals(
           StrKey.isValidSignedPayload(
-            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
           ),
-          false
+          false,
         );
       });
     });
@@ -541,18 +543,18 @@ describe("StrKey", () => {
       it("validates valid contracts", () => {
         assertEquals(
           StrKey.isValidContractId(
-            "CA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQGAXE"
+            "CA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQGAXE",
           ),
-          true
+          true,
         );
       });
 
       it("rejects when format check fails (wrong prefix)", () => {
         assertEquals(
           StrKey.isValidContractId(
-            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
           ),
-          false
+          false,
         );
       });
     });
@@ -561,18 +563,18 @@ describe("StrKey", () => {
       it("validates valid liquidity pools", () => {
         assertEquals(
           StrKey.isValidLiquidityPoolId(
-            "LA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUPJN"
+            "LA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUPJN",
           ),
-          true
+          true,
         );
       });
 
       it("rejects when format check fails (wrong prefix)", () => {
         assertEquals(
           StrKey.isValidLiquidityPoolId(
-            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
           ),
-          false
+          false,
         );
       });
     });
@@ -581,27 +583,27 @@ describe("StrKey", () => {
       it("validates valid claimable balances", () => {
         assertEquals(
           StrKey.isValidClaimableBalanceId(
-            "BAAD6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGR4TU"
+            "BAAD6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGR4TU",
           ),
-          true
+          true,
         );
       });
 
       it("rejects trailing bits not zero", () => {
         assertEquals(
           StrKey.isValidClaimableBalanceId(
-            "BAAD6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGR4TV"
+            "BAAD6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGR4TV",
           ),
-          false
+          false,
         );
       });
 
       it("rejects when format check fails (wrong prefix)", () => {
         assertEquals(
           StrKey.isValidClaimableBalanceId(
-            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
           ),
-          false
+          false,
         );
       });
     });
@@ -618,9 +620,9 @@ describe("StrKey", () => {
       // Expected: false (length prefix declares fewer bytes than actual payload)
       assertEquals(
         StrKey.isValidSignedPayload(
-          "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAQACAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUPB6IAAAAAAAAPM"
+          "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAQACAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUPB6IAAAAAAAAPM",
         ),
-        true // <- KNOWN-ISSUE
+        true, // <- KNOWN-ISSUE
       );
     });
 
@@ -628,9 +630,9 @@ describe("StrKey", () => {
       // Expected: false (length prefix declares more bytes than actual payload)
       assertEquals(
         StrKey.isValidSignedPayload(
-          "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAOQCAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4Z2PQ"
+          "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAOQCAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4Z2PQ",
         ),
-        true // <- KNOWN-ISSUE
+        true, // <- KNOWN-ISSUE
       );
     });
 
@@ -638,9 +640,9 @@ describe("StrKey", () => {
       // Expected: false (payloads < 64 bytes must be zero-padded to 64 bytes)
       assertEquals(
         StrKey.isValidSignedPayload(
-          "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAOQCAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DXFH6"
+          "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAOQCAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DXFH6",
         ),
-        true // <- KNOWN-ISSUE
+        true, // <- KNOWN-ISSUE
       );
     });
 
@@ -648,10 +650,34 @@ describe("StrKey", () => {
       // Expected: false (first byte should be 0x00 for CLAIMABLE_BALANCE_ID_TYPE_V0)
       assertEquals(
         StrKey.isValidClaimableBalanceId(
-          "BAAT6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGXACA"
+          "BAAT6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGXACA",
         ),
-        true // <- KNOWN-ISSUE
+        true, // <- KNOWN-ISSUE
       );
+    });
+  });
+
+  describe("encode helpers", () => {
+    it("encodes pre-authorized transaction hashes", () => {
+      const encoded = StrKey.encodePreAuthTx(Buffer.alloc(32, 7));
+      assertEquals(StrKey.isPreAuthTx(encoded), true);
+    });
+
+    it("encodes signed payloads", () => {
+      const signerPayload = new xdr.SignerKeyEd25519SignedPayload({
+        ed25519: Keypair.random().rawPublicKey(),
+        payload: Buffer.from([1, 2, 3]),
+      });
+
+      const encoded = StrKey.encodeSignedPayload(signerPayload.toXDR());
+      assertEquals(StrKey.isSignedPayload(encoded), true);
+    });
+
+    it("encodes ed25519 secret seeds", () => {
+      const secret = StrKey.encodeEd25519SecretSeed(
+        Keypair.random().rawSecretKey(),
+      );
+      assertEquals(StrKey.isEd25519SecretKey(secret), true);
     });
   });
 });

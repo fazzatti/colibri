@@ -27,6 +27,10 @@ export * from "@/ledger-parser/index.ts";
 /** Error constructors for ledger parser helpers. */
 export * as ERRORS_LDP from "@/ledger-parser/error.ts";
 
+export * from "@/ledger-entries/index.ts";
+/** Error constructors for ledger entry access helpers. */
+export * as ERRORS_LDE from "@/ledger-entries/error.ts";
+
 export * from "@/network/index.ts";
 export * from "@/network/types.ts";
 
