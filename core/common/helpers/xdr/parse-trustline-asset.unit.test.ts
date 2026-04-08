@@ -41,10 +41,11 @@ describe("parseTrustLineAsset", () => {
 
   it("throws for unsupported trustline asset types", () => {
     assertThrows(
-      // deno-lint-ignore no-explicit-any
       () =>
         parseTrustLineAsset(
-          { switch: () => ({ name: "unknownAssetType" }) } as any,
+          {
+            switch: () => ({ name: "unknownAssetType" }),
+          } as unknown as xdr.TrustLineAsset,
         ),
       Error,
       "Unsupported trustline asset type",

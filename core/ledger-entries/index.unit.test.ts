@@ -396,7 +396,10 @@ describe("LedgerEntries", () => {
       });
       const withRpc = new LedgerEntries({
         rpc: {
-          getLedgerEntries: async () => ({ entries: [], latestLedger: 1 }),
+          getLedgerEntries: () => Promise.resolve({
+            entries: [],
+            latestLedger: 1,
+          }),
         } as unknown as Server,
       });
 
@@ -440,7 +443,7 @@ describe("LedgerEntries", () => {
 
       const ledger = new LedgerEntries({
         rpc: {
-          getLedgerEntries: async () => ({
+          getLedgerEntries: () => Promise.resolve({
             entries: [
               makeResult(key, xdr.LedgerEntryData.account(accountEntry)),
             ],

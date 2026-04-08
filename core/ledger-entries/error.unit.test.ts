@@ -26,9 +26,8 @@ describe("LedgerEntries errors", () => {
     );
 
     await assertRejects(
-      async () => {
-        throw new E.UNEXPECTED_LEDGER_ENTRY_TYPE("account", "data");
-      },
+      () =>
+        Promise.reject(new E.UNEXPECTED_LEDGER_ENTRY_TYPE("account", "data")),
       E.UNEXPECTED_LEDGER_ENTRY_TYPE,
     );
   });
