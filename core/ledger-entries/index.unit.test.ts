@@ -410,10 +410,13 @@ describe("LedgerEntries", () => {
     });
 
     it("accepts ledger keys whose base64 serialization returns bytes", async () => {
-      const key = buildAccountLedgerKey({
+      const responseKey = buildAccountLedgerKey({
         accountId: ACCOUNT_ID,
       }) as unknown as xdr.LedgerKey;
-      const originalToXdr = key.toXDR.bind(key);
+      const requestKey = buildAccountLedgerKey({
+        accountId: ACCOUNT_ID,
+      }) as unknown as xdr.LedgerKey;
+      const originalToXdr = requestKey.toXDR.bind(requestKey);
       const accountEntry = new xdr.AccountEntry({
         accountId: Keypair.fromPublicKey(ACCOUNT_ID).xdrAccountId(),
         balance: xdr.Int64.fromString("10"),
@@ -427,7 +430,7 @@ describe("LedgerEntries", () => {
         ext: new xdr.AccountEntryExt(0),
       });
 
-      Object.defineProperty(key, "toXDR", {
+      Object.defineProperty(requestKey, "toXDR", {
         value: (format?: "raw" | "hex" | "base64") => {
           if (format === "base64") {
             return new TextEncoder().encode(String(originalToXdr("base64")));
@@ -445,14 +448,17 @@ describe("LedgerEntries", () => {
         rpc: {
           getLedgerEntries: () => Promise.resolve({
             entries: [
-              makeResult(key, xdr.LedgerEntryData.account(accountEntry)),
+              makeResult(
+                responseKey,
+                xdr.LedgerEntryData.account(accountEntry),
+              ),
             ],
             latestLedger: 1,
           }),
         } as unknown as Server,
       });
 
-      const [entry] = await ledger.getMany([key] as const);
+      const [entry] = await ledger.getMany([requestKey] as const);
 
       assertEquals(entry?.type, "account");
       if (!entry || entry.type !== "account") {
@@ -748,14 +754,16 @@ describe("LedgerEntries", () => {
       );
     });
 
-    it("throws when ttl entries are requested through rpc", async () => {
+    it("throws when ttl entries are requested through generic reads", async () => {
       const ledger = new LedgerEntries({ rpc: makeRpc([]) });
 
       await assertRejects(
         () =>
-          ledger.ttl({
-            key: buildContractInstanceLedgerKey({ contractId: CONTRACT_ID }),
-          }),
+          ledger.get(
+            buildTtlLedgerKey({
+              key: buildContractInstanceLedgerKey({ contractId: CONTRACT_ID }),
+            }),
+          ),
         E.UNSUPPORTED_RPC_LEDGER_KEY,
       );
     });

@@ -28,20 +28,26 @@ const KNOWN_ISSUE_INVALID_CLAIMABLE_BALANCE_ID =
 
 describe("LedgerEntries key builders", () => {
   it("covers non-default builder branches", () => {
-    const rawBytes = xdr.ScVal.scvU32(7).toXDR();
-    const rawString = Array.from(
-      rawBytes,
-      (byte) => String.fromCharCode(byte),
-    ).join("");
+    const rawBytes = xdr.ScVal.scvU32(7).toXDR("raw");
+    const base64String = xdr.ScVal.scvU32(7).toXDR("base64");
+    const base64Bytes = new TextEncoder().encode(String(base64String));
 
     const temporaryKey = buildContractDataLedgerKey({
       contractId: CONTRACT_ID,
       durability: "temporary",
       key: {
-        toXDR: () => rawString,
+        toXDR: (format?: "raw" | "hex" | "base64") =>
+          format === "base64" ? String(base64String) : rawBytes,
       },
     });
     const bytesKey = buildContractDataLedgerKey({
+      contractId: CONTRACT_ID,
+      key: {
+        toXDR: (format?: "raw" | "hex" | "base64") =>
+          format === "base64" ? base64Bytes : rawBytes,
+      },
+    });
+    const rawFallbackKey = buildContractDataLedgerKey({
       contractId: CONTRACT_ID,
       key: {
         toXDR: () => rawBytes,
@@ -69,6 +75,10 @@ describe("LedgerEntries key builders", () => {
     );
     assertEquals(
       (bytesKey as unknown as xdr.LedgerKey).contractData().key().u32(),
+      7,
+    );
+    assertEquals(
+      (rawFallbackKey as unknown as xdr.LedgerKey).contractData().key().u32(),
       7,
     );
     assertEquals(

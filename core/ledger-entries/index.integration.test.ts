@@ -11,6 +11,7 @@ import {
   buildConfigSettingLedgerKey,
   buildContractInstanceLedgerKey,
   buildDataLedgerKey,
+  buildTtlLedgerKey,
 } from "@/ledger-entries/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { NativeAccount } from "@/account/native/index.ts";
@@ -203,12 +204,14 @@ describe("LedgerEntries integration", disableSanitizeConfig, () => {
     assert(code.hash.length > 0);
   });
 
-  it("surfaces the rpc ttl-query limitation explicitly", async () => {
+  it("surfaces the rpc ttl-query limitation explicitly on generic reads", async () => {
     await assertRejects(
       () =>
-        ledger.ttl({
-          key: buildContractInstanceLedgerKey({ contractId }),
-        }),
+        ledger.get(
+          buildTtlLedgerKey({
+            key: buildContractInstanceLedgerKey({ contractId }),
+          }),
+        ),
       E.UNSUPPORTED_RPC_LEDGER_KEY,
     );
   });

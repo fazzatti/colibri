@@ -45,6 +45,8 @@ import type {
 import type { Sha256Hash } from "@/strkeys/types.ts";
 
 const HEX_32_BYTE_REGEX = /^[0-9a-f]{64}$/i;
+const BASE64_REGEX =
+  /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
 
 const CONFIG_SETTING_ID_BUILDERS: Record<
   ConfigSettingIdName,
@@ -97,15 +99,36 @@ function toRawXdrBuffer(value: LedgerKeyLike): Buffer {
     : Buffer.from(encoded);
 }
 
+function decodeByteFormBase64(value: Uint8Array): string | null {
+  try {
+    const decoded = new TextDecoder("utf-8", { fatal: true }).decode(value);
+    if (
+      BASE64_REGEX.test(decoded) &&
+      Buffer.from(decoded, "base64").toString("base64") === decoded
+    ) {
+      return decoded;
+    }
+  } catch {
+    // Fall through and treat the payload as raw bytes.
+  }
+
+  return null;
+}
+
 function normalizeScVal(value: { toXDR(format?: "raw" | "hex" | "base64"): string | Uint8Array }): xdr.ScVal {
   if (value instanceof xdr.ScVal) {
     return value;
   }
 
-  const encoded = value.toXDR();
-  return xdr.ScVal.fromXDR(
-    typeof encoded === "string" ? Buffer.from(encoded) : Buffer.from(encoded),
-  );
+  const encoded = value.toXDR("base64");
+  if (typeof encoded === "string") {
+    return xdr.ScVal.fromXDR(encoded, "base64");
+  }
+
+  const byteFormBase64 = decodeByteFormBase64(encoded);
+  return byteFormBase64
+    ? xdr.ScVal.fromXDR(byteFormBase64, "base64")
+    : xdr.ScVal.fromXDR(Buffer.from(encoded));
 }
 
 function requireAccountId(accountId: string): void {
