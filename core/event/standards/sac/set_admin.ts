@@ -11,6 +11,7 @@
 
 import { StrKey } from "@/strkeys/index.ts";
 import { EventTemplate } from "@/event/template.ts";
+import * as E from "@/event/error.ts";
 import type { EventSchema } from "@/event/types.ts";
 import { isStellarAssetCanonicalString } from "@/asset/sep11/index.ts";
 import type { StellarAssetCanonicalString } from "@/asset/sep11/types.ts";
@@ -59,7 +60,7 @@ export class SetAdminEvent extends EventTemplate<typeof SetAdminEventSchema> {
   get asset(): StellarAssetCanonicalString {
     const val = this.get("asset");
     if (!isStellarAssetCanonicalString(val)) {
-      throw new Error(`Invalid SEP-11 asset format: ${val}`);
+      throw new E.INVALID_EVENT_ASSET_FORMAT(val);
     }
     return val;
   }

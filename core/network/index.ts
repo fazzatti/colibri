@@ -10,6 +10,7 @@ import type {
   TestNetNetCustomConfig,
 } from "@/network/types.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
+import * as E from "@/network/error.ts";
 
 /** Preset provider helpers for commonly used public Stellar RPC networks. */
 export * as NetworkProviders from "@/network/providers/index.ts";
@@ -198,9 +199,7 @@ export class NetworkConfig implements INetworkConfig {
       | "_allowHttp"
   ): NetworkType | string | boolean {
     if (isDefined(this[arg])) return this[arg];
-    throw new Error(
-      `Property ${arg} is not set in the Network Config instance`
-    );
+    throw new E.PROPERTY_NOT_SET(arg);
   }
 
   /** @internal */
@@ -215,9 +214,7 @@ export class NetworkConfig implements INetworkConfig {
       | "_allowHttp"
   ): void {
     if (isDefined(this[arg])) {
-      throw new Error(
-        `Property ${arg} is already set in the Network Config instance`
-      );
+      throw new E.PROPERTY_ALREADY_SET(arg);
     }
   }
 

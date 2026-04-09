@@ -15,6 +15,7 @@ export type InitializeWithFriendbotOptions = {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const waitForRpcPropagation = async (
+  friendbotUrl: string,
   publicKey: Ed25519PublicKey,
   options?: InitializeWithFriendbotOptions,
 ) => {
@@ -36,8 +37,11 @@ const waitForRpcPropagation = async (
     }
   }
 
-  throw new Error(
-    `Account ${publicKey} was funded but did not become visible on RPC within ${timeoutInMs}ms.`,
+  throw new E.RPC_PROPAGATION_TIMEOUT(
+    friendbotUrl,
+    publicKey,
+    options.rpcUrl,
+    timeoutInMs,
   );
 };
 
@@ -70,10 +74,13 @@ export const initializeWithFriendbot = async (
       );
     }
 
-    await waitForRpcPropagation(publicKey, options);
+    await waitForRpcPropagation(friendbotUrl, publicKey, options);
 
     return;
   } catch (e) {
+    if (e instanceof E.FriendbotError) {
+      throw e;
+    }
     throw new E.UNEXPECTED(friendbotUrl, e as Error);
   }
 };

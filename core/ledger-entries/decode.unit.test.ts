@@ -16,6 +16,7 @@ import {
   buildConfigSettingLedgerKey,
   buildContractCodeLedgerKey,
   buildContractInstanceLedgerKey,
+  buildTtlLedgerKey,
   buildTrustlineLedgerKey,
 } from "@/ledger-entries/index.ts";
 import { StrKey } from "@/strkeys/index.ts";
@@ -156,6 +157,14 @@ describe("LedgerEntries decode helpers", () => {
           ),
         }),
       ),
+      xdr.Claimant.claimantTypeV0(
+        new xdr.ClaimantV0({
+          destination,
+          predicate: xdr.ClaimPredicate.claimPredicateBeforeRelativeTime(
+            xdr.Int64.fromString("321"),
+          ),
+        }),
+      ),
     ];
     const key = buildClaimableBalanceLedgerKey({
       balanceId: CLAIMABLE_BALANCE_ID,
@@ -188,6 +197,7 @@ describe("LedgerEntries decode helpers", () => {
     assertEquals(decoded.claimants[1].predicate.type, "and");
     assertEquals(decoded.claimants[2].predicate.type, "or");
     assertEquals(decoded.claimants[3].predicate.type, "not");
+    assertEquals(decoded.claimants[4].predicate.type, "beforeRelativeTime");
   });
 
   it("covers nullable claim predicates", () => {
@@ -318,6 +328,14 @@ describe("LedgerEntries decode helpers", () => {
       throw new Error("expected config setting entry");
     }
     assertEquals(decodedConfig.value, [1n, 2n]);
+  });
+
+  it("covers ttl key detection", () => {
+    const ttlKey = buildTtlLedgerKey({
+      keyHash: StrKey.encodeSha256Hash(Buffer.alloc(32, 9)),
+    }) as unknown as xdr.LedgerKey;
+
+    assertEquals(detectLedgerEntryKindFromKey(ttlKey), "ttl");
   });
 
   it("covers unsupported decode branches", () => {

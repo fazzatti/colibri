@@ -1,3 +1,9 @@
+import { ColibriError } from "@/error/index.ts";
+
+enum ErrorCode {
+  ARRAY_LENGTH_OUT_OF_BOUNDS = "HLP_BND_01",
+}
+
 /**
  * Helper to create a fixed-length tuple.
  * @internal
@@ -149,9 +155,21 @@ export function asBoundedArray<T, Min extends number, Max extends number>(
   max: Max
 ): BoundedArray<T, Min, Max> {
   if (!isBoundedArray(arr, min, max)) {
-    throw new Error(
-      `Array length ${arr.length} not in bounds [${min}, ${max}]`
-    );
+    throw ColibriError.unexpected({
+      domain: "helpers",
+      source: "@colibri/core/common/helpers/bounded-array",
+      code: ErrorCode.ARRAY_LENGTH_OUT_OF_BOUNDS,
+      message: `Array length ${arr.length} not in bounds [${min}, ${max}]`,
+      details:
+        "The provided array does not satisfy the required bounded length constraints.",
+      meta: {
+        data: {
+          length: arr.length,
+          min,
+          max,
+        },
+      },
+    });
   }
   return arr as unknown as BoundedArray<T, Min, Max>;
 }

@@ -1,6 +1,7 @@
 import { assertEquals, assertStringIncludes, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Asset, Keypair, xdr } from "stellar-sdk";
+import { UNKNOWN_TRUSTLINE_ASSET_TYPE } from "@/common/helpers/xdr/error.ts";
 import { parseTrustLineAsset } from "@/common/helpers/xdr/parse-trustline-asset.ts";
 
 describe("parseTrustLineAsset", () => {
@@ -47,8 +48,8 @@ describe("parseTrustLineAsset", () => {
             switch: () => ({ name: "unknownAssetType" }),
           } as unknown as xdr.TrustLineAsset,
         ),
-      Error,
-      "Unsupported trustline asset type",
+      UNKNOWN_TRUSTLINE_ASSET_TYPE,
+      "Unknown TrustLineAsset type",
     );
   });
 });

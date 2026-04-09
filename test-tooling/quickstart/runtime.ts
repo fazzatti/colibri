@@ -153,9 +153,16 @@ const waitForFriendbotReady = async (
     return;
   }
 
-  throw new Error(
-    `Friendbot is not ready yet (status: ${response.status}, body: ${body}).`,
-  );
+  throw new READINESS_ERROR({
+    message: "Friendbot is not ready yet.",
+    details:
+      `Friendbot is not ready yet (status: ${response.status}, body: ${body}).`,
+    data: {
+      friendbotUrl: probe.friendbotUrl,
+      status: response.status,
+      body,
+    },
+  });
 };
 
 const isTerminalReadinessError = (error: unknown): boolean => {

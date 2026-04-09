@@ -146,7 +146,7 @@ function decodeSignerKey(key: xdr.SignerKey): SignerKeyView {
     }
 
     default:
-      throw new Error(`Unsupported signer key type: ${type}`);
+      throw new E.UNSUPPORTED_XDR_VARIANT("signer key", type);
   }
 }
 
@@ -191,7 +191,10 @@ function decodeClaimPredicate(
         seconds: predicate.relBefore().toBigInt(),
       };
     default:
-      throw new Error(`Unsupported claim predicate type: ${predicate.switch().name}`);
+      throw new E.UNSUPPORTED_XDR_VARIANT(
+        "claim predicate",
+        predicate.switch().name,
+      );
   }
 }
 
@@ -217,8 +220,9 @@ function decodeContractExecutable(
         type: "stellarAsset",
       };
     default:
-      throw new Error(
-        `Unsupported contract executable type: ${executable.switch().name}`,
+      throw new E.UNSUPPORTED_XDR_VARIANT(
+        "contract executable",
+        executable.switch().name,
       );
   }
 }
@@ -475,7 +479,7 @@ export function detectLedgerEntryKindFromKey(key: xdr.LedgerKey): LedgerEntryKin
     case "ttl":
       return "ttl";
     default:
-      throw new Error(`Unsupported ledger key type: ${key.switch().name}`);
+      throw new E.UNSUPPORTED_XDR_VARIANT("ledger key", key.switch().name);
   }
 }
 
@@ -508,7 +512,10 @@ export function decodeLedgerEntry(entry: Api.LedgerEntryResult): AnyLedgerEntry 
     case "ttl":
       return decodeTtlEntry(entry);
     default:
-      throw new Error(`Unsupported ledger entry type: ${entry.val.switch().name}`);
+      throw new E.UNSUPPORTED_XDR_VARIANT(
+        "ledger entry",
+        entry.val.switch().name,
+      );
   }
 }
 

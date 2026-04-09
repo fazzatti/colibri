@@ -73,6 +73,7 @@ export enum Code {
   UNEXPECTED_LEDGER_ENTRY_TYPE = "LDE_010",
   CONTRACT_INSTANCE_HAS_NO_WASM_HASH = "LDE_011",
   UNSUPPORTED_RPC_LEDGER_KEY = "LDE_012",
+  UNSUPPORTED_XDR_VARIANT = "LDE_013",
 }
 
 /**
@@ -334,6 +335,27 @@ export class UNSUPPORTED_RPC_LEDGER_KEY extends LedgerEntriesError<Code> {
           : "Use a different API path that supports this ledger-key type.",
       },
       data: { kind },
+    });
+  }
+}
+
+/**
+ * Raised when a decoded Stellar XDR union variant is unsupported.
+ */
+export class UNSUPPORTED_XDR_VARIANT extends LedgerEntriesError<Code> {
+  /**
+   * Creates the error.
+   *
+   * @param kind High-level XDR union family being decoded.
+   * @param value Unsupported variant name returned by Stellar SDK.
+   */
+  constructor(kind: string, value: string) {
+    super({
+      code: Code.UNSUPPORTED_XDR_VARIANT,
+      message: `Unsupported ${kind} type: ${value}`,
+      details:
+        "The connected Stellar SDK returned an XDR union variant that this LedgerEntries decoder does not currently support.",
+      data: { kind, value },
     });
   }
 }

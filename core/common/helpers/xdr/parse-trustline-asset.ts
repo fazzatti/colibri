@@ -1,6 +1,7 @@
 import { Buffer } from "buffer";
 import { StrKey } from "@/strkeys/index.ts";
 import { toStellarAssetCanonicalString } from "@/asset/sep11/index.ts";
+import { UNKNOWN_TRUSTLINE_ASSET_TYPE } from "@/common/helpers/xdr/error.ts";
 import type { ChangeTrustAssetString } from "@/common/helpers/xdr/parse-change-trust-asset.ts";
 import type { xdr } from "stellar-sdk";
 
@@ -40,6 +41,6 @@ export function parseTrustLineAsset(
       return `pool:${StrKey.encodeLiquidityPool(Buffer.from(assetXdr.liquidityPoolId() as unknown as Uint8Array))}`;
 
     default:
-      throw new Error(`Unsupported trustline asset type: ${assetXdr.switch().name}`);
+      throw new UNKNOWN_TRUSTLINE_ASSET_TYPE(assetXdr.switch().name);
   }
 }

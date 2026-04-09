@@ -17,7 +17,6 @@ import {
 } from "@/ledger-entries/keys.ts";
 import {
   decodeLedgerEntryForKey,
-  detectLedgerEntryKindFromKey,
 } from "@/ledger-entries/decode.ts";
 import { toBase64Xdr } from "@/ledger-entries/xdr.ts";
 import type {
@@ -105,9 +104,8 @@ export class LedgerEntries {
     }
 
     for (const key of keys) {
-      const kind = detectLedgerEntryKindFromKey(key as xdr.LedgerKey);
-      if (kind === "ttl") {
-        throw new E.UNSUPPORTED_RPC_LEDGER_KEY(kind);
+      if (key.switch().name === "ttl") {
+        throw new E.UNSUPPORTED_RPC_LEDGER_KEY("ttl");
       }
     }
 

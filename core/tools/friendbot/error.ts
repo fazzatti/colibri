@@ -3,10 +3,14 @@ import { ToolsError } from "@/tools/error.ts";
 export enum Code {
   UNEXPECTED = "TOOL_FRDBOT_000",
   INVALID_ADDRESS = "TOOL_FRDBOT_001",
+  RPC_PROPAGATION_TIMEOUT = "TOOL_FRDBOT_002",
 }
 
 export type MetaData = {
   friendbotUrl: string;
+  publicKey?: string;
+  rpcUrl?: string;
+  timeoutInMs?: number;
 };
 
 export abstract class FriendbotError extends ToolsError<Code, MetaData> {
@@ -49,7 +53,37 @@ export class INVALID_ADDRESS extends FriendbotError {
   }
 }
 
+export class RPC_PROPAGATION_TIMEOUT extends FriendbotError {
+  constructor(
+    friendbotUrl: string,
+    publicKey: string,
+    rpcUrl: string,
+    timeoutInMs: number,
+  ) {
+    super({
+      code: Code.RPC_PROPAGATION_TIMEOUT,
+      message:
+        `Account ${publicKey} was funded but did not become visible on RPC within ${timeoutInMs}ms.`,
+      data: {
+        friendbotUrl,
+        publicKey,
+        rpcUrl,
+        timeoutInMs,
+      },
+      details:
+        "Friendbot funding succeeded, but the account never became readable from the configured RPC endpoint within the allotted timeout.",
+      diagnostic: {
+        rootCause:
+          "RPC propagation lagged behind the Friendbot funding response or the configured RPC endpoint was unhealthy.",
+        suggestion:
+          "Verify the RPC URL, increase the propagation timeout, or retry once the network catches up.",
+      },
+    });
+  }
+}
+
 export const ERROR_TOOL_FRDBOT = {
   [Code.UNEXPECTED]: UNEXPECTED,
   [Code.INVALID_ADDRESS]: INVALID_ADDRESS,
+  [Code.RPC_PROPAGATION_TIMEOUT]: RPC_PROPAGATION_TIMEOUT,
 };
