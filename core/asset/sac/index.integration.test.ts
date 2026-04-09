@@ -26,7 +26,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
   const networkConfig = NetworkConfig.TestNet();
 
   // The RPC may sometimes take a while to reflect changes, so we use a longer timeout for the integration tests
-  // This seems to be specific to testnet.
+  // This seems to be specific to testnet, when using SDF's RPC and also near testnet upgrades.
   const wait = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms));
 
   const setupIssuerFlags = async (
@@ -78,7 +78,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
 
   const txConfig: TransactionConfig = {
     fee: "10000000", // 1 XLM
-    timeout: 30,
+    timeout: 60,
     source: issuer.address(),
     signers: [issuer.signer()],
   };
