@@ -40,7 +40,7 @@ export class INVALID_ADDRESS extends FriendbotError {
         friendbotUrl,
       },
       details:
-        `The address provided '${address}' is not a valid Stellar address. It must ba a valid public key in the G-address format.`,
+        `The address provided '${address}' is not a valid Stellar address. It must be a valid public key in the G-address format.`,
       diagnostic: {
         rootCause:
           "The address is not a valid Stellar public key. Accounts in Stellar are Ed25519 public keys represented in the G-address format according to SEP23.",
