@@ -27,7 +27,7 @@ describe("StellarTestLedger", () => {
   const stellarTestLedger = new StellarTestLedger({
     logLevel,
     containerName: "colibri-stellar-test-ledger-stable",
-    containerImageVersion: "v425-latest",
+    containerImageVersion: "latest",
   });
 
   afterAll(async () => {
