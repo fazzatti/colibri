@@ -180,7 +180,7 @@ describe("Quickstart runtime helpers", () => {
           } as unknown as DockerClientLike,
         }),
       CONTAINER_ERROR,
-      "Failed to list Docker containers. Cause: daemon unavailable",
+      "Failed to list Docker containers.",
     );
     assertStrictEquals(causeWrappedError.code, Code.CONTAINER_ERROR);
     assertStrictEquals(causeWrappedError.meta.cause, dockerFailure);
