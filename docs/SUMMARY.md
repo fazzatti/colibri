@@ -16,6 +16,7 @@
     - [SEP-11](core/asset/sep-11.md)
     - [Stellar Asset Contract](core/asset/stellar-asset-contract.md)
   - [Contract](core/contract.md)
+  - [Ledger Entries](core/ledger-entries.md)
   - [Network](core/network.md)
   - [SEP-1](core/sep1.md)
   - [Signer](core/signer/README.md)

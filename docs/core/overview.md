@@ -2,7 +2,8 @@
 
 `@colibri/core` is the foundation package for the Colibri toolkit. It exposes
 the main clients, transaction configuration types, low-level process
-functions, step factories, built-in pipelines, event helpers, and tooling.
+functions, step factories, built-in pipelines, event helpers, ledger-state
+accessors, and tooling.
 
 ## Installation
 
@@ -75,7 +76,12 @@ const result = await pipeline.run({
 ### High-Level Clients
 
 ```ts
-import { Contract, NetworkConfig, StellarAssetContract } from "@colibri/core";
+import {
+  Contract,
+  LedgerEntries,
+  NetworkConfig,
+  StellarAssetContract,
+} from "@colibri/core";
 
 const network = NetworkConfig.TestNet();
 
@@ -88,6 +94,32 @@ const sac = StellarAssetContract.fromContractId({
   networkConfig: network,
   contractId: "CBI...",
 });
+
+const ledger = new LedgerEntries({
+  networkConfig: network,
+});
+```
+
+### Ledger State Access
+
+```ts
+import {
+  LedgerEntries,
+  NetworkConfig,
+  buildAccountLedgerKey,
+} from "@colibri/core";
+
+const ledger = new LedgerEntries({
+  networkConfig: NetworkConfig.TestNet(),
+});
+
+const account = await ledger.account({
+  accountId: "GA...",
+});
+
+const generic = await ledger.get(
+  buildAccountLedgerKey({ accountId: "GA..." }),
+);
 ```
 
 ### Event Parsing
@@ -149,6 +181,7 @@ try {
 
 - use high-level clients when you want ergonomics and a stable object-oriented
   interface
+- use `LedgerEntries` when you want typed RPC access to live ledger state
 - use `create*Pipeline(...)` when you want to attach plugins or own the flow
 - use `steps` when you need stable orchestration ids
 - use raw processes when you want isolated single-purpose behavior
@@ -156,6 +189,7 @@ try {
 ## Next Steps
 
 - [Contract](contract.md) — High-level Soroban client
+- [Ledger Entries](ledger-entries.md) — Typed RPC access to live ledger state
 - [Stellar Asset Contract](asset/stellar-asset-contract.md) — SAC-specific
   client
 - [Pipelines](pipelines/README.md) — Built-in write and read flows
