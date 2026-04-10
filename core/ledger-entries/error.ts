@@ -74,6 +74,7 @@ export enum Code {
   CONTRACT_INSTANCE_HAS_NO_WASM_HASH = "LDE_011",
   UNSUPPORTED_RPC_LEDGER_KEY = "LDE_012",
   UNSUPPORTED_XDR_VARIANT = "LDE_013",
+  INVALID_OFFER_ID = "LDE_014",
 }
 
 /**
@@ -128,6 +129,25 @@ export class INVALID_ACCOUNT_ID extends LedgerEntriesError<Code> {
       details:
         "The provided account id is not a valid Ed25519 Stellar public key.",
       data: { accountId },
+    });
+  }
+}
+
+/**
+ * Raised when an invalid offer id is provided.
+ */
+export class INVALID_OFFER_ID extends LedgerEntriesError<Code> {
+  /**
+   * Creates the error.
+   *
+   * @param offerId - Invalid offer id supplied by the caller.
+   */
+  constructor(offerId: string | number | bigint) {
+    super({
+      code: Code.INVALID_OFFER_ID,
+      message: `Invalid offer id: ${offerId}`,
+      details: "The provided offer id must be a non-negative 64-bit integer.",
+      data: { offerId },
     });
   }
 }
@@ -280,7 +300,8 @@ export class UNEXPECTED_LEDGER_ENTRY_TYPE extends LedgerEntriesError<Code> {
   constructor(expected: LedgerEntryKind, actual: LedgerEntryKind) {
     super({
       code: Code.UNEXPECTED_LEDGER_ENTRY_TYPE,
-      message: `Unexpected ledger entry type: expected ${expected}, received ${actual}`,
+      message:
+        `Unexpected ledger entry type: expected ${expected}, received ${actual}`,
       details:
         "The RPC server returned a ledger entry whose decoded type does not match the requested key.",
       data: { expected, actual },
@@ -359,3 +380,24 @@ export class UNSUPPORTED_XDR_VARIANT extends LedgerEntriesError<Code> {
     });
   }
 }
+
+/**
+ * Error code to class mapping.
+ */
+export const ERROR_LDE = {
+  [Code.INVALID_CONSTRUCTOR_ARGS]: INVALID_CONSTRUCTOR_ARGS,
+  [Code.MISSING_RPC_URL]: MISSING_RPC_URL,
+  [Code.INVALID_ACCOUNT_ID]: INVALID_ACCOUNT_ID,
+  [Code.INVALID_OFFER_ID]: INVALID_OFFER_ID,
+  [Code.INVALID_CONTRACT_ID]: INVALID_CONTRACT_ID,
+  [Code.INVALID_CLAIMABLE_BALANCE_ID]: INVALID_CLAIMABLE_BALANCE_ID,
+  [Code.INVALID_LIQUIDITY_POOL_ID]: INVALID_LIQUIDITY_POOL_ID,
+  [Code.INVALID_HEX_HASH]: INVALID_HEX_HASH,
+  [Code.INVALID_CONFIG_SETTING_ID]: INVALID_CONFIG_SETTING_ID,
+  [Code.INVALID_LEDGER_KEY_HASH]: INVALID_LEDGER_KEY_HASH,
+  [Code.LEDGER_ENTRY_NOT_FOUND]: LEDGER_ENTRY_NOT_FOUND,
+  [Code.UNEXPECTED_LEDGER_ENTRY_TYPE]: UNEXPECTED_LEDGER_ENTRY_TYPE,
+  [Code.CONTRACT_INSTANCE_HAS_NO_WASM_HASH]: CONTRACT_INSTANCE_HAS_NO_WASM_HASH,
+  [Code.UNSUPPORTED_RPC_LEDGER_KEY]: UNSUPPORTED_RPC_LEDGER_KEY,
+  [Code.UNSUPPORTED_XDR_VARIANT]: UNSUPPORTED_XDR_VARIANT,
+} as const;

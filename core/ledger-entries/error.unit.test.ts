@@ -9,6 +9,10 @@ describe("LedgerEntries errors", () => {
       E.Code.INVALID_CONTRACT_ID,
     );
     assertEquals(
+      new E.INVALID_OFFER_ID(-1).code,
+      E.Code.INVALID_OFFER_ID,
+    );
+    assertEquals(
       new E.INVALID_CONFIG_SETTING_ID("badSetting").code,
       E.Code.INVALID_CONFIG_SETTING_ID,
     );
@@ -29,6 +33,14 @@ describe("LedgerEntries errors", () => {
       () =>
         Promise.reject(new E.UNEXPECTED_LEDGER_ENTRY_TYPE("account", "data")),
       E.UNEXPECTED_LEDGER_ENTRY_TYPE,
+    );
+  });
+
+  it("exposes the registry for code-based lookups", () => {
+    assertEquals(E.ERROR_LDE[E.Code.INVALID_OFFER_ID], E.INVALID_OFFER_ID);
+    assertEquals(
+      E.ERROR_LDE[E.Code.UNSUPPORTED_RPC_LEDGER_KEY],
+      E.UNSUPPORTED_RPC_LEDGER_KEY,
     );
   });
 });

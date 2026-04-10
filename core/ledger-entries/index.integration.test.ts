@@ -6,12 +6,12 @@ import type { Buffer } from "buffer";
 import { Asset, Operation } from "stellar-sdk";
 import { StellarTestLedger } from "../../test-tooling/mod.ts";
 import {
-  LedgerEntries,
   buildAccountLedgerKey,
   buildConfigSettingLedgerKey,
   buildContractInstanceLedgerKey,
   buildDataLedgerKey,
   buildTtlLedgerKey,
+  LedgerEntries,
 } from "@/ledger-entries/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { NativeAccount } from "@/account/native/index.ts";
@@ -46,36 +46,25 @@ describe("LedgerEntries integration", disableSanitizeConfig, () => {
 
   let contractId: ContractId;
 
-  const unwrapCause = (error: unknown): string => {
-    if (!(error instanceof Error)) {
-      return String(error);
-    }
+  const waitForContractInstance = async (id: ContractId): Promise<void> => {
+    const deadline = Date.now() + 15_000;
+    let lastError: unknown;
 
-    const meta = (
-      error as Error & {
-        meta?: {
-          cause?: unknown;
-          data?: {
-            simulationResponse?: {
-              error?: string;
-            };
-          };
-        };
+    while (Date.now() < deadline) {
+      try {
+        await ledger.contractInstance({ contractId: id });
+        return;
+      } catch (error) {
+        lastError = error;
+        await wait();
       }
-    ).meta;
-    const simulationError = meta?.data?.simulationResponse?.error;
-
-    if (simulationError) {
-      return `${error.message} ${simulationError}`;
     }
 
-    const cause = meta?.cause;
-
-    if (cause instanceof Error) {
-      return unwrapCause(cause);
+    if (lastError instanceof Error) {
+      throw lastError;
     }
 
-    return error.message;
+    assert(false, `Contract instance ${id} did not become readable in time`);
   };
 
   beforeAll(async () => {
@@ -146,18 +135,11 @@ describe("LedgerEntries integration", disableSanitizeConfig, () => {
       },
     });
 
-    try {
-      await contract.uploadWasm(adminConfig);
-      await contract.deploy({ config: adminConfig });
-    } catch (error) {
-      throw new Error(
-        `Failed to prepare contract fixtures for LedgerEntries integration: ${unwrapCause(error)}`,
-      );
-    }
+    await contract.uploadWasm(adminConfig);
+    await contract.deploy({ config: adminConfig });
 
     contractId = contract.getContractId() as ContractId;
-
-    await wait(1500);
+    await waitForContractInstance(contractId);
   });
 
   afterAll(async () => {
@@ -217,15 +199,17 @@ describe("LedgerEntries integration", disableSanitizeConfig, () => {
   });
 
   it("supports typed batch reads across entry kinds", async () => {
-    const [accountEntry, dataEntry, contractEntry, configEntry] =
-      await ledger.getMany([
-        buildAccountLedgerKey({ accountId: user.address() }),
-        buildDataLedgerKey({ accountId: user.address(), dataName }),
-        buildContractInstanceLedgerKey({ contractId }),
-        buildConfigSettingLedgerKey({
-          configSettingId: "configSettingContractMaxSizeBytes",
-        }),
-      ] as const);
+    const [accountEntry, dataEntry, contractEntry, configEntry] = await ledger
+      .getMany(
+        [
+          buildAccountLedgerKey({ accountId: user.address() }),
+          buildDataLedgerKey({ accountId: user.address(), dataName }),
+          buildContractInstanceLedgerKey({ contractId }),
+          buildConfigSettingLedgerKey({
+            configSettingId: "configSettingContractMaxSizeBytes",
+          }),
+        ] as const,
+      );
 
     assertEquals(accountEntry?.type, "account");
     assertEquals(dataEntry?.type, "data");

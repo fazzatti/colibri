@@ -1,14 +1,18 @@
 # TOID
 
-The TOID module provides utilities for working with SEP-0035 Total Order IDs — unique identifiers for operations across the Stellar network.
+The TOID module provides utilities for working with SEP-0035 Total Order IDs —
+unique identifiers for operations across the Stellar network.
 
 ## What is a TOID?
 
-A TOID (Total Order ID) is a 64-bit integer that uniquely identifies any operation on the Stellar network. It encodes three pieces of information:
+A TOID (Total Order ID) is a 64-bit integer that uniquely identifies any
+operation on the Stellar network. It encodes three pieces of information:
 
 - **Ledger Sequence** (32 bits) — Which ledger the operation was in
-- **Transaction Order** (20 bits) — Position of the transaction within the ledger
-- **Operation Index** (12 bits) — Position of the operation within the transaction
+- **Transaction Order** (20 bits) — Position of the transaction within the
+  ledger
+- **Operation Index** (12 bits) — Position of the operation within the
+  transaction
 
 ## Functions
 
@@ -127,9 +131,19 @@ const events = await getEvents({ cursor: startToid });
 
 Identify specific operations across the network:
 
-`typescript\n// Find all operations in a specific ledger\nconst ledger = 60044284;\nconst firstToid = createTOID(ledger, 1, 1);\nconst lastToid = createTOID(ledger, 1048575, 4095);\n\n// Query between these TOIDs\n`\n\n## SEP-0035 Specification
+```typescript
+// Find all operations in a specific ledger
+const ledger = 60044284;
+const firstToid = createTOID(ledger, 1, 1);
+const lastToid = createTOID(ledger, 1048575, 4095);
 
-The TOID format is defined in [SEP-0035](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0035.md):
+// Query between these TOIDs
+```
+
+## SEP-0035 Specification
+
+The TOID format is defined in
+[SEP-0035](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0035.md):
 
 ```
 Bit Layout (64 bits total):
@@ -154,8 +168,9 @@ Bits:           63-32              31-12            11-0
 const eventId = "0000530242871959553";
 
 if (isTOID(eventId)) {
-  const { ledgerSequence, transactionOrder, operationIndex } =
-    parseTOID(eventId);
+  const { ledgerSequence, transactionOrder, operationIndex } = parseTOID(
+    eventId,
+  );
   console.log(`Ledger: ${ledgerSequence}`);
   console.log(`TX #${transactionOrder}, Op #${operationIndex}`);
 }

@@ -1,6 +1,8 @@
 # SEP-10
 
-The `@colibri/sep10` package provides [SEP-10 Web Authentication](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0010.md) for Stellar.
+The `@colibri/sep10` package provides
+[SEP-10 Web Authentication](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0010.md)
+for Stellar.
 
 ## Installation
 
@@ -13,7 +15,7 @@ deno add jsr:@colibri/sep10
 ```typescript
 import { Sep10Client } from "@colibri/sep10";
 import { StellarToml } from "@colibri/core";
-import { Keypair } from "stellar-sdk";
+import { Keypair } from "npm:@stellar/stellar-sdk";
 
 // Fetch and parse stellar.toml
 const toml = await StellarToml.fromDomain("anchor.example.com");
@@ -58,7 +60,8 @@ const client = Sep10Client.fromToml(toml);
 const client = Sep10Client.fromToml(toml, Networks.TESTNET);
 ```
 
-The client extracts `webAuthEndpoint`, `signingKey`, `domain`, and `networkPassphrase` from the `StellarToml` instance.
+The client extracts `webAuthEndpoint`, `signingKey`, `domain`, and
+`networkPassphrase` from the `StellarToml` instance.
 
 **Throws:**
 
@@ -201,7 +204,8 @@ const jwt = Sep10Jwt.fromToken(tokenString);
 
 ## Error Handling
 
-Errors follow the `SEP10_CHAL_XXX` format for challenge errors and `SEP10_CLI_XXX` for client errors. Import error classes from:
+Errors follow the `SEP10_CHAL_XXX` format for challenge errors and
+`SEP10_CLI_XXX` for client errors. Import error classes from:
 
 ```typescript
 import { ChallengeErrors, ClientErrors } from "@colibri/sep10";

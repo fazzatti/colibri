@@ -68,11 +68,11 @@ describe("XDR Helper Errors", () => {
       assertEquals(error.code, Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE);
       assertEquals(
         error.message,
-        "Failed to get address type from SorobanAuthorizationEntry"
+        "Failed to get address type from SorobanAuthorizationEntry",
       );
       assertEquals(
         error.details,
-        "Could not extract address type from the authorization entry credentials"
+        "Could not extract address type from the authorization entry credentials",
       );
       assertEquals(error.meta.data, { value: { authEntryXDR: "AAAA" } });
     });
@@ -93,11 +93,11 @@ describe("XDR Helper Errors", () => {
       assertEquals(error.code, Code.FAILED_TO_GET_AUTH_ENTRY_SIGNER);
       assertEquals(
         error.message,
-        "Failed to get signer from SorobanAuthorizationEntry"
+        "Failed to get signer from SorobanAuthorizationEntry",
       );
       assertEquals(
         error.details,
-        "Could not extract signer address from the authorization entry"
+        "Could not extract signer address from the authorization entry",
       );
       assertEquals(error.meta.data, { value: { authEntryXDR: "AAAA" } });
     });
@@ -114,25 +114,25 @@ describe("XDR Helper Errors", () => {
     it("should create error with authEntryXDR and signer", () => {
       const error = new E.INVALID_AUTH_ENTRY_SIGNER_ADDRESS(
         "AAAA",
-        "invalid-signer"
+        "invalid-signer",
       );
 
       assertInstanceOf(error, ColibriError);
       assertEquals(error.code, Code.INVALID_AUTH_ENTRY_SIGNER_ADDRESS);
       assertEquals(
         error.message,
-        "Invalid signer address extracted from SorobanAuthorizationEntry"
+        "Invalid signer address extracted from SorobanAuthorizationEntry",
       );
       assertEquals(
         error.details,
-        "Expected a valid Ed25519 public key or contract ID, but got an invalid address"
+        "Expected a valid Ed25519 public key or contract ID, but got an invalid address",
       );
     });
 
     it("should include signer in meta data", () => {
       const error = new E.INVALID_AUTH_ENTRY_SIGNER_ADDRESS(
         "AAAA",
-        "invalid-signer"
+        "invalid-signer",
       );
 
       assertEquals(error.meta.data, {
@@ -150,7 +150,7 @@ describe("XDR Helper Errors", () => {
       assertEquals(error.message, "Unexpected format of TransactionResult XDR");
       assertEquals(
         error.details,
-        "The TransactionResult XDR does not match the expected format for error parsing"
+        "The TransactionResult XDR does not match the expected format for error parsing",
       );
     });
 
@@ -170,7 +170,7 @@ describe("XDR Helper Errors", () => {
       assertEquals(error.message, "Unsupported ScVal type: scvUnknown");
       assertEquals(
         error.details,
-        "The ScVal type is not supported for parsing into a TypeScript-friendly value"
+        "The ScVal type is not supported for parsing into a TypeScript-friendly value",
       );
       assertEquals(error.meta.data, { value: { scValType: "scvUnknown" } });
     });
@@ -193,16 +193,20 @@ describe("XDR Helper Errors", () => {
       assertEquals(ERROR_XDR[Code.UNKNOWN_ASSET_TYPE], E.UNKNOWN_ASSET_TYPE);
       assertEquals(
         ERROR_XDR[Code.UNKNOWN_CHANGE_TRUST_ASSET_TYPE],
-        E.UNKNOWN_CHANGE_TRUST_ASSET_TYPE
+        E.UNKNOWN_CHANGE_TRUST_ASSET_TYPE,
+      );
+      assertEquals(
+        ERROR_XDR[Code.UNKNOWN_TRUSTLINE_ASSET_TYPE],
+        E.UNKNOWN_TRUSTLINE_ASSET_TYPE,
       );
       assertEquals(
         ERROR_XDR[Code.UNKNOWN_MUXED_ACCOUNT_TYPE],
-        E.UNKNOWN_MUXED_ACCOUNT_TYPE
+        E.UNKNOWN_MUXED_ACCOUNT_TYPE,
       );
       assertEquals(ERROR_XDR[Code.INVALID_XDR_PARSE], E.INVALID_XDR_PARSE);
       assertEquals(
         ERROR_XDR[Code.UNSUPPORTED_SCVAL_TYPE],
-        E.UNSUPPORTED_SCVAL_TYPE
+        E.UNSUPPORTED_SCVAL_TYPE,
       );
       assertEquals(ERROR_XDR[Code.UNKNOWN_SCVAL_TYPE], E.UNKNOWN_SCVAL_TYPE);
     });

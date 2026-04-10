@@ -1,4 +1,10 @@
-import { Address, Contract as StellarContract, Keypair, hash, xdr } from "stellar-sdk";
+import {
+  Address,
+  Contract as StellarContract,
+  hash,
+  Keypair,
+  xdr,
+} from "stellar-sdk";
 import { Buffer } from "buffer";
 import type { LedgerKeyLike } from "@/common/types/index.ts";
 import { StrKey } from "@/strkeys/index.ts";
@@ -46,6 +52,7 @@ import type {
 import type { Sha256Hash } from "@/strkeys/types.ts";
 
 const HEX_32_BYTE_REGEX = /^[0-9a-f]{64}$/i;
+const MAX_SIGNED_INT64 = 9_223_372_036_854_775_807n;
 
 const CONFIG_SETTING_ID_BUILDERS: Record<
   ConfigSettingIdName,
@@ -91,7 +98,9 @@ function brandLedgerKey<TEntry extends AnyLedgerEntry>(
   return key as unknown as TypedLedgerKey<TEntry>;
 }
 
-function normalizeScVal(value: { toXDR(format?: "raw" | "hex" | "base64"): string | Uint8Array }): xdr.ScVal {
+function normalizeScVal(
+  value: { toXDR(format?: "raw" | "hex" | "base64"): string | Uint8Array },
+): xdr.ScVal {
   if (value instanceof xdr.ScVal) {
     return value;
   }
@@ -111,6 +120,32 @@ function requireAccountId(accountId: string): void {
   if (!StrKey.isValidEd25519PublicKey(accountId)) {
     throw new E.INVALID_ACCOUNT_ID(accountId);
   }
+}
+
+function normalizeOfferId(offerId: bigint | number | string): xdr.Int64 {
+  let parsed: bigint;
+
+  if (typeof offerId === "bigint") {
+    parsed = offerId;
+  } else if (typeof offerId === "number") {
+    if (!Number.isInteger(offerId)) {
+      throw new E.INVALID_OFFER_ID(offerId);
+    }
+
+    parsed = BigInt(offerId);
+  } else {
+    if (!/^\d+$/.test(offerId)) {
+      throw new E.INVALID_OFFER_ID(offerId);
+    }
+
+    parsed = BigInt(offerId);
+  }
+
+  if (parsed < 0n || parsed > MAX_SIGNED_INT64) {
+    throw new E.INVALID_OFFER_ID(offerId);
+  }
+
+  return xdr.Int64.fromString(parsed.toString());
 }
 
 function requireContractId(contractId: string): void {
@@ -257,7 +292,7 @@ export function buildOfferLedgerKey({
     xdr.LedgerKey.offer(
       new xdr.LedgerKeyOffer({
         sellerId: Keypair.fromPublicKey(sellerId).xdrAccountId(),
-        offerId: xdr.Int64.fromString(String(offerId)),
+        offerId: normalizeOfferId(offerId),
       }),
     ),
   );
@@ -276,7 +311,9 @@ export function buildDataLedgerKey({
     xdr.LedgerKey.data(
       new xdr.LedgerKeyData({
         accountId: Keypair.fromPublicKey(accountId).xdrAccountId(),
-        dataName: typeof dataName === "string" ? dataName : Buffer.from(dataName),
+        dataName: typeof dataName === "string"
+          ? dataName
+          : Buffer.from(dataName),
       }),
     ),
   );

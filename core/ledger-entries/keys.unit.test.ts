@@ -11,6 +11,7 @@ import {
   buildContractCodeLedgerKey,
   buildContractDataLedgerKey,
   buildDataLedgerKey,
+  buildOfferLedgerKey,
   buildTtlLedgerKey,
   hashLedgerKey,
 } from "@/ledger-entries/index.ts";
@@ -166,6 +167,42 @@ describe("LedgerEntries key builders", () => {
           keyHash: new Uint8Array(31),
         }),
       E.INVALID_LEDGER_KEY_HASH,
+    );
+    assertThrows(
+      () =>
+        buildOfferLedgerKey({
+          sellerId: ACCOUNT_ID,
+          offerId: 1.5,
+        }),
+      E.INVALID_OFFER_ID,
+    );
+    assertThrows(
+      () =>
+        buildOfferLedgerKey({
+          sellerId: ACCOUNT_ID,
+          offerId: -1,
+        }),
+      E.INVALID_OFFER_ID,
+    );
+    assertThrows(
+      () =>
+        buildOfferLedgerKey({
+          sellerId: ACCOUNT_ID,
+          offerId: "not-an-int",
+        }),
+      E.INVALID_OFFER_ID,
+    );
+  });
+
+  it("accepts string-form offer ids", () => {
+    const key = buildOfferLedgerKey({
+      sellerId: ACCOUNT_ID,
+      offerId: "17",
+    });
+
+    assertEquals(
+      (key as unknown as xdr.LedgerKey).offer().offerId().toBigInt(),
+      17n,
     );
   });
 

@@ -30,12 +30,12 @@ This will add imports similar to:
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^0.18.0",
-    "@colibri/sep10": "jsr:@colibri/sep10@^0.5.3",
-    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.2.4",
-    "@colibri/test-tooling": "jsr:@colibri/test-tooling@^0.3.0",
-    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.9.3",
-    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^0.1.0"
+    "@colibri/core": "jsr:@colibri/core@^0.19.0",
+    "@colibri/sep10": "jsr:@colibri/sep10@^0.5.4",
+    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.2.5",
+    "@colibri/test-tooling": "jsr:@colibri/test-tooling@^0.3.1",
+    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.9.4",
+    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^0.2.1"
   }
 }
 ```
@@ -73,15 +73,15 @@ Docker-backed integration helpers centered on `StellarTestLedger`.
 
 Plugins extend pipeline step behavior for specific use cases:
 
-| Plugin                                                        | Package                              | Description                                       |
-| ------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------- |
-| [Fee Bump](../packages/plugins/fee-bump.md)                   | `@colibri/plugin-fee-bump`           | Wrap outgoing transactions in a fee-bump envelope |
-| [Channel Accounts](../packages/plugins/channel-accounts.md)   | `@colibri/plugin-channel-accounts`   | Reuse sponsored channel accounts across write runs |
+| Plugin                                                      | Package                            | Description                                        |
+| ----------------------------------------------------------- | ---------------------------------- | -------------------------------------------------- |
+| [Fee Bump](../packages/plugins/fee-bump.md)                 | `@colibri/plugin-fee-bump`         | Wrap outgoing transactions in a fee-bump envelope  |
+| [Channel Accounts](../packages/plugins/channel-accounts.md) | `@colibri/plugin-channel-accounts` | Reuse sponsored channel accounts across write runs |
 
 ## Stellar SDK Dependency
 
-Colibri stays close to `@stellar/stellar-sdk`, and many advanced flows still
-use SDK values directly:
+Colibri stays close to `@stellar/stellar-sdk`, and many advanced flows still use
+SDK values directly:
 
 ```ts
 import { Operation, xdr } from "npm:@stellar/stellar-sdk";

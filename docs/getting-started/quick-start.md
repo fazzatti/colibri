@@ -61,7 +61,7 @@ import {
   LocalSigner,
   NetworkConfig,
 } from "@colibri/core";
-import { Operation } from "stellar-sdk";
+import { Operation, xdr } from "npm:@stellar/stellar-sdk";
 
 const network = NetworkConfig.TestNet();
 const signer = LocalSigner.generateRandom();
@@ -78,7 +78,7 @@ const pipeline = createInvokeContractPipeline({
 const operation = Operation.invokeContractFunction({
   contract: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
   function: "hello",
-  args: [],
+  args: [xdr.ScVal.scvString("World")],
 });
 
 const result = await pipeline.run({
