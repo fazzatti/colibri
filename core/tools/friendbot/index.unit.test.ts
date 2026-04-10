@@ -1,4 +1,4 @@
-import { assertEquals, assertRejects } from "@std/assert";
+import { assertEquals, assertRejects, assertStrictEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { stub } from "@std/testing/mock";
 import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
@@ -12,8 +12,10 @@ describe("initializeWithFriendbot", () => {
   const FRIENDBOT_URL = "https://friendbot.stellar.org";
 
   it("initializes account successfully", async () => {
-    const fetchStub = stub(globalThis, "fetch", () =>
-      Promise.resolve(new Response("OK", { status: 200 }))
+    const fetchStub = stub(
+      globalThis,
+      "fetch",
+      () => Promise.resolve(new Response("OK", { status: 200 })),
     );
 
     try {
@@ -30,20 +32,25 @@ describe("initializeWithFriendbot", () => {
     await assertRejects(
       () => initializeWithFriendbot(FRIENDBOT_URL, invalidAddress),
       E.INVALID_ADDRESS,
-      "The address provided is invalid!"
+      "The address provided is invalid!",
     );
   });
 
   it("throws UNEXPECTED on non-200 response", async () => {
-    const fetchStub = stub(globalThis, "fetch", () =>
-      Promise.resolve(new Response("Account already exists", { status: 400 }))
+    const fetchStub = stub(
+      globalThis,
+      "fetch",
+      () =>
+        Promise.resolve(
+          new Response("Account already exists", { status: 400 }),
+        ),
     );
 
     try {
       await assertRejects(
         () => initializeWithFriendbot(FRIENDBOT_URL, TEST_PUBLIC),
         E.UNEXPECTED,
-        "An unexpected error occurred when using Friendbot!"
+        "An unexpected error occurred when using Friendbot!",
       );
     } finally {
       fetchStub.restore();
@@ -51,14 +58,16 @@ describe("initializeWithFriendbot", () => {
   });
 
   it("throws UNEXPECTED on network error", async () => {
-    const fetchStub = stub(globalThis, "fetch", () =>
-      Promise.reject(new Error("Network error"))
+    const fetchStub = stub(
+      globalThis,
+      "fetch",
+      () => Promise.reject(new Error("Network error")),
     );
 
     try {
       await assertRejects(
         () => initializeWithFriendbot(FRIENDBOT_URL, TEST_PUBLIC),
-        E.UNEXPECTED
+        E.UNEXPECTED,
       );
     } finally {
       fetchStub.restore();
@@ -71,8 +80,7 @@ describe("initializeWithFriendbot", () => {
         new Response("account already funded to starting balance", {
           status: 400,
         }),
-      )
-    );
+      ));
     const getAccountStub = stub(
       Server.prototype,
       "getAccount",
@@ -93,8 +101,10 @@ describe("initializeWithFriendbot", () => {
   });
 
   it("retries RPC propagation until the funded account becomes visible", async () => {
-    const fetchStub = stub(globalThis, "fetch", () =>
-      Promise.resolve(new Response("OK", { status: 200 }))
+    const fetchStub = stub(
+      globalThis,
+      "fetch",
+      () => Promise.resolve(new Response("OK", { status: 200 })),
     );
     let attempts = 0;
     const getAccountStub = stub(
@@ -126,13 +136,16 @@ describe("initializeWithFriendbot", () => {
   });
 
   it("throws RPC_PROPAGATION_TIMEOUT when RPC propagation times out", async () => {
-    const fetchStub = stub(globalThis, "fetch", () =>
-      Promise.resolve(new Response("OK", { status: 200 }))
+    const fetchStub = stub(
+      globalThis,
+      "fetch",
+      () => Promise.resolve(new Response("OK", { status: 200 })),
     );
+    const propagationError = new Error("not visible yet");
     const getAccountStub = stub(
       Server.prototype,
       "getAccount",
-      () => Promise.reject(new Error("not visible yet")),
+      () => Promise.reject(propagationError),
     );
     const nowValues = [0, 0, 2];
     const dateNowStub = stub(Date, "now", () => nowValues.shift() ?? 2);
@@ -152,6 +165,7 @@ describe("initializeWithFriendbot", () => {
         error.message,
         `Account ${TEST_PUBLIC} was funded but did not become visible on RPC within 1ms.`,
       );
+      assertStrictEquals(error.meta.cause, propagationError);
     } finally {
       dateNowStub.restore();
       getAccountStub.restore();

@@ -1,6 +1,7 @@
 import { assert, assertEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { NetworkType, NetworkPassphrase } from "@/network/types.ts";
+import { NetworkPassphrase, NetworkType } from "@/network/types.ts";
+import * as E from "@/network/error.ts";
 import { isNetworkConfig, NetworkConfig } from "@/network/index.ts";
 
 describe("Network", () => {
@@ -23,11 +24,11 @@ describe("Network", () => {
       assertEquals(futureNet.rpcUrl, "https://rpc-futurenet.stellar.org:443");
       assertEquals(
         futureNet.friendbotUrl,
-        "https://friendbot-futurenet.stellar.org"
+        "https://friendbot-futurenet.stellar.org",
       );
       assertEquals(
         futureNet.horizonUrl,
-        "https://horizon-futurenet.stellar.org"
+        "https://horizon-futurenet.stellar.org",
       );
       assertEquals(futureNet.allowHttp, false);
     });
@@ -117,14 +118,14 @@ describe("Network", () => {
           NetworkConfig.CustomNet({
             networkPassphrase: "Some Custom Network",
             rpcUrl: "https://rpc.custom.com",
-          })
-        )
+          }),
+        ),
       );
 
       assert(
         !isNetworkConfig({
           rpcUrl: "https://rpc.missingtype.com",
-        })
+        }),
       );
 
       assert(
@@ -132,7 +133,7 @@ describe("Network", () => {
           type: "invalidtype" as NetworkType,
           networkPassphrase: "Invalid Type Network",
           rpcUrl: "https://rpc.invalid.com",
-        })
+        }),
       );
     });
 
@@ -189,7 +190,7 @@ describe("Network", () => {
       assertEquals(testNet.horizonUrl, "https://custom-horizon.testnet.com");
       assertEquals(
         testNet.friendbotUrl,
-        "https://custom-friendbot.testnet.com"
+        "https://custom-friendbot.testnet.com",
       );
       assertEquals(testNet.archiveRpcUrl, "https://custom-archive.testnet.com");
       assertEquals(testNet.allowHttp, true);
@@ -207,15 +208,15 @@ describe("Network", () => {
       assertEquals(futureNet.rpcUrl, "https://custom-rpc.futurenet.com");
       assertEquals(
         futureNet.horizonUrl,
-        "https://custom-horizon.futurenet.com"
+        "https://custom-horizon.futurenet.com",
       );
       assertEquals(
         futureNet.friendbotUrl,
-        "https://custom-friendbot.futurenet.com"
+        "https://custom-friendbot.futurenet.com",
       );
       assertEquals(
         futureNet.archiveRpcUrl,
-        "https://custom-archive.futurenet.com"
+        "https://custom-archive.futurenet.com",
       );
       assertEquals(futureNet.allowHttp, true);
     });
@@ -261,7 +262,7 @@ describe("Network", () => {
           customNet.type = NetworkType.TESTNET;
         },
         Error,
-        "already set"
+        "already set",
       );
     });
 
@@ -275,7 +276,7 @@ describe("Network", () => {
           customNet.networkPassphrase = "New Passphrase";
         },
         Error,
-        "already set"
+        "already set",
       );
     });
 
@@ -293,12 +294,16 @@ describe("Network", () => {
         networkPassphrase: "Test",
         rpcUrl: "https://rpc.test.com",
       });
-      assertThrows(
+      const error = assertThrows(
         () => {
           customNet.rpcUrl = "https://rpc2.test.com";
         },
-        Error,
-        "already set"
+        E.PROPERTY_ALREADY_SET,
+      );
+      assertEquals(error.meta.data, { property: "rpcUrl" });
+      assertEquals(
+        error.message,
+        "Property rpcUrl is already set in the Network Config instance",
       );
     });
 
@@ -320,7 +325,7 @@ describe("Network", () => {
           customNet.archiveRpcUrl = "https://archive2.test.com";
         },
         Error,
-        "already set"
+        "already set",
       );
     });
 
@@ -342,7 +347,7 @@ describe("Network", () => {
           customNet.horizonUrl = "https://horizon2.test.com";
         },
         Error,
-        "already set"
+        "already set",
       );
     });
 
@@ -364,7 +369,7 @@ describe("Network", () => {
           customNet.friendbotUrl = "https://friendbot2.test.com";
         },
         Error,
-        "already set"
+        "already set",
       );
     });
 
@@ -386,7 +391,7 @@ describe("Network", () => {
           customNet.allowHttp = true;
         },
         Error,
-        "already set"
+        "already set",
       );
     });
   });
@@ -400,10 +405,14 @@ describe("Network", () => {
       // This tests the require() throw path
       // deno-lint-ignore no-explicit-any
       (customNet as any)._type = undefined;
-      assertThrows(
+      const error = assertThrows(
         () => customNet.type,
-        Error,
-        "Property _type is not set in the Network Config instance"
+        E.PROPERTY_NOT_SET,
+      );
+      assertEquals(error.meta.data, { property: "type" });
+      assertEquals(
+        error.message,
+        "Property type is not set in the Network Config instance",
       );
     });
 
@@ -414,10 +423,14 @@ describe("Network", () => {
       // Forcibly unset the private _networkPassphrase field
       // deno-lint-ignore no-explicit-any
       (customNet as any)._networkPassphrase = undefined;
-      assertThrows(
+      const error = assertThrows(
         () => customNet.networkPassphrase,
-        Error,
-        "Property _networkPassphrase is not set in the Network Config instance"
+        E.PROPERTY_NOT_SET,
+      );
+      assertEquals(error.meta.data, { property: "networkPassphrase" });
+      assertEquals(
+        error.message,
+        "Property networkPassphrase is not set in the Network Config instance",
       );
     });
   });

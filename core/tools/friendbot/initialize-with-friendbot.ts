@@ -27,12 +27,16 @@ const waitForRpcPropagation = async (
   const startedAt = Date.now();
   const timeoutInMs = options.timeoutInMs ?? 15_000;
   const pollIntervalInMs = options.pollIntervalInMs ?? 1_000;
+  let lastError: Error | undefined;
 
   while (Date.now() - startedAt < timeoutInMs) {
     try {
       await rpc.getAccount(publicKey);
       return;
-    } catch {
+    } catch (error) {
+      if (error instanceof Error) {
+        lastError = error;
+      }
       await sleep(pollIntervalInMs);
     }
   }
@@ -42,6 +46,7 @@ const waitForRpcPropagation = async (
     publicKey,
     options.rpcUrl,
     timeoutInMs,
+    lastError,
   );
 };
 
@@ -53,24 +58,23 @@ export const initializeWithFriendbot = async (
 ): Promise<void> => {
   assert(
     StrKey.isEd25519PublicKey(publicKey),
-    new E.INVALID_ADDRESS(friendbotUrl, publicKey)
+    new E.INVALID_ADDRESS(friendbotUrl, publicKey),
   );
 
   try {
     const response = await fetch(
-      `${friendbotUrl}?addr=${encodeURIComponent(publicKey)}`
+      `${friendbotUrl}?addr=${encodeURIComponent(publicKey)}`,
     );
 
     const text = await response.text(); // Deno: Consume the response body to prevent resource leaks
 
-    const alreadyFunded =
-      response.status === 400 &&
+    const alreadyFunded = response.status === 400 &&
       text.includes("account already funded to starting balance");
 
     if (response.status !== 200 && !alreadyFunded) {
       throw new E.UNEXPECTED(
         friendbotUrl,
-        new Error(`Failed to initialize with Friendbot: ${text}`)
+        new Error(`Failed to initialize with Friendbot: ${text}`),
       );
     }
 
