@@ -117,6 +117,14 @@ const formatError = (error: unknown): string => {
 };
 
 /**
+ * Appends the formatted underlying error message when one is available.
+ */
+const withUnderlyingError = (message: string, error: unknown): string => {
+  const formatted = formatError(error).trim();
+  return formatted ? `${message} Cause: ${formatted}` : message;
+};
+
+/**
  * Wraps unknown failures in a quickstart error when needed.
  */
 const ensureQuickstartError = <T extends QuickstartError>(
@@ -362,7 +370,10 @@ export const findContainerByName = async (
     throw ensureQuickstartError(
       error,
       new CONTAINER_ERROR({
-        message: "Failed to list Docker containers.",
+        message: withUnderlyingError(
+          "Failed to list Docker containers.",
+          error,
+        ),
         details:
           "Quickstart could not inspect the local Docker daemon while looking up a named container.",
         data: { containerName: name },
