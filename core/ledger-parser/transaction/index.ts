@@ -12,7 +12,11 @@ import {
   parseMuxedAccount,
 } from "@/common/helpers/xdr/index.ts";
 import { Operation } from "@/ledger-parser/operation/index.ts";
-import { INVALID_TRANSACTION_INDEX } from "@/ledger-parser/error.ts";
+import {
+  INVALID_TRANSACTION_INDEX,
+  MISSING_TRANSACTION_ENVELOPE,
+  UNSUPPORTED_ENVELOPE_TYPE,
+} from "@/ledger-parser/error.ts";
 import type { Ledger } from "@/ledger-parser/ledger/index.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
 
@@ -180,9 +184,7 @@ export class Transaction {
   @memoize()
   get sourceAccount(): string {
     if (!this.txEnvelope) {
-      throw new Error(
-        `Cannot get source account for transaction ${this.hash} - envelope not available`,
-      );
+      throw new MISSING_TRANSACTION_ENVELOPE(this.hash, "source account");
     }
 
     const envelope = this.envelope;
@@ -208,7 +210,7 @@ export class Transaction {
       return parseMuxedAccount(feeBump.feeSource());
     }
 
-    throw new Error(`Unsupported envelope type: ${envType}`);
+    throw new UNSUPPORTED_ENVELOPE_TYPE(envType);
   }
 
   /**
@@ -228,9 +230,7 @@ export class Transaction {
   @memoize()
   get sequence(): bigint {
     if (!this.txEnvelope) {
-      throw new Error(
-        `Cannot get sequence for transaction ${this.hash} - envelope not available`,
-      );
+      throw new MISSING_TRANSACTION_ENVELOPE(this.hash, "sequence");
     }
 
     const envelope = this.envelope;
@@ -260,9 +260,7 @@ export class Transaction {
   @memoize()
   get operations(): Operation[] {
     if (!this.txEnvelope) {
-      throw new Error(
-        `Cannot get operations for transaction ${this.hash} - envelope not available`,
-      );
+      throw new MISSING_TRANSACTION_ENVELOPE(this.hash, "operations");
     }
 
     const envelope = this.envelope;

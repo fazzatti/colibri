@@ -70,6 +70,8 @@ export enum Code {
   INVALID_TRANSACTION_INDEX = "LDP_005",
   INVALID_OPERATION_INDEX = "LDP_006",
   UNSUPPORTED_OPERATION_TYPE = "LDP_007",
+  MISSING_TRANSACTION_ENVELOPE = "LDP_008",
+  UNSUPPORTED_ENVELOPE_TYPE = "LDP_009",
 }
 
 /**
@@ -216,6 +218,48 @@ export class UNSUPPORTED_OPERATION_TYPE extends LedgerParserError {
 }
 
 /**
+ * Thrown when envelope-dependent transaction data is requested but unavailable.
+ */
+export class MISSING_TRANSACTION_ENVELOPE extends LedgerParserError {
+  /**
+   * Creates the error.
+   *
+   * @param hash Transaction hash lacking an envelope.
+   * @param property Envelope-dependent property that was requested.
+   */
+  constructor(hash: string, property: string) {
+    super({
+      code: Code.MISSING_TRANSACTION_ENVELOPE,
+      message:
+        `Cannot get ${property} for transaction ${hash} - envelope not available`,
+      details:
+        "The requested transaction property depends on an envelope, but the transaction metadata did not include one.",
+      data: { hash, property },
+    });
+  }
+}
+
+/**
+ * Thrown when a transaction envelope type is not supported by the parser.
+ */
+export class UNSUPPORTED_ENVELOPE_TYPE extends LedgerParserError {
+  /**
+   * Creates the error.
+   *
+   * @param envelopeType Unsupported transaction-envelope discriminator.
+   */
+  constructor(envelopeType: string | number) {
+    super({
+      code: Code.UNSUPPORTED_ENVELOPE_TYPE,
+      message: `Unsupported envelope type: ${envelopeType}`,
+      details:
+        "The transaction parser encountered an envelope type it does not know how to decode.",
+      data: { envelopeType },
+    });
+  }
+}
+
+/**
  * Export all error classes for convenience.
  */
 export const ERROR_LDP = {
@@ -227,4 +271,6 @@ export const ERROR_LDP = {
   [Code.INVALID_TRANSACTION_INDEX]: INVALID_TRANSACTION_INDEX,
   [Code.INVALID_OPERATION_INDEX]: INVALID_OPERATION_INDEX,
   [Code.UNSUPPORTED_OPERATION_TYPE]: UNSUPPORTED_OPERATION_TYPE,
+  [Code.MISSING_TRANSACTION_ENVELOPE]: MISSING_TRANSACTION_ENVELOPE,
+  [Code.UNSUPPORTED_ENVELOPE_TYPE]: UNSUPPORTED_ENVELOPE_TYPE,
 };

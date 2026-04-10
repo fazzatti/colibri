@@ -107,7 +107,7 @@ export abstract class QuickstartError<
       data: args.data,
     };
 
-    super(args.message);
+    super(args.message, meta.cause ? { cause: meta.cause } : undefined);
     this.name = `QuickstartError ${args.code}`;
     this.code = args.code;
     this.details = args.details;

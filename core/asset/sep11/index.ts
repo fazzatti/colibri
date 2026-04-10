@@ -12,6 +12,7 @@
 
 import { StrKey } from "@/strkeys/index.ts";
 import { regex } from "@/common/regex/index.ts";
+import { MISSING_ISSUER_FOR_NON_NATIVE_ASSET } from "@/asset/sep11/error.ts";
 import type { StellarAssetCanonicalString } from "@/asset/sep11/types.ts";
 /**
  * Check if a value is a valid SEP-11 StellarAssetCanonicalString.
@@ -128,7 +129,7 @@ export function toStellarAssetCanonicalString(
   }
 
   if (!issuer) {
-    throw new Error(`Issuer required for non-native asset: ${code}`);
+    throw new MISSING_ISSUER_FOR_NON_NATIVE_ASSET(code);
   }
 
   return `${code}:${issuer}` as StellarAssetCanonicalString;

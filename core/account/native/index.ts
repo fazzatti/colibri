@@ -1,19 +1,24 @@
-import { Account, Keypair, MuxedAccount, xdr } from "stellar-sdk";
+import { Account, MuxedAccount } from "stellar-sdk";
 import { assert } from "@/common/assert/assert.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import { isMuxedId } from "@/common/type-guards/is-muxed-id.ts";
 import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
+import type { TrustlineAssetLike } from "@/common/types/index.ts";
+import {
+  buildAccountLedgerKey,
+  buildTrustlineLedgerKey,
+} from "@/ledger-entries/keys.ts";
 import type {
-  LedgerKeyLike,
-  TrustlineAssetLike,
-} from "@/common/types/index.ts";
+  AccountLedgerKey,
+  TrustlineLedgerKey,
+} from "@/ledger-entries/types.ts";
 import type { Signer } from "@/signer/types.ts";
 import * as E from "@/account/native/error.ts";
 import type { INativeAccount, MuxedId } from "@/account/native/types.ts";
 import type {
   StellarAddress,
-  WithSigner,
   WithoutSigner,
+  WithSigner,
 } from "@/account/types.ts";
 
 /**
@@ -28,7 +33,7 @@ export class NativeAccount implements INativeAccount {
   private constructor(publicKey: Ed25519PublicKey) {
     assert(
       StrKey.isValidEd25519PublicKey(publicKey),
-      new E.INVALID_ED25519_PUBLIC_KEY(publicKey)
+      new E.INVALID_ED25519_PUBLIC_KEY(publicKey),
     );
 
     this._publicKey = publicKey;
@@ -43,7 +48,7 @@ export class NativeAccount implements INativeAccount {
   static fromAddress(address: StellarAddress): WithoutSigner<NativeAccount> {
     assert(
       StrKey.isEd25519PublicKey(address),
-      new E.UNSUPPORTED_ADDRESS_TYPE(address)
+      new E.UNSUPPORTED_ADDRESS_TYPE(address),
     );
     return new NativeAccount(address) as WithoutSigner<NativeAccount>;
   }
@@ -55,7 +60,7 @@ export class NativeAccount implements INativeAccount {
    * @returns A native account without an attached signer.
    */
   static fromPublicKey(
-    address: Ed25519PublicKey
+    address: Ed25519PublicKey,
   ): WithoutSigner<NativeAccount> {
     return new NativeAccount(address) as WithoutSigner<NativeAccount>;
   }
@@ -84,7 +89,7 @@ export class NativeAccount implements INativeAccount {
 
     assert(
       StrKey.isValidMuxedAddress(muxedAddress),
-      new E.INVALID_MUXED_ADDRESS_GENERATED(muxedAddress, id, this._publicKey)
+      new E.INVALID_MUXED_ADDRESS_GENERATED(muxedAddress, id, this._publicKey),
     );
 
     return muxedAddress as MuxedAddress;
@@ -95,14 +100,8 @@ export class NativeAccount implements INativeAccount {
    *
    * @returns Account ledger key for direct ledger lookups.
    */
-  getAccountLedgerKey(): LedgerKeyLike {
-    const ledgerKey = xdr.LedgerKey.account(
-      new xdr.LedgerKeyAccount({
-        accountId: Keypair.fromPublicKey(this._publicKey).xdrPublicKey(),
-      })
-    );
-
-    return ledgerKey;
+  getAccountLedgerKey(): AccountLedgerKey {
+    return buildAccountLedgerKey({ accountId: this._publicKey });
   }
 
   /**
@@ -111,15 +110,11 @@ export class NativeAccount implements INativeAccount {
    * @param asset - Trustline asset to resolve.
    * @returns Trustline ledger key for direct ledger lookups.
    */
-  getTrustlineLedgerKey(asset: TrustlineAssetLike): LedgerKeyLike {
-    const trustlineLedgerKey = xdr.LedgerKey.trustline(
-      new xdr.LedgerKeyTrustLine({
-        accountId: Keypair.fromPublicKey(this._publicKey).xdrAccountId(),
-        asset: asset.toTrustLineXDRObject() as xdr.TrustLineAsset,
-      })
-    );
-
-    return trustlineLedgerKey;
+  getTrustlineLedgerKey(asset: TrustlineAssetLike): TrustlineLedgerKey {
+    return buildTrustlineLedgerKey({
+      accountId: this._publicKey,
+      asset,
+    });
   }
 
   // ----------------
@@ -134,7 +129,7 @@ export class NativeAccount implements INativeAccount {
    */
   static fromMasterSigner(signer: Signer): WithSigner<NativeAccount> {
     return NativeAccount.fromAddress(signer.publicKey()).withMasterSigner(
-      signer
+      signer,
     );
   }
 

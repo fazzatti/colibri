@@ -1,5 +1,6 @@
 import { StrKey } from "@/strkeys/index.ts";
 import { EventTemplate } from "@/event/template.ts";
+import * as E from "@/event/error.ts";
 import type { EventSchema } from "@/event/types.ts";
 import type { Event } from "@/event/event.ts";
 import { isEventMuxedData } from "@/event/standards/cap67/index.ts";
@@ -92,7 +93,7 @@ export class MintEvent extends EventTemplate<typeof MintEventSchema> {
     if (isEventMuxedData(val)) {
       return val.amount as bigint;
     }
-    throw new Error("Invalid mint event data format");
+    throw new E.INVALID_EVENT_DATA_FORMAT("mint");
   }
 
   /**

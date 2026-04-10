@@ -125,7 +125,7 @@ describe("initializeWithFriendbot", () => {
     }
   });
 
-  it("throws UNEXPECTED when RPC propagation times out", async () => {
+  it("throws RPC_PROPAGATION_TIMEOUT when RPC propagation times out", async () => {
     const fetchStub = stub(globalThis, "fetch", () =>
       Promise.resolve(new Response("OK", { status: 200 }))
     );
@@ -145,11 +145,11 @@ describe("initializeWithFriendbot", () => {
             timeoutInMs: 1,
             pollIntervalInMs: 0,
           }),
-        E.UNEXPECTED,
+        E.RPC_PROPAGATION_TIMEOUT,
       );
 
       assertEquals(
-        error.meta.cause?.message,
+        error.message,
         `Account ${TEST_PUBLIC} was funded but did not become visible on RPC within 1ms.`,
       );
     } finally {

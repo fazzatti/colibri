@@ -30,6 +30,7 @@ describe("Quickstart errors", () => {
     assertStrictEquals(error.domain, "tools");
     assertStrictEquals(error.source, "@colibri/test-tooling/quickstart");
     assertStrictEquals(error.code, Code.INVALID_CONFIGURATION);
+    assertStrictEquals(error.cause, undefined);
     assertEquals(error.meta, {
       cause: null,
       data: {
@@ -108,6 +109,8 @@ describe("Quickstart errors", () => {
       cause: new Error("boom"),
     });
     assertStrictEquals(dockerError.meta.cause?.message, "boom");
+    assertInstanceOf(dockerError.cause, Error);
+    assertStrictEquals(dockerError.cause.message, "boom");
     assertEquals(dockerError.meta.data, {});
 
     const containerError = new CONTAINER_ERROR({
@@ -117,6 +120,8 @@ describe("Quickstart errors", () => {
       data: { containerId: "abc" },
     });
     assertStrictEquals(containerError.meta.cause?.message, "broken");
+    assertInstanceOf(containerError.cause, Error);
+    assertStrictEquals(containerError.cause.message, "broken");
     assertEquals(containerError.meta.data, { containerId: "abc" });
 
     const imageError = new IMAGE_ERROR({
@@ -125,6 +130,8 @@ describe("Quickstart errors", () => {
       cause: { status: "bad" },
     });
     assertStrictEquals(imageError.meta.cause?.message, '{"status":"bad"}');
+    assertInstanceOf(imageError.cause, Error);
+    assertStrictEquals(imageError.cause.message, '{"status":"bad"}');
     assertEquals(imageError.meta.data, {});
 
     const circularCause: { label: string; self?: unknown; toString(): string } =
@@ -145,6 +152,8 @@ describe("Quickstart errors", () => {
       fallbackCauseError.meta.cause?.message,
       "circular-cause",
     );
+    assertInstanceOf(fallbackCauseError.cause, Error);
+    assertStrictEquals(fallbackCauseError.cause.message, "circular-cause");
     assertEquals(fallbackCauseError.meta.data, {});
   });
 

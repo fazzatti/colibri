@@ -200,23 +200,35 @@ function isValidClaimableBalanceId(value: string): value is ClaimableBalanceId {
 }
 
 const stellarSdkStr = {
-  encodeContract: StellarSdkStrKey.encodeContract,
+  encodeContract: ((...args: Parameters<typeof StellarSdkStrKey.encodeContract>) =>
+    StellarSdkStrKey.encodeContract(...args) as ContractId),
   decodeContract: StellarSdkStrKey.decodeContract,
-  encodePreAuthTx: StellarSdkStrKey.encodePreAuthTx,
+  encodePreAuthTx: ((...args: Parameters<typeof StellarSdkStrKey.encodePreAuthTx>) =>
+    StellarSdkStrKey.encodePreAuthTx(...args) as PreAuthTx),
   decodePreAuthTx: StellarSdkStrKey.decodePreAuthTx,
-  encodeSha256Hash: StellarSdkStrKey.encodeSha256Hash,
+  encodeSha256Hash: ((...args: Parameters<typeof StellarSdkStrKey.encodeSha256Hash>) =>
+    StellarSdkStrKey.encodeSha256Hash(...args) as Sha256Hash),
   decodeSha256Hash: StellarSdkStrKey.decodeSha256Hash,
-  encodeSignedPayload: StellarSdkStrKey.encodeSignedPayload,
+  encodeSignedPayload: ((...args: Parameters<typeof StellarSdkStrKey.encodeSignedPayload>) =>
+    StellarSdkStrKey.encodeSignedPayload(...args) as SignedPayload),
   decodeSignedPayload: StellarSdkStrKey.decodeSignedPayload,
-  encodeLiquidityPool: StellarSdkStrKey.encodeLiquidityPool,
+  encodeLiquidityPool: ((...args: Parameters<typeof StellarSdkStrKey.encodeLiquidityPool>) =>
+    StellarSdkStrKey.encodeLiquidityPool(...args) as LiquidityPoolId),
   decodeLiquidityPool: StellarSdkStrKey.decodeLiquidityPool,
-  encodeClaimableBalance: StellarSdkStrKey.encodeClaimableBalance,
+  encodeClaimableBalance: ((...args: Parameters<typeof StellarSdkStrKey.encodeClaimableBalance>) =>
+    StellarSdkStrKey.encodeClaimableBalance(...args) as ClaimableBalanceId),
   decodeClaimableBalance: StellarSdkStrKey.decodeClaimableBalance,
-  encodeEd25519PublicKey: StellarSdkStrKey.encodeEd25519PublicKey,
+  encodeEd25519PublicKey: ((
+    ...args: Parameters<typeof StellarSdkStrKey.encodeEd25519PublicKey>
+  ) => StellarSdkStrKey.encodeEd25519PublicKey(...args) as Ed25519PublicKey),
   decodeEd25519PublicKey: StellarSdkStrKey.decodeEd25519PublicKey,
-  encodeEd25519SecretSeed: StellarSdkStrKey.encodeEd25519SecretSeed,
+  encodeEd25519SecretSeed: ((
+    ...args: Parameters<typeof StellarSdkStrKey.encodeEd25519SecretSeed>
+  ) => StellarSdkStrKey.encodeEd25519SecretSeed(...args) as Ed25519SecretKey),
   decodeEd25519SecretSeed: StellarSdkStrKey.decodeEd25519SecretSeed,
-  encodeMed25519PublicKey: StellarSdkStrKey.encodeMed25519PublicKey,
+  encodeMed25519PublicKey: ((
+    ...args: Parameters<typeof StellarSdkStrKey.encodeMed25519PublicKey>
+  ) => StellarSdkStrKey.encodeMed25519PublicKey(...args) as MuxedAddress),
   decodeMed25519PublicKey: StellarSdkStrKey.decodeMed25519PublicKey,
 };
 

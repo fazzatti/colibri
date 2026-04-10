@@ -1,12 +1,13 @@
 import type {
+  ContractId,
   Ed25519PublicKey,
   MuxedAddress,
-  ContractId,
 } from "@/strkeys/types.ts";
+import type { TrustlineAssetLike } from "@/common/types/index.ts";
 import type {
-  LedgerKeyLike,
-  TrustlineAssetLike,
-} from "@/common/types/index.ts";
+  AccountLedgerKey,
+  TrustlineLedgerKey,
+} from "@/ledger-entries/types.ts";
 import type { MultiSigSchema, Signer } from "@/signer/types.ts";
 
 /**
@@ -21,13 +22,13 @@ export interface Account {
   /** Returns the canonical address represented by the account helper. */
   address(): StellarAddress;
   /** Builds the ledger key that identifies the account entry. */
-  getAccountLedgerKey(): LedgerKeyLike;
+  getAccountLedgerKey(): AccountLedgerKey;
   /**
    * Builds the ledger key for a trustline entry owned by this account.
    *
    * @param asset - Asset whose trustline should be addressed.
    */
-  getTrustlineLedgerKey(asset: TrustlineAssetLike): LedgerKeyLike;
+  getTrustlineLedgerKey(asset: TrustlineAssetLike): TrustlineLedgerKey;
 }
 
 /**
