@@ -233,6 +233,37 @@ known contract id, wasm, or deployed contract metadata. It exposes its
 `invokePipe` and `readPipe` publicly, which makes it the right seam for advanced
 pipeline plugin composition.
 
+## Ledger entries
+
+`LedgerEntries` provides typed RPC reads for well-known Stellar ledger entries
+without forcing callers to assemble `LedgerKey` XDR or manually walk the
+returned entry XDR.
+
+```ts
+const ledger = new LedgerEntries({ networkConfig });
+
+const account = await ledger.account({ accountId });
+const trustline = await ledger.trustline({ accountId, asset });
+const instance = await ledger.contractInstance({ contractId });
+
+account.balance;
+trustline.limit;
+instance.executable;
+instance.xdr; // parsed RPC entry for advanced inspection
+```
+
+For lower-level workflows, the branded key builders remain available as
+standalone exports and still return plain `xdr.LedgerKey` values at runtime:
+
+```ts
+const [account, config] = await ledger.getMany([
+  buildAccountLedgerKey({ accountId }),
+  buildConfigSettingLedgerKey({
+    configSettingId: "configSettingContractMaxSizeBytes",
+  }),
+] as const);
+```
+
 ### StellarAssetContract
 
 `StellarAssetContract` is the domain-specific client for CAP-0046-06 Stellar

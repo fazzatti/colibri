@@ -11,6 +11,7 @@ import { EventType, type IEvent } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
 import { StrKey } from "@/strkeys/index.ts";
+import * as E from "@/event/error.ts";
 
 type EventConstructorArgs = Omit<RpcEventResponseLike, "type" | "contractId"> & {
   type: EventType;
@@ -60,16 +61,15 @@ export class Event implements IEvent {
       const { contractId } = args;
 
       if (!StrKey.isContractId(contractId)) {
-        throw new Error(
-          `Invalid event: contractId is not a valid ContractId (${contractId})`
-        );
+        throw new E.INVALID_CONTRACT_ID(contractId);
       }
 
       this.contractId = contractId;
     }
 
-    if (!isEventId(args.id))
-      throw new Error(`Invalid event: id is not a valid EventId (${args.id})`);
+    if (!isEventId(args.id)) {
+      throw new E.INVALID_EVENT_ID(args.id);
+    }
 
     this.id = args.id;
     this.type = args.type;
@@ -114,7 +114,7 @@ export class Event implements IEvent {
         eventType = EventType.System;
         break;
       default:
-        throw new Error(`Unknown event type: ${response.type}`);
+        throw new E.UNKNOWN_EVENT_TYPE(response.type);
     }
 
     let contractId: ContractId | undefined;
@@ -123,9 +123,7 @@ export class Event implements IEvent {
       const eventContractId = response.contractId?.contractId();
 
       if (!StrKey.isContractId(eventContractId)) {
-        throw new Error(
-          `Invalid event: contractId is not a valid ContractId (${eventContractId})`
-        );
+        throw new E.INVALID_CONTRACT_ID(eventContractId);
       }
 
       contractId = eventContractId;

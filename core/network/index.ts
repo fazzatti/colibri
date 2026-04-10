@@ -1,15 +1,16 @@
-import { NetworkType, NetworkPassphrase } from "@/network/types.ts";
+import { NetworkPassphrase, NetworkType } from "@/network/types.ts";
 import type {
-  TestNetConfig,
   CustomNetworkConfig,
-  MainNetConfig,
   FutureNetConfig,
-  INetworkConfig,
-  MainNetCustomConfig,
   FutureNetCustomConfig,
+  INetworkConfig,
+  MainNetConfig,
+  MainNetCustomConfig,
+  TestNetConfig,
   TestNetNetCustomConfig,
 } from "@/network/types.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
+import * as E from "@/network/error.ts";
 
 /** Preset provider helpers for commonly used public Stellar RPC networks. */
 export * as NetworkProviders from "@/network/providers/index.ts";
@@ -75,7 +76,7 @@ export class NetworkConfig implements INetworkConfig {
    * @returns A fully resolved Futurenet configuration.
    */
   static FutureNet(
-    args?: FutureNetCustomConfig
+    args?: FutureNetCustomConfig,
   ): NetworkConfig & FutureNetConfig {
     const { rpcUrl, archiveRpcUrl, horizonUrl, friendbotUrl, allowHttp } =
       args || {};
@@ -148,11 +149,13 @@ export class NetworkConfig implements INetworkConfig {
 
     if (isDefined(payload.rpcUrl)) config._rpcUrl = payload.rpcUrl;
     if (isDefined(payload.horizonUrl)) config._horizonUrl = payload.horizonUrl;
-    if (isDefined(payload.friendbotUrl))
+    if (isDefined(payload.friendbotUrl)) {
       config._friendbotUrl = payload.friendbotUrl;
+    }
     if (isDefined(payload.allowHttp)) config._allowHttp = payload.allowHttp;
-    if (isDefined(payload.archiveRpcUrl))
+    if (isDefined(payload.archiveRpcUrl)) {
       config._archiveRpcUrl = payload.archiveRpcUrl;
+    }
 
     return config as NetworkConfig & CustomNetworkConfig;
   }
@@ -162,6 +165,20 @@ export class NetworkConfig implements INetworkConfig {
   //==========================================
   //
   //
+
+  /** @internal */
+  private normalizePropertyName(
+    arg:
+      | "_type"
+      | "_networkPassphrase"
+      | "_rpcUrl"
+      | "_archiveRpcUrl"
+      | "_horizonUrl"
+      | "_friendbotUrl"
+      | "_allowHttp",
+  ): string {
+    return arg.slice(1);
+  }
 
   /**
    * Internal helper method to safely retrieve required properties.
@@ -195,12 +212,10 @@ export class NetworkConfig implements INetworkConfig {
       | "_archiveRpcUrl"
       | "_horizonUrl"
       | "_friendbotUrl"
-      | "_allowHttp"
+      | "_allowHttp",
   ): NetworkType | string | boolean {
     if (isDefined(this[arg])) return this[arg];
-    throw new Error(
-      `Property ${arg} is not set in the Network Config instance`
-    );
+    throw new E.PROPERTY_NOT_SET(this.normalizePropertyName(arg));
   }
 
   /** @internal */
@@ -212,12 +227,10 @@ export class NetworkConfig implements INetworkConfig {
       | "_archiveRpcUrl"
       | "_horizonUrl"
       | "_friendbotUrl"
-      | "_allowHttp"
+      | "_allowHttp",
   ): void {
     if (isDefined(this[arg])) {
-      throw new Error(
-        `Property ${arg} is already set in the Network Config instance`
-      );
+      throw new E.PROPERTY_ALREADY_SET(this.normalizePropertyName(arg));
     }
   }
 

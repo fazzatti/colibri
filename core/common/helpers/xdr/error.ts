@@ -26,6 +26,7 @@ export enum Code {
   FAILED_TO_PARSE_XDR = "HLP_XDR_09",
   UNSUPPORTED_SCVAL_TYPE = "HLP_XDR_10",
   UNKNOWN_SCVAL_TYPE = "HLP_XDR_11",
+  UNKNOWN_TRUSTLINE_ASSET_TYPE = "HLP_XDR_12",
 }
 
 export type MetaData = {
@@ -96,6 +97,21 @@ export class UNKNOWN_CHANGE_TRUST_ASSET_TYPE extends XdrHelperError {
     super({
       code: Code.UNKNOWN_CHANGE_TRUST_ASSET_TYPE,
       message: `Unknown ChangeTrustAsset type: ${assetType}`,
+      details:
+        "Expected assetTypeNative, assetTypeCreditAlphanum4, assetTypeCreditAlphanum12, or assetTypePoolShare",
+      data: { assetType },
+    });
+  }
+}
+
+/**
+ * Thrown when an unknown TrustLineAsset type is encountered.
+ */
+export class UNKNOWN_TRUSTLINE_ASSET_TYPE extends XdrHelperError {
+  constructor(assetType: string) {
+    super({
+      code: Code.UNKNOWN_TRUSTLINE_ASSET_TYPE,
+      message: `Unknown TrustLineAsset type: ${assetType}`,
       details:
         "Expected assetTypeNative, assetTypeCreditAlphanum4, assetTypeCreditAlphanum12, or assetTypePoolShare",
       data: { assetType },
@@ -243,6 +259,7 @@ export class UNKNOWN_SCVAL_TYPE extends XdrHelperError {
 export const ERROR_XDR = {
   [Code.UNKNOWN_ASSET_TYPE]: UNKNOWN_ASSET_TYPE,
   [Code.UNKNOWN_CHANGE_TRUST_ASSET_TYPE]: UNKNOWN_CHANGE_TRUST_ASSET_TYPE,
+  [Code.UNKNOWN_TRUSTLINE_ASSET_TYPE]: UNKNOWN_TRUSTLINE_ASSET_TYPE,
   [Code.UNKNOWN_MUXED_ACCOUNT_TYPE]: UNKNOWN_MUXED_ACCOUNT_TYPE,
   [Code.INVALID_XDR_PARSE]: INVALID_XDR_PARSE,
   [Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE]:

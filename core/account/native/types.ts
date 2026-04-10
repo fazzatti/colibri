@@ -1,9 +1,10 @@
 import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
 import type { Account } from "@/account/types.ts";
+import type { TrustlineAssetLike } from "@/common/types/index.ts";
 import type {
-  LedgerKeyLike,
-  TrustlineAssetLike,
-} from "@/common/types/index.ts";
+  AccountLedgerKey,
+  TrustlineLedgerKey,
+} from "@/ledger-entries/types.ts";
 
 /**
  * String-encoded muxed account id accepted by {@link NativeAccount.muxedAddress}.
@@ -19,7 +20,7 @@ export interface INativeAccount extends Account {
   /** Returns the muxed address generated for the provided id. */
   muxedAddress(id: MuxedId): MuxedAddress;
   /** Returns the ledger key for the account entry. */
-  getAccountLedgerKey(): LedgerKeyLike;
+  getAccountLedgerKey(): AccountLedgerKey;
   /** Returns the ledger key for the provided trustline asset. */
-  getTrustlineLedgerKey(asset: TrustlineAssetLike): LedgerKeyLike;
+  getTrustlineLedgerKey(asset: TrustlineAssetLike): TrustlineLedgerKey;
 }

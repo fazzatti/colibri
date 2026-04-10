@@ -15,6 +15,7 @@ export type InitializeWithFriendbotOptions = {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const waitForRpcPropagation = async (
+  friendbotUrl: string,
   publicKey: Ed25519PublicKey,
   options?: InitializeWithFriendbotOptions,
 ) => {
@@ -26,18 +27,26 @@ const waitForRpcPropagation = async (
   const startedAt = Date.now();
   const timeoutInMs = options.timeoutInMs ?? 15_000;
   const pollIntervalInMs = options.pollIntervalInMs ?? 1_000;
+  let lastError: Error | undefined;
 
   while (Date.now() - startedAt < timeoutInMs) {
     try {
       await rpc.getAccount(publicKey);
       return;
-    } catch {
+    } catch (error) {
+      if (error instanceof Error) {
+        lastError = error;
+      }
       await sleep(pollIntervalInMs);
     }
   }
 
-  throw new Error(
-    `Account ${publicKey} was funded but did not become visible on RPC within ${timeoutInMs}ms.`,
+  throw new E.RPC_PROPAGATION_TIMEOUT(
+    friendbotUrl,
+    publicKey,
+    options.rpcUrl,
+    timeoutInMs,
+    lastError,
   );
 };
 
@@ -49,31 +58,33 @@ export const initializeWithFriendbot = async (
 ): Promise<void> => {
   assert(
     StrKey.isEd25519PublicKey(publicKey),
-    new E.INVALID_ADDRESS(friendbotUrl, publicKey)
+    new E.INVALID_ADDRESS(friendbotUrl, publicKey),
   );
 
   try {
     const response = await fetch(
-      `${friendbotUrl}?addr=${encodeURIComponent(publicKey)}`
+      `${friendbotUrl}?addr=${encodeURIComponent(publicKey)}`,
     );
 
     const text = await response.text(); // Deno: Consume the response body to prevent resource leaks
 
-    const alreadyFunded =
-      response.status === 400 &&
+    const alreadyFunded = response.status === 400 &&
       text.includes("account already funded to starting balance");
 
     if (response.status !== 200 && !alreadyFunded) {
       throw new E.UNEXPECTED(
         friendbotUrl,
-        new Error(`Failed to initialize with Friendbot: ${text}`)
+        new Error(`Failed to initialize with Friendbot: ${text}`),
       );
     }
 
-    await waitForRpcPropagation(publicKey, options);
+    await waitForRpcPropagation(friendbotUrl, publicKey, options);
 
     return;
   } catch (e) {
+    if (e instanceof E.FriendbotError) {
+      throw e;
+    }
     throw new E.UNEXPECTED(friendbotUrl, e as Error);
   }
 };

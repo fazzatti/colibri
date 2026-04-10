@@ -14,6 +14,19 @@ export const getTransactionTimeout = (
   tx: Transaction | FeeBumpTransaction,
   unit: "seconds" | "milliseconds" = "seconds"
 ): number | undefined => {
+  const timeoutContext = {
+    domain: "helpers" as const,
+    source: baseErrorSource + "/getTransactionTimeout",
+    message:
+      "Failed to get transaction timeout from Transaction or FeeBumpTransaction!",
+    code: ErrorCode.FAILED_TO_GET_TRANSACTION_TIMEOUT,
+    meta: {
+      data: {
+        txXDR: softTryToXDR(() => tx.toXDR()),
+      },
+    },
+  };
+
   try {
     if (tx instanceof FeeBumpTransaction && "innerTransaction" in tx)
       tx = tx.innerTransaction;
@@ -27,20 +40,13 @@ export const getTransactionTimeout = (
         : undefined;
     }
 
-    throw new Error(`Unexpected transaction type!`);
-  } catch (e) {
-    throw ColibriError.fromUnknown(e, {
-      domain: "helpers",
-      source: baseErrorSource + "/getTransactionTimeout",
-      message:
-        "Failed to get transaction timeout from Transaction or FeeBumpTransaction!",
-      code: ErrorCode.FAILED_TO_GET_TRANSACTION_TIMEOUT,
-      meta: {
-        data: {
-          txXDR: softTryToXDR(() => tx.toXDR()),
-        },
-      },
+    throw ColibriError.unexpected({
+      ...timeoutContext,
+      details:
+        "The provided value is not a supported Transaction or FeeBumpTransaction instance.",
     });
+  } catch (e) {
+    throw ColibriError.fromUnknown(e, timeoutContext);
   }
 };
 

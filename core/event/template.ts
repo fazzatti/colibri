@@ -2,6 +2,7 @@ import { Buffer } from "buffer";
 import { Address, xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { Event } from "@/event/event.ts";
+import * as E from "@/event/error.ts";
 import type {
   EventSchema,
   SchemaFieldType,
@@ -35,7 +36,7 @@ function valueToScVal(value: unknown, type: SchemaFieldType): xdr.ScVal {
       return xdr.ScVal.scvBytes(Buffer.from(value as Uint8Array));
     // For larger integers, we'd need nativeToScVal - keeping simple for now
     default:
-      throw new Error(`Cannot convert value to ScVal for type: ${type}`);
+      throw new E.UNSUPPORTED_SCHEMA_FIELD_TYPE(type);
   }
 }
 
@@ -133,7 +134,7 @@ export abstract class EventTemplate<S extends EventSchema> extends Event {
       return this.topics[topicIndex + 1] as FieldTypeFor<S, K>;
     }
 
-    throw new Error(`Unknown field: ${String(field)}`);
+    throw new E.UNKNOWN_FIELD(String(field));
   }
 
   /**
@@ -178,11 +179,9 @@ export abstract class EventTemplate<S extends EventSchema> extends Event {
   ): T {
     if (!this.is(event)) {
       const schema = this.schema;
-      throw new Error(
-        `Event does not match ${schema.name} schema. ` +
-          `Expected ${schema.topics.length + 1} topics with name "${
-            schema.name
-          }".`
+      throw new E.EVENT_SCHEMA_MISMATCH(
+        schema.name,
+        schema.topics.length + 1,
       );
     }
 
@@ -228,11 +227,9 @@ export abstract class EventTemplate<S extends EventSchema> extends Event {
     const event = Event.fromEventResponse(response);
     if (!this.is(event)) {
       const schema = this.schema;
-      throw new Error(
-        `Event does not match ${schema.name} schema. ` +
-          `Expected ${schema.topics.length + 1} topics with name "${
-            schema.name
-          }".`
+      throw new E.EVENT_SCHEMA_MISMATCH(
+        schema.name,
+        schema.topics.length + 1,
       );
     }
 

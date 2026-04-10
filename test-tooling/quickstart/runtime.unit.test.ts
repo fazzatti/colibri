@@ -170,6 +170,21 @@ describe("Quickstart runtime helpers", () => {
       "already wrapped",
     );
     assertStrictEquals(wrappedError.code, Code.CONTAINER_ERROR);
+
+    const dockerFailure = new Error("daemon unavailable");
+    const causeWrappedError = await assertRejects(
+      () =>
+        findContainerByName("broken", {
+          dockerClient: {
+            listContainers: () => Promise.reject(dockerFailure),
+          } as unknown as DockerClientLike,
+        }),
+      CONTAINER_ERROR,
+      "Failed to list Docker containers.",
+    );
+    assertStrictEquals(causeWrappedError.code, Code.CONTAINER_ERROR);
+    assertStrictEquals(causeWrappedError.meta.cause, dockerFailure);
+    assertStrictEquals(causeWrappedError.cause, dockerFailure);
   });
 
   it("runtime helpers can create a real Docker client when none is injected", async () => {
