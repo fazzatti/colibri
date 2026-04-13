@@ -6,6 +6,13 @@ The main public API is `StellarTestLedger`, a Docker-backed harness that starts,
 reuses, inspects, stops, and destroys a Stellar Quickstart instance for
 integration tests.
 
+<a href="https://jsr.io/@colibri/test-tooling">
+  <img src="https://jsr.io/badges/@colibri/test-tooling" alt="JSR @colibri/test-tooling" />
+</a>
+<a href="https://jsr.io/@colibri/test-tooling">
+  <img src="https://jsr.io/badges/@colibri/test-tooling/total-downloads" alt="JSR total downloads for @colibri/test-tooling" />
+</a>
+
 ## Installation
 
 ```bash

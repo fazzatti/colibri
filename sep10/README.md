@@ -2,6 +2,13 @@
 
 SEP-10 Web Authentication client for Stellar. Part of the [Colibri](https://github.com/fazzatti/colibri) ecosystem.
 
+<a href="https://jsr.io/@colibri/sep10">
+  <img src="https://jsr.io/badges/@colibri/sep10" alt="JSR @colibri/sep10" />
+</a>
+<a href="https://jsr.io/@colibri/sep10">
+  <img src="https://jsr.io/badges/@colibri/sep10/total-downloads" alt="JSR total downloads for @colibri/sep10" />
+</a>
+
 [📚 Documentation](https://fifo-docs.gitbook.io/colibri) | [💡 Examples](https://github.com/fazzatti/colibri-examples)
 
 ## Installation

@@ -3,6 +3,13 @@
 A Colibri plugin that wraps a Stellar Transaction in a Fee Bump Transaction so a
 designated account pays the fees.
 
+<a href="https://jsr.io/@colibri/plugin-fee-bump">
+  <img src="https://jsr.io/badges/@colibri/plugin-fee-bump" alt="JSR @colibri/plugin-fee-bump" />
+</a>
+<a href="https://jsr.io/@colibri/plugin-fee-bump">
+  <img src="https://jsr.io/badges/@colibri/plugin-fee-bump/total-downloads" alt="JSR total downloads for @colibri/plugin-fee-bump" />
+</a>
+
 It targets the `SendTransaction` step from `@colibri/core`. You can attach it to
 any `convee` pipe that includes `steps.SEND_TRANSACTION_STEP_ID` (for example,
 one created by `createInvokeContractPipeline`).
