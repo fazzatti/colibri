@@ -5,7 +5,7 @@ Soroban workflows. Currently in beta release with hardened error handling,
 transaction orchestration, account primitives, and typed helpers ready for
 integrated pipelines.
 
-[📚 Documentation](https://colibri-docs.gitbook.io/) |
+[📚 Documentation](https://fifo-docs.gitbook.io/colibri) |
 [💡 Examples](https://github.com/fazzatti/colibri-examples)
 
 ## Installation
