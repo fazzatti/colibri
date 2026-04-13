@@ -66,9 +66,7 @@ describe("FeeBump Plugin", () => {
       },
     });
 
-  const createPluginTestPipe = (
-    onInput?: (input: PluginInput) => void,
-  ) =>
+  const createPluginTestPipe = (onInput?: (input: PluginInput) => void) =>
     pipe(
       [
         step(
@@ -76,6 +74,8 @@ describe("FeeBump Plugin", () => {
             onInput?.(input);
             return {
               hash: "mock-hash",
+              ledger: 12345,
+              createdAt: Date.now(),
               returnValue: undefined,
               response: {} as Api.GetSuccessfulTransactionResponse,
             };
@@ -107,7 +107,7 @@ describe("FeeBump Plugin", () => {
       assertEquals(invokePipe.id, INVOKE_CONTRACT_PIPELINE_ID);
       assertEquals(invokePipe.plugins.length, 1);
       const [attachedPlugin] = Array.from(
-        invokePipe.plugins as unknown as readonly typeof plugin[],
+        invokePipe.plugins as unknown as readonly (typeof plugin)[],
       );
       assertExists(attachedPlugin);
       assertEquals(attachedPlugin.id, FEE_BUMP_PLUGIN_ID);
@@ -142,8 +142,9 @@ describe("FeeBump Plugin", () => {
       );
       assertEquals(interceptedInput.transaction.fee, "20000000");
       assertEquals(
-        (interceptedInput.transaction as FeeBumpTransaction).innerTransaction
-          .toXDR(),
+        (
+          interceptedInput.transaction as FeeBumpTransaction
+        ).innerTransaction.toXDR(),
         mockTransaction.toXDR(),
       );
     });

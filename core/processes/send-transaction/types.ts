@@ -58,6 +58,10 @@ export type SendTransactionOutput = {
   hash: string;
   /** Soroban return value, when the submitted transaction produced one. */
   returnValue: XdrScVal | undefined;
+  /** Ledger sequence in which the transaction was included. */
+  ledger: number;
+  /** Timestamp (in ms since epoch) when the transaction was included in the ledger. */
+  createdAt: number;
   /** Full successful response returned by Stellar RPC. */
   response: RpcSuccessfulTransactionResponse;
 };
