@@ -60,7 +60,7 @@ export type SendTransactionOutput = {
   returnValue: XdrScVal | undefined;
   /** Ledger sequence in which the transaction was included. */
   ledger: number;
-  /** Timestamp (in ms since epoch) when the transaction was included in the ledger. */
+  /** Unix timestamp of when the transaction was included in the ledger. */
   createdAt: number;
   /** Full successful response returned by Stellar RPC. */
   response: RpcSuccessfulTransactionResponse;

@@ -1,8 +1,8 @@
 // deno-lint-ignore-file require-await
-import { describe, it, beforeEach, afterEach } from "@std/testing/bdd";
+import { afterEach, beforeEach, describe, it } from "@std/testing/bdd";
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { stub, type Stub } from "@std/testing/mock";
-import { xdr, Transaction } from "stellar-sdk";
+import { type Stub, stub } from "@std/testing/mock";
+import { Transaction, xdr } from "stellar-sdk";
 import { Api, type Server } from "stellar-sdk/rpc";
 import { sendTransaction } from "@/processes/send-transaction/index.ts";
 import { SendTransactionStatus } from "@/processes/send-transaction/types.ts";
@@ -10,12 +10,12 @@ import * as E from "@/processes/send-transaction/error.ts";
 
 const withMockedDateNow = async <T>(
   values: number[],
-  fn: () => Promise<T>
+  fn: () => Promise<T>,
 ): Promise<T> => {
   const originalNow = Date.now;
   let index = 0;
-  Date.now = (() =>
-    values[Math.min(index++, values.length - 1)]) as typeof Date.now;
+  Date.now =
+    (() => values[Math.min(index++, values.length - 1)]) as typeof Date.now;
   try {
     return await fn();
   } finally {
@@ -32,23 +32,23 @@ export const getTransactionTimeout = (_tx: Transaction): number | undefined =>
   undefined;
 
 const transactionHelpers = { getTransactionTimeout };
+const CREATED_AT = 1_710_000_000;
 
 const buildSuccessResponse = (
   hash: string,
-  returnValue: xdr.ScVal | undefined = undefined
-): Api.GetSuccessfulTransactionResponse =>
-  ({
-    status: Api.GetTransactionStatus.SUCCESS,
-    envelopeXdr: "AAAA",
-    resultXdr: "AAAA",
-    resultMetaXdr: "AAAA",
-    feeMetaXdr: null,
-    hash,
-    ledger: 123,
-    createdAt: new Date().toISOString(),
-    pagingToken: "1",
-    returnValue,
-  } as unknown as Api.GetSuccessfulTransactionResponse);
+  returnValue: xdr.ScVal | undefined = undefined,
+): Api.GetSuccessfulTransactionResponse => ({
+  status: Api.GetTransactionStatus.SUCCESS,
+  envelopeXdr: "AAAA",
+  resultXdr: "AAAA",
+  resultMetaXdr: "AAAA",
+  feeMetaXdr: null,
+  hash,
+  ledger: 123,
+  createdAt: CREATED_AT,
+  pagingToken: "1",
+  returnValue,
+} as unknown as Api.GetSuccessfulTransactionResponse);
 
 describe("SendTransaction", () => {
   let getTransactionTimeoutStub: Stub<typeof transactionHelpers>;
@@ -57,7 +57,7 @@ describe("SendTransaction", () => {
     getTransactionTimeoutStub = stub(
       transactionHelpers,
       "getTransactionTimeout",
-      () => undefined
+      () => undefined,
     );
     // getTransactionTimeoutStub.restore();
   });
@@ -145,7 +145,7 @@ describe("SendTransaction", () => {
               waitIntervalInMs: 400,
               useTransactionTimeoutIfAvailable: true,
             },
-          })
+          }),
       );
 
       assertEquals(result.hash, hash);
@@ -161,7 +161,7 @@ describe("SendTransaction", () => {
               transaction: undefined as unknown as Transaction,
               rpc: {} as Server,
             }),
-          E.MISSING_ARG
+          E.MISSING_ARG,
         );
         assert(err instanceof E.MISSING_ARG);
       });
@@ -174,7 +174,7 @@ describe("SendTransaction", () => {
               rpc: {} as Server,
               options: { timeoutInSeconds: 0 },
             }),
-          E.TIMEOUT_TOO_LOW
+          E.TIMEOUT_TOO_LOW,
         );
         assert(err instanceof E.TIMEOUT_TOO_LOW);
       });
@@ -187,7 +187,7 @@ describe("SendTransaction", () => {
               rpc: {} as Server,
               options: { waitIntervalInMs: 50 },
             }),
-          E.WAIT_INTERVAL_TOO_LOW
+          E.WAIT_INTERVAL_TOO_LOW,
         );
         assert(err instanceof E.WAIT_INTERVAL_TOO_LOW);
       });
@@ -208,7 +208,7 @@ describe("SendTransaction", () => {
               transaction: mockTransaction,
               rpc,
             }),
-          E.FAIL_TO_SEND_TRANSACTION
+          E.FAIL_TO_SEND_TRANSACTION,
         );
         assert(err instanceof E.FAIL_TO_SEND_TRANSACTION);
       });
@@ -235,7 +235,7 @@ describe("SendTransaction", () => {
               transaction: mockTransaction,
               rpc,
             }),
-          E.DUPLICATE_TRANSACTION
+          E.DUPLICATE_TRANSACTION,
         );
         assert(err instanceof E.DUPLICATE_TRANSACTION);
         assertEquals(getCalls, 0);
@@ -261,7 +261,7 @@ describe("SendTransaction", () => {
               transaction: mockTransaction,
               rpc,
             }),
-          E.TRY_AGAIN_LATER
+          E.TRY_AGAIN_LATER,
         );
         assert(err instanceof E.TRY_AGAIN_LATER);
       });
@@ -288,7 +288,7 @@ describe("SendTransaction", () => {
               transaction: mockTransaction,
               rpc,
             }),
-          E.ERROR_STATUS
+          E.ERROR_STATUS,
         );
         assert(err instanceof E.ERROR_STATUS);
       });
@@ -313,7 +313,7 @@ describe("SendTransaction", () => {
               transaction: mockTransaction,
               rpc,
             }),
-          E.UNEXPECTED_STATUS
+          E.UNEXPECTED_STATUS,
         );
         assert(err instanceof E.UNEXPECTED_STATUS);
       });
@@ -340,7 +340,7 @@ describe("SendTransaction", () => {
               transaction: mockTransaction,
               rpc,
             }),
-          E.UNEXPECTED_STATUS
+          E.UNEXPECTED_STATUS,
         );
         assert(err instanceof E.UNEXPECTED_STATUS);
       });
@@ -364,7 +364,7 @@ describe("SendTransaction", () => {
               transaction: mockTransaction,
               rpc,
             }),
-          E.FAILED_TO_GET_TRANSACTION_STATUS
+          E.FAILED_TO_GET_TRANSACTION_STATUS,
         );
         assert(err instanceof E.FAILED_TO_GET_TRANSACTION_STATUS);
       });
@@ -398,7 +398,7 @@ describe("SendTransaction", () => {
               transaction: mockTransaction,
               rpc,
             }),
-          E.TRANSACTION_FAILED
+          E.TRANSACTION_FAILED,
         );
         assert(err instanceof E.TRANSACTION_FAILED);
       });
@@ -434,8 +434,8 @@ describe("SendTransaction", () => {
                     useTransactionTimeoutIfAvailable: false,
                   },
                 }),
-              E.TRANSACTION_NOT_FOUND
-            )
+              E.TRANSACTION_NOT_FOUND,
+            ),
         );
         assert(err instanceof E.TRANSACTION_NOT_FOUND);
       });
@@ -474,8 +474,8 @@ describe("SendTransaction", () => {
                   useTransactionTimeoutIfAvailable: false,
                 },
               }),
-            E.TRANSACTION_NOT_FOUND
-          )
+            E.TRANSACTION_NOT_FOUND,
+          ),
       );
 
       assert(err instanceof E.TRANSACTION_NOT_FOUND);
@@ -498,7 +498,7 @@ describe("SendTransaction", () => {
             transaction: {} as Transaction,
             rpc: rpc,
           }),
-        E.UNEXPECTED_ERROR
+        E.UNEXPECTED_ERROR,
       );
       assert(err instanceof E.UNEXPECTED_ERROR);
     });

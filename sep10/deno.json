@@ -1,6 +1,6 @@
 {
   "name": "@colibri/sep10",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "exports": "./mod.ts",
   "license": "MIT",
   "publish": {
@@ -8,6 +8,6 @@
   },
   "imports": {
     "@/": "./src/",
-    "@colibri/core": "jsr:@colibri/core@^0.19.0"
+    "@colibri/core": "jsr:@colibri/core@^0.20.0"
   }
 }

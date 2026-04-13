@@ -36,6 +36,7 @@ import {
 type PluginInput = SendTransactionInput;
 
 describe("FeeBump Plugin", () => {
+  const CREATED_AT = 1_710_000_000;
   const networkConfig = NetworkConfig.TestNet();
 
   const innerSource = NativeAccount.fromMasterSigner(
@@ -75,7 +76,7 @@ describe("FeeBump Plugin", () => {
             return {
               hash: "mock-hash",
               ledger: 12345,
-              createdAt: Date.now(),
+              createdAt: CREATED_AT,
               returnValue: undefined,
               response: {} as Api.GetSuccessfulTransactionResponse,
             };

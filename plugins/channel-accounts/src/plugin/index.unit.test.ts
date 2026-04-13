@@ -27,6 +27,7 @@ import {
 } from "@/index.ts";
 
 describe("ChannelAccounts", () => {
+  const CREATED_AT = 1_710_000_000;
   const networkConfig = NetworkConfig.TestNet();
   const sponsor = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
   const actor = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
@@ -55,7 +56,7 @@ describe("ChannelAccounts", () => {
   const createInvokePipelineOutput = (): InvokeContractOutput => ({
     hash: "invoke-hash",
     ledger: 12345,
-    createdAt: Date.now(),
+    createdAt: CREATED_AT,
     response: {} as InvokeContractOutput["response"],
     returnValue: undefined,
   });
