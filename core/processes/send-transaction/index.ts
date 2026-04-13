@@ -13,7 +13,7 @@ import { ResultOrError } from "@/common/deferred/result-or-error.ts";
 
 /** Submits a signed transaction to Stellar RPC and waits for a terminal result. */
 export const sendTransaction = async (
-  input: SendTransactionInput
+  input: SendTransactionInput,
 ): Promise<SendTransactionOutput> => {
   try {
     const { transaction, rpc, options } = input;
@@ -25,17 +25,17 @@ export const sendTransaction = async (
 
     assertRequiredArgs(
       { transaction, rpc },
-      (argName: string) => new E.MISSING_ARG(input, argName)
+      (argName: string) => new E.MISSING_ARG(input, argName),
     );
 
     assert(
       timeoutInSeconds >= 1,
-      new E.TIMEOUT_TOO_LOW(input, timeoutInSeconds)
+      new E.TIMEOUT_TOO_LOW(input, timeoutInSeconds),
     );
 
     assert(
       waitIntervalInMs >= 100,
-      new E.WAIT_INTERVAL_TOO_LOW(input, waitIntervalInMs)
+      new E.WAIT_INTERVAL_TOO_LOW(input, waitIntervalInMs),
     );
 
     let sendResponse: Api.SendTransactionResponse;
@@ -60,7 +60,7 @@ export const sendTransaction = async (
           input,
           txHash,
           sendResponse.errorResult,
-          sendResponse.diagnosticEvents
+          sendResponse.diagnosticEvents,
         );
 
       throw new E.UNEXPECTED_STATUS(input, txHash, sendResponse.status);
@@ -80,6 +80,8 @@ export const sendTransaction = async (
       return {
         hash: txHash,
         returnValue: getTxResponse.returnValue,
+        ledger: getTxResponse.ledger,
+        createdAt: getTxResponse.createdAt,
         response: getTxResponse,
       };
 
@@ -93,7 +95,7 @@ export const sendTransaction = async (
     throw new E.UNEXPECTED_STATUS(
       input,
       txHash,
-      (getTxResponse as Api.GetTransactionResponse).status
+      (getTxResponse as Api.GetTransactionResponse).status,
     );
   } catch (e) {
     if (e instanceof E.SendTransactionError) {
@@ -107,7 +109,7 @@ const getTransactionRecursively = async (
   rpc: Server,
   hash: string,
   waitUntil: number,
-  waitIntervalInMs: number
+  waitIntervalInMs: number,
 ): Promise<
   ResultOrError<
     Api.GetTransactionResponse,

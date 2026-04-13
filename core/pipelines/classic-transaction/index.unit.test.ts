@@ -159,6 +159,8 @@ describe("createClassicTransactionPipeline", () => {
       it("transforms SendTransactionOutput to ClassicTransactionOutput", async () => {
         const mockSendOutput: SendTransactionOutput = {
           hash: "mock-hash-123",
+          ledger: 12345,
+          createdAt: Date.now(),
           returnValue: xdr.ScVal.scvVoid(),
           response: {} as unknown as Api.GetSuccessfulTransactionResponse,
         };
