@@ -16,6 +16,9 @@ A TypeScript-first toolkit for building robust Stellar and Soroban applications 
 
 <div align="center">
 
+<a href="https://jsr.io/@colibri">
+    <img src="https://jsr.io/badges/@colibri/" alt="JSR @colibri" />
+  </a>
 <a href="https://github.com/fazzatti/colibri/actions/workflows/deno.yml">
     <img src="https://github.com/fazzatti/colibri/actions/workflows/deno.yml/badge.svg" alt="CI" />
   </a>
@@ -35,14 +38,10 @@ A TypeScript-first toolkit for building robust Stellar and Soroban applications 
 
 ## Packages
 
-### [@colibri/core](./core)
+### [@colibri/core](./core) <a href="https://jsr.io/@colibri/core"><img src="https://jsr.io/badges/@colibri/core" alt="JSR @colibri/core" /></a>
 
 The foundation of the Colibri ecosystem. Provides pipelines, processes, and
 utilities for Stellar and Soroban workflows.
-
-<a href="https://jsr.io/@colibri/core">
-  <img src="https://jsr.io/badges/@colibri/core" alt="JSR @colibri/core" />
-</a>
 
 ```sh
 deno add jsr:@colibri/core
@@ -54,14 +53,10 @@ npm install @colibri/core
 
 ---
 
-### [@colibri/sep10](./sep10)
+### [@colibri/sep10](./sep10) <a href="https://jsr.io/@colibri/sep10"><img src="https://jsr.io/badges/@colibri/sep10" alt="JSR @colibri/sep10" /></a>
 
 A SEP-10 web authentication client for Stellar, with full-flow helpers,
 challenge validation, JWT handling, and flexible signer support.
-
-<a href="https://jsr.io/@colibri/sep10">
-  <img src="https://jsr.io/badges/@colibri/sep10" alt="JSR @colibri/sep10" />
-</a>
 
 ```sh
 deno add jsr:@colibri/sep10
@@ -73,14 +68,10 @@ npm install @colibri/sep10
 
 ---
 
-### [@colibri/plugin-fee-bump](./plugins/fee-bump)
+### [@colibri/plugin-fee-bump](./plugins/fee-bump) <a href="https://jsr.io/@colibri/plugin-fee-bump"><img src="https://jsr.io/badges/@colibri/plugin-fee-bump" alt="JSR @colibri/plugin-fee-bump" /></a>
 
 A plugin that enables fee sponsorship by wrapping transactions in Fee Bump
 Transactions.
-
-<a href="https://jsr.io/@colibri/plugin-fee-bump">
-  <img src="https://jsr.io/badges/@colibri/plugin-fee-bump" alt="JSR @colibri/plugin-fee-bump" />
-</a>
 
 ```sh
 deno add jsr:@colibri/plugin-fee-bump
@@ -92,14 +83,10 @@ npm install @colibri/plugin-fee-bump
 
 ---
 
-### [@colibri/plugin-channel-accounts](./plugins/channel-accounts)
+### [@colibri/plugin-channel-accounts](./plugins/channel-accounts) <a href="https://jsr.io/@colibri/plugin-channel-accounts"><img src="https://jsr.io/badges/@colibri/plugin-channel-accounts" alt="JSR @colibri/plugin-channel-accounts" /></a>
 
 A plugin and channel management helper for reusing sponsored Stellar channel
 accounts across classic and Soroban transaction pipelines.
-
-<a href="https://jsr.io/@colibri/plugin-channel-accounts">
-  <img src="https://jsr.io/badges/@colibri/plugin-channel-accounts" alt="JSR @colibri/plugin-channel-accounts" />
-</a>
 
 ```sh
 deno add jsr:@colibri/plugin-channel-accounts
@@ -111,14 +98,10 @@ npm install @colibri/plugin-channel-accounts
 
 ---
 
-### [@colibri/rpc-streamer](./rpc-streamer)
+### [@colibri/rpc-streamer](./rpc-streamer) <a href="https://jsr.io/@colibri/rpc-streamer"><img src="https://jsr.io/badges/@colibri/rpc-streamer" alt="JSR @colibri/rpc-streamer" /></a>
 
 A real-time event streaming client for Stellar/Soroban that supports live
 streaming, historical ingestion, and automatic mode switching.
-
-<a href="https://jsr.io/@colibri/rpc-streamer">
-  <img src="https://jsr.io/badges/@colibri/rpc-streamer" alt="JSR @colibri/rpc-streamer" />
-</a>
 
 ```sh
 deno add jsr:@colibri/rpc-streamer
@@ -130,14 +113,10 @@ npm install @colibri/rpc-streamer
 
 ---
 
-### [@colibri/test-tooling](./test-tooling)
+### [@colibri/test-tooling](./test-tooling) <a href="https://jsr.io/@colibri/test-tooling"><img src="https://jsr.io/badges/@colibri/test-tooling" alt="JSR @colibri/test-tooling" /></a>
 
 Docker-backed test infrastructure helpers for Colibri packages, centered on
 `StellarTestLedger` for local Quickstart-based integration tests.
-
-<a href="https://jsr.io/@colibri/test-tooling">
-  <img src="https://jsr.io/badges/@colibri/test-tooling" alt="JSR @colibri/test-tooling" />
-</a>
 
 ```sh
 deno add jsr:@colibri/test-tooling
