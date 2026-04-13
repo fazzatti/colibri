@@ -14,45 +14,6 @@ A TypeScript-first toolkit for building robust Stellar and Soroban applications 
   <a href="https://fifo-docs.gitbook.io/colibri">📚 Documentation</a> | <a href="https://github.com/fazzatti/colibri-examples">💡 Examples</a>
 </p>
 
-<p align="center">
-  <a href="https://jsr.io/@colibri/core">
-    <img src="https://jsr.io/badges/@colibri/core" alt="JSR @colibri/core" />
-  </a>
-  <a href="https://jsr.io/@colibri/core">
-    <img src="https://jsr.io/badges/@colibri/core/total-downloads" alt="JSR total downloads for @colibri/core" />
-  </a>
-  <a href="https://jsr.io/@colibri/sep10">
-    <img src="https://jsr.io/badges/@colibri/sep10" alt="JSR @colibri/sep10" />
-  </a>
-  <a href="https://jsr.io/@colibri/sep10">
-    <img src="https://jsr.io/badges/@colibri/sep10/total-downloads" alt="JSR total downloads for @colibri/sep10" />
-  </a>
-  <a href="https://jsr.io/@colibri/plugin-fee-bump">
-    <img src="https://jsr.io/badges/@colibri/plugin-fee-bump" alt="JSR @colibri/plugin-fee-bump" />
-  </a>
-  <a href="https://jsr.io/@colibri/plugin-fee-bump">
-    <img src="https://jsr.io/badges/@colibri/plugin-fee-bump/total-downloads" alt="JSR total downloads for @colibri/plugin-fee-bump" />
-  </a>
-  <a href="https://jsr.io/@colibri/plugin-channel-accounts">
-    <img src="https://jsr.io/badges/@colibri/plugin-channel-accounts" alt="JSR @colibri/plugin-channel-accounts" />
-  </a>
-  <a href="https://jsr.io/@colibri/plugin-channel-accounts">
-    <img src="https://jsr.io/badges/@colibri/plugin-channel-accounts/total-downloads" alt="JSR total downloads for @colibri/plugin-channel-accounts" />
-  </a>
-  <a href="https://jsr.io/@colibri/rpc-streamer">
-    <img src="https://jsr.io/badges/@colibri/rpc-streamer" alt="JSR @colibri/rpc-streamer" />
-  </a>
-  <a href="https://jsr.io/@colibri/rpc-streamer">
-    <img src="https://jsr.io/badges/@colibri/rpc-streamer/total-downloads" alt="JSR total downloads for @colibri/rpc-streamer" />
-  </a>
-  <a href="https://jsr.io/@colibri/test-tooling">
-    <img src="https://jsr.io/badges/@colibri/test-tooling" alt="JSR @colibri/test-tooling" />
-  </a>
-  <a href="https://jsr.io/@colibri/test-tooling">
-    <img src="https://jsr.io/badges/@colibri/test-tooling/total-downloads" alt="JSR total downloads for @colibri/test-tooling" />
-  </a>
-</p>
-
 <div align="center">
 
 <a href="https://github.com/fazzatti/colibri/actions/workflows/deno.yml">
@@ -79,6 +40,10 @@ A TypeScript-first toolkit for building robust Stellar and Soroban applications 
 The foundation of the Colibri ecosystem. Provides pipelines, processes, and
 utilities for Stellar and Soroban workflows.
 
+<a href="https://jsr.io/@colibri/core">
+  <img src="https://jsr.io/badges/@colibri/core" alt="JSR @colibri/core" />
+</a>
+
 ```sh
 deno add jsr:@colibri/core
 # or
@@ -93,6 +58,10 @@ npm install @colibri/core
 
 A SEP-10 web authentication client for Stellar, with full-flow helpers,
 challenge validation, JWT handling, and flexible signer support.
+
+<a href="https://jsr.io/@colibri/sep10">
+  <img src="https://jsr.io/badges/@colibri/sep10" alt="JSR @colibri/sep10" />
+</a>
 
 ```sh
 deno add jsr:@colibri/sep10
@@ -109,6 +78,10 @@ npm install @colibri/sep10
 A plugin that enables fee sponsorship by wrapping transactions in Fee Bump
 Transactions.
 
+<a href="https://jsr.io/@colibri/plugin-fee-bump">
+  <img src="https://jsr.io/badges/@colibri/plugin-fee-bump" alt="JSR @colibri/plugin-fee-bump" />
+</a>
+
 ```sh
 deno add jsr:@colibri/plugin-fee-bump
 # or
@@ -123,6 +96,10 @@ npm install @colibri/plugin-fee-bump
 
 A plugin and channel management helper for reusing sponsored Stellar channel
 accounts across classic and Soroban transaction pipelines.
+
+<a href="https://jsr.io/@colibri/plugin-channel-accounts">
+  <img src="https://jsr.io/badges/@colibri/plugin-channel-accounts" alt="JSR @colibri/plugin-channel-accounts" />
+</a>
 
 ```sh
 deno add jsr:@colibri/plugin-channel-accounts
@@ -139,6 +116,10 @@ npm install @colibri/plugin-channel-accounts
 A real-time event streaming client for Stellar/Soroban that supports live
 streaming, historical ingestion, and automatic mode switching.
 
+<a href="https://jsr.io/@colibri/rpc-streamer">
+  <img src="https://jsr.io/badges/@colibri/rpc-streamer" alt="JSR @colibri/rpc-streamer" />
+</a>
+
 ```sh
 deno add jsr:@colibri/rpc-streamer
 # or
@@ -153,6 +134,10 @@ npm install @colibri/rpc-streamer
 
 Docker-backed test infrastructure helpers for Colibri packages, centered on
 `StellarTestLedger` for local Quickstart-based integration tests.
+
+<a href="https://jsr.io/@colibri/test-tooling">
+  <img src="https://jsr.io/badges/@colibri/test-tooling" alt="JSR @colibri/test-tooling" />
+</a>
 
 ```sh
 deno add jsr:@colibri/test-tooling
