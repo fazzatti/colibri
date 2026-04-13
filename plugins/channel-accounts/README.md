@@ -3,7 +3,7 @@
 Utilities for managing sponsored Stellar channel accounts and reusing them in
 Colibri classic and Soroban transaction pipelines.
 
-[📚 Documentation](https://colibri-docs.gitbook.io/) |
+[📚 Documentation](https://fifo-docs.gitbook.io/colibri) |
 [💡 Examples](https://github.com/fazzatti/colibri-examples)
 
 ## Exports

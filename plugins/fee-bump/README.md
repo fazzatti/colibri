@@ -7,7 +7,7 @@ It targets the `SendTransaction` step from `@colibri/core`. You can attach it to
 any `convee` pipe that includes `steps.SEND_TRANSACTION_STEP_ID` (for example,
 one created by `createInvokeContractPipeline`).
 
-[📚 Documentation](https://colibri-docs.gitbook.io/) |
+[📚 Documentation](https://fifo-docs.gitbook.io/colibri) |
 [💡 Examples](https://github.com/fazzatti/colibri-examples)
 
 ## Quick start
