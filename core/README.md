@@ -5,6 +5,13 @@ Soroban workflows. Currently in beta release with hardened error handling,
 transaction orchestration, account primitives, and typed helpers ready for
 integrated pipelines.
 
+<a href="https://jsr.io/@colibri/core">
+  <img src="https://jsr.io/badges/@colibri/core" alt="JSR @colibri/core" />
+</a>
+<a href="https://jsr.io/@colibri/core">
+  <img src="https://jsr.io/badges/@colibri/core/total-downloads" alt="JSR total downloads for @colibri/core" />
+</a>
+
 [📚 Documentation](https://fifo-docs.gitbook.io/colibri) |
 [💡 Examples](https://github.com/fazzatti/colibri-examples)
 
