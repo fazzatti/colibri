@@ -2,6 +2,13 @@
 
 A generic RPC streaming framework for building custom Stellar data streamers. The `RPCStreamer<T>` class handles all the complex streaming logic—archive-to-live transitions, checkpoints, error handling, pagination—so you can focus on defining what data to extract.
 
+<a href="https://jsr.io/@colibri/rpc-streamer">
+  <img src="https://jsr.io/badges/@colibri/rpc-streamer" alt="JSR @colibri/rpc-streamer" />
+</a>
+<a href="https://jsr.io/@colibri/rpc-streamer">
+  <img src="https://jsr.io/badges/@colibri/rpc-streamer/total-downloads" alt="JSR total downloads for @colibri/rpc-streamer" />
+</a>
+
 ## Overview
 
 This package provides two ways to stream Stellar blockchain data:

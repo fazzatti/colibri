@@ -3,6 +3,13 @@
 Utilities for managing sponsored Stellar channel accounts and reusing them in
 Colibri classic and Soroban transaction pipelines.
 
+<a href="https://jsr.io/@colibri/plugin-channel-accounts">
+  <img src="https://jsr.io/badges/@colibri/plugin-channel-accounts" alt="JSR @colibri/plugin-channel-accounts" />
+</a>
+<a href="https://jsr.io/@colibri/plugin-channel-accounts">
+  <img src="https://jsr.io/badges/@colibri/plugin-channel-accounts/total-downloads" alt="JSR total downloads for @colibri/plugin-channel-accounts" />
+</a>
+
 [📚 Documentation](https://fifo-docs.gitbook.io/colibri) |
 [💡 Examples](https://github.com/fazzatti/colibri-examples)
 

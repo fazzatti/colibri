@@ -14,6 +14,45 @@ A TypeScript-first toolkit for building robust Stellar and Soroban applications 
   <a href="https://fifo-docs.gitbook.io/colibri">📚 Documentation</a> | <a href="https://github.com/fazzatti/colibri-examples">💡 Examples</a>
 </p>
 
+<p align="center">
+  <a href="https://jsr.io/@colibri/core">
+    <img src="https://jsr.io/badges/@colibri/core" alt="JSR @colibri/core" />
+  </a>
+  <a href="https://jsr.io/@colibri/core">
+    <img src="https://jsr.io/badges/@colibri/core/total-downloads" alt="JSR total downloads for @colibri/core" />
+  </a>
+  <a href="https://jsr.io/@colibri/sep10">
+    <img src="https://jsr.io/badges/@colibri/sep10" alt="JSR @colibri/sep10" />
+  </a>
+  <a href="https://jsr.io/@colibri/sep10">
+    <img src="https://jsr.io/badges/@colibri/sep10/total-downloads" alt="JSR total downloads for @colibri/sep10" />
+  </a>
+  <a href="https://jsr.io/@colibri/plugin-fee-bump">
+    <img src="https://jsr.io/badges/@colibri/plugin-fee-bump" alt="JSR @colibri/plugin-fee-bump" />
+  </a>
+  <a href="https://jsr.io/@colibri/plugin-fee-bump">
+    <img src="https://jsr.io/badges/@colibri/plugin-fee-bump/total-downloads" alt="JSR total downloads for @colibri/plugin-fee-bump" />
+  </a>
+  <a href="https://jsr.io/@colibri/plugin-channel-accounts">
+    <img src="https://jsr.io/badges/@colibri/plugin-channel-accounts" alt="JSR @colibri/plugin-channel-accounts" />
+  </a>
+  <a href="https://jsr.io/@colibri/plugin-channel-accounts">
+    <img src="https://jsr.io/badges/@colibri/plugin-channel-accounts/total-downloads" alt="JSR total downloads for @colibri/plugin-channel-accounts" />
+  </a>
+  <a href="https://jsr.io/@colibri/rpc-streamer">
+    <img src="https://jsr.io/badges/@colibri/rpc-streamer" alt="JSR @colibri/rpc-streamer" />
+  </a>
+  <a href="https://jsr.io/@colibri/rpc-streamer">
+    <img src="https://jsr.io/badges/@colibri/rpc-streamer/total-downloads" alt="JSR total downloads for @colibri/rpc-streamer" />
+  </a>
+  <a href="https://jsr.io/@colibri/test-tooling">
+    <img src="https://jsr.io/badges/@colibri/test-tooling" alt="JSR @colibri/test-tooling" />
+  </a>
+  <a href="https://jsr.io/@colibri/test-tooling">
+    <img src="https://jsr.io/badges/@colibri/test-tooling/total-downloads" alt="JSR total downloads for @colibri/test-tooling" />
+  </a>
+</p>
+
 <div align="center">
 
 <a href="https://github.com/fazzatti/colibri/actions/workflows/deno.yml">
