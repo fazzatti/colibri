@@ -27,6 +27,7 @@ import {
 } from "@/index.ts";
 
 describe("ChannelAccounts", () => {
+  const CREATED_AT = 1_710_000_000;
   const networkConfig = NetworkConfig.TestNet();
   const sponsor = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
   const actor = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
@@ -54,6 +55,8 @@ describe("ChannelAccounts", () => {
 
   const createInvokePipelineOutput = (): InvokeContractOutput => ({
     hash: "invoke-hash",
+    ledger: 12345,
+    createdAt: CREATED_AT,
     response: {} as InvokeContractOutput["response"],
     returnValue: undefined,
   });
@@ -93,9 +96,10 @@ describe("ChannelAccounts", () => {
         CLASSIC_TRANSACTION_PIPELINE_ID,
         INVOKE_CONTRACT_PIPELINE_ID,
       ]);
-      assertEquals(plugin.getChannels().map((item) => item.address()), [
-        channel.address(),
-      ]);
+      assertEquals(
+        plugin.getChannels().map((item) => item.address()),
+        [channel.address()],
+      );
     });
 
     it("registers channels after construction and exposes proxy members", () => {
@@ -110,7 +114,10 @@ describe("ChannelAccounts", () => {
       assertEquals("getChannels" in plugin, true);
       assertEquals("id" in plugin, true);
       assertEquals(
-        plugin.getChannels().map((item) => item.address()).sort(),
+        plugin
+          .getChannels()
+          .map((item) => item.address())
+          .sort(),
         [channel.address(), extraChannel.address()].sort(),
       );
     });
@@ -147,9 +154,10 @@ describe("ChannelAccounts", () => {
       );
 
       assertEquals(result.hash, "classic-hash");
-      assertEquals(plugin.getChannels().map((item) => item.address()), [
-        channel.address(),
-      ]);
+      assertEquals(
+        plugin.getChannels().map((item) => item.address()),
+        [channel.address()],
+      );
     });
 
     it("ignores output release when no channel is allocated", () => {
@@ -157,12 +165,14 @@ describe("ChannelAccounts", () => {
         channels: [channel],
       });
       const output = createClassicPipelineOutput();
-      const outputHook = (plugin as {
-        output(
-          this: unknown,
-          output: ClassicTransactionOutput,
-        ): ClassicTransactionOutput;
-      }).output;
+      const outputHook = (
+        plugin as {
+          output(
+            this: unknown,
+            output: ClassicTransactionOutput,
+          ): ClassicTransactionOutput;
+        }
+      ).output;
 
       const result = outputHook.call(
         {
@@ -208,9 +218,10 @@ describe("ChannelAccounts", () => {
         "boom",
       );
 
-      assertEquals(plugin.getChannels().map((item) => item.address()), [
-        channel.address(),
-      ]);
+      assertEquals(
+        plugin.getChannels().map((item) => item.address()),
+        [channel.address()],
+      );
 
       const recoveryPipeline = pipe(
         [
@@ -239,9 +250,10 @@ describe("ChannelAccounts", () => {
       );
 
       assertEquals(result.hash, "invoke-hash");
-      assertEquals(plugin.getChannels().map((item) => item.address()), [
-        channel.address(),
-      ]);
+      assertEquals(
+        plugin.getChannels().map((item) => item.address()),
+        [channel.address()],
+      );
     });
 
     it("accepts an explicit pipeline target", () => {

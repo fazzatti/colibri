@@ -30,6 +30,8 @@ const seedStepOutput = async <Output>(
   await seedStep.runWith({ context: { parent: context } });
 };
 
+const CREATED_AT = 1_710_000_000;
+
 describe("createClassicTransactionPipeline", () => {
   describe("Construction", () => {
     it("creates pipeline with proper name when valid config is provided", () => {
@@ -159,6 +161,8 @@ describe("createClassicTransactionPipeline", () => {
       it("transforms SendTransactionOutput to ClassicTransactionOutput", async () => {
         const mockSendOutput: SendTransactionOutput = {
           hash: "mock-hash-123",
+          ledger: 12345,
+          createdAt: CREATED_AT,
           returnValue: xdr.ScVal.scvVoid(),
           response: {} as unknown as Api.GetSuccessfulTransactionResponse,
         };
