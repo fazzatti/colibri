@@ -1,6 +1,6 @@
 {
   "name": "@colibri/core",
-  "version": "0.20.0",
+  "version": "0.20.1",
   "license": "MIT",
   "exports": {
     ".": "./mod.ts"
@@ -9,7 +9,8 @@
     "plugins": ["../_tools/lint/enum-requires-own-file.ts"]
   },
   "publish": {
-    "include": ["mod.ts", "./**/*.ts", "README.md", "LICENSE"]
+    "include": ["mod.ts", "./**/*.ts", "README.md", "LICENSE", "./deno.json"],
+    "exclude": ["./**/*.test.ts"]
   },
   "imports": {
     "@/": "./"
