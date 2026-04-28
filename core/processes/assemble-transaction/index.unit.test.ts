@@ -75,6 +75,44 @@ describe("AssembleTransaction", () => {
       assertEquals(result.fee, "18"); // 10 inclusion fee + 3 resource fee from soroban data + 5 resource fee from input
     });
 
+    it("preserves source sequence above Number.MAX_SAFE_INTEGER (2^53)", async () => {
+      // Soroban sequence numbers are `ledger << 32 | n`. Once the ledger
+      // passes ~2.1M, sequences exceed 2^53 and Number() loses precision.
+      // Regression test: a build-output sequence of 9_771_475_800_162_306
+      // must round-trip through assemble unchanged.
+      const builtSeq = "9771475800162306";
+      const account = new Account(
+        "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
+        // TransactionBuilder.build adds 1, so seed with builtSeq - 1
+        (BigInt(builtSeq) - 1n).toString(),
+      );
+      const transaction = new TransactionBuilder(account, {
+        fee: "100",
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
+      })
+        .addOperation(
+          Operation.invokeContractFunction({
+            contract:
+              "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+            function: "transfer",
+            args: [],
+          }),
+        )
+        .setTimeout(0)
+        .build();
+
+      assertEquals(transaction.sequence, builtSeq);
+
+      const result = await assembleTransaction({
+        transaction,
+        sorobanData: new SorobanDataBuilder(),
+        authEntries: [],
+        resourceFee: 0,
+      });
+
+      assertEquals(result.sequence, builtSeq);
+    });
+
     it("executes with soroban data and auth entries", async () => {
       const transaction = createTestTransaction();
       const sorobanData = new SorobanDataBuilder();

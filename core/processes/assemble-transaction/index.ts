@@ -43,9 +43,13 @@ export const assembleTransaction = async (
       auth: authEntries,
     });
 
+    // Use BigInt math: Soroban sequence numbers are `ledger << 32 | n`, which
+    // exceeds Number.MAX_SAFE_INTEGER (2^53 - 1) once the ledger passes ~2.1M.
+    // `Number(seq) - 1` silently rounds to the nearest representable double,
+    // producing the wrong source seq and causing `txBadSeq` on submission.
     const sourceAccount = new Account(
       transaction.source,
-      (Number(transaction.sequence) - 1).toString()
+      (BigInt(transaction.sequence) - 1n).toString()
     );
 
     let builtSorobanData: xdr.SorobanTransactionData | undefined;
