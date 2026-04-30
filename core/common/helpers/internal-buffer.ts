@@ -7,9 +7,9 @@ import type { BinaryData } from "@/common/types/index.ts";
  * decoupled from a specific `buffer` package version.
  */
 export function toBuffer(value: BinaryData): Buffer {
-  if (value instanceof ArrayBuffer) {
-    return Buffer.from(value);
-  }
+  const bytes = value instanceof ArrayBuffer
+    ? new Uint8Array(value)
+    : new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
 
-  return Buffer.from(value.buffer, value.byteOffset, value.byteLength);
+  return Buffer.from(bytes);
 }
