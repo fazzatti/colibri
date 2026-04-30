@@ -1,9 +1,10 @@
 /**
- * Minimal binary payload used by Colibri's public cryptographic helpers.
+ * Minimal binary payload used by Colibri's public byte-oriented APIs.
  *
- * `Buffer` values remain assignable because they extend `Uint8Array`.
+ * This intentionally accepts structural JavaScript byte containers instead of
+ * exposing a specific `buffer` package version as part of Colibri's public API.
  */
-export type BinaryData = Uint8Array;
+export type BinaryData = ArrayBuffer | ArrayBufferView;
 
 /**
  * Minimal XDR-serializable surface exposed by low-level Colibri APIs.
