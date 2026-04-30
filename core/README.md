@@ -263,12 +263,14 @@ For lower-level workflows, the branded key builders remain available as
 standalone exports and still return plain `xdr.LedgerKey` values at runtime:
 
 ```ts
-const [account, config] = await ledger.getMany([
-  buildAccountLedgerKey({ accountId }),
-  buildConfigSettingLedgerKey({
-    configSettingId: "configSettingContractMaxSizeBytes",
-  }),
-] as const);
+const [account, config] = await ledger.getMany(
+  [
+    buildAccountLedgerKey({ accountId }),
+    buildConfigSettingLedgerKey({
+      configSettingId: "configSettingContractMaxSizeBytes",
+    }),
+  ] as const,
+);
 ```
 
 ### StellarAssetContract
@@ -520,6 +522,9 @@ Colibri Core ships shared utilities so every layer speaks the same language:
 - **Assertions and verifiers (`common/assert`, `common/verifiers`)** – Throw
   Colibri errors on invalid input, ensuring consistent error handling from top
   to bottom.
+- **Binary helpers (`common/helpers`)** – `normalizeBinaryData` accepts
+  `ArrayBuffer`, typed arrays, `DataView`, and other `ArrayBufferView` inputs
+  and returns a defensive `Uint8Array` copy for stable downstream use.
 - **Address (`core/address`)** – Address-specific utilities such as
   muxed-account normalization.
 - **Auth (`core/auth`)** – Authorization and requirement derivation helpers,
