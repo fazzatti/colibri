@@ -1,5 +1,5 @@
-import type { Buffer } from "buffer";
 import type { NetworkConfig } from "@/network/index.ts";
+import type { BinaryData } from "@/common/types/index.ts";
 import type { Spec } from "stellar-sdk/contract";
 import type { Server } from "stellar-sdk/rpc";
 
@@ -14,13 +14,13 @@ export type ContractConstructorArgs = {
 export type ContractConfig = {
   spec?: Spec;
   contractId?: string;
-  wasm?: Buffer;
+  wasm?: BinaryData;
   wasmHash?: string;
 } & (ContractConfigWasm | ContractConfigWasmHash | ContractConfigId);
 
 /** @internal */
 export type ContractConfigWasm = {
-  wasm: Buffer;
+  wasm: BinaryData;
 };
 
 /** @internal */

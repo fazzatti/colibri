@@ -1,13 +1,8 @@
-import type { Buffer } from "buffer";
-import {
-  authorizeEntry,
-  Keypair,
-  type xdr,
-} from "stellar-sdk";
+import { authorizeEntry, Keypair, type xdr } from "stellar-sdk";
 import type {
   BinaryData,
-  SorobanAuthorizationEntryLike,
   SignableTransaction,
+  SorobanAuthorizationEntryLike,
   TransactionXDRBase64,
 } from "@/common/types/index.ts";
 import type {
@@ -19,6 +14,7 @@ import type { LocalSigner as LocalSignerType } from "@/signer/local/types.ts";
 import * as E from "@/signer/local/error.ts";
 import { assert } from "@/common/assert/assert.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
+import { toBuffer } from "@/common/helpers/internal-buffer.ts";
 
 /**
  * LocalSigner
@@ -64,7 +60,7 @@ export class LocalSigner implements LocalSignerType {
    * @returns Signed transaction XDR as base64 text.
    */
   signTransaction: (
-    tx: SignableTransaction
+    tx: SignableTransaction,
   ) => TransactionXDRBase64;
 
   /**
@@ -78,7 +74,7 @@ export class LocalSigner implements LocalSignerType {
   signSorobanAuthEntry: (
     entry: SorobanAuthorizationEntryLike,
     validUntil: number,
-    passphrase: string
+    passphrase: string,
   ) => Promise<SorobanAuthorizationEntryLike>;
 
   /**
@@ -111,12 +107,12 @@ export class LocalSigner implements LocalSignerType {
     // Public methods close over `kp` to access secret material as needed.
     this.secretKey = hideSecret
       ? () => {
-          throw new E.SECRET_NOT_ACCESSIBLE();
-        }
+        throw new E.SECRET_NOT_ACCESSIBLE();
+      }
       : () => {
-          assert(isDefined(kp), new E.SIGNER_DESTROYED());
-          return kp.secret() as Ed25519SecretKey;
-        };
+        assert(isDefined(kp), new E.SIGNER_DESTROYED());
+        return kp.secret() as Ed25519SecretKey;
+      };
 
     const pub = kp.publicKey();
 
@@ -125,7 +121,7 @@ export class LocalSigner implements LocalSignerType {
 
     this.sign = (data: BinaryData): BinaryData => {
       assert(isDefined(kp), new E.SIGNER_DESTROYED());
-      return kp.sign(data as Buffer);
+      return kp.sign(toBuffer(data));
     };
 
     this.verifySignature = (
@@ -133,11 +129,11 @@ export class LocalSigner implements LocalSignerType {
       signature: BinaryData,
     ): boolean => {
       const keypair = Keypair.fromPublicKey(this.publicKey());
-      return keypair.verify(data as Buffer, signature as Buffer);
+      return keypair.verify(toBuffer(data), toBuffer(signature));
     };
 
     this.signTransaction = (
-      tx: SignableTransaction
+      tx: SignableTransaction,
     ): TransactionXDRBase64 => {
       assert(isDefined(kp), new E.SIGNER_DESTROYED());
       tx.sign(kp);
@@ -147,7 +143,7 @@ export class LocalSigner implements LocalSignerType {
     this.signSorobanAuthEntry = (
       entry: SorobanAuthorizationEntryLike,
       validUntil: number,
-      passphrase: string
+      passphrase: string,
     ): Promise<SorobanAuthorizationEntryLike> => {
       assert(isDefined(kp), new E.SIGNER_DESTROYED());
       return authorizeEntry(
@@ -184,7 +180,7 @@ export class LocalSigner implements LocalSignerType {
   static generateRandom(hideSecret = false): LocalSigner {
     return new LocalSigner(
       Keypair.random().secret() as Ed25519SecretKey,
-      hideSecret
+      hideSecret,
     );
   }
 

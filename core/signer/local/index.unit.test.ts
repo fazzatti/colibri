@@ -8,16 +8,17 @@ import {
 import { Buffer } from "buffer";
 import { describe, it } from "@std/testing/bdd";
 import {
+  Account,
+  Asset,
+  Contract,
   Keypair,
   Networks,
   Operation,
   TransactionBuilder,
-  Asset,
   xdr,
-  Account,
-  Contract,
 } from "stellar-sdk";
 import { LocalSigner } from "@/signer/local/index.ts";
+import { normalizeBinaryData } from "@/common/helpers/binary.ts";
 import type {
   ContractId,
   Ed25519PublicKey,
@@ -53,10 +54,13 @@ describe("LocalSigner", () => {
         (k) => {
           const descriptor = Object.getOwnPropertyDescriptor(signer, k);
           return descriptor?.value === TEST_SECRET;
-        }
+        },
       );
 
-      assert(!hasSecretValue, "Secret value should not be stored directly on instance");
+      assert(
+        !hasSecretValue,
+        "Secret value should not be stored directly on instance",
+      );
     });
 
     it("creates a signer with hideSecret = false by default", () => {
@@ -69,7 +73,7 @@ describe("LocalSigner", () => {
       assertThrows(
         () => signer.secretKey(),
         E.SECRET_NOT_ACCESSIBLE,
-        "Secret key is not accessible"
+        "Secret key is not accessible",
       );
     });
   });
@@ -94,7 +98,7 @@ describe("LocalSigner", () => {
       assertThrows(
         () => signer.secretKey(),
         E.SECRET_NOT_ACCESSIBLE,
-        "Secret key is not accessible"
+        "Secret key is not accessible",
       );
     });
   });
@@ -110,7 +114,7 @@ describe("LocalSigner", () => {
       assertThrows(
         () => signer.secretKey(),
         E.SECRET_NOT_ACCESSIBLE,
-        "Secret key is not accessible"
+        "Secret key is not accessible",
       );
     });
 
@@ -230,7 +234,7 @@ describe("LocalSigner", () => {
       const signer = LocalSigner.fromSecret(TEST_SECRET);
       assertThrows(
         () => signer.removeTarget(TEST_PUBLIC),
-        E.CANNOT_REMOVE_MASTER_TARGET
+        E.CANNOT_REMOVE_MASTER_TARGET,
       );
     });
 
@@ -247,7 +251,7 @@ describe("LocalSigner", () => {
     it("signs a transaction and returns XDR", () => {
       const signer = LocalSigner.fromSecret(TEST_SECRET);
       const sourceKp = Keypair.fromSecret(TEST_SECRET);
-      
+
       const account = new Account(sourceKp.publicKey(), "0");
       const tx = new TransactionBuilder(account, {
         fee: "100",
@@ -258,7 +262,7 @@ describe("LocalSigner", () => {
             destination: Keypair.random().publicKey(),
             asset: Asset.native(),
             amount: "10",
-          })
+          }),
         )
         .setTimeout(30)
         .build();
@@ -268,7 +272,7 @@ describe("LocalSigner", () => {
       assertExists(xdr);
       assert(typeof xdr === "string");
       assert(xdr.length > 0);
-      
+
       // Verify signature was added
       assertEquals(tx.signatures.length, 1);
     });
@@ -287,14 +291,14 @@ describe("LocalSigner", () => {
             destination: Keypair.random().publicKey(),
             asset: Asset.native(),
             amount: "10",
-          })
+          }),
         )
         .setTimeout(30)
         .build();
 
       assertThrows(
         () => signer.signTransaction(tx),
-        E.SIGNER_DESTROYED
+        E.SIGNER_DESTROYED,
       );
     });
   });
@@ -319,7 +323,17 @@ describe("LocalSigner", () => {
 
       // Verify using stellar-sdk Keypair
       const keypair = Keypair.fromPublicKey(TEST_PUBLIC);
-      assert(keypair.verify(data, Buffer.from(signature)));
+      assert(keypair.verify(data, Buffer.from(normalizeBinaryData(signature))));
+    });
+
+    it("accepts structural binary data for signing and verification", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const bytes = new TextEncoder().encode("test message to sign");
+      const data = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
+
+      const signature = signer.sign(data);
+
+      assert(signer.verifySignature(data, signature));
     });
 
     it("produces different signatures for different data", () => {
@@ -331,8 +345,8 @@ describe("LocalSigner", () => {
       const sig2 = signer.sign(data2);
 
       assertNotEquals(
-        Buffer.from(sig1).toString("hex"),
-        Buffer.from(sig2).toString("hex")
+        Buffer.from(normalizeBinaryData(sig1)).toString("hex"),
+        Buffer.from(normalizeBinaryData(sig2)).toString("hex"),
       );
     });
 
@@ -344,7 +358,7 @@ describe("LocalSigner", () => {
 
       assertThrows(
         () => signer.sign(data),
-        E.SIGNER_DESTROYED
+        E.SIGNER_DESTROYED,
       );
     });
   });
@@ -408,31 +422,34 @@ describe("LocalSigner", () => {
   describe("signSorobanAuthEntry", () => {
     it("signs a Soroban auth entry", async () => {
       const signer = LocalSigner.fromSecret(TEST_SECRET);
-      
+
       // Create a minimal auth entry for testing
       const credentials = xdr.SorobanCredentials.sorobanCredentialsAddress(
         new xdr.SorobanAddressCredentials({
           address: xdr.ScAddress.scAddressTypeAccount(
             xdr.PublicKey.publicKeyTypeEd25519(
-              Keypair.fromPublicKey(TEST_PUBLIC).rawPublicKey()
-            )
+              Keypair.fromPublicKey(TEST_PUBLIC).rawPublicKey(),
+            ),
           ),
           nonce: xdr.Int64.fromString("0"),
           signatureExpirationLedger: 0,
           signature: xdr.ScVal.scvVec([]),
-        })
+        }),
       );
 
       const entry = new xdr.SorobanAuthorizationEntry({
         credentials,
         rootInvocation: new xdr.SorobanAuthorizedInvocation({
-          function: xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
-            new xdr.InvokeContractArgs({
-              contractAddress:new Contract("CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM").address().toScAddress(),
-              functionName: "test",
-              args: [],
-            })
-          ),
+          function: xdr.SorobanAuthorizedFunction
+            .sorobanAuthorizedFunctionTypeContractFn(
+              new xdr.InvokeContractArgs({
+                contractAddress: new Contract(
+                  "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                ).address().toScAddress(),
+                functionName: "test",
+                args: [],
+              }),
+            ),
           subInvocations: [],
         }),
       });
@@ -441,7 +458,7 @@ describe("LocalSigner", () => {
       const signedEntry = await signer.signSorobanAuthEntry(
         entry,
         validUntil,
-        Networks.TESTNET
+        Networks.TESTNET,
       );
 
       assertExists(signedEntry);
@@ -455,13 +472,16 @@ describe("LocalSigner", () => {
       const entry = new xdr.SorobanAuthorizationEntry({
         credentials: xdr.SorobanCredentials.sorobanCredentialsSourceAccount(),
         rootInvocation: new xdr.SorobanAuthorizedInvocation({
-          function: xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
-            new xdr.InvokeContractArgs({
-              contractAddress: new Contract("CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM").address().toScAddress(),
-              functionName: "test",
-              args: [],
-            })
-          ),
+          function: xdr.SorobanAuthorizedFunction
+            .sorobanAuthorizedFunctionTypeContractFn(
+              new xdr.InvokeContractArgs({
+                contractAddress: new Contract(
+                  "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                ).address().toScAddress(),
+                functionName: "test",
+                args: [],
+              }),
+            ),
           subInvocations: [],
         }),
       });
@@ -504,15 +524,15 @@ describe("LocalSigner", () => {
   });
 
   describe("Symbol.dispose", () => {
- it("calls destroy when using 'using' keyword", () => {
+    it("calls destroy when using 'using' keyword", () => {
       let signer: LocalSigner;
-      
+
       {
         using tempSigner = LocalSigner.fromSecret(TEST_SECRET);
         signer = tempSigner;
         assertEquals(signer.publicKey(), TEST_PUBLIC);
       }
-      
+
       // After scope, signer should be destroyed
       const account = new Account(TEST_PUBLIC, "0");
       const tx = new TransactionBuilder(account, {
@@ -524,7 +544,7 @@ describe("LocalSigner", () => {
 
       assertThrows(
         () => signer.signTransaction(tx),
-        E.SIGNER_DESTROYED
+        E.SIGNER_DESTROYED,
       );
     });
   });

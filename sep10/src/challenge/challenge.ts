@@ -6,22 +6,22 @@
  */
 
 import {
+  Account,
+  Keypair,
+  Memo,
+  Operation,
   type Transaction,
   TransactionBuilder,
-  Keypair,
-  Operation,
-  Memo,
   xdr,
-  Account,
 } from "stellar-sdk";
 import { Buffer } from "buffer";
-import { isSigner } from "@colibri/core";
+import { isSigner, normalizeBinaryData } from "@colibri/core";
 import type { Signer } from "@colibri/core";
 import type {
   BuildChallengeOptions,
-  VerifyChallengeOptions,
   ChallengeOperation,
   ChallengeTimeBounds,
+  VerifyChallengeOptions,
 } from "@/types.ts";
 import * as E from "@/challenge/error.ts";
 import { isChallengeTransaction as _isChallengeTransaction } from "@/utils/is-challenge-transaction.ts";
@@ -86,7 +86,7 @@ export class SEP10Challenge {
       memo?: string;
       timeBounds: ChallengeTimeBounds;
       operations: ChallengeOperation[];
-    }
+    },
   ) {
     this._transaction = transaction;
     this._networkPassphrase = networkPassphrase;
@@ -132,7 +132,7 @@ export class SEP10Challenge {
     try {
       transaction = TransactionBuilder.fromXDR(
         xdr,
-        networkPassphrase
+        networkPassphrase,
       ) as Transaction;
     } catch (error) {
       throw new E.INVALID_XDR(error as Error, xdr);
@@ -159,7 +159,7 @@ export class SEP10Challenge {
    */
   static fromTransaction(
     transaction: Transaction,
-    networkPassphrase: string
+    networkPassphrase: string,
   ): SEP10Challenge {
     // Validate sequence number
     if (transaction.sequence !== "0") {
@@ -331,7 +331,7 @@ export class SEP10Challenge {
         source: clientAccount,
         name: `${homeDomain}${AUTH_KEY_SUFFIX}`,
         value: nonceBase64,
-      })
+      }),
     );
 
     // web_auth_domain operation
@@ -341,7 +341,7 @@ export class SEP10Challenge {
           source: serverAccount,
           name: "web_auth_domain",
           value: webAuthDomain,
-        })
+        }),
       );
     }
 
@@ -352,7 +352,7 @@ export class SEP10Challenge {
           source: clientDomainAccount,
           name: "client_domain",
           value: clientDomain,
-        })
+        }),
       );
     }
 
@@ -471,7 +471,7 @@ export class SEP10Challenge {
     options: Pick<
       VerifyChallengeOptions,
       "allowExpired" | "now" | "timeTolerance" | "skipTimeValidation"
-    > = {}
+    > = {},
   ): void {
     const {
       allowExpired = false,
@@ -556,7 +556,7 @@ export class SEP10Challenge {
    */
   verifyWebAuthDomain(
     serverPublicKey: string,
-    expectedWebAuthDomain?: string
+    expectedWebAuthDomain?: string,
   ): void {
     // Verify value matches if expected is provided
     if (
@@ -572,7 +572,7 @@ export class SEP10Challenge {
     // Verify source account is server
     if (this._webAuthDomain) {
       const webAuthOp = this._operations.find(
-        (op) => op.key === "web_auth_domain"
+        (op) => op.key === "web_auth_domain",
       );
       if (webAuthOp && webAuthOp.sourceAccount !== serverPublicKey) {
         throw new E.INVALID_WEB_AUTH_DOMAIN({
@@ -616,7 +616,7 @@ export class SEP10Challenge {
         throw new E.INVALID_OPERATION_SOURCE(
           op.key,
           op.sourceAccount,
-          serverPublicKey
+          serverPublicKey,
         );
       }
     }
@@ -683,7 +683,7 @@ export class SEP10Challenge {
    */
   isValid(
     serverPublicKey: string,
-    options: VerifyChallengeOptions = {}
+    options: VerifyChallengeOptions = {},
   ): boolean {
     try {
       this.verify(serverPublicKey, options);
@@ -720,11 +720,13 @@ export class SEP10Challenge {
   sign(signer: Keypair | Signer): this {
     if (isSigner(signer)) {
       const signature = Buffer.from(
-        signer.sign(Buffer.from(this._transaction.hash()))
+        normalizeBinaryData(
+          signer.sign(normalizeBinaryData(this._transaction.hash())),
+        ),
       );
       const hint = Keypair.fromPublicKey(signer.publicKey()).signatureHint();
       this._transaction.signatures.push(
-        new xdr.DecoratedSignature({ hint, signature })
+        new xdr.DecoratedSignature({ hint, signature }),
       );
     } else {
       this._transaction.sign(signer);
