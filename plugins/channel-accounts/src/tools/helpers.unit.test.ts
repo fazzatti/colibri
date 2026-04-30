@@ -12,6 +12,7 @@ import {
   LocalSigner,
   NativeAccount,
   NetworkConfig,
+  normalizeBinaryData,
   type Signer,
   StrKey,
 } from "@colibri/core";
@@ -68,8 +69,7 @@ describe("ChannelAccounts helpers", () => {
             return [{
               weight: () => 1,
               key: () => ({
-                ed25519: () =>
-                  StrKey.decodeEd25519PublicKey(sponsor.address()),
+                ed25519: () => StrKey.decodeEd25519PublicKey(sponsor.address()),
               }),
             }];
           },
@@ -109,7 +109,7 @@ describe("ChannelAccounts helpers", () => {
       publicKey: () => sponsor.address(),
       sign: (data) => {
         calls.sign += 1;
-        return Buffer.from(data);
+        return Buffer.from(normalizeBinaryData(data));
       },
       signTransaction: () => {
         calls.signTransaction += 1;
@@ -174,9 +174,10 @@ describe("ChannelAccounts helpers", () => {
     const otherChannel = createChannelAccount();
 
     assertEquals(
-      chunkChannels([sponsor, channel, otherChannel] as ChannelAccount[], 2).map((
-        batch,
-      ) => batch.length),
+      chunkChannels([sponsor, channel, otherChannel] as ChannelAccount[], 2)
+        .map((
+          batch,
+        ) => batch.length),
       [2, 1],
     );
   });

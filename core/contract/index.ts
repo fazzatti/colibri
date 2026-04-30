@@ -23,6 +23,7 @@ import {
 } from "@/common/helpers/get-transaction-response.ts";
 import { processSpecEntryStream } from "@/common/helpers/wasm.ts";
 import { generateRandomSalt } from "@/common/helpers/generate-random-salt.ts";
+import { toBuffer } from "@/common/helpers/internal-buffer.ts";
 import * as E from "@/contract/error.ts";
 import type { ContractConstructorArgs } from "@/contract/types.ts";
 import type { Api } from "stellar-sdk/rpc";
@@ -108,7 +109,7 @@ export class Contract {
       this.contractId = contractId;
     }
     if (wasm) {
-      this.wasm = wasm;
+      this.wasm = toBuffer(wasm);
     }
     if (wasmHash) {
       this.wasmHash = wasmHash;
@@ -250,7 +251,7 @@ export class Contract {
 
     try {
       const uploadOperation = Operation.uploadContractWasm({
-        wasm: wasm,
+        wasm,
       });
 
       const result = await this.invokePipe.run({
@@ -296,7 +297,7 @@ export class Contract {
       const deployOperation = Operation.createCustomContract({
         address: new Address(config.source),
         wasmHash: Buffer.from(wasmHash, "hex"),
-        salt: contractSalt,
+        salt: toBuffer(contractSalt),
         constructorArgs: encodedArgs,
       } as OperationOptions.CreateCustomContract);
 

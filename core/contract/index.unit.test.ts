@@ -1,8 +1,4 @@
-import {
-  assertEquals,
-  assertExists,
-  assertThrows,
-} from "@std/assert";
+import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Buffer } from "buffer";
 import { Contract } from "@/contract/index.ts";
@@ -55,6 +51,41 @@ describe("Contract", () => {
 
       assertEquals(contract.getWasm(), mockWasm);
     });
+
+    it("accepts structural binary wasm inputs without requiring Colibri's Buffer type", () => {
+      const mockRpc = {} as unknown as Server;
+      const networkConfig = NetworkConfig.CustomNet({
+        type: NetworkType.TESTNET,
+        networkPassphrase: "Test Network",
+      });
+      const uint8Contract = new Contract({
+        networkConfig,
+        contractConfig: {
+          wasm: new Uint8Array([1, 2, 3]),
+        },
+        rpc: mockRpc,
+      });
+      const arrayBuffer = new Uint8Array([4, 5, 6]).buffer;
+      const arrayBufferContract = new Contract({
+        networkConfig,
+        contractConfig: {
+          wasm: arrayBuffer,
+        },
+        rpc: mockRpc,
+      });
+      const source = new Uint8Array([0, 7, 8, 9, 0]);
+      const dataViewContract = new Contract({
+        networkConfig,
+        contractConfig: {
+          wasm: new DataView(source.buffer, 1, 3),
+        },
+        rpc: mockRpc,
+      });
+
+      assertEquals([...uint8Contract.getWasm()], [1, 2, 3]);
+      assertEquals([...arrayBufferContract.getWasm()], [4, 5, 6]);
+      assertEquals([...dataViewContract.getWasm()], [7, 8, 9]);
+    });
   });
 
   describe("construction Errors", () => {
@@ -69,7 +100,7 @@ describe("Contract", () => {
             networkConfig: undefined as unknown as NetworkConfig,
             contractConfig,
           }),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
 
       assertThrows(
@@ -78,7 +109,7 @@ describe("Contract", () => {
             networkConfig: {} as unknown as NetworkConfig,
             contractConfig,
           }),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
 
       assertThrows(
@@ -90,7 +121,7 @@ describe("Contract", () => {
             } as unknown as NetworkConfig,
             contractConfig: undefined as unknown as ContractConfig,
           }),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
     });
 
@@ -107,7 +138,7 @@ describe("Contract", () => {
               wasm: mockWasm,
             },
           }),
-        E.MISSING_RPC_URL
+        E.MISSING_RPC_URL,
       );
     });
 
@@ -122,7 +153,7 @@ describe("Contract", () => {
             }),
             contractConfig: {} as unknown as ContractConfig,
           }),
-        E.INVALID_CONTRACT_CONFIG
+        E.INVALID_CONTRACT_CONFIG,
       );
     });
 
@@ -153,22 +184,22 @@ describe("Contract", () => {
 
       assertThrows(
         () => contractWithWasm.getWasmHash(),
-        E.MISSING_REQUIRED_PROPERTY
+        E.MISSING_REQUIRED_PROPERTY,
       );
 
       assertThrows(
         () => contractWithWasm.getSpec(),
-        E.MISSING_REQUIRED_PROPERTY
+        E.MISSING_REQUIRED_PROPERTY,
       );
 
       assertThrows(
         () => contractWithWasm.getContractId(),
-        E.MISSING_REQUIRED_PROPERTY
+        E.MISSING_REQUIRED_PROPERTY,
       );
 
       assertThrows(
         () => contractWithWasmHash.getWasm(),
-        E.MISSING_REQUIRED_PROPERTY
+        E.MISSING_REQUIRED_PROPERTY,
       );
     });
   });
@@ -250,8 +281,7 @@ describe("Contract", () => {
 
       const expectedOperation = Operation.invokeContractFunction({
         function: "hello",
-        contract:
-          "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+        contract: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
         args: [],
       });
       assertEquals(

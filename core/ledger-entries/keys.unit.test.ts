@@ -75,11 +75,15 @@ describe("LedgerEntries key builders", () => {
       accountId: ACCOUNT_ID,
       dataName: new Uint8Array([1, 2, 3]),
     });
+    const dataViewKey = buildDataLedgerKey({
+      accountId: ACCOUNT_ID,
+      dataName: new DataView(new Uint8Array([0, 4, 5, 6, 0]).buffer, 1, 3),
+    });
     const codeKey = buildContractCodeLedgerKey({
-      hash: new Uint8Array(32).fill(5),
+      hash: new DataView(new Uint8Array(34).fill(5).buffer, 1, 32),
     });
     const ttlKey = buildTtlLedgerKey({
-      keyHash: new Uint8Array(32).fill(6),
+      keyHash: new DataView(new Uint8Array(34).fill(6).buffer, 1, 32),
     });
 
     assertEquals(
@@ -102,6 +106,12 @@ describe("LedgerEntries key builders", () => {
     assertEquals(
       Buffer.from((dataKey as unknown as xdr.LedgerKey).data().dataName()),
       Buffer.from([1, 2, 3]),
+    );
+    assertEquals(
+      Buffer.from(
+        (dataViewKey as unknown as xdr.LedgerKey).data().dataName(),
+      ),
+      Buffer.from([4, 5, 6]),
     );
     assertEquals(
       (codeKey as unknown as xdr.LedgerKey).contractCode().hash().length,

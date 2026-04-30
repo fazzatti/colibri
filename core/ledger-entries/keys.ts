@@ -6,7 +6,8 @@ import {
   xdr,
 } from "stellar-sdk";
 import { Buffer } from "buffer";
-import type { LedgerKeyLike } from "@/common/types/index.ts";
+import type { BinaryData, LedgerKeyLike } from "@/common/types/index.ts";
+import { toBuffer } from "@/common/helpers/internal-buffer.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import * as E from "@/ledger-entries/error.ts";
 import { decodeByteFormBase64, toRawXdrBuffer } from "@/ledger-entries/xdr.ts";
@@ -166,7 +167,7 @@ function requireLiquidityPoolId(liquidityPoolId: string): void {
   }
 }
 
-function normalizeHashBytes(hashValue: string | Uint8Array): Buffer {
+function normalizeHashBytes(hashValue: string | BinaryData): Buffer {
   if (typeof hashValue === "string") {
     if (!HEX_32_BYTE_REGEX.test(hashValue)) {
       throw new E.INVALID_HEX_HASH(hashValue);
@@ -174,11 +175,12 @@ function normalizeHashBytes(hashValue: string | Uint8Array): Buffer {
     return Buffer.from(hashValue, "hex");
   }
 
-  if (hashValue.length !== 32) {
-    throw new E.INVALID_HEX_HASH(Buffer.from(hashValue).toString("hex"));
+  const hashBytes = toBuffer(hashValue);
+  if (hashBytes.length !== 32) {
+    throw new E.INVALID_HEX_HASH(hashBytes.toString("hex"));
   }
 
-  return Buffer.from(hashValue);
+  return hashBytes;
 }
 
 function normalizeContractDataDurability(
@@ -229,11 +231,12 @@ function normalizeLedgerKeyHash(
     }
   }
 
-  if (args.keyHash.length !== 32) {
+  const keyHash = toBuffer(args.keyHash);
+  if (keyHash.length !== 32) {
     throw new E.INVALID_LEDGER_KEY_HASH();
   }
 
-  return Buffer.from(args.keyHash);
+  return keyHash;
 }
 
 /**
@@ -311,9 +314,7 @@ export function buildDataLedgerKey({
     xdr.LedgerKey.data(
       new xdr.LedgerKeyData({
         accountId: Keypair.fromPublicKey(accountId).xdrAccountId(),
-        dataName: typeof dataName === "string"
-          ? dataName
-          : Buffer.from(dataName),
+        dataName: typeof dataName === "string" ? dataName : toBuffer(dataName),
       }),
     ),
   );
