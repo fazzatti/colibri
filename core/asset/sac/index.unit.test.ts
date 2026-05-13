@@ -305,6 +305,86 @@ describe("StellarAssetContract memoized descriptive reads", () => {
   });
 });
 
+describe("StellarAssetContract token invocations", () => {
+  const networkConfig = NetworkConfig.TestNet();
+  const issuer = LocalSigner.generateRandom();
+  const contractId = new Asset("TEST", issuer.publicKey()).contractId(
+    networkConfig.networkPassphrase,
+  ) as ContractId;
+
+  const txConfig: TransactionConfig = {
+    fee: "10000000",
+    timeout: 30,
+    source: issuer.publicKey(),
+    signers: [issuer],
+  };
+
+  let restoreInvokeRaw: (() => void) | undefined;
+
+  afterEach(() => {
+    restoreInvokeRaw?.();
+    restoreInvokeRaw = undefined;
+  });
+
+  const mockInvokeRaw = (
+    sac: StellarAssetContract,
+    implementation: (args: any) => Promise<unknown>,
+  ) => {
+    const originalInvokeRaw = sac.contract.invokeRaw.bind(sac.contract);
+
+    Object.defineProperty(sac.contract, "invokeRaw", {
+      value: implementation,
+      configurable: true,
+      writable: true,
+    });
+
+    restoreInvokeRaw = () => {
+      Object.defineProperty(sac.contract, "invokeRaw", {
+        value: originalInvokeRaw,
+        configurable: true,
+        writable: true,
+      });
+    };
+  };
+
+  it("invokes trust with the CAP-0073 address argument", async () => {
+    const sac = StellarAssetContract.fromContractId({
+      contractId,
+      networkConfig,
+    });
+    const address = LocalSigner.generateRandom().publicKey();
+    const auth = [] as any;
+    let receivedArgs: any;
+
+    mockInvokeRaw(sac, (args) => {
+      receivedArgs = args;
+      return Promise.resolve({
+        hash: "hash",
+        ledger: 1,
+        createdAt: 2,
+        response: {} as any,
+        returnValue: nativeToScVal(true, { type: "bool" }),
+      });
+    });
+
+    const result = await sac.trust({
+      address,
+      config: txConfig,
+      auth,
+    });
+
+    assertEquals(receivedArgs.operationArgs.function, Method.Trust);
+    assertEquals(receivedArgs.operationArgs.args.length, 1);
+    assertEquals(
+      receivedArgs.operationArgs.args[0].toXDR("base64"),
+      nativeToScVal(address, { type: "address" }).toXDR("base64"),
+    );
+    assertStrictEquals(receivedArgs.operationArgs.auth, auth);
+    assertStrictEquals(receivedArgs.config, txConfig);
+    assertEquals(result.returnValue, undefined);
+  });
+});
+
 describe("StellarAssetContract deployment error handling", () => {
   const networkConfig = NetworkConfig.TestNet();
   const issuer = LocalSigner.generateRandom();
