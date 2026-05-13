@@ -99,7 +99,8 @@ const resolveAssetIdentity = (
  *
  * This class provides a high-level interface for interacting with Stellar Asset Contracts,
  * which are Soroban smart contracts that enable classic Stellar assets to be used within
- * the Soroban ecosystem. SACs implement the SEP-41 token interface and are defined in CAP-0046-06.
+ * the Soroban ecosystem. SACs implement the SEP-41 token interface and are
+ * defined in CAP-0046-06, with trustline creation support added by CAP-0073.
  *
  * SACs bridge classic Stellar assets with Soroban smart contracts while maintaining
  * compatibility with the existing Stellar asset system. A `StellarAssetContract`
@@ -107,6 +108,7 @@ const resolveAssetIdentity = (
  * and only needed when creating or deploying a SAC from a classic asset.
  *
  * @see {@link https://github.com/stellar/stellar-protocol/blob/master/core/cap-0046-06.md | CAP-0046-06}
+ * @see {@link https://github.com/stellar/stellar-protocol/blob/master/core/cap-0073.md | CAP-0073}
  * @see {@link https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0041.md | SEP-41}
  *
  * @example
@@ -710,6 +712,57 @@ export class StellarAssetContract {
       ...result,
       returnValue: undefined,
     } as ContractOutput[Method.Approve];
+  }
+
+  /**
+   * Creates an unlimited trustline for this asset on a Stellar account address.
+   *
+   * Use this before sending this asset to a classic Stellar account that does
+   * not already trust it. Existing trustlines are left unchanged, and contract
+   * addresses are ignored. If a new trustline is created, the account address
+   * must authorize the invocation.
+   *
+   * @param args - The trustline creation parameters
+   * @param args.address - The account address that should trust this asset
+   * @param args.config - Transaction configuration (fee, timeout, source, signers)
+   * @param args.auth - Optional pre-signed authorization entries
+   * @returns The invoke result with transaction details
+   *
+   * @see {@link https://github.com/stellar/stellar-protocol/blob/master/core/cap-0073.md | CAP-0073}
+   *
+   * @example
+   * ```typescript
+   * await sac.trust({
+   *   address: holderAddress,
+   *   config: {
+   *     fee: "10000000",
+   *     timeout: 30,
+   *     source: holderAddress,
+   *     signers: [holderSigner],
+   *   },
+   * });
+   * ```
+   */
+  public async trust({
+    address,
+    config,
+    auth,
+  }: ContractInput[Method.Trust] & BaseInvocation): Promise<
+    ContractOutput[Method.Trust]
+  > {
+    const result = await this.contract.invokeRaw({
+      operationArgs: {
+        function: Method.Trust,
+        args: [nativeToScVal(address, { type: "address" })],
+        auth,
+      },
+      config,
+    });
+
+    return {
+      ...result,
+      returnValue: undefined,
+    } as ContractOutput[Method.Trust];
   }
 
   /**

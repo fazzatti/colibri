@@ -69,6 +69,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
   const issuer = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
   const userA = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
   const userB = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
+  const userC = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
   const code = "COLIBRI";
 
   const asset = new Asset(code, issuer.address());
@@ -97,6 +98,10 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
       allowHttp: networkConfig.allowHttp,
     });
     await initializeWithFriendbot(networkConfig.friendbotUrl, userB.address(), {
+      rpcUrl: networkConfig.rpcUrl,
+      allowHttp: networkConfig.allowHttp,
+    });
+    await initializeWithFriendbot(networkConfig.friendbotUrl, userC.address(), {
       rpcUrl: networkConfig.rpcUrl,
       allowHttp: networkConfig.allowHttp,
     });
@@ -167,6 +172,25 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
         config: txConfig,
       });
       assertEquals(deployedSAC.contractId, contractId);
+    });
+
+    it("creates a classic account trustline through the CAP-0073 trust function", async () => {
+      await colibriSAC.trust({
+        address: userC.address(),
+        config: {
+          ...txConfig,
+          signers: [issuer.signer(), userC.signer()],
+        },
+      });
+      await wait();
+
+      const balance = await colibriSAC.balance({ id: userC.address() });
+      const isAuthorized = await colibriSAC.authorized({
+        id: userC.address(),
+      });
+
+      assertEquals(balance, 0n);
+      assertEquals(isAuthorized, true);
     });
 
     it("Reads from descriptive contract functions", async () => {
