@@ -98,8 +98,9 @@ type InvokeOutput<V> = Omit<InvokeContractOutput, "returnValue"> & {
 /**
  * SAC (Stellar Asset Contract) Methods
  *
- * Based on CAP-0046-06:
+ * Based on CAP-0046-06 and CAP-0073:
  * https://github.com/stellar/stellar-protocol/blob/master/core/cap-0046-06.md
+ * https://github.com/stellar/stellar-protocol/blob/master/core/cap-0073.md
  */
 export enum Method {
   // Descriptive Interface
@@ -112,6 +113,7 @@ export enum Method {
   Approve = "approve",
   Balance = "balance",
   Authorized = "authorized",
+  Trust = "trust",
   Transfer = "transfer",
   TransferFrom = "transfer_from",
   Burn = "burn",
@@ -146,6 +148,9 @@ export type ContractInput = {
   };
   [Method.Authorized]: {
     id: Address;
+  };
+  [Method.Trust]: {
+    address: Address;
   };
   [Method.Transfer]: {
     from: Address;
@@ -204,6 +209,7 @@ export type ContractOutput = {
 
   // Token Interface (invoke)
   [Method.Approve]: InvokeOutput<undefined>;
+  [Method.Trust]: InvokeOutput<undefined>;
   [Method.Transfer]: InvokeOutput<undefined>;
   [Method.TransferFrom]: InvokeOutput<undefined>;
   [Method.Burn]: InvokeOutput<undefined>;
