@@ -11,6 +11,7 @@ import {
   createInvokeContractPipeline,
   type InvokeContractPipeline,
 } from "@/pipelines/invoke-contract/index.ts";
+import { createContractErrorMatcherPlugin } from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
 import {
   createReadFromContractPipeline,
   type ReadFromContractPipeline,
@@ -43,6 +44,10 @@ import type { ReadFromContractOutput } from "@/pipelines/read-from-contract/type
 
 /**
  * High-level client for interacting with a Soroban contract.
+ *
+ * `Contract` owns both read and invoke pipelines. Pass `contractErrors` in the
+ * contract configuration when you want those pipelines to convert recognized
+ * contract-error simulation failures into known contract-error plugin errors.
  */
 export class Contract {
   /** @internal */
@@ -96,7 +101,12 @@ export class Contract {
       rpc,
     });
 
-    const { spec, contractId, wasm, wasmHash } = contractConfig;
+    const { spec, contractId, wasm, wasmHash, contractErrors } = contractConfig;
+
+    if (contractErrors) {
+      this.invokePipe.use(createContractErrorMatcherPlugin(contractErrors));
+      this.readPipe.use(createContractErrorMatcherPlugin(contractErrors));
+    }
 
     if (spec) {
       this.spec = spec;

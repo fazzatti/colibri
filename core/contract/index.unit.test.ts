@@ -10,6 +10,7 @@ import { NetworkType } from "@/network/types.ts";
 import { Operation } from "stellar-sdk";
 import type { Spec } from "stellar-sdk/contract";
 import type { ContractId } from "@/strkeys/types.ts";
+import { CONTRACT_ERROR_MATCHER_PLUGIN_ID } from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
 
 class TestContract extends Contract {
   public requireNoContractIdForTest(): void {
@@ -85,6 +86,42 @@ describe("Contract", () => {
       assertEquals([...uint8Contract.getWasm()], [1, 2, 3]);
       assertEquals([...arrayBufferContract.getWasm()], [4, 5, 6]);
       assertEquals([...dataViewContract.getWasm()], [7, 8, 9]);
+    });
+
+    it("adds contract errors to both contract pipelines during construction", () => {
+      const mockRpc = {} as unknown as Server;
+      const contract = new Contract({
+        networkConfig: NetworkConfig.CustomNet({
+          type: NetworkType.TESTNET,
+          networkPassphrase: "Test Network",
+        }),
+        contractConfig: {
+          wasmHash: "mockHash",
+          contractErrors: {
+            265: { message: "Known token error" },
+          },
+        },
+        rpc: mockRpc,
+      });
+      const invokePlugins = contract.invokePipe.plugins as readonly {
+        id: string;
+      }[];
+      const readPlugins = contract.readPipe.plugins as readonly {
+        id: string;
+      }[];
+
+      assertEquals(
+        invokePlugins.some((plugin) =>
+          plugin.id === CONTRACT_ERROR_MATCHER_PLUGIN_ID
+        ),
+        true,
+      );
+      assertEquals(
+        readPlugins.some((plugin) =>
+          plugin.id === CONTRACT_ERROR_MATCHER_PLUGIN_ID
+        ),
+        true,
+      );
     });
   });
 

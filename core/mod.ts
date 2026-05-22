@@ -40,7 +40,7 @@ export * as steps from "@/steps/index.ts";
 
 export * from "@/pipelines/index.ts";
 
-export * from "@/plugins/error.ts";
+export * from "@/plugins/index.ts";
 
 export type * from "@/signer/types.ts";
 export * from "@/signer/local/index.ts";
