@@ -13,6 +13,7 @@ coverage.lcov
 target/
 
 **/.bindings/
+_internal/contracts/*/local-bindings/
 
 **/test_snapshots/
 
