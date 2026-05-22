@@ -7,7 +7,7 @@ state reads.
 ## Creating A Contract Instance
 
 ```ts
-import { Contract, NetworkConfig } from "@colibri/core";
+import { ColibriError, Contract, NetworkConfig } from "@colibri/core";
 
 const network = NetworkConfig.TestNet();
 
@@ -24,6 +24,44 @@ Other construction shapes are also supported:
 - `contractId` for an already-deployed contract
 - `wasm` when you have local contract bytes
 - `wasmHash` when the wasm is already uploaded
+- `contractErrors` when you want known contract-error matching on reads and
+  invokes
+
+## Known Contract Errors
+
+`Contract` can install the core
+[Contract Error Matcher](plugins/contract-error-matcher.md) plugin on both
+pipelines it owns. Pass `contractErrors` in `contractConfig` to map numeric
+contract errors into human-readable Colibri errors.
+
+```ts
+import { Contract, NetworkConfig } from "@colibri/core";
+
+const contract = new Contract({
+  networkConfig: NetworkConfig.TestNet(),
+  contractConfig: {
+    contractId: "CABC...",
+    spec,
+    contractErrors: {
+      1: { message: "Unauthorized" },
+      265: { message: "InsufficientBalance" },
+    },
+  },
+});
+
+try {
+  await contract.invoke({ method, methodArgs, config });
+} catch (error) {
+  if (ColibriError.is(error) && error.code === "PLG_SIM_CEM_001") {
+    console.log(error.message); // "Contract error: InsufficientBalance"
+    console.log(error.meta.data.match);
+  }
+}
+```
+
+Use this path when the same mapping should apply to both `read(...)` and
+`invoke(...)`. For advanced flows, attach
+`createContractErrorMatcherPlugin(...)` directly to a pipeline.
 
 ## Core Methods
 

@@ -30,6 +30,8 @@
     - [Invoke Contract](core/pipelines/invoke-contract.md)
     - [Read From Contract](core/pipelines/read-from-contract.md)
     - [Classic Transaction](core/pipelines/classic-transaction.md)
+  - [Core Plugins](core/plugins/README.md)
+    - [Contract Error Matcher](core/plugins/contract-error-matcher.md)
   - [Steps](core/steps.md)
   - [Processes](core/processes/README.md)
     - [BuildTransaction](core/processes/build-transaction.md)

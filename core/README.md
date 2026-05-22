@@ -45,6 +45,9 @@ paths (e.g., `jsr:@colibri/core/processes`). Published exports are declared in
   [Processes](#processes).
 - **Steps** – Thin `convee` wrappers around processes that provide stable ids
   and plugin targets. See [Pipelines](#pipelines).
+- **Core plugins** – Built-in extension points for Colibri pipeline steps, such
+  as known contract-error matching during simulation. See
+  [Core plugins](#core-plugins).
 - **Accounts and signers** – Strongly typed wrappers around Ed25519 identities,
   muxed accounts, ledger keys, and signing. See
   [Accounts & signers](#accounts--signers).
@@ -170,7 +173,7 @@ to test directly and easy to reuse outside Colibri's built-in pipelines.
   and either RPC-derived or explicit sequence numbers.
 - **SimulateTransaction** – Wraps `Server.simulateTransaction`, producing typed
   success/restore responses and raising specific errors for transport failures,
-  simulation errors, or unrecognized payloads.
+  generic simulation failures, parsed contract errors, or unrecognized payloads.
 - **SignAuthEntries** – Consumes simulated Soroban auth entries alongside a set
   of `TransactionSigner`s, returning signatures in the order Soroban expects.
 - **AssembleTransaction** – Merges the base transaction, signed auth entries,
@@ -192,6 +195,34 @@ const transaction = await buildTransaction(input);
 
 When you need orchestration ids or plugin targets, use the matching step factory
 from `jsr:@colibri/core`.
+
+## Core plugins
+
+Core plugins are shipped with `@colibri/core` and attach to built-in pipeline
+steps with `pipeline.use(...)`.
+
+The contract error matcher targets the `simulate-transaction` step. It rewrites
+recognized `CONTRACT_ERROR_SIMULATION_FAILED` errors into
+`KNOWN_CONTRACT_ERROR_SIMULATION_FAILED` with a message from your contract error
+map while keeping the original simulation failure in `meta.cause`.
+
+```ts
+import {
+  createContractErrorMatcherPlugin,
+  createInvokeContractPipeline,
+} from "jsr:@colibri/core";
+
+const pipe = createInvokeContractPipeline({ networkConfig });
+
+pipe.use(
+  createContractErrorMatcherPlugin({
+    1: { message: "Unauthorized" },
+  }),
+);
+```
+
+For the high-level `Contract` client, pass the same mapping as `contractErrors`
+and Colibri installs the matcher on both `readPipe` and `invokePipe`.
 
 ## Accounts & signers
 
