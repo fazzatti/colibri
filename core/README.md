@@ -28,9 +28,9 @@ deno add jsr:@colibri/core
 npm install @colibri/core
 ```
 
-After installation, import from the root (`jsr:@colibri/core`) or from specific
-paths (e.g., `jsr:@colibri/core/processes`). Published exports are declared in
-`core/deno.json`, ensuring compatibility with Deno, Node, and bundlers.
+After installation, import from the package root (`jsr:@colibri/core`).
+Published exports are declared in `core/deno.json`, ensuring compatibility with
+Deno, Node, and bundlers.
 
 ## Architecture overview
 
@@ -71,7 +71,7 @@ The error layer is the backbone of Colibri Core. Every error extends the base
 `ColibriError`, which standardizes:
 
 - `domain` – logical area (`pipelines`, `processes`, `tools`, `common`, etc.).
-- `code` – stable identifier (`PIPE_INVOKE_002`, `PROC_SIM_004`, …) that you can
+- `code` – stable identifier (`PIPE_INVC_002`, `SIM_004`, …) that you can
   log, match on, or promote to analytics.
 - `source` – which module raised the error.
 - `details` and `diagnostic` – human-readable stack or diagnostic object.
@@ -81,13 +81,12 @@ The error layer is the backbone of Colibri Core. Every error extends the base
 Each module exports its own subclasses. Example:
 
 ```ts
-import { ColibriError } from "jsr:@colibri/core/error";
-import * as InvokeErrors from "jsr:@colibri/core/pipelines/invoke-contract/error";
+import { ColibriError, ERROR_PIPE_INVC } from "jsr:@colibri/core";
 
 try {
   await pipe.run(input);
 } catch (err) {
-  if (err instanceof InvokeErrors.MISSING_ARG) {
+  if (err instanceof ERROR_PIPE_INVC.MISSING_ARG) {
     // handle a known configuration issue
   } else if (ColibriError.is(err)) {
     console.error(err.code, err.meta);
@@ -165,9 +164,9 @@ Soroban flows so you can share configuration between the two modes.
 
 ## Processes
 
-Processes are reusable building blocks exposed under
-`jsr:@colibri/core/processes`. They are plain functions, which makes them easy
-to test directly and easy to reuse outside Colibri's built-in pipelines.
+Processes are reusable building blocks exported from `jsr:@colibri/core`. They
+are plain functions, which makes them easy to test directly and easy to reuse
+outside Colibri's built-in pipelines.
 
 - **BuildTransaction** – Creates transactions with optional memo, preconditions,
   and either RPC-derived or explicit sequence numbers.
@@ -188,7 +187,7 @@ to test directly and easy to reuse outside Colibri's built-in pipelines.
 Each process is exported as a function plus an error namespace. Example:
 
 ```ts
-import { BTX_ERRORS, buildTransaction } from "jsr:@colibri/core/processes";
+import { BTX_ERRORS, buildTransaction } from "jsr:@colibri/core";
 
 const transaction = await buildTransaction(input);
 ```
@@ -329,6 +328,16 @@ const deployed = await StellarAssetContract.deploy({
 });
 ```
 
+Use `trust(...)` to create an unlimited trustline on a classic Stellar account
+before sending the asset to that account:
+
+```ts
+await existing.trust({
+  address: holderAddress,
+  config: txConfig,
+});
+```
+
 `options.cache` configures memoization for stable descriptive reads
 (`decimals()`, `name()`, and `symbol()`). The same shared cache shape is reused
 across high-level tools:
@@ -362,7 +371,7 @@ including parsing from ledger metadata and filtering.
 Parse contract events directly from `LedgerCloseMeta` XDR structures:
 
 ```ts
-import { parseEventsFromLedgerCloseMeta } from "jsr:@colibri/core/events";
+import { parseEventsFromLedgerCloseMeta } from "jsr:@colibri/core";
 
 await parseEventsFromLedgerCloseMeta(
   metadataXdr, // LedgerCloseMeta XDR string
@@ -375,7 +384,7 @@ await parseEventsFromLedgerCloseMeta(
 
 // Each event includes:
 // - id: unique event identifier
-// - type: "contract" | "system" | "diagnostic"
+// - type: "contract" | "system"
 // - ledger: ledger sequence number
 // - contractId: the emitting contract (with address helper)
 // - topic: decoded topic values
@@ -387,7 +396,7 @@ await parseEventsFromLedgerCloseMeta(
 Create filters to select specific events by type, contract, or topic patterns:
 
 ```ts
-import { EventFilter, EventType } from "jsr:@colibri/core/events";
+import { EventFilter, EventType } from "jsr:@colibri/core";
 import { xdr } from "stellar-sdk";
 
 const filter = new EventFilter({
@@ -410,10 +419,7 @@ const rawFilter = filter.toRawEventFilter();
 Helper functions for working with ledger close metadata:
 
 ```ts
-import {
-  isLedgerCloseMetaV1,
-  isLedgerCloseMetaV2,
-} from "jsr:@colibri/core/events";
+import { isLedgerCloseMetaV1, isLedgerCloseMetaV2 } from "jsr:@colibri/core";
 
 // Type guards for metadata versions
 if (isLedgerCloseMetaV2(meta)) {
@@ -489,7 +495,7 @@ factory methods and runtime type narrowing.
 ### Creating configurations
 
 ```ts
-import { NetworkConfig } from "jsr:@colibri/core/network";
+import { NetworkConfig } from "jsr:@colibri/core";
 
 // Pre-configured networks
 const testnet = NetworkConfig.TestNet();
@@ -570,8 +576,7 @@ Colibri Core ships shared utilities so every layer speaks the same language:
   between fast regex validation and checksum verification.
 
 ```ts
-import { NetworkConfig } from "jsr:@colibri/core/network";
-import type { TransactionConfig } from "jsr:@colibri/core/common/types";
+import { NetworkConfig, type TransactionConfig } from "jsr:@colibri/core";
 ```
 
 By centralizing validation and typing, these modules reduce duplicated logic
