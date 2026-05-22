@@ -11,8 +11,7 @@ const baseErrorSource = "@colibri/core/helpers/failed-simulation-response";
 const contractIdLookupContext = {
   domain: "helpers" as const,
   code: ErrorCode.FAILED_TO_GET_ASSET_CONTRACT_ID,
-  source:
-    baseErrorSource +
+  source: baseErrorSource +
     "/getStellarAssetContractIdFromFailedSimulationResponse",
   message: "Failed to get the contract Id from the simulation response!",
   diagnostic: {
@@ -24,7 +23,7 @@ const contractIdLookupContext = {
 };
 
 export const getStellarAssetContractIdFromFailedSimulationResponse = (
-  response: Api.SimulateTransactionErrorResponse
+  response: Api.SimulateTransactionErrorResponse,
 ): ContractId => {
   try {
     const events = response.events;
