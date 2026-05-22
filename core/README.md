@@ -53,8 +53,8 @@ paths (e.g., `jsr:@colibri/core/processes`). Published exports are declared in
   [Accounts & signers](#accounts--signers).
 - **Events** – Tools for parsing, filtering, and working with Soroban contract
   events from ledger metadata. See [Events](#events).
-- **TOID** – Utilities for working with Stellar's Total Order IDs for precise
-  transaction and operation indexing. See [TOID](#toid).
+- **TOID** – Utilities for working with SEP-0035 operation IDs for precise
+  operation indexing. See [TOID](#toid).
 - **Network configuration** – Type-safe network profiles with runtime validation
   and type narrowing. See [Network configuration](#network-configuration).
 - **Common modules** – Shared configuration types, validators, StrKey utilities,
@@ -423,62 +423,63 @@ if (isLedgerCloseMetaV2(meta)) {
 
 ## TOID
 
-TOID (Total Order ID) is Stellar's mechanism for uniquely identifying
-transactions and operations across the entire network history. Colibri Core
-provides utilities for creating, parsing, and working with TOIDs.
+The TOID helpers work with SEP-0035 operation IDs. Colibri uses the `TOID` type
+name for these 64-bit identifiers, but SEP-0035 itself names the scheme
+"Operation IDs".
+
+A TOID identifies one historical operation. It is related to, but distinct from,
+Colibri's `EventId`, which appends an event index to the operation ID.
 
 ### Creating TOIDs
 
 ```ts
-import { encodeTOID } from "jsr:@colibri/core/toid";
+import { createTOID } from "jsr:@colibri/core";
 
-// Create a TOID from components
-const toid = encodeTOID({
-  ledgerSeq: 12345678,
-  txOrder: 1,
-  opOrder: 0,
-});
+const toid = createTOID(
+  12345678, // ledgerSequence
+  1, // transactionOrder, 1-based
+  1, // operationIndex, 1-based
+);
 
-// Returns a bigint representing the unique identifier
-console.log(toid); // 53021371269890048n
+console.log(toid); // "0053024283256950784"
 ```
 
 ### Parsing TOIDs
 
 ```ts
-import { decodeTOID } from "jsr:@colibri/core/toid";
+import { parseTOID } from "jsr:@colibri/core";
 
-const components = decodeTOID(53021371269890048n);
+const components = parseTOID("0053024283256950784");
 // {
-//   ledgerSeq: 12345678,
-//   txOrder: 1,
-//   opOrder: 0
+//   ledgerSequence: 12345678,
+//   transactionOrder: 1,
+//   operationIndex: 1
 // }
 ```
 
 ### Ledger bounds
 
 ```ts
-import { getLedgerRangeFromTOID } from "jsr:@colibri/core/toid";
+import { createTOID } from "jsr:@colibri/core";
 
-// Get the TOID range for an entire ledger
-const { start, end } = getLedgerRangeFromTOID(12345678);
-// start: first possible TOID in ledger
-// end: last possible TOID in ledger
+const ledger = 12345678;
+const firstToid = createTOID(ledger, 1, 1);
+const lastToid = createTOID(ledger, 1048575, 4095);
 ```
 
 ### TOID structure
 
 TOIDs pack three values into a 64-bit integer:
 
-| Field             | Bits | Description                                    |
-| ----------------- | ---- | ---------------------------------------------- |
-| Ledger sequence   | 32   | The ledger number (0 to ~4 billion)            |
-| Transaction order | 20   | Position within the ledger (0 to ~1 million)   |
-| Operation order   | 12   | Operation index within transaction (0 to 4095) |
+| Field                         | Bits | Description                                      |
+| ----------------------------- | ---- | ------------------------------------------------ |
+| Ledger sequence               | 32   | The ledger number                                |
+| Transaction application order | 20   | Position of the transaction in the closed ledger |
+| Operation index               | 12   | Operation index within transaction               |
 
-This structure ensures global uniqueness and natural ordering—comparing TOIDs as
-integers yields chronological order.
+This structure gives historical operations deterministic order after the ledger
+has closed. A transaction's application order is not knowable before inclusion
+in a closed ledger.
 
 ## Network configuration
 

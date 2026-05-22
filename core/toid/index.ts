@@ -24,44 +24,44 @@ export function isTOID(id: string): id is TOID {
 }
 
 /**
- * Generates a TOID (Total Order ID) from its component parts.
+ * Generates a Colibri TOID from SEP-0035 operation ID components.
  *
  * Based on SEP-0035:
- * - Bits 0-31: Ledger Sequence (32 bits)
- * - Bits 32-51: Transaction Application Order (20 bits, starts at 1)
- * - Bits 52-63: Operation Index (12 bits, starts at 1)
+ * - Upper 32 bits: Ledger sequence
+ * - Next 20 bits: Transaction application order, starting at 1
+ * - Lower 12 bits: Operation index, starting at 1
  *
  * @param ledgerSequence - The ledger sequence number (max 2,147,483,647)
  * @param transactionOrder - The transaction application order within the ledger (1-based, max 1,048,575)
  * @param operationIndex - The operation index within the transaction (1-based, max 4,095)
- * @returns A 19-character zero-padded TOID string
+ * @returns A 19-character zero-padded TOID string.
  * @throws Error if any parameter exceeds its maximum value
  *
  * @see https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0035.md#specification
  *
  * @example
  * const toid = createTOID(123456, 1, 1);
- * // Returns: "0000530242871959553" (19 characters, zero-padded)
+ * // Returns: "0000530239482499072" (19 characters, zero-padded)
  */
 export function createTOID(
   ledgerSequence: number,
   transactionOrder: number,
-  operationIndex: number
+  operationIndex: number,
 ): TOID {
   // Validate bounds
   assert(
     ledgerSequence >= 0 && ledgerSequence <= 2147483647,
-    new E.LEDGER_OUT_OF_RANGE(ledgerSequence)
+    new E.LEDGER_OUT_OF_RANGE(ledgerSequence),
   );
 
   assert(
     transactionOrder >= 1 && transactionOrder <= 1048575,
-    new E.TX_ORDER_OUT_OF_RANGE(transactionOrder)
+    new E.TX_ORDER_OUT_OF_RANGE(transactionOrder),
   );
 
   assert(
     operationIndex >= 1 && operationIndex <= 4095,
-    new E.OP_INDEX_OUT_OF_RANGE(operationIndex)
+    new E.OP_INDEX_OUT_OF_RANGE(operationIndex),
   );
 
   // Shift operation index to 0-based for bit packing (matches RPC behavior)
@@ -69,8 +69,7 @@ export function createTOID(
   const opIndex0 = operationIndex - 1;
 
   // Pack into 64-bit integer using BigInt for precision
-  const toid =
-    (BigInt(ledgerSequence) << 32n) |
+  const toid = (BigInt(ledgerSequence) << 32n) |
     (BigInt(transactionOrder) << 12n) |
     BigInt(opIndex0);
 
@@ -87,7 +86,7 @@ export function createTOID(
  * @throws Error if the TOID is invalid
  *
  * @example
- * const parts = parseTOID("0000530242871959552");
+ * const parts = parseTOID("0000530239482499072");
  * // Returns: { ledgerSequence: 123456, transactionOrder: 1, operationIndex: 1 }
  */
 export function parseTOID(toid: string): {
