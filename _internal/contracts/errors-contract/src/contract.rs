@@ -10,8 +10,11 @@ pub struct ErrorsContract;
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
 pub enum Error {
+    /// Minimal documented contract error used to verify error doc extraction.
     One = 1,
+    /// The requested operation cannot continue because the test contract emitted error code 265.
     TwoHundredSixtyFive = 265,
+    /// Cross-contract diagnostic path used when verifying larger contract error codes.
     ThreeThousandFourHundredSeventySeven = 3477,
     SixtyFiveThousandFiveHundredThirtyFive = 65_535,
     SevenHundredThousandOne = 700_001,
