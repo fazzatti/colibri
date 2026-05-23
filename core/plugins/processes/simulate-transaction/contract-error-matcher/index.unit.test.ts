@@ -340,6 +340,43 @@ describe("createContractErrorMatcherPlugin", () => {
     assertEquals(error.meta.data.match.matcherIndex, 0);
   });
 
+  it("keeps the surfaced contract simulation error when the configured contract id rejects the surfaced code", async () => {
+    const originalError = createContractSimulationError([
+      createStackItem({
+        code: 265,
+        contractId: ROOT_CONTRACT_ID,
+        issuedFrom: "root-invocation",
+        eventIndex: 7,
+      }),
+    ]);
+    const testPipe = createFailingSimulationPipe(originalError);
+    testPipe.use(
+      createContractErrorMatcherPlugin([
+        {
+          strategy: "contract-id",
+          contractId: SUB_CONTRACT_ID,
+          errors: {
+            265: { message: "Known error for another contract" },
+          },
+        },
+      ]),
+    );
+
+    const error = await assertRejects(
+      async () => await testPipe(createInput()),
+      SIM_ERRORS.CONTRACT_ERROR_SIMULATION_FAILED,
+    );
+
+    assertEquals(error, originalError);
+    assertEquals(error.code, SIM_ERRORS.Code.CONTRACT_ERROR_SIMULATION_FAILED);
+    assertEquals(error.meta.data.contractError.code, 265);
+    assertEquals(error.meta.data.contractErrorStack[0].code, 265);
+    assertEquals(
+      error.meta.data.contractErrorStack[0].contractId,
+      ROOT_CONTRACT_ID,
+    );
+  });
+
   it("matches the configured root or sub invocation issuer", async () => {
     const originalError = createContractSimulationError([
       createStackItem({
