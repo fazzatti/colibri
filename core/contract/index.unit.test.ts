@@ -107,7 +107,6 @@ describe("Contract", () => {
       assertEquals([...arrayBufferContract.getWasm()], [4, 5, 6]);
       assertEquals([...dataViewContract.getWasm()], [7, 8, 9]);
     });
-
     it("adds configured constructor plugins to the selected owned pipelines", () => {
       const mockRpc = {} as unknown as Server;
       const invokePlugin = createContractErrorMatcherPlugin({
