@@ -2,10 +2,9 @@ import type { NetworkConfig } from "@/network/index.ts";
 import type { BinaryData } from "@/common/types/index.ts";
 import type { Spec } from "stellar-sdk/contract";
 import type { Server } from "stellar-sdk/rpc";
-import type { ContractId } from "@/strkeys/types.ts";
-import type { ParsedSimulationErrorIssuer } from "@/common/helpers/contract-error-from-failed-simulation-response.ts";
 import type { InvokeContractPipeline } from "@/pipelines/invoke-contract/index.ts";
 import type { ReadFromContractPipeline } from "@/pipelines/read-from-contract/index.ts";
+import type { ContractErrorMatcher } from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
 
 /**
  * Plugin accepted by the contract's owned invoke pipeline.
@@ -37,27 +36,21 @@ export type ContractPipelinePlugins = {
 /**
  * Strategy used when deriving contract-error matching from the loaded contract
  * specification.
+ *
+ * This is derived from the contract-error matcher plugin configuration: the
+ * loader supplies the `errors` map from the contract WASM/spec, while
+ * `contract-id` can omit `contractId` to use the id bound to this client.
  */
-export type LoadContractErrorsFromWasmArgs =
-  | {
-    /** Match any parsed contract error by numeric code. */
-    strategy: "any";
-  }
-  | {
-    /** Match only errors emitted by a specific contract id. */
-    strategy: "contract-id";
-    /**
-     * Contract id that must emit the error. When omitted, the current
-     * contract id bound to this client is used.
-     */
-    contractId?: ContractId;
-  }
-  | {
-    /** Match only root-invocation or sub-invocation errors. */
-    strategy: "issued-from";
-    /** Invocation level that must emit the error. */
-    issuedFrom: ParsedSimulationErrorIssuer;
-  };
+export type LoadContractErrorsFromWasmArgs = ContractErrorMatcher extends
+  infer Matcher
+  ? Matcher extends ContractErrorMatcher
+    ? Omit<Matcher, "errors"> extends infer Args
+      ? Args extends { strategy: "contract-id"; contractId: unknown }
+        ? Omit<Args, "contractId"> & Partial<Pick<Args, "contractId">>
+      : Args
+    : never
+  : never
+  : never;
 
 /** @internal */
 export type ContractConstructorArgs = {
