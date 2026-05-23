@@ -17,6 +17,11 @@ describe("contract error matcher helpers", () => {
     const errors = extractContractErrorMapFromSpec(ERRORS_CONTRACT_SPEC);
 
     assertEquals(errors, ErrorByCode);
+    assertEquals(
+      errors[265].details,
+      "The requested operation cannot continue because the test contract emitted error code 265.",
+    );
+    assertEquals(errors[65535].details, undefined);
   });
 
   it("extracts the error map from contract wasm bytes", async () => {
@@ -27,6 +32,11 @@ describe("contract error matcher helpers", () => {
     const errors = extractContractErrorMapFromWasm(wasm);
 
     assertEquals(errors, ErrorByCode);
+    assertEquals(
+      errors[3477].details,
+      "Cross-contract diagnostic path used when verifying larger contract error codes.",
+    );
+    assertEquals(errors[700001].details, undefined);
   });
 
   it("throws when a spec declares duplicate error codes", () => {
@@ -35,10 +45,12 @@ describe("contract error matcher helpers", () => {
         {
           value: () => 1,
           name: () => ({ toString: () => "One" }),
+          doc: () => ({ toString: () => "" }),
         },
         {
           value: () => 1,
           name: () => ({ toString: () => "DuplicateOne" }),
+          doc: () => ({ toString: () => "" }),
         },
       ],
     } as unknown as Spec;

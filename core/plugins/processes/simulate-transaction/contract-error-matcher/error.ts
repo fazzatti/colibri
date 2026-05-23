@@ -40,6 +40,8 @@ export abstract class ContractErrorMatcherPluginError<
  *
  * Catch this error when you want application code to react to a known
  * contract-defined error using the human-facing mapping provided to the plugin.
+ * If the selected mapping includes details, those details are used as the
+ * diagnostic root cause.
  * The original `CONTRACT_ERROR_SIMULATION_FAILED` error is available as
  * `meta.cause` for deeper diagnostic inspection.
  */
@@ -63,7 +65,7 @@ export class KNOWN_CONTRACT_ERROR_SIMULATION_FAILED
       details:
         `The transaction simulation failed with known contract error #${match.code}.`,
       diagnostic: {
-        rootCause:
+        rootCause: match.details ??
           "A contract-defined error was recognized by the contract-error matcher plugin.",
         suggestion:
           "Inspect meta.data.match for the selected known error and meta.cause for the original simulation failure.",

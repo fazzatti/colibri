@@ -129,7 +129,10 @@ describe("createContractErrorMatcherPlugin", () => {
     const testPipe = createFailingSimulationPipe(originalError);
     testPipe.use(
       createContractErrorMatcherPlugin({
-        265: { message: "Known token error" },
+        265: {
+          message: "Known token error",
+          details: "The known token error details from the contract spec.",
+        },
       }),
     );
 
@@ -146,6 +149,14 @@ describe("createContractErrorMatcherPlugin", () => {
     assertEquals(error.meta.cause, originalError);
     assertEquals(error.meta.data.match.code, 265);
     assertEquals(error.meta.data.match.message, "Known token error");
+    assertEquals(
+      error.meta.data.match.details,
+      "The known token error details from the contract spec.",
+    );
+    assertEquals(
+      error.diagnostic?.rootCause,
+      "The known token error details from the contract spec.",
+    );
     assertEquals(error.meta.data.match.contractId, ROOT_CONTRACT_ID);
     assertEquals(error.meta.data.match.issuedFrom, "root-invocation");
     assertEquals(error.meta.data.match.eventIndex, 4);
@@ -205,6 +216,11 @@ describe("createContractErrorMatcherPlugin", () => {
     assertEquals(error.meta.cause, originalError);
     assertEquals(error.meta.data.match.code, 265);
     assertEquals(error.meta.data.match.message, "Generic known error");
+    assertEquals(error.meta.data.match.details, undefined);
+    assertEquals(
+      error.diagnostic?.rootCause,
+      "A contract-defined error was recognized by the contract-error matcher plugin.",
+    );
     assertEquals(error.meta.data.match.strategy, "any");
     assertEquals(error.meta.data.match.matcherIndex, 0);
   });

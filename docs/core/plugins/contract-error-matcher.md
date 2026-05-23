@@ -8,7 +8,9 @@ simulation responses into known, human-readable Colibri errors.
 
 Soroban RPC surfaces contract failures as numeric codes such as
 `Error(Contract, #265)`. Those codes are useful, but applications usually need
-to map them back to a contract-specific enum or binding-generated message.
+to map them back to a contract-specific enum or binding-generated message. When
+contract error specs include documentation comments, Colibri can also carry
+those docs as optional error details.
 
 The matcher plugin does that mapping at the simulation boundary:
 
@@ -41,7 +43,10 @@ const pipeline = createInvokeContractPipeline({
 
 pipeline.use(
   createContractErrorMatcherPlugin({
-    1: { message: "Unauthorized" },
+    1: {
+      message: "Unauthorized",
+      details: "The caller is not authorized to run this operation.",
+    },
     265: { message: "InsufficientBalance" },
   }),
 );
@@ -108,6 +113,10 @@ const errors = extractContractErrorMapFromWasm(wasm);
 const matcher = createContractErrorMatcherPlugin(errors);
 ```
 
+The extracted map uses the contract error enum case name as `message`. If an
+error enum case has a non-empty doc string in the compiled spec, that text is
+included as `details`.
+
 For constructor-time plugin setup, use `contractConfig.plugins` and choose the
 target pipeline explicitly:
 
@@ -115,7 +124,10 @@ target pipeline explicitly:
 import { createContractErrorMatcherPlugin } from "@colibri/core";
 
 const matcher = createContractErrorMatcherPlugin({
-  1: { message: "Unauthorized" },
+  1: {
+    message: "Unauthorized",
+    details: "The caller is not authorized to run this operation.",
+  },
   265: { message: "InsufficientBalance" },
 });
 
@@ -215,11 +227,15 @@ The match includes:
 | -------------- | -------------------------------------------------------- |
 | `code`         | Numeric contract error code                              |
 | `message`      | Message from your configured map                         |
+| `details`      | Optional details from your map or extracted spec docs    |
 | `contractId`   | Contract that emitted the matched diagnostic error event |
 | `issuedFrom`   | `root-invocation` or `sub-invocation`                    |
 | `eventIndex`   | Index of the diagnostic event that produced the match    |
 | `strategy`     | Matcher strategy that matched                            |
 | `matcherIndex` | Index of the matcher entry that matched                  |
+
+When `details` is present, `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED` also uses it
+as `error.diagnostic.rootCause`.
 
 For deeper analysis, inspect the original simulation error:
 

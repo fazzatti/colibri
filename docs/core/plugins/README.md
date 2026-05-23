@@ -29,7 +29,10 @@ const pipeline = createInvokeContractPipeline({
 
 pipeline.use(
   createContractErrorMatcherPlugin({
-    1: { message: "Unauthorized" },
+    1: {
+      message: "Unauthorized",
+      details: "The caller is not authorized to run this operation.",
+    },
   }),
 );
 ```

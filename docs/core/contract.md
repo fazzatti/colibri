@@ -70,7 +70,10 @@ pipeline or pass plugins intentionally through `contractConfig.plugins`:
 import { createContractErrorMatcherPlugin } from "@colibri/core";
 
 const matcher = createContractErrorMatcherPlugin({
-  1: { message: "Unauthorized" },
+  1: {
+    message: "Unauthorized",
+    details: "The caller is not authorized to run this operation.",
+  },
 });
 
 const contract = new Contract({

@@ -87,6 +87,14 @@ describe(
         "TwoHundredSixtyFive",
       );
       assertEquals(
+        error.meta.data.match.details,
+        "The requested operation cannot continue because the test contract emitted error code 265.",
+      );
+      assertEquals(
+        error.diagnostic?.rootCause,
+        "The requested operation cannot continue because the test contract emitted error code 265.",
+      );
+      assertEquals(
         error.meta.data.match.contractId,
         contract.getContractId(),
       );
@@ -121,6 +129,14 @@ describe(
       assertEquals(
         error.meta.data.match.message,
         "ThreeThousandFourHundredSeventySeven",
+      );
+      assertEquals(
+        error.meta.data.match.details,
+        "Cross-contract diagnostic path used when verifying larger contract error codes.",
+      );
+      assertEquals(
+        error.diagnostic?.rootCause,
+        "Cross-contract diagnostic path used when verifying larger contract error codes.",
       );
       assertEquals(
         error.meta.data.match.contractId,

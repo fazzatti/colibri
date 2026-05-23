@@ -203,7 +203,9 @@ steps with `pipeline.use(...)`.
 The contract error matcher targets the `simulate-transaction` step. It rewrites
 recognized `CONTRACT_ERROR_SIMULATION_FAILED` errors into
 `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED` with a message from your contract error
-map while keeping the original simulation failure in `meta.cause`.
+map while keeping the original simulation failure in `meta.cause`. Error maps
+can also include optional `details`, which Colibri surfaces in the diagnostic
+root cause.
 
 ```ts
 import {
@@ -215,7 +217,10 @@ const pipe = createInvokeContractPipeline({ networkConfig });
 
 pipe.use(
   createContractErrorMatcherPlugin({
-    1: { message: "Unauthorized" },
+    1: {
+      message: "Unauthorized",
+      details: "The caller is not authorized to run this operation.",
+    },
   }),
 );
 ```

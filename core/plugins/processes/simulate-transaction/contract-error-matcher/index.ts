@@ -37,7 +37,8 @@ export const CONTRACT_ERROR_MATCHER_PLUGIN_TARGET: "simulate-transaction" =
  * the simulate-transaction process. When the parsed contract-error stack
  * matches the configured code map or matcher list, the plugin throws
  * `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED` with the configured human-facing
- * message. The original process error remains available as `meta.cause`.
+ * message and optional details. The original process error remains available
+ * as `meta.cause`.
  *
  * Attach this plugin directly to an invoke/read pipeline for advanced
  * orchestration. High-level `Contract` users can also pass plugins explicitly
@@ -57,7 +58,10 @@ export const CONTRACT_ERROR_MATCHER_PLUGIN_TARGET: "simulate-transaction" =
  *
  * const pipe = createInvokeContractPipeline({ networkConfig });
  * pipe.use(createContractErrorMatcherPlugin({
- *   1: { message: "Unauthorized" },
+ *   1: {
+ *     message: "Unauthorized",
+ *     details: "The caller is not authorized to run this operation.",
+ *   },
  * }));
  * ```
  */
@@ -102,6 +106,7 @@ const getKnownContractErrorMatch = (
       return {
         code: candidate.code,
         message: knownError.message,
+        details: knownError.details,
         contractId: candidate.contractId,
         issuedFrom: candidate.issuedFrom,
         eventIndex: candidate.eventIndex,

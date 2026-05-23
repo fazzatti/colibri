@@ -10,11 +10,15 @@ import type { ContractId } from "@/strkeys/types.ts";
  *
  * Contract bindings commonly generate maps shaped like
  * `{ 1: { message: "Unauthorized" } }`. Colibri uses this message when the
- * matcher plugin recognizes the corresponding contract error code.
+ * matcher plugin recognizes the corresponding contract error code. When
+ * available, `details` can carry the contract error's documentation string and
+ * is surfaced in the known-error diagnostic.
  */
 export type KnownContractErrorDefinition = {
   /** Message shown when this known contract error is recognized. */
   message: string;
+  /** Optional detailed explanation for the known error. */
+  details?: string;
 };
 
 /**
@@ -104,7 +108,10 @@ export type ContractErrorMatcher =
  * @example Simple code-only mapping.
  * ```ts
  * const contractErrors = {
- *   1: { message: "Unauthorized" },
+ *   1: {
+ *     message: "Unauthorized",
+ *     details: "The caller is not authorized to run this operation.",
+ *   },
  *   2: { message: "AlreadyInitialized" },
  * };
  * ```
@@ -134,13 +141,16 @@ export type ContractErrorMatcherPluginConfig =
  *
  * The selected match is exposed through
  * `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED.meta.data.match`, while the original
- * `CONTRACT_ERROR_SIMULATION_FAILED` remains available as `meta.cause`.
+ * `CONTRACT_ERROR_SIMULATION_FAILED` remains available as `meta.cause`. When a
+ * known-error definition includes `details`, the selected match carries it too.
  */
 export type KnownContractErrorMatch = {
   /** Numeric contract error code. */
   code: number;
   /** Human-facing message configured for the code. */
   message: string;
+  /** Optional detailed explanation configured for the code. */
+  details?: string;
   /** Contract that emitted the matched diagnostic error event. */
   contractId: ContractId;
   /** Whether the matched error was emitted by the root or a sub-invocation. */

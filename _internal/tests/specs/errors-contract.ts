@@ -2,9 +2,21 @@
 import { Spec } from "stellar-sdk/contract";
 
 export const ErrorByCode = {
-  1: { message: "One" },
-  265: { message: "TwoHundredSixtyFive" },
-  3477: { message: "ThreeThousandFourHundredSeventySeven" },
+  1: {
+    message: "One",
+    details:
+      "Minimal documented contract error used to verify error doc extraction.",
+  },
+  265: {
+    message: "TwoHundredSixtyFive",
+    details:
+      "The requested operation cannot continue because the test contract emitted error code 265.",
+  },
+  3477: {
+    message: "ThreeThousandFourHundredSeventySeven",
+    details:
+      "Cross-contract diagnostic path used when verifying larger contract error codes.",
+  },
   65535: { message: "SixtyFiveThousandFiveHundredThirtyFive" },
   700001: { message: "SevenHundredThousandOne" },
 };
