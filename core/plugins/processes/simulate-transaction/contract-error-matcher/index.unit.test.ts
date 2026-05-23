@@ -184,6 +184,78 @@ describe("createContractErrorMatcherPlugin", () => {
     assertEquals(error.code, SIM_ERRORS.Code.CONTRACT_ERROR_SIMULATION_FAILED);
   });
 
+  it("prefers the surfaced contract error when older stack entries also match", async () => {
+    const originalError = createContractSimulationError([
+      createStackItem({
+        code: 1,
+        contractId: SUB_CONTRACT_ID,
+        issuedFrom: "sub-invocation",
+        eventIndex: 2,
+      }),
+      createStackItem({
+        code: 265,
+        contractId: ROOT_CONTRACT_ID,
+        issuedFrom: "root-invocation",
+        eventIndex: 6,
+      }),
+    ]);
+    const testPipe = createFailingSimulationPipe(originalError);
+    testPipe.use(
+      createContractErrorMatcherPlugin({
+        1: { message: "Older nested error" },
+        265: { message: "Surfaced rethrow error" },
+      }),
+    );
+
+    const error = await assertRejects(
+      async () => await testPipe(createInput()),
+      PLUGIN_ERRORS.KNOWN_CONTRACT_ERROR_SIMULATION_FAILED,
+    );
+
+    assertEquals(error.message, "Contract error: Surfaced rethrow error");
+    assertEquals(error.meta.cause, originalError);
+    assertEquals(error.meta.data.match.code, 265);
+    assertEquals(error.meta.data.match.message, "Surfaced rethrow error");
+    assertEquals(error.meta.data.match.details, undefined);
+    assertEquals(error.meta.data.match.contractId, ROOT_CONTRACT_ID);
+    assertEquals(error.meta.data.match.issuedFrom, "root-invocation");
+    assertEquals(error.meta.data.match.eventIndex, 6);
+    assertEquals(error.meta.data.match.strategy, "any");
+    assertEquals(error.meta.data.match.matcherIndex, 0);
+  });
+
+  it("keeps the surfaced contract simulation error when only an older nested code is mapped", async () => {
+    const originalError = createContractSimulationError([
+      createStackItem({
+        code: 1,
+        contractId: SUB_CONTRACT_ID,
+        issuedFrom: "sub-invocation",
+        eventIndex: 2,
+      }),
+      createStackItem({
+        code: 265,
+        contractId: ROOT_CONTRACT_ID,
+        issuedFrom: "root-invocation",
+        eventIndex: 6,
+      }),
+    ]);
+    const testPipe = createFailingSimulationPipe(originalError);
+    testPipe.use(
+      createContractErrorMatcherPlugin({
+        1: { message: "Older nested error" },
+      }),
+    );
+
+    const error = await assertRejects(
+      async () => await testPipe(createInput()),
+      SIM_ERRORS.CONTRACT_ERROR_SIMULATION_FAILED,
+    );
+
+    assertEquals(error, originalError);
+    assertEquals(error.code, SIM_ERRORS.Code.CONTRACT_ERROR_SIMULATION_FAILED);
+    assertEquals(error.meta.data.contractError.code, 265);
+  });
+
   it("uses the first matching strategy entry before later, more specific entries", async () => {
     const originalError = createContractSimulationError([
       createStackItem({ code: 265, contractId: ROOT_CONTRACT_ID }),

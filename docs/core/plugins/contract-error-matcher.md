@@ -17,8 +17,8 @@ The matcher plugin does that mapping at the simulation boundary:
 1. `simulateTransaction` identifies a failed simulation with a contract error.
 2. Colibri throws `CONTRACT_ERROR_SIMULATION_FAILED` with parsed diagnostic
    metadata.
-3. The plugin checks the parsed contract-error stack against your known error
-   map.
+3. The plugin checks the error code surfaced by RPC against your known error
+   map, using the parsed stack to identify the matching diagnostic event.
 4. If a match is found, it throws `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED`.
 
 The original simulation error remains available as `error.meta.cause`, so you
@@ -231,7 +231,11 @@ createContractErrorMatcherPlugin([
 ```
 
 Matcher entries are evaluated in the order you provide them. Put the most
-specific matcher first when a code may appear in multiple places.
+specific matcher first when the surfaced code may appear in multiple places.
+When a cross-contract call emits one error and the root invocation rethrows a
+different one, the matcher uses the code surfaced by RPC. It will not rewrite
+the failure to an older nested code just because that code appears earlier in
+the diagnostic stack.
 
 ## Inspecting The Error
 

@@ -1,4 +1,4 @@
-import { assertEquals, assertRejects } from "@std/assert";
+import { assert, assertEquals, assertRejects } from "@std/assert";
 import { beforeAll, describe, it } from "@std/testing/bdd";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";
@@ -34,6 +34,7 @@ describe(
     };
 
     let matchingContract: Contract;
+    let targetContract: Contract;
     let unmatchedContract: Contract;
 
     beforeAll(async () => {
@@ -59,6 +60,17 @@ describe(
       });
 
       await deployedContract.uploadWasm(config);
+      await deployedContract.deploy({ config });
+
+      targetContract = new Contract({
+        networkConfig,
+        rpc: deployedContract.rpc,
+        contractConfig: {
+          contractId: deployedContract.getContractId(),
+          spec: ERRORS_CONTRACT_SPEC,
+        },
+      });
+
       await deployedContract.deploy({ config });
 
       matchingContract = new Contract({
@@ -123,6 +135,53 @@ describe(
       assertEquals(
         error.diagnostic?.rootCause,
         "The requested operation cannot continue because the test contract emitted error code 265.",
+      );
+      assertEquals(
+        error.meta.data.match.contractId,
+        matchingContract.getContractId(),
+      );
+      assertEquals(error.meta.data.match.issuedFrom, "root-invocation");
+      assertEquals(error.meta.data.match.strategy, "any");
+      assertEquals(error.meta.data.match.matcherIndex, 0);
+    });
+
+    it("matches the surfaced rethrow code instead of an older nested contract error", async () => {
+      const error = await assertRejects(
+        async () =>
+          await matchingContract.invoke({
+            method: ERRORS_CONTRACT_METHODS.trigger_cross_rethrow_code,
+            methodArgs: {
+              target_contract: targetContract.getContractId(),
+              target_error_code: 1,
+              rethrow_error_code: 265,
+            },
+            config,
+          }),
+        PLUGIN_ERRORS.KNOWN_CONTRACT_ERROR_SIMULATION_FAILED,
+      );
+
+      assertEquals(
+        error.code,
+        PLUGIN_ERRORS.Code.KNOWN_CONTRACT_ERROR_SIMULATION_FAILED,
+      );
+      assertEquals(
+        error.message,
+        "Contract error: TwoHundredSixtyFive",
+      );
+      assert(
+        error.meta.cause instanceof SIM_ERRORS.CONTRACT_ERROR_SIMULATION_FAILED,
+      );
+      assertEquals(error.meta.cause.meta.data.contractError.code, 265);
+      assertEquals(
+        error.meta.cause.meta.data.contractErrorStack.map((event) =>
+          event.code
+        ),
+        [1, 1, 1, 265, 265],
+      );
+      assertEquals(error.meta.data.match.code, 265);
+      assertEquals(
+        error.meta.data.match.message,
+        "TwoHundredSixtyFive",
       );
       assertEquals(
         error.meta.data.match.contractId,

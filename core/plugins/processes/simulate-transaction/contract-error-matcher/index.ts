@@ -35,10 +35,10 @@ export const CONTRACT_ERROR_MATCHER_PLUGIN_TARGET: "simulate-transaction" =
  *
  * The plugin listens for `CONTRACT_ERROR_SIMULATION_FAILED` errors emitted by
  * the simulate-transaction process. When the parsed contract-error stack
- * matches the configured code map or matcher list, the plugin throws
- * `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED` with the configured human-facing
- * message and optional details. The original process error remains available
- * as `meta.cause`.
+ * contains the error code surfaced by RPC and it matches the configured code
+ * map or matcher list, the plugin throws `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED`
+ * with the configured human-facing message and optional details. The original
+ * process error remains available as `meta.cause`.
  *
  * Attach this plugin directly to an invoke/read pipeline for advanced
  * orchestration. High-level `Contract` users can also pass plugins explicitly
@@ -96,8 +96,11 @@ const getKnownContractErrorMatch = (
   error: CONTRACT_ERROR_SIMULATION_FAILED,
   matchers: readonly ContractErrorMatcher[],
 ): KnownContractErrorMatch | null => {
+  const surfacedCode = error.meta.data.contractError.code;
+
   for (const [matcherIndex, matcher] of matchers.entries()) {
     for (const candidate of error.meta.data.contractErrorStack) {
+      if (candidate.code !== surfacedCode) continue;
       if (!matchesStrategy(candidate, matcher)) continue;
 
       const knownError = matcher.errors[candidate.code];

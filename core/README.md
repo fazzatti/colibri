@@ -71,8 +71,8 @@ The error layer is the backbone of Colibri Core. Every error extends the base
 `ColibriError`, which standardizes:
 
 - `domain` – logical area (`pipelines`, `processes`, `tools`, `common`, etc.).
-- `code` – stable identifier (`PIPE_INVC_002`, `SIM_004`, …) that you can
-  log, match on, or promote to analytics.
+- `code` – stable identifier (`PIPE_INVC_002`, `SIM_004`, …) that you can log,
+  match on, or promote to analytics.
 - `source` – which module raised the error.
 - `details` and `diagnostic` – human-readable stack or diagnostic object.
 - `meta` – structured payload (often the input that caused the failure) so
@@ -205,7 +205,9 @@ recognized `CONTRACT_ERROR_SIMULATION_FAILED` errors into
 `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED` with a message from your contract error
 map while keeping the original simulation failure in `meta.cause`. Error maps
 can also include optional `details`, which Colibri surfaces in the diagnostic
-root cause.
+root cause. When a diagnostic stack contains multiple contract errors, the
+matcher only rewrites the error code surfaced by RPC and uses the stack to find
+the matching contract, root/sub-invocation marker, and event index.
 
 ```ts
 import {
