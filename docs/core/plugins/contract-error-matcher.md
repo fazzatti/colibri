@@ -117,6 +117,26 @@ The extracted map uses the contract error enum case name as `message`. If an
 error enum case has a non-empty doc string in the compiled spec, that text is
 included as `details`.
 
+For a contract error enum like:
+
+```rust
+pub enum Error {
+    /// The caller is not authorized to run this operation.
+    Unauthorized = 1,
+}
+```
+
+the extracted map has the same structure accepted by the plugin:
+
+```ts
+{
+  1: {
+    message: "Unauthorized",
+    details: "The caller is not authorized to run this operation.",
+  },
+}
+```
+
 For constructor-time plugin setup, use `contractConfig.plugins` and choose the
 target pipeline explicitly:
 
@@ -236,6 +256,13 @@ The match includes:
 
 When `details` is present, `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED` also uses it
 as `error.diagnostic.rootCause`.
+
+```ts
+if (ColibriError.is(error) && error.code === "PLG_SIM_CEM_001") {
+  console.log(error.meta.data.match.details);
+  console.log(error.diagnostic?.rootCause);
+}
+```
 
 For deeper analysis, inspect the original simulation error:
 
