@@ -34,9 +34,10 @@ pipeline.use(
 );
 ```
 
-Some core plugins are also exposed through higher-level client configuration
-when there is a common ergonomic path. For contract error matching, pass
-`contractErrors` to `Contract`.
+Some core plugins also have higher-level client helpers. For contract error
+matching, call `contract.loadContractErrorsFromWasm(...)` to derive the mapping
+from a loaded contract spec or WASM, or pass plugins intentionally through
+`ContractConfig.plugins`.
 
 ## Related Pages
 

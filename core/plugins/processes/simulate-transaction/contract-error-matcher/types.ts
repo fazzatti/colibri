@@ -157,8 +157,9 @@ export type KnownContractErrorMatch = {
  * Runtime plugin returned by {@link createContractErrorMatcherPlugin}.
  *
  * Most users do not need to call these methods directly. Attach the plugin to a
- * pipeline with `pipeline.use(...)`, or pass `contractErrors` to
- * `ContractConfig` when constructing a `Contract`.
+ * pipeline with `pipeline.use(...)`, pass it intentionally through
+ * `ContractConfig.plugins`, or use `Contract.loadContractErrorsFromWasm(...)`
+ * when the mapping should be derived from a contract spec or WASM.
  */
 export type ContractErrorMatcherPlugin = {
   /** Stable plugin id. */

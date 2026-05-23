@@ -3,7 +3,6 @@ import { beforeAll, describe, it } from "@std/testing/bdd";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";
 import {
-  ErrorByCode,
   ERRORS_CONTRACT_METHODS,
   ERRORS_CONTRACT_SPEC,
 } from "colibri-internal/tests/specs/errors-contract.ts";
@@ -51,10 +50,10 @@ describe(
         contractConfig: {
           wasm,
           spec: ERRORS_CONTRACT_SPEC,
-          contractErrors: ErrorByCode,
         },
       });
 
+      await contract.loadContractErrorsFromWasm({ strategy: "any" });
       await contract.uploadWasm(config);
       await contract.deploy({ config });
     });

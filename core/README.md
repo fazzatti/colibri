@@ -220,8 +220,11 @@ pipe.use(
 );
 ```
 
-For the high-level `Contract` client, pass the same mapping as `contractErrors`
-and Colibri installs the matcher on both `readPipe` and `invokePipe`.
+For the high-level `Contract` client, call
+`contract.loadContractErrorsFromWasm(...)` to derive the mapping from the loaded
+spec or WASM and install the matcher on both `readPipe` and `invokePipe`. If you
+need constructor-time setup, pass plugins intentionally through
+`contractConfig.plugins`.
 
 ## Accounts & signers
 

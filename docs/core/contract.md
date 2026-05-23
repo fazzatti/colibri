@@ -24,30 +24,29 @@ Other construction shapes are also supported:
 - `contractId` for an already-deployed contract
 - `wasm` when you have local contract bytes
 - `wasmHash` when the wasm is already uploaded
-- `contractErrors` when you want known contract-error matching on reads and
-  invokes
+- `plugins` when you intentionally want to attach plugins to the owned read or
+  invoke pipelines during construction
 
 ## Known Contract Errors
 
 `Contract` can install the core
 [Contract Error Matcher](plugins/contract-error-matcher.md) plugin on both
-pipelines it owns. Pass `contractErrors` in `contractConfig` to map numeric
-contract errors into human-readable Colibri errors.
+pipelines it owns. Use `loadContractErrorsFromWasm(...)` when the contract spec
+or WASM contains error enum cases and you want Colibri to derive the mapping for
+you.
 
 ```ts
-import { Contract, NetworkConfig } from "@colibri/core";
+import { ColibriError, Contract, NetworkConfig } from "@colibri/core";
 
 const contract = new Contract({
   networkConfig: NetworkConfig.TestNet(),
   contractConfig: {
     contractId: "CABC...",
     spec,
-    contractErrors: {
-      1: { message: "Unauthorized" },
-      265: { message: "InsufficientBalance" },
-    },
   },
 });
+
+await contract.loadContractErrorsFromWasm({ strategy: "any" });
 
 try {
   await contract.invoke({ method, methodArgs, config });
@@ -59,9 +58,33 @@ try {
 }
 ```
 
-Use this path when the same mapping should apply to both `read(...)` and
-`invoke(...)`. For advanced flows, attach
-`createContractErrorMatcherPlugin(...)` directly to a pipeline.
+`loadContractErrorsFromWasm(...)` uses the already loaded spec when available.
+Otherwise it loads the spec from local WASM or from the deployed contract WASM
+through RPC. It throws if the built-in matcher plugin is already attached to
+either owned pipeline, so plugin ordering stays explicit.
+
+For advanced flows, attach `createContractErrorMatcherPlugin(...)` directly to a
+pipeline or pass plugins intentionally through `contractConfig.plugins`:
+
+```ts
+import { createContractErrorMatcherPlugin } from "@colibri/core";
+
+const matcher = createContractErrorMatcherPlugin({
+  1: { message: "Unauthorized" },
+});
+
+const contract = new Contract({
+  networkConfig,
+  contractConfig: {
+    contractId: "CABC...",
+    spec,
+    plugins: {
+      invokePipe: [matcher],
+      readPipe: [matcher],
+    },
+  },
+});
+```
 
 ## Core Methods
 

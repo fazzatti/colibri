@@ -7,6 +7,7 @@ import type { KnownContractErrorMatch } from "@/plugins/processes/simulate-trans
  */
 export enum Code {
   KNOWN_CONTRACT_ERROR_SIMULATION_FAILED = "PLG_SIM_CEM_001",
+  DUPLICATE_CONTRACT_ERROR_CODE = "PLG_SIM_CEM_002",
 }
 
 /**
@@ -23,9 +24,11 @@ export type KnownContractErrorSimulationFailedMeta = {
 /**
  * Base class for errors emitted by the contract-error matcher plugin.
  */
-export abstract class ContractErrorMatcherPluginError extends PluginError<
+export abstract class ContractErrorMatcherPluginError<
+  Data = unknown,
+> extends PluginError<
   Code,
-  KnownContractErrorSimulationFailedMeta
+  Data
 > {
   /** Source identifier for contract-error matcher plugin failures. */
   override readonly source =
@@ -41,7 +44,9 @@ export abstract class ContractErrorMatcherPluginError extends PluginError<
  * `meta.cause` for deeper diagnostic inspection.
  */
 export class KNOWN_CONTRACT_ERROR_SIMULATION_FAILED
-  extends ContractErrorMatcherPluginError {
+  extends ContractErrorMatcherPluginError<
+    KnownContractErrorSimulationFailedMeta
+  > {
   /**
    * Creates a known contract-error simulation failure.
    *
@@ -70,9 +75,37 @@ export class KNOWN_CONTRACT_ERROR_SIMULATION_FAILED
 }
 
 /**
+ * Raised when a contract spec declares the same contract error code more than once.
+ */
+export class DUPLICATE_CONTRACT_ERROR_CODE
+  extends ContractErrorMatcherPluginError<{ code: number }> {
+  /**
+   * Creates a duplicate contract-error-code failure.
+   *
+   * @param code - Numeric contract error code that appeared more than once.
+   */
+  constructor(code: number) {
+    super({
+      code: Code.DUPLICATE_CONTRACT_ERROR_CODE,
+      message: `Duplicate contract error code: ${code}`,
+      details:
+        "The contract specification contains multiple error enum cases with the same numeric code.",
+      diagnostic: {
+        rootCause:
+          "Contract error matching requires a one-to-one mapping between numeric codes and human-facing messages.",
+        suggestion:
+          "Fix the contract error enum or provide a manual matcher configuration with the intended mapping.",
+      },
+      data: { code },
+    });
+  }
+}
+
+/**
  * Contract-error matcher plugin error constructors indexed by stable code.
  */
 export const ERROR_PLG_SIM_CEM = {
   [Code.KNOWN_CONTRACT_ERROR_SIMULATION_FAILED]:
     KNOWN_CONTRACT_ERROR_SIMULATION_FAILED,
+  [Code.DUPLICATE_CONTRACT_ERROR_CODE]: DUPLICATE_CONTRACT_ERROR_CODE,
 };

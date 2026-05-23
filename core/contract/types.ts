@@ -2,7 +2,62 @@ import type { NetworkConfig } from "@/network/index.ts";
 import type { BinaryData } from "@/common/types/index.ts";
 import type { Spec } from "stellar-sdk/contract";
 import type { Server } from "stellar-sdk/rpc";
-import type { ContractErrorMatcherPluginConfig } from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
+import type { ContractId } from "@/strkeys/types.ts";
+import type { ParsedSimulationErrorIssuer } from "@/common/helpers/contract-error-from-failed-simulation-response.ts";
+import type { InvokeContractPipeline } from "@/pipelines/invoke-contract/index.ts";
+import type { ReadFromContractPipeline } from "@/pipelines/read-from-contract/index.ts";
+
+/**
+ * Plugin accepted by the contract's owned invoke pipeline.
+ */
+export type ContractInvokePipePlugin = Parameters<
+  InvokeContractPipeline["use"]
+>[0];
+
+/**
+ * Plugin accepted by the contract's owned read pipeline.
+ */
+export type ContractReadPipePlugin = Parameters<
+  ReadFromContractPipeline["use"]
+>[0];
+
+/**
+ * Plugins attached to the contract's owned pipelines during construction.
+ *
+ * Constructor-time plugins are intentionally pipeline-specific so callers make
+ * a deliberate choice about whether behavior applies to writes, reads, or both.
+ */
+export type ContractPipelinePlugins = {
+  /** Plugins attached to `contract.invokePipe`. */
+  invokePipe?: readonly ContractInvokePipePlugin[];
+  /** Plugins attached to `contract.readPipe`. */
+  readPipe?: readonly ContractReadPipePlugin[];
+};
+
+/**
+ * Strategy used when deriving contract-error matching from the loaded contract
+ * specification.
+ */
+export type LoadContractErrorsFromWasmArgs =
+  | {
+    /** Match any parsed contract error by numeric code. */
+    strategy: "any";
+  }
+  | {
+    /** Match only errors emitted by a specific contract id. */
+    strategy: "contract-id";
+    /**
+     * Contract id that must emit the error. When omitted, the current
+     * contract id bound to this client is used.
+     */
+    contractId?: ContractId;
+  }
+  | {
+    /** Match only root-invocation or sub-invocation errors. */
+    strategy: "issued-from";
+    /** Invocation level that must emit the error. */
+    issuedFrom: ParsedSimulationErrorIssuer;
+  };
 
 /** @internal */
 export type ContractConstructorArgs = {
@@ -22,29 +77,28 @@ export type ContractConfig = {
   /** Uploaded wasm hash used for deploy flows. */
   wasmHash?: string;
   /**
-   * Known contract-error mapping installed on both contract pipelines.
+   * Plugins installed on the contract's owned pipelines during construction.
    *
-   * Provide this when you want `read(...)` and `invoke(...)` to translate
-   * recognized simulation contract errors into
-   * `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED` with a human-facing message. A
-   * plain map matches by code; an ordered matcher list can match by contract id
-   * or by root/sub-invocation level.
+   * Use this for advanced orchestration that should exist from the moment the
+   * client is created. Plugins are split by pipeline so read-only and
+   * state-changing flows can be configured independently.
    *
-   * @example Map known contract errors while constructing a client.
+   * @example Attach a plugin to both owned pipelines.
    * ```ts
    * const contract = new Contract({
    *   networkConfig,
    *   contractConfig: {
    *     contractId,
    *     spec,
-   *     contractErrors: {
-   *       1: { message: "Unauthorized" },
+   *     plugins: {
+   *       invokePipe: [plugin],
+   *       readPipe: [plugin],
    *     },
    *   },
    * });
    * ```
    */
-  contractErrors?: ContractErrorMatcherPluginConfig;
+  plugins?: ContractPipelinePlugins;
 } & (ContractConfigWasm | ContractConfigWasmHash | ContractConfigId);
 
 /** @internal */

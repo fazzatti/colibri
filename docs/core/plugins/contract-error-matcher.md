@@ -63,9 +63,9 @@ try {
 
 ## Use With `Contract`
 
-For the high-level `Contract` client, pass the same mapping as `contractErrors`.
-Colibri installs the matcher on both the read and invoke pipelines owned by that
-contract instance.
+For the high-level `Contract` client, use `loadContractErrorsFromWasm(...)` when
+the contract spec or WASM contains error enum cases. Colibri derives the
+error-code map and installs the matcher on both owned pipelines.
 
 ```ts
 import { Contract, NetworkConfig } from "@colibri/core";
@@ -75,12 +75,10 @@ const contract = new Contract({
   contractConfig: {
     contractId: "C...",
     spec,
-    contractErrors: {
-      1: { message: "Unauthorized" },
-      265: { message: "InsufficientBalance" },
-    },
   },
 });
+
+await contract.loadContractErrorsFromWasm({ strategy: "any" });
 
 await contract.invoke({
   method: "transfer",
@@ -91,7 +89,48 @@ await contract.invoke({
 
 This path is the simplest option when a generated contract client or application
 owns one `Contract` instance and wants consistent error mapping for both reads
-and writes.
+and writes. The loader uses the already loaded spec when available; otherwise it
+loads the spec from local WASM or from deployed WASM through RPC. It throws if
+the built-in matcher is already attached to either owned pipeline.
+
+If you already have WASM bytes and only need the plain mapping, use
+`extractContractErrorMapFromWasm(...)`:
+
+```ts
+import {
+  createContractErrorMatcherPlugin,
+  extractContractErrorMapFromWasm,
+} from "@colibri/core";
+
+const wasm = await Deno.readFile("./contract.wasm");
+const errors = extractContractErrorMapFromWasm(wasm);
+
+const matcher = createContractErrorMatcherPlugin(errors);
+```
+
+For constructor-time plugin setup, use `contractConfig.plugins` and choose the
+target pipeline explicitly:
+
+```ts
+import { createContractErrorMatcherPlugin } from "@colibri/core";
+
+const matcher = createContractErrorMatcherPlugin({
+  1: { message: "Unauthorized" },
+  265: { message: "InsufficientBalance" },
+});
+
+const contract = new Contract({
+  networkConfig: NetworkConfig.TestNet(),
+  contractConfig: {
+    contractId: "C...",
+    spec,
+    plugins: {
+      invokePipe: [matcher],
+      readPipe: [matcher],
+    },
+  },
+});
+```
 
 ## Matching Strategies
 
@@ -194,7 +233,9 @@ console.log(original.meta.data.diagnosticEvents);
 ## Related APIs
 
 - `createContractErrorMatcherPlugin(...)`
-- `ContractConfig.contractErrors`
+- `extractContractErrorMapFromWasm(...)`
+- `ContractConfig.plugins`
+- `Contract.loadContractErrorsFromWasm(...)`
 - `CONTRACT_ERROR_SIMULATION_FAILED`
 - `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED`
 - `parseFailedSimulationResponse(...)`

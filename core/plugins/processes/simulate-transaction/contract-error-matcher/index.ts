@@ -40,8 +40,10 @@ export const CONTRACT_ERROR_MATCHER_PLUGIN_TARGET: "simulate-transaction" =
  * message. The original process error remains available as `meta.cause`.
  *
  * Attach this plugin directly to an invoke/read pipeline for advanced
- * orchestration, or pass the same config as `contractErrors` to `Contract` for
- * automatic installation on both contract pipelines.
+ * orchestration. High-level `Contract` users can also pass plugins explicitly
+ * through `contractConfig.plugins` or call
+ * `contract.loadContractErrorsFromWasm(...)` to derive a mapping from the
+ * loaded contract spec or WASM.
  *
  * @param config - A simple error-code map or ordered matcher list.
  * @returns A plugin targeting the simulate-transaction step.
@@ -126,4 +128,5 @@ const matchesStrategy = (
 
 export { ERROR_PLG_SIM_CEM } from "@/plugins/processes/simulate-transaction/contract-error-matcher/error.ts";
 export * from "@/plugins/processes/simulate-transaction/contract-error-matcher/error.ts";
+export { extractContractErrorMapFromWasm } from "@/plugins/processes/simulate-transaction/contract-error-matcher/helpers.ts";
 export type * from "@/plugins/processes/simulate-transaction/contract-error-matcher/types.ts";
