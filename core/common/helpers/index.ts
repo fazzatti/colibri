@@ -6,5 +6,20 @@ export * from "@/common/helpers/xdr/index.ts";
 export * from "@/common/helpers/transaction.ts";
 export * from "@/common/helpers/calculate-contract-id.ts";
 export * from "@/common/helpers/format-units.ts";
+export {
+  getContractErrorFromFailedSimulationResponse,
+  type ParsedFailedSimulationResponse,
+  type ParsedSimulationContractError,
+  type ParsedSimulationContractErrorDiagnosticEvent,
+  type ParsedSimulationContractErrorStackItem,
+  type ParsedSimulationDiagnosticContractError,
+  type ParsedSimulationDiagnosticEvent,
+  type ParsedSimulationDiagnosticEventBase,
+  type ParsedSimulationErrorIssuer,
+  type ParsedSimulationFunctionCall,
+  type ParsedSimulationFunctionCallDiagnosticEvent,
+  type ParsedSimulationOtherDiagnosticEvent,
+  parseFailedSimulationResponse,
+} from "@/common/helpers/contract-error-from-failed-simulation-response.ts";
 /** Error constructors for decimal unit formatting helpers. */
 export * as ERRORS_HLP_UNT from "@/common/helpers/format-units.error.ts";

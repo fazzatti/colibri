@@ -1,4 +1,9 @@
-import { assertEquals, assertExists, assertThrows } from "@std/assert";
+import {
+  assertEquals,
+  assertExists,
+  assertRejects,
+  assertThrows,
+} from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Buffer } from "buffer";
 import { Contract } from "@/contract/index.ts";
@@ -10,12 +15,28 @@ import { NetworkType } from "@/network/types.ts";
 import { Operation } from "stellar-sdk";
 import type { Spec } from "stellar-sdk/contract";
 import type { ContractId } from "@/strkeys/types.ts";
+import {
+  CONTRACT_ERROR_MATCHER_PLUGIN_ID,
+  createContractErrorMatcherPlugin,
+} from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
+import {
+  ErrorByCode,
+  ERRORS_CONTRACT_SPEC,
+} from "colibri-internal/tests/specs/errors-contract.ts";
+import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";
 
 class TestContract extends Contract {
   public requireNoContractIdForTest(): void {
     this.requireNoContractId();
   }
 }
+
+const hasContractErrorMatcherPlugin = (
+  plugins: readonly unknown[],
+): boolean =>
+  (plugins as readonly { id: string }[]).some((plugin) =>
+    plugin.id === CONTRACT_ERROR_MATCHER_PLUGIN_ID
+  );
 
 describe("Contract", () => {
   describe("construction", () => {
@@ -85,6 +106,41 @@ describe("Contract", () => {
       assertEquals([...uint8Contract.getWasm()], [1, 2, 3]);
       assertEquals([...arrayBufferContract.getWasm()], [4, 5, 6]);
       assertEquals([...dataViewContract.getWasm()], [7, 8, 9]);
+    });
+
+    it("adds configured constructor plugins to the selected owned pipelines", () => {
+      const mockRpc = {} as unknown as Server;
+      const invokePlugin = createContractErrorMatcherPlugin({
+        265: { message: "Known invoke error" },
+      });
+      const readPlugin = createContractErrorMatcherPlugin({
+        3477: { message: "Known read error" },
+      });
+      const contract = new Contract({
+        networkConfig: NetworkConfig.CustomNet({
+          type: NetworkType.TESTNET,
+          networkPassphrase: "Test Network",
+        }),
+        contractConfig: {
+          wasmHash: "mockHash",
+          plugins: {
+            invokePipe: [invokePlugin],
+            readPipe: [readPlugin],
+          },
+        },
+        rpc: mockRpc,
+      });
+
+      assertEquals(
+        (contract.invokePipe.plugins as readonly unknown[]).includes(
+          invokePlugin,
+        ),
+        true,
+      );
+      assertEquals(
+        (contract.readPipe.plugins as readonly unknown[]).includes(readPlugin),
+        true,
+      );
     });
   });
 
@@ -234,6 +290,206 @@ describe("Contract", () => {
       assertThrows(
         () => contractWithId.requireNoContractIdForTest(),
         E.PROPERTY_ALREADY_SET,
+      );
+    });
+
+    it("loads contract errors from an existing spec and installs the matcher on both owned pipelines", async () => {
+      const contract = new Contract({
+        networkConfig,
+        contractConfig: {
+          wasmHash: "mockHash",
+          spec: ERRORS_CONTRACT_SPEC,
+        },
+        rpc: mockRpc,
+      });
+
+      const errors = await contract.loadContractErrorsFromWasm({
+        strategy: "any",
+      });
+
+      assertEquals(errors, ErrorByCode);
+      assertEquals(
+        hasContractErrorMatcherPlugin(contract.invokePipe.plugins),
+        true,
+      );
+      assertEquals(
+        hasContractErrorMatcherPlugin(contract.readPipe.plugins),
+        true,
+      );
+    });
+
+    it("loads contract errors from local wasm when no spec is already loaded", async () => {
+      const wasm = await loadWasmFile(
+        "./_internal/tests/compiled-contracts/errors_contract.wasm",
+      );
+      const contract = new Contract({
+        networkConfig,
+        contractConfig: {
+          wasm,
+        },
+        rpc: mockRpc,
+      });
+
+      const errors = await contract.loadContractErrorsFromWasm({
+        strategy: "any",
+      });
+
+      assertEquals(errors, ErrorByCode);
+      assertEquals(
+        hasContractErrorMatcherPlugin(contract.invokePipe.plugins),
+        true,
+      );
+      assertEquals(
+        hasContractErrorMatcherPlugin(contract.readPipe.plugins),
+        true,
+      );
+    });
+
+    it("uses the bound contract id for contract-id error loading", async () => {
+      const contract = new Contract({
+        networkConfig,
+        contractConfig: {
+          contractId:
+            "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId,
+          spec: ERRORS_CONTRACT_SPEC,
+        },
+        rpc: mockRpc,
+      });
+
+      const errors = await contract.loadContractErrorsFromWasm({
+        strategy: "contract-id",
+      });
+
+      assertEquals(errors, ErrorByCode);
+      assertEquals(
+        hasContractErrorMatcherPlugin(contract.invokePipe.plugins),
+        true,
+      );
+      assertEquals(
+        hasContractErrorMatcherPlugin(contract.readPipe.plugins),
+        true,
+      );
+    });
+
+    it("uses an explicit contract id for contract-id error loading", async () => {
+      const contract = new Contract({
+        networkConfig,
+        contractConfig: {
+          wasmHash: "mockHash",
+          spec: ERRORS_CONTRACT_SPEC,
+        },
+        rpc: mockRpc,
+      });
+
+      const errors = await contract.loadContractErrorsFromWasm({
+        strategy: "contract-id",
+        contractId:
+          "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId,
+      });
+
+      assertEquals(errors, ErrorByCode);
+      assertEquals(
+        hasContractErrorMatcherPlugin(contract.invokePipe.plugins),
+        true,
+      );
+      assertEquals(
+        hasContractErrorMatcherPlugin(contract.readPipe.plugins),
+        true,
+      );
+    });
+
+    it("loads contract errors for issued-from matching", async () => {
+      const contract = new Contract({
+        networkConfig,
+        contractConfig: {
+          wasmHash: "mockHash",
+          spec: ERRORS_CONTRACT_SPEC,
+        },
+        rpc: mockRpc,
+      });
+
+      const errors = await contract.loadContractErrorsFromWasm({
+        strategy: "issued-from",
+        issuedFrom: "sub-invocation",
+      });
+
+      assertEquals(errors, ErrorByCode);
+      assertEquals(
+        hasContractErrorMatcherPlugin(contract.invokePipe.plugins),
+        true,
+      );
+      assertEquals(
+        hasContractErrorMatcherPlugin(contract.readPipe.plugins),
+        true,
+      );
+    });
+
+    it("does not install the matcher when the loaded spec has no contract errors", async () => {
+      const contract = new Contract({
+        networkConfig,
+        contractConfig: {
+          wasmHash: "mockHash",
+          spec: { errorCases: () => [] } as unknown as Spec,
+        },
+        rpc: mockRpc,
+      });
+
+      const errors = await contract.loadContractErrorsFromWasm({
+        strategy: "any",
+      });
+
+      assertEquals(errors, {});
+      assertEquals(
+        hasContractErrorMatcherPlugin(contract.invokePipe.plugins),
+        false,
+      );
+      assertEquals(
+        hasContractErrorMatcherPlugin(contract.readPipe.plugins),
+        false,
+      );
+    });
+
+    it("throws when loading contract errors would add a second matcher to the invoke pipeline", async () => {
+      const contract = new Contract({
+        networkConfig,
+        contractConfig: {
+          wasmHash: "mockHash",
+          spec: ERRORS_CONTRACT_SPEC,
+          plugins: {
+            invokePipe: [createContractErrorMatcherPlugin(ErrorByCode)],
+          },
+        },
+        rpc: mockRpc,
+      });
+
+      await assertRejects(
+        async () =>
+          await contract.loadContractErrorsFromWasm({
+            strategy: "any",
+          }),
+        E.CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED,
+      );
+    });
+
+    it("throws when loading contract errors would add a second matcher to the read pipeline", async () => {
+      const contract = new Contract({
+        networkConfig,
+        contractConfig: {
+          wasmHash: "mockHash",
+          spec: ERRORS_CONTRACT_SPEC,
+          plugins: {
+            readPipe: [createContractErrorMatcherPlugin(ErrorByCode)],
+          },
+        },
+        rpc: mockRpc,
+      });
+
+      await assertRejects(
+        async () =>
+          await contract.loadContractErrorsFromWasm({
+            strategy: "any",
+          }),
+        E.CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED,
       );
     });
 

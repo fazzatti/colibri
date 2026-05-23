@@ -197,7 +197,7 @@ function createArchiveIngestor(
  *
  * const streamer = createEventStreamer({
  *   rpcUrl: "https://soroban-testnet.stellar.org",
- *   filters: [new EventFilter({ contractId: "C..." })],
+ *   filters: [new EventFilter({ contractIds: ["C..."] })],
  * });
  *
  * await streamer.start(async (event) => {

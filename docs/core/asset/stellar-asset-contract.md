@@ -5,7 +5,8 @@ Contracts (SACs), the built-in Soroban contracts that bridge classic Stellar
 assets into the Soroban ecosystem.
 
 SACs implement the token interface used by Stellar's built-in asset wrapper and
-are defined in [CAP-0046-06](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0046-06.md).
+are defined in
+[CAP-0046-06](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0046-06.md).
 
 ## Overview
 
@@ -65,7 +66,11 @@ const sac = new StellarAssetContract({
 The deployment flow is a static factory that returns a ready client:
 
 ```ts
-import { LocalSigner, NetworkConfig, StellarAssetContract } from "@colibri/core";
+import {
+  LocalSigner,
+  NetworkConfig,
+  StellarAssetContract,
+} from "@colibri/core";
 
 const signer = LocalSigner.fromSecret("S...");
 
@@ -155,6 +160,20 @@ await sac.approve({
 });
 ```
 
+### Trust
+
+Create an unlimited trustline for this asset on a classic Stellar account:
+
+```ts
+await sac.trust({
+  address: holderAddress,
+  config,
+});
+```
+
+Use this before sending the asset to a classic account that does not already
+trust it. Existing trustlines are unchanged, and contract addresses are ignored.
+
 ### Admin Operations
 
 ```ts
@@ -183,12 +202,12 @@ sac.contract.invokePipe.use(createChannelAccountsPlugin({ channels }));
 
 ## Errors
 
-| Code      | Class                        | Description                                  |
-| --------- | ---------------------------- | -------------------------------------------- |
-| `SAC_001` | `MISSING_ARG`                | Required SAC argument missing                |
-| `SAC_002` | `FAILED_TO_DEPLOY_CONTRACT`  | SAC deployment failed                        |
-| `SAC_003` | `UNMATCHED_CONTRACT_ID`      | Network returned a different contract id     |
-| `SAC_004` | `MISSING_RETURN_VALUE`       | Expected contract return value missing       |
+| Code      | Class                       | Description                              |
+| --------- | --------------------------- | ---------------------------------------- |
+| `SAC_001` | `MISSING_ARG`               | Required SAC argument missing            |
+| `SAC_002` | `FAILED_TO_DEPLOY_CONTRACT` | SAC deployment failed                    |
+| `SAC_003` | `UNMATCHED_CONTRACT_ID`     | Network returned a different contract id |
+| `SAC_004` | `MISSING_RETURN_VALUE`      | Expected contract return value missing   |
 
 ## Notes
 

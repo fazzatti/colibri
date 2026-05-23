@@ -1,9 +1,9 @@
 # Core Package Overview
 
 `@colibri/core` is the foundation package for the Colibri toolkit. It exposes
-the main clients, transaction configuration types, low-level process
-functions, step factories, built-in pipelines, event helpers, ledger-state
-accessors, and tooling.
+the main clients, transaction configuration types, low-level process functions,
+step factories, built-in pipelines, event helpers, ledger-state accessors, and
+tooling.
 
 ## Installation
 
@@ -13,12 +13,14 @@ deno add jsr:@colibri/core
 
 ## Architecture At A Glance
 
-- **Processes** are raw single-purpose functions such as `buildTransaction`
-  and `sendTransaction`
+- **Processes** are raw single-purpose functions such as `buildTransaction` and
+  `sendTransaction`
 - **Steps** are `convee` wrappers with stable ids under `steps`
 - **Pipelines** are built with `create*Pipeline(...)` factory functions
-- **Clients** such as `Contract` and `StellarAssetContract` own those
-  pipelines internally
+- **Clients** such as `Contract` and `StellarAssetContract` own those pipelines
+  internally
+- **Core plugins** extend built-in pipeline steps without changing the pipeline
+  structure
 - **Errors** are typed, stable, and source-aware
 
 ## Quick Import Examples
@@ -104,9 +106,9 @@ const ledger = new LedgerEntries({
 
 ```ts
 import {
+  buildAccountLedgerKey,
   LedgerEntries,
   NetworkConfig,
-  buildAccountLedgerKey,
 } from "@colibri/core";
 
 const ledger = new LedgerEntries({
@@ -144,11 +146,11 @@ console.log(transfer.from, transfer.to, transfer.amount);
 ```ts
 import {
   Contract,
+  createInvokeContractPipeline,
   EventFilter,
   LocalSigner,
   NetworkConfig,
   SACEvents,
-  createInvokeContractPipeline,
   steps,
 } from "@colibri/core";
 
@@ -183,6 +185,8 @@ try {
   interface
 - use `LedgerEntries` when you want typed RPC access to live ledger state
 - use `create*Pipeline(...)` when you want to attach plugins or own the flow
+- use core plugins when you want built-in extension behavior such as known
+  contract-error matching
 - use `steps` when you need stable orchestration ids
 - use raw processes when you want isolated single-purpose behavior
 
@@ -193,4 +197,5 @@ try {
 - [Stellar Asset Contract](asset/stellar-asset-contract.md) — SAC-specific
   client
 - [Pipelines](pipelines/README.md) — Built-in write and read flows
+- [Core Plugins](plugins/README.md) — Built-in pipeline extensions
 - [Error Handling](error.md) — Typed error model

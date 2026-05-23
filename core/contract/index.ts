@@ -12,6 +12,12 @@ import {
   type InvokeContractPipeline,
 } from "@/pipelines/invoke-contract/index.ts";
 import {
+  CONTRACT_ERROR_MATCHER_PLUGIN_ID,
+  CONTRACT_ERROR_MATCHER_PLUGIN_TARGET,
+  createContractErrorMatcherPlugin,
+} from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
+import { extractContractErrorMapFromSpec } from "@/plugins/processes/simulate-transaction/contract-error-matcher/helpers.ts";
+import {
   createReadFromContractPipeline,
   type ReadFromContractPipeline,
 } from "@/pipelines/read-from-contract/index.ts";
@@ -25,7 +31,10 @@ import { processSpecEntryStream } from "@/common/helpers/wasm.ts";
 import { generateRandomSalt } from "@/common/helpers/generate-random-salt.ts";
 import { toBuffer } from "@/common/helpers/internal-buffer.ts";
 import * as E from "@/contract/error.ts";
-import type { ContractConstructorArgs } from "@/contract/types.ts";
+import type {
+  ContractConstructorArgs,
+  LoadContractErrorsFromWasmArgs,
+} from "@/contract/types.ts";
 import type { Api } from "stellar-sdk/rpc";
 import type { OperationOptions } from "stellar-sdk";
 import type { ContractId } from "@/strkeys/types.ts";
@@ -40,9 +49,24 @@ import type { TransactionConfig } from "@/common/types/transaction-config/types.
 import type { InvokeContractOutput } from "@/pipelines/invoke-contract/types.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import type { ReadFromContractOutput } from "@/pipelines/read-from-contract/types.ts";
+import type {
+  ContractErrorMatcherPluginConfig,
+  KnownContractErrorMap,
+} from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
+
+type PipelinePluginIdentity = {
+  readonly id: string;
+  readonly target: string;
+};
 
 /**
  * High-level client for interacting with a Soroban contract.
+ *
+ * `Contract` owns both read and invoke pipelines. Advanced callers can attach
+ * plugins to those owned pipelines with `contractConfig.plugins`. For
+ * contract-error matching, call `loadContractErrorsFromWasm(...)` to derive
+ * the error map from the loaded contract spec or WASM and install the built-in
+ * matcher on both pipelines.
  */
 export class Contract {
   /** @internal */
@@ -96,7 +120,14 @@ export class Contract {
       rpc,
     });
 
-    const { spec, contractId, wasm, wasmHash } = contractConfig;
+    const { spec, contractId, wasm, wasmHash, plugins } = contractConfig;
+
+    for (const plugin of plugins?.invokePipe ?? []) {
+      this.invokePipe.use(plugin);
+    }
+    for (const plugin of plugins?.readPipe ?? []) {
+      this.readPipe.use(plugin);
+    }
 
     if (spec) {
       this.spec = spec;
@@ -156,6 +187,53 @@ export class Contract {
   /** @internal */
   protected requireNoSpec(): void {
     this.requireNo("spec");
+  }
+
+  /** @internal */
+  private hasContractErrorMatcherPlugin(
+    pipe: InvokeContractPipeline | ReadFromContractPipeline,
+  ): boolean {
+    const plugins = pipe.plugins as readonly PipelinePluginIdentity[];
+
+    return plugins.some((plugin) =>
+      plugin.id === CONTRACT_ERROR_MATCHER_PLUGIN_ID &&
+      plugin.target === CONTRACT_ERROR_MATCHER_PLUGIN_TARGET
+    );
+  }
+
+  /** @internal */
+  private assertNoContractErrorMatcherPlugin(): void {
+    const invokePipe = this.hasContractErrorMatcherPlugin(this.invokePipe);
+    const readPipe = this.hasContractErrorMatcherPlugin(this.readPipe);
+
+    if (invokePipe || readPipe) {
+      throw new E.CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED({
+        invokePipe,
+        readPipe,
+      });
+    }
+  }
+
+  /** @internal */
+  private createContractErrorMatcherConfig(
+    args: LoadContractErrorsFromWasmArgs,
+    errors: KnownContractErrorMap,
+  ): ContractErrorMatcherPluginConfig {
+    if (args.strategy === "any") return errors;
+
+    if (args.strategy === "contract-id") {
+      return [{
+        strategy: "contract-id",
+        contractId: args.contractId ?? this.getContractId(),
+        errors,
+      }];
+    }
+
+    return [{
+      strategy: "issued-from",
+      issuedFrom: args.issuedFrom,
+      errors,
+    }];
   }
 
   //==========================================
@@ -364,6 +442,59 @@ export class Contract {
     this.wasm = wasm;
 
     await this.loadSpecFromWasm();
+  }
+
+  /**
+   * Loads known contract-error names from the contract spec and installs the
+   * matcher plugin on this client's read and invoke pipelines.
+   *
+   * If the contract spec is already loaded, this method uses it directly. If no
+   * spec is loaded, it loads the spec from local WASM when available, otherwise
+   * it fetches the deployed WASM through the configured RPC server. The derived
+   * map uses each contract error code as the key and the error enum case name
+   * as the message.
+   *
+   * The method is intentionally guarded: if the built-in contract-error matcher
+   * plugin is already attached to either owned pipeline, it throws instead of
+   * adding a second matcher with ambiguous ordering.
+   *
+   * @param args - Matching strategy used when installing the derived map. With
+   * `contract-id`, omit `contractId` to use this contract client's bound id.
+   * @returns The derived contract-error map.
+   * @throws When the matcher plugin is already attached to either owned
+   * pipeline.
+   *
+   * @example Load and install known errors for any matching contract-error code.
+   * ```ts
+   * const errors = await contract.loadContractErrorsFromWasm({
+   *   strategy: "any",
+   * });
+   * ```
+   */
+  public async loadContractErrorsFromWasm(
+    args: LoadContractErrorsFromWasmArgs,
+  ): Promise<KnownContractErrorMap> {
+    this.assertNoContractErrorMatcherPlugin();
+
+    if (!this.spec) {
+      if (this.wasm) {
+        await this.loadSpecFromWasm();
+      } else {
+        await this.loadSpecFromDeployedContract();
+      }
+    }
+
+    const errors = extractContractErrorMapFromSpec(this.getSpec());
+
+    if (Object.keys(errors).length === 0) {
+      return errors;
+    }
+
+    const matcherConfig = this.createContractErrorMatcherConfig(args, errors);
+    this.invokePipe.use(createContractErrorMatcherPlugin(matcherConfig));
+    this.readPipe.use(createContractErrorMatcherPlugin(matcherConfig));
+
+    return errors;
   }
 
   /**

@@ -72,6 +72,7 @@ export enum Code {
   CONTRACT_INSTANCE_NOT_FOUND = "CONTR_009",
   CONTRACT_CODE_NOT_FOUND = "CONTR_010",
   INVALID_CONTRACT_ID = "CONTR_011",
+  CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED = "CONTR_012",
 }
 
 // Currently unused, reserving
@@ -318,6 +319,33 @@ export class INVALID_CONTRACT_ID extends ContractError<Code> {
 }
 
 /**
+ * Raised when automatic contract-error loading would duplicate the matcher plugin.
+ */
+export class CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED
+  extends ContractError<Code> {
+  /**
+   * Creates an already-configured contract-error matcher error.
+   *
+   * @param args - Which owned pipelines already contain the matcher plugin.
+   */
+  constructor(args: { invokePipe: boolean; readPipe: boolean }) {
+    super({
+      code: Code.CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED,
+      message: "Contract error matcher already configured",
+      details:
+        "The contract error matcher plugin is already attached to at least one owned contract pipeline.",
+      diagnostic: {
+        suggestion:
+          "Create a new Contract instance or configure plugins explicitly instead of calling loadContractErrorsFromWasm again.",
+        rootCause:
+          "Adding a second matcher would make plugin ordering and error matching behavior ambiguous.",
+      },
+      data: args,
+    });
+  }
+}
+
+/**
  * Contract error constructors indexed by stable error code.
  */
 export const ERROR_CONTR = {
@@ -333,4 +361,6 @@ export const ERROR_CONTR = {
   [Code.CONTRACT_INSTANCE_NOT_FOUND]: CONTRACT_INSTANCE_NOT_FOUND,
   [Code.CONTRACT_CODE_NOT_FOUND]: CONTRACT_CODE_NOT_FOUND,
   [Code.INVALID_CONTRACT_ID]: INVALID_CONTRACT_ID,
+  [Code.CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED]:
+    CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED,
 };
