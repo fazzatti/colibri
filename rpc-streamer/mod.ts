@@ -27,7 +27,7 @@
  * // Create an event streamer
  * const eventStreamer = RPCStreamer.event({
  *   rpcUrl: "https://soroban-testnet.stellar.org",
- *   filters: [new EventFilter({ contractId: "C..." })],
+ *   filters: [new EventFilter({ contractIds: ["C..."] })],
  * });
  *
  * await eventStreamer.start(async (event) => {
@@ -72,19 +72,19 @@ export { RPCStreamer } from "@/streamer.ts";
 
 // Types
 export type {
-  DataHandler,
-  CheckpointHandler,
-  ErrorHandler,
-  LiveIngestionResult,
-  LiveIngestFunc,
-  ArchiveIngestFunc,
   ArchiveIngestContext,
-  StreamerOptions,
-  BaseStartOptions,
-  LiveStartOptions,
+  ArchiveIngestFunc,
   ArchiveStartOptions,
   AutoStartOptions,
+  BaseStartOptions,
+  CheckpointHandler,
+  DataHandler,
+  ErrorHandler,
+  LiveIngestFunc,
+  LiveIngestionResult,
+  LiveStartOptions,
   RPCStreamerConfig,
+  StreamerOptions,
 } from "@/types.ts";
 
 // Errors

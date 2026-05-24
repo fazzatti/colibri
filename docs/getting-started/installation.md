@@ -30,12 +30,12 @@ This will add imports similar to:
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^0.20.0",
-    "@colibri/sep10": "jsr:@colibri/sep10@^0.5.5",
-    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.2.6",
+    "@colibri/core": "jsr:@colibri/core@^0.22.0",
+    "@colibri/sep10": "jsr:@colibri/sep10@^0.5.10",
+    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.2.10",
     "@colibri/test-tooling": "jsr:@colibri/test-tooling@^0.3.1",
-    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.9.5",
-    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^0.2.2"
+    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.9.9",
+    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^0.2.6"
   }
 }
 ```

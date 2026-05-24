@@ -19,6 +19,10 @@ Plugins are useful when you want to add behavior such as:
 | [Fee Bump](fee-bump.md)                 | Wrap outgoing transactions in a fee-bump envelope             |
 | [Channel Accounts](channel-accounts.md) | Reuse sponsored channel accounts across classic/invoke writes |
 
+`@colibri/core` also ships core plugins that do not require separate package
+installation. See [Core Plugins](../../core/plugins/README.md) for built-in
+extension points such as the contract error matcher.
+
 ## Using A Plugin
 
 ```ts

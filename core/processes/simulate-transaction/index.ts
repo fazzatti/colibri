@@ -3,12 +3,13 @@ import type {
   SimulateTransactionOutput,
 } from "@/processes/simulate-transaction/types.ts";
 import * as E from "@/processes/simulate-transaction/error.ts";
+import { parseFailedSimulationResponse } from "@/common/helpers/contract-error-from-failed-simulation-response.ts";
 
 import { Api } from "stellar-sdk/rpc";
 
 /** Simulates a built transaction against Stellar RPC. */
 export const simulateTransaction = async (
-  input: SimulateTransactionInput
+  input: SimulateTransactionInput,
 ): Promise<SimulateTransactionOutput> => {
   try {
     const { transaction, rpc } = input;
@@ -22,7 +23,24 @@ export const simulateTransaction = async (
     }
 
     if (Api.isSimulationError(simulationResponse)) {
-      throw new E.SIMULATION_FAILED(input, simulationResponse);
+      const failedSimulation = parseFailedSimulationResponse(
+        simulationResponse,
+      );
+
+      if (failedSimulation.contractError) {
+        throw new E.CONTRACT_ERROR_SIMULATION_FAILED(
+          input,
+          simulationResponse,
+          {
+            ...failedSimulation,
+            contractError: failedSimulation.contractError,
+          },
+        );
+      }
+
+      throw new E.SIMULATION_FAILED(input, simulationResponse, {
+        failedSimulation,
+      });
     }
 
     if (

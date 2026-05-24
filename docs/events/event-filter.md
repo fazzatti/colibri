@@ -38,7 +38,7 @@ The event type to filter:
 ```typescript
 enum EventType {
   Contract = "contract", // User-defined contract events
-  System = "system", // System-level events (e.g., SAC events)
+  System = "system", // System contract events
 }
 ```
 
@@ -46,11 +46,13 @@ Most events you'll work with are `Contract` events.
 
 ### `topics`
 
-Topic filters control which events match based on topic values. See [Topic Filters](#topic-filters) below.
+Topic filters control which events match based on topic values. See
+[Topic Filters](#topic-filters) below.
 
 ## Topic Filters
 
-Soroban events have up to 4 topics (indexed values). Topic filters let you match specific values or wildcards.
+Soroban events have up to 4 topics (indexed values). Topic filters let you match
+specific values or wildcards.
 
 ### Structure
 
@@ -127,7 +129,7 @@ You can use multiple filters to capture different event types:
 
 ```typescript
 import { RPCStreamer } from "@colibri/rpc-streamer";
-import { EventFilter, SACEvents } from "@colibri/core";
+import { EventFilter, EventType, SACEvents } from "@colibri/core";
 
 const transferFilter = new EventFilter({
   contractIds: ["C..."],
@@ -214,7 +216,7 @@ Filters are converted to RPC format when passed to the Event Streamer:
 
 ```typescript
 // EventFilter provides methods for conversion
-const rpcFilter = filter.toRpcFilter();
+const rpcFilter = filter.toRawEventFilter();
 ```
 
 ## Best Practices
@@ -269,6 +271,8 @@ if (StrKey.isContractId(contractId)) {
 
 ## Next Steps
 
-- [SAC Events](standardized-events/sac.md) — Stellar Asset Contract event templates
-- [SEP-41 Events](standardized-events/sep-41.md) — Token interface event templates
+- [SAC Events](standardized-events/sac.md) — Stellar Asset Contract event
+  templates
+- [SEP-41 Events](standardized-events/sep-41.md) — Token interface event
+  templates
 - [RPC Streamer](../packages/rpc-streamer.md) — Use filters with streaming

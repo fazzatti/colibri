@@ -4,7 +4,7 @@ CONTRACT_NAME = types_harness
 NETWORK = testnet
 SOURCE_ACCOUNT = admin
 WASM_PATH = ../../../target/wasm32v1-none/release/$(CONTRACT_NAME).wasm
-BINDINGS_DIR = ./.bindings
+BINDINGS_DIR = ./local-bindings
 
 # scripts
 UPLOAD_AND_DEPLOY_SCRIPT = ./src/deploy/upload-and-deploy.ts

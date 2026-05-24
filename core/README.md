@@ -28,9 +28,9 @@ deno add jsr:@colibri/core
 npm install @colibri/core
 ```
 
-After installation, import from the root (`jsr:@colibri/core`) or from specific
-paths (e.g., `jsr:@colibri/core/processes`). Published exports are declared in
-`core/deno.json`, ensuring compatibility with Deno, Node, and bundlers.
+After installation, import from the package root (`jsr:@colibri/core`).
+Published exports are declared in `core/deno.json`, ensuring compatibility with
+Deno, Node, and bundlers.
 
 ## Architecture overview
 
@@ -45,13 +45,16 @@ paths (e.g., `jsr:@colibri/core/processes`). Published exports are declared in
   [Processes](#processes).
 - **Steps** – Thin `convee` wrappers around processes that provide stable ids
   and plugin targets. See [Pipelines](#pipelines).
+- **Core plugins** – Built-in extension points for Colibri pipeline steps, such
+  as known contract-error matching during simulation. See
+  [Core plugins](#core-plugins).
 - **Accounts and signers** – Strongly typed wrappers around Ed25519 identities,
   muxed accounts, ledger keys, and signing. See
   [Accounts & signers](#accounts--signers).
 - **Events** – Tools for parsing, filtering, and working with Soroban contract
   events from ledger metadata. See [Events](#events).
-- **TOID** – Utilities for working with Stellar's Total Order IDs for precise
-  transaction and operation indexing. See [TOID](#toid).
+- **TOID** – Utilities for working with SEP-0035 operation IDs for precise
+  operation indexing. See [TOID](#toid).
 - **Network configuration** – Type-safe network profiles with runtime validation
   and type narrowing. See [Network configuration](#network-configuration).
 - **Common modules** – Shared configuration types, validators, StrKey utilities,
@@ -68,8 +71,8 @@ The error layer is the backbone of Colibri Core. Every error extends the base
 `ColibriError`, which standardizes:
 
 - `domain` – logical area (`pipelines`, `processes`, `tools`, `common`, etc.).
-- `code` – stable identifier (`PIPE_INVOKE_002`, `PROC_SIM_004`, …) that you can
-  log, match on, or promote to analytics.
+- `code` – stable identifier (`PIPE_INVC_002`, `SIM_004`, …) that you can log,
+  match on, or promote to analytics.
 - `source` – which module raised the error.
 - `details` and `diagnostic` – human-readable stack or diagnostic object.
 - `meta` – structured payload (often the input that caused the failure) so
@@ -78,13 +81,12 @@ The error layer is the backbone of Colibri Core. Every error extends the base
 Each module exports its own subclasses. Example:
 
 ```ts
-import { ColibriError } from "jsr:@colibri/core/error";
-import * as InvokeErrors from "jsr:@colibri/core/pipelines/invoke-contract/error";
+import { ColibriError, ERROR_PIPE_INVC } from "jsr:@colibri/core";
 
 try {
   await pipe.run(input);
 } catch (err) {
-  if (err instanceof InvokeErrors.MISSING_ARG) {
+  if (err instanceof ERROR_PIPE_INVC.MISSING_ARG) {
     // handle a known configuration issue
   } else if (ColibriError.is(err)) {
     console.error(err.code, err.meta);
@@ -162,15 +164,15 @@ Soroban flows so you can share configuration between the two modes.
 
 ## Processes
 
-Processes are reusable building blocks exposed under
-`jsr:@colibri/core/processes`. They are plain functions, which makes them easy
-to test directly and easy to reuse outside Colibri's built-in pipelines.
+Processes are reusable building blocks exported from `jsr:@colibri/core`. They
+are plain functions, which makes them easy to test directly and easy to reuse
+outside Colibri's built-in pipelines.
 
 - **BuildTransaction** – Creates transactions with optional memo, preconditions,
   and either RPC-derived or explicit sequence numbers.
 - **SimulateTransaction** – Wraps `Server.simulateTransaction`, producing typed
   success/restore responses and raising specific errors for transport failures,
-  simulation errors, or unrecognized payloads.
+  generic simulation failures, parsed contract errors, or unrecognized payloads.
 - **SignAuthEntries** – Consumes simulated Soroban auth entries alongside a set
   of `TransactionSigner`s, returning signatures in the order Soroban expects.
 - **AssembleTransaction** – Merges the base transaction, signed auth entries,
@@ -185,13 +187,51 @@ to test directly and easy to reuse outside Colibri's built-in pipelines.
 Each process is exported as a function plus an error namespace. Example:
 
 ```ts
-import { BTX_ERRORS, buildTransaction } from "jsr:@colibri/core/processes";
+import { BTX_ERRORS, buildTransaction } from "jsr:@colibri/core";
 
 const transaction = await buildTransaction(input);
 ```
 
 When you need orchestration ids or plugin targets, use the matching step factory
 from `jsr:@colibri/core`.
+
+## Core plugins
+
+Core plugins are shipped with `@colibri/core` and attach to built-in pipeline
+steps with `pipeline.use(...)`.
+
+The contract error matcher targets the `simulate-transaction` step. It rewrites
+recognized `CONTRACT_ERROR_SIMULATION_FAILED` errors into
+`KNOWN_CONTRACT_ERROR_SIMULATION_FAILED` with a message from your contract error
+map while keeping the original simulation failure in `meta.cause`. Error maps
+can also include optional `details`, which Colibri surfaces in the diagnostic
+root cause. When a diagnostic stack contains multiple contract errors, the
+matcher only rewrites the error code surfaced by RPC and uses the stack to find
+the matching contract, root/sub-invocation marker, and event index.
+
+```ts
+import {
+  createContractErrorMatcherPlugin,
+  createInvokeContractPipeline,
+} from "jsr:@colibri/core";
+
+const pipe = createInvokeContractPipeline({ networkConfig });
+
+pipe.use(
+  createContractErrorMatcherPlugin({
+    1: {
+      message: "Unauthorized",
+      details: "The caller is not authorized to run this operation.",
+    },
+  }),
+);
+```
+
+For the high-level `Contract` client, call
+`contract.loadContractErrorsFromWasm(...)` to derive the mapping from the loaded
+spec or WASM and install the matcher on both `readPipe` and `invokePipe`. If you
+need constructor-time setup, pass plugins intentionally through
+`contractConfig.plugins`.
 
 ## Accounts & signers
 
@@ -298,6 +338,16 @@ const deployed = await StellarAssetContract.deploy({
 });
 ```
 
+Use `trust(...)` to create an unlimited trustline on a classic Stellar account
+before sending the asset to that account:
+
+```ts
+await existing.trust({
+  address: holderAddress,
+  config: txConfig,
+});
+```
+
 `options.cache` configures memoization for stable descriptive reads
 (`decimals()`, `name()`, and `symbol()`). The same shared cache shape is reused
 across high-level tools:
@@ -331,7 +381,7 @@ including parsing from ledger metadata and filtering.
 Parse contract events directly from `LedgerCloseMeta` XDR structures:
 
 ```ts
-import { parseEventsFromLedgerCloseMeta } from "jsr:@colibri/core/events";
+import { parseEventsFromLedgerCloseMeta } from "jsr:@colibri/core";
 
 await parseEventsFromLedgerCloseMeta(
   metadataXdr, // LedgerCloseMeta XDR string
@@ -344,7 +394,7 @@ await parseEventsFromLedgerCloseMeta(
 
 // Each event includes:
 // - id: unique event identifier
-// - type: "contract" | "system" | "diagnostic"
+// - type: "contract" | "system"
 // - ledger: ledger sequence number
 // - contractId: the emitting contract (with address helper)
 // - topic: decoded topic values
@@ -356,7 +406,7 @@ await parseEventsFromLedgerCloseMeta(
 Create filters to select specific events by type, contract, or topic patterns:
 
 ```ts
-import { EventFilter, EventType } from "jsr:@colibri/core/events";
+import { EventFilter, EventType } from "jsr:@colibri/core";
 import { xdr } from "stellar-sdk";
 
 const filter = new EventFilter({
@@ -379,10 +429,7 @@ const rawFilter = filter.toRawEventFilter();
 Helper functions for working with ledger close metadata:
 
 ```ts
-import {
-  isLedgerCloseMetaV1,
-  isLedgerCloseMetaV2,
-} from "jsr:@colibri/core/events";
+import { isLedgerCloseMetaV1, isLedgerCloseMetaV2 } from "jsr:@colibri/core";
 
 // Type guards for metadata versions
 if (isLedgerCloseMetaV2(meta)) {
@@ -392,62 +439,63 @@ if (isLedgerCloseMetaV2(meta)) {
 
 ## TOID
 
-TOID (Total Order ID) is Stellar's mechanism for uniquely identifying
-transactions and operations across the entire network history. Colibri Core
-provides utilities for creating, parsing, and working with TOIDs.
+The TOID helpers work with SEP-0035 operation IDs. Colibri uses the `TOID` type
+name for these 64-bit identifiers, but SEP-0035 itself names the scheme
+"Operation IDs".
+
+A TOID identifies one historical operation. It is related to, but distinct from,
+Colibri's `EventId`, which appends an event index to the operation ID.
 
 ### Creating TOIDs
 
 ```ts
-import { encodeTOID } from "jsr:@colibri/core/toid";
+import { createTOID } from "jsr:@colibri/core";
 
-// Create a TOID from components
-const toid = encodeTOID({
-  ledgerSeq: 12345678,
-  txOrder: 1,
-  opOrder: 0,
-});
+const toid = createTOID(
+  12345678, // ledgerSequence
+  1, // transactionOrder, 1-based
+  1, // operationIndex, 1-based
+);
 
-// Returns a bigint representing the unique identifier
-console.log(toid); // 53021371269890048n
+console.log(toid); // "0053024283256950784"
 ```
 
 ### Parsing TOIDs
 
 ```ts
-import { decodeTOID } from "jsr:@colibri/core/toid";
+import { parseTOID } from "jsr:@colibri/core";
 
-const components = decodeTOID(53021371269890048n);
+const components = parseTOID("0053024283256950784");
 // {
-//   ledgerSeq: 12345678,
-//   txOrder: 1,
-//   opOrder: 0
+//   ledgerSequence: 12345678,
+//   transactionOrder: 1,
+//   operationIndex: 1
 // }
 ```
 
 ### Ledger bounds
 
 ```ts
-import { getLedgerRangeFromTOID } from "jsr:@colibri/core/toid";
+import { createTOID } from "jsr:@colibri/core";
 
-// Get the TOID range for an entire ledger
-const { start, end } = getLedgerRangeFromTOID(12345678);
-// start: first possible TOID in ledger
-// end: last possible TOID in ledger
+const ledger = 12345678;
+const firstToid = createTOID(ledger, 1, 1);
+const lastToid = createTOID(ledger, 1048575, 4095);
 ```
 
 ### TOID structure
 
 TOIDs pack three values into a 64-bit integer:
 
-| Field             | Bits | Description                                    |
-| ----------------- | ---- | ---------------------------------------------- |
-| Ledger sequence   | 32   | The ledger number (0 to ~4 billion)            |
-| Transaction order | 20   | Position within the ledger (0 to ~1 million)   |
-| Operation order   | 12   | Operation index within transaction (0 to 4095) |
+| Field                         | Bits | Description                                      |
+| ----------------------------- | ---- | ------------------------------------------------ |
+| Ledger sequence               | 32   | The ledger number                                |
+| Transaction application order | 20   | Position of the transaction in the closed ledger |
+| Operation index               | 12   | Operation index within transaction               |
 
-This structure ensures global uniqueness and natural ordering—comparing TOIDs as
-integers yields chronological order.
+This structure gives historical operations deterministic order after the ledger
+has closed. A transaction's application order is not knowable before inclusion
+in a closed ledger.
 
 ## Network configuration
 
@@ -457,7 +505,7 @@ factory methods and runtime type narrowing.
 ### Creating configurations
 
 ```ts
-import { NetworkConfig } from "jsr:@colibri/core/network";
+import { NetworkConfig } from "jsr:@colibri/core";
 
 // Pre-configured networks
 const testnet = NetworkConfig.TestNet();
@@ -538,8 +586,7 @@ Colibri Core ships shared utilities so every layer speaks the same language:
   between fast regex validation and checksum verification.
 
 ```ts
-import { NetworkConfig } from "jsr:@colibri/core/network";
-import type { TransactionConfig } from "jsr:@colibri/core/common/types";
+import { NetworkConfig, type TransactionConfig } from "jsr:@colibri/core";
 ```
 
 By centralizing validation and typing, these modules reduce duplicated logic

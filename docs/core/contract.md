@@ -7,7 +7,7 @@ state reads.
 ## Creating A Contract Instance
 
 ```ts
-import { Contract, NetworkConfig } from "@colibri/core";
+import { ColibriError, Contract, NetworkConfig } from "@colibri/core";
 
 const network = NetworkConfig.TestNet();
 
@@ -24,6 +24,70 @@ Other construction shapes are also supported:
 - `contractId` for an already-deployed contract
 - `wasm` when you have local contract bytes
 - `wasmHash` when the wasm is already uploaded
+- `plugins` when you intentionally want to attach plugins to the owned read or
+  invoke pipelines during construction
+
+## Known Contract Errors
+
+`Contract` can install the core
+[Contract Error Matcher](plugins/contract-error-matcher.md) plugin on both
+pipelines it owns. Use `loadContractErrorsFromWasm(...)` when the contract spec
+or WASM contains error enum cases and you want Colibri to derive the mapping for
+you.
+
+```ts
+import { ColibriError, Contract, NetworkConfig } from "@colibri/core";
+
+const contract = new Contract({
+  networkConfig: NetworkConfig.TestNet(),
+  contractConfig: {
+    contractId: "CABC...",
+    spec,
+  },
+});
+
+await contract.loadContractErrorsFromWasm({ strategy: "any" });
+
+try {
+  await contract.invoke({ method, methodArgs, config });
+} catch (error) {
+  if (ColibriError.is(error) && error.code === "PLG_SIM_CEM_001") {
+    console.log(error.message); // "Contract error: InsufficientBalance"
+    console.log(error.meta.data.match);
+  }
+}
+```
+
+`loadContractErrorsFromWasm(...)` uses the already loaded spec when available.
+Otherwise it loads the spec from local WASM or from the deployed contract WASM
+through RPC. It throws if the built-in matcher plugin is already attached to
+either owned pipeline, so plugin ordering stays explicit.
+
+For advanced flows, attach `createContractErrorMatcherPlugin(...)` directly to a
+pipeline or pass plugins intentionally through `contractConfig.plugins`:
+
+```ts
+import { createContractErrorMatcherPlugin } from "@colibri/core";
+
+const matcher = createContractErrorMatcherPlugin({
+  1: {
+    message: "Unauthorized",
+    details: "The caller is not authorized to run this operation.",
+  },
+});
+
+const contract = new Contract({
+  networkConfig,
+  contractConfig: {
+    contractId: "CABC...",
+    spec,
+    plugins: {
+      invokePipe: [matcher],
+      readPipe: [matcher],
+    },
+  },
+});
+```
 
 ## Core Methods
 

@@ -1,6 +1,8 @@
 # SEP-1
 
-Utilities for parsing [stellar.toml](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0001.md) files.
+Utilities for parsing
+[stellar.toml](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0001.md)
+files.
 
 ## StellarToml
 
@@ -78,7 +80,7 @@ const sep10 = toml.sep10Config;
 Errors follow the `SEP1_XXX` format. Import from:
 
 ```typescript
-import * as E from "@colibri/core/sep1/error";
+import { ERRORS_SEP1 } from "@colibri/core";
 
-// E.FETCH_FAILED, E.INVALID_TOML, etc.
+// ERRORS_SEP1.FETCH_FAILED, ERRORS_SEP1.PARSE_ERROR, etc.
 ```
