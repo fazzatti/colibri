@@ -9,7 +9,11 @@ import {
   Claimant,
   Operation,
 } from "stellar-sdk";
-import type { AuthFlag, SignerKeyOptions, xdr } from "stellar-sdk";
+import type {
+  AuthFlag,
+  OperationRecord,
+  xdr,
+} from "stellar-sdk";
 import * as E from "@/auth/requirements/classic-operation-threshold/error.ts";
 import { getRequiredOperationThresholdForClassicOperation as getRequirements } from "@/auth/requirements/classic-operation-threshold/index.ts";
 
@@ -26,7 +30,7 @@ describe("Auth classic operation threshold", () => {
   it("returns void if no requirements are identified", () => {
     const op = {
       type: "MOCK OP",
-    } as unknown as Operation;
+    } as unknown as OperationRecord;
 
     const requirements = getRequirements(op) as SignatureRequirement;
     assertEquals(requirements, undefined);
@@ -255,7 +259,7 @@ describe("Auth classic operation threshold", () => {
         signer: {
           ed25519PublicKey:
             "GAKT7G5CXB4DVUAUOJXY7KLN6UFZLICTNCKHH6HOOOZC3HDA2YDNURJR",
-        } as SignerKeyOptions.Ed25519PublicKey,
+        },
       }),
       Operation.setOptions({
         homeDomain: "mock",

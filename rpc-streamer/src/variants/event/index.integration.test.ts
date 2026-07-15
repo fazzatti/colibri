@@ -1,5 +1,4 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
-import { QUASAR_API_KEY } from "colibri-internal/env/index.ts";
 import { assertEquals, assertExists } from "@std/assert";
 import { afterEach, describe, it } from "@std/testing/bdd";
 import {
@@ -56,7 +55,7 @@ describe(
   disableSanitizeConfig,
 
   () => {
-    const networkConfig = NetworkProviders.Lightsail.MainNet(QUASAR_API_KEY);
+    const networkConfig = NetworkProviders.Lightsail.MainNet();
 
     let streamer: RPCStreamer<Event>;
 

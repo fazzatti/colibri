@@ -5,6 +5,7 @@ import {
   assertThrows,
 } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
+import { stub } from "@std/testing/mock";
 import { Buffer } from "buffer";
 import { Contract } from "@/contract/index.ts";
 import * as E from "@/contract/error.ts";
@@ -342,6 +343,35 @@ describe("Contract", () => {
         hasContractErrorMatcherPlugin(contract.readPipe.plugins),
         true,
       );
+    });
+
+    it("loads contract errors from deployed wasm when no spec or local wasm is available", async () => {
+      const contract = new Contract({
+        networkConfig,
+        contractConfig: {
+          contractId:
+            "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId,
+        },
+        rpc: mockRpc,
+      });
+      const loadSpecStub = stub(
+        contract,
+        "loadSpecFromDeployedContract",
+        () => Promise.resolve(),
+      );
+      const getSpecStub = stub(contract, "getSpec", () => ERRORS_CONTRACT_SPEC);
+
+      try {
+        const errors = await contract.loadContractErrorsFromWasm({
+          strategy: "any",
+        });
+
+        assertEquals(loadSpecStub.calls.length, 1);
+        assertEquals(errors, ErrorByCode);
+      } finally {
+        loadSpecStub.restore();
+        getSpecStub.restore();
+      }
     });
 
     it("uses the bound contract id for contract-id error loading", async () => {
