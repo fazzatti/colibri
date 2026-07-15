@@ -134,7 +134,7 @@ const appendPreconditions = (
     tx.setMinAccountSequence(minAccountSequence);
   }
 
-  if (minAccountSequenceAge) {
+  if (minAccountSequenceAge !== undefined) {
     tx.setMinAccountSequenceAge(minAccountSequenceAge);
   }
 

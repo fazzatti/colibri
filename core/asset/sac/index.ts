@@ -11,7 +11,6 @@ import {
   Asset,
   nativeToScVal,
   Operation,
-  type OperationOptions,
   scValToNative,
 } from "stellar-sdk";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
@@ -331,8 +330,8 @@ export class StellarAssetContract {
 
     try {
       const deployOperation = Operation.createStellarAssetContract({
-        asset: asset,
-      } as OperationOptions.CreateStellarAssetContract);
+        asset,
+      });
 
       const result = await this.contract.invokePipe.run({
         config,
@@ -1091,7 +1090,7 @@ export class StellarAssetContract {
         function: Method.SetAuthorized,
         args: [
           nativeToScVal(id, { type: "address" }),
-          nativeToScVal(authorize, { type: "bool" }),
+          nativeToScVal(authorize),
         ],
         auth,
       },

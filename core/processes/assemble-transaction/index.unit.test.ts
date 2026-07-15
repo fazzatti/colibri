@@ -1,11 +1,12 @@
-// deno-lint-ignore-file no-explicit-any
 import { assertEquals, assertInstanceOf, assertRejects } from "@std/assert";
 
 import { describe, it } from "@std/testing/bdd";
 import {
   Account,
   Asset,
+  Keypair,
   Operation,
+  SignerKey,
   SorobanDataBuilder,
   Transaction,
   TransactionBuilder,
@@ -111,6 +112,43 @@ describe("AssembleTransaction", () => {
       });
 
       assertEquals(result.sequence, builtSeq);
+    });
+
+    it("preserves v16 precondition ages and extra signer keys", async () => {
+      const account = new Account(
+        "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
+        "100",
+      );
+      const extraSigner = Keypair.random().publicKey();
+      const transaction = new TransactionBuilder(account, {
+        fee: "100",
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
+      })
+        .addOperation(
+          Operation.invokeContractFunction({
+            contract:
+              "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+            function: "transfer",
+            args: [],
+          }),
+        )
+        .setMinAccountSequenceAge(100n)
+        .setExtraSigners([extraSigner])
+        .setTimeout(0)
+        .build();
+
+      const result = await assembleTransaction({
+        transaction,
+        sorobanData: new SorobanDataBuilder(),
+        authEntries: [],
+        resourceFee: 0,
+      });
+
+      assertEquals(result.minAccountSequenceAge, 100n);
+      assertEquals(
+        result.extraSigners?.map((signer) => SignerKey.encodeSignerKey(signer)),
+        [extraSigner],
+      );
     });
 
     it("executes with soroban data and auth entries", async () => {
@@ -219,35 +257,17 @@ describe("AssembleTransaction", () => {
     });
 
     it("throws FAILED_TO_BUILD_TRANSACTION_ERROR if the transaction build fails", async () => {
-      const createFaultyTestTransaction = () => {
-        const account = new Account(
-          "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
-          "100",
-        );
-
-        const tx = new TransactionBuilder(account, {
-          fee: "100",
-          networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
-        })
-          .addOperation(
-            Operation.invokeContractFunction({
-              contract:
-                "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
-              function: "transfer",
-              args: [],
-            }),
-          )
-          .setTimeout(0)
-          .build();
-
-        // Corrupt the transaction to cause build failure
-        (tx as any)._timeBounds = { minTime: "-10", maxTime: "-1" };
-
-        return tx;
-      };
+      const transaction = createTestTransaction();
+      const buildStub = stub(
+        TransactionBuilder.prototype,
+        "build",
+        () => {
+          throw new Error("Mocked build error");
+        },
+      );
 
       const input: AssembleTransactionInput = {
-        transaction: createFaultyTestTransaction(),
+        transaction,
         sorobanData: new SorobanDataBuilder(),
         authEntries: [],
         resourceFee: 0,
@@ -257,6 +277,8 @@ describe("AssembleTransaction", () => {
         async () => await assembleTransaction(input),
         E.FAILED_TO_BUILD_TRANSACTION_ERROR,
       );
+
+      buildStub.restore();
     });
 
     it("throws MISSING_ARG if the transaction input lacks a required arg", async () => {

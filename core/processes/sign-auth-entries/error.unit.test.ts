@@ -22,13 +22,13 @@ describe("SignAuthEntries", () => {
 
   const makeInvocation = () =>
     new xdr.SorobanAuthorizedInvocation({
-      function:
-        xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
+      function: xdr.SorobanAuthorizedFunction
+        .sorobanAuthorizedFunctionTypeContractFn(
           new xdr.InvokeContractArgs({
             contractAddress: Address.contract(Buffer.alloc(32)).toScAddress(),
             functionName: "noop",
             args: [],
-          })
+          }),
         ),
       subInvocations: [],
     });
@@ -41,7 +41,7 @@ describe("SignAuthEntries", () => {
           nonce: new xdr.Int64(0),
           signatureExpirationLedger: 0,
           signature: xdr.ScVal.scvVec([]),
-        })
+        }),
       ),
       rootInvocation: makeInvocation(),
     });
@@ -51,14 +51,14 @@ describe("SignAuthEntries", () => {
     behavior?: (
       entry: SorobanAuthorizationEntryLike,
       validUntil: number,
-      passphrase: string
-    ) => Promise<SorobanAuthorizationEntryLike>
+      passphrase: string,
+    ) => Promise<SorobanAuthorizationEntryLike>,
   ): MockSigner => {
     const signTransaction: Signer["signTransaction"] = async (
       ..._args: Parameters<Signer["signTransaction"]>
     ) => {
       return await Promise.resolve(
-        undefined as unknown as Awaited<ReturnType<Signer["signTransaction"]>>
+        undefined as unknown as Awaited<ReturnType<Signer["signTransaction"]>>,
       );
     };
     const sign: Signer["sign"] = (b: Buffer): Buffer => {
@@ -82,24 +82,22 @@ describe("SignAuthEntries", () => {
     return signer;
   };
 
-  const makeRpc = (sequence = 1000): Server =>
-    ({
-      async getLatestLedger() {
-        return await { sequence, id: "mock", protocolVersion: 20 };
-      },
-    } as unknown as Server);
+  const makeRpc = (sequence = 1000): Server => ({
+    async getLatestLedger() {
+      return await { sequence, id: "mock", protocolVersion: 20 };
+    },
+  } as unknown as Server);
 
-  const makeFailingRpc = (): Server =>
-    ({
-      async getLatestLedger() {
-        await new Promise((_resolve, reject) => reject(new Error("rpc down")));
-      },
-    } as unknown as Server);
+  const makeFailingRpc = (): Server => ({
+    async getLatestLedger() {
+      await new Promise((_resolve, reject) => reject(new Error("rpc down")));
+    },
+  } as unknown as Server);
 
   describe("errors", () => {
     it("requires auth array", async () => {
       const signer = makeSigner(
-        Address.account(Buffer.alloc(32, 9)).toString()
+        Address.account(Buffer.alloc(32, 9)).toString(),
       );
       await assertRejects(
         () =>
@@ -109,7 +107,7 @@ describe("SignAuthEntries", () => {
             rpc: makeRpc(),
             networkPassphrase,
           }),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
     });
 
@@ -126,7 +124,7 @@ describe("SignAuthEntries", () => {
             rpc: undefined as unknown as Server,
             networkPassphrase,
           }),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
     });
 
@@ -142,7 +140,7 @@ describe("SignAuthEntries", () => {
             rpc: makeRpc(),
             networkPassphrase,
           }),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
     });
 
@@ -159,7 +157,7 @@ describe("SignAuthEntries", () => {
             rpc: makeRpc(),
             networkPassphrase: undefined as unknown as string,
           }),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
     });
 
@@ -177,7 +175,7 @@ describe("SignAuthEntries", () => {
             networkPassphrase,
             validity: { validUntilLedgerSeq: 0 },
           }),
-        E.VALID_UNTIL_LEDGER_SEQ_TOO_LOW
+        E.VALID_UNTIL_LEDGER_SEQ_TOO_LOW,
       );
     });
 
@@ -195,7 +193,7 @@ describe("SignAuthEntries", () => {
             networkPassphrase,
             validity: { validForLedgers: 0 },
           }),
-        E.VALID_FOR_LEDGERS_TOO_LOW
+        E.VALID_FOR_LEDGERS_TOO_LOW,
       );
     });
 
@@ -213,7 +211,7 @@ describe("SignAuthEntries", () => {
             networkPassphrase,
             validity: { validForSeconds: 5 },
           }),
-        E.VALID_FOR_SECONDS_TOO_LOW
+        E.VALID_FOR_SECONDS_TOO_LOW,
       );
     });
 
@@ -230,7 +228,7 @@ describe("SignAuthEntries", () => {
             rpc: makeFailingRpc(),
             networkPassphrase,
           }),
-        E.FAILED_TO_FETCH_LATEST_LEDGER
+        E.FAILED_TO_FETCH_LATEST_LEDGER,
       );
     });
 
@@ -246,7 +244,7 @@ describe("SignAuthEntries", () => {
             rpc: makeRpc(),
             networkPassphrase,
           }),
-        E.MISSING_SIGNER
+        E.MISSING_SIGNER,
       );
     });
 
@@ -265,14 +263,14 @@ describe("SignAuthEntries", () => {
             rpc: makeRpc(),
             networkPassphrase,
           }),
-        E.FAILED_TO_SIGN_AUTH_ENTRY
+        E.FAILED_TO_SIGN_AUTH_ENTRY,
       );
     });
 
     it("wraps unexpected errors", async () => {
       await assertRejects(
         () => signAuthEntries(null as unknown as SignAuthEntriesInput),
-        E.UNEXPECTED_ERROR
+        E.UNEXPECTED_ERROR,
       );
     });
   });

@@ -1,4 +1,4 @@
-import type { Operation } from "stellar-sdk";
+import type { OperationRecord } from "stellar-sdk";
 import { AuthError } from "@/auth/error.ts";
 
 /** Stable error codes emitted by classic operation threshold checks. */
@@ -9,7 +9,7 @@ export enum Code {
 
 /** Metadata attached to classic-operation-threshold errors. */
 export type MetaData = {
-  operation: Operation;
+  operation: OperationRecord;
 };
 
 /** Base error type for classic operation threshold evaluation failures. */
@@ -30,7 +30,7 @@ export class UNEXPECTED_ERROR extends ClassicOperationThresholdError {
    * @param operation Operation being evaluated.
    * @param cause Underlying unexpected failure.
    */
-  constructor(operation: Operation, cause?: Error) {
+  constructor(operation: OperationRecord, cause?: Error) {
     super({
       code: Code.UNEXPECTED_ERROR,
       message: "Unexpected error occurred!",
@@ -52,7 +52,7 @@ export class FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE extends ClassicOperationThres
    * @param source Operation source account, when present.
    * @param cause Underlying failure.
    */
-  constructor(operation: Operation, source?: string, cause?: Error) {
+  constructor(operation: OperationRecord, source?: string, cause?: Error) {
     super({
       code: Code.FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE,
       message: "Error identifying the source account!",

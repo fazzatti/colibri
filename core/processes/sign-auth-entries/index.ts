@@ -1,20 +1,24 @@
 import { xdr } from "stellar-sdk";
 import type { Api, Server } from "stellar-sdk/rpc";
 import type {
+  LedgerValidity,
   SignAuthEntriesInput,
   SignAuthEntriesOutput,
-  LedgerValidity,
 } from "@/processes/sign-auth-entries/types.ts";
 import * as E from "@/processes/sign-auth-entries/error.ts";
 import { assert } from "@/common/assert/assert.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 import { getAddressSignerFromAuthEntry } from "@/common/helpers/xdr/get-address-signer-from-auth-entry.ts";
 import { getAddressTypeFromAuthEntry } from "@/common/helpers/xdr/get-address-type-from-auth-entry.ts";
+import {
+  type AuthEntryAddressCredentials,
+  tryGetAddressCredentialsFromAuthEntry,
+} from "@/common/helpers/xdr/get-address-credentials-from-auth-entry.ts";
 import { ResultOrError } from "@/common/deferred/result-or-error.ts";
 
 /** Signs Soroban authorization entries with the provided signers. */
 export const signAuthEntries = async (
-  input: SignAuthEntriesInput
+  input: SignAuthEntriesInput,
 ): Promise<SignAuthEntriesOutput> => {
   try {
     const { auth, rpc, signers, networkPassphrase, validity, removeUnsigned } =
@@ -22,7 +26,7 @@ export const signAuthEntries = async (
 
     assertRequiredArgs(
       { auth, rpc, signers, networkPassphrase },
-      (argName: string) => new E.MISSING_ARG(input, argName)
+      (argName: string) => new E.MISSING_ARG(input, argName),
     );
 
     const validUntilLedgerSeq = (
@@ -74,7 +78,7 @@ export const signAuthEntries = async (
           signedEntry = await signer.signSorobanAuthEntry(
             authEntry,
             validUntilLedgerSeq,
-            networkPassphrase
+            networkPassphrase,
           ) as xdr.SorobanAuthorizationEntry;
         } catch (e) {
           throw new E.FAILED_TO_SIGN_AUTH_ENTRY(input, authEntry, e as Error);
@@ -96,14 +100,15 @@ export const signAuthEntries = async (
 
 const getValidUntilLedgerSeq = async (
   validity: LedgerValidity | undefined,
-  rpc: Server
+  rpc: Server,
 ): Promise<
   ResultOrError<number, SignAuthEntriesInput, E.SignAuthEntriesError>
 > => {
   if (validity && "validUntilLedgerSeq" in validity) {
     const { validUntilLedgerSeq } = validity;
-    if (validUntilLedgerSeq <= 0)
+    if (validUntilLedgerSeq <= 0) {
       return E.VALID_UNTIL_LEDGER_SEQ_TOO_LOW.deferInput(validUntilLedgerSeq);
+    }
 
     return ResultOrError.wrapVal(validUntilLedgerSeq);
   }
@@ -112,16 +117,18 @@ const getValidUntilLedgerSeq = async (
 
   if (validity && "validForSeconds" in validity) {
     const { validForSeconds } = validity;
-    if (validForSeconds <= 5)
+    if (validForSeconds <= 5) {
       return E.VALID_FOR_SECONDS_TOO_LOW.deferInput(validForSeconds);
+    }
 
     nOfLedgersToSignFor = nOfLedgersToSignFor = Math.ceil(validForSeconds / 5);
   }
 
   if (validity && "validForLedgers" in validity) {
     const { validForLedgers } = validity;
-    if (validForLedgers <= 0)
+    if (validForLedgers <= 0) {
       return E.VALID_FOR_LEDGERS_TOO_LOW.deferInput(validForLedgers);
+    }
 
     nOfLedgersToSignFor = validForLedgers;
   }
@@ -140,31 +147,27 @@ const getValidUntilLedgerSeq = async (
 };
 
 const getSourceCredentialAuth = (
-  authEntries: xdr.SorobanAuthorizationEntry[]
+  authEntries: xdr.SorobanAuthorizationEntry[],
 ): xdr.SorobanAuthorizationEntry[] => {
   return authEntries.filter((entry) => {
     const credentials = entry.credentials();
     return (
       credentials.switch() ===
-      xdr.SorobanCredentialsType.sorobanCredentialsSourceAccount()
+        xdr.SorobanCredentialsType.sorobanCredentialsSourceAccount()
     );
   });
 };
 
 const getAddressCredentialAuth = (
-  authEntries: xdr.SorobanAuthorizationEntry[]
+  authEntries: xdr.SorobanAuthorizationEntry[],
 ): xdr.SorobanAuthorizationEntry[] => {
-  return authEntries.filter((entry) => {
-    const credentials = entry.credentials();
-    return (
-      credentials.switch() ===
-      xdr.SorobanCredentialsType.sorobanCredentialsAddress()
-    );
-  });
+  return authEntries.filter((entry) =>
+    tryGetAddressCredentialsFromAuthEntry(entry) !== null
+  );
 };
 
 const separateSignedAndUnsignedAuthEntries = (
-  authEntries: xdr.SorobanAuthorizationEntry[]
+  authEntries: xdr.SorobanAuthorizationEntry[],
 ): {
   signed: xdr.SorobanAuthorizationEntry[];
   unsigned: xdr.SorobanAuthorizationEntry[];
@@ -175,18 +178,20 @@ const separateSignedAndUnsignedAuthEntries = (
   for (const entry of authEntries) {
     const credentials = entry.credentials();
 
-    const isSourceAccount =
-      credentials.switch() ===
+    const isSourceAccount = credentials.switch() ===
       xdr.SorobanCredentialsType.sorobanCredentialsSourceAccount();
 
-    // An entry is considered unsigned if it's not a source account and its signature is empty
-    // A signature can be empty if it's either an empty vector or a void ScVal
-    const isSignatureEmpty =
-      !isSourceAccount &&
-      (credentials.address().signature().toXDR("base64") ===
-        xdr.ScVal.scvVec([]).toXDR("base64") ||
-        credentials.address().signature().toXDR("base64") ===
-          xdr.ScVal.scvVoid().toXDR("base64"));
+    const resolvedCredentials = isSourceAccount
+      ? null
+      : tryGetAddressCredentialsFromAuthEntry(entry);
+
+    // Delegated entries may be signed at the top-level address or at any
+    // nested delegate node. Preserve any entry that already contains at least
+    // one signature because the account's authorization policy is not known
+    // to Colibri.
+    const isSignatureEmpty = resolvedCredentials
+      ? getCredentialSignatures(resolvedCredentials).every(isEmptySignature)
+      : false;
 
     if (isSourceAccount || isSignatureEmpty) {
       unsigned.push(entry);
@@ -197,5 +202,33 @@ const separateSignedAndUnsignedAuthEntries = (
 
   return { signed, unsigned };
 };
+
+const getCredentialSignatures = (
+  credentials: AuthEntryAddressCredentials,
+): xdr.ScVal[] => {
+  const signatures = [credentials.addressCredentials.signature()];
+
+  if (credentials.type !== "addressWithDelegates") return signatures;
+
+  const collectDelegateSignatures = (
+    delegates: xdr.SorobanDelegateSignature[],
+  ): void => {
+    for (const delegate of delegates) {
+      signatures.push(delegate.signature());
+      collectDelegateSignatures(delegate.nestedDelegates());
+    }
+  };
+
+  collectDelegateSignatures(credentials.delegates);
+  return signatures;
+};
+
+const EMPTY_SIGNATURE_XDRS = new Set([
+  xdr.ScVal.scvVec([]).toXDR("base64"),
+  xdr.ScVal.scvVoid().toXDR("base64"),
+]);
+
+const isEmptySignature = (signature: xdr.ScVal): boolean =>
+  EMPTY_SIGNATURE_XDRS.has(signature.toXDR("base64"));
 /** Error constructors emitted by {@link signAuthEntries}. */
 export const SignAuthEntriesErrors: typeof E = E;

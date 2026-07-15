@@ -1,14 +1,16 @@
 // ...existing code...
-import { assert, assertEquals, assertExists } from "@std/assert";
+import { assert, assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
+import { Buffer } from "buffer";
 import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
 import {
-  paramsToInvocation,
   authEntryToParams,
-  paramsToAuthEntry,
   paramsToAuthEntries,
+  paramsToAuthEntry,
+  paramsToInvocation,
 } from "@/common/helpers/xdr/auth-entries.ts";
 import type {
+  AuthEntryDelegateParams,
   AuthEntryParams,
   FnArg,
   InvocationParams,
@@ -35,11 +37,11 @@ describe("Auth entry helpers", () => {
       assertEquals(contractFn.functionName(), "echo");
       assertEquals(
         contractFn.args()[0].toXDR("base64"),
-        nativeToScVal("hello", { type: "string" }).toXDR("base64")
+        nativeToScVal("hello", { type: "string" }).toXDR("base64"),
       );
       assertEquals(
         contractFn.args()[1].toXDR("base64"),
-        nativeToScVal("42", { type: "string" }).toXDR("base64")
+        nativeToScVal("42", { type: "string" }).toXDR("base64"),
       );
     });
 
@@ -62,7 +64,7 @@ describe("Auth entry helpers", () => {
       assertEquals(contractFn.args().length, 1);
       assertEquals(
         contractFn.args()[0].toXDR("base64"),
-        boolArg.toXDR("base64")
+        boolArg.toXDR("base64"),
       );
       assertEquals(invocation.subInvocations().length, 0);
     });
@@ -113,14 +115,255 @@ describe("Auth entry helpers", () => {
       const rootArgs = roundTrip.rootInvocation.function.args;
       assert(Array.isArray(rootArgs));
       assertEquals(rootArgs.length, 2);
-      assertEquals(rootArgs[0], { value: true, type: "bool" });
-      assertEquals(rootArgs[1], { value: "token", type: "scvString" });
+      assertEquals(rootArgs[0], {
+        value: true,
+        type: "bool",
+        xdr: nativeToScVal(true).toXDR("base64"),
+      });
+      assertEquals(rootArgs[1], {
+        value: "token",
+        type: "string",
+        xdr: nativeToScVal("token", { type: "string" }).toXDR("base64"),
+      });
 
       assertExists(roundTrip.rootInvocation.subInvocations);
       assertEquals(roundTrip.rootInvocation.subInvocations.length, 1);
       assertEquals(
         roundTrip.rootInvocation.subInvocations[0].function.functionName,
-        "noop"
+        "noop",
+      );
+    });
+
+    it("round-trips ADDRESS_V2 credentials without changing the XDR arm", () => {
+      const account = Address.fromString(Keypair.random().publicKey());
+      const contract = Address.contract(Buffer.alloc(32, 4));
+      const entry = new xdr.SorobanAuthorizationEntry({
+        credentials: xdr.SorobanCredentials.sorobanCredentialsAddressV2(
+          new xdr.SorobanAddressCredentials({
+            address: account.toScAddress(),
+            nonce: new xdr.Int64(77),
+            signatureExpirationLedger: 321,
+            signature: xdr.ScVal.scvU32(11),
+          }),
+        ),
+        rootInvocation: new xdr.SorobanAuthorizedInvocation({
+          function: xdr.SorobanAuthorizedFunction
+            .sorobanAuthorizedFunctionTypeContractFn(
+              new xdr.InvokeContractArgs({
+                contractAddress: contract.toScAddress(),
+                functionName: "v2",
+                args: [xdr.ScVal.scvString("protocol-27")],
+              }),
+            ),
+          subInvocations: [],
+        }),
+      });
+
+      const params = authEntryToParams(entry);
+      const rebuilt = paramsToAuthEntry(params);
+
+      assertEquals(params.credentials.type, "addressV2");
+      assertEquals(rebuilt.toXDR("base64"), entry.toXDR("base64"));
+    });
+
+    it("preserves exact XDR for nested and non-native ScVal arguments", () => {
+      const account = Address.fromString(Keypair.random().publicKey());
+      const contract = Address.contract(Buffer.alloc(32, 12));
+      const args = [
+        xdr.ScVal.scvVec([
+          xdr.ScVal.scvU32(1),
+          xdr.ScVal.scvI32(-2),
+          xdr.ScVal.scvSymbol("mixed"),
+        ]),
+        xdr.ScVal.scvMap([
+          new xdr.ScMapEntry({
+            key: xdr.ScVal.scvSymbol("value"),
+            val: xdr.ScVal.scvVec([xdr.ScVal.scvU32(3)]),
+          }),
+        ]),
+        xdr.ScVal.scvError(xdr.ScError.sceContract(7)),
+      ];
+      const entry = new xdr.SorobanAuthorizationEntry({
+        credentials: xdr.SorobanCredentials.sorobanCredentialsAddressV2(
+          new xdr.SorobanAddressCredentials({
+            address: account.toScAddress(),
+            nonce: new xdr.Int64(91),
+            signatureExpirationLedger: 777,
+            signature: xdr.ScVal.scvVoid(),
+          }),
+        ),
+        rootInvocation: new xdr.SorobanAuthorizedInvocation({
+          function: xdr.SorobanAuthorizedFunction
+            .sorobanAuthorizedFunctionTypeContractFn(
+              new xdr.InvokeContractArgs({
+                contractAddress: contract.toScAddress(),
+                functionName: "inspect",
+                args,
+              }),
+            ),
+          subInvocations: [],
+        }),
+      });
+
+      const params = authEntryToParams(entry);
+      const parsedArgs = params.rootInvocation.function.args as FnArg[];
+      const rebuilt = paramsToAuthEntry(params);
+
+      assertEquals(
+        parsedArgs.map((arg) => arg.xdr),
+        args.map((arg) => arg.toXDR("base64")),
+      );
+      assertEquals(rebuilt.toXDR("base64"), entry.toXDR("base64"));
+    });
+
+    it("round-trips delegated and nested-delegate credentials exactly", () => {
+      const account = Address.fromString(Keypair.random().publicKey());
+      const delegate = Address.contract(Buffer.alloc(32, 5));
+      const nestedDelegate = Address.fromString(Keypair.random().publicKey());
+      const contract = Address.contract(Buffer.alloc(32, 6));
+      const entry = new xdr.SorobanAuthorizationEntry({
+        credentials: xdr.SorobanCredentials
+          .sorobanCredentialsAddressWithDelegates(
+            new xdr.SorobanAddressCredentialsWithDelegates({
+              addressCredentials: new xdr.SorobanAddressCredentials({
+                address: account.toScAddress(),
+                nonce: new xdr.Int64(88),
+                signatureExpirationLedger: 654,
+                signature: xdr.ScVal.scvVoid(),
+              }),
+              delegates: [
+                new xdr.SorobanDelegateSignature({
+                  address: delegate.toScAddress(),
+                  signature: xdr.ScVal.scvBytes(Buffer.from([1, 2, 3])),
+                  nestedDelegates: [
+                    new xdr.SorobanDelegateSignature({
+                      address: nestedDelegate.toScAddress(),
+                      signature: xdr.ScVal.scvU32(12),
+                      nestedDelegates: [],
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ),
+        rootInvocation: new xdr.SorobanAuthorizedInvocation({
+          function: xdr.SorobanAuthorizedFunction
+            .sorobanAuthorizedFunctionTypeContractFn(
+              new xdr.InvokeContractArgs({
+                contractAddress: contract.toScAddress(),
+                functionName: "delegated",
+                args: [],
+              }),
+            ),
+          subInvocations: [],
+        }),
+      });
+
+      const params = authEntryToParams(entry);
+      const rebuilt = paramsToAuthEntry(params);
+
+      assertEquals(params.credentials.type, "addressWithDelegates");
+      if (params.credentials.type !== "addressWithDelegates") return;
+      assertEquals(params.credentials.delegates.length, 1);
+      assertEquals(params.credentials.delegates[0].nestedDelegates?.length, 1);
+      assertEquals(rebuilt.toXDR("base64"), entry.toXDR("base64"));
+    });
+
+    it("sorts delegate arrays recursively by address XDR", () => {
+      const account = Address.fromString(Keypair.random().publicKey());
+      const contract = Address.contract(Buffer.alloc(32, 13));
+      const topLow = Address.contract(Buffer.alloc(32, 1));
+      const topHigh = Address.contract(Buffer.alloc(32, 3));
+      const nestedLow = Address.contract(Buffer.alloc(32, 4));
+      const nestedHigh = Address.contract(Buffer.alloc(32, 5));
+      const params: AuthEntryParams = {
+        credentials: {
+          type: "addressWithDelegates",
+          address: account.toString(),
+          nonce: "1",
+          signatureExpirationLedger: 100,
+          delegates: [
+            {
+              address: topHigh.toString(),
+              nestedDelegates: [
+                { address: nestedHigh.toString() },
+                { address: nestedLow.toString() },
+              ],
+            },
+            { address: topLow.toString() },
+          ],
+        },
+        rootInvocation: {
+          function: {
+            contractAddress: contract.toString(),
+            functionName: "delegated",
+            args: [],
+          },
+        },
+      };
+
+      const credentials = paramsToAuthEntry(params)
+        .credentials().addressWithDelegates();
+      const delegates = credentials.delegates();
+
+      assertEquals(
+        delegates.map((delegate) =>
+          Address.fromScAddress(delegate.address()).toString()
+        ),
+        [topLow.toString(), topHigh.toString()],
+      );
+      assertEquals(
+        delegates[1].nestedDelegates().map((delegate) =>
+          Address.fromScAddress(delegate.address()).toString()
+        ),
+        [nestedLow.toString(), nestedHigh.toString()],
+      );
+    });
+
+    it("rejects duplicate delegate addresses at every nesting level", () => {
+      const account = Address.fromString(Keypair.random().publicKey());
+      const contract = Address.contract(Buffer.alloc(32, 14));
+      const delegate = Address.contract(Buffer.alloc(32, 6)).toString();
+      const nested = Address.contract(Buffer.alloc(32, 7)).toString();
+      const makeParams = (
+        delegates: AuthEntryDelegateParams[],
+      ): AuthEntryParams => ({
+        credentials: {
+          type: "addressWithDelegates",
+          address: account.toString(),
+          nonce: "1",
+          signatureExpirationLedger: 100,
+          delegates,
+        },
+        rootInvocation: {
+          function: {
+            contractAddress: contract.toString(),
+            functionName: "delegated",
+            args: [],
+          },
+        },
+      });
+
+      assertThrows(
+        () =>
+          paramsToAuthEntry(makeParams([
+            { address: delegate },
+            { address: delegate },
+          ])),
+        Error,
+        "duplicate delegate address",
+      );
+      assertThrows(
+        () =>
+          paramsToAuthEntry(makeParams([{
+            address: delegate,
+            nestedDelegates: [
+              { address: nested },
+              { address: nested },
+            ],
+          }])),
+        Error,
+        "duplicate delegate address",
       );
     });
 
@@ -184,16 +427,16 @@ describe("Auth entry helpers", () => {
             nonce: new xdr.Int64(0),
             signatureExpirationLedger: 0,
             signature: xdr.ScVal.scvVoid(),
-          })
+          }),
         ),
         rootInvocation: new xdr.SorobanAuthorizedInvocation({
-          function:
-            xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
+          function: xdr.SorobanAuthorizedFunction
+            .sorobanAuthorizedFunctionTypeContractFn(
               new xdr.InvokeContractArgs({
                 contractAddress: contractAddr.toScAddress(),
                 functionName: "inspect",
                 args: [addressArg, i128Arg],
-              })
+              }),
             ),
           subInvocations: [],
         }),

@@ -63,7 +63,8 @@ export class MISSING_ARG extends SignAuthEntriesError {
       code: Code.MISSING_ARG,
       message: `Missing required argument: ${argName}!`,
       input,
-      details: `The argument '${argName}' is required but was not provided in the input.`,
+      details:
+        `The argument '${argName}' is required but was not provided in the input.`,
     });
   }
 }
@@ -83,7 +84,8 @@ export class VALID_UNTIL_LEDGER_SEQ_TOO_LOW extends SignAuthEntriesError {
       code: Code.VALID_UNTIL_LEDGER_SEQ_TOO_LOW,
       message: "Invalid validUntilLedgerSeq! Too Low!",
       input,
-      details: `The validUntilLedgerSeq '${validUntilLedgerSeq}' is invalid. It must be a valid ledger sequence higher than 0.`,
+      details:
+        `The validUntilLedgerSeq '${validUntilLedgerSeq}' is invalid. It must be a valid ledger sequence higher than 0.`,
     });
   }
 }
@@ -103,7 +105,8 @@ export class VALID_FOR_LEDGERS_TOO_LOW extends SignAuthEntriesError {
       code: Code.VALID_FOR_LEDGERS_TOO_LOW,
       message: "Invalid validForLedgers! Too Low!",
       input,
-      details: `The validForLedgers '${validForLedgers}' is invalid. It must be a valid ledger sequence higher than 0.`,
+      details:
+        `The validForLedgers '${validForLedgers}' is invalid. It must be a valid ledger sequence higher than 0.`,
     });
   }
 }
@@ -123,7 +126,8 @@ export class VALID_FOR_SECONDS_TOO_LOW extends SignAuthEntriesError {
       code: Code.VALID_FOR_SECONDS_TOO_LOW,
       message: "Invalid validForSeconds! Too Low!",
       input,
-      details: `The validForSeconds '${validForSeconds}' is invalid. It must be a valid number of seconds higher than 5 so it is valid for at least 1 ledger.`,
+      details:
+        `The validForSeconds '${validForSeconds}' is invalid. It must be a valid number of seconds higher than 5 so it is valid for at least 1 ledger.`,
     });
   }
 }
@@ -173,13 +177,14 @@ export class MISSING_SIGNER extends SignAuthEntriesError {
   constructor(
     input: SignAuthEntriesInput,
     requiredSigner: string,
-    authEntry: xdr.SorobanAuthorizationEntry
+    authEntry: xdr.SorobanAuthorizationEntry,
   ) {
     super({
       code: Code.MISSING_SIGNER,
       message: "Missing required signer for authorization entry!",
       input,
-      details: `The required signer '${requiredSigner}' was not found for the authorization entry.`,
+      details:
+        `The required signer '${requiredSigner}' was not found for the authorization entry.`,
     });
     this.meta = {
       data: {
@@ -214,7 +219,7 @@ export class FAILED_TO_SIGN_AUTH_ENTRY extends SignAuthEntriesError {
   constructor(
     input: SignAuthEntriesInput,
     entry: xdr.SorobanAuthorizationEntry,
-    cause: Error
+    cause: Error,
   ) {
     super({
       code: Code.FAILED_TO_SIGN_AUTH_ENTRY,

@@ -1,4 +1,4 @@
-import { type Operation, xdr } from "stellar-sdk";
+import { type Operation, type OperationRecord, xdr } from "stellar-sdk";
 import { muxedAddressToBaseAccount } from "@/address/index.ts";
 import * as E from "@/auth/requirements/classic-operation-threshold/error.ts";
 import { ColibriError } from "@/error/index.ts";
@@ -33,7 +33,7 @@ const setSourceSigner = (
 
 /** Returns the signer threshold required for a classic Stellar operation. */
 export const getRequiredOperationThresholdForClassicOperation = (
-  operation: Operation,
+  operation: OperationRecord,
 ): SignatureRequirementRaw | void => {
   try {
     let thresholdLevel = OperationThreshold.medium;

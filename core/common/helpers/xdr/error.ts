@@ -27,6 +27,7 @@ export enum Code {
   UNSUPPORTED_SCVAL_TYPE = "HLP_XDR_10",
   UNKNOWN_SCVAL_TYPE = "HLP_XDR_11",
   UNKNOWN_TRUSTLINE_ASSET_TYPE = "HLP_XDR_12",
+  UNSUPPORTED_AUTH_ENTRY_CREDENTIALS = "HLP_XDR_13",
 }
 
 export type MetaData = {
@@ -210,6 +211,22 @@ export class INVALID_AUTH_ENTRY_SIGNER_ADDRESS extends XdrHelperError {
 }
 
 /**
+ * Thrown when an authorization entry does not use an address credential arm.
+ */
+export class UNSUPPORTED_AUTH_ENTRY_CREDENTIALS extends XdrHelperError {
+  constructor(authEntryXDR: string, credentialType: string) {
+    super({
+      code: Code.UNSUPPORTED_AUTH_ENTRY_CREDENTIALS,
+      message:
+        `Unsupported Soroban authorization credential type: ${credentialType}`,
+      details:
+        "Expected ADDRESS, ADDRESS_V2, or ADDRESS_WITH_DELEGATES credentials",
+      data: { value: { authEntryXDR, credentialType } },
+    });
+  }
+}
+
+/**
  * Thrown when parsing error result fails.
  */
 export class FAILED_TO_PARSE_ERROR_RESULT extends XdrHelperError {
@@ -269,4 +286,5 @@ export const ERROR_XDR = {
   [Code.FAILED_TO_PARSE_ERROR_RESULT]: FAILED_TO_PARSE_ERROR_RESULT,
   [Code.UNSUPPORTED_SCVAL_TYPE]: UNSUPPORTED_SCVAL_TYPE,
   [Code.UNKNOWN_SCVAL_TYPE]: UNKNOWN_SCVAL_TYPE,
+  [Code.UNSUPPORTED_AUTH_ENTRY_CREDENTIALS]: UNSUPPORTED_AUTH_ENTRY_CREDENTIALS,
 } as const;

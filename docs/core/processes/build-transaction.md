@@ -42,7 +42,7 @@ The `preconditions` object supports:
 | `timeoutSeconds`              | `number`       | Timeout from now (cannot use with timeBounds) |
 | `ledgerBounds`                | `LedgerBounds` | Ledger bounds (`minLedger`, `maxLedger`)      |
 | `minAccountSequence`          | `string`       | Minimum account sequence                      |
-| `minAccountSequenceAge`       | `number`       | Minimum sequence age in seconds               |
+| `minAccountSequenceAge`       | `bigint`       | Minimum sequence age in seconds               |
 | `minAccountSequenceLedgerGap` | `number`       | Minimum gap from last sequence change         |
 | `extraSigners`                | `SignerKey[]`  | Additional required signers                   |
 

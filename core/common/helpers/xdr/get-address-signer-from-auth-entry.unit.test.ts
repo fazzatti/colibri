@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Buffer } from "buffer";
-import { xdr, Address, Keypair } from "stellar-sdk";
+import { Address, Keypair, xdr } from "stellar-sdk";
 import { getAddressSignerFromAuthEntry } from "@/common/helpers/xdr/get-address-signer-from-auth-entry.ts";
 import { FAILED_TO_GET_AUTH_ENTRY_SIGNER } from "@/common/helpers/xdr/error.ts";
 import { StrKey } from "@/strkeys/index.ts";
@@ -18,16 +18,16 @@ describe("getAddressSignerFromAuthEntry", () => {
           nonce: new xdr.Int64(0),
           signatureExpirationLedger: 0,
           signature: xdr.ScVal.scvVoid(),
-        })
+        }),
       ),
       rootInvocation: new xdr.SorobanAuthorizedInvocation({
-        function:
-          xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
+        function: xdr.SorobanAuthorizedFunction
+          .sorobanAuthorizedFunctionTypeContractFn(
             new xdr.InvokeContractArgs({
               contractAddress: address.toScAddress(),
               functionName: "test",
               args: [],
-            })
+            }),
           ),
         subInvocations: [],
       }),
@@ -40,6 +40,72 @@ describe("getAddressSignerFromAuthEntry", () => {
     assertEquals(signer, kp.publicKey());
   });
 
+  it("extracts the signer from ADDRESS_V2 credentials", () => {
+    const kp = Keypair.random();
+    const address = Address.fromString(kp.publicKey());
+    const authEntry = new xdr.SorobanAuthorizationEntry({
+      credentials: xdr.SorobanCredentials.sorobanCredentialsAddressV2(
+        new xdr.SorobanAddressCredentials({
+          address: address.toScAddress(),
+          nonce: new xdr.Int64(0),
+          signatureExpirationLedger: 0,
+          signature: xdr.ScVal.scvVoid(),
+        }),
+      ),
+      rootInvocation: new xdr.SorobanAuthorizedInvocation({
+        function: xdr.SorobanAuthorizedFunction
+          .sorobanAuthorizedFunctionTypeContractFn(
+            new xdr.InvokeContractArgs({
+              contractAddress: address.toScAddress(),
+              functionName: "test",
+              args: [],
+            }),
+          ),
+        subInvocations: [],
+      }),
+    });
+
+    assertEquals(getAddressSignerFromAuthEntry(authEntry), kp.publicKey());
+  });
+
+  it("extracts the top-level signer from delegated credentials", () => {
+    const account = Address.fromString(Keypair.random().publicKey());
+    const delegate = Address.fromString(Keypair.random().publicKey());
+    const authEntry = new xdr.SorobanAuthorizationEntry({
+      credentials: xdr.SorobanCredentials
+        .sorobanCredentialsAddressWithDelegates(
+          new xdr.SorobanAddressCredentialsWithDelegates({
+            addressCredentials: new xdr.SorobanAddressCredentials({
+              address: account.toScAddress(),
+              nonce: new xdr.Int64(0),
+              signatureExpirationLedger: 0,
+              signature: xdr.ScVal.scvVoid(),
+            }),
+            delegates: [
+              new xdr.SorobanDelegateSignature({
+                address: delegate.toScAddress(),
+                signature: xdr.ScVal.scvVoid(),
+                nestedDelegates: [],
+              }),
+            ],
+          }),
+        ),
+      rootInvocation: new xdr.SorobanAuthorizedInvocation({
+        function: xdr.SorobanAuthorizedFunction
+          .sorobanAuthorizedFunctionTypeContractFn(
+            new xdr.InvokeContractArgs({
+              contractAddress: account.toScAddress(),
+              functionName: "test",
+              args: [],
+            }),
+          ),
+        subInvocations: [],
+      }),
+    });
+
+    assertEquals(getAddressSignerFromAuthEntry(authEntry), account.toString());
+  });
+
   it("should throw error for invalid auth entry", () => {
     const invalidAuthEntry = {} as unknown as xdr.SorobanAuthorizationEntry;
 
@@ -49,6 +115,7 @@ describe("getAddressSignerFromAuthEntry", () => {
   it("should preserve Error causes when signer extraction fails", () => {
     const authEntry = {
       credentials: () => ({
+        switch: () => xdr.SorobanCredentialsType.sorobanCredentialsAddress(),
         address: () => ({
           address: () => {
             throw new Error("boom");
@@ -60,7 +127,7 @@ describe("getAddressSignerFromAuthEntry", () => {
 
     const error = assertThrows(
       () => getAddressSignerFromAuthEntry(authEntry),
-      FAILED_TO_GET_AUTH_ENTRY_SIGNER
+      FAILED_TO_GET_AUTH_ENTRY_SIGNER,
     );
 
     assertEquals(error.meta?.cause?.message, "boom");
@@ -81,16 +148,16 @@ describe("getAddressSignerFromAuthEntry", () => {
           nonce: new xdr.Int64(0),
           signatureExpirationLedger: 0,
           signature: xdr.ScVal.scvVoid(),
-        })
+        }),
       ),
       rootInvocation: new xdr.SorobanAuthorizedInvocation({
-        function:
-          xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
+        function: xdr.SorobanAuthorizedFunction
+          .sorobanAuthorizedFunctionTypeContractFn(
             new xdr.InvokeContractArgs({
               contractAddress: address.toScAddress(),
               functionName: "test",
               args: [],
-            })
+            }),
           ),
         subInvocations: [],
       }),
@@ -121,16 +188,16 @@ describe("getAddressSignerFromAuthEntry", () => {
           nonce: new xdr.Int64(0),
           signatureExpirationLedger: 0,
           signature: xdr.ScVal.scvVoid(),
-        })
+        }),
       ),
       rootInvocation: new xdr.SorobanAuthorizedInvocation({
-        function:
-          xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
+        function: xdr.SorobanAuthorizedFunction
+          .sorobanAuthorizedFunctionTypeContractFn(
             new xdr.InvokeContractArgs({
               contractAddress: contractAddress.toScAddress(),
               functionName: "test",
               args: [],
-            })
+            }),
           ),
         subInvocations: [],
       }),
@@ -145,6 +212,7 @@ describe("getAddressSignerFromAuthEntry", () => {
   it("should normalize non-Error signer extraction failures", () => {
     const authEntry = {
       credentials: () => ({
+        switch: () => xdr.SorobanCredentialsType.sorobanCredentialsAddress(),
         address: () => ({
           address: () => {
             throw "boom";
@@ -156,7 +224,7 @@ describe("getAddressSignerFromAuthEntry", () => {
 
     const error = assertThrows(
       () => getAddressSignerFromAuthEntry(authEntry),
-      FAILED_TO_GET_AUTH_ENTRY_SIGNER
+      FAILED_TO_GET_AUTH_ENTRY_SIGNER,
     );
 
     assertEquals(error.meta?.cause, null);

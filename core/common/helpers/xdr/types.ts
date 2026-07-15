@@ -2,13 +2,41 @@ import type { xdr } from "stellar-sdk";
 
 /** @internal */
 export type AuthEntryParams = {
-  credentials: {
-    address: string;
-    nonce: string;
-    signatureExpirationLedger: number;
-    signature?: string;
-  };
+  credentials: AuthEntryCredentialsParams;
   rootInvocation: InvocationParams;
+};
+
+/** @internal */
+export type AuthEntryCredentialsParams =
+  & AuthEntryAddressCredentialsParams
+  & (
+    | {
+      type?: "address";
+      delegates?: never;
+    }
+    | {
+      type: "addressV2";
+      delegates?: never;
+    }
+    | {
+      type: "addressWithDelegates";
+      delegates: AuthEntryDelegateParams[];
+    }
+  );
+
+/** @internal */
+export type AuthEntryAddressCredentialsParams = {
+  address: string;
+  nonce: string;
+  signatureExpirationLedger: number;
+  signature?: string;
+};
+
+/** @internal */
+export type AuthEntryDelegateParams = {
+  address: string;
+  signature?: string;
+  nestedDelegates?: AuthEntryDelegateParams[];
 };
 
 /** @internal */
@@ -24,7 +52,14 @@ export type InvocationParams = {
 /** @internal */
 export type FnArg = {
   value: unknown;
-  type: string;
+  type: ScValTypeName;
+  /**
+   * Exact base64-encoded ScVal XDR captured while parsing an auth entry.
+   *
+   * When present, auth-entry reconstruction prefers this representation over
+   * the lossy native `value` projection. Caller-created arguments may omit it.
+   */
+  xdr?: string;
 };
 
 // ============================================================================

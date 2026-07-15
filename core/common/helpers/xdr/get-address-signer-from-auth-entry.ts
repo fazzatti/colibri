@@ -6,6 +6,7 @@ import {
   FAILED_TO_GET_AUTH_ENTRY_SIGNER,
   INVALID_AUTH_ENTRY_SIGNER_ADDRESS,
 } from "@/common/helpers/xdr/error.ts";
+import { getAddressCredentialsFromAuthEntry } from "@/common/helpers/xdr/get-address-credentials-from-auth-entry.ts";
 
 /**
  * Extracts the signer address from a Soroban authorization entry.
@@ -16,24 +17,27 @@ import {
  * @throws {INVALID_AUTH_ENTRY_SIGNER_ADDRESS} If the extracted address is invalid
  */
 export const getAddressSignerFromAuthEntry = (
-  authEntry: xdr.SorobanAuthorizationEntry
+  authEntry: xdr.SorobanAuthorizationEntry,
 ): Ed25519PublicKey | ContractId => {
   let signer: string;
   try {
+    const { addressCredentials } = getAddressCredentialsFromAuthEntry(
+      authEntry,
+    );
     signer = Address.fromScAddress(
-      authEntry.credentials().address().address()
+      addressCredentials.address(),
     ).toString();
   } catch (e) {
     throw new FAILED_TO_GET_AUTH_ENTRY_SIGNER(
       authEntry.toXDR("base64"),
-      e instanceof Error ? e : undefined
+      e instanceof Error ? e : undefined,
     );
   }
 
   assert(
     StrKey.isValidEd25519PublicKey(signer) || StrKey.isValidContractId(signer),
-    new INVALID_AUTH_ENTRY_SIGNER_ADDRESS(authEntry.toXDR("base64"), signer)
+    new INVALID_AUTH_ENTRY_SIGNER_ADDRESS(authEntry.toXDR("base64"), signer),
   );
 
-  return signer as Ed25519PublicKey;
+  return signer as Ed25519PublicKey | ContractId;
 };

@@ -363,7 +363,7 @@ describe("StellarAssetContract token invocations", () => {
         ledger: 1,
         createdAt: 2,
         response: {} as any,
-        returnValue: nativeToScVal(true, { type: "bool" }),
+        returnValue: nativeToScVal(true),
       });
     });
 

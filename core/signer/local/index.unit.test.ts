@@ -465,6 +465,69 @@ describe("LocalSigner", () => {
       assert(signedEntry instanceof xdr.SorobanAuthorizationEntry);
     });
 
+    it("signs the top-level credentials of a delegated auth entry", async () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+      const account = xdr.ScAddress.scAddressTypeAccount(
+        xdr.PublicKey.publicKeyTypeEd25519(
+          Keypair.fromPublicKey(TEST_PUBLIC).rawPublicKey(),
+        ),
+      );
+      const entry = new xdr.SorobanAuthorizationEntry({
+        credentials: xdr.SorobanCredentials
+          .sorobanCredentialsAddressWithDelegates(
+            new xdr.SorobanAddressCredentialsWithDelegates({
+              addressCredentials: new xdr.SorobanAddressCredentials({
+                address: account,
+                nonce: xdr.Int64.fromString("0"),
+                signatureExpirationLedger: 0,
+                signature: xdr.ScVal.scvVec([]),
+              }),
+              delegates: [
+                new xdr.SorobanDelegateSignature({
+                  address: new Contract(TEST_CONTRACT_ID).address()
+                    .toScAddress(),
+                  signature: xdr.ScVal.scvVoid(),
+                  nestedDelegates: [],
+                }),
+              ],
+            }),
+          ),
+        rootInvocation: new xdr.SorobanAuthorizedInvocation({
+          function: xdr.SorobanAuthorizedFunction
+            .sorobanAuthorizedFunctionTypeContractFn(
+              new xdr.InvokeContractArgs({
+                contractAddress: new Contract(TEST_CONTRACT_ID).address()
+                  .toScAddress(),
+                functionName: "test",
+                args: [],
+              }),
+            ),
+          subInvocations: [],
+        }),
+      });
+
+      const signedEntry = await signer.signSorobanAuthEntry(
+        entry,
+        1000000,
+        Networks.TESTNET,
+      ) as xdr.SorobanAuthorizationEntry;
+      const signedCredentials = signedEntry.credentials()
+        .addressWithDelegates();
+
+      assertEquals(
+        signedEntry.credentials().switch().name,
+        "sorobanCredentialsAddressWithDelegates",
+      );
+      assertNotEquals(
+        signedCredentials.addressCredentials().signature().toXDR("base64"),
+        xdr.ScVal.scvVec([]).toXDR("base64"),
+      );
+      assertEquals(
+        signedCredentials.delegates()[0].signature().toXDR("base64"),
+        xdr.ScVal.scvVoid().toXDR("base64"),
+      );
+    });
+
     it("throws after destroy", async () => {
       const signer = LocalSigner.fromSecret(TEST_SECRET);
       signer.destroy();

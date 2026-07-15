@@ -36,7 +36,6 @@ import type {
   LoadContractErrorsFromWasmArgs,
 } from "@/contract/types.ts";
 import type { Api } from "stellar-sdk/rpc";
-import type { OperationOptions } from "stellar-sdk";
 import type { ContractId } from "@/strkeys/types.ts";
 import type { NetworkConfig } from "@/network/index.ts";
 import type {
@@ -377,7 +376,7 @@ export class Contract {
         wasmHash: Buffer.from(wasmHash, "hex"),
         salt: toBuffer(contractSalt),
         constructorArgs: encodedArgs,
-      } as OperationOptions.CreateCustomContract);
+      });
 
       const result = await this.invokePipe.run({
         config,

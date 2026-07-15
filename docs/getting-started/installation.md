@@ -6,6 +6,8 @@ Deno-first TypeScript projects.
 ## Prerequisites
 
 - [Deno](https://deno.land/) `v2.0` or later
+- [Node.js](https://nodejs.org/) `v22` or later when consuming Colibri from
+  Node.js
 - A reachable Docker daemon such as Docker Desktop or OrbStack if you plan to
   use `@colibri/test-tooling`
 
@@ -30,12 +32,12 @@ This will add imports similar to:
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^0.22.0",
-    "@colibri/sep10": "jsr:@colibri/sep10@^0.5.10",
-    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.2.10",
+    "@colibri/core": "jsr:@colibri/core@^0.23.0",
+    "@colibri/sep10": "jsr:@colibri/sep10@^0.5.11",
+    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.2.11",
     "@colibri/test-tooling": "jsr:@colibri/test-tooling@^0.3.1",
-    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.9.9",
-    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^0.2.6"
+    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.9.10",
+    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^0.2.7"
   }
 }
 ```

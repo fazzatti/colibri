@@ -75,6 +75,7 @@ function createValidChallenge(
   } = options;
 
   const now = Math.floor(Date.now() / 1000);
+  const maxTime = now + timeout;
   const serverAccount = serverKeypair.publicKey();
 
   // Create account with adjustable sequence for testing
@@ -87,8 +88,8 @@ function createValidChallenge(
     fee: "100",
     networkPassphrase: NETWORK_PASSPHRASE,
     timebounds: {
-      minTime: now,
-      maxTime: now + timeout,
+      minTime: Math.min(now, maxTime),
+      maxTime,
     },
   });
 
