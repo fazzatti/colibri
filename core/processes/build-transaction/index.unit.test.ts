@@ -297,7 +297,7 @@ describe("BuildTransaction", () => {
         baseFee: "100",
         networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
         preconditions: {
-          minAccountSequenceAge: 100,
+          minAccountSequenceAge: 100n,
         },
       };
 

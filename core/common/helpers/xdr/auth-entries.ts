@@ -8,6 +8,8 @@ import type {
 const invocationToParams = (
   invocation: xdr.SorobanAuthorizedInvocation
 ): InvocationParams => {
+  const args = invocation.function().contractFn().args();
+
   return {
     function: {
       contractAddress: Address.fromScAddress(
@@ -18,7 +20,7 @@ const invocationToParams = (
         .contractFn()
         .functionName()
         .toString(),
-      args: invocation.function().contractFn().args().map(parseScVal),
+      args: parseScValArgs(args),
     },
     subInvocations: [
       ...invocation
@@ -31,15 +33,9 @@ const invocationToParams = (
 export const paramsToInvocation = (
   params: InvocationParams
 ): xdr.SorobanAuthorizedInvocation => {
-  let args;
-
-  if (params.function.args.length > 0 && "type" in params.function.args[0]) {
-    args = (params.function.args as FnArg[]).map((arg) => {
-      return nativeToScVal(arg.value, { type: arg.type });
-    });
-  } else {
-    args = params.function.args as xdr.ScVal[];
-  }
+  const args = isScValArray(params.function.args)
+    ? params.function.args
+    : params.function.args.map(fnArgToScVal);
 
   return new xdr.SorobanAuthorizedInvocation({
     function:
@@ -79,25 +75,67 @@ export const authEntryToParams = (
   return entryParams;
 };
 
-const parseScVal = (value: xdr.ScVal): FnArg => {
-  const type = parseScValType(value.switch().name);
-  return {
-    value:
-      type === "bool" ? scValToNative(value) : String(scValToNative(value)),
-    type,
-  };
+const isScValArray = (
+  args: FnArg[] | xdr.ScVal[]
+): args is xdr.ScVal[] => {
+  return args.length > 0 && args[0] instanceof xdr.ScVal;
 };
 
-const parseScValType = (rawType: string): string => {
-  switch (rawType) {
-    case "scvAddress":
-      return "address";
-    case "scvI128":
-      return "i128";
+const fnArgToScVal = (arg: FnArg): xdr.ScVal => {
+  if (arg.type === undefined) return nativeToScVal(arg.value);
+
+  return nativeToScVal(arg.value, { type: arg.type });
+};
+
+const parseScValArgs = (args: xdr.ScVal[]): FnArg[] | xdr.ScVal[] => {
+  const parsedArgs = args.map(parseScValArg);
+
+  if (parsedArgs.every(isFnArg)) return parsedArgs;
+
+  return args;
+};
+
+const isFnArg = (arg: FnArg | undefined): arg is FnArg => {
+  return arg !== undefined;
+};
+
+const parseScValArg = (value: xdr.ScVal): FnArg | undefined => {
+  const nativeValue = scValToNative(value);
+
+  switch (value.switch().name) {
+    case "scvVoid":
     case "scvBool":
-      return "bool";
+      return { value: nativeValue };
+    case "scvU32":
+      return { value: String(nativeValue), type: "u32" };
+    case "scvI32":
+      return { value: String(nativeValue), type: "i32" };
+    case "scvU64":
+      return { value: String(nativeValue), type: "u64" };
+    case "scvI64":
+      return { value: String(nativeValue), type: "i64" };
+    case "scvU128":
+      return { value: String(nativeValue), type: "u128" };
+    case "scvAddress":
+      return { value: String(nativeValue), type: "address" };
+    case "scvI128":
+      return { value: String(nativeValue), type: "i128" };
+    case "scvU256":
+      return { value: String(nativeValue), type: "u256" };
+    case "scvI256":
+      return { value: String(nativeValue), type: "i256" };
+    case "scvTimepoint":
+      return { value: String(nativeValue), type: "timepoint" };
+    case "scvDuration":
+      return { value: String(nativeValue), type: "duration" };
+    case "scvBytes":
+      return { value: nativeValue, type: "bytes" };
+    case "scvString":
+      return { value: nativeValue, type: "string" };
+    case "scvSymbol":
+      return { value: nativeValue, type: "symbol" };
     default:
-      return rawType;
+      return undefined;
   }
 };
 

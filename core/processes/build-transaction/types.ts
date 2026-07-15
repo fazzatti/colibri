@@ -76,7 +76,7 @@ export type TransactionPreconditions = {
   // last seq change. That timestamp is recorded as seqTime whenever the
   // account’s seq changes or you run BumpSequence. If this or the ledger
   // gap below is not met you get txBAD_MIN_SEQ_AGE_OR_GAP.
-  minAccountSequenceAge?: number; // seconds
+  minAccountSequenceAge?: bigint; // seconds
 
   // same idea, but measured in ledgers, not seconds. It becomes valid only
   // once the current ledger number is at least seqLedger plus the gap.
