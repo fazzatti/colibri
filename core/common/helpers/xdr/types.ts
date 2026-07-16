@@ -1,4 +1,4 @@
-import type { xdr } from "stellar-sdk";
+import type { NativeToScValOpts, xdr } from "stellar-sdk";
 
 /** @internal */
 export type AuthEntryParams = {
@@ -24,7 +24,7 @@ export type InvocationParams = {
 /** @internal */
 export type FnArg = {
   value: unknown;
-  type: string;
+  type?: NativeToScValOpts["type"];
 };
 
 // ============================================================================

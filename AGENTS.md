@@ -306,12 +306,7 @@ Some integration tests require external dependencies:
 - public RPC/network access
 - Friendbot access
 - Docker access for `test-tooling`
-- optional `QUASAR_API_KEY` from `.env` or environment for certain provider and
-  streamer integration tests
-
-The only documented env variable in `.env.example` is:
-
-- `QUASAR_API_KEY`
+- public RPC and archive-RPC provider availability
 
 If you add more environment-sensitive tests, document them.
 

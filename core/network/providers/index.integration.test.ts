@@ -1,12 +1,11 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
-import { QUASAR_API_KEY } from "colibri-internal/env/index.ts";
 import { type Api, Server } from "stellar-sdk/rpc";
 import { describe, it } from "@std/testing/bdd";
 import { assertEquals } from "@std/assert";
+import { Ankr } from "@/network/providers/ankr.ts";
 import { Gateway } from "@/network/providers/gateway.ts";
 import { Lightsail } from "@/network/providers/lightsail.ts";
-import { Nodies } from "@/network/providers/nodies.ts";
-import { isDefined } from "@/common/type-guards/is-defined.ts";
+import { OnFinality } from "@/network/providers/onfinality.ts";
 
 /**
  * Extended health response type that includes additional fields missing from the SDK.
@@ -56,14 +55,19 @@ describe("RPC Provider Health Checks", disableSanitizeConfig, () => {
       assertEquals(health.status, "healthy");
     });
 
-    it("MainNet PRO should be healthy", async () => {
-      assertEquals(
-        isDefined(QUASAR_API_KEY),
-        true,
-        "QUASAR_API_KEY is not defined in env",
-      );
+    it("MainNet archive should be healthy", async () => {
+      const config = Lightsail.MainNet();
+      const server = new Server(config.archiveRpcUrl, {
+        allowHttp: config.allowHttp ?? false,
+      });
+      const health = (await server.getHealth()) as GetHealthResponse;
+      assertEquals(health.status, "healthy");
+    });
+  });
 
-      const config = Lightsail.MainNet(QUASAR_API_KEY);
+  describe("OnFinality", () => {
+    it("MainNet should be healthy", async () => {
+      const config = OnFinality.MainNet();
       const server = new Server(config.rpcUrl, {
         allowHttp: config.allowHttp ?? false,
       });
@@ -72,18 +76,9 @@ describe("RPC Provider Health Checks", disableSanitizeConfig, () => {
     });
   });
 
-  describe("Nodies", () => {
-    it("MainNet should be healthy", async () => {
-      const config = Nodies.MainNet();
-      const server = new Server(config.rpcUrl, {
-        allowHttp: config.allowHttp ?? false,
-      });
-      const health = (await server.getHealth()) as GetHealthResponse;
-      assertEquals(health.status, "healthy");
-    });
-
-    it("TestNet should be healthy", async () => {
-      const config = Nodies.TestNet();
+  describe("Ankr", () => {
+    it("MainNet full archive should be healthy", async () => {
+      const config = Ankr.MainNet();
       const server = new Server(config.rpcUrl, {
         allowHttp: config.allowHttp ?? false,
       });

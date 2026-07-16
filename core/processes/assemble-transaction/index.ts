@@ -1,4 +1,10 @@
-import { Account, Operation, TransactionBuilder, type xdr } from "stellar-sdk";
+import {
+  Account,
+  Operation,
+  SignerKey,
+  TransactionBuilder,
+  type xdr,
+} from "stellar-sdk";
 import type {
   AssembleTransactionInput,
   AssembleTransactionOutput,
@@ -73,7 +79,7 @@ export const assembleTransaction = async (
         minAccountSequence: transaction.minAccountSequence,
         minAccountSequenceAge: transaction.minAccountSequenceAge,
         minAccountSequenceLedgerGap: transaction.minAccountSequenceLedgerGap,
-        extraSigners: transaction.extraSigners,
+        extraSigners: transaction.extraSigners?.map(SignerKey.encodeSignerKey),
         sorobanData: builtSorobanData,
       });
 
