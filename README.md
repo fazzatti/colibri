@@ -53,18 +53,19 @@ npm install @colibri/core
 
 ---
 
-### [@colibri/sep10](./sep10) <a href="https://jsr.io/@colibri/sep10"><img src="https://jsr.io/badges/@colibri/sep10" alt="JSR @colibri/sep10" /></a>
+### [@colibri/webauth](./webauth) <a href="https://jsr.io/@colibri/webauth"><img src="https://jsr.io/badges/@colibri/webauth" alt="JSR @colibri/webauth" /></a>
 
-A SEP-10 web authentication client for Stellar, with full-flow helpers,
-challenge validation, JWT handling, and flexible signer support.
+Unified SEP-10 and SEP-45 Web Authentication with deterministic account routing,
+strict challenge verification, custom contract authorization, and enforcing
+Soroban simulation.
 
 ```sh
-deno add jsr:@colibri/sep10
+deno add jsr:@colibri/webauth
 # or
-npm install @colibri/sep10
+npm install @colibri/webauth
 ```
 
-[View Documentation →](./sep10/README.md)
+[View Documentation →](./webauth/README.md)
 
 ---
 

@@ -53,9 +53,9 @@
 
 - [RPC Streamer](packages/rpc-streamer.md)
 
-## @colibri/sep10
+## @colibri/webauth
 
-- [SEP-10](packages/sep10.md)
+- [WebAuth](packages/webauth.md)
 
 ## @colibri/test-tooling
 
