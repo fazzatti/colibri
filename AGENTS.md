@@ -17,7 +17,8 @@ Soroban packages:
 - `core/`: the architectural center of the repo. It defines the shared error
   model, networks, accounts, signers, helpers, processes, steps, pipelines,
   plugins, contract clients, event tooling, ledger parsing, and utilities.
-- `sep10/`: a SEP-10 web auth client package built on top of Colibri core.
+- `webauth/`: a unified SEP-10 and SEP-45 web-auth client package built on top
+  of Colibri core.
 - `rpc-streamer/`: a generic callback-based RPC streaming package with event and
   ledger variants.
 - `plugins/fee-bump/`: a plugin that wraps outgoing transactions in a fee-bump
@@ -101,7 +102,7 @@ GitHub Actions behavior matters when changing structure or versions:
 Current package version sources:
 
 - `core/deno.json`
-- `sep10/deno.json`
+- `webauth/deno.json`
 - `rpc-streamer/deno.json`
 - `plugins/fee-bump/deno.json`
 - `plugins/channel-accounts/deno.json`
@@ -328,17 +329,18 @@ Keep these invariants:
 
 If you change `core/`, consider ripple effects on all dependent packages.
 
-### `sep10/`
+### `webauth/`
 
 Keep the split between:
 
-- challenge parsing/building/verification
-- client request flow
-- JWT parsing
-- small utility helpers
+- shared routing, transport, token, and typed-error plumbing
+- protocol-specific challenge parsing and verification
+- explicit SEP-10 and SEP-45 client lifecycles
+- contract authorization, simulation, and footprint validation
 
-This package relies on `@colibri/core` for shared primitives but should remain a
-clean, focused SEP-10 package rather than absorbing unrelated Stellar helpers.
+This package relies on `@colibri/core` for shared primitives. Keep the protocol
+engines separate behind the unified client and preserve deterministic
+account-type routing without fallback.
 
 ### `rpc-streamer/`
 

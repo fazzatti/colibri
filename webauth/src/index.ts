@@ -1,7 +1,6 @@
 /** Unified WebAuth client. */
 export { WebAuthClient } from "@/client.ts";
-/** Shared decoded/authenticated token representation. */
-export { WebAuthToken } from "@/token.ts";
+export * from "@/token.ts";
 /** Shared and protocol-specific typed errors. */
 export {
   Sep10Code,
