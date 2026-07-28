@@ -33,14 +33,14 @@ jobs:
             local package_path="$1"
             local tag_prefix="$2"
             local deno_json="$package_path/deno.json"
-            
+
             if [ -f "$deno_json" ]; then
               # Extract version from deno.json
               VERSION=$(jq -r '.version // empty' "$deno_json")
-              
+
               if [ -n "$VERSION" ]; then
                 TAG_NAME="${tag_prefix}-${VERSION}"
-                
+
                 # Check if tag already exists
                 if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
                   echo "New version detected: $TAG_NAME"
@@ -61,9 +61,6 @@ jobs:
 
           # Check rpc-streamer package
           check_package "rpc-streamer" "rpc-streamer"
-
-          # Check sep10 package
-          check_package "sep10" "sep10"
 
           # Check webauth package
           check_package "webauth" "webauth"
@@ -99,18 +96,18 @@ jobs:
           for TAG_NAME in "${TAG_ARRAY[@]}"; do
             if [ -n "$TAG_NAME" ]; then
               echo "Creating tag and release for: $TAG_NAME"
-              
+
               # Create the tag
               git tag "$TAG_NAME"
               git push origin "$TAG_NAME"
-              
+
               # Mark core releases as latest, others as not latest
               if [[ "$TAG_NAME" == core-* ]]; then
                 LATEST_FLAG="--latest=true"
               else
                 LATEST_FLAG="--latest=false"
               fi
-              
+
               # Create GitHub release
               gh release create "$TAG_NAME" \
                 --title "$TAG_NAME" \
