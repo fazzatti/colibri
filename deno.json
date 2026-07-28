@@ -3,6 +3,7 @@
     "./core",
     "./rpc-streamer",
     "./sep10",
+    "./webauth",
     "./plugins/*",
     "./test-tooling"
   ],
@@ -10,6 +11,7 @@
   "imports": {
     "jsr:@colibri/core": "./core",
     "jsr:@colibri/test-tooling": "./test-tooling",
+    "jsr:@colibri/webauth": "./webauth",
     "colibri-internal/": "./_internal/",
     "colibri-tools/": "./_tools/",
     "stellar-sdk": "npm:@stellar/stellar-sdk@^16.0.1",
@@ -22,8 +24,10 @@
     "@std/expect": "jsr:@std/expect@^1.0.0"
   },
   "tasks": {
-    "check": "deno check core/mod.ts rpc-streamer/mod.ts sep10/mod.ts plugins/fee-bump/mod.ts plugins/channel-accounts/mod.ts test-tooling/mod.ts",
-    "check:jsr": "deno doc --lint core/mod.ts && deno doc --lint plugins/fee-bump/mod.ts && deno doc --lint plugins/channel-accounts/mod.ts && deno doc --lint test-tooling/mod.ts",
+    "check": "deno check core/mod.ts rpc-streamer/mod.ts sep10/mod.ts webauth/mod.ts plugins/fee-bump/mod.ts plugins/channel-accounts/mod.ts test-tooling/mod.ts",
+    "check:jsr": "deno doc --lint core/mod.ts && deno doc --lint webauth/mod.ts && deno doc --lint plugins/fee-bump/mod.ts && deno doc --lint plugins/channel-accounts/mod.ts && deno doc --lint test-tooling/mod.ts",
+    "build:webauth-fixtures": "deno run -A _tools/build-webauth-fixtures.ts",
+    "check:webauth-fixtures": "deno run -A _tools/build-webauth-fixtures.ts --check",
     "test": "deno test -A --parallel --clean --ignore='_*/' --coverage=coverage",
     "test:unit": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.integration.test.ts' --ignore='**/*.testnet.integration.test.ts' --coverage=coverage",
     "test:integration": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.unit.test.ts' --coverage=coverage",
