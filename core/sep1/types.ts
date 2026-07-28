@@ -1,4 +1,4 @@
-import type { Ed25519PublicKey, ContractId } from "@/strkeys/types.ts";
+import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 
 /**
  * Options for fetching a stellar.toml file
@@ -45,8 +45,9 @@ export interface StellarTomlParseOptions {
 /**
  * Combined options for fromDomain
  */
-export type StellarTomlOptions = StellarTomlFetchOptions &
-  StellarTomlParseOptions;
+export type StellarTomlOptions =
+  & StellarTomlFetchOptions
+  & StellarTomlParseOptions;
 
 // =============================================================================
 // General Information (top-level fields from SEP-1)
@@ -382,4 +383,32 @@ export interface Sep45Config {
 
   /** Optional network passphrase */
   networkPassphrase?: string;
+}
+
+/**
+ * Complete WebAuth protocol discovery data extracted from a stellar.toml.
+ *
+ * Protocol sub-configurations are included only when all fields required by
+ * that protocol are advertised.
+ */
+export interface WebAuthDiscoveryConfig {
+  /** Normalized home domain from which the stellar.toml was fetched. */
+  homeDomain: string;
+
+  /** Server signing key shared by the advertised WebAuth protocols. */
+  signingKey: Ed25519PublicKey;
+
+  /** Optional network confirmation advertised by the server. */
+  networkPassphrase?: string;
+
+  /** Complete SEP-10 endpoint configuration, when advertised. */
+  sep10?: {
+    endpoint: string;
+  };
+
+  /** Complete SEP-45 endpoint and contract configuration, when advertised. */
+  sep45?: {
+    endpoint: string;
+    contractId: ContractId;
+  };
 }

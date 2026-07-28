@@ -1,0 +1,18 @@
+{
+  "name": "@colibri/webauth",
+  "version": "0.1.0",
+  "exports": {
+    ".": "./mod.ts",
+    "./sep10": "./src/sep10/index.ts",
+    "./sep45": "./src/sep45/index.ts"
+  },
+  "license": "MIT",
+  "publish": {
+    "include": ["./**/*.ts", "./README.md", "./LICENSE", "./deno.json"],
+    "exclude": ["./**/*.test.ts"]
+  },
+  "imports": {
+    "@/": "./src/",
+    "@colibri/core": "jsr:@colibri/core@^0.24.0"
+  }
+}

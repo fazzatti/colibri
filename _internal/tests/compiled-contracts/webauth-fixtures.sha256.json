@@ -1,0 +1,9 @@
+{
+  "stellarCli": "26.1.0",
+  "sorobanSdk": "22.0.8",
+  "artifacts": {
+    "web_auth_contract.wasm": "7466b7e1f52fa1d126bd45bc6e27e5272d3cfe448ae01427453f4ebf00093e38",
+    "passkey_account_contract.wasm": "4d4ab4baf70b0864b7f83988b3c820e0778876006df4a00c3842dc4b572d5a66",
+    "signatureless_account_contract.wasm": "7f1d4c29ed2e1b3f15409fcdb0e0325fa4835a4479bc3520785632058bb1b947"
+  }
+}

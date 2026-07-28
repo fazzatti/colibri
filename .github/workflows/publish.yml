@@ -20,7 +20,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: 2.2.2
+          deno-version: 2.7.11
 
       - name: Detect package version bumps
         id: detect-versions
@@ -64,6 +64,9 @@ jobs:
 
           # Check sep10 package
           check_package "sep10" "sep10"
+
+          # Check webauth package
+          check_package "webauth" "webauth"
 
           # Check test-tooling package
           check_package "test-tooling" "test-tooling"

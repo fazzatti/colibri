@@ -1,10 +1,10 @@
 import {
   assertEquals,
   assertRejects,
-  assertThrows,
   assertStringIncludes,
+  assertThrows,
 } from "@std/assert";
-import { describe, it, beforeEach } from "@std/testing/bdd";
+import { beforeEach, describe, it } from "@std/testing/bdd";
 import { StellarToml } from "@/sep1/index.ts";
 import * as E from "@/sep1/error.ts";
 
@@ -129,7 +129,7 @@ describe("StellarToml", () => {
 
       const error = await assertRejects(
         () => StellarToml.fromDomain("example.com", { fetchFn: mockFetch }),
-        E.PARSE_ERROR
+        E.PARSE_ERROR,
       );
       assertEquals(error.meta.data.domain, "example.com");
     });
@@ -141,7 +141,7 @@ describe("StellarToml", () => {
 
       assertThrows(
         () => StellarToml.fromString(tomlWithBadKey, { validate: true }),
-        E.INVALID_SIGNING_KEY
+        E.INVALID_SIGNING_KEY,
       );
     });
 
@@ -161,7 +161,7 @@ describe("StellarToml", () => {
 
       assertThrows(
         () => StellarToml.fromString(tomlWithHttpUrl, { validate: true }),
-        E.INVALID_URL
+        E.INVALID_URL,
       );
     });
 
@@ -184,7 +184,7 @@ describe("StellarToml", () => {
 
       assertThrows(
         () => StellarToml.fromString(tomlWithBadUrl, { validate: true }),
-        E.INVALID_URL
+        E.INVALID_URL,
       );
     });
 
@@ -196,7 +196,7 @@ describe("StellarToml", () => {
 
       assertThrows(
         () => StellarToml.fromString(tomlWithHttpDocUrl, { validate: true }),
-        E.INVALID_URL
+        E.INVALID_URL,
       );
     });
 
@@ -224,7 +224,7 @@ describe("StellarToml", () => {
             validate: true,
             allowHttp: true,
           }),
-        E.INVALID_URL
+        E.INVALID_URL,
       );
     });
 
@@ -236,7 +236,7 @@ describe("StellarToml", () => {
 
       assertThrows(
         () => StellarToml.fromString(tomlWithBadDocUrl, { validate: true }),
-        E.INVALID_URL
+        E.INVALID_URL,
       );
     });
 
@@ -247,7 +247,7 @@ describe("StellarToml", () => {
 
       const error = assertThrows(
         () => StellarToml.fromString(tomlWithBadAccount, { validate: true }),
-        E.INVALID_ACCOUNT
+        E.INVALID_ACCOUNT,
       );
       assertEquals(error.meta.data.index, 0);
       assertEquals(error.meta.data.field, "ACCOUNTS");
@@ -261,7 +261,7 @@ describe("StellarToml", () => {
       const error = assertThrows(
         () =>
           StellarToml.fromString(tomlWithBadAccountAtIndex, { validate: true }),
-        E.INVALID_ACCOUNT
+        E.INVALID_ACCOUNT,
       );
       assertEquals(error.meta.data.index, 2);
     });
@@ -275,7 +275,7 @@ describe("StellarToml", () => {
 
       const error = assertThrows(
         () => StellarToml.fromString(tomlWithBadIssuer, { validate: true }),
-        E.INVALID_ACCOUNT
+        E.INVALID_ACCOUNT,
       );
       assertEquals(error.meta.data.field, "CURRENCIES[0].issuer");
     });
@@ -289,7 +289,7 @@ describe("StellarToml", () => {
 
       const error = assertThrows(
         () => StellarToml.fromString(tomlWithBadContract, { validate: true }),
-        E.INVALID_ACCOUNT
+        E.INVALID_ACCOUNT,
       );
       assertEquals(error.meta.data.field, "CURRENCIES[0].contract");
     });
@@ -303,7 +303,7 @@ describe("StellarToml", () => {
 
       const error = assertThrows(
         () => StellarToml.fromString(tomlWithBadValidator, { validate: true }),
-        E.INVALID_SIGNING_KEY
+        E.INVALID_SIGNING_KEY,
       );
       assertEquals(error.meta.data.field, "VALIDATORS[0].PUBLIC_KEY");
     });
@@ -315,7 +315,7 @@ describe("StellarToml", () => {
 
       const error = assertThrows(
         () => StellarToml.fromString(tomlWithBadUriKey, { validate: true }),
-        E.INVALID_SIGNING_KEY
+        E.INVALID_SIGNING_KEY,
       );
       assertEquals(error.meta.data.field, "URI_REQUEST_SIGNING_KEY");
     });
@@ -387,7 +387,7 @@ describe("StellarToml", () => {
         `
         WEB_AUTH_ENDPOINT = "https://auth.example.com"
       `,
-        { validate: false }
+        { validate: false },
       );
       assertEquals(tomlNoKey.hasWebAuth(), false);
     });
@@ -432,7 +432,7 @@ describe("StellarToml", () => {
       assertEquals(config?.signingKey, VALID_PUBLIC_KEY);
       assertEquals(
         config?.networkPassphrase,
-        "Test SDF Network ; September 2015"
+        "Test SDF Network ; September 2015",
       );
     });
 
@@ -508,7 +508,7 @@ describe("StellarToml", () => {
     it("throws INVALID_DOMAIN for domain with protocol", async () => {
       await assertRejects(
         () => StellarToml.fromDomain("https://example.com"),
-        E.INVALID_DOMAIN
+        E.INVALID_DOMAIN,
       );
     });
 
@@ -556,7 +556,7 @@ describe("StellarToml", () => {
 
       const error = await assertRejects(
         () => StellarToml.fromDomain("example.com", { fetchFn: mockFetch }),
-        E.FETCH_FAILED
+        E.FETCH_FAILED,
       );
       // Verify error contains status info
       assertEquals(error.meta.data.statusCode, 404);
@@ -570,7 +570,7 @@ describe("StellarToml", () => {
 
       const error = await assertRejects(
         () => StellarToml.fromDomain("example.com", { fetchFn: mockFetch }),
-        E.FETCH_FAILED
+        E.FETCH_FAILED,
       );
       assertEquals(error.meta.data.statusCode, 500);
       assertEquals(error.meta.data.statusText, "");
@@ -588,14 +588,14 @@ describe("StellarToml", () => {
 
       await assertRejects(
         () => StellarToml.fromDomain("example.com", { fetchFn: mockFetch }),
-        E.FILE_TOO_LARGE
+        E.FILE_TOO_LARGE,
       );
     });
 
     it("throws TIMEOUT when request times out", async () => {
       const mockFetch = async (
         _input: RequestInfo | URL,
-        options?: RequestInit
+        options?: RequestInit,
       ) => {
         // Simulate timeout by checking if signal is aborted
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -611,7 +611,7 @@ describe("StellarToml", () => {
             fetchFn: mockFetch,
             timeout: 50, // Very short timeout
           }),
-        E.TIMEOUT
+        E.TIMEOUT,
       );
     });
 
@@ -622,7 +622,7 @@ describe("StellarToml", () => {
 
       const error = await assertRejects(
         () => StellarToml.fromDomain("example.com", { fetchFn: mockFetch }),
-        E.FETCH_FAILED
+        E.FETCH_FAILED,
       );
       // Verify cause is captured
       assertEquals(error.meta.cause?.message, "Network error");
@@ -637,7 +637,7 @@ describe("StellarToml", () => {
 
       const error = await assertRejects(
         () => StellarToml.fromDomain("example.com", { fetchFn: mockFetch }),
-        E.FETCH_FAILED
+        E.FETCH_FAILED,
       );
       assertEquals(error.meta.cause instanceof Error, true);
     });
@@ -660,7 +660,7 @@ describe("StellarToml", () => {
       // Should throw with validation enabled (default)
       await assertRejects(
         () => StellarToml.fromDomain("example.com", { fetchFn: mockFetch }),
-        E.INVALID_SIGNING_KEY
+        E.INVALID_SIGNING_KEY,
       );
 
       // Should not throw with validation disabled
@@ -680,7 +680,7 @@ describe("StellarToml", () => {
 
       await assertRejects(
         () => StellarToml.fromDomain("example.com", { fetchFn: mockFetch }),
-        E.FILE_TOO_LARGE
+        E.FILE_TOO_LARGE,
       );
     });
 
@@ -691,7 +691,7 @@ describe("StellarToml", () => {
 
       await assertRejects(
         () => StellarToml.fromDomain("example.com", { fetchFn: mockFetch }),
-        E.FETCH_FAILED
+        E.FETCH_FAILED,
       );
     });
   });
@@ -701,7 +701,7 @@ describe("StellarToml", () => {
       const toml = StellarToml.fromString(SEP45_TOML);
       assertEquals(
         toml.webAuthForContractsEndpoint,
-        "https://auth.example.com/sep45"
+        "https://auth.example.com/sep45",
       );
     });
 
@@ -778,7 +778,7 @@ describe("StellarToml", () => {
         WEB_AUTH_FOR_CONTRACTS_ENDPOINT = "https://auth.example.com/sep45"
         SIGNING_KEY = "${VALID_PUBLIC_KEY}"
       `,
-        { validate: false }
+        { validate: false },
       );
       assertEquals(toml.hasWebAuthForContracts(), false);
     });
@@ -789,7 +789,7 @@ describe("StellarToml", () => {
         WEB_AUTH_FOR_CONTRACTS_ENDPOINT = "https://auth.example.com/sep45"
         WEB_AUTH_CONTRACT_ID = "${VALID_CONTRACT_ID}"
       `,
-        { validate: false }
+        { validate: false },
       );
       assertEquals(toml.hasWebAuthForContracts(), false);
     });
@@ -812,7 +812,7 @@ describe("StellarToml", () => {
         "WEB_AUTH_ENDPOINT",
         "not-a-url",
         "example.com",
-        false
+        false,
       );
       assertStringIncludes(error.details!, "is not a valid URL");
       // When requireHttps=false, details should NOT mention HTTPS requirement
@@ -824,7 +824,7 @@ describe("StellarToml", () => {
         "WEB_AUTH_ENDPOINT",
         "http://example.com",
         "example.com",
-        true
+        true,
       );
       assertStringIncludes(error.details!, "HTTPS");
     });
@@ -836,6 +836,78 @@ describe("StellarToml", () => {
       const wrappedError = new Error(String(nonErrorValue));
       const error = new E.PARSE_ERROR("example.com", wrappedError, "invalid");
       assertEquals(error.diagnostic?.rootCause, "string error");
+    });
+  });
+});
+
+describe("StellarToml webAuthConfig", () => {
+  it("returns only complete advertised protocol configurations", async () => {
+    const toml = await StellarToml.fromDomain("example.com", {
+      fetchFn: async () =>
+        await new Response(
+          `${SEP10_TOML}
+WEB_AUTH_FOR_CONTRACTS_ENDPOINT = "https://auth.example.com/sep45"
+WEB_AUTH_CONTRACT_ID = "${VALID_CONTRACT_ID}"
+`,
+        ),
+    });
+
+    assertEquals(toml.webAuthConfig, {
+      homeDomain: "example.com",
+      signingKey: VALID_PUBLIC_KEY,
+      networkPassphrase: "Test SDF Network ; September 2015",
+      sep10: { endpoint: "https://auth.example.com/sep10" },
+      sep45: {
+        endpoint: "https://auth.example.com/sep45",
+        contractId: VALID_CONTRACT_ID,
+      },
+    });
+  });
+
+  it("preserves complete SEP-10 while omitting incomplete SEP-45", async () => {
+    const toml = await StellarToml.fromDomain("example.com", {
+      fetchFn: async () =>
+        await new Response(
+          `${SEP10_TOML}
+WEB_AUTH_FOR_CONTRACTS_ENDPOINT = "https://auth.example.com/sep45"
+`,
+        ),
+    });
+
+    assertEquals(toml.webAuthConfig?.sep10, {
+      endpoint: "https://auth.example.com/sep10",
+    });
+    assertEquals(toml.webAuthConfig?.sep45, undefined);
+  });
+
+  it("returns undefined without retained domain or complete protocols", async () => {
+    assertEquals(StellarToml.fromString(SEP10_TOML).webAuthConfig, undefined);
+    const toml = await StellarToml.fromDomain("example.com", {
+      fetchFn: async () => await new Response(MINIMAL_TOML),
+    });
+    assertEquals(toml.webAuthConfig, undefined);
+
+    const signingKeyOnly = await StellarToml.fromDomain("example.com", {
+      fetchFn: async () =>
+        await new Response(`SIGNING_KEY = "${VALID_PUBLIC_KEY}"`),
+    });
+    assertEquals(signingKeyOnly.webAuthConfig, undefined);
+  });
+
+  it("returns a complete SEP-45 configuration without SEP-10", async () => {
+    const toml = await StellarToml.fromDomain("example.com", {
+      fetchFn: async () =>
+        await new Response(
+          `SIGNING_KEY = "${VALID_PUBLIC_KEY}"
+WEB_AUTH_FOR_CONTRACTS_ENDPOINT = "https://auth.example.com/sep45"
+WEB_AUTH_CONTRACT_ID = "${VALID_CONTRACT_ID}"`,
+        ),
+    });
+
+    assertEquals(toml.webAuthConfig?.sep10, undefined);
+    assertEquals(toml.webAuthConfig?.sep45, {
+      endpoint: "https://auth.example.com/sep45",
+      contractId: VALID_CONTRACT_ID,
     });
   });
 });

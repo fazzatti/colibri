@@ -2,6 +2,25 @@
 
 SEP-10 Web Authentication client for Stellar. Part of the [Colibri](https://github.com/fazzatti/colibri) ecosystem.
 
+> **Deprecated:** `@colibri/sep10` is frozen and deprecated in favor of
+> [`@colibri/webauth`](../webauth/README.md). Version `0.5.12` is the final
+> release of this package; it has been sunset and will be archived. New
+> features and SEP-10 improvements are published only through
+> `@colibri/webauth`.
+
+For new code:
+
+```diff
+- import { Sep10Client } from "@colibri/sep10";
++ import { WebAuthClient } from "@colibri/webauth";
+```
+
+Create a `WebAuthClient` with `WebAuthClient.fromDomain(...)`, then call
+`client.sep10.authenticate(...)` for the explicit SEP-10 path or
+`client.authenticate(...)` for deterministic SEP-10/SEP-45 routing. See the
+[migration guide](../webauth/README.md#migrating-from-colibrisep10). The new
+package does not promise exact API compatibility with this legacy package.
+
 <a href="https://jsr.io/@colibri/sep10">
   <img src="https://jsr.io/badges/@colibri/sep10" alt="JSR @colibri/sep10" />
 </a>

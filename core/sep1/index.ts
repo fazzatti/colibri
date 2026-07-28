@@ -5,17 +5,18 @@
 import { parse as parseToml } from "@std/toml";
 import { StrKey } from "@/strkeys/index.ts";
 import { regex } from "@/common/regex/index.ts";
-import type { Ed25519PublicKey, ContractId } from "@/strkeys/types.ts";
+import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 import type {
-  StellarTomlData,
-  StellarTomlDocumentation,
-  StellarTomlPrincipal,
-  StellarTomlCurrency,
-  StellarTomlValidator,
-  StellarTomlOptions,
-  StellarTomlParseOptions,
   Sep10Config,
   Sep45Config,
+  StellarTomlCurrency,
+  StellarTomlData,
+  StellarTomlDocumentation,
+  StellarTomlOptions,
+  StellarTomlParseOptions,
+  StellarTomlPrincipal,
+  StellarTomlValidator,
+  WebAuthDiscoveryConfig,
 } from "@/sep1/types.ts";
 import * as E from "@/sep1/error.ts";
 
@@ -107,7 +108,7 @@ export class StellarToml {
    */
   static async fromDomain(
     domain: string,
-    options: StellarTomlOptions = {}
+    options: StellarTomlOptions = {},
   ): Promise<StellarToml> {
     const {
       timeout = DEFAULT_TIMEOUT,
@@ -145,7 +146,7 @@ export class StellarToml {
           cleanDomain,
           undefined,
           response.status,
-          response.statusText
+          response.statusText,
         );
       }
 
@@ -155,7 +156,7 @@ export class StellarToml {
         throw new E.FILE_TOO_LARGE(
           cleanDomain,
           parseInt(contentLength, 10),
-          MAX_FILE_SIZE
+          MAX_FILE_SIZE,
         );
       }
 
@@ -181,7 +182,7 @@ export class StellarToml {
 
       throw new E.FETCH_FAILED(
         cleanDomain,
-        error instanceof Error ? error : new Error(String(error))
+        error instanceof Error ? error : new Error(String(error)),
       );
     }
   }
@@ -211,7 +212,7 @@ export class StellarToml {
   static fromString(
     content: string,
     options: StellarTomlParseOptions = {},
-    domain?: string
+    domain?: string,
   ): StellarToml {
     const { validate = true, allowHttp = false } = options;
 
@@ -247,7 +248,7 @@ export class StellarToml {
   private static validate(
     data: StellarTomlData,
     domain?: string,
-    allowHttp = false
+    allowHttp = false,
   ): void {
     // Validate signing key fields
     for (const field of SIGNING_KEY_FIELDS) {
@@ -283,7 +284,7 @@ export class StellarToml {
             "DOCUMENTATION.ORG_URL",
             data.DOCUMENTATION.ORG_URL,
             domain,
-            requireHttps
+            requireHttps,
           );
         }
       } catch (error) {
@@ -292,7 +293,7 @@ export class StellarToml {
           "DOCUMENTATION.ORG_URL",
           data.DOCUMENTATION.ORG_URL,
           domain,
-          requireHttps
+          requireHttps,
         );
       }
     }
@@ -318,7 +319,7 @@ export class StellarToml {
           throw new E.INVALID_SIGNING_KEY(
             `VALIDATORS[${i}].PUBLIC_KEY`,
             validator.PUBLIC_KEY,
-            domain
+            domain,
           );
         }
       }
@@ -335,14 +336,14 @@ export class StellarToml {
           throw new E.INVALID_ACCOUNT(
             `CURRENCIES[${i}].issuer`,
             currency.issuer,
-            domain
+            domain,
           );
         }
         if (currency.contract && !StrKey.isValidContractId(currency.contract)) {
           throw new E.INVALID_ACCOUNT(
             `CURRENCIES[${i}].contract`,
             currency.contract,
-            domain
+            domain,
           );
         }
       }
@@ -581,6 +582,40 @@ export class StellarToml {
   }
 
   /**
+   * Gets normalized discovery data for every completely advertised WebAuth
+   * protocol.
+   *
+   * This additive convenience does not change the completeness rules of
+   * {@link sep10Config} or {@link sep45Config}. It returns `undefined` when
+   * this instance has no retained domain, no signing key, or neither complete
+   * protocol configuration.
+   */
+  get webAuthConfig(): WebAuthDiscoveryConfig | undefined {
+    if (!this._domain || !this.signingKey) {
+      return undefined;
+    }
+
+    const sep10 = this.sep10Config;
+    const sep45 = this.sep45Config;
+    if (!sep10 && !sep45) {
+      return undefined;
+    }
+
+    return {
+      homeDomain: this._domain,
+      signingKey: this.signingKey,
+      networkPassphrase: this.networkPassphrase,
+      sep10: sep10 ? { endpoint: sep10.webAuthEndpoint } : undefined,
+      sep45: sep45
+        ? {
+          endpoint: sep45.webAuthEndpoint,
+          contractId: sep45.contractId,
+        }
+        : undefined,
+    };
+  }
+
+  /**
    * Finds a currency by code and optionally by issuer
    *
    * @param code - The currency code to search for
@@ -612,7 +647,7 @@ export class StellarToml {
    * @returns Array of matching currencies
    */
   getCurrenciesByStatus(
-    status: "live" | "dead" | "test" | "private"
+    status: "live" | "dead" | "test" | "private",
   ): StellarTomlCurrency[] {
     return this.currencies.filter((c) => c.status === status);
   }

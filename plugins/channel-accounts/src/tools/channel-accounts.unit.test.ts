@@ -44,6 +44,29 @@ const createBrokenChannel = (): ChannelAccount =>
   }) as unknown as ChannelAccount;
 
 describe("ChannelAccounts unit behavior", () => {
+  it("reports missing arguments while opening and closing channels", async () => {
+    await assertRejects(
+      async () =>
+        await ChannelAccounts.open({
+          numberOfChannels: 1,
+          sponsor: undefined as never,
+          networkConfig,
+          config,
+        }),
+      E.MISSING_ARG,
+    );
+    await assertRejects(
+      async () =>
+        await ChannelAccounts.close({
+          channels: undefined as never,
+          sponsor,
+          networkConfig,
+          config,
+        }),
+      E.MISSING_ARG,
+    );
+  });
+
   it("rethrows Colibri errors raised while opening channels", async () => {
     const error = await assertRejects(
       async () =>
