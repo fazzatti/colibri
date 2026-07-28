@@ -1,6 +1,12 @@
-import type { Keypair, Transaction, xdr } from "stellar-sdk";
 import type { WebAuthCoreSigner, WebAuthSubmissionFormat } from "@/types.ts";
 import type { ContractAuthHandler } from "@/sep45/contract-auth.ts";
+import type {
+  Keypair,
+  ScVal,
+  Server,
+  SorobanAuthorizationEntry,
+  Transaction,
+} from "@/stellar-sdk-types.ts";
 
 /** Minimal RPC boundary used by the SEP-45 client. */
 export interface Sep45Rpc {
@@ -9,11 +15,9 @@ export interface Sep45Rpc {
   /** Simulates a transaction using the selected authorization mode. */
   simulateTransaction(
     transaction: Transaction,
-    resourceLeeway?: Parameters<
-      import("stellar-sdk/rpc").Server["simulateTransaction"]
-    >[1],
+    resourceLeeway?: Parameters<Server["simulateTransaction"]>[1],
     authMode?: "enforce" | "record" | "record_allow_nonroot",
-  ): ReturnType<import("stellar-sdk/rpc").Server["simulateTransaction"]>;
+  ): ReturnType<Server["simulateTransaction"]>;
 }
 
 /** Inputs used by the pure SEP-45 challenge verifier. */
@@ -45,9 +49,9 @@ export interface VerifiedSep45Challenge {
   /** Original base64 authorization-entry array XDR. */
   authorizationEntriesXdr: string;
   /** Decoded authorization entries. */
-  entries: xdr.SorobanAuthorizationEntry[];
+  entries: SorobanAuthorizationEntry[];
   /** Shared WebAuth invocation argument. */
-  invocationArgument: xdr.ScVal;
+  invocationArgument: ScVal;
   /** Complete normalized invocation argument map. */
   arguments: Readonly<Record<string, string>>;
   /** Unknown Symbol-to-String arguments preserved by the verifier. */

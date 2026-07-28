@@ -1,6 +1,6 @@
 import { Buffer } from "buffer";
 import { isSigner, normalizeBinaryData, StellarToml } from "@colibri/core";
-import { Keypair, type Transaction, xdr } from "stellar-sdk";
+import { Keypair as StellarKeypair, xdr } from "stellar-sdk";
 import { Sep10Challenge, Sep10SignedChallenge } from "@/sep10/challenge.ts";
 import {
   hasSep10ClientDomainOperation,
@@ -16,6 +16,7 @@ import { WebAuthToken } from "@/token.ts";
 import { WebAuthTransport } from "@/transport.ts";
 import type { WebAuthCoreSigner } from "@/types.ts";
 import { protocolForAccount } from "@/routing.ts";
+import type { Keypair, Transaction } from "@/stellar-sdk-types.ts";
 
 interface ResolvedSep10ClientConfig
   extends Omit<Sep10ClientConfig, "submissionFormat"> {
@@ -38,7 +39,7 @@ function signTransaction(
   const signature = Buffer.from(
     normalizeBinaryData(signer.sign(normalizeBinaryData(transaction.hash()))),
   );
-  const hint = Keypair.fromPublicKey(signer.publicKey()).signatureHint();
+  const hint = StellarKeypair.fromPublicKey(signer.publicKey()).signatureHint();
   transaction.signatures.push(new xdr.DecoratedSignature({ hint, signature }));
 }
 

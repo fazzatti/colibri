@@ -1,6 +1,9 @@
 import type { INetworkConfig, Signer } from "@colibri/core";
-import type { Keypair, xdr } from "stellar-sdk";
 import type { ContractAuthHandler } from "@/sep45/contract-auth.ts";
+import type {
+  Keypair,
+  SorobanAuthorizationEntry,
+} from "@/stellar-sdk-types.ts";
 
 /** @internal Exact Core network shape retained without re-exporting Core. */
 export type WebAuthCoreNetworkConfig = INetworkConfig;
@@ -94,5 +97,5 @@ export interface ContractAuthContext {
 
 /** Full-entry contract authorization hook. */
 export type ContractAuthorizationResult =
-  | xdr.SorobanAuthorizationEntry
-  | Promise<xdr.SorobanAuthorizationEntry>;
+  | SorobanAuthorizationEntry
+  | Promise<SorobanAuthorizationEntry>;

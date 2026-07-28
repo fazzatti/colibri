@@ -1,9 +1,10 @@
 import { Buffer } from "buffer";
 import { xdr } from "stellar-sdk";
 import { Sep45Code, Sep45Error } from "@/error.ts";
+import type { SorobanAuthorizationEntry } from "@/stellar-sdk-types.ts";
 
 function encodeEntries(
-  entries: xdr.SorobanAuthorizationEntry[],
+  entries: SorobanAuthorizationEntry[],
 ): Buffer {
   // `SorobanAuthorizationEntries` is a generated variable-array instance.
   // js-xdr 4 exposes array encoding through the static XdrType implementation,
@@ -12,7 +13,7 @@ function encodeEntries(
   // manually reimplementing XDR framing.
   const encode = xdr.SorobanAuthorizationEntry.toXDR as unknown as (
     this: typeof xdr.SorobanAuthorizationEntries,
-    value: xdr.SorobanAuthorizationEntry[],
+    value: SorobanAuthorizationEntry[],
   ) => Buffer;
   return encode.call(xdr.SorobanAuthorizationEntries, entries);
 }
@@ -20,7 +21,7 @@ function encodeEntries(
 /** Decodes an exact variable-length Soroban authorization-entry array. */
 export function decodeSep45AuthorizationEntries(
   value: string,
-): xdr.SorobanAuthorizationEntry[] {
+): SorobanAuthorizationEntry[] {
   if (
     typeof value !== "string" ||
     value.length === 0 ||
@@ -57,14 +58,14 @@ export function decodeSep45AuthorizationEntries(
 
 /** Encodes a variable-length Soroban authorization-entry array. */
 export function encodeSep45AuthorizationEntries(
-  entries: xdr.SorobanAuthorizationEntry[],
+  entries: SorobanAuthorizationEntry[],
 ): string {
   return encodeEntries(entries).toString("base64");
 }
 
 /** Deep-clones an authorization entry through XDR. */
 export function cloneSep45AuthorizationEntry(
-  entry: xdr.SorobanAuthorizationEntry,
-): xdr.SorobanAuthorizationEntry {
+  entry: SorobanAuthorizationEntry,
+): SorobanAuthorizationEntry {
   return xdr.SorobanAuthorizationEntry.fromXDR(entry.toXDR());
 }

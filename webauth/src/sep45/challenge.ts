@@ -7,6 +7,7 @@ import type {
   Sep45SimulationReceipt,
   VerifiedSep45Challenge,
 } from "@/sep45/types.ts";
+import type { SorobanAuthorizationEntry } from "@/stellar-sdk-types.ts";
 
 function cloneVerified(
   verified: VerifiedSep45Challenge,
@@ -60,7 +61,7 @@ export class Sep45Challenge {
   }
 
   /** Defensive clones of the verified entries. */
-  get entries(): xdr.SorobanAuthorizationEntry[] {
+  get entries(): SorobanAuthorizationEntry[] {
     return decodeSep45AuthorizationEntries(this.toXDR());
   }
 
@@ -79,7 +80,7 @@ export class Sep45AuthorizedChallenge {
   /** @internal Creates an authorized state. */
   constructor(
     verified: VerifiedSep45Challenge,
-    entries: xdr.SorobanAuthorizationEntry[],
+    entries: SorobanAuthorizationEntry[],
     validUntilLedgerSeq: number,
   ) {
     this.#verified = cloneVerified(verified);
@@ -98,7 +99,7 @@ export class Sep45AuthorizedChallenge {
   }
 
   /** Defensive clones of every authorized and preserved entry. */
-  get entries(): xdr.SorobanAuthorizationEntry[] {
+  get entries(): SorobanAuthorizationEntry[] {
     return decodeSep45AuthorizationEntries(this.toXDR());
   }
 

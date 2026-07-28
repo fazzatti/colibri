@@ -12,6 +12,7 @@ import { Api } from "stellar-sdk/rpc";
 import { Sep45Code, Sep45Error } from "@/error.ts";
 import type { Sep45Rpc, Sep45SimulationReceipt } from "@/sep45/types.ts";
 import type { Sep45AuthorizedChallenge } from "@/sep45/challenge.ts";
+import type { LedgerKey } from "@/stellar-sdk-types.ts";
 
 const DUMMY_SOURCE = StrKey.encodeEd25519PublicKey(Buffer.alloc(32));
 
@@ -57,7 +58,7 @@ function validateReadWriteKey(
 
 /** Validates the exact SEP-45 read-write footprint allowlist. */
 export function validateSep45Footprint(
-  readWrite: xdr.LedgerKey[],
+  readWrite: LedgerKey[],
   allowedNonceAddresses: ReadonlySet<string>,
   webAuthContractId: string,
 ): void {

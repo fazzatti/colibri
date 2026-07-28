@@ -1,6 +1,6 @@
-import type { Transaction } from "stellar-sdk";
 import { TransactionBuilder } from "stellar-sdk";
 import type { VerifiedSep10Challenge } from "@/sep10/types.ts";
+import type { Transaction } from "@/stellar-sdk-types.ts";
 
 function cloneTransaction(
   transactionXdr: string,

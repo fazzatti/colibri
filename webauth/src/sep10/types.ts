@@ -1,5 +1,5 @@
-import type { Keypair, Transaction } from "stellar-sdk";
 import type { WebAuthCoreSigner, WebAuthSubmissionFormat } from "@/types.ts";
+import type { Keypair, Transaction } from "@/stellar-sdk-types.ts";
 
 /** Inputs used by the pure SEP-10 challenge verifier. */
 export interface VerifySep10ChallengeInput {
