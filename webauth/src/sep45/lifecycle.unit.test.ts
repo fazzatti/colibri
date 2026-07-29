@@ -234,6 +234,7 @@ describe("SEP-45 lifecycle", () => {
     let called = false;
     const signer = {
       publicKey: () => fixture.server.publicKey(),
+      signerKey: () => fixture.server.publicKey(),
       sign: (value: Uint8Array) => value,
       signTransaction: () => "",
       signsFor: () => true,
@@ -446,6 +447,7 @@ describe("SEP-45 lifecycle", () => {
 
     const signer = {
       publicKey: () => fixture.clientDomain.publicKey(),
+      signerKey: () => fixture.clientDomain.publicKey(),
       sign: (value: Uint8Array) => value,
       signTransaction: () => "",
       signsFor: () => true,

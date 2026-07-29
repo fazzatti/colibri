@@ -72,7 +72,7 @@ const result = await pipeline.run({
 | `networkConfig`         | Network configuration used to build the wrapper  |
 | `feeBumpConfig.source`  | Stellar address that will pay the fee bump       |
 | `feeBumpConfig.fee`     | Base fee in stroops for the outer envelope       |
-| `feeBumpConfig.signers` | Signers that authorize the fee-bump envelope     |
+| `feeBumpConfig.signers` | Envelope or pre-authorized transaction signers for the fee-bump source |
 
 ## How It Works
 
@@ -82,7 +82,8 @@ const result = await pipeline.run({
 4. It signs that outer envelope with the configured sponsor signers
 5. The wrapped transaction continues to `sendTransaction`
 
-The inner transaction signatures are preserved.
+The inner transaction signatures are preserved. The outer source can use an
+Ed25519, Hash-X, signed-payload, or exact pre-authorized transaction signer.
 
 ## Error Codes
 

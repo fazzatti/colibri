@@ -1,7 +1,12 @@
-import type { KeypairSigner, Signer } from "@/signer/types.ts";
+import type {
+  EnvelopeSigner,
+  PreAuthTransactionSigner,
+  Signer,
+} from "@/signer/types.ts";
 import type {
   ContractId,
   Ed25519PublicKey,
+  ExtraSignerKey,
   MuxedAddress,
 } from "@/strkeys/types.ts";
 
@@ -20,6 +25,13 @@ export type TransactionConfig = {
    * entries.
    */
   signers: Signer[];
+  /**
+   * Exact signer keys that must additionally authorize the transaction.
+   *
+   * Stellar permits Ed25519, Hash-X, and signed-payload keys here.
+   * Pre-authorized transaction keys are intentionally excluded.
+   */
+  extraSigners?: ExtraSignerKey[];
 };
 
 /**
@@ -33,7 +45,7 @@ export type BaseFee = `${number}`;
 export type FeeBumpConfig = {
   fee: TransactionConfig["fee"];
   source: TransactionConfig["source"];
-  signers: KeypairSigner[];
+  signers: (EnvelopeSigner | PreAuthTransactionSigner)[];
 };
 
 /**

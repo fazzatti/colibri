@@ -54,6 +54,13 @@ export class LocalSigner implements LocalSignerType {
   sign: (data: BinaryData) => BinaryData;
 
   /**
+   * Returns the Ed25519 signer key represented by this local signer.
+   *
+   * @returns The signer's `G...` public key.
+   */
+  signerKey: () => Ed25519PublicKey;
+
+  /**
    * Signs a classic or fee-bump transaction envelope.
    *
    * @param tx - Transaction envelope to sign.
@@ -119,6 +126,7 @@ export class LocalSigner implements LocalSignerType {
     const pub = kp.publicKey();
 
     this.publicKey = () => pub as Ed25519PublicKey;
+    this.signerKey = this.publicKey;
     this.addTarget(this.publicKey());
 
     this.sign = (data: BinaryData): BinaryData => {

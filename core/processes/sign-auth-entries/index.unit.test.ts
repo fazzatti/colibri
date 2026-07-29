@@ -98,6 +98,7 @@ const makeSigner = (
   const signer: MockSigner = {
     calls: 0,
     publicKey: () => pub,
+    signerKey: () => pub,
     signsFor: (target: Ed25519PublicKey | ContractId) => target === pub,
     signTransaction,
     sign,

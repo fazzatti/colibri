@@ -4,6 +4,7 @@ import {
   isAuthEntrySigner,
   isEnvelopeSigner,
   isKeypairSigner,
+  isPreAuthTransactionSigner,
   isSigner,
 } from "@/common/type-guards/is-signer.ts";
 
@@ -12,11 +13,26 @@ describe("signer type guards", () => {
 
   it("recognizes an envelope-only signer", () => {
     const signer = {
+      signerKey: () => "GTEST",
       signsFor,
       signTransaction: () => "signed-xdr",
     };
 
     assert(isEnvelopeSigner(signer));
+    assertFalse(isAuthEntrySigner(signer));
+    assert(isSigner(signer));
+    assertFalse(isKeypairSigner(signer));
+  });
+
+  it("recognizes a pre-authorized transaction signer", () => {
+    const signer = {
+      signerKey: () => "TTEST",
+      signsFor,
+      authorizesTransaction: () => true,
+    };
+
+    assertFalse(isEnvelopeSigner(signer));
+    assert(isPreAuthTransactionSigner(signer));
     assertFalse(isAuthEntrySigner(signer));
     assert(isSigner(signer));
     assertFalse(isKeypairSigner(signer));
@@ -37,6 +53,7 @@ describe("signer type guards", () => {
   it("recognizes a complete keypair signer", () => {
     const signer = {
       publicKey: () => "GTEST",
+      signerKey: () => "GTEST",
       sign: (data: Uint8Array) => data,
       signsFor,
       signTransaction: () => "signed-xdr",
@@ -53,6 +70,7 @@ describe("signer type guards", () => {
     for (const value of [undefined, null, {}, { signsFor }]) {
       assertFalse(isEnvelopeSigner(value));
       assertFalse(isAuthEntrySigner(value));
+      assertFalse(isPreAuthTransactionSigner(value));
       assertFalse(isSigner(value));
       assertFalse(isKeypairSigner(value));
     }

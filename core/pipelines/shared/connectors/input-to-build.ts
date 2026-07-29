@@ -5,7 +5,7 @@ import type { BuildTransactionInput } from "@/processes/build-transaction/types.
 
 type InputWithTransactionConfig = {
   operations: xdr.Operation[];
-  config: Pick<TransactionConfig, "fee" | "source">;
+  config: Pick<TransactionConfig, "extraSigners" | "fee" | "source">;
 };
 
 export const createInputToBuild = <Input extends InputWithTransactionConfig>(
@@ -21,6 +21,9 @@ export const createInputToBuild = <Input extends InputWithTransactionConfig>(
       networkPassphrase,
       operations,
       rpc,
+      preconditions: config.extraSigners?.length
+        ? { extraSigners: config.extraSigners }
+        : undefined,
     };
   };
 };

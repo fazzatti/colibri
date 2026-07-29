@@ -75,6 +75,7 @@ export const createChannelProxySigner = (
 
   return {
     publicKey: () => channel.address(),
+    signerKey: signer.signerKey.bind(signer),
     sign: signer.sign.bind(signer),
     signTransaction: (transaction) => {
       const signableTransaction = transaction as SignableTransactionWithSignatures;

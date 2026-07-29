@@ -191,8 +191,9 @@ outside Colibri's built-in pipelines.
   Soroban data, and resource fee into a ready-to-sign transaction.
 - **EnvelopeSigningRequirements** – Analyzes both envelope and Soroban
   requirements, yielding a checklist of signatures needed before submission.
-- **SignEnvelope** – Applies available signers, allowing partial signing when
-  you plan to collect additional approvals downstream.
+- **SignEnvelope** – Deterministically resolves account and exact extra-signer
+  requirements, then applies envelope signatures or verifies pre-authorized
+  transaction hashes.
 - **SendTransaction** – Submits the envelope (classic or fee-bump) via RPC and
   normalizes RPC responses into Colibri errors when failures occur.
 
@@ -279,10 +280,18 @@ await signer.signSorobanAuthEntry(entry, validUntil, passphrase);
 ```
 
 `EnvelopeSigner` and `AuthEntrySigner` are independent capabilities. `Signer`
-accepts either capability, and each signing process uses the matching
-`isEnvelopeSigner(...)` or `isAuthEntrySigner(...)` guard before invoking it.
+also accepts the distinct `PreAuthTransactionSigner` capability, and each
+signing process uses the matching `isEnvelopeSigner(...)`,
+`isPreAuthTransactionSigner(...)`, or `isAuthEntrySigner(...)` guard before
+invoking it.
 `KeypairSigner` describes the complete Ed25519 surface implemented by
 `LocalSigner`, including detached payload signing and public-key access.
+
+Envelope authorizers expose their exact `signerKey()`. Colibri includes built-in
+`HashXSigner`, `Ed25519SignedPayloadSigner`, and
+`PreAuthorizedTransactionSigner` implementations. Alternative account signer
+mechanisms require an explicit `addTarget(account)`, while transaction
+`extraSigners` are matched directly by signer key.
 
 `DelegatedSigner` implements the authorization-entry capability for CAP-71. It
 owns an externally assembled recursive `nestedDelegates` topology, applies the

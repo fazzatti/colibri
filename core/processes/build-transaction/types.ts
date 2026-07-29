@@ -2,6 +2,7 @@ import type { Server } from "stellar-sdk/rpc";
 import type { Memo, Transaction, xdr } from "stellar-sdk";
 import type { BaseFee } from "@/common/types/transaction-config/types.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+import type { ExtraSignerKey } from "@/strkeys/types.ts";
 
 /**
  * Input accepted by the build-transaction process.
@@ -86,15 +87,15 @@ export type TransactionPreconditions = {
   // These are extra signer requirements for the transaction
 
   // Up to 2 SignerKeys live in preconditions, each must be satisfied
-  // at validation. ed25519 requires a standard signature and uses one
-  // slot. HASH_X requires a preimage signature and uses one slot.
-  // PREAUTH_TX is satisfied by the transaction hash, no signature slot
-  // needed. Duplicates are malformed. Missing any required extra signer
-  // results in txBAD_AUTH.
+  // at validation. Ed25519 requires a standard signature, HASH_X requires
+  // a preimage signature, and signed payload requires a signature over its
+  // embedded payload. PREAUTH_TX is intentionally excluded because a
+  // transaction cannot recursively contain its own hash. Duplicates are
+  // malformed. Missing any required extra signer results in txBAD_AUTH.
   //
   // These are NOT signatures being added Actual signatures are carried
   // in the transaction envelope, up to 20 total.
-  extraSigners?: string[]; // up to 2 extra signers allowed
+  extraSigners?: ExtraSignerKey[]; // up to 2 extra signers allowed
 } & TimeBasedPreconditions;
 
 // a window in ledger sequence, minLedger inclusive, maxLedger exclusive,

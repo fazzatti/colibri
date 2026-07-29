@@ -78,9 +78,10 @@ For concrete examples, refer to the unit and integration tests in `src/`.
     fee (fee source).
   - `fee` (string, required) — Fee amount in stroops to set on the
     FeeBumpTransaction as base fee\* (e.g. `"10000000"` equals 1 XLM).
-  - `signers` (array, optional) — Array of signer objects (e.g.,
-    `NativeAccount.signer()` or `LocalSigner`) used to authorize the fee bump
-    transaction.
+  - `signers` (array, required) — Envelope or pre-authorized transaction signer
+    objects used to authorize the fee-bump source. This includes
+    `LocalSigner`, `HashXSigner`, `Ed25519SignedPayloadSigner`, and
+    `PreAuthorizedTransactionSigner`.
 
 _\*Since this value defines a base fee, the total amount set as max network fee
 will be this value multiplied by the number of operations in the inner envelope

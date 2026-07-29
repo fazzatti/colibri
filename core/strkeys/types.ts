@@ -43,6 +43,23 @@ export type LiquidityPoolId = `L${string}`;
 /** Claimable balance id encoded as a StrKey. */
 export type ClaimableBalanceId = `B${string}`;
 
+/**
+ * Any StrKey representation accepted by Stellar's signer-key XDR union.
+ */
+export type SignerKey =
+  | Ed25519PublicKey
+  | PreAuthTx
+  | Sha256Hash
+  | SignedPayload;
+
+/**
+ * Signer keys accepted by transaction `extraSigners` preconditions.
+ *
+ * Pre-authorized transaction keys cannot be extra signers because their hash
+ * would recursively depend on the precondition containing that same hash.
+ */
+export type ExtraSignerKey = Exclude<SignerKey, PreAuthTx>;
+
 /** Maps each StrKey prefix to its corresponding branded string type. */
 export type StrkeyType = {
   [StrkeyPrefix.ClaimableBalanceId]: ClaimableBalanceId;

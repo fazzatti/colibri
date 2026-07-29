@@ -886,6 +886,7 @@ describe("SEP-10 WebAuth", () => {
 
     const failingSigner = {
       publicKey: () => fixture.client.publicKey(),
+      signerKey: () => fixture.client.publicKey(),
       sign: () => {
         throw new Error("signing failed");
       },

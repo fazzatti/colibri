@@ -8,9 +8,18 @@ implement either capability.
 
 ```ts
 type EnvelopeSigner = {
+  signerKey(): ExtraSignerKey;
   signTransaction(
     tx: SignableTransaction,
   ): Promise<TransactionXDRBase64> | TransactionXDRBase64;
+  signsFor(target: Ed25519PublicKey | ContractId): boolean;
+};
+
+type PreAuthTransactionSigner = {
+  signerKey(): PreAuthTx;
+  authorizesTransaction(
+    tx: SignableTransaction,
+  ): Promise<boolean> | boolean;
   signsFor(target: Ed25519PublicKey | ContractId): boolean;
 };
 
@@ -24,7 +33,10 @@ type AuthEntrySigner = {
   signsFor(target: Ed25519PublicKey | ContractId): boolean;
 };
 
-type Signer = EnvelopeSigner | AuthEntrySigner;
+type Signer =
+  | EnvelopeSigner
+  | PreAuthTransactionSigner
+  | AuthEntrySigner;
 ```
 
 `KeypairSigner` is the complete Ed25519 interface for implementations that
@@ -38,7 +50,9 @@ type KeypairSigner = EnvelopeSigner & AuthEntrySigner & {
 ```
 
 `LocalSigner` implements `KeypairSigner`, while `DelegatedSigner` implements
-only `AuthEntrySigner`.
+only `AuthEntrySigner`. `HashXSigner` and `Ed25519SignedPayloadSigner`
+implement `EnvelopeSigner`. `PreAuthorizedTransactionSigner` verifies a
+transaction hash without adding a decorated signature.
 
 ## Using Signers
 
@@ -66,8 +80,23 @@ const result = await pipeline.run({
 
 The pipeline carries `Signer[]` unchanged until a process needs a capability.
 `signAuthEntries(...)` narrows with `isAuthEntrySigner(...)`, while
-`signEnvelope(...)` narrows with `isEnvelopeSigner(...)`. A signer implementing
-both capabilities passes both guards.
+`signEnvelope(...)` narrows with `isEnvelopeSigner(...)` and
+`isPreAuthTransactionSigner(...)`. A signer implementing multiple capabilities
+passes every applicable guard.
+
+Every transaction authorizer exposes an exact `signerKey()`. Colibri uses that
+identity to match transaction `extraSigners` and deduplicate a signer selected
+through both an account requirement and an exact key requirement.
+
+For each required account, selection is intentional:
+
+- no matching target produces `SIGNER_NOT_FOUND`;
+- one matching signer key is selected;
+- multiple instances of one key produce `DUPLICATE_SIGNER_KEY`;
+- multiple distinct keys produce `AMBIGUOUS_ACCOUNT_SIGNERS`.
+
+Colibri does not select by array order or apply implicit signer precedence.
+Weighted multi-signature policy remains an application-level concern.
 
 ## Implementing A Custom Authorization-Entry Signer
 
@@ -95,13 +124,20 @@ authoritative validation.
 
 ## Available Signers
 
-| Signer                                     | Description                                      |
-| ------------------------------------------ | ------------------------------------------------ |
-| [LocalSigner](local-signer.md)             | In-memory full signer for development and testing |
-| [DelegatedSigner](delegated-signer.md)     | Recursive CAP-71 authorization-entry signer       |
+| Signer | Description |
+| --- | --- |
+| [LocalSigner](local-signer.md) | In-memory Ed25519 envelope and authorization-entry signer |
+| [HashXSigner](hash-x-signer.md) | Hash-X preimage envelope signer |
+| [Ed25519SignedPayloadSigner](signed-payload-signer.md) | Ed25519 signature over a disclosed payload |
+| [PreAuthorizedTransactionSigner](pre-authorized-transaction-signer.md) | Exact transaction-hash authorizer |
+| [DelegatedSigner](delegated-signer.md) | Recursive CAP-71 authorization-entry signer |
 
 ## Next Steps
 
 - [LocalSigner](local-signer.md) — Built-in signer implementation
+- [HashXSigner](hash-x-signer.md) — Hash-X signer and preimage lifecycle
+- [Ed25519SignedPayloadSigner](signed-payload-signer.md) — Signed payload flow
+- [PreAuthorizedTransactionSigner](pre-authorized-transaction-signer.md) —
+  Exact transaction authorization
 - [DelegatedSigner](delegated-signer.md) — Recursive delegated authorization
 - [Transaction Config](../transaction-config.md) — Where signers are supplied

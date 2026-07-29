@@ -107,6 +107,7 @@ describe("ChannelAccounts helpers", () => {
     };
     const fakeSigner: KeypairSigner = {
       publicKey: () => sponsor.address(),
+      signerKey: () => sponsor.address(),
       sign: (data) => {
         calls.sign += 1;
         return Buffer.from(normalizeBinaryData(data));
@@ -148,6 +149,7 @@ describe("ChannelAccounts helpers", () => {
     const signerHint = Keypair.fromPublicKey(sponsor.address()).signatureHint();
     const fakeSigner: KeypairSigner = {
       publicKey: () => sponsor.address(),
+      signerKey: () => sponsor.address(),
       sign: (data) => data,
       signTransaction: () => {
         throw new Error("should not sign twice");

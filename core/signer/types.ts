@@ -1,4 +1,9 @@
-import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
+import type {
+  ContractId,
+  Ed25519PublicKey,
+  ExtraSignerKey,
+  PreAuthTx,
+} from "@/strkeys/types.ts";
 import type {
   BinaryData,
   SignableTransaction,
@@ -10,11 +15,28 @@ import type {
  * A signer that can authorize a Stellar transaction envelope.
  */
 export type EnvelopeSigner = {
+  /** Returns the exact Stellar signer key represented by this signer. */
+  signerKey(): ExtraSignerKey;
   /** Signs a Stellar transaction or fee-bump envelope and returns its XDR. */
   signTransaction(
     tx: SignableTransaction,
   ): Promise<TransactionXDRBase64> | TransactionXDRBase64;
   /** Returns whether this signer can authorize the given target. */
+  signsFor(target: Ed25519PublicKey | ContractId): boolean;
+};
+
+/**
+ * A pre-authorized transaction signer that validates an exact transaction
+ * hash without adding a decorated signature to its envelope.
+ */
+export type PreAuthTransactionSigner = {
+  /** Returns the pre-authorized transaction signer key. */
+  signerKey(): PreAuthTx;
+  /** Returns whether the provided transaction matches the authorized hash. */
+  authorizesTransaction(
+    tx: SignableTransaction,
+  ): Promise<boolean> | boolean;
+  /** Returns whether this signer can authorize the given account. */
   signsFor(target: Ed25519PublicKey | ContractId): boolean;
 };
 
@@ -40,7 +62,10 @@ export type AuthEntrySigner = {
  * A signer can authorize transaction envelopes, Soroban authorization
  * entries, or both.
  */
-export type Signer = EnvelopeSigner | AuthEntrySigner;
+export type Signer =
+  | EnvelopeSigner
+  | PreAuthTransactionSigner
+  | AuthEntrySigner;
 
 /**
  * Complete Ed25519 signing surface implemented by local keypair signers.

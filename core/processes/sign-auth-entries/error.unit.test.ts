@@ -70,6 +70,7 @@ describe("SignAuthEntries", () => {
     const signer: MockSigner = {
       calls: 0,
       publicKey: () => publicKey as Ed25519PublicKey,
+      signerKey: () => publicKey as Ed25519PublicKey,
       sign,
       signTransaction,
       signsFor: (target: Ed25519PublicKey | string) => target === publicKey,
