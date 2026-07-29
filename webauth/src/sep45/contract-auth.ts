@@ -4,6 +4,7 @@ import type {
   ContractId,
   Ed25519PublicKey,
   SorobanAuthorizationEntryLike,
+  XdrSerializable,
 } from "@colibri/core";
 import type { ContractAuthContext } from "@/types.ts";
 import { cloneSep45AuthorizationEntry } from "@/sep45/codec.ts";
@@ -18,6 +19,7 @@ export type {
   ContractId,
   Ed25519PublicKey,
   SorobanAuthorizationEntryLike,
+  XdrSerializable,
 };
 
 /** Application-defined full-entry contract authorization hook. */
