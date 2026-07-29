@@ -131,12 +131,19 @@ target step ids such as `steps.SEND_TRANSACTION_STEP_ID`.
 path:
 
 1. Build the transaction (`BuildTransaction`).
-2. Simulate it (`SimulateTransaction`).
+2. Run recording simulation (`SimulateTransaction`).
 3. Sign Soroban authorization entries (`SignAuthEntries`).
-4. Assemble the transaction (`AssembleTransaction`).
-5. Determine signing requirements (`EnvelopeSigningRequirements`).
-6. Apply available signers (`SignEnvelope`).
-7. Submit via RPC (`SendTransaction`).
+4. Assemble delegated auth for enforcement when present
+   (`PostAuthAssembleTransaction`).
+5. Run enforcing simulation when delegated auth is present
+   (`PostAuthEnforcedSimulation`).
+6. Assemble the final transaction (`AssembleTransaction`).
+7. Determine signing requirements (`EnvelopeSigningRequirements`).
+8. Apply available envelope signers (`SignEnvelope`).
+9. Submit via RPC (`SendTransaction`).
+
+The post-auth steps infer their behavior from operation XDR. Ordinary
+transactions pass through them without a second RPC simulation.
 
 Output includes the RPC submission response, transaction hash, and the Soroban
 return value decoded to `xdr.ScVal`. Connectors use `convee` run context to
@@ -175,6 +182,10 @@ outside Colibri's built-in pipelines.
   generic simulation failures, parsed contract errors, or unrecognized payloads.
 - **SignAuthEntries** – Consumes simulated Soroban auth entries alongside a set
   of `TransactionSigner`s, returning signatures in the order Soroban expects.
+- **PostAuthAssembleTransaction** – Builds the intermediate transaction needed
+  to enforce completed delegated credentials.
+- **PostAuthEnforcedSimulation** – Runs the second simulation for delegated
+  credentials and passes ordinary transactions through without an RPC call.
 - **AssembleTransaction** – Merges the base transaction, signed auth entries,
   Soroban data, and resource fee into a ready-to-sign transaction.
 - **EnvelopeSigningRequirements** – Analyzes both envelope and Soroban
@@ -253,7 +264,7 @@ helpers commonly needed in Soroban contexts:
 All methods throw predictable `ColibriError` subclasses when validation fails,
 ensuring upstream workflows can safely recover.
 
-### LocalSigner and the TransactionSigner contract
+### Signer capabilities
 
 `LocalSigner` is an in-memory Ed25519 signer that keeps the secret key within a
 closure (never on the instance), supports classic transaction signatures,
@@ -266,10 +277,15 @@ signer.sign(transaction);
 await signer.signSorobanAuthEntry(entry, validUntil, passphrase);
 ```
 
-If you rely on hardware wallets, custodial services, or remote signers,
-implement the exported `TransactionSigner` interface. Processes and pipelines
-only depend on the interface, so your signers become drop-in replacements for
-`LocalSigner`.
+`EnvelopeSigner` and `AuthEntrySigner` are independent capabilities.
+`TransactionSigner` accepts either capability, while `Signer` retains the
+complete local-style surface implemented by `LocalSigner`.
+
+`DelegatedSigner` implements the authorization-entry capability for CAP-71. It
+owns an externally assembled recursive `nestedDelegates` topology, applies the
+same full-entry signing method at every node, and returns one completed
+delegated authorization entry. Only the top-level instance belongs in the
+Soroban transaction's signer list.
 
 ## High-level contract clients
 

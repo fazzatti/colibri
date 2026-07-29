@@ -5,8 +5,8 @@ import {
 import type {
   ClassicTransactionInput,
   ClassicTransactionOutput,
-  InvokeContractInput,
   InvokeContractOutput,
+  InvokeContractPipelineInput,
   NativeAccount,
   NetworkConfig,
   TransactionConfig,
@@ -65,7 +65,7 @@ export type CreateChannelAccountsPluginArgs = {
  */
 export type ChannelAccountsPipelineInput =
   | ClassicTransactionInput
-  | InvokeContractInput;
+  | InvokeContractPipelineInput;
 
 /**
  * Output shapes returned by the supported pipelines.

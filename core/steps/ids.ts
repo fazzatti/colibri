@@ -9,6 +9,12 @@ export const ENVELOPE_SIGNING_REQUIREMENTS_STEP_ID =
 export const SEND_TRANSACTION_STEP_ID = "send-transaction" as const;
 /** Stable step identifier for sign-auth-entries pipeline steps. */
 export const SIGN_AUTH_ENTRIES_STEP_ID = "sign-auth-entries" as const;
+/** Stable step identifier for post-auth transaction assembly steps. */
+export const POST_AUTH_ASSEMBLE_TRANSACTION_STEP_ID =
+  "post-auth-assemble-transaction" as const;
+/** Stable step identifier for post-auth enforcing-simulation steps. */
+export const POST_AUTH_ENFORCED_SIMULATION_STEP_ID =
+  "post-auth-enforced-simulation" as const;
 /** Stable step identifier for sign-envelope pipeline steps. */
 export const SIGN_ENVELOPE_STEP_ID = "sign-envelope" as const;
 /** Stable step identifier for simulate-transaction pipeline steps. */

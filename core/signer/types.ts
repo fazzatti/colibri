@@ -1,31 +1,56 @@
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 import type {
   BinaryData,
-  SorobanAuthorizationEntryLike,
   SignableTransaction,
+  SorobanAuthorizationEntryLike,
   TransactionXDRBase64,
 } from "@/common/types/index.ts";
 
 /**
- * Generic signing surface used throughout Colibri.
+ * A signer that can authorize a Stellar transaction envelope.
  */
-export type Signer = {
-  /** Returns the signer's Ed25519 public key. */
-  publicKey(): Ed25519PublicKey;
-  /** Signs an arbitrary binary payload. */
-  sign(data: BinaryData): BinaryData;
+export type EnvelopeSigner = {
   /** Signs a Stellar transaction or fee-bump envelope and returns its XDR. */
   signTransaction(
-    tx: SignableTransaction
+    tx: SignableTransaction,
   ): Promise<TransactionXDRBase64> | TransactionXDRBase64;
+  /** Returns whether this signer can authorize the given target. */
+  signsFor(target: Ed25519PublicKey | ContractId): boolean;
+};
+
+/**
+ * A signer that can transform a Soroban authorization entry into an
+ * authorized entry.
+ */
+export type AuthEntrySigner = {
   /** Signs a Soroban authorization entry and returns the signed entry. */
   signSorobanAuthEntry(
     authEntry: SorobanAuthorizationEntryLike,
     validUntilLedgerSeq: number,
-    networkPassphrase: string
+    networkPassphrase: string,
+    forAddress?: Ed25519PublicKey | ContractId,
   ): Promise<SorobanAuthorizationEntryLike>;
   /** Returns whether this signer can authorize the given target. */
   signsFor(target: Ed25519PublicKey | ContractId): boolean;
+};
+
+/**
+ * Any signer capability accepted by a Colibri transaction configuration.
+ *
+ * A signer can authorize transaction envelopes, Soroban authorization
+ * entries, or both.
+ */
+export type TransactionSigner = EnvelopeSigner | AuthEntrySigner;
+
+/**
+ * Complete local-style signing surface retained for signers that support
+ * payload, envelope, and Soroban authorization-entry signing.
+ */
+export type Signer = EnvelopeSigner & AuthEntrySigner & {
+  /** Returns the signer's Ed25519 public key. */
+  publicKey(): Ed25519PublicKey;
+  /** Signs an arbitrary binary payload. */
+  sign(data: BinaryData): BinaryData;
 };
 
 /**

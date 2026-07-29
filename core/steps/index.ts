@@ -4,6 +4,8 @@ export * from "@/steps/build-transaction.ts";
 export * from "@/steps/envelope-signing-requirements.ts";
 export * from "@/steps/send-transaction.ts";
 export * from "@/steps/sign-auth-entries.ts";
+export * from "@/steps/post-auth-assemble-transaction.ts";
+export * from "@/steps/post-auth-enforced-simulation.ts";
 export * from "@/steps/sign-envelope.ts";
 export * from "@/steps/simulate-transaction.ts";
 export * from "@/steps/wrap-fee-bump.ts";

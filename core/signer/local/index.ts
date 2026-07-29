@@ -69,12 +69,14 @@ export class LocalSigner implements LocalSignerType {
    * @param entry - Authorization entry to sign.
    * @param validUntil - Ledger sequence at which the authorization expires.
    * @param passphrase - Network passphrase used for signing.
+   * @param forAddress - Credential node that should receive the signature.
    * @returns Signed authorization entry.
    */
   signSorobanAuthEntry: (
     entry: SorobanAuthorizationEntryLike,
     validUntil: number,
     passphrase: string,
+    forAddress?: Ed25519PublicKey | ContractId,
   ) => Promise<SorobanAuthorizationEntryLike>;
 
   /**
@@ -144,6 +146,7 @@ export class LocalSigner implements LocalSignerType {
       entry: SorobanAuthorizationEntryLike,
       validUntil: number,
       passphrase: string,
+      forAddress?: Ed25519PublicKey | ContractId,
     ): Promise<SorobanAuthorizationEntryLike> => {
       assert(isDefined(kp), new E.SIGNER_DESTROYED());
       return authorizeEntry(
@@ -151,6 +154,7 @@ export class LocalSigner implements LocalSignerType {
         kp,
         validUntil,
         passphrase,
+        forAddress,
       ) as Promise<SorobanAuthorizationEntryLike>;
     };
 

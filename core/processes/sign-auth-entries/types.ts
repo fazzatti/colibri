@@ -1,11 +1,11 @@
 import type { xdr } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
-import type { Signer } from "@/signer/types.ts";
+import type { TransactionSigner } from "@/signer/types.ts";
 
 /** @internal */
 export type SignAuthEntriesInput = {
   auth: xdr.SorobanAuthorizationEntry[];
-  signers: Signer[];
+  signers: TransactionSigner[];
   rpc: Server;
   networkPassphrase: string;
   validity?: LedgerValidity; // optional validity to add to the signature, defaults to 120 ledgers(~10 min)
@@ -15,11 +15,11 @@ export type SignAuthEntriesInput = {
 /** @internal */
 export type LedgerValidity =
   | {
-      validForLedgers: number;
-    }
+    validForLedgers: number;
+  }
   | {
-      validForSeconds: number;
-    }
+    validForSeconds: number;
+  }
   | { validUntilLedgerSeq: number };
 
 /** @internal */

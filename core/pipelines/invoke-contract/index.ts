@@ -2,7 +2,7 @@ import { pipe, step } from "convee";
 import { Server } from "stellar-sdk/rpc";
 import type {
   CreateInvokeContractPipelineArgs,
-  InvokeContractInput,
+  InvokeContractPipelineInput,
 } from "@/pipelines/invoke-contract/types.ts";
 import * as E from "@/pipelines/invoke-contract/error.ts";
 import { ColibriError } from "@/error/index.ts";
@@ -11,7 +11,9 @@ import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 import {
   envSignReqToSignEnvelope,
   inputToBuild,
-  signAuthEntriesToAssemble,
+  postAuthAssembleToEnforcedSimulation,
+  postAuthEnforcedSimulationToAssemble,
+  signAuthEntriesToPostAuthAssemble,
   signEnvelopeToSendTransaction,
   simulateToSignAuthEntries,
 } from "@/pipelines/invoke-contract/connectors.ts";
@@ -21,6 +23,8 @@ import {
   createAssembleTransactionStep,
   createBuildTransactionStep,
   createEnvelopeSigningRequirementsStep,
+  createPostAuthAssembleTransactionStep,
+  createPostAuthEnforcedSimulationStep,
   createSendTransactionStep,
   createSignAuthEntriesStep,
   createSignEnvelopeStep,
@@ -39,7 +43,7 @@ const buildInvokeContractPipeline = ({
   rpc,
 }: CreateInvokeContractPipelineArgs & { rpc: Server }) => {
   const inputStep = step(
-    (input: InvokeContractInput) => input,
+    (input: InvokeContractPipelineInput) => input,
     { id: INVOKE_CONTRACT_INPUT_STEP_ID },
   );
   const buildInputStep = step(
@@ -56,6 +60,8 @@ const buildInvokeContractPipeline = ({
   const BuildTransaction = createBuildTransactionStep();
   const SimulateTransaction = createSimulateTransactionStep();
   const SignAuthEntries = createSignAuthEntriesStep();
+  const PostAuthAssembleTransaction = createPostAuthAssembleTransactionStep();
+  const PostAuthEnforcedSimulation = createPostAuthEnforcedSimulationStep();
   const AssembleTransaction = createAssembleTransactionStep();
   const EnvelopeSigningRequirements = createEnvelopeSigningRequirementsStep();
   const SignEnvelope = createSignEnvelopeStep();
@@ -69,7 +75,11 @@ const buildInvokeContractPipeline = ({
     SimulateTransaction,
     connectSimulateToSignAuthEntries,
     SignAuthEntries,
-    signAuthEntriesToAssemble(),
+    signAuthEntriesToPostAuthAssemble(),
+    PostAuthAssembleTransaction,
+    postAuthAssembleToEnforcedSimulation(rpc),
+    PostAuthEnforcedSimulation,
+    postAuthEnforcedSimulationToAssemble(),
     AssembleTransaction,
     assembleToEnvelopeSigningRequirements,
     EnvelopeSigningRequirements,

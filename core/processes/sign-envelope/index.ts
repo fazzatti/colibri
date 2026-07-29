@@ -5,10 +5,11 @@ import type {
 } from "@/processes/sign-envelope/types.ts";
 import * as E from "@/processes/sign-envelope/error.ts";
 import { assert } from "@/common/assert/assert.ts";
+import { isEnvelopeSigner } from "@/common/type-guards/is-signer.ts";
 
 /** Signs a transaction envelope according to precomputed signature requirements. */
 export const signEnvelope = async (
-  input: SignEnvelopeInput
+  input: SignEnvelopeInput,
 ): Promise<SignEnvelopeOutput> => {
   try {
     const { transaction, signatureRequirements, signers } = input;
@@ -21,19 +22,21 @@ export const signEnvelope = async (
 
     for (const requirement of signatureRequirements) {
       const requiredSigner = requirement.address;
-      const signer = signers.find((s) => s.signsFor(requiredSigner));
+      const signer = signers
+        .filter(isEnvelopeSigner)
+        .find((candidate) => candidate.signsFor(requiredSigner));
       assert(signer, new E.SIGNER_NOT_FOUND(input, requiredSigner, signers));
 
       try {
         signedTransaction = TransactionBuilder.fromXDR(
           await signer.signTransaction(signedTransaction),
-          passphrase
+          passphrase,
         ) as typeof transaction;
       } catch (error) {
         throw new E.FAILED_TO_SIGN_TRANSACTION(
           input,
           requiredSigner,
-          error as Error
+          error as Error,
         );
       }
     }

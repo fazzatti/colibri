@@ -1,5 +1,6 @@
 import type { xdr } from "stellar-sdk";
 import { FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE } from "@/common/helpers/xdr/error.ts";
+import { getAddressCredentialsFromAuthEntry } from "@/common/helpers/xdr/get-address-credentials-from-auth-entry.ts";
 
 /**
  * Extracts the address type from a Soroban authorization entry.
@@ -9,14 +10,18 @@ import { FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE } from "@/common/helpers/xdr/erro
  * @throws {FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE} If the address type cannot be extracted
  */
 export const getAddressTypeFromAuthEntry = (
-  authEntry: xdr.SorobanAuthorizationEntry
+  authEntry: xdr.SorobanAuthorizationEntry,
 ): typeof xdr.ScAddressType.prototype.name => {
   try {
-    return authEntry.credentials().address().address().switch().name;
+    const addressCredentials = getAddressCredentialsFromAuthEntry(authEntry);
+    if (!addressCredentials) {
+      throw new Error("Entry has no address credentials");
+    }
+    return addressCredentials.address().switch().name;
   } catch (e) {
     throw new FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE(
       authEntry.toXDR("base64"),
-      e instanceof Error ? e : undefined
+      e instanceof Error ? e : undefined,
     );
   }
 };

@@ -2,6 +2,7 @@ import type { xdr } from "stellar-sdk";
 import type { Asset } from "stellar-sdk";
 import type {
   Address,
+  SorobanTransactionConfig,
   TransactionConfig,
 } from "@/common/types/transaction-config/types.ts";
 import type { MemoizePolicy } from "@/common/decorators/memoize/types.ts";
@@ -87,7 +88,7 @@ export type DeployStellarAssetContractArgs =
 
 /** @internal */
 export type BaseInvocation = {
-  config: TransactionConfig;
+  config: SorobanTransactionConfig;
   auth?: xdr.SorobanAuthorizationEntry[];
 };
 

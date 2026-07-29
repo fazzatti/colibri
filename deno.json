@@ -27,6 +27,8 @@
     "check:jsr": "deno doc --lint core/mod.ts && deno doc --lint webauth/mod.ts && deno doc --lint plugins/fee-bump/mod.ts && deno doc --lint plugins/channel-accounts/mod.ts && deno doc --lint test-tooling/mod.ts",
     "build:webauth-fixtures": "deno run -A _tools/build-webauth-fixtures.ts",
     "check:webauth-fixtures": "deno run -A _tools/build-webauth-fixtures.ts --check",
+    "build:delegated-auth-fixtures": "deno run -A _tools/build-delegated-auth-fixtures.ts",
+    "check:delegated-auth-fixtures": "deno run -A _tools/build-delegated-auth-fixtures.ts --check",
     "test": "deno test -A --parallel --clean --ignore='_*/' --coverage=coverage",
     "test:unit": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.integration.test.ts' --ignore='**/*.testnet.integration.test.ts' --coverage=coverage",
     "test:integration": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.unit.test.ts' --coverage=coverage",

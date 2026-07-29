@@ -44,6 +44,7 @@ export * from "@/plugins/index.ts";
 
 export type * from "@/signer/types.ts";
 export * from "@/signer/local/index.ts";
+export * from "@/signer/delegated/index.ts";
 
 export * from "@/strkeys/index.ts";
 export type * from "@/strkeys/types.ts";

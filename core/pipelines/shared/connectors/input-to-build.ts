@@ -5,7 +5,7 @@ import type { BuildTransactionInput } from "@/processes/build-transaction/types.
 
 type InputWithTransactionConfig = {
   operations: xdr.Operation[];
-  config: TransactionConfig;
+  config: Pick<TransactionConfig, "fee" | "source">;
 };
 
 export const createInputToBuild = <Input extends InputWithTransactionConfig>(

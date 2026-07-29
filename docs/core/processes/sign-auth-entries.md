@@ -20,7 +20,7 @@ const result = await signAuthEntries({
 | Property            | Type                          | Required | Description                            |
 | ------------------- | ----------------------------- | -------- | -------------------------------------- |
 | `auth`              | `SorobanAuthorizationEntry[]` | Yes      | Authorization entries from simulation  |
-| `signers`           | `Signer[]`                    | Yes      | Signers for the entries                |
+| `signers`           | `TransactionSigner[]`         | Yes      | Authorization-entry-capable signers    |
 | `rpc`               | `Server`                      | Yes      | RPC server (to get current ledger)     |
 | `networkPassphrase` | `string`                      | Yes      | Network passphrase                     |
 | `validity`          | `LedgerValidity`              | —        | How long signatures are valid          |
@@ -59,8 +59,8 @@ Returns `SorobanAuthorizationEntry[]` with signatures added to entries matching 
    - `validUntilLedgerSeq`: Uses the exact value
 3. **Separates credential types**:
    - **Source account credentials** — Passed through (no signature needed in auth entry)
-   - **Address credentials** — Need to be signed
-   - **Already signed entries** — Preserved as-is (detected by checking for empty signature)
+   - **Address credentials** — Legacy, V2, and delegated variants can be signed
+   - **Already signed entries** — Preserved as-is
 4. **Filters by address type**:
 
 - **Account addresses** — Signs with a signer that `signsFor(address)`
@@ -69,8 +69,14 @@ Returns `SorobanAuthorizationEntry[]` with signatures added to entries matching 
 - **Liquidity pool addresses** — Skipped
 - **Muxed account addresses** — Skipped
 
-5. **Signs matching entries** — For each signable address entry, finds a signer where `signsFor(requiredSigner)` is true and signs
+5. **Signs matching entries** — For each signable address entry, finds an
+   `AuthEntrySigner` where `signsFor(requiredSigner)` is true and asks it to
+   return the complete authorized entry
 6. **Handles `removeUnsigned`** — If `true`, entries without a matching signer are removed from output; if `false` (default), they're included unsigned
+
+For delegated credentials, signed/unsigned classification checks the complete
+recursive signature tree. A valid custom account may intentionally retain a
+void top-level signature and authorize through its nested delegates.
 
 ### Validity Validation
 

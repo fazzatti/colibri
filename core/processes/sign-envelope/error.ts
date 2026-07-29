@@ -1,6 +1,6 @@
 import type { SignEnvelopeInput } from "@/processes/sign-envelope/types.ts";
 import { ProcessError } from "@/processes/error.ts";
-import type { Signer } from "@/signer/types.ts";
+import type { TransactionSigner } from "@/signer/types.ts";
 
 /**
  * Stable error codes emitted by the sign-envelope process.
@@ -98,17 +98,24 @@ export class SIGNER_NOT_FOUND extends SignEnvelopeError {
   constructor(
     input: SignEnvelopeInput,
     publicKey: string,
-    availableSigners: Signer[]
+    availableSigners: TransactionSigner[],
   ) {
-    const availableSignersList = availableSigners
-      .map((s) => s.publicKey)
-      .join(", ");
+    const availableSignerLabels: string[] = [];
+    for (const signer of availableSigners) {
+      if ("publicKey" in signer && typeof signer.publicKey === "function") {
+        availableSignerLabels.push(signer.publicKey());
+      } else {
+        availableSignerLabels.push(signer.constructor.name);
+      }
+    }
+    const availableSignersList = availableSignerLabels.join(", ");
 
     super({
       code: Code.SIGNER_NOT_FOUND,
       message: "Signer not found!",
       input,
-      details: `No signer matching the required public key (${publicKey}) was found among the provided signers. Available signers: [${availableSignersList}]`,
+      details:
+        `No signer matching the required public key (${publicKey}) was found among the provided signers. Available signers: [${availableSignersList}]`,
     });
   }
 }
@@ -129,7 +136,8 @@ export class FAILED_TO_SIGN_TRANSACTION extends SignEnvelopeError {
       code: Code.FAILED_TO_SIGN_TRANSACTION,
       message: "Failed to sign the transaction!",
       input,
-      details: `An error occurred while attempting to sign the transaction with the signer having public key: ${publicKey}. See 'cause' for more details.`,
+      details:
+        `An error occurred while attempting to sign the transaction with the signer having public key: ${publicKey}. See 'cause' for more details.`,
       cause,
     });
   }
