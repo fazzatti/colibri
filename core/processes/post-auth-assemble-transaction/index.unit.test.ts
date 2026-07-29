@@ -106,16 +106,36 @@ describe("postAuthAssembleTransaction", () => {
     assertEquals(result.fee, "110");
   });
 
-  it("requires the authorized operation", async () => {
-    const input = {
-      transaction: makeTransaction(),
-      authorizedOperation: undefined,
-      resourceFee: 10,
-    } as unknown as PostAuthAssembleTransactionInput;
+  it("uses a unique error for each required input", async () => {
+    const codes = Object.values(E.Code);
+    assertEquals(new Set(codes).size, codes.length);
 
     await assertRejects(
-      () => postAuthAssembleTransaction(input),
-      E.MISSING_ARG,
+      () =>
+        postAuthAssembleTransaction({
+          transaction: undefined,
+          authorizedOperation: makeInvokeOperation(),
+          resourceFee: 10,
+        } as unknown as PostAuthAssembleTransactionInput),
+      E.MISSING_TRANSACTION,
+    );
+    await assertRejects(
+      () =>
+        postAuthAssembleTransaction({
+          transaction: makeTransaction(),
+          authorizedOperation: undefined,
+          resourceFee: 10,
+        } as unknown as PostAuthAssembleTransactionInput),
+      E.MISSING_AUTHORIZED_OPERATION,
+    );
+    await assertRejects(
+      () =>
+        postAuthAssembleTransaction({
+          transaction: makeTransaction(),
+          authorizedOperation: makeInvokeOperation(),
+          resourceFee: undefined,
+        } as unknown as PostAuthAssembleTransactionInput),
+      E.MISSING_RESOURCE_FEE,
     );
   });
 

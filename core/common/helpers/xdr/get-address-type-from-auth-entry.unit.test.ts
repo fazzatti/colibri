@@ -4,7 +4,9 @@ import { xdr, Address, Keypair } from "stellar-sdk";
 import { getAddressTypeFromAuthEntry } from "@/common/helpers/xdr/get-address-type-from-auth-entry.ts";
 import {
   Code,
+  FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
   FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE,
+  MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
 } from "@/common/helpers/xdr/error.ts";
 
 describe("getAddressTypeFromAuthEntry", () => {
@@ -45,9 +47,12 @@ describe("getAddressTypeFromAuthEntry", () => {
 
     const error = assertThrows(
       () => getAddressTypeFromAuthEntry(invalidAuthEntry),
-      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE
+      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE
     );
-    assertEquals(error.code, Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE);
+    assertEquals(
+      error.code,
+      Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
+    );
   });
 
   it("should throw a typed error for source-account credentials", () => {
@@ -69,10 +74,29 @@ describe("getAddressTypeFromAuthEntry", () => {
 
     const error = assertThrows(
       () => getAddressTypeFromAuthEntry(authEntry),
-      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE
+      MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE
     );
 
-    assertEquals(error.code, Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE);
+    assertEquals(
+      error.code,
+      Code.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
+    );
+    assertEquals(error.meta.cause, null);
+  });
+
+  it("should normalize non-Error credential extraction failures", () => {
+    const authEntry = {
+      credentials: () => {
+        throw "boom";
+      },
+      toXDR: () => "AAAA",
+    } as unknown as xdr.SorobanAuthorizationEntry;
+
+    const error = assertThrows(
+      () => getAddressTypeFromAuthEntry(authEntry),
+      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE
+    );
+
     assertEquals(error.meta.cause, null);
   });
 

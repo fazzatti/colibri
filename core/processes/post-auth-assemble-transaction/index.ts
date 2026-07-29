@@ -24,8 +24,16 @@ export const postAuthAssembleTransaction = async (
       input;
 
     assertRequiredArgs(
-      { transaction, authorizedOperation, resourceFee },
-      (argName) => new E.MISSING_ARG(input, argName),
+      { transaction },
+      () => new E.MISSING_TRANSACTION(input),
+    );
+    assertRequiredArgs(
+      { authorizedOperation },
+      () => new E.MISSING_AUTHORIZED_OPERATION(input),
+    );
+    assertRequiredArgs(
+      { resourceFee },
+      () => new E.MISSING_RESOURCE_FEE(input),
     );
 
     if (!hasDelegatedAuthorization(authorizedOperation)) return transaction;

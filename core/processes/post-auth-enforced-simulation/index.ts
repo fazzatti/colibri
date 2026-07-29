@@ -23,8 +23,16 @@ export const postAuthEnforcedSimulation = async (
     const { transaction, recordingSimulation, rpc } = input;
 
     assertRequiredArgs(
-      { transaction, recordingSimulation, rpc },
-      (argName) => new E.MISSING_ARG(input, argName),
+      { transaction },
+      () => new E.MISSING_TRANSACTION(input),
+    );
+    assertRequiredArgs(
+      { recordingSimulation },
+      () => new E.MISSING_RECORDING_SIMULATION(input),
+    );
+    assertRequiredArgs(
+      { rpc },
+      () => new E.MISSING_RPC(input),
     );
 
     const requiresEnforcingSimulation = getOperationsFromTransaction(

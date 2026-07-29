@@ -5,7 +5,9 @@ import { xdr, Address, Keypair } from "stellar-sdk";
 import { getAddressSignerFromAuthEntry } from "@/common/helpers/xdr/get-address-signer-from-auth-entry.ts";
 import {
   Code,
+  FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
   FAILED_TO_GET_AUTH_ENTRY_SIGNER,
+  MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
 } from "@/common/helpers/xdr/error.ts";
 import { StrKey } from "@/strkeys/index.ts";
 
@@ -48,9 +50,12 @@ describe("getAddressSignerFromAuthEntry", () => {
 
     const error = assertThrows(
       () => getAddressSignerFromAuthEntry(invalidAuthEntry),
-      FAILED_TO_GET_AUTH_ENTRY_SIGNER
+      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER
     );
-    assertEquals(error.code, Code.FAILED_TO_GET_AUTH_ENTRY_SIGNER);
+    assertEquals(
+      error.code,
+      Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
+    );
   });
 
   it("should throw a typed error for source-account credentials", () => {
@@ -72,10 +77,29 @@ describe("getAddressSignerFromAuthEntry", () => {
 
     const error = assertThrows(
       () => getAddressSignerFromAuthEntry(authEntry),
-      FAILED_TO_GET_AUTH_ENTRY_SIGNER
+      MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER
     );
 
-    assertEquals(error.code, Code.FAILED_TO_GET_AUTH_ENTRY_SIGNER);
+    assertEquals(
+      error.code,
+      Code.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
+    );
+    assertEquals(error.meta.cause, null);
+  });
+
+  it("should normalize non-Error credential extraction failures", () => {
+    const authEntry = {
+      credentials: () => {
+        throw "boom";
+      },
+      toXDR: () => "AAAA",
+    } as unknown as xdr.SorobanAuthorizationEntry;
+
+    const error = assertThrows(
+      () => getAddressSignerFromAuthEntry(authEntry),
+      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER
+    );
+
     assertEquals(error.meta.cause, null);
   });
 

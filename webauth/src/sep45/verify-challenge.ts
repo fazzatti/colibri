@@ -176,7 +176,7 @@ function verifyServerSignature(
     const nativeSignature = scValToNative(credentials.signature());
     if (!Array.isArray(nativeSignature)) {
       return fail(
-        Sep45Code.INVALID_SERVER_SIGNATURE,
+        Sep45Code.SERVER_SIGNATURE_NOT_VECTOR,
         "SEP-45 server signature must be a vector",
         { serverAccount },
       );
@@ -206,7 +206,7 @@ function verifyServerSignature(
     });
     if (!valid) {
       return fail(
-        Sep45Code.INVALID_SERVER_SIGNATURE,
+        Sep45Code.NO_MATCHING_SERVER_SIGNATURE,
         "SEP-45 server entry has no matching Ed25519 signature",
         { serverAccount },
       );
@@ -217,7 +217,7 @@ function verifyServerSignature(
       throw cause;
     }
     return fail(
-      Sep45Code.INVALID_SERVER_SIGNATURE,
+      Sep45Code.FAILED_TO_VERIFY_SERVER_SIGNATURE,
       "SEP-45 server entry has an invalid signature",
       { serverAccount },
       cause,

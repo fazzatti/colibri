@@ -121,16 +121,36 @@ describe("postAuthEnforcedSimulation", () => {
     assertEquals(calls, 1);
   });
 
-  it("requires the recording simulation", async () => {
-    const input = {
-      transaction: makeTransaction(),
-      recordingSimulation: undefined,
-      rpc: {},
-    } as unknown as PostAuthEnforcedSimulationInput;
+  it("uses a unique error for each required input", async () => {
+    const codes = Object.values(E.Code);
+    assertEquals(new Set(codes).size, codes.length);
 
     await assertRejects(
-      () => postAuthEnforcedSimulation(input),
-      E.MISSING_ARG,
+      () =>
+        postAuthEnforcedSimulation({
+          transaction: undefined,
+          recordingSimulation: makeSimulation("recording"),
+          rpc: {},
+        } as unknown as PostAuthEnforcedSimulationInput),
+      E.MISSING_TRANSACTION,
+    );
+    await assertRejects(
+      () =>
+        postAuthEnforcedSimulation({
+          transaction: makeTransaction(),
+          recordingSimulation: undefined,
+          rpc: {},
+        } as unknown as PostAuthEnforcedSimulationInput),
+      E.MISSING_RECORDING_SIMULATION,
+    );
+    await assertRejects(
+      () =>
+        postAuthEnforcedSimulation({
+          transaction: makeTransaction(),
+          recordingSimulation: makeSimulation("recording"),
+          rpc: undefined,
+        } as unknown as PostAuthEnforcedSimulationInput),
+      E.MISSING_RPC,
     );
   });
 
