@@ -1,4 +1,4 @@
-import type { Signer, TransactionSigner } from "@/signer/types.ts";
+import type { KeypairSigner, Signer } from "@/signer/types.ts";
 import type {
   ContractId,
   Ed25519PublicKey,
@@ -8,9 +8,7 @@ import type {
 /**
  * Transaction-level configuration shared by Colibri transaction builders.
  */
-export type TransactionConfig<
-  TSigner extends TransactionSigner = Signer,
-> = {
+export type TransactionConfig = {
   /** Base fee in stroops applied to the transaction. */
   fee: BaseFee;
   /** Source account that will submit the transaction. */
@@ -21,14 +19,8 @@ export type TransactionConfig<
    * Signers used to authorize transaction envelopes and Soroban authorization
    * entries.
    */
-  signers: TSigner[];
+  signers: Signer[];
 };
-
-/**
- * Transaction configuration for Soroban invocations, where signers can
- * authorize the envelope, authorization entries, or both.
- */
-export type SorobanTransactionConfig = TransactionConfig<TransactionSigner>;
 
 /**
  * String representation of a Stellar base fee value.
@@ -41,7 +33,7 @@ export type BaseFee = `${number}`;
 export type FeeBumpConfig = {
   fee: TransactionConfig["fee"];
   source: TransactionConfig["source"];
-  signers: TransactionConfig["signers"];
+  signers: KeypairSigner[];
 };
 
 /**

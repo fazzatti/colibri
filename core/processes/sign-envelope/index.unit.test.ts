@@ -13,7 +13,7 @@ import {
 import { signEnvelope } from "@/processes/sign-envelope/index.ts";
 import * as E from "@/processes/sign-envelope/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
-import { OperationThreshold, type Signer } from "@/signer/types.ts";
+import { OperationThreshold, type KeypairSigner } from "@/signer/types.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 
 describe("SignEnvelope", () => {
@@ -55,7 +55,7 @@ describe("SignEnvelope", () => {
     );
   };
 
-  type MockSigner = Signer & {
+  type MockSigner = KeypairSigner & {
     calls: number;
     lastType?: "tx" | "feeBump";
   };

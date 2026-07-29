@@ -16,7 +16,7 @@ import * as E from "@/signer/delegated/error.ts";
 /**
  * Recursively materializes and authorizes a CAP-71 delegated credential tree.
  *
- * Add only the top-level instance to `SorobanTransactionConfig.signers`. The
+ * Add only the top-level instance to `TransactionConfig.signers`. The
  * complete nested topology is supplied when the instance is constructed. When
  * Colibri invokes the root signer with a simulation-produced authorization
  * entry, the root wraps that entry with delegated credentials and recursively

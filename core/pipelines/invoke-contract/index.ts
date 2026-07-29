@@ -2,7 +2,7 @@ import { pipe, step } from "convee";
 import { Server } from "stellar-sdk/rpc";
 import type {
   CreateInvokeContractPipelineArgs,
-  InvokeContractPipelineInput,
+  InvokeContractInput,
 } from "@/pipelines/invoke-contract/types.ts";
 import * as E from "@/pipelines/invoke-contract/error.ts";
 import { ColibriError } from "@/error/index.ts";
@@ -43,7 +43,7 @@ const buildInvokeContractPipeline = ({
   rpc,
 }: CreateInvokeContractPipelineArgs & { rpc: Server }) => {
   const inputStep = step(
-    (input: InvokeContractPipelineInput) => input,
+    (input: InvokeContractInput) => input,
     { id: INVOKE_CONTRACT_INPUT_STEP_ID },
   );
   const buildInputStep = step(

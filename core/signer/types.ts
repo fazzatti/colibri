@@ -35,18 +35,17 @@ export type AuthEntrySigner = {
 };
 
 /**
- * Any signer capability accepted by a Colibri transaction configuration.
+ * Any signer capability accepted by Colibri.
  *
  * A signer can authorize transaction envelopes, Soroban authorization
  * entries, or both.
  */
-export type TransactionSigner = EnvelopeSigner | AuthEntrySigner;
+export type Signer = EnvelopeSigner | AuthEntrySigner;
 
 /**
- * Complete local-style signing surface retained for signers that support
- * payload, envelope, and Soroban authorization-entry signing.
+ * Complete Ed25519 signing surface implemented by local keypair signers.
  */
-export type Signer = EnvelopeSigner & AuthEntrySigner & {
+export type KeypairSigner = EnvelopeSigner & AuthEntrySigner & {
   /** Returns the signer's Ed25519 public key. */
   publicKey(): Ed25519PublicKey;
   /** Signs an arbitrary binary payload. */

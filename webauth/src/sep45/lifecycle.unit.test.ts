@@ -6,7 +6,7 @@ import {
   assertThrows,
 } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import type { Signer } from "@colibri/core";
+import type { AuthEntrySigner, KeypairSigner } from "@colibri/core";
 import {
   Address,
   Keypair,
@@ -245,7 +245,7 @@ describe("SEP-45 lifecycle", () => {
         called = expiration === 106 && passphrase === fixture.networkPassphrase;
         return await cloneSep45AuthorizationEntry(value);
       },
-    } as unknown as Signer;
+    } as unknown as AuthEntrySigner;
     const adapted = await ContractAuth.fromSigner(signer)(entry, context);
     assertEquals(called, true);
     assertEquals(adapted.toXDR(), entry.toXDR());
@@ -457,7 +457,7 @@ describe("SEP-45 lifecycle", () => {
         clone.credentials().address().signatureExpirationLedger(expiration);
         return await clone;
       },
-    } as unknown as Signer;
+    } as unknown as KeypairSigner;
     const withColibriSigner = await client.authorizeChallenge(
       challenge,
       ContractAuth.none(),
@@ -470,7 +470,7 @@ describe("SEP-45 lifecycle", () => {
       signSorobanAuthEntry() {
         throw new Error("signing failed");
       },
-    } as unknown as Signer;
+    } as unknown as KeypairSigner;
     assertEquals(
       (
         await assertRejects(

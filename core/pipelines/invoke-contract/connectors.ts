@@ -1,7 +1,7 @@
 import { step, type StepThis } from "convee";
 import { Operation } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
-import type { InvokeContractPipelineInput } from "@/pipelines/invoke-contract/types.ts";
+import type { InvokeContractInput } from "@/pipelines/invoke-contract/types.ts";
 import type {
   BuildTransactionOutput,
 } from "@/processes/build-transaction/types.ts";
@@ -33,7 +33,7 @@ import {
 export const INVOKE_CONTRACT_INPUT_STEP_ID = "invoke-contract-input" as const;
 
 export const inputToBuild = (rpc: Server, networkPassphrase: string) => {
-  return createInputToBuild<InvokeContractPipelineInput>(
+  return createInputToBuild<InvokeContractInput>(
     rpc,
     networkPassphrase,
   );
@@ -48,7 +48,7 @@ export const simulateToSignAuthEntries = (
     simulationResponse: SimulateTransactionOutput,
   ): SignAuthEntriesInput {
     const authEntries = simulationResponse.result?.auth || [];
-    const inputStep = getRequiredStepOutput<InvokeContractPipelineInput>(
+    const inputStep = getRequiredStepOutput<InvokeContractInput>(
       this,
       INVOKE_CONTRACT_INPUT_STEP_ID,
     );
@@ -155,7 +155,7 @@ export const postAuthEnforcedSimulationToAssemble = () =>
 
 export const envSignReqToSignEnvelope = () =>
   createEnvSignReqToSignEnvelope<
-    InvokeContractPipelineInput,
+    InvokeContractInput,
     AssembleTransactionOutput
   >({
     id: "invoke-contract-envelope-to-sign-envelope" as const,

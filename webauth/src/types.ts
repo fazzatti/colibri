@@ -1,4 +1,4 @@
-import type { INetworkConfig, Signer } from "@colibri/core";
+import type { INetworkConfig, KeypairSigner } from "@colibri/core";
 import type { ContractAuthHandler } from "@/sep45/contract-auth.ts";
 import type {
   Keypair,
@@ -9,7 +9,7 @@ import type {
 export type WebAuthCoreNetworkConfig = INetworkConfig;
 
 /** @internal Exact Core signer shape retained without re-exporting Core. */
-export type WebAuthCoreSigner = Signer;
+export type WebAuthCoreSigner = KeypairSigner;
 
 /** WebAuth protocols implemented by Colibri. */
 export type WebAuthProtocol = "sep10" | "sep45";

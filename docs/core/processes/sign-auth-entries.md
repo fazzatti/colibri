@@ -20,7 +20,7 @@ const result = await signAuthEntries({
 | Property            | Type                          | Required | Description                            |
 | ------------------- | ----------------------------- | -------- | -------------------------------------- |
 | `auth`              | `SorobanAuthorizationEntry[]` | Yes      | Authorization entries from simulation  |
-| `signers`           | `TransactionSigner[]`         | Yes      | Authorization-entry-capable signers    |
+| `signers`           | `Signer[]`                    | Yes      | Signers narrowed by auth-entry capability |
 | `rpc`               | `Server`                      | Yes      | RPC server (to get current ledger)     |
 | `networkPassphrase` | `string`                      | Yes      | Network passphrase                     |
 | `validity`          | `LedgerValidity`              | —        | How long signatures are valid          |

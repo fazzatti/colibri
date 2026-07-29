@@ -1,4 +1,4 @@
-import type { SorobanTransactionConfig } from "@colibri/core";
+import type { TransactionConfig } from "@colibri/core";
 import type {
   ChannelAccount,
   ChannelAccountsPipelineInput,
@@ -11,7 +11,7 @@ export const injectChannelAccount = <
   input: Input,
   channel: ChannelAccount,
 ): Input => {
-  const nextConfig: SorobanTransactionConfig = {
+  const nextConfig: TransactionConfig = {
     ...input.config,
     source: channel.address(),
     signers: appendUniqueSigners(input.config.signers, channel.signer()),

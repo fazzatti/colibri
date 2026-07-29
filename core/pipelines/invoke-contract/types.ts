@@ -1,9 +1,6 @@
 import type { xdr } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
-import type {
-  SorobanTransactionConfig,
-  TransactionConfig,
-} from "@/common/types/transaction-config/types.ts";
+import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { NetworkConfig } from "@/network/index.ts";
 import type { SendTransactionOutput } from "@/processes/send-transaction/types.ts";
 
@@ -14,17 +11,10 @@ export type CreateInvokeContractPipelineArgs = {
 };
 
 /** @internal */
-export type InvokeContractInput<
-  TConfig extends SorobanTransactionConfig = TransactionConfig,
-> = {
+export type InvokeContractInput = {
   operations: xdr.Operation[];
-  config: TConfig;
+  config: TransactionConfig;
 };
-
-/** @internal */
-export type InvokeContractPipelineInput = InvokeContractInput<
-  SorobanTransactionConfig
->;
 
 /** @internal */
 export type InvokeContractOutput = SendTransactionOutput;

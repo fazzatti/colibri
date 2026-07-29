@@ -181,7 +181,8 @@ outside Colibri's built-in pipelines.
   success/restore responses and raising specific errors for transport failures,
   generic simulation failures, parsed contract errors, or unrecognized payloads.
 - **SignAuthEntries** – Consumes simulated Soroban auth entries alongside a set
-  of `TransactionSigner`s, returning signatures in the order Soroban expects.
+  of `Signer`s, narrowing them to the authorization-entry capability and
+  returning signatures in the order Soroban expects.
 - **PostAuthAssembleTransaction** – Builds the intermediate transaction needed
   to enforce completed delegated credentials.
 - **PostAuthEnforcedSimulation** – Runs the second simulation for delegated
@@ -253,7 +254,7 @@ helpers commonly needed in Soroban contexts:
 
 - `NativeAccount.fromAddress(publicKey)` – validated instantiation without
   signer.
-- `NativeAccount.fromMasterSigner(transactionSigner)` – binds a signer so
+- `NativeAccount.fromMasterSigner(keypairSigner)` – binds a keypair signer so
   pipelines can discover it automatically.
 - `address()` – returns the Ed25519 public key.
 - `muxedAddress(muxedId)` – produces a muxed account string with checksum
@@ -277,9 +278,11 @@ signer.sign(transaction);
 await signer.signSorobanAuthEntry(entry, validUntil, passphrase);
 ```
 
-`EnvelopeSigner` and `AuthEntrySigner` are independent capabilities.
-`TransactionSigner` accepts either capability, while `Signer` retains the
-complete local-style surface implemented by `LocalSigner`.
+`EnvelopeSigner` and `AuthEntrySigner` are independent capabilities. `Signer`
+accepts either capability, and each signing process uses the matching
+`isEnvelopeSigner(...)` or `isAuthEntrySigner(...)` guard before invoking it.
+`KeypairSigner` describes the complete Ed25519 surface implemented by
+`LocalSigner`, including detached payload signing and public-key access.
 
 `DelegatedSigner` implements the authorization-entry capability for CAP-71. It
 owns an externally assembled recursive `nestedDelegates` topology, applies the

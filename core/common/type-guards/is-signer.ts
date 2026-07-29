@@ -1,15 +1,15 @@
 import type {
   AuthEntrySigner,
   EnvelopeSigner,
+  KeypairSigner,
   Signer,
-  TransactionSigner,
 } from "@/signer/types.ts";
 import { isDefined } from "@/common/index.ts";
 import { hasFunction } from "@/common/type-guards/has-function.ts";
 
 /** Returns `true` when the value can sign transaction envelopes. */
 export const isEnvelopeSigner = (
-  signer: TransactionSigner | unknown,
+  signer: unknown,
 ): signer is EnvelopeSigner => {
   return (
     isDefined(signer) &&
@@ -20,7 +20,7 @@ export const isEnvelopeSigner = (
 
 /** Returns `true` when the value can sign Soroban authorization entries. */
 export const isAuthEntrySigner = (
-  signer: TransactionSigner | unknown,
+  signer: unknown,
 ): signer is AuthEntrySigner => {
   return (
     isDefined(signer) &&
@@ -29,8 +29,13 @@ export const isAuthEntrySigner = (
   );
 };
 
-/** Returns `true` when the value satisfies Colibri's complete signer contract. */
+/** Returns `true` when the value provides a supported signing capability. */
 export const isSigner = (signer: unknown): signer is Signer => {
+  return isEnvelopeSigner(signer) || isAuthEntrySigner(signer);
+};
+
+/** Returns `true` when the value satisfies the complete keypair signer contract. */
+export const isKeypairSigner = (signer: unknown): signer is KeypairSigner => {
   return (
     isDefined(signer) &&
     hasFunction(signer, "publicKey") &&

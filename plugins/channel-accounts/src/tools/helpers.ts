@@ -1,8 +1,8 @@
 import {
+  type KeypairSigner,
   LocalSigner,
   NativeAccount,
   type SignableTransaction,
-  type Signer,
   StrKey,
 } from "@colibri/core";
 import type { xdr } from "stellar-sdk";
@@ -66,10 +66,12 @@ type SignableTransactionWithSignatures = SignableTransaction & {
 };
 
 export const createChannelProxySigner = (
-  signer: Signer,
+  signer: KeypairSigner,
   channel: ChannelAccount,
-): Signer => {
-  const signerHint = StrKey.decodeEd25519PublicKey(signer.publicKey()).slice(-4);
+): KeypairSigner => {
+  const signerHint = StrKey.decodeEd25519PublicKey(signer.publicKey()).slice(
+    -4,
+  );
 
   return {
     publicKey: () => channel.address(),

@@ -44,10 +44,7 @@ import type {
   ScValLike,
   SorobanAuthorizationEntryLike,
 } from "@/common/types/index.ts";
-import type {
-  SorobanTransactionConfig,
-  TransactionConfig,
-} from "@/common/types/transaction-config/types.ts";
+import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { InvokeContractOutput } from "@/pipelines/invoke-contract/types.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import type { ReadFromContractOutput } from "@/pipelines/read-from-contract/types.ts";
@@ -361,7 +358,7 @@ export class Contract {
     constructorArgs,
     salt,
   }: {
-    config: SorobanTransactionConfig;
+    config: TransactionConfig;
     constructorArgs?: T;
     salt?: BinaryData;
   }): Promise<InvokeContractOutput> {
@@ -581,7 +578,7 @@ export class Contract {
     method: string;
     methodArgs?: object;
     auth?: SorobanAuthorizationEntryLike[];
-    config: SorobanTransactionConfig;
+    config: TransactionConfig;
   }): Promise<InvokeContractOutput> {
     const contractId = this.getContractId();
 
@@ -621,7 +618,7 @@ export class Contract {
       args: xdr.ScVal[];
       auth?: xdr.SorobanAuthorizationEntry[];
     };
-    config: SorobanTransactionConfig;
+    config: TransactionConfig;
   }): Promise<InvokeContractOutput> {
     const contractId = this.getContractId();
 

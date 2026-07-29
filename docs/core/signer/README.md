@@ -24,23 +24,25 @@ type AuthEntrySigner = {
   signsFor(target: Ed25519PublicKey | ContractId): boolean;
 };
 
-type TransactionSigner = EnvelopeSigner | AuthEntrySigner;
+type Signer = EnvelopeSigner | AuthEntrySigner;
 ```
 
-`Signer` remains the complete local-style interface for implementations that
+`KeypairSigner` is the complete Ed25519 interface for implementations that
 support detached signatures, envelopes, and authorization entries:
 
 ```ts
-type Signer = EnvelopeSigner & AuthEntrySigner & {
+type KeypairSigner = EnvelopeSigner & AuthEntrySigner & {
   publicKey(): Ed25519PublicKey;
   sign(data: Uint8Array): Uint8Array;
 };
 ```
 
+`LocalSigner` implements `KeypairSigner`, while `DelegatedSigner` implements
+only `AuthEntrySigner`.
+
 ## Using Signers
 
-Pass signers through `TransactionConfig`. Soroban invocation APIs accept
-`SorobanTransactionConfig`, whose signer list is `TransactionSigner[]`:
+Pass every signer through the same `TransactionConfig.signers` list:
 
 ```ts
 import {
@@ -61,6 +63,11 @@ const result = await pipeline.run({
   },
 });
 ```
+
+The pipeline carries `Signer[]` unchanged until a process needs a capability.
+`signAuthEntries(...)` narrows with `isAuthEntrySigner(...)`, while
+`signEnvelope(...)` narrows with `isEnvelopeSigner(...)`. A signer implementing
+both capabilities passes both guards.
 
 ## Implementing A Custom Authorization-Entry Signer
 
