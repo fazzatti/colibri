@@ -25,7 +25,7 @@ import {
   SIMULATE_TRANSACTION_STEP_ID,
 } from "@/steps/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
-import { hasDelegatedAuthorization } from "@/common/helpers/xdr/has-delegated-authorization.ts";
+import { operationHasDelegatedAuthorization } from "@/common/helpers/xdr/operation-has-delegated-authorization.ts";
 
 const source = "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P";
 const rootAddress = Address.contract(Buffer.alloc(32, 1));
@@ -104,7 +104,10 @@ describe("invoke-contract post-auth connectors", () => {
     assertStrictEquals(result.transaction, transaction);
     assertStrictEquals(result.sorobanData, recording.transactionData);
     assertEquals(result.resourceFee, 42);
-    assertEquals(hasDelegatedAuthorization(result.authorizedOperation), true);
+    assertEquals(
+      operationHasDelegatedAuthorization(result.authorizedOperation),
+      true,
+    );
   });
 
   it("connects the post-auth transaction to enforcing simulation", async () => {

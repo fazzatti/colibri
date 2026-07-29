@@ -3,7 +3,7 @@ import { getAddressTypeFromAuthEntry } from "@/common/helpers/xdr/get-address-ty
 import { getAddressSignerFromAuthEntry } from "@/common/helpers/xdr/get-address-signer-from-auth-entry.ts";
 import { getAddressCredentialsFromAuthEntry } from "@/common/helpers/xdr/get-address-credentials-from-auth-entry.ts";
 import { getAuthEntrySignatures } from "@/common/helpers/xdr/get-auth-entry-signatures.ts";
-import { hasDelegatedAuthorization } from "@/common/helpers/xdr/has-delegated-authorization.ts";
+import { operationHasDelegatedAuthorization } from "@/common/helpers/xdr/operation-has-delegated-authorization.ts";
 import { softTryToXDR } from "@/common/helpers/xdr/soft-try-to-xdr.ts";
 import { parseEvents } from "@/common/helpers/xdr/parse-events.ts";
 import { parseErrorResult } from "@/common/helpers/xdr/parse-error-result.ts";
@@ -15,7 +15,7 @@ export const xdr = {
   getAddressSignerFromAuthEntry,
   getAddressCredentialsFromAuthEntry,
   getAuthEntrySignatures,
-  hasDelegatedAuthorization,
+  operationHasDelegatedAuthorization,
   softTryToXDR,
   parseEvents,
   parseErrorResult,
@@ -30,7 +30,7 @@ export * from "@/common/helpers/xdr/get-address-type-from-auth-entry.ts";
 export * from "@/common/helpers/xdr/get-address-signer-from-auth-entry.ts";
 export * from "@/common/helpers/xdr/get-address-credentials-from-auth-entry.ts";
 export * from "@/common/helpers/xdr/get-auth-entry-signatures.ts";
-export * from "@/common/helpers/xdr/has-delegated-authorization.ts";
+export * from "@/common/helpers/xdr/operation-has-delegated-authorization.ts";
 export * from "@/common/helpers/xdr/soft-try-to-xdr.ts";
 export * from "@/common/helpers/xdr/parse-events.ts";
 export * from "@/common/helpers/xdr/parse-error-result.ts";

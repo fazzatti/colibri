@@ -6,7 +6,7 @@ import { getAddressCredentialsFromAuthEntry } from "@/common/helpers/xdr/get-add
 import { getAddressSignerFromAuthEntry } from "@/common/helpers/xdr/get-address-signer-from-auth-entry.ts";
 import { getAddressTypeFromAuthEntry } from "@/common/helpers/xdr/get-address-type-from-auth-entry.ts";
 import { getAuthEntrySignatures } from "@/common/helpers/xdr/get-auth-entry-signatures.ts";
-import { hasDelegatedAuthorization } from "@/common/helpers/xdr/has-delegated-authorization.ts";
+import { operationHasDelegatedAuthorization } from "@/common/helpers/xdr/operation-has-delegated-authorization.ts";
 
 const rootAddress = Address.contract(Buffer.alloc(32, 1));
 const delegateAddress = Address.account(Buffer.alloc(32, 2));
@@ -133,7 +133,7 @@ describe("delegated authorization XDR helpers", () => {
     });
   });
 
-  describe("hasDelegatedAuthorization", () => {
+  describe("operationHasDelegatedAuthorization", () => {
     it("detects delegated credentials in invoke-host-function operations", () => {
       const operation = Operation.invokeHostFunction({
         func: xdr.HostFunction.hostFunctionTypeInvokeContract(
@@ -142,7 +142,7 @@ describe("delegated authorization XDR helpers", () => {
         auth: [makeDelegatedEntry()],
       });
 
-      assertEquals(hasDelegatedAuthorization(operation), true);
+      assertEquals(operationHasDelegatedAuthorization(operation), true);
     });
 
     it("returns false for ordinary auth and non-contract operations", () => {
@@ -153,8 +153,11 @@ describe("delegated authorization XDR helpers", () => {
         auth: [makeAddressEntry()],
       });
 
-      assertEquals(hasDelegatedAuthorization(ordinary), false);
-      assertEquals(hasDelegatedAuthorization(Operation.setOptions({})), false);
+      assertEquals(operationHasDelegatedAuthorization(ordinary), false);
+      assertEquals(
+        operationHasDelegatedAuthorization(Operation.setOptions({})),
+        false,
+      );
     });
   });
 });

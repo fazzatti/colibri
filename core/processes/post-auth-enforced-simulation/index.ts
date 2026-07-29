@@ -7,7 +7,7 @@ import { SimulateTransactionError } from "@/processes/simulate-transaction/error
 import { simulateTransaction } from "@/processes/simulate-transaction/index.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 import { getOperationsFromTransaction } from "@/common/helpers/transaction.ts";
-import { hasDelegatedAuthorization } from "@/common/helpers/xdr/has-delegated-authorization.ts";
+import { operationHasDelegatedAuthorization } from "@/common/helpers/xdr/operation-has-delegated-authorization.ts";
 
 /**
  * Enforces completed delegated authorization entries through a second
@@ -37,7 +37,7 @@ export const postAuthEnforcedSimulation = async (
 
     const requiresEnforcingSimulation = getOperationsFromTransaction(
       transaction,
-    ).some(hasDelegatedAuthorization);
+    ).some(operationHasDelegatedAuthorization);
 
     if (!requiresEnforcingSimulation) return recordingSimulation;
 

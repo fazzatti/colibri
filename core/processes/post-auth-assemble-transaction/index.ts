@@ -7,7 +7,7 @@ import * as E from "@/processes/post-auth-assemble-transaction/error.ts";
 import { AssembleTransactionError } from "@/processes/assemble-transaction/error.ts";
 import { assembleTransaction } from "@/processes/assemble-transaction/index.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
-import { hasDelegatedAuthorization } from "@/common/helpers/xdr/has-delegated-authorization.ts";
+import { operationHasDelegatedAuthorization } from "@/common/helpers/xdr/operation-has-delegated-authorization.ts";
 
 /**
  * Assembles signed delegated credentials into an intermediate transaction.
@@ -36,7 +36,9 @@ export const postAuthAssembleTransaction = async (
       () => new E.MISSING_RESOURCE_FEE(input),
     );
 
-    if (!hasDelegatedAuthorization(authorizedOperation)) return transaction;
+    if (!operationHasDelegatedAuthorization(authorizedOperation)) {
+      return transaction;
+    }
 
     const authEntries = authorizedOperation.body()
       .invokeHostFunctionOp()
