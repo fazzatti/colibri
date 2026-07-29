@@ -7,6 +7,7 @@ import {
   INVALID_AUTH_ENTRY_SIGNER_ADDRESS,
 } from "@/common/helpers/xdr/error.ts";
 import { getAddressCredentialsFromAuthEntry } from "@/common/helpers/xdr/get-address-credentials-from-auth-entry.ts";
+import { softTryToXDR } from "@/common/helpers/xdr/soft-try-to-xdr.ts";
 
 /**
  * Extracts the signer address from a Soroban authorization entry.
@@ -19,25 +20,36 @@ import { getAddressCredentialsFromAuthEntry } from "@/common/helpers/xdr/get-add
 export const getAddressSignerFromAuthEntry = (
   authEntry: xdr.SorobanAuthorizationEntry,
 ): Ed25519PublicKey | ContractId => {
+  const authEntryXDR = () =>
+    softTryToXDR(() => authEntry.toXDR("base64"));
+  const extractionError = (cause?: unknown) =>
+    new FAILED_TO_GET_AUTH_ENTRY_SIGNER(
+      authEntryXDR(),
+      cause instanceof Error ? cause : undefined,
+    );
+
+  let addressCredentials: xdr.SorobanAddressCredentials | null;
+  try {
+    addressCredentials = getAddressCredentialsFromAuthEntry(authEntry);
+  } catch (cause) {
+    throw extractionError(cause);
+  }
+  if (!addressCredentials) {
+    throw extractionError();
+  }
+
   let signer: string;
   try {
-    const addressCredentials = getAddressCredentialsFromAuthEntry(authEntry);
-    if (!addressCredentials) {
-      throw new Error("Entry has no address credentials");
-    }
     signer = Address.fromScAddress(
       addressCredentials.address(),
     ).toString();
-  } catch (e) {
-    throw new FAILED_TO_GET_AUTH_ENTRY_SIGNER(
-      authEntry.toXDR("base64"),
-      e instanceof Error ? e : undefined,
-    );
+  } catch (cause) {
+    throw extractionError(cause);
   }
 
   assert(
     StrKey.isValidEd25519PublicKey(signer) || StrKey.isValidContractId(signer),
-    new INVALID_AUTH_ENTRY_SIGNER_ADDRESS(authEntry.toXDR("base64"), signer),
+    new INVALID_AUTH_ENTRY_SIGNER_ADDRESS(authEntryXDR(), signer),
   );
 
   return signer as Ed25519PublicKey;

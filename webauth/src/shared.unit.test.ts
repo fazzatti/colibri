@@ -170,9 +170,17 @@ describe("WebAuth shared behavior", () => {
       );
     }
     const nonObject = `${btoa("{}")}.${btoa("[]")}.x`;
+    const nonObjectError = assertThrows(
+      () => WebAuthToken.decode(nonObject),
+      WebAuthError,
+    );
     assertEquals(
-      assertThrows(() => WebAuthToken.decode(nonObject), WebAuthError).code,
+      nonObjectError.code,
       WebAuthCode.INVALID_TOKEN,
+    );
+    assertEquals(
+      nonObjectError.details,
+      "The token payload must be a JSON object.",
     );
 
     const base = {

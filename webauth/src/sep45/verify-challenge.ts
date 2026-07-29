@@ -175,7 +175,11 @@ function verifyServerSignature(
   try {
     const nativeSignature = scValToNative(credentials.signature());
     if (!Array.isArray(nativeSignature)) {
-      throw new TypeError("server signature is not a vector");
+      return fail(
+        Sep45Code.INVALID_SERVER_SIGNATURE,
+        "SEP-45 server signature must be a vector",
+        { serverAccount },
+      );
     }
     const expectedKey = StrKey.decodeEd25519PublicKey(serverAccount);
     const payload = hash(
@@ -201,10 +205,17 @@ function verifyServerSignature(
       );
     });
     if (!valid) {
-      throw new TypeError("no matching Ed25519 signature");
+      return fail(
+        Sep45Code.INVALID_SERVER_SIGNATURE,
+        "SEP-45 server entry has no matching Ed25519 signature",
+        { serverAccount },
+      );
     }
     return expiration;
   } catch (cause) {
+    if (cause instanceof Sep45Error) {
+      throw cause;
+    }
     return fail(
       Sep45Code.INVALID_SERVER_SIGNATURE,
       "SEP-45 server entry has an invalid signature",

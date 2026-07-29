@@ -2,7 +2,10 @@ import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { xdr, Address, Keypair } from "stellar-sdk";
 import { getAddressTypeFromAuthEntry } from "@/common/helpers/xdr/get-address-type-from-auth-entry.ts";
-import { FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE } from "@/common/helpers/xdr/error.ts";
+import {
+  Code,
+  FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE,
+} from "@/common/helpers/xdr/error.ts";
 
 describe("getAddressTypeFromAuthEntry", () => {
   it("should get address type from auth entry", () => {
@@ -40,7 +43,37 @@ describe("getAddressTypeFromAuthEntry", () => {
   it("should throw error for invalid auth entry", () => {
     const invalidAuthEntry = {} as unknown as xdr.SorobanAuthorizationEntry;
 
-    assertThrows(() => getAddressTypeFromAuthEntry(invalidAuthEntry));
+    const error = assertThrows(
+      () => getAddressTypeFromAuthEntry(invalidAuthEntry),
+      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE
+    );
+    assertEquals(error.code, Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE);
+  });
+
+  it("should throw a typed error for source-account credentials", () => {
+    const address = Address.fromString(Keypair.random().publicKey());
+    const authEntry = new xdr.SorobanAuthorizationEntry({
+      credentials: xdr.SorobanCredentials.sorobanCredentialsSourceAccount(),
+      rootInvocation: new xdr.SorobanAuthorizedInvocation({
+        function: xdr.SorobanAuthorizedFunction
+          .sorobanAuthorizedFunctionTypeContractFn(
+            new xdr.InvokeContractArgs({
+              contractAddress: address.toScAddress(),
+              functionName: "test",
+              args: [],
+            }),
+          ),
+        subInvocations: [],
+      }),
+    });
+
+    const error = assertThrows(
+      () => getAddressTypeFromAuthEntry(authEntry),
+      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE
+    );
+
+    assertEquals(error.code, Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE);
+    assertEquals(error.meta.cause, null);
   });
 
   it("should preserve Error causes when address type extraction fails", () => {
