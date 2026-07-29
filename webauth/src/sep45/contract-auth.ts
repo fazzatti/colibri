@@ -1,4 +1,10 @@
 import { authorizeEntry, xdr } from "stellar-sdk";
+import type {
+  AuthEntrySigner,
+  ContractId,
+  Ed25519PublicKey,
+  SorobanAuthorizationEntryLike,
+} from "@colibri/core";
 import type { ContractAuthContext } from "@/types.ts";
 import { cloneSep45AuthorizationEntry } from "@/sep45/codec.ts";
 import type {
@@ -7,7 +13,12 @@ import type {
 } from "@/stellar-sdk-types.ts";
 
 /** Colibri signer capability accepted by {@link ContractAuth.fromSigner}. */
-export type AuthEntrySigner = import("@colibri/core").AuthEntrySigner;
+export type {
+  AuthEntrySigner,
+  ContractId,
+  Ed25519PublicKey,
+  SorobanAuthorizationEntryLike,
+};
 
 /** Application-defined full-entry contract authorization hook. */
 export type ContractAuthHandler = (
