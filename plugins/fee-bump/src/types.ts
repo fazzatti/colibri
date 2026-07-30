@@ -1,3 +1,5 @@
+import type { ContractId, Ed25519PublicKey, SignerKey } from "@colibri/core";
+
 /**
  * Stable identifier used by the fee-bump plugin.
  */
@@ -23,18 +25,20 @@ export interface FeeBumpSignableTransaction {
   toXDR(format?: "raw" | "hex" | "base64"): string | Uint8Array;
   /** Applies one or more signatures to the envelope. */
   sign(...signers: unknown[]): unknown;
+  /** Returns the network-bound transaction hash. */
+  hash(): Uint8Array;
 }
 
 /**
- * Minimal signer surface required to authorize a fee-bump envelope.
+ * Identity and account-targeting surface shared by fee-bump authorizers.
  */
-export interface FeeBumpPluginSigner {
+export interface FeeBumpPluginSignerIdentity {
   /**
-   * Returns the signer's Stellar address.
+   * Returns the exact Stellar signer key represented by this signer.
    *
-   * This is only used for diagnostics when Colibri cannot match a signer.
+   * This can be a `G...`, `X...`, `P...`, or `T...` key.
    */
-  publicKey(): string;
+  signerKey(): SignerKey;
 
   /**
    * Returns whether this signer can authorize the given Stellar address.
@@ -42,8 +46,15 @@ export interface FeeBumpPluginSigner {
    * @param target - Required Stellar address.
    * @returns `true` when this signer can sign for the address.
    */
-  signsFor(target: string): boolean;
+  signsFor(
+    target: Ed25519PublicKey | ContractId,
+  ): boolean;
+}
 
+/**
+ * Fee-bump signer that adds a decorated signature to the envelope.
+ */
+export interface FeeBumpEnvelopeSigner extends FeeBumpPluginSignerIdentity {
   /**
    * Signs the fee-bump envelope and returns the updated XDR.
    *
@@ -54,6 +65,30 @@ export interface FeeBumpPluginSigner {
     transaction: FeeBumpSignableTransaction,
   ): string | Promise<string>;
 }
+
+/**
+ * Fee-bump signer that authorizes one exact transaction hash without adding a
+ * decorated signature.
+ */
+export interface FeeBumpPreAuthorizedTransactionSigner
+  extends FeeBumpPluginSignerIdentity {
+  /**
+   * Returns whether this signer authorizes the exact fee-bump transaction.
+   *
+   * @param transaction - Final fee-bump transaction to verify.
+   * @returns Whether the transaction hash matches the pre-authorized key.
+   */
+  authorizesTransaction(
+    transaction: FeeBumpSignableTransaction,
+  ): boolean | Promise<boolean>;
+}
+
+/**
+ * Signer mechanisms supported by the fee-bump plugin.
+ */
+export type FeeBumpPluginSigner =
+  | FeeBumpEnvelopeSigner
+  | FeeBumpPreAuthorizedTransactionSigner;
 
 /**
  * Network information required to build fee-bump envelopes.

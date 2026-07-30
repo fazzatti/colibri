@@ -27,6 +27,10 @@ export enum Code {
   UNSUPPORTED_SCVAL_TYPE = "HLP_XDR_10",
   UNKNOWN_SCVAL_TYPE = "HLP_XDR_11",
   UNKNOWN_TRUSTLINE_ASSET_TYPE = "HLP_XDR_12",
+  FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER = "HLP_XDR_13",
+  MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER = "HLP_XDR_14",
+  FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE = "HLP_XDR_15",
+  MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE = "HLP_XDR_16",
 }
 
 export type MetaData = {
@@ -194,6 +198,78 @@ export class FAILED_TO_GET_AUTH_ENTRY_SIGNER extends XdrHelperError {
 }
 
 /**
+ * Thrown when signer extraction cannot read an authorization entry's address
+ * credentials.
+ */
+export class FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER
+  extends XdrHelperError {
+  constructor(authEntryXDR: string, cause?: Error) {
+    super({
+      code: Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
+      message:
+        "Failed to get address credentials for SorobanAuthorizationEntry signer",
+      details:
+        "Could not read the authorization entry credentials required to extract its signer",
+      data: { value: { authEntryXDR } },
+      cause,
+    });
+  }
+}
+
+/**
+ * Thrown when signer extraction receives credentials without an address.
+ */
+export class MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER
+  extends XdrHelperError {
+  constructor(authEntryXDR: string) {
+    super({
+      code: Code.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
+      message:
+        "Missing address credentials for SorobanAuthorizationEntry signer",
+      details:
+        "The authorization entry does not contain address credentials from which a signer can be extracted",
+      data: { value: { authEntryXDR } },
+    });
+  }
+}
+
+/**
+ * Thrown when address-type extraction cannot read an authorization entry's
+ * address credentials.
+ */
+export class FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE
+  extends XdrHelperError {
+  constructor(authEntryXDR: string, cause?: Error) {
+    super({
+      code: Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
+      message:
+        "Failed to get address credentials for SorobanAuthorizationEntry address type",
+      details:
+        "Could not read the authorization entry credentials required to extract its address type",
+      data: { value: { authEntryXDR } },
+      cause,
+    });
+  }
+}
+
+/**
+ * Thrown when address-type extraction receives credentials without an address.
+ */
+export class MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE
+  extends XdrHelperError {
+  constructor(authEntryXDR: string) {
+    super({
+      code: Code.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
+      message:
+        "Missing address credentials for SorobanAuthorizationEntry address type",
+      details:
+        "The authorization entry does not contain address credentials from which an address type can be extracted",
+      data: { value: { authEntryXDR } },
+    });
+  }
+}
+
+/**
  * Thrown when an invalid signer address is encountered.
  */
 export class INVALID_AUTH_ENTRY_SIGNER_ADDRESS extends XdrHelperError {
@@ -265,6 +341,14 @@ export const ERROR_XDR = {
   [Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE]:
     FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE,
   [Code.FAILED_TO_GET_AUTH_ENTRY_SIGNER]: FAILED_TO_GET_AUTH_ENTRY_SIGNER,
+  [Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER]:
+    FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
+  [Code.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER]:
+    MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
+  [Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE]:
+    FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
+  [Code.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE]:
+    MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
   [Code.INVALID_AUTH_ENTRY_SIGNER_ADDRESS]: INVALID_AUTH_ENTRY_SIGNER_ADDRESS,
   [Code.FAILED_TO_PARSE_ERROR_RESULT]: FAILED_TO_PARSE_ERROR_RESULT,
   [Code.UNSUPPORTED_SCVAL_TYPE]: UNSUPPORTED_SCVAL_TYPE,

@@ -430,17 +430,27 @@ describe("SEP-45 challenge verification", () => {
     const challenge = await buildSep45Challenge(fixture);
     const entries = decodeSep45AuthorizationEntries(challenge.xdr);
     entries[1].credentials().address().signature(xdr.ScVal.scvVoid());
-    expectCode(
+    const vectorError = assertThrows(
       () => verify(fixture, encodeSep45AuthorizationEntries(entries)),
-      Sep45Code.INVALID_SERVER_SIGNATURE,
+      Sep45Error,
+    );
+    assertEquals(vectorError.code, Sep45Code.SERVER_SIGNATURE_NOT_VECTOR);
+    assertEquals(
+      vectorError.message,
+      "SEP-45 server signature must be a vector",
     );
 
     entries[1].credentials().address().signature(
       xdr.ScVal.scvVec([xdr.ScVal.scvString("not-a-signature-map")]),
     );
-    expectCode(
+    const signatureError = assertThrows(
       () => verify(fixture, encodeSep45AuthorizationEntries(entries)),
-      Sep45Code.INVALID_SERVER_SIGNATURE,
+      Sep45Error,
+    );
+    assertEquals(signatureError.code, Sep45Code.NO_MATCHING_SERVER_SIGNATURE);
+    assertEquals(
+      signatureError.message,
+      "SEP-45 server entry has no matching Ed25519 signature",
     );
 
     entries[1].credentials().address().signature(
@@ -459,7 +469,23 @@ describe("SEP-45 challenge verification", () => {
     );
     expectCode(
       () => verify(fixture, encodeSep45AuthorizationEntries(entries)),
-      Sep45Code.INVALID_SERVER_SIGNATURE,
+      Sep45Code.NO_MATCHING_SERVER_SIGNATURE,
+    );
+
+    const sdkError = assertThrows(
+      () =>
+        verify(fixture, challenge.xdr, {
+          networkPassphrase: Symbol("invalid"),
+        }),
+      Sep45Error,
+    );
+    assertEquals(
+      sdkError.code,
+      Sep45Code.FAILED_TO_VERIFY_SERVER_SIGNATURE,
+    );
+    assertEquals(
+      sdkError.message,
+      "SEP-45 server entry has an invalid signature",
     );
 
     const expired = await buildSep45Challenge(fixture, { expiration: 100 });

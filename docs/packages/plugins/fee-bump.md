@@ -62,17 +62,27 @@ const result = await pipeline.run({
 - `createFeeBumpPlugin(...)`
 - `FEE_BUMP_PLUGIN_ID`
 - `FEE_BUMP_PLUGIN_TARGET`
+- `Code` and `ERROR_PLG_FBP`
+- `FeeBumpPluginConfig`, `FeeBumpPluginNetworkConfig`, and `FeeBumpPluginArgs`
+- `FeeBumpPluginSigner`
+- `FeeBumpEnvelopeSigner`
+- `FeeBumpPreAuthorizedTransactionSigner`
+- `FeeBumpPluginSignerIdentity`
+- `FeeBumpSignableTransaction`
+
+The package also re-exports Core's branded signer-key and address types used by
+custom fee-bump signers.
 
 ## Configuration
 
 `createFeeBumpPlugin(...)` accepts:
 
-| Property                | Description                                      |
-| ----------------------- | ------------------------------------------------ |
-| `networkConfig`         | Network configuration used to build the wrapper  |
-| `feeBumpConfig.source`  | Stellar address that will pay the fee bump       |
-| `feeBumpConfig.fee`     | Base fee in stroops for the outer envelope       |
-| `feeBumpConfig.signers` | Signers that authorize the fee-bump envelope     |
+| Property                | Description                                                            |
+| ----------------------- | ---------------------------------------------------------------------- |
+| `networkConfig`         | Network configuration used to build the wrapper                        |
+| `feeBumpConfig.source`  | Stellar address that will pay the fee bump                             |
+| `feeBumpConfig.fee`     | Base fee in stroops for the outer envelope                             |
+| `feeBumpConfig.signers` | Envelope or pre-authorized transaction signers for the fee-bump source |
 
 ## How It Works
 
@@ -82,7 +92,8 @@ const result = await pipeline.run({
 4. It signs that outer envelope with the configured sponsor signers
 5. The wrapped transaction continues to `sendTransaction`
 
-The inner transaction signatures are preserved.
+The inner transaction signatures are preserved. The outer source can use an
+Ed25519, Hash-X, signed-payload, or exact pre-authorized transaction signer.
 
 ## Error Codes
 

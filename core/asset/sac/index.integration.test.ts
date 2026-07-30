@@ -18,7 +18,7 @@ import {
 import { Server } from "stellar-sdk/rpc";
 import { toStellarAssetCanonicalString } from "@/asset/sep11/index.ts";
 import { createClassicTransactionPipeline } from "@/pipelines/classic-transaction/index.ts";
-import type { Signer } from "@/signer/types.ts";
+import type { KeypairSigner } from "@/signer/types.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 import * as SACError from "@/asset/sac/error.ts";
 
@@ -44,7 +44,7 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
   };
 
   const addTrustline = async (
-    users: Signer[],
+    users: KeypairSigner[],
     asset: Asset,
     networkConfig: NetworkConfig,
     config: TransactionConfig,

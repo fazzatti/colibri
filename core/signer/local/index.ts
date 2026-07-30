@@ -54,6 +54,13 @@ export class LocalSigner implements LocalSignerType {
   sign: (data: BinaryData) => BinaryData;
 
   /**
+   * Returns the Ed25519 signer key represented by this local signer.
+   *
+   * @returns The signer's `G...` public key.
+   */
+  signerKey: () => Ed25519PublicKey;
+
+  /**
    * Signs a classic or fee-bump transaction envelope.
    *
    * @param tx - Transaction envelope to sign.
@@ -69,12 +76,14 @@ export class LocalSigner implements LocalSignerType {
    * @param entry - Authorization entry to sign.
    * @param validUntil - Ledger sequence at which the authorization expires.
    * @param passphrase - Network passphrase used for signing.
+   * @param forAddress - Credential node that should receive the signature.
    * @returns Signed authorization entry.
    */
   signSorobanAuthEntry: (
     entry: SorobanAuthorizationEntryLike,
     validUntil: number,
     passphrase: string,
+    forAddress?: Ed25519PublicKey | ContractId,
   ) => Promise<SorobanAuthorizationEntryLike>;
 
   /**
@@ -117,6 +126,7 @@ export class LocalSigner implements LocalSignerType {
     const pub = kp.publicKey();
 
     this.publicKey = () => pub as Ed25519PublicKey;
+    this.signerKey = this.publicKey;
     this.addTarget(this.publicKey());
 
     this.sign = (data: BinaryData): BinaryData => {
@@ -144,6 +154,7 @@ export class LocalSigner implements LocalSignerType {
       entry: SorobanAuthorizationEntryLike,
       validUntil: number,
       passphrase: string,
+      forAddress?: Ed25519PublicKey | ContractId,
     ): Promise<SorobanAuthorizationEntryLike> => {
       assert(isDefined(kp), new E.SIGNER_DESTROYED());
       return authorizeEntry(
@@ -151,6 +162,7 @@ export class LocalSigner implements LocalSignerType {
         kp,
         validUntil,
         passphrase,
+        forAddress,
       ) as Promise<SorobanAuthorizationEntryLike>;
     };
 

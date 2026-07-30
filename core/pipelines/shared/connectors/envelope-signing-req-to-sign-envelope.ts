@@ -1,5 +1,5 @@
 import { step, type StepThis } from "convee";
-import type { Signer, SignatureRequirement } from "@/signer/types.ts";
+import type { SignatureRequirement, Signer } from "@/signer/types.ts";
 import type { EnvelopeSigningRequirementsOutput } from "@/processes/envelope-signing-requirements/types.ts";
 import type { SignEnvelopeInput } from "@/processes/sign-envelope/types.ts";
 import { getRequiredStepOutput } from "@/pipelines/shared/connectors/runtime.ts";

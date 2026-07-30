@@ -1,6 +1,8 @@
 # WrapFeeBump
 
-Wraps a transaction with a fee bump, enabling fee sponsorship. A fee bump allows a different account to pay for a transaction's fees, useful for improving user experience or handling fee increases after initial signing.
+Wraps a transaction with a fee bump, enabling fee sponsorship. A fee bump allows
+a different account to pay for a transaction's fees, useful for improving user
+experience or handling fee increases after initial signing.
 
 ## `wrapFeeBump`
 
@@ -28,11 +30,11 @@ const result = await wrapFeeBump({
 
 ### FeeBumpConfig
 
-| Property | Type               | Description                   |
-| -------- | ------------------ | ----------------------------- |
-| `source` | `Ed25519PublicKey` | Fee bump source (sponsor)     |
-| `fee`    | `BaseFee`          | Total fee (must exceed inner) |
-| `signers` | `Signer[]`         | Signers kept with the shared fee bump config shape |
+| Property  | Type                                             | Description                                                |
+| --------- | ------------------------------------------------ | ---------------------------------------------------------- |
+| `source`  | `Ed25519PublicKey`                               | Fee bump source (sponsor)                                  |
+| `fee`     | `BaseFee`                                        | Total fee (must exceed inner)                              |
+| `signers` | `(EnvelopeSigner \| PreAuthTransactionSigner)[]` | Signers that authorize or pre-authorize the outer envelope |
 
 ## Output
 
@@ -42,10 +44,15 @@ Returns a `FeeBumpTransaction` wrapping the inner transaction.
 
 ### Validations
 
-1. **Validates required arguments** — Ensures `transaction`, `networkPassphrase`, `config`, `config.source`, and `config.fee` are all present
-2. **Verifies not already a fee bump** — The input transaction cannot already be a fee bump transaction (no double-wrapping)
-3. **Verifies is a valid transaction** — Ensures the input is a proper Transaction object
-4. **Validates fee** — The fee bump fee must be strictly greater than the inner transaction's fee
+1. **Validates required arguments** — Ensures `transaction`,
+   `networkPassphrase`, `config`, `config.source`, and `config.fee` are all
+   present
+2. **Verifies not already a fee bump** — The input transaction cannot already be
+   a fee bump transaction (no double-wrapping)
+3. **Verifies is a valid transaction** — Ensures the input is a proper
+   Transaction object
+4. **Validates fee** — The fee bump fee must be strictly greater than the inner
+   transaction's fee
 
 ### Fee Bump Construction
 
@@ -58,7 +65,8 @@ The process uses `TransactionBuilder.buildFeeBumpTransaction()` with:
 
 ### After Creation
 
-The fee bump transaction must then be signed by the fee bump source before submission. The inner transaction's signatures are preserved.
+The fee bump transaction must then be signed by the fee bump source before
+submission. The inner transaction's signatures are preserved.
 
 ## Errors
 
@@ -72,4 +80,5 @@ The fee bump transaction must then be signed by the fee bump source before submi
 
 ## See Also
 
-- [Fee Bump Plugin](../../packages/plugins/fee-bump.md) — Integrates fee bumps into pipelines
+- [Fee Bump Plugin](../../packages/plugins/fee-bump.md) — Integrates fee bumps
+  into pipelines

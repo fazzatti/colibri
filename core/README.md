@@ -131,12 +131,19 @@ target step ids such as `steps.SEND_TRANSACTION_STEP_ID`.
 path:
 
 1. Build the transaction (`BuildTransaction`).
-2. Simulate it (`SimulateTransaction`).
+2. Run recording simulation (`SimulateTransaction`).
 3. Sign Soroban authorization entries (`SignAuthEntries`).
-4. Assemble the transaction (`AssembleTransaction`).
-5. Determine signing requirements (`EnvelopeSigningRequirements`).
-6. Apply available signers (`SignEnvelope`).
-7. Submit via RPC (`SendTransaction`).
+4. Assemble delegated auth for enforcement when present
+   (`AssembleForEnforcement`).
+5. Run enforcing simulation when delegated auth is present
+   (`EnforceSimulation`).
+6. Assemble the final transaction (`AssembleTransaction`).
+7. Determine signing requirements (`EnvelopeSigningRequirements`).
+8. Apply available envelope signers (`SignEnvelope`).
+9. Submit via RPC (`SendTransaction`).
+
+The enforcement steps infer their behavior from operation XDR. Ordinary
+transactions pass through them without a second RPC simulation.
 
 Output includes the RPC submission response, transaction hash, and the Soroban
 return value decoded to `xdr.ScVal`. Connectors use `convee` run context to
@@ -174,13 +181,19 @@ outside Colibri's built-in pipelines.
   success/restore responses and raising specific errors for transport failures,
   generic simulation failures, parsed contract errors, or unrecognized payloads.
 - **SignAuthEntries** – Consumes simulated Soroban auth entries alongside a set
-  of `TransactionSigner`s, returning signatures in the order Soroban expects.
+  of `Signer`s, narrowing them to the authorization-entry capability and
+  returning complete authorized entries in the order Soroban expects.
+- **AssembleForEnforcement** – Builds the intermediate transaction needed to
+  enforce completed delegated credentials.
+- **EnforceSimulation** – Runs the second simulation for delegated credentials
+  and passes ordinary transactions through without an RPC call.
 - **AssembleTransaction** – Merges the base transaction, signed auth entries,
   Soroban data, and resource fee into a ready-to-sign transaction.
 - **EnvelopeSigningRequirements** – Analyzes both envelope and Soroban
   requirements, yielding a checklist of signatures needed before submission.
-- **SignEnvelope** – Applies available signers, allowing partial signing when
-  you plan to collect additional approvals downstream.
+- **SignEnvelope** – Deterministically resolves account and exact extra-signer
+  requirements, then applies envelope signatures or verifies pre-authorized
+  transaction hashes.
 - **SendTransaction** – Submits the envelope (classic or fee-bump) via RPC and
   normalizes RPC responses into Colibri errors when failures occur.
 
@@ -242,7 +255,7 @@ helpers commonly needed in Soroban contexts:
 
 - `NativeAccount.fromAddress(publicKey)` – validated instantiation without
   signer.
-- `NativeAccount.fromMasterSigner(transactionSigner)` – binds a signer so
+- `NativeAccount.fromMasterSigner(keypairSigner)` – binds a keypair signer so
   pipelines can discover it automatically.
 - `address()` – returns the Ed25519 public key.
 - `muxedAddress(muxedId)` – produces a muxed account string with checksum
@@ -253,7 +266,7 @@ helpers commonly needed in Soroban contexts:
 All methods throw predictable `ColibriError` subclasses when validation fails,
 ensuring upstream workflows can safely recover.
 
-### LocalSigner and the TransactionSigner contract
+### Signer capabilities
 
 `LocalSigner` is an in-memory Ed25519 signer that keeps the secret key within a
 closure (never on the instance), supports classic transaction signatures,
@@ -262,14 +275,28 @@ Soroban authorization signatures, and exposes a `destroy()` method plus
 
 ```ts
 const signer = LocalSigner.fromSecret(secret);
-signer.sign(transaction);
+signer.signTransaction(transaction);
 await signer.signSorobanAuthEntry(entry, validUntil, passphrase);
 ```
 
-If you rely on hardware wallets, custodial services, or remote signers,
-implement the exported `TransactionSigner` interface. Processes and pipelines
-only depend on the interface, so your signers become drop-in replacements for
-`LocalSigner`.
+`EnvelopeSigner` and `AuthEntrySigner` are independent capabilities. `Signer`
+also accepts the distinct `PreAuthTransactionSigner` capability, and each
+signing process uses the matching `isEnvelopeSigner(...)`,
+`isPreAuthTransactionSigner(...)`, or `isAuthEntrySigner(...)` guard before
+invoking it. `KeypairSigner` describes the complete Ed25519 surface implemented
+by `LocalSigner`, including detached payload signing and public-key access.
+
+Envelope authorizers expose their exact `signerKey()`. Colibri includes built-in
+`HashXSigner`, `Ed25519SignedPayloadSigner`, and
+`PreAuthorizedTransactionSigner` implementations. Alternative account signer
+mechanisms require an explicit `addTarget(account)`, while transaction
+`extraSigners` are matched directly by signer key.
+
+`DelegatedSigner` implements the authorization-entry capability for CAP-71. It
+owns an externally assembled recursive `nestedDelegates` topology, applies the
+same full-entry signing method at every node, and returns one completed
+delegated authorization entry. Only the top-level instance belongs in the
+Soroban transaction's signer list.
 
 ## High-level contract clients
 
@@ -565,14 +592,21 @@ All configurations provide:
 Colibri Core ships shared utilities so every layer speaks the same language:
 
 - **Transaction configuration (`common/types`)** – `TransactionConfig` defines
-  fee, timeout, source address, and signer list; additional types cover base
-  fees, time bounds, preconditions, and transaction XDR string aliases.
+  fee, timeout, source address, signer list, and optional exact `G...`, `X...`,
+  or `P...` extra-signer preconditions; additional types cover base fees, time
+  bounds, preconditions, and transaction XDR string aliases.
 - **Assertions and verifiers (`common/assert`, `common/verifiers`)** – Throw
   Colibri errors on invalid input, ensuring consistent error handling from top
   to bottom.
 - **Binary helpers (`common/helpers`)** – `normalizeBinaryData` accepts
   `ArrayBuffer`, typed arrays, `DataView`, and other `ArrayBufferView` inputs
   and returns a defensive `Uint8Array` copy for stable downstream use.
+- **XDR helpers (`common/helpers/xdr`)** –
+  `getAddressCredentialsFromAuthEntry(...)`,
+  `getAddressSignerFromAuthEntry(...)`, `getAddressTypeFromAuthEntry(...)`,
+  `getAuthEntrySignatures(...)`, and `operationHasDelegatedAuthorization(...)`
+  inspect legacy, address-v2, and delegated authorization entries without
+  duplicating XDR-union traversal.
 - **Address (`core/address`)** – Address-specific utilities such as
   muxed-account normalization.
 - **Auth (`core/auth`)** – Authorization and requirement derivation helpers,

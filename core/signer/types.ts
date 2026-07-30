@@ -1,31 +1,80 @@
-import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
+import type {
+  ContractId,
+  Ed25519PublicKey,
+  ExtraSignerKey,
+  PreAuthTx,
+} from "@/strkeys/types.ts";
 import type {
   BinaryData,
-  SorobanAuthorizationEntryLike,
   SignableTransaction,
+  SorobanAuthorizationEntryLike,
   TransactionXDRBase64,
 } from "@/common/types/index.ts";
 
 /**
- * Generic signing surface used throughout Colibri.
+ * A signer that can authorize a Stellar transaction envelope.
  */
-export type Signer = {
-  /** Returns the signer's Ed25519 public key. */
-  publicKey(): Ed25519PublicKey;
-  /** Signs an arbitrary binary payload. */
-  sign(data: BinaryData): BinaryData;
+export type EnvelopeSigner = {
+  /** Returns the exact Stellar signer key represented by this signer. */
+  signerKey(): ExtraSignerKey;
   /** Signs a Stellar transaction or fee-bump envelope and returns its XDR. */
   signTransaction(
-    tx: SignableTransaction
+    tx: SignableTransaction,
   ): Promise<TransactionXDRBase64> | TransactionXDRBase64;
+  /** Returns whether this signer can authorize the given target. */
+  signsFor(target: Ed25519PublicKey | ContractId): boolean;
+};
+
+/**
+ * A pre-authorized transaction signer that validates an exact transaction
+ * hash without adding a decorated signature to its envelope.
+ */
+export type PreAuthTransactionSigner = {
+  /** Returns the pre-authorized transaction signer key. */
+  signerKey(): PreAuthTx;
+  /** Returns whether the provided transaction matches the authorized hash. */
+  authorizesTransaction(
+    tx: SignableTransaction,
+  ): Promise<boolean> | boolean;
+  /** Returns whether this signer can authorize the given account. */
+  signsFor(target: Ed25519PublicKey | ContractId): boolean;
+};
+
+/**
+ * A signer that can transform a Soroban authorization entry into an
+ * authorized entry.
+ */
+export type AuthEntrySigner = {
   /** Signs a Soroban authorization entry and returns the signed entry. */
   signSorobanAuthEntry(
     authEntry: SorobanAuthorizationEntryLike,
     validUntilLedgerSeq: number,
-    networkPassphrase: string
+    networkPassphrase: string,
+    forAddress?: Ed25519PublicKey | ContractId,
   ): Promise<SorobanAuthorizationEntryLike>;
   /** Returns whether this signer can authorize the given target. */
   signsFor(target: Ed25519PublicKey | ContractId): boolean;
+};
+
+/**
+ * Any signer capability accepted by Colibri.
+ *
+ * A signer can authorize transaction envelopes, Soroban authorization
+ * entries, or both.
+ */
+export type Signer =
+  | EnvelopeSigner
+  | PreAuthTransactionSigner
+  | AuthEntrySigner;
+
+/**
+ * Complete Ed25519 signing surface implemented by local keypair signers.
+ */
+export type KeypairSigner = EnvelopeSigner & AuthEntrySigner & {
+  /** Returns the signer's Ed25519 public key. */
+  publicKey(): Ed25519PublicKey;
+  /** Signs an arbitrary binary payload. */
+  sign(data: BinaryData): BinaryData;
 };
 
 /**

@@ -3,7 +3,12 @@ import { describe, it } from "@std/testing/bdd";
 import { Buffer } from "buffer";
 import { xdr, Address, Keypair } from "stellar-sdk";
 import { getAddressSignerFromAuthEntry } from "@/common/helpers/xdr/get-address-signer-from-auth-entry.ts";
-import { FAILED_TO_GET_AUTH_ENTRY_SIGNER } from "@/common/helpers/xdr/error.ts";
+import {
+  Code,
+  FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
+  FAILED_TO_GET_AUTH_ENTRY_SIGNER,
+  MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
+} from "@/common/helpers/xdr/error.ts";
 import { StrKey } from "@/strkeys/index.ts";
 
 describe("getAddressSignerFromAuthEntry", () => {
@@ -43,7 +48,59 @@ describe("getAddressSignerFromAuthEntry", () => {
   it("should throw error for invalid auth entry", () => {
     const invalidAuthEntry = {} as unknown as xdr.SorobanAuthorizationEntry;
 
-    assertThrows(() => getAddressSignerFromAuthEntry(invalidAuthEntry));
+    const error = assertThrows(
+      () => getAddressSignerFromAuthEntry(invalidAuthEntry),
+      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER
+    );
+    assertEquals(
+      error.code,
+      Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
+    );
+  });
+
+  it("should throw a typed error for source-account credentials", () => {
+    const address = Address.fromString(Keypair.random().publicKey());
+    const authEntry = new xdr.SorobanAuthorizationEntry({
+      credentials: xdr.SorobanCredentials.sorobanCredentialsSourceAccount(),
+      rootInvocation: new xdr.SorobanAuthorizedInvocation({
+        function: xdr.SorobanAuthorizedFunction
+          .sorobanAuthorizedFunctionTypeContractFn(
+            new xdr.InvokeContractArgs({
+              contractAddress: address.toScAddress(),
+              functionName: "test",
+              args: [],
+            }),
+          ),
+        subInvocations: [],
+      }),
+    });
+
+    const error = assertThrows(
+      () => getAddressSignerFromAuthEntry(authEntry),
+      MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER
+    );
+
+    assertEquals(
+      error.code,
+      Code.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
+    );
+    assertEquals(error.meta.cause, null);
+  });
+
+  it("should normalize non-Error credential extraction failures", () => {
+    const authEntry = {
+      credentials: () => {
+        throw "boom";
+      },
+      toXDR: () => "AAAA",
+    } as unknown as xdr.SorobanAuthorizationEntry;
+
+    const error = assertThrows(
+      () => getAddressSignerFromAuthEntry(authEntry),
+      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER
+    );
+
+    assertEquals(error.meta.cause, null);
   });
 
   it("should preserve Error causes when signer extraction fails", () => {

@@ -9,11 +9,11 @@ import { Buffer } from "buffer";
 import { Keypair, xdr } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import {
+  type KeypairSigner,
   LocalSigner,
   NativeAccount,
   NetworkConfig,
   normalizeBinaryData,
-  type Signer,
   StrKey,
 } from "@colibri/core";
 import type { ChannelAccount } from "@/shared/types.ts";
@@ -105,8 +105,9 @@ describe("ChannelAccounts helpers", () => {
       signTransaction: 0,
       signSorobanAuthEntry: 0,
     };
-    const fakeSigner: Signer = {
+    const fakeSigner: KeypairSigner = {
       publicKey: () => sponsor.address(),
+      signerKey: () => sponsor.address(),
       sign: (data) => {
         calls.sign += 1;
         return Buffer.from(normalizeBinaryData(data));
@@ -146,8 +147,9 @@ describe("ChannelAccounts helpers", () => {
 
   it("reuses the existing transaction xdr when the proxy signer hint is already present", async () => {
     const signerHint = Keypair.fromPublicKey(sponsor.address()).signatureHint();
-    const fakeSigner: Signer = {
+    const fakeSigner: KeypairSigner = {
       publicKey: () => sponsor.address(),
+      signerKey: () => sponsor.address(),
       sign: (data) => data,
       signTransaction: () => {
         throw new Error("should not sign twice");

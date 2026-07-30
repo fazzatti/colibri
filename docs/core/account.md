@@ -1,6 +1,7 @@
 # Account
 
-The Account module provides the `NativeAccount` class for working with Stellar accounts.
+The Account module provides the `NativeAccount` class for working with Stellar
+accounts.
 
 ## NativeAccount
 
@@ -32,7 +33,8 @@ const muxed = account.muxedAddress("12345");
 
 #### withMasterSigner(signer)
 
-Attach a signer to the account:
+Attach a `KeypairSigner` to the account. `LocalSigner` implements this complete
+Ed25519 signer capability:
 
 ```typescript
 import { LocalSigner } from "@colibri/core";
@@ -53,7 +55,7 @@ const signer = signableAccount.signer();
 
 #### fromMasterSigner(signer)
 
-Create an account directly from a signer:
+Create an account directly from a `KeypairSigner`:
 
 ```typescript
 import { LocalSigner, NativeAccount } from "@colibri/core";

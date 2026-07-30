@@ -53,6 +53,13 @@ describe("WebAuth shared behavior", () => {
   });
 
   it("error hierarchy carries protocol-safe metadata", () => {
+    const codes = [
+      ...Object.values(WebAuthCode),
+      ...Object.values(Sep10Code),
+      ...Object.values(Sep45Code),
+    ];
+    assertEquals(new Set(codes).size, codes.length);
+
     const shared = new WebAuthError({
       code: WebAuthCode.TRANSPORT,
       message: "shared",
@@ -170,9 +177,17 @@ describe("WebAuth shared behavior", () => {
       );
     }
     const nonObject = `${btoa("{}")}.${btoa("[]")}.x`;
+    const nonObjectError = assertThrows(
+      () => WebAuthToken.decode(nonObject),
+      WebAuthError,
+    );
     assertEquals(
-      assertThrows(() => WebAuthToken.decode(nonObject), WebAuthError).code,
-      WebAuthCode.INVALID_TOKEN,
+      nonObjectError.code,
+      WebAuthCode.INVALID_TOKEN_PAYLOAD_TYPE,
+    );
+    assertEquals(
+      nonObjectError.details,
+      "The token payload must be a JSON object.",
     );
 
     const base = {

@@ -155,6 +155,8 @@ Step ids currently defined in `core/steps/ids.ts`:
 - `build-transaction`
 - `simulate-transaction`
 - `sign-auth-entries`
+- `assemble-for-enforcement`
+- `enforce-simulation`
 - `assemble-transaction`
 - `envelope-signing-requirements`
 - `sign-envelope`

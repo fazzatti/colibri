@@ -13,6 +13,7 @@ import {
   INVOKE_CONTRACT_PIPELINE_ID,
   type InvokeContractInput,
   type InvokeContractOutput,
+  isKeypairSigner,
   LocalSigner,
   NativeAccount,
   NetworkConfig,
@@ -133,7 +134,9 @@ describe("ChannelAccounts", () => {
             (input: ClassicTransactionInput): ClassicTransactionOutput => {
               assertEquals(input.config.source, channel.address());
               assertArrayIncludes(
-                input.config.signers.map((signer) => signer.publicKey()),
+                input.config.signers
+                  .filter(isKeypairSigner)
+                  .map((signer) => signer.publicKey()),
                 [actor.address(), channel.address()],
               );
 
@@ -197,7 +200,9 @@ describe("ChannelAccounts", () => {
             (input: InvokeContractInput): InvokeContractOutput => {
               assertEquals(input.config.source, channel.address());
               assertArrayIncludes(
-                input.config.signers.map((signer) => signer.publicKey()),
+                input.config.signers
+                  .filter(isKeypairSigner)
+                  .map((signer) => signer.publicKey()),
                 [actor.address(), channel.address()],
               );
 
@@ -229,7 +234,9 @@ describe("ChannelAccounts", () => {
             (input: InvokeContractInput): InvokeContractOutput => {
               assertEquals(input.config.source, channel.address());
               assertArrayIncludes(
-                input.config.signers.map((signer) => signer.publicKey()),
+                input.config.signers
+                  .filter(isKeypairSigner)
+                  .map((signer) => signer.publicKey()),
                 [actor.address(), channel.address()],
               );
 

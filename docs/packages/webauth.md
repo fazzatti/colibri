@@ -7,8 +7,9 @@ classic-account authentication and draft
 contract-account authentication.
 
 {% hint style="warning" %} SEP-45 is a draft. Colibri currently implements
-v0.1.1 with legacy address credentials. Protocol 27 address-v2 credentials and
-delegates are rejected until the SEP defines their use. {% endhint %}
+v0.1.1 with legacy address credentials. A server-provided challenge using
+Protocol 27 address-v2 or delegated credentials is rejected until the SEP
+defines their use. {% endhint %}
 
 ## Installation
 
@@ -61,19 +62,19 @@ client.protocolFor(account);
 import { Keypair } from "npm:@stellar/stellar-sdk";
 
 const keypair = Keypair.fromSecret("S...");
-const token = await client.authenticate({
+const jwt = await client.authenticate({
   account: keypair.publicKey(),
   signer: keypair,
 });
 
-console.log(token.protocol);
-console.log(token.token);
+console.log(jwt.protocol);
+console.log(jwt.token);
 ```
 
 ## Explicit SEP-10
 
 ```typescript
-const token = await client.sep10.authenticate({
+const jwt = await client.sep10.authenticate({
   account: keypair.publicKey(),
   signer: keypair,
   memo: "12345",
@@ -87,7 +88,7 @@ const challenge = await client.sep10.getChallenge({
   account: keypair.publicKey(),
 });
 const signed = await client.sep10.signChallenge(challenge, keypair);
-const token = await client.sep10.submitChallenge(signed);
+const jwt = await client.sep10.submitChallenge(signed);
 ```
 
 The first method returns only after Colibri verifies the server signature,
@@ -112,7 +113,7 @@ const authorize: ContractAuthHandler = async (entry, context) => {
   return xdr.SorobanAuthorizationEntry.fromXDR(authorizedXdr);
 };
 
-const token = await client.sep45.authenticate({
+const jwt = await client.sep45.authenticate({
   account: "C...",
   authorize,
 });
@@ -128,7 +129,7 @@ five-second ledger cadence. Ledger close times vary, and the server entry is
 always the hard upper bound:
 
 ```typescript
-const token = await client.sep45.authenticate({
+const jwt = await client.sep45.authenticate({
   account: "C...",
   authorize,
   authorizationValidityLedgers: 12,
@@ -141,9 +142,14 @@ Built-in adapters are available for conventional authorization:
 import { ContractAuth } from "@colibri/webauth";
 
 const ed25519 = ContractAuth.ed25519(keypair);
-const colibri = ContractAuth.fromSigner(signer);
+const colibri = ContractAuth.fromSigner(authEntrySigner);
 const signatureless = ContractAuth.none();
 ```
+
+`ContractAuth.fromSigner(...)` accepts Core's `AuthEntrySigner` capability and
+adapts its complete returned entry to the SEP-45 handler boundary. Colibri does
+not otherwise constrain its contract-specific contents; enforcing simulation and
+the server remain authoritative.
 
 The explicit lifecycle uses immutable states:
 
@@ -154,7 +160,7 @@ const authorized = await client.sep45.authorizeChallenge(
   authorize,
 );
 const prepared = await client.sep45.prepareChallenge(authorized);
-const token = await client.sep45.submitChallenge(prepared);
+const jwt = await client.sep45.submitChallenge(prepared);
 ```
 
 ## Client domains
@@ -162,7 +168,7 @@ const token = await client.sep45.submitChallenge(prepared);
 Pass the client domain and its signing key:
 
 ```typescript
-const token = await client.authenticate({
+const jwt = await client.authenticate({
   account: keypair.publicKey(),
   signer: keypair,
   clientDomain: "wallet.example.com",

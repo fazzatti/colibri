@@ -8,7 +8,7 @@ import type {
   AccountLedgerKey,
   TrustlineLedgerKey,
 } from "@/ledger-entries/types.ts";
-import type { MultiSigSchema, Signer } from "@/signer/types.ts";
+import type { KeypairSigner, MultiSigSchema } from "@/signer/types.ts";
 
 /**
  * Union of address formats accepted by Colibri account helpers.
@@ -35,14 +35,14 @@ export interface Account {
  * Account view that can be upgraded with a master signer.
  */
 export type WithoutSigner<T extends Account> = T & {
-  withMasterSigner(signer: Signer): WithSigner<T>;
+  withMasterSigner(signer: KeypairSigner): WithSigner<T>;
 };
 
 /**
  * Account view that exposes a configured master signer.
  */
 export type WithSigner<T extends Account> = T & {
-  signer(): Signer;
+  signer(): KeypairSigner;
 };
 
 /**

@@ -20,5 +20,5 @@ export const injectChannelAccount = <
   return {
     ...input,
     config: nextConfig,
-  };
+  } as Input;
 };

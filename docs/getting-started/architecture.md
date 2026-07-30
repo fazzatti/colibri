@@ -7,8 +7,8 @@ extensions** so each layer stays composable.
 
 ### Processes
 
-Processes are plain functions such as `buildTransaction`,
-`simulateTransaction`, `signEnvelope`, and `sendTransaction`.
+Processes are plain functions such as `buildTransaction`, `simulateTransaction`,
+`signEnvelope`, and `sendTransaction`.
 
 - one job each
 - typed input/output
@@ -38,11 +38,15 @@ Connectors adapt one step boundary into the next.
 
 Pipelines are ready-to-use `convee` pipes built from steps and connectors.
 
+```text
+Build → Recording Simulation → Sign Auth Entries
+  → Assemble For Enforcement → Enforce Simulation
+  → Final Assembly → Resolve Envelope Requirements → Sign Envelope → Submit
 ```
-┌─────────┐ → ┌──────────┐ → ┌──────────┐ → ┌────────┐ → ┌────────┐
-│  Build  │   │ Simulate │   │ SignAuth │   │  Sign  │   │ Submit │
-└─────────┘   └──────────┘   └──────────┘   └────────┘   └────────┘
-```
+
+The enforcement assembly and simulation stages inspect the authorization entry
+XDR. They pass ordinary transactions through without a second RPC simulation and
+activate only when delegated credentials require CAP-71 enforcement.
 
 Colibri ships factory functions for the common flows:
 
