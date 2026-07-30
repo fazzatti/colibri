@@ -73,7 +73,7 @@ export class DelegatedSigner implements DelegatedSignerNode {
    * every configured credential node.
    *
    * @param authEntry - Recording-simulation entry or delegated entry to update.
-   * @param validUntilLedgerSeq - Exclusive signature expiration ledger.
+   * @param validUntilLedgerSeq - Inclusive signature expiration ledger.
    * @param networkPassphrase - Network passphrase committed by every signer.
    * @param forAddress - Credential position this invocation should authorize.
    * @returns The complete delegated authorization entry.

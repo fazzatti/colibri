@@ -1,8 +1,10 @@
 # Ed25519SignedPayloadSigner
 
-`Ed25519SignedPayloadSigner` represents Stellar's `P...` signer key. The key
-contains an Ed25519 public key and a payload of 1 to 64 bytes. Authorization
-adds an Ed25519 signature over that payload, not over the transaction hash.
+`Ed25519SignedPayloadSigner` represents Stellar's
+[CAP-40](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0040.md)
+`P...` signer key. The key contains an Ed25519 public key and a payload of 1 to
+64 bytes. Authorization adds an Ed25519 signature over that payload, not over
+the transaction hash.
 
 ## Explicit Payload
 

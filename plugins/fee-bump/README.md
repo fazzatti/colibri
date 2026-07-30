@@ -62,6 +62,19 @@ input for the rest of the pipeline.
 - `FEE_BUMP_PLUGIN_ID` — plugin id
 - `FEE_BUMP_PLUGIN_TARGET` — pipeline step where it should be added
   (`SendTransaction`)
+- `FeeBumpPluginConfig`, `FeeBumpPluginNetworkConfig`, and `FeeBumpPluginArgs` —
+  plugin configuration types
+- `FeeBumpPluginSigner` — union of the supported outer-envelope signer
+  capabilities
+- `FeeBumpEnvelopeSigner` — signer that adds a decorated envelope signature
+- `FeeBumpPreAuthorizedTransactionSigner` — signer that validates an exact
+  pre-authorized outer transaction hash
+- `FeeBumpPluginSignerIdentity` and `FeeBumpSignableTransaction` — interfaces
+  for custom fee-bump signer implementations
+
+The package also re-exports Core's branded `SignerKey`, `Ed25519PublicKey`,
+`ContractId`, `PreAuthTx`, `Sha256Hash`, and `SignedPayload` types for custom
+signer implementations.
 
 For concrete examples, refer to the unit and integration tests in `src/`.
 
@@ -79,8 +92,8 @@ For concrete examples, refer to the unit and integration tests in `src/`.
   - `fee` (string, required) — Fee amount in stroops to set on the
     FeeBumpTransaction as base fee\* (e.g. `"10000000"` equals 1 XLM).
   - `signers` (array, required) — Envelope or pre-authorized transaction signer
-    objects used to authorize the fee-bump source. This includes
-    `LocalSigner`, `HashXSigner`, `Ed25519SignedPayloadSigner`, and
+    objects used to authorize the fee-bump source. This includes `LocalSigner`,
+    `HashXSigner`, `Ed25519SignedPayloadSigner`, and
     `PreAuthorizedTransactionSigner`.
 
 _\*Since this value defines a base fee, the total amount set as max network fee

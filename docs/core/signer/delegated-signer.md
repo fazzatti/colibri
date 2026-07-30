@@ -1,8 +1,9 @@
 # DelegatedSigner
 
-`DelegatedSigner` is Colibri's CAP-71 authorization-entry signer. It represents
-one top-level custom account and owns the complete recursive
-`nestedDelegates` topology required by that account.
+`DelegatedSigner` is Colibri's
+[CAP-71-01](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0071-01.md)
+authorization-entry signer. It represents one top-level custom account and owns
+the complete recursive `nestedDelegates` topology required by that account.
 
 Only the top-level `DelegatedSigner` is added to the transaction configuration.
 When `SignAuthEntries` supplies a recording-simulation entry, the signer:
@@ -37,16 +38,16 @@ const accountSigner = new DelegatedSigner({
 ```
 
 The topology is assembled before invoking the pipeline because the application
-knows the custom accounts' delegation policy. Colibri does not discover or
-guess that policy during simulation.
+knows the custom accounts' delegation policy. Colibri does not discover or guess
+that policy during simulation.
 
 Each node accepts:
 
-| Property          | Type                      | Required | Description |
-| ----------------- | ------------------------- | -------- | ----------- |
-| `address`         | `Ed25519PublicKey \| ContractId` | Yes | Credential address represented by the node |
-| `signer`          | `AuthEntrySigner`         | No       | Produces this node's own signature value |
-| `nestedDelegates` | `DelegatedSignerNode[]`   | No       | Recursive delegates authorized by this node |
+| Property          | Type                             | Required | Description                                 |
+| ----------------- | -------------------------------- | -------- | ------------------------------------------- |
+| `address`         | `Ed25519PublicKey \| ContractId` | Yes      | Credential address represented by the node  |
+| `signer`          | `AuthEntrySigner`                | No       | Produces this node's own signature value    |
+| `nestedDelegates` | `DelegatedSignerNode[]`          | No       | Recursive delegates authorized by this node |
 
 Omit `signer` when a custom account authorizes entirely through its delegates
 and uses a void signature at that node.
@@ -70,20 +71,21 @@ const result = await contract.invoke({
 });
 ```
 
-`feePayer` signs the transaction envelope. `accountSigner` matches the
-top-level contract authorization entry and produces the delegated credential
-tree.
+`feePayer` signs the transaction envelope. `accountSigner` matches the top-level
+contract authorization entry and produces the delegated credential tree.
 
 ## Structural Guarantees
 
 The constructor canonicalizes each immediate `nestedDelegates` array by the raw
-Stellar address XDR order and rejects duplicate sibling addresses. Every child
-does the same for its own children, so the complete tree satisfies CAP-71's
-ordering and uniqueness rules before signing begins.
+Stellar address XDR order and rejects duplicate sibling addresses. Each
+`DelegatedSigner` node applies the same rule to its own children, so a topology
+composed from these nodes satisfies CAP-71's ordering and uniqueness rules
+before signing begins.
 
-Colibri does not validate the account contract's delegation policy. A missing,
-unexpected, or incorrectly signed delegate is rejected by
-`enforceSimulation` before submission.
+Colibri does not interpret the account contract's delegation policy. During
+`enforceSimulation`, the Stellar host enforces delegated-credential structure
+and the account contract decides whether the supplied topology and signatures
+are authorized. Any failure is surfaced before submission.
 
 ## Next Steps
 

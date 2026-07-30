@@ -182,11 +182,11 @@ outside Colibri's built-in pipelines.
   generic simulation failures, parsed contract errors, or unrecognized payloads.
 - **SignAuthEntries** – Consumes simulated Soroban auth entries alongside a set
   of `Signer`s, narrowing them to the authorization-entry capability and
-  returning signatures in the order Soroban expects.
-- **AssembleForEnforcement** – Builds the intermediate transaction needed
-  to enforce completed delegated credentials.
-- **EnforceSimulation** – Runs the second simulation for delegated
-  credentials and passes ordinary transactions through without an RPC call.
+  returning complete authorized entries in the order Soroban expects.
+- **AssembleForEnforcement** – Builds the intermediate transaction needed to
+  enforce completed delegated credentials.
+- **EnforceSimulation** – Runs the second simulation for delegated credentials
+  and passes ordinary transactions through without an RPC call.
 - **AssembleTransaction** – Merges the base transaction, signed auth entries,
   Soroban data, and resource fee into a ready-to-sign transaction.
 - **EnvelopeSigningRequirements** – Analyzes both envelope and Soroban
@@ -275,7 +275,7 @@ Soroban authorization signatures, and exposes a `destroy()` method plus
 
 ```ts
 const signer = LocalSigner.fromSecret(secret);
-signer.sign(transaction);
+signer.signTransaction(transaction);
 await signer.signSorobanAuthEntry(entry, validUntil, passphrase);
 ```
 
@@ -283,9 +283,8 @@ await signer.signSorobanAuthEntry(entry, validUntil, passphrase);
 also accepts the distinct `PreAuthTransactionSigner` capability, and each
 signing process uses the matching `isEnvelopeSigner(...)`,
 `isPreAuthTransactionSigner(...)`, or `isAuthEntrySigner(...)` guard before
-invoking it.
-`KeypairSigner` describes the complete Ed25519 surface implemented by
-`LocalSigner`, including detached payload signing and public-key access.
+invoking it. `KeypairSigner` describes the complete Ed25519 surface implemented
+by `LocalSigner`, including detached payload signing and public-key access.
 
 Envelope authorizers expose their exact `signerKey()`. Colibri includes built-in
 `HashXSigner`, `Ed25519SignedPayloadSigner`, and
@@ -593,14 +592,20 @@ All configurations provide:
 Colibri Core ships shared utilities so every layer speaks the same language:
 
 - **Transaction configuration (`common/types`)** – `TransactionConfig` defines
-  fee, timeout, source address, and signer list; additional types cover base
-  fees, time bounds, preconditions, and transaction XDR string aliases.
+  fee, timeout, source address, signer list, and optional exact `G...`, `X...`,
+  or `P...` extra-signer preconditions; additional types cover base fees, time
+  bounds, preconditions, and transaction XDR string aliases.
 - **Assertions and verifiers (`common/assert`, `common/verifiers`)** – Throw
   Colibri errors on invalid input, ensuring consistent error handling from top
   to bottom.
 - **Binary helpers (`common/helpers`)** – `normalizeBinaryData` accepts
   `ArrayBuffer`, typed arrays, `DataView`, and other `ArrayBufferView` inputs
   and returns a defensive `Uint8Array` copy for stable downstream use.
+- **XDR helpers (`common/helpers/xdr`)** –
+  `getAddressCredentialsFromAuthEntry(...)`,
+  `getAddressSignerFromAuthEntry(...)`, `getAuthEntrySignatures(...)`, and
+  `operationHasDelegatedAuthorization(...)` inspect legacy, address-v2, and
+  delegated authorization entries without duplicating XDR-union traversal.
 - **Address (`core/address`)** – Address-specific utilities such as
   muxed-account normalization.
 - **Auth (`core/auth`)** – Authorization and requirement derivation helpers,

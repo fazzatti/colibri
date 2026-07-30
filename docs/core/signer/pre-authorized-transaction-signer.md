@@ -30,6 +30,7 @@ const installSigner = Operation.setOptions({
   },
 });
 
+// Submit installSigner with an existing account signer first.
 signer.addTarget(accountId);
 
 const output = await signEnvelope({
@@ -47,9 +48,15 @@ const fromHash = PreAuthorizedTransactionSigner.fromHash(hash);
 const fromKey = PreAuthorizedTransactionSigner.fromHash("T...");
 ```
 
-If the transaction changes, Colibri raises `PRE_AUTH_TRANSACTION_MISMATCH`.
-Signatures already added to the envelope do not change the transaction hash, so
-a pre-authorized signer can be checked after other envelope signers.
+If the transaction changes, Colibri raises
+`SEN_ERRORS.PRE_AUTH_TRANSACTION_MISMATCH` (`SEN_012`). Signatures already added
+to the envelope do not change the transaction hash, so a pre-authorized signer
+can be checked after other envelope signers.
+
+When the matching transaction is applied, Stellar automatically removes the
+`T...` signer from the account even if an operation fails. If the transaction is
+never applied, the signer remains and must be removed explicitly when it is no
+longer needed.
 
 Pre-authorized transaction keys cannot be `extraSigners`: embedding the `T...`
 key as a precondition would make its hash recursively depend on itself.
