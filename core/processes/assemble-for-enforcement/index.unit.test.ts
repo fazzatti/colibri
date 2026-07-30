@@ -11,9 +11,9 @@ import {
   xdr,
 } from "stellar-sdk";
 import { Buffer } from "buffer";
-import { postAuthAssembleTransaction } from "@/processes/post-auth-assemble-transaction/index.ts";
-import type { PostAuthAssembleTransactionInput } from "@/processes/post-auth-assemble-transaction/types.ts";
-import * as E from "@/processes/post-auth-assemble-transaction/error.ts";
+import { assembleForEnforcement } from "@/processes/assemble-for-enforcement/index.ts";
+import type { AssembleForEnforcementInput } from "@/processes/assemble-for-enforcement/types.ts";
+import * as E from "@/processes/assemble-for-enforcement/error.ts";
 import * as AssembleErrors from "@/processes/assemble-transaction/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { getOperationsFromTransaction } from "@/common/helpers/transaction.ts";
@@ -70,11 +70,11 @@ const makeTransaction = (operation = makeInvokeOperation()) =>
     .setTimeout(0)
     .build();
 
-describe("postAuthAssembleTransaction", () => {
+describe("assembleForEnforcement", () => {
   it("passes ordinary authorization through unchanged", async () => {
     const transaction = makeTransaction();
 
-    const result = await postAuthAssembleTransaction({
+    const result = await assembleForEnforcement({
       transaction,
       authorizedOperation: makeInvokeOperation([makeAuthEntry()]),
       sorobanData: new SorobanDataBuilder(),
@@ -88,7 +88,7 @@ describe("postAuthAssembleTransaction", () => {
     const transaction = makeTransaction();
     const delegatedEntry = makeDelegatedEntry();
 
-    const result = await postAuthAssembleTransaction({
+    const result = await assembleForEnforcement({
       transaction,
       authorizedOperation: makeInvokeOperation([delegatedEntry]),
       sorobanData: new SorobanDataBuilder(),
@@ -112,29 +112,29 @@ describe("postAuthAssembleTransaction", () => {
 
     await assertRejects(
       () =>
-        postAuthAssembleTransaction({
+        assembleForEnforcement({
           transaction: undefined,
           authorizedOperation: makeInvokeOperation(),
           resourceFee: 10,
-        } as unknown as PostAuthAssembleTransactionInput),
+        } as unknown as AssembleForEnforcementInput),
       E.MISSING_TRANSACTION,
     );
     await assertRejects(
       () =>
-        postAuthAssembleTransaction({
+        assembleForEnforcement({
           transaction: makeTransaction(),
           authorizedOperation: undefined,
           resourceFee: 10,
-        } as unknown as PostAuthAssembleTransactionInput),
+        } as unknown as AssembleForEnforcementInput),
       E.MISSING_AUTHORIZED_OPERATION,
     );
     await assertRejects(
       () =>
-        postAuthAssembleTransaction({
+        assembleForEnforcement({
           transaction: makeTransaction(),
           authorizedOperation: makeInvokeOperation(),
           resourceFee: undefined,
-        } as unknown as PostAuthAssembleTransactionInput),
+        } as unknown as AssembleForEnforcementInput),
       E.MISSING_RESOURCE_FEE,
     );
   });
@@ -150,7 +150,7 @@ describe("postAuthAssembleTransaction", () => {
 
     await assertRejects(
       () =>
-        postAuthAssembleTransaction({
+        assembleForEnforcement({
           transaction: paymentTransaction,
           authorizedOperation: makeInvokeOperation([makeDelegatedEntry()]),
           sorobanData: new SorobanDataBuilder(),
@@ -163,8 +163,8 @@ describe("postAuthAssembleTransaction", () => {
   it("normalizes unexpected failures", async () => {
     await assertRejects(
       () =>
-        postAuthAssembleTransaction(
-          null as unknown as PostAuthAssembleTransactionInput,
+        assembleForEnforcement(
+          null as unknown as AssembleForEnforcementInput,
         ),
       E.UNEXPECTED_ERROR,
     );

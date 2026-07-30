@@ -82,8 +82,8 @@ does the same for its own children, so the complete tree satisfies CAP-71's
 ordering and uniqueness rules before signing begins.
 
 Colibri does not validate the account contract's delegation policy. A missing,
-unexpected, or incorrectly signed delegate is rejected by the post-auth
-enforcing simulation before submission.
+unexpected, or incorrectly signed delegate is rejected by
+`enforceSimulation` before submission.
 
 ## Next Steps
 

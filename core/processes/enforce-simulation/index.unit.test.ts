@@ -12,10 +12,10 @@ import {
 } from "stellar-sdk";
 import type { Api, Server } from "stellar-sdk/rpc";
 import { Buffer } from "buffer";
-import { postAuthEnforcedSimulation } from "@/processes/post-auth-enforced-simulation/index.ts";
-import type { PostAuthEnforcedSimulationInput } from "@/processes/post-auth-enforced-simulation/types.ts";
+import { enforceSimulation } from "@/processes/enforce-simulation/index.ts";
+import type { EnforceSimulationInput } from "@/processes/enforce-simulation/types.ts";
 import type { SimulateTransactionOutput } from "@/processes/simulate-transaction/types.ts";
-import * as E from "@/processes/post-auth-enforced-simulation/error.ts";
+import * as E from "@/processes/enforce-simulation/error.ts";
 import * as SimulateErrors from "@/processes/simulate-transaction/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
 
@@ -79,7 +79,7 @@ const makeSimulation = (
   _parsed: true,
 });
 
-describe("postAuthEnforcedSimulation", () => {
+describe("enforceSimulation", () => {
   it("returns the recording simulation without RPC for ordinary auth", async () => {
     const recordingSimulation = makeSimulation("recording");
     let calls = 0;
@@ -90,7 +90,7 @@ describe("postAuthEnforcedSimulation", () => {
       },
     } as unknown as Server;
 
-    const result = await postAuthEnforcedSimulation({
+    const result = await enforceSimulation({
       transaction: makeTransaction([entry]),
       recordingSimulation,
       rpc,
@@ -110,7 +110,7 @@ describe("postAuthEnforcedSimulation", () => {
       },
     } as unknown as Server;
 
-    const result = await postAuthEnforcedSimulation({
+    const result = await enforceSimulation({
       transaction: makeTransaction([delegatedEntry]),
       recordingSimulation: makeSimulation("recording"),
       rpc,
@@ -127,29 +127,29 @@ describe("postAuthEnforcedSimulation", () => {
 
     await assertRejects(
       () =>
-        postAuthEnforcedSimulation({
+        enforceSimulation({
           transaction: undefined,
           recordingSimulation: makeSimulation("recording"),
           rpc: {},
-        } as unknown as PostAuthEnforcedSimulationInput),
+        } as unknown as EnforceSimulationInput),
       E.MISSING_TRANSACTION,
     );
     await assertRejects(
       () =>
-        postAuthEnforcedSimulation({
+        enforceSimulation({
           transaction: makeTransaction(),
           recordingSimulation: undefined,
           rpc: {},
-        } as unknown as PostAuthEnforcedSimulationInput),
+        } as unknown as EnforceSimulationInput),
       E.MISSING_RECORDING_SIMULATION,
     );
     await assertRejects(
       () =>
-        postAuthEnforcedSimulation({
+        enforceSimulation({
           transaction: makeTransaction(),
           recordingSimulation: makeSimulation("recording"),
           rpc: undefined,
-        } as unknown as PostAuthEnforcedSimulationInput),
+        } as unknown as EnforceSimulationInput),
       E.MISSING_RPC,
     );
   });
@@ -163,7 +163,7 @@ describe("postAuthEnforcedSimulation", () => {
 
     await assertRejects(
       () =>
-        postAuthEnforcedSimulation({
+        enforceSimulation({
           transaction: makeTransaction([delegatedEntry]),
           recordingSimulation: makeSimulation("recording"),
           rpc,
@@ -175,8 +175,8 @@ describe("postAuthEnforcedSimulation", () => {
   it("normalizes unexpected failures", async () => {
     await assertRejects(
       () =>
-        postAuthEnforcedSimulation(
-          null as unknown as PostAuthEnforcedSimulationInput,
+        enforceSimulation(
+          null as unknown as EnforceSimulationInput,
         ),
       E.UNEXPECTED_ERROR,
     );

@@ -1,7 +1,7 @@
 import type { SorobanDataBuilder, Transaction, xdr } from "stellar-sdk";
 
 /** @internal */
-export type PostAuthAssembleTransactionInput = {
+export type AssembleForEnforcementInput = {
   transaction: Transaction;
   authorizedOperation: xdr.Operation;
   sorobanData?: SorobanDataBuilder;
@@ -9,4 +9,4 @@ export type PostAuthAssembleTransactionInput = {
 };
 
 /** @internal */
-export type PostAuthAssembleTransactionOutput = Transaction;
+export type AssembleForEnforcementOutput = Transaction;

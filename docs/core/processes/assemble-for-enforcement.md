@@ -1,14 +1,14 @@
-# PostAuthAssembleTransaction
+# AssembleForEnforcement
 
 Builds the intermediate transaction needed to enforce completed CAP-71
 delegated credentials.
 
-## `postAuthAssembleTransaction`
+## `assembleForEnforcement`
 
 ```ts
-import { postAuthAssembleTransaction } from "@colibri/core";
+import { assembleForEnforcement } from "@colibri/core";
 
-const transaction = await postAuthAssembleTransaction({
+const transaction = await assembleForEnforcement({
   transaction: baseTransaction,
   authorizedOperation,
   sorobanData: recordingSimulation.transactionData,
@@ -37,7 +37,9 @@ const transaction = await postAuthAssembleTransaction({
 
 | Code      | Description |
 | --------- | ----------- |
-| `PAA_000` | Unexpected post-auth assembly failure |
-| `PAA_001` | Missing required argument |
+| `AFE_000` | Unexpected assembly-for-enforcement failure |
+| `AFE_001` | Missing transaction |
+| `AFE_002` | Missing authorized operation |
+| `AFE_003` | Missing resource fee |
 
 Typed `AssembleTransactionError` failures are preserved.

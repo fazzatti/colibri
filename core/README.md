@@ -134,15 +134,15 @@ path:
 2. Run recording simulation (`SimulateTransaction`).
 3. Sign Soroban authorization entries (`SignAuthEntries`).
 4. Assemble delegated auth for enforcement when present
-   (`PostAuthAssembleTransaction`).
+   (`AssembleForEnforcement`).
 5. Run enforcing simulation when delegated auth is present
-   (`PostAuthEnforcedSimulation`).
+   (`EnforceSimulation`).
 6. Assemble the final transaction (`AssembleTransaction`).
 7. Determine signing requirements (`EnvelopeSigningRequirements`).
 8. Apply available envelope signers (`SignEnvelope`).
 9. Submit via RPC (`SendTransaction`).
 
-The post-auth steps infer their behavior from operation XDR. Ordinary
+The enforcement steps infer their behavior from operation XDR. Ordinary
 transactions pass through them without a second RPC simulation.
 
 Output includes the RPC submission response, transaction hash, and the Soroban
@@ -183,9 +183,9 @@ outside Colibri's built-in pipelines.
 - **SignAuthEntries** – Consumes simulated Soroban auth entries alongside a set
   of `Signer`s, narrowing them to the authorization-entry capability and
   returning signatures in the order Soroban expects.
-- **PostAuthAssembleTransaction** – Builds the intermediate transaction needed
+- **AssembleForEnforcement** – Builds the intermediate transaction needed
   to enforce completed delegated credentials.
-- **PostAuthEnforcedSimulation** – Runs the second simulation for delegated
+- **EnforceSimulation** – Runs the second simulation for delegated
   credentials and passes ordinary transactions through without an RPC call.
 - **AssembleTransaction** – Merges the base transaction, signed auth entries,
   Soroban data, and resource fee into a ready-to-sign transaction.

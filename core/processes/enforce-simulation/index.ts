@@ -1,8 +1,8 @@
 import type {
-  PostAuthEnforcedSimulationInput,
-  PostAuthEnforcedSimulationOutput,
-} from "@/processes/post-auth-enforced-simulation/types.ts";
-import * as E from "@/processes/post-auth-enforced-simulation/error.ts";
+  EnforceSimulationInput,
+  EnforceSimulationOutput,
+} from "@/processes/enforce-simulation/types.ts";
+import * as E from "@/processes/enforce-simulation/error.ts";
 import { SimulateTransactionError } from "@/processes/simulate-transaction/error.ts";
 import { simulateTransaction } from "@/processes/simulate-transaction/index.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
@@ -16,9 +16,9 @@ import { operationHasDelegatedAuthorization } from "@/common/helpers/xdr/operati
  * When the assembled operation contains no delegated credentials, the process
  * returns the original recording simulation and performs no RPC request.
  */
-export const postAuthEnforcedSimulation = async (
-  input: PostAuthEnforcedSimulationInput,
-): Promise<PostAuthEnforcedSimulationOutput> => {
+export const enforceSimulation = async (
+  input: EnforceSimulationInput,
+): Promise<EnforceSimulationOutput> => {
   try {
     const { transaction, recordingSimulation, rpc } = input;
 
@@ -44,7 +44,7 @@ export const postAuthEnforcedSimulation = async (
     return await simulateTransaction({ transaction, rpc });
   } catch (error) {
     if (
-      error instanceof E.PostAuthEnforcedSimulationError ||
+      error instanceof E.EnforceSimulationError ||
       error instanceof SimulateTransactionError
     ) {
       throw error;
@@ -53,5 +53,5 @@ export const postAuthEnforcedSimulation = async (
   }
 };
 
-/** Error constructors emitted by {@link postAuthEnforcedSimulation}. */
-export const PostAuthEnforcedSimulationErrors: typeof E = E;
+/** Error constructors emitted by {@link enforceSimulation}. */
+export const EnforceSimulationErrors: typeof E = E;

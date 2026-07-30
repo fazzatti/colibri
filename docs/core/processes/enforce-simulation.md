@@ -1,15 +1,15 @@
-# PostAuthEnforcedSimulation
+# EnforceSimulation
 
 Runs the second simulation required after CAP-71 delegated authorization
 entries are complete.
 
-## `postAuthEnforcedSimulation`
+## `enforceSimulation`
 
 ```ts
-import { postAuthEnforcedSimulation } from "@colibri/core";
+import { enforceSimulation } from "@colibri/core";
 
-const simulation = await postAuthEnforcedSimulation({
-  transaction: postAuthTransaction,
+const simulation = await enforceSimulation({
+  transaction: preparedTransaction,
   recordingSimulation,
   rpc: rpcServer,
 });
@@ -19,7 +19,7 @@ const simulation = await postAuthEnforcedSimulation({
 
 | Property              | Type                        | Required | Description |
 | --------------------- | --------------------------- | -------- | ----------- |
-| `transaction`         | `Transaction`               | Yes      | Post-auth transaction |
+| `transaction`         | `Transaction`               | Yes      | Transaction prepared for enforcement |
 | `recordingSimulation` | `SimulateTransactionOutput` | Yes      | Original recording response |
 | `rpc`                 | `Server`                    | Yes      | RPC server used for enforcing simulation |
 
@@ -36,7 +36,9 @@ const simulation = await postAuthEnforcedSimulation({
 
 | Code      | Description |
 | --------- | ----------- |
-| `PAE_000` | Unexpected post-auth enforcing-simulation failure |
-| `PAE_001` | Missing required argument |
+| `EFS_000` | Unexpected enforcing-simulation failure |
+| `EFS_001` | Missing transaction |
+| `EFS_002` | Missing recording simulation |
+| `EFS_003` | Missing RPC client |
 
 Typed `SimulateTransactionError` failures are preserved.

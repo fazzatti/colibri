@@ -1,9 +1,9 @@
 import type { xdr } from "stellar-sdk";
 import type {
-  PostAuthAssembleTransactionInput,
-  PostAuthAssembleTransactionOutput,
-} from "@/processes/post-auth-assemble-transaction/types.ts";
-import * as E from "@/processes/post-auth-assemble-transaction/error.ts";
+  AssembleForEnforcementInput,
+  AssembleForEnforcementOutput,
+} from "@/processes/assemble-for-enforcement/types.ts";
+import * as E from "@/processes/assemble-for-enforcement/error.ts";
 import { AssembleTransactionError } from "@/processes/assemble-transaction/error.ts";
 import { assembleTransaction } from "@/processes/assemble-transaction/index.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
@@ -16,9 +16,9 @@ import { operationHasDelegatedAuthorization } from "@/common/helpers/xdr/operati
  * operations are assembled with the recording simulation's resources so that
  * the resulting transaction can undergo the mandatory enforcing simulation.
  */
-export const postAuthAssembleTransaction = async (
-  input: PostAuthAssembleTransactionInput,
-): Promise<PostAuthAssembleTransactionOutput> => {
+export const assembleForEnforcement = async (
+  input: AssembleForEnforcementInput,
+): Promise<AssembleForEnforcementOutput> => {
   try {
     const { transaction, authorizedOperation, sorobanData, resourceFee } =
       input;
@@ -52,7 +52,7 @@ export const postAuthAssembleTransaction = async (
     });
   } catch (error) {
     if (
-      error instanceof E.PostAuthAssembleTransactionError ||
+      error instanceof E.AssembleForEnforcementError ||
       error instanceof AssembleTransactionError
     ) {
       throw error;
@@ -61,5 +61,5 @@ export const postAuthAssembleTransaction = async (
   }
 };
 
-/** Error constructors emitted by {@link postAuthAssembleTransaction}. */
-export const PostAuthAssembleTransactionErrors: typeof E = E;
+/** Error constructors emitted by {@link assembleForEnforcement}. */
+export const AssembleForEnforcementErrors: typeof E = E;

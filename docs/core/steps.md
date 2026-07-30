@@ -35,8 +35,8 @@ Factories return fresh step instances, which keeps pipelines and tests isolated 
 | `createBuildTransactionStep()` | `BUILD_TRANSACTION_STEP_ID` |
 | `createSimulateTransactionStep()` | `SIMULATE_TRANSACTION_STEP_ID` |
 | `createSignAuthEntriesStep()` | `SIGN_AUTH_ENTRIES_STEP_ID` |
-| `createPostAuthAssembleTransactionStep()` | `POST_AUTH_ASSEMBLE_TRANSACTION_STEP_ID` |
-| `createPostAuthEnforcedSimulationStep()` | `POST_AUTH_ENFORCED_SIMULATION_STEP_ID` |
+| `createAssembleForEnforcementStep()` | `ASSEMBLE_FOR_ENFORCEMENT_STEP_ID` |
+| `createEnforceSimulationStep()` | `ENFORCE_SIMULATION_STEP_ID` |
 | `createAssembleTransactionStep()` | `ASSEMBLE_TRANSACTION_STEP_ID` |
 | `createEnvelopeSigningRequirementsStep()` | `ENVELOPE_SIGNING_REQUIREMENTS_STEP_ID` |
 | `createSignEnvelopeStep()` | `SIGN_ENVELOPE_STEP_ID` |

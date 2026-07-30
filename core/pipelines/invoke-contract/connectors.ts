@@ -14,8 +14,8 @@ import type {
   SignAuthEntriesInput,
   SignAuthEntriesOutput,
 } from "@/processes/sign-auth-entries/types.ts";
-import type { PostAuthAssembleTransactionInput } from "@/processes/post-auth-assemble-transaction/types.ts";
-import type { PostAuthEnforcedSimulationInput } from "@/processes/post-auth-enforced-simulation/types.ts";
+import type { AssembleForEnforcementInput } from "@/processes/assemble-for-enforcement/types.ts";
+import type { EnforceSimulationInput } from "@/processes/enforce-simulation/types.ts";
 import {
   ASSEMBLE_TRANSACTION_STEP_ID,
   BUILD_TRANSACTION_STEP_ID,
@@ -89,11 +89,11 @@ export const signAuthEntriesToAssemble = () =>
     };
   }, { id: "invoke-contract-sign-auth-to-assemble" as const });
 
-export const signAuthEntriesToPostAuthAssemble = () =>
+export const signAuthEntriesToAssembleForEnforcement = () =>
   step(function (
     this: StepThis,
     ...signAuthEntriesOutput: SignAuthEntriesOutput
-  ): PostAuthAssembleTransactionInput {
+  ): AssembleForEnforcementInput {
     const transaction = getRequiredStepOutput<BuildTransactionOutput>(
       this,
       BUILD_TRANSACTION_STEP_ID,
@@ -114,13 +114,13 @@ export const signAuthEntriesToPostAuthAssemble = () =>
       sorobanData: simulateOutput.transactionData,
       resourceFee: parseInt(simulateOutput.minResourceFee),
     };
-  }, { id: "invoke-contract-sign-auth-to-post-auth-assemble" as const });
+  }, { id: "invoke-contract-sign-auth-to-assemble-for-enforcement" as const });
 
-export const postAuthAssembleToEnforcedSimulation = (rpc: Server) =>
+export const assembleForEnforcementToEnforceSimulation = (rpc: Server) =>
   step(function (
     this: StepThis,
-    transaction: PostAuthEnforcedSimulationInput["transaction"],
-  ): PostAuthEnforcedSimulationInput {
+    transaction: EnforceSimulationInput["transaction"],
+  ): EnforceSimulationInput {
     const recordingSimulation = getRequiredStepOutput<
       SimulateTransactionOutput
     >(
@@ -129,9 +129,9 @@ export const postAuthAssembleToEnforcedSimulation = (rpc: Server) =>
     );
 
     return { transaction, recordingSimulation, rpc };
-  }, { id: "invoke-contract-post-auth-assemble-to-simulate" as const });
+  }, { id: "invoke-contract-assemble-for-enforcement-to-simulate" as const });
 
-export const postAuthEnforcedSimulationToAssemble = () =>
+export const enforceSimulationToAssemble = () =>
   step(function (
     this: StepThis,
     simulationOutput: SimulateTransactionOutput,
@@ -151,7 +151,7 @@ export const postAuthEnforcedSimulationToAssemble = () =>
       sorobanData: simulationOutput.transactionData,
       resourceFee: parseInt(simulationOutput.minResourceFee),
     };
-  }, { id: "invoke-contract-post-auth-simulate-to-assemble" as const });
+  }, { id: "invoke-contract-enforce-simulation-to-assemble" as const });
 
 export const envSignReqToSignEnvelope = () =>
   createEnvSignReqToSignEnvelope<

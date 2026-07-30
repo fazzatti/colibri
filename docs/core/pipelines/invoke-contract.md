@@ -11,14 +11,14 @@ This pipeline uses step wrappers around:
 2. [SimulateTransaction](../processes/simulate-transaction.md) in recording
    mode
 3. [SignAuthEntries](../processes/sign-auth-entries.md)
-4. [PostAuthAssembleTransaction](../processes/post-auth-assemble-transaction.md)
-5. [PostAuthEnforcedSimulation](../processes/post-auth-enforced-simulation.md)
+4. [AssembleForEnforcement](../processes/assemble-for-enforcement.md)
+5. [EnforceSimulation](../processes/enforce-simulation.md)
 6. [AssembleTransaction](../processes/assemble-transaction.md)
 7. [EnvelopeSigningRequirements](../processes/envelope-signing-requirements.md)
 8. [SignEnvelope](../processes/sign-envelope.md)
 9. [SendTransaction](../processes/send-transaction.md)
 
-The two post-auth processes inspect operation XDR directly. For ordinary
+The two enforcement processes inspect operation XDR directly. For ordinary
 authorization entries they are pass-through steps and make no additional RPC
 request. When signed entries contain delegated credentials, they assemble an
 intermediate transaction and run the Protocol 27 enforcing simulation. Final

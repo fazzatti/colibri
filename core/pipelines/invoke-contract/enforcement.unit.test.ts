@@ -14,9 +14,9 @@ import {
 import type { Server } from "stellar-sdk/rpc";
 import { Buffer } from "buffer";
 import {
-  postAuthAssembleToEnforcedSimulation,
-  postAuthEnforcedSimulationToAssemble,
-  signAuthEntriesToPostAuthAssemble,
+  assembleForEnforcementToEnforceSimulation,
+  enforceSimulationToAssemble,
+  signAuthEntriesToAssembleForEnforcement,
 } from "@/pipelines/invoke-contract/connectors.ts";
 import type { SimulateTransactionOutput } from "@/processes/simulate-transaction/types.ts";
 import {
@@ -89,14 +89,14 @@ const seedStepOutput = async <Output>(
   await seedStep.runWith({ context: { parent: context } });
 };
 
-describe("invoke-contract post-auth connectors", () => {
-  it("builds the post-auth assembly input from signed entries", async () => {
+describe("invoke-contract enforcement connectors", () => {
+  it("builds enforcement assembly input from signed entries", async () => {
     const context = createRunContext();
     const recording = simulation("recording");
     await seedStepOutput(context, BUILD_TRANSACTION_STEP_ID, transaction);
     await seedStepOutput(context, SIMULATE_TRANSACTION_STEP_ID, recording);
 
-    const result = await signAuthEntriesToPostAuthAssemble().runWith(
+    const result = await signAuthEntriesToAssembleForEnforcement().runWith(
       { context: { parent: context } },
       entry,
     );
@@ -110,13 +110,13 @@ describe("invoke-contract post-auth connectors", () => {
     );
   });
 
-  it("connects the post-auth transaction to enforcing simulation", async () => {
+  it("connects the prepared transaction to enforcing simulation", async () => {
     const context = createRunContext();
     const recording = simulation("recording");
     const rpc = {} as Server;
     await seedStepOutput(context, SIMULATE_TRANSACTION_STEP_ID, recording);
 
-    const result = await postAuthAssembleToEnforcedSimulation(rpc).runWith(
+    const result = await assembleForEnforcementToEnforceSimulation(rpc).runWith(
       { context: { parent: context } },
       transaction,
     );
@@ -132,7 +132,7 @@ describe("invoke-contract post-auth connectors", () => {
     await seedStepOutput(context, BUILD_TRANSACTION_STEP_ID, transaction);
     await seedStepOutput(context, SIGN_AUTH_ENTRIES_STEP_ID, [entry]);
 
-    const result = await postAuthEnforcedSimulationToAssemble().runWith(
+    const result = await enforceSimulationToAssemble().runWith(
       { context: { parent: context } },
       enforcing,
     );
