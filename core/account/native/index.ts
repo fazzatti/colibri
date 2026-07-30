@@ -12,7 +12,7 @@ import type {
   AccountLedgerKey,
   TrustlineLedgerKey,
 } from "@/ledger-entries/types.ts";
-import type { Signer } from "@/signer/types.ts";
+import type { KeypairSigner } from "@/signer/types.ts";
 import * as E from "@/account/native/error.ts";
 import type { INativeAccount, MuxedId } from "@/account/native/types.ts";
 import type {
@@ -28,7 +28,7 @@ export class NativeAccount implements INativeAccount {
   /** Stored public key for the native account instance. */
   protected _publicKey: Ed25519PublicKey;
   /** Optional master signer used to authorize transactions for this account. */
-  protected _masterSigner?: Signer;
+  protected _masterSigner?: KeypairSigner;
 
   private constructor(publicKey: Ed25519PublicKey) {
     assert(
@@ -127,7 +127,7 @@ export class NativeAccount implements INativeAccount {
    * @param signer - Signer whose public key identifies the account.
    * @returns A signer-backed native account.
    */
-  static fromMasterSigner(signer: Signer): WithSigner<NativeAccount> {
+  static fromMasterSigner(signer: KeypairSigner): WithSigner<NativeAccount> {
     return NativeAccount.fromAddress(signer.publicKey()).withMasterSigner(
       signer,
     );
@@ -139,7 +139,7 @@ export class NativeAccount implements INativeAccount {
    * @param signer - Signer used to authorize account actions.
    * @returns The same account instance with signer capabilities.
    */
-  withMasterSigner(signer: Signer): WithSigner<this> {
+  withMasterSigner(signer: KeypairSigner): WithSigner<this> {
     this._masterSigner = signer;
     return this as WithSigner<this>;
   }
@@ -149,7 +149,7 @@ export class NativeAccount implements INativeAccount {
    *
    * @returns Bound signer for the account.
    */
-  signer(): Signer {
+  signer(): KeypairSigner {
     assert(this._masterSigner, new E.MISSING_MASTER_SIGNER(this._publicKey));
     return this._masterSigner;
   }

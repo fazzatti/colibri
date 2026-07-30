@@ -9,17 +9,21 @@ import { ColibriError } from "@/error/index.ts";
 import { buildToSimulate } from "@/pipelines/shared/connectors/build-to-simulate.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 import {
+  assembleForEnforcementToEnforceSimulation,
+  enforceSimulationToAssemble,
   envSignReqToSignEnvelope,
   inputToBuild,
-  signAuthEntriesToAssemble,
+  signAuthEntriesToAssembleForEnforcement,
   signEnvelopeToSendTransaction,
   simulateToSignAuthEntries,
 } from "@/pipelines/invoke-contract/connectors.ts";
 import { assembleToEnvelopeSigningRequirements } from "@/pipelines/shared/connectors/assemble-to-envelope-signing-req.ts";
 import { assert } from "@/common/assert/assert.ts";
 import {
+  createAssembleForEnforcementStep,
   createAssembleTransactionStep,
   createBuildTransactionStep,
+  createEnforceSimulationStep,
   createEnvelopeSigningRequirementsStep,
   createSendTransactionStep,
   createSignAuthEntriesStep,
@@ -56,6 +60,8 @@ const buildInvokeContractPipeline = ({
   const BuildTransaction = createBuildTransactionStep();
   const SimulateTransaction = createSimulateTransactionStep();
   const SignAuthEntries = createSignAuthEntriesStep();
+  const AssembleForEnforcement = createAssembleForEnforcementStep();
+  const EnforceSimulation = createEnforceSimulationStep();
   const AssembleTransaction = createAssembleTransactionStep();
   const EnvelopeSigningRequirements = createEnvelopeSigningRequirementsStep();
   const SignEnvelope = createSignEnvelopeStep();
@@ -69,7 +75,11 @@ const buildInvokeContractPipeline = ({
     SimulateTransaction,
     connectSimulateToSignAuthEntries,
     SignAuthEntries,
-    signAuthEntriesToAssemble(),
+    signAuthEntriesToAssembleForEnforcement(),
+    AssembleForEnforcement,
+    assembleForEnforcementToEnforceSimulation(rpc),
+    EnforceSimulation,
+    enforceSimulationToAssemble(),
     AssembleTransaction,
     assembleToEnvelopeSigningRequirements,
     EnvelopeSigningRequirements,

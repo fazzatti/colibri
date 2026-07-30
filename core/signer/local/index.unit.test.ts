@@ -139,6 +139,14 @@ describe("LocalSigner", () => {
     });
   });
 
+  describe("signerKey", () => {
+    it("returns the same G key used for Ed25519 envelope signatures", () => {
+      const signer = LocalSigner.fromSecret(TEST_SECRET);
+
+      assertEquals(signer.signerKey(), signer.publicKey());
+    });
+  });
+
   describe("signsFor", () => {
     it("returns true for signer's own public key by default", () => {
       const signer = LocalSigner.fromSecret(TEST_SECRET);

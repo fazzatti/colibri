@@ -13,7 +13,7 @@ import {
 import { signEnvelope } from "@/processes/sign-envelope/index.ts";
 import * as E from "@/processes/sign-envelope/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
-import { OperationThreshold, type Signer } from "@/signer/types.ts";
+import { OperationThreshold, type KeypairSigner } from "@/signer/types.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 
 describe("SignEnvelope", () => {
@@ -55,7 +55,7 @@ describe("SignEnvelope", () => {
     );
   };
 
-  type MockSigner = Signer & {
+  type MockSigner = KeypairSigner & {
     calls: number;
     lastType?: "tx" | "feeBump";
   };
@@ -64,6 +64,7 @@ describe("SignEnvelope", () => {
     const pub = kp.publicKey() as Ed25519PublicKey;
     return {
       publicKey: () => pub,
+      signerKey: () => pub,
       signsFor: (target: Ed25519PublicKey | ContractId) => target === pub,
       calls: 0,
       async signSorobanAuthEntry(e, _vu, _np) {
@@ -97,6 +98,7 @@ describe("SignEnvelope", () => {
     const pub = publicKey as Ed25519PublicKey;
     return {
       publicKey: () => pub,
+      signerKey: () => pub,
       signsFor: (target: Ed25519PublicKey | ContractId) => target === pub,
       calls: 0,
       async signSorobanAuthEntry(e, _vu: unknown, _np: unknown) {
@@ -196,7 +198,7 @@ describe("SignEnvelope", () => {
       assertEquals(signer2.calls, 1);
     });
 
-    it("signs a Transaction multiple times with the same signer", async () => {
+    it("deduplicates the same signer across repeated requirements", async () => {
       const tx = buildTx(KPS[0].publicKey());
       const signer = createSigner(KPS[0]);
 
@@ -220,8 +222,8 @@ describe("SignEnvelope", () => {
       });
 
       assert(out instanceof Transaction);
-      assertEquals(out.signatures.length, 3);
-      assertEquals(signer.calls, 3);
+      assertEquals(out.signatures.length, 1);
+      assertEquals(signer.calls, 1);
     });
 
     it("signs a FeeBumpTransaction", async () => {
@@ -302,7 +304,7 @@ describe("SignEnvelope", () => {
       );
     });
 
-    it("throws FAILED_TO_SIGN_TRANSACTION when signer returns invalid XDR", async () => {
+    it("throws FAILED_TO_PARSE_SIGNED_TRANSACTION when signer returns invalid XDR", async () => {
       const tx = buildTx(KPS[0].publicKey());
       const badSigner = createFailingSigner(KPS[0].publicKey(), "invalidXDR");
 
@@ -318,7 +320,7 @@ describe("SignEnvelope", () => {
             ],
             signers: [badSigner],
           }),
-        E.FAILED_TO_SIGN_TRANSACTION
+        E.FAILED_TO_PARSE_SIGNED_TRANSACTION
       );
     });
 

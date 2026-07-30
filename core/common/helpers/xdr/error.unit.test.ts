@@ -10,6 +10,11 @@ import { Code, ERROR_XDR } from "@/common/helpers/xdr/error.ts";
 import { ColibriError } from "@/error/index.ts";
 
 describe("XDR Helper Errors", () => {
+  it("uses a unique value for every error code", () => {
+    const codes = Object.values(Code);
+    assertEquals(new Set(codes).size, codes.length);
+  });
+
   describe("UNKNOWN_ASSET_TYPE", () => {
     it("should create error with correct properties", () => {
       const error = new E.UNKNOWN_ASSET_TYPE("invalidType");
@@ -107,6 +112,55 @@ describe("XDR Helper Errors", () => {
       const error = new E.FAILED_TO_GET_AUTH_ENTRY_SIGNER("AAAA", cause);
 
       assertEquals(error.meta.cause, cause);
+    });
+  });
+
+  describe("signer credential errors", () => {
+    it("should distinguish credential reads from missing credentials", () => {
+      const cause = new Error("credentials failed");
+      const failed = new E
+        .FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER(
+        "AAAA",
+        cause,
+      );
+      const missing = new E.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER(
+        "BBBB",
+      );
+
+      assertEquals(
+        failed.code,
+        Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
+      );
+      assertEquals(failed.meta.cause, cause);
+      assertEquals(
+        missing.code,
+        Code.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
+      );
+      assertEquals(missing.meta.cause, null);
+    });
+  });
+
+  describe("address-type credential errors", () => {
+    it("should distinguish credential reads from missing credentials", () => {
+      const cause = new Error("credentials failed");
+      const failed = new E
+        .FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE(
+        "AAAA",
+        cause,
+      );
+      const missing = new E
+        .MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE("BBBB");
+
+      assertEquals(
+        failed.code,
+        Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
+      );
+      assertEquals(failed.meta.cause, cause);
+      assertEquals(
+        missing.code,
+        Code.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
+      );
+      assertEquals(missing.meta.cause, null);
     });
   });
 
@@ -209,6 +263,28 @@ describe("XDR Helper Errors", () => {
         E.UNSUPPORTED_SCVAL_TYPE,
       );
       assertEquals(ERROR_XDR[Code.UNKNOWN_SCVAL_TYPE], E.UNKNOWN_SCVAL_TYPE);
+      assertEquals(
+        ERROR_XDR[
+          Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER
+        ],
+        E.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
+      );
+      assertEquals(
+        ERROR_XDR[Code.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER],
+        E.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
+      );
+      assertEquals(
+        ERROR_XDR[
+          Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE
+        ],
+        E.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
+      );
+      assertEquals(
+        ERROR_XDR[
+          Code.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE
+        ],
+        E.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
+      );
     });
   });
 

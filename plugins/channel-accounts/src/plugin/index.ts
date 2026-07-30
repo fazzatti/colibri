@@ -1,15 +1,4 @@
-import type {
-  ClassicTransactionInput,
-  createClassicTransactionPipeline,
-  createInvokeContractPipeline,
-  InvokeContractInput,
-} from "@colibri/core";
-import {
-  type PipeContext,
-  type PipeLevelPlugin,
-  plugin,
-  type PluginThis,
-} from "convee";
+import { plugin, type PluginThis } from "convee";
 import {
   CHANNEL_ACCOUNTS_PLUGIN_ID,
   CHANNEL_ACCOUNTS_PLUGIN_TARGETS,
@@ -22,26 +11,16 @@ import {
 import { injectChannelAccount } from "@/plugin/helpers.ts";
 import { ChannelAccountsPool } from "@/plugin/pool.ts";
 
-type ClassicTransactionPipeline = ReturnType<
-  typeof createClassicTransactionPipeline
->;
-type InvokeContractPipeline = ReturnType<typeof createInvokeContractPipeline>;
-
-type ChannelAccountsRuntimePlugin =
-  & ChannelAccountsPluginControls
-  & PipeLevelPlugin<
-    ClassicTransactionPipeline["steps"],
-    Error,
-    PipeContext<ClassicTransactionPipeline["steps"]>
-  >
-  & PipeLevelPlugin<
-    InvokeContractPipeline["steps"],
-    Error,
-    PipeContext<InvokeContractPipeline["steps"]>
-  >;
-
-type ChannelAccountsPublicPlugin = ChannelAccountsRuntimePlugin & {
+type ChannelAccountsPublicPlugin = ChannelAccountsPluginControls & {
+  readonly id: string;
+  readonly target: undefined;
+  supports(capability: string): boolean;
   targets(stepId: string): boolean;
+  input<TInput extends ChannelAccountsPipelineInput>(
+    input: TInput,
+  ): Promise<TInput>;
+  output<TOutput>(output: TOutput): TOutput;
+  error<TError extends Error>(error: TError): TError;
 };
 
 const targetsPipeline = (
@@ -97,7 +76,7 @@ export const createChannelAccountsPlugin = (
     .onInput(async function (
       this: PluginThis,
       input: ChannelAccountsPipelineInput,
-    ): Promise<ClassicTransactionInput | InvokeContractInput> {
+    ): Promise<ChannelAccountsPipelineInput> {
       const channel = await pool.allocate(this.context().runId);
       return injectChannelAccount(input, channel);
     })

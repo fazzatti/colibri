@@ -7,14 +7,14 @@ import { signAuthEntries } from "@/processes/sign-auth-entries/index.ts";
 import * as E from "@/processes/sign-auth-entries/error.ts";
 import type { SignAuthEntriesInput } from "@/processes/sign-auth-entries/types.ts";
 import { NetworkConfig } from "@/network/index.ts";
-import type { Signer } from "@/signer/types.ts";
+import type { KeypairSigner, Signer } from "@/signer/types.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 import type { SorobanAuthorizationEntryLike } from "@/common/types/index.ts";
 
 describe("SignAuthEntries", () => {
   const { networkPassphrase } = NetworkConfig.TestNet();
 
-  type MockSigner = Signer & {
+  type MockSigner = KeypairSigner & {
     calls: number;
     lastEntry?: SorobanAuthorizationEntryLike;
     lastValidUntil?: number;
@@ -54,20 +54,23 @@ describe("SignAuthEntries", () => {
       passphrase: string
     ) => Promise<SorobanAuthorizationEntryLike>
   ): MockSigner => {
-    const signTransaction: Signer["signTransaction"] = async (
-      ..._args: Parameters<Signer["signTransaction"]>
+    const signTransaction: KeypairSigner["signTransaction"] = async (
+      ..._args: Parameters<KeypairSigner["signTransaction"]>
     ) => {
       return await Promise.resolve(
-        undefined as unknown as Awaited<ReturnType<Signer["signTransaction"]>>
+        undefined as unknown as Awaited<
+          ReturnType<KeypairSigner["signTransaction"]>
+        >
       );
     };
-    const sign: Signer["sign"] = (b: Buffer): Buffer => {
+    const sign: KeypairSigner["sign"] = (b: Buffer): Buffer => {
       return b;
     };
 
     const signer: MockSigner = {
       calls: 0,
       publicKey: () => publicKey as Ed25519PublicKey,
+      signerKey: () => publicKey as Ed25519PublicKey,
       sign,
       signTransaction,
       signsFor: (target: Ed25519PublicKey | string) => target === publicKey,

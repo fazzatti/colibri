@@ -1,0 +1,8 @@
+{
+  "stellarCli": "26.1.0",
+  "sorobanSdk": "27.0.3",
+  "artifacts": {
+    "recursive_delegate_account_contract.wasm": "576ab95c6dfcb81ca7823874273c936a150966c542aae3b991e064da94a70ebc",
+    "delegated_asset_account_contract.wasm": "0a3ba1e77f9e496f672ffeca76922657ce04072e03bbdbed6d5941a2d1f88d03"
+  }
+}

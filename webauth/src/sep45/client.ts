@@ -1,4 +1,4 @@
-import { isSigner, StellarToml } from "@colibri/core";
+import { isKeypairSigner, StellarToml } from "@colibri/core";
 import { authorizeEntry, type Keypair, xdr } from "stellar-sdk";
 import {
   Sep45AuthorizedChallenge,
@@ -49,7 +49,7 @@ async function signClientDomainEntry(
   networkPassphrase: string,
 ): Promise<xdr.SorobanAuthorizationEntry> {
   const publicKey = signer.publicKey();
-  const matches = isSigner(signer)
+  const matches = isKeypairSigner(signer)
     ? signer.signsFor(
       expectedAccount as Parameters<WebAuthCoreSigner["signsFor"]>[0],
     )
@@ -62,7 +62,7 @@ async function signClientDomainEntry(
     });
   }
   const expiringEntry = setExpiration(entry, expiration);
-  if (isSigner(signer)) {
+  if (isKeypairSigner(signer)) {
     const result = await signer.signSorobanAuthEntry(
       expiringEntry,
       expiration,

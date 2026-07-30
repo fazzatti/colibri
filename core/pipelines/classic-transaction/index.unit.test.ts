@@ -20,6 +20,7 @@ import type { SignEnvelopeOutput } from "@/processes/sign-envelope/types.ts";
 import type { SendTransactionOutput } from "@/processes/send-transaction/types.ts";
 import { NetworkType } from "@/network/types.ts";
 import { BUILD_TRANSACTION_STEP_ID } from "@/steps/index.ts";
+import { HashXSigner } from "@/signer/hash-x/index.ts";
 
 const seedStepOutput = async <Output>(
   context: ReturnType<typeof createRunContext>,
@@ -89,6 +90,31 @@ describe("createClassicTransactionPipeline", () => {
         assertEquals(result.operations, input.operations);
         assertExists(result.source);
         assertEquals(result.rpc, mockRpc);
+      });
+
+      it("forwards configured extra signer keys as transaction preconditions", () => {
+        const networkConfig = NetworkConfig.TestNet();
+        const mockRpc = {} as unknown as Server;
+        const extraSigner = HashXSigner.fromPreimage(new Uint8Array([1]));
+        const input: ClassicTransactionInput = {
+          operations: [Operation.setOptions({})],
+          config: {
+            fee: "100",
+            source: "GMOCKEDSOURCE",
+            timeout: 30,
+            signers: [],
+            extraSigners: [extraSigner.signerKey()],
+          },
+        };
+
+        const result = inputToBuild(
+          mockRpc,
+          networkConfig.networkPassphrase,
+        )(input);
+
+        assertEquals(result.preconditions, {
+          extraSigners: [extraSigner.signerKey()],
+        });
       });
     });
 

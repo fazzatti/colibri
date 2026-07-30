@@ -1,5 +1,9 @@
 import { Buffer } from "buffer";
-import { isSigner, normalizeBinaryData, StellarToml } from "@colibri/core";
+import {
+  isKeypairSigner,
+  normalizeBinaryData,
+  StellarToml,
+} from "@colibri/core";
 import { Keypair as StellarKeypair, xdr } from "stellar-sdk";
 import { Sep10Challenge, Sep10SignedChallenge } from "@/sep10/challenge.ts";
 import {
@@ -32,7 +36,7 @@ function signTransaction(
   transaction: Transaction,
   signer: Keypair | WebAuthCoreSigner,
 ): void {
-  if (!isSigner(signer)) {
+  if (!isKeypairSigner(signer)) {
     transaction.sign(signer);
     return;
   }
@@ -211,7 +215,7 @@ export class Sep10Client {
           });
         }
         const publicKey = signerPublicKey(clientDomainSigner);
-        const signsForDomain = isSigner(clientDomainSigner)
+        const signsForDomain = isKeypairSigner(clientDomainSigner)
           ? clientDomainSigner.signsFor(
             challenge.clientDomainAccount as ReturnType<
               WebAuthCoreSigner["publicKey"]

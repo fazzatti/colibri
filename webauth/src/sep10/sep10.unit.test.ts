@@ -14,7 +14,7 @@ import {
   TransactionBuilder,
   xdr,
 } from "stellar-sdk";
-import { LocalSigner, type Signer } from "@colibri/core";
+import { type KeypairSigner, LocalSigner } from "@colibri/core";
 import {
   buildSep10Challenge,
   createWebAuthFixture,
@@ -886,13 +886,14 @@ describe("SEP-10 WebAuth", () => {
 
     const failingSigner = {
       publicKey: () => fixture.client.publicKey(),
+      signerKey: () => fixture.client.publicKey(),
       sign: () => {
         throw new Error("signing failed");
       },
       signTransaction: () => "",
       signSorobanAuthEntry: () => Promise.reject(new Error("unused")),
       signsFor: () => true,
-    } as unknown as Signer;
+    } as unknown as KeypairSigner;
     assertEquals(
       (
         await assertRejects(

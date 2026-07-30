@@ -44,7 +44,7 @@ The `preconditions` object supports:
 | `minAccountSequence`          | `string`       | Minimum account sequence                      |
 | `minAccountSequenceAge`       | `bigint`       | Minimum sequence age in seconds               |
 | `minAccountSequenceLedgerGap` | `number`       | Minimum gap from last sequence change         |
-| `extraSigners`                | `string[]`     | Additional required signer StrKeys            |
+| `extraSigners`                | `ExtraSignerKey[]` | Additional required `G...`, `X...`, or `P...` signer keys |
 
 ## Output
 

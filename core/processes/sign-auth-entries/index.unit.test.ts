@@ -5,11 +5,11 @@ import { xdr, Address } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
 import { signAuthEntries } from "@/processes/sign-auth-entries/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
-import type { Signer } from "@/signer/types.ts";
+import type { KeypairSigner } from "@/signer/types.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 import type { SorobanAuthorizationEntryLike } from "@/common/types/index.ts";
 
-type MockSigner = Signer & {
+type MockSigner = KeypairSigner & {
   calls: number;
   lastEntry?: SorobanAuthorizationEntryLike;
   lastValidUntil?: number;
@@ -82,20 +82,23 @@ const makeSigner = (
   ) => Promise<SorobanAuthorizationEntryLike>
 ): MockSigner => {
   const pub = publicKey as Ed25519PublicKey;
-  const sign: Signer["sign"] = (b: Buffer): Buffer => {
+  const sign: KeypairSigner["sign"] = (b: Buffer): Buffer => {
     return b;
   };
-  const signTransaction: Signer["signTransaction"] = async (
-    ..._args: Parameters<Signer["signTransaction"]>
+  const signTransaction: KeypairSigner["signTransaction"] = async (
+    ..._args: Parameters<KeypairSigner["signTransaction"]>
   ) => {
     return await Promise.resolve(
-      undefined as unknown as Awaited<ReturnType<Signer["signTransaction"]>>
+      undefined as unknown as Awaited<
+        ReturnType<KeypairSigner["signTransaction"]>
+      >
     );
   };
 
   const signer: MockSigner = {
     calls: 0,
     publicKey: () => pub,
+    signerKey: () => pub,
     signsFor: (target: Ed25519PublicKey | ContractId) => target === pub,
     signTransaction,
     sign,

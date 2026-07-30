@@ -31,10 +31,17 @@ function decodeClaims(token: string): Readonly<Record<string, unknown>> {
   try {
     const claims = JSON.parse(decodeBase64Url(parts[1]));
     if (!claims || typeof claims !== "object" || Array.isArray(claims)) {
-      throw new TypeError("JWT payload is not an object");
+      throw new WebAuthError({
+        code: WebAuthCode.INVALID_TOKEN_PAYLOAD_TYPE,
+        message: "Invalid JWT payload",
+        details: "The token payload must be a JSON object.",
+      });
     }
     return Object.freeze({ ...claims });
   } catch (cause) {
+    if (cause instanceof WebAuthError) {
+      throw cause;
+    }
     throw new WebAuthError({
       code: WebAuthCode.INVALID_TOKEN,
       message: "Invalid JWT payload",

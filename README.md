@@ -162,9 +162,11 @@ and testability.
 
 - **Pipelines (The "What")**: Orchestrators that chain processes together to
   achieve a high-level business goal.
-  - _Example:_ `createInvokeContractPipeline(...)` composes build, simulate,
-    sign-auth, assemble, envelope-signing-requirements, sign-envelope, and send
-    steps into one write flow.
+  - _Example:_ `createInvokeContractPipeline(...)` composes build, recording
+    simulation, authorization-entry signing, conditional delegated-credential
+    assembly and enforcing simulation, final assembly,
+    envelope-signing-requirements, envelope signing, and submission into one
+    write flow.
 
 This composition allows us to swap parts easily. For instance, the `FeeBump`
 plugin targets the `SendTransaction` step and wraps the outgoing transaction

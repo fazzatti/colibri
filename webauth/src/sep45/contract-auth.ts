@@ -1,10 +1,26 @@
 import { authorizeEntry, xdr } from "stellar-sdk";
-import type { ContractAuthContext, WebAuthCoreSigner } from "@/types.ts";
+import type {
+  AuthEntrySigner,
+  ContractId,
+  Ed25519PublicKey,
+  SorobanAuthorizationEntryLike,
+  XdrSerializable,
+} from "@colibri/core";
+import type { ContractAuthContext } from "@/types.ts";
 import { cloneSep45AuthorizationEntry } from "@/sep45/codec.ts";
 import type {
   Keypair,
   SorobanAuthorizationEntry,
 } from "@/stellar-sdk-types.ts";
+
+/** Colibri signer capability accepted by {@link ContractAuth.fromSigner}. */
+export type {
+  AuthEntrySigner,
+  ContractId,
+  Ed25519PublicKey,
+  SorobanAuthorizationEntryLike,
+  XdrSerializable,
+};
 
 /** Application-defined full-entry contract authorization hook. */
 export type ContractAuthHandler = (
@@ -16,12 +32,12 @@ export type ContractAuthHandler = (
 
 /** Small conventional adapters that preserve the raw full-entry boundary. */
 export const ContractAuth: {
-  fromSigner(signer: WebAuthCoreSigner): ContractAuthHandler;
+  fromSigner(signer: AuthEntrySigner): ContractAuthHandler;
   ed25519(keypair: Keypair): ContractAuthHandler;
   none(): ContractAuthHandler;
 } = {
   /** Adapts a Colibri signer to the contract authorization hook. */
-  fromSigner(signer: WebAuthCoreSigner): ContractAuthHandler {
+  fromSigner(signer: AuthEntrySigner): ContractAuthHandler {
     return async (entry, context) => {
       const signed = await signer.signSorobanAuthEntry(
         entry,

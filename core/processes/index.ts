@@ -1,3 +1,6 @@
+import * as AssembleForEnforcementErrors from "@/processes/assemble-for-enforcement/error.ts";
+import * as EnforceSimulationErrors from "@/processes/enforce-simulation/error.ts";
+
 export * from "@/processes/assemble-transaction/index.ts";
 /** Error constructors for assemble-transaction process failures. */
 export * as ASM_ERRORS from "@/processes/assemble-transaction/error.ts";
@@ -22,6 +25,18 @@ export * from "@/processes/sign-auth-entries/index.ts";
 /** Error constructors for sign-auth-entries process failures. */
 export * as SAE_ERRORS from "@/processes/sign-auth-entries/error.ts";
 export type * from "@/processes/sign-auth-entries/types.ts";
+
+export * from "@/processes/assemble-for-enforcement/index.ts";
+/** Error constructors for assembly-for-enforcement process failures. */
+export const AFE_ERRORS: typeof AssembleForEnforcementErrors =
+  AssembleForEnforcementErrors;
+export type * from "@/processes/assemble-for-enforcement/types.ts";
+
+export * from "@/processes/enforce-simulation/index.ts";
+/** Error constructors for enforcing-simulation process failures. */
+export const EFS_ERRORS: typeof EnforceSimulationErrors =
+  EnforceSimulationErrors;
+export type * from "@/processes/enforce-simulation/types.ts";
 
 export * from "@/processes/sign-envelope/index.ts";
 /** Error constructors for sign-envelope process failures. */

@@ -15,11 +15,11 @@ export type SignAuthEntriesInput = {
 /** @internal */
 export type LedgerValidity =
   | {
-      validForLedgers: number;
-    }
+    validForLedgers: number;
+  }
   | {
-      validForSeconds: number;
-    }
+    validForSeconds: number;
+  }
   | { validUntilLedgerSeq: number };
 
 /** @internal */

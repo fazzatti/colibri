@@ -1,16 +1,27 @@
-import type { Signer } from "@colibri/core";
+import type { KeypairSigner, Signer } from "@colibri/core";
+
+type SignerWithPublicKey = Signer & Pick<KeypairSigner, "publicKey">;
 
 export const appendUniqueSigners = (
   signers: readonly Signer[],
-  ...extraSigners: readonly Signer[]
+  ...extraSigners: readonly KeypairSigner[]
 ): Signer[] => {
-  const signerMap = new Map(
-    signers.map((signer) => [signer.publicKey(), signer]),
+  const signersWithoutPublicKey = signers.filter(
+    (signer) =>
+      !("publicKey" in signer) || typeof signer.publicKey !== "function",
+  );
+  const signerMap = new Map<string, Signer>(
+    signers
+      .filter(
+        (signer): signer is SignerWithPublicKey =>
+          "publicKey" in signer && typeof signer.publicKey === "function",
+      )
+      .map((signer) => [signer.publicKey(), signer]),
   );
 
   for (const signer of extraSigners) {
     signerMap.set(signer.publicKey(), signer);
   }
 
-  return Array.from(signerMap.values());
+  return [...signersWithoutPublicKey, ...signerMap.values()];
 };
