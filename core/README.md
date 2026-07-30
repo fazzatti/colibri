@@ -603,9 +603,10 @@ Colibri Core ships shared utilities so every layer speaks the same language:
   and returns a defensive `Uint8Array` copy for stable downstream use.
 - **XDR helpers (`common/helpers/xdr`)** –
   `getAddressCredentialsFromAuthEntry(...)`,
-  `getAddressSignerFromAuthEntry(...)`, `getAuthEntrySignatures(...)`, and
-  `operationHasDelegatedAuthorization(...)` inspect legacy, address-v2, and
-  delegated authorization entries without duplicating XDR-union traversal.
+  `getAddressSignerFromAuthEntry(...)`, `getAddressTypeFromAuthEntry(...)`,
+  `getAuthEntrySignatures(...)`, and `operationHasDelegatedAuthorization(...)`
+  inspect legacy, address-v2, and delegated authorization entries without
+  duplicating XDR-union traversal.
 - **Address (`core/address`)** – Address-specific utilities such as
   muxed-account normalization.
 - **Auth (`core/auth`)** – Authorization and requirement derivation helpers,

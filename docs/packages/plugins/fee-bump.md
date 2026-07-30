@@ -62,6 +62,7 @@ const result = await pipeline.run({
 - `createFeeBumpPlugin(...)`
 - `FEE_BUMP_PLUGIN_ID`
 - `FEE_BUMP_PLUGIN_TARGET`
+- `Code` and `ERROR_PLG_FBP`
 - `FeeBumpPluginConfig`, `FeeBumpPluginNetworkConfig`, and `FeeBumpPluginArgs`
 - `FeeBumpPluginSigner`
 - `FeeBumpEnvelopeSigner`

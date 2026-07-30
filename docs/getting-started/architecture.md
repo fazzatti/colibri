@@ -41,7 +41,7 @@ Pipelines are ready-to-use `convee` pipes built from steps and connectors.
 ```text
 Build → Recording Simulation → Sign Auth Entries
   → Assemble For Enforcement → Enforce Simulation
-  → Final Assembly → Sign Envelope → Submit
+  → Final Assembly → Resolve Envelope Requirements → Sign Envelope → Submit
 ```
 
 The enforcement assembly and simulation stages inspect the authorization entry

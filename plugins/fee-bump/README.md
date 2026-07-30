@@ -62,6 +62,7 @@ input for the rest of the pipeline.
 - `FEE_BUMP_PLUGIN_ID` — plugin id
 - `FEE_BUMP_PLUGIN_TARGET` — pipeline step where it should be added
   (`SendTransaction`)
+- `Code` and `ERROR_PLG_FBP` — stable error codes and constructors
 - `FeeBumpPluginConfig`, `FeeBumpPluginNetworkConfig`, and `FeeBumpPluginArgs` —
   plugin configuration types
 - `FeeBumpPluginSigner` — union of the supported outer-envelope signer
