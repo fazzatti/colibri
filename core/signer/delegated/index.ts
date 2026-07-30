@@ -7,11 +7,27 @@ import {
 import { Buffer } from "buffer";
 import type { SorobanAuthorizationEntryLike } from "@/common/types/index.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
-import type {
-  DelegatedSignerConfig,
-  DelegatedSignerNode,
-} from "@/signer/delegated/types.ts";
+import type { AuthEntrySigner } from "@/signer/types.ts";
 import * as E from "@/signer/delegated/error.ts";
+
+/**
+ * Configuration used to create a recursive delegated authorization signer.
+ */
+export type DelegatedSignerConfig = {
+  /**
+   * Top-level or nested credential address represented by this signer.
+   */
+  address: Ed25519PublicKey | ContractId;
+  /**
+   * Optional signer for this node's own signature value. Omit it when the
+   * account authorizes entirely through its nested delegates.
+   */
+  signer?: AuthEntrySigner;
+  /**
+   * Recursive delegated signers configured below this address.
+   */
+  nestedDelegates?: DelegatedSigner[];
+};
 
 /**
  * Recursively materializes and authorizes a CAP-71 delegated credential tree.
@@ -22,10 +38,10 @@ import * as E from "@/signer/delegated/error.ts";
  * entry, the root wraps that entry with delegated credentials and recursively
  * asks every configured node to authorize the same top-level payload.
  */
-export class DelegatedSigner implements DelegatedSignerNode {
+export class DelegatedSigner implements AuthEntrySigner {
   private readonly address: Ed25519PublicKey | ContractId;
   private readonly signer?: DelegatedSignerConfig["signer"];
-  private readonly nestedDelegates: DelegatedSignerNode[];
+  private readonly nestedDelegates: DelegatedSigner[];
 
   /**
    * Creates a delegated signer node and canonicalizes its immediate children.
@@ -54,7 +70,7 @@ export class DelegatedSigner implements DelegatedSignerNode {
   }
 
   /** Returns a defensive copy of the node's canonical nested delegates. */
-  getNestedDelegates(): DelegatedSignerNode[] {
+  getNestedDelegates(): DelegatedSigner[] {
     return [...this.nestedDelegates];
   }
 
@@ -132,8 +148,8 @@ export class DelegatedSigner implements DelegatedSignerNode {
 }
 
 const compareDelegateAddresses = (
-  left: DelegatedSignerNode,
-  right: DelegatedSignerNode,
+  left: DelegatedSigner,
+  right: DelegatedSigner,
 ): number =>
   Buffer.compare(
     new Address(left.getAddress()).toScAddress().toXDR(),
@@ -141,7 +157,7 @@ const compareDelegateAddresses = (
   );
 
 const toDelegateSignature = (
-  delegate: DelegatedSignerNode,
+  delegate: DelegatedSigner,
 ): DelegateSignature => ({
   address: delegate.getAddress(),
   nestedDelegates: delegate.getNestedDelegates().map(toDelegateSignature),
@@ -155,4 +171,3 @@ const isDelegatedEntry = (
 
 /** Error constructors emitted by {@link DelegatedSigner}. */
 export const DelegatedSignerErrors: typeof E = E;
-export type * from "@/signer/delegated/types.ts";

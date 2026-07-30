@@ -47,7 +47,7 @@ Each node accepts:
 | ----------------- | -------------------------------- | -------- | ------------------------------------------- |
 | `address`         | `Ed25519PublicKey \| ContractId` | Yes      | Credential address represented by the node  |
 | `signer`          | `AuthEntrySigner`                | No       | Produces this node's own signature value    |
-| `nestedDelegates` | `DelegatedSignerNode[]`          | No       | Recursive delegates authorized by this node |
+| `nestedDelegates` | `DelegatedSigner[]`              | No       | Recursive delegates authorized by this node |
 
 Omit `signer` when a custom account authorizes entirely through its delegates
 and uses a void signature at that node.
@@ -77,10 +77,9 @@ contract authorization entry and produces the delegated credential tree.
 ## Structural Guarantees
 
 The constructor canonicalizes each immediate `nestedDelegates` array by the raw
-Stellar address XDR order and rejects duplicate sibling addresses. Each
-`DelegatedSigner` node applies the same rule to its own children, so a topology
-composed from these nodes satisfies CAP-71's ordering and uniqueness rules
-before signing begins.
+Stellar address XDR order and rejects duplicate sibling addresses. Because every
+nested node is also a `DelegatedSigner`, the same constructor invariants apply
+recursively throughout the topology before signing begins.
 
 Colibri does not interpret the account contract's delegation policy. During
 `enforceSimulation`, the Stellar host enforces delegated-credential structure
