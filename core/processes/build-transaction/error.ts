@@ -401,7 +401,7 @@ export class INCLUSION_FEE_TOO_LOW_ERROR extends BuildTransactionError {
   }
 }
 
-/** Raised when a maximum fee cannot cover minimum transaction inclusion. */
+/** Raised when a maximum fee cannot cover resources and minimum inclusion. */
 export class MAX_FEE_TOO_LOW_ERROR extends BuildTransactionError {
   /** Creates an insufficient maximum-fee error. */
   constructor(input: BuildTransactionInput, value: bigint, minimum: bigint) {
@@ -410,7 +410,7 @@ export class MAX_FEE_TOO_LOW_ERROR extends BuildTransactionError {
       message: "Maximum transaction fee is too low!",
       input,
       details:
-        `The provided maximum fee '${value}' must be at least '${minimum}' stroops for this transaction's operations.`,
+        `The provided maximum fee '${value}' must be at least '${minimum}' stroops to cover this transaction's resources and minimum inclusion.`,
     });
   }
 }

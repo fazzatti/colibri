@@ -1,6 +1,10 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Operation } from "stellar-sdk";
+import { Operation, SorobanDataBuilder } from "stellar-sdk";
+import {
+  getTransactionInclusionFee,
+  getTransactionResourceFee,
+} from "@/common/helpers/transaction-fee.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { buildTransaction } from "@/processes/build-transaction/index.ts";
 import type { BuildTransactionInput } from "@/processes/build-transaction/types.ts";
@@ -21,6 +25,24 @@ const inputWith = (
   source,
   sequence: "100",
   networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
+} as BuildTransactionInput);
+
+const sorobanInputWith = (
+  fee: Pick<BuildTransactionInput, "baseFee" | "transactionFee">,
+  resourceFee = 100,
+): BuildTransactionInput => ({
+  ...fee,
+  operations: [
+    Operation.invokeContractFunction({
+      contract: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+      function: "transfer",
+      args: [],
+    }),
+  ],
+  source,
+  sequence: "100",
+  networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
+  sorobanData: new SorobanDataBuilder().setResourceFee(resourceFee).build(),
 } as BuildTransactionInput);
 
 describe("buildTransaction fee strategies", () => {
@@ -52,6 +74,51 @@ describe("buildTransaction fee strategies", () => {
     );
 
     assertEquals(transaction.fee, "302");
+  });
+
+  it("adds supplied Soroban resources once for string and explicit base fees", async () => {
+    const stringTransaction = await buildTransaction(
+      sorobanInputWith({ baseFee: "101" }),
+    );
+    const explicitTransaction = await buildTransaction(
+      sorobanInputWith({ transactionFee: { base: "101" } }),
+    );
+
+    for (const transaction of [stringTransaction, explicitTransaction]) {
+      assertEquals(transaction.fee, "201");
+      assertEquals(getTransactionInclusionFee(transaction), 101n);
+      assertEquals(getTransactionResourceFee(transaction), 100n);
+    }
+  });
+
+  it("adds supplied Soroban resources to an exact inclusion fee", async () => {
+    const transaction = await buildTransaction(
+      sorobanInputWith({ transactionFee: { inclusion: "205" } }),
+    );
+
+    assertEquals(transaction.fee, "305");
+    assertEquals(getTransactionInclusionFee(transaction), 205n);
+    assertEquals(getTransactionResourceFee(transaction), 100n);
+  });
+
+  it("uses a Soroban maximum as the exact resource-inclusive total", async () => {
+    const transaction = await buildTransaction(
+      sorobanInputWith({ transactionFee: { max: "250" } }),
+    );
+
+    assertEquals(transaction.fee, "250");
+    assertEquals(getTransactionInclusionFee(transaction), 150n);
+    assertEquals(getTransactionResourceFee(transaction), 100n);
+  });
+
+  it("supports a maximum at the transaction XDR limit with Soroban resources", async () => {
+    const transaction = await buildTransaction(
+      sorobanInputWith({ transactionFee: { max: "4294967295" } }),
+    );
+
+    assertEquals(transaction.fee, "4294967295");
+    assertEquals(getTransactionInclusionFee(transaction), 4294967195n);
+    assertEquals(getTransactionResourceFee(transaction), 100n);
   });
 
   it("requires exactly one build-process fee input", async () => {
@@ -142,11 +209,30 @@ describe("buildTransaction fee strategies", () => {
     );
   });
 
+  it("requires a Soroban maximum to cover resources and minimum inclusion", async () => {
+    await assertRejects(
+      () =>
+        buildTransaction(
+          sorobanInputWith({ transactionFee: { max: "199" } }),
+        ),
+      E.MAX_FEE_TOO_LOW_ERROR,
+    );
+  });
+
   it("rejects exact fees that do not fit the transaction XDR", async () => {
     await assertRejects(
       () =>
         buildTransaction(
           inputWith({ transactionFee: { inclusion: "4294967296" } }),
+        ),
+      E.TRANSACTION_FEE_TOO_HIGH_ERROR,
+    );
+    await assertRejects(
+      () =>
+        buildTransaction(
+          sorobanInputWith({
+            transactionFee: { inclusion: "4294967295" },
+          }),
         ),
       E.TRANSACTION_FEE_TOO_HIGH_ERROR,
     );

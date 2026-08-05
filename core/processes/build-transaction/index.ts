@@ -8,6 +8,7 @@ import * as E from "@/processes/build-transaction/error.ts";
 import { Account, TransactionBuilder } from "stellar-sdk";
 import { assert } from "@/common/assert/assert.ts";
 import {
+  getTransactionResourceFee,
   MAXIMUM_TRANSACTION_FEE,
   MINIMUM_BASE_FEE,
   parseTransactionFee,
@@ -44,7 +45,13 @@ export const buildTransaction = async (
     );
 
     let builderBaseFee: BaseFee;
-    let exactTransactionFee: bigint | undefined;
+    let exactTransactionFee:
+      | {
+        mode: "inclusion" | "max";
+        amount: bigint;
+        minimumInclusionFee: bigint;
+      }
+      | undefined;
 
     if (baseFee !== undefined) {
       assert(
@@ -76,21 +83,25 @@ export const buildTransaction = async (
         assert(amount > 0n, new E.BASE_FEE_TOO_LOW_ERROR(input, amount));
         builderBaseFee = amount.toString() as BaseFee;
       } else {
-        const minimumFee = MINIMUM_BASE_FEE * BigInt(operations.length);
-        assert(
-          amount >= minimumFee,
-          mode === "inclusion"
-            ? new E.INCLUSION_FEE_TOO_LOW_ERROR(input, amount, minimumFee)
-            : new E.MAX_FEE_TOO_LOW_ERROR(input, amount, minimumFee),
-        );
+        const minimumInclusionFee = MINIMUM_BASE_FEE *
+          BigInt(operations.length);
+        if (mode === "inclusion") {
+          assert(
+            amount >= minimumInclusionFee,
+            new E.INCLUSION_FEE_TOO_LOW_ERROR(
+              input,
+              amount,
+              minimumInclusionFee,
+            ),
+          );
+        }
         assert(
           amount <= MAXIMUM_TRANSACTION_FEE,
           new E.TRANSACTION_FEE_TOO_HIGH_ERROR(input, amount),
         );
 
-        builderBaseFee = (amount / BigInt(operations.length))
-          .toString() as BaseFee;
-        exactTransactionFee = amount;
+        builderBaseFee = MINIMUM_BASE_FEE.toString() as BaseFee;
+        exactTransactionFee = { mode, amount, minimumInclusionFee };
       }
     }
 
@@ -171,7 +182,30 @@ export const buildTransaction = async (
 
     if (exactTransactionFee === undefined) return builtTransaction;
 
-    return setTransactionFee(builtTransaction, exactTransactionFee);
+    const resourceFee = getTransactionResourceFee(builtTransaction);
+    const { mode, amount, minimumInclusionFee } = exactTransactionFee;
+    const finalTransactionFee = mode === "inclusion"
+      ? amount + resourceFee
+      : amount;
+
+    if (mode === "max") {
+      const minimumTransactionFee = minimumInclusionFee + resourceFee;
+      assert(
+        amount >= minimumTransactionFee,
+        new E.MAX_FEE_TOO_LOW_ERROR(
+          input,
+          amount,
+          minimumTransactionFee,
+        ),
+      );
+    }
+
+    assert(
+      finalTransactionFee <= MAXIMUM_TRANSACTION_FEE,
+      new E.TRANSACTION_FEE_TOO_HIGH_ERROR(input, finalTransactionFee),
+    );
+
+    return setTransactionFee(builtTransaction, finalTransactionFee);
   } catch (e) {
     if (e instanceof E.BuildTransactionError) {
       throw e;

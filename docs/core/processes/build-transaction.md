@@ -49,16 +49,18 @@ current sequence from the network.
 ### Explicit Fee Strategies
 
 - `transactionFee: { base: "100" }` uses `100` as the per-operation base fee.
-- `transactionFee: { inclusion: "205" }` writes exactly `205` as the total
-  inclusion fee. This remains exact even when there are multiple operations and
-  the value is not evenly divisible by their count.
-- `transactionFee: { max: "205" }` writes exactly `205` as the complete fee for
-  a classic transaction. For Soroban, final assembly recalculates this value
-  against the simulated resource fee.
+- `transactionFee: { inclusion: "205" }` writes exactly `205` as the
+  transaction's inclusion-fee component. This remains exact even when there are
+  multiple operations and the value is not evenly divisible by their count. If
+  `sorobanData` is supplied, its resource fee is added once.
+- `transactionFee: { max: "205" }` writes exactly `205` as the complete fee. If
+  `sorobanData` is supplied, that maximum must cover its resource fee plus the
+  minimum inclusion fee.
 
 Exact classic inclusion and maximum fees must be at least 100 stroops per
-operation. Every exact total must fit Stellar's unsigned 32-bit transaction-fee
-field.
+operation. Resource-inclusive totals must fit Stellar's unsigned 32-bit
+transaction-fee field. The invoke-contract pipeline recalculates the final
+amount from the latest simulation data during assembly.
 
 ### Preconditions
 
@@ -97,5 +99,5 @@ Returns a `Transaction` ready for simulation or signing.
 | `BTX_013` | Invalid inclusion fee                                     |
 | `BTX_014` | Invalid maximum fee                                       |
 | `BTX_015` | Inclusion fee cannot cover the operation minimums         |
-| `BTX_016` | Maximum fee cannot cover the operation minimums           |
+| `BTX_016` | Maximum fee cannot cover resources and operation minimums |
 | `BTX_017` | Exact transaction fee exceeds the XDR limit               |
