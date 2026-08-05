@@ -1,6 +1,9 @@
 import type { Server } from "stellar-sdk/rpc";
 import type { Memo, Transaction, xdr } from "stellar-sdk";
-import type { BaseFee } from "@/common/types/transaction-config/types.ts";
+import type {
+  BaseFee,
+  TransactionFee,
+} from "@/common/types/transaction-config/types.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 import type { ExtraSignerKey } from "@/strkeys/types.ts";
 
@@ -8,22 +11,35 @@ import type { ExtraSignerKey } from "@/strkeys/types.ts";
  * Input accepted by the build-transaction process.
  */
 /** @internal */
-export type BuildTransactionInput = {
-  /** Operations that will be added to the transaction envelope. */
-  operations: xdr.Operation[];
-  /** Source account for the transaction. */
-  source: Ed25519PublicKey;
-  /** Base fee in stroops. */
-  baseFee: BaseFee;
-  /** Stellar network passphrase. */
-  networkPassphrase: string;
-  /** Optional Soroban data or encoded Soroban data payload. */
-  sorobanData?: string | xdr.SorobanTransactionData;
-  /** Optional memo attached to the transaction. */
-  memo?: Memo;
-  /** Optional transaction preconditions. */
-  preconditions?: TransactionPreconditions;
-} & (WithRpc | WithoutRpc);
+export type BuildTransactionInput =
+  & {
+    /** Operations that will be added to the transaction envelope. */
+    operations: xdr.Operation[];
+    /** Source account for the transaction. */
+    source: Ed25519PublicKey;
+    /** Stellar network passphrase. */
+    networkPassphrase: string;
+    /** Optional Soroban data or encoded Soroban data payload. */
+    sorobanData?: string | xdr.SorobanTransactionData;
+    /** Optional memo attached to the transaction. */
+    memo?: Memo;
+    /** Optional transaction preconditions. */
+    preconditions?: TransactionPreconditions;
+  }
+  & BuildTransactionFee
+  & (WithRpc | WithoutRpc);
+
+type BuildTransactionFee =
+  | {
+    /** Base fee in stroops using the Stellar SDK's per-operation behavior. */
+    baseFee: BaseFee;
+    transactionFee?: never;
+  }
+  | {
+    baseFee?: never;
+    /** Explicit base, inclusion, or maximum transaction-fee strategy. */
+    transactionFee: TransactionFee;
+  };
 
 /**
  * Output returned by the build-transaction process.

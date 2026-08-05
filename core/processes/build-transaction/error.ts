@@ -17,6 +17,12 @@ export enum Code {
   FAILED_TO_SET_PRECONDITIONS = "BTX_009",
   NO_OPERATIONS_PROVIDED = "BTX_010",
   RPC_REQUIRED_TO_LOAD_ACCOUNT = "BTX_011",
+  INVALID_TRANSACTION_FEE_CONFIGURATION = "BTX_012",
+  INVALID_INCLUSION_FEE = "BTX_013",
+  INVALID_MAX_FEE = "BTX_014",
+  INCLUSION_FEE_TOO_LOW = "BTX_015",
+  MAX_FEE_TOO_LOW = "BTX_016",
+  TRANSACTION_FEE_TOO_HIGH = "BTX_017",
 }
 
 /**
@@ -60,12 +66,12 @@ export class INVALID_BASE_FEE_ERROR extends BuildTransactionError {
    *
    * @param input - Original process input.
    */
-  constructor(input: BuildTransactionInput) {
+  constructor(input: BuildTransactionInput, value: unknown = input.baseFee) {
     super({
       code: Code.INVALID_BASE_FEE,
       message: "Invalid Base Fee!",
       input,
-      details: `The provided base fee '${input.baseFee}' couldn't be parsed.`,
+      details: `The provided base fee '${String(value)}' couldn't be parsed.`,
       diagnostic: {
         rootCause:
           "The base fee provided could not be converted to a valid number.",
@@ -88,12 +94,14 @@ export class BASE_FEE_TOO_LOW_ERROR extends BuildTransactionError {
    *
    * @param input - Original process input.
    */
-  constructor(input: BuildTransactionInput) {
+  constructor(input: BuildTransactionInput, value: unknown = input.baseFee) {
     super({
       code: Code.BASE_FEE_TOO_LOW,
       message: "Base fee is too low!",
       input,
-      details: `The provided base fee '${input.baseFee}' is not valid. Must be greater than 0.`,
+      details: `The provided base fee '${
+        String(value)
+      }' is not valid. Must be greater than 0.`,
       diagnostic: {
         rootCause: "The base fee provided is less than or equal to 0.",
         suggestion:
@@ -139,7 +147,8 @@ export class COULD_NOT_LOAD_ACCOUNT_ERROR extends BuildTransactionError {
 /**
  * Raised when the transaction builder cannot be created.
  */
-export class COULD_NOT_CREATE_TRANSACTION_BUILDER_ERROR extends BuildTransactionError {
+export class COULD_NOT_CREATE_TRANSACTION_BUILDER_ERROR
+  extends BuildTransactionError {
   /**
    * Creates a transaction-builder creation error.
    *
@@ -203,7 +212,8 @@ export class COULD_NOT_BUILD_TRANSACTION_ERROR extends BuildTransactionError {
 /**
  * Raised when a source account cannot be initialized with the provided sequence.
  */
-export class COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE_ERROR extends BuildTransactionError {
+export class COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE_ERROR
+  extends BuildTransactionError {
   /**
    * Creates an invalid-sequence initialization error.
    *
@@ -215,7 +225,8 @@ export class COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE_ERROR extends BuildTrans
       code: Code.COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE,
       message: "Could not initialize account with provided sequence!",
       input,
-      details: `The account object for '${input.source}' could not be initialized with the provided sequence '${input.sequence}'`,
+      details:
+        `The account object for '${input.source}' could not be initialized with the provided sequence '${input.sequence}'`,
       diagnostic: {
         rootCause:
           "The sequence number provided could not be parsed into a valid number by the underlying Stellar SDK.",
@@ -331,6 +342,93 @@ export class RPC_REQUIRED_TO_LOAD_ACCOUNT_ERROR extends BuildTransactionError {
   }
 }
 
+/** Raised when an explicit transaction-fee object does not select one mode. */
+export class INVALID_TRANSACTION_FEE_CONFIGURATION_ERROR
+  extends BuildTransactionError {
+  /** Creates an invalid transaction-fee configuration error. */
+  constructor(input: BuildTransactionInput) {
+    super({
+      code: Code.INVALID_TRANSACTION_FEE_CONFIGURATION,
+      message: "Invalid transaction fee configuration!",
+      input,
+      details:
+        "The transaction fee must define exactly one of 'base', 'inclusion', or 'max'.",
+    });
+  }
+}
+
+/** Raised when an explicit inclusion-fee amount is not an integer string. */
+export class INVALID_INCLUSION_FEE_ERROR extends BuildTransactionError {
+  /** Creates an invalid inclusion-fee error. */
+  constructor(input: BuildTransactionInput, value: unknown) {
+    super({
+      code: Code.INVALID_INCLUSION_FEE,
+      message: "Invalid inclusion fee!",
+      input,
+      details: `The provided inclusion fee '${
+        String(value)
+      }' must be a non-negative integer string in stroops.`,
+    });
+  }
+}
+
+/** Raised when an explicit maximum-fee amount is not an integer string. */
+export class INVALID_MAX_FEE_ERROR extends BuildTransactionError {
+  /** Creates an invalid maximum-fee error. */
+  constructor(input: BuildTransactionInput, value: unknown) {
+    super({
+      code: Code.INVALID_MAX_FEE,
+      message: "Invalid maximum transaction fee!",
+      input,
+      details: `The provided maximum fee '${
+        String(value)
+      }' must be a non-negative integer string in stroops.`,
+    });
+  }
+}
+
+/** Raised when an exact inclusion fee cannot cover every operation. */
+export class INCLUSION_FEE_TOO_LOW_ERROR extends BuildTransactionError {
+  /** Creates an insufficient inclusion-fee error. */
+  constructor(input: BuildTransactionInput, value: bigint, minimum: bigint) {
+    super({
+      code: Code.INCLUSION_FEE_TOO_LOW,
+      message: "Inclusion fee is too low!",
+      input,
+      details:
+        `The provided inclusion fee '${value}' must be at least '${minimum}' stroops for this transaction's operations.`,
+    });
+  }
+}
+
+/** Raised when a maximum fee cannot cover minimum transaction inclusion. */
+export class MAX_FEE_TOO_LOW_ERROR extends BuildTransactionError {
+  /** Creates an insufficient maximum-fee error. */
+  constructor(input: BuildTransactionInput, value: bigint, minimum: bigint) {
+    super({
+      code: Code.MAX_FEE_TOO_LOW,
+      message: "Maximum transaction fee is too low!",
+      input,
+      details:
+        `The provided maximum fee '${value}' must be at least '${minimum}' stroops for this transaction's operations.`,
+    });
+  }
+}
+
+/** Raised when an exact transaction fee exceeds the XDR uint32 limit. */
+export class TRANSACTION_FEE_TOO_HIGH_ERROR extends BuildTransactionError {
+  /** Creates an excessive transaction-fee error. */
+  constructor(input: BuildTransactionInput, value: bigint) {
+    super({
+      code: Code.TRANSACTION_FEE_TOO_HIGH,
+      message: "Transaction fee is too high!",
+      input,
+      details:
+        `The provided transaction fee '${value}' exceeds the maximum uint32 value supported by Stellar transaction XDR.`,
+    });
+  }
+}
+
 /**
  * Build-transaction error constructors indexed by stable code.
  */
@@ -349,4 +447,11 @@ export const ERROR_BY_CODE = {
   [Code.FAILED_TO_SET_PRECONDITIONS]: FAILED_TO_SET_PRECONDITIONS_ERROR,
   [Code.NO_OPERATIONS_PROVIDED]: NO_OPERATIONS_PROVIDED_ERROR,
   [Code.RPC_REQUIRED_TO_LOAD_ACCOUNT]: RPC_REQUIRED_TO_LOAD_ACCOUNT_ERROR,
+  [Code.INVALID_TRANSACTION_FEE_CONFIGURATION]:
+    INVALID_TRANSACTION_FEE_CONFIGURATION_ERROR,
+  [Code.INVALID_INCLUSION_FEE]: INVALID_INCLUSION_FEE_ERROR,
+  [Code.INVALID_MAX_FEE]: INVALID_MAX_FEE_ERROR,
+  [Code.INCLUSION_FEE_TOO_LOW]: INCLUSION_FEE_TOO_LOW_ERROR,
+  [Code.MAX_FEE_TOO_LOW]: MAX_FEE_TOO_LOW_ERROR,
+  [Code.TRANSACTION_FEE_TOO_HIGH]: TRANSACTION_FEE_TOO_HIGH_ERROR,
 };

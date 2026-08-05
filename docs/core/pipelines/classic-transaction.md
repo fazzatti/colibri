@@ -46,6 +46,12 @@ const result = await pipeline.run({
 console.log(result.hash);
 ```
 
+`config.fee` can remain a string base fee or select an explicit strategy. For
+example, `{ inclusion: "205" }` sets the total inclusion-fee bid to exactly 205
+stroops even for a multi-operation transaction, while `{ max: "205" }` caps the
+complete classic transaction fee. See
+[Transaction Config](../transaction-config.md).
+
 ## Typical Use Cases
 
 - payments

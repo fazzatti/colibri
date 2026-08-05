@@ -78,7 +78,6 @@ describe("assembleForEnforcement", () => {
       transaction,
       authorizedOperation: makeInvokeOperation([makeAuthEntry()]),
       sorobanData: new SorobanDataBuilder(),
-      resourceFee: 10,
     });
 
     assertStrictEquals(result, transaction);
@@ -91,8 +90,7 @@ describe("assembleForEnforcement", () => {
     const result = await assembleForEnforcement({
       transaction,
       authorizedOperation: makeInvokeOperation([delegatedEntry]),
-      sorobanData: new SorobanDataBuilder(),
-      resourceFee: 10,
+      sorobanData: new SorobanDataBuilder().setResourceFee(10),
     });
 
     const assembledAuth = getOperationsFromTransaction(result)[0].body()
@@ -115,7 +113,6 @@ describe("assembleForEnforcement", () => {
         assembleForEnforcement({
           transaction: undefined,
           authorizedOperation: makeInvokeOperation(),
-          resourceFee: 10,
         } as unknown as AssembleForEnforcementInput),
       E.MISSING_TRANSACTION,
     );
@@ -124,18 +121,8 @@ describe("assembleForEnforcement", () => {
         assembleForEnforcement({
           transaction: makeTransaction(),
           authorizedOperation: undefined,
-          resourceFee: 10,
         } as unknown as AssembleForEnforcementInput),
       E.MISSING_AUTHORIZED_OPERATION,
-    );
-    await assertRejects(
-      () =>
-        assembleForEnforcement({
-          transaction: makeTransaction(),
-          authorizedOperation: makeInvokeOperation(),
-          resourceFee: undefined,
-        } as unknown as AssembleForEnforcementInput),
-      E.MISSING_RESOURCE_FEE,
     );
   });
 
@@ -154,7 +141,6 @@ describe("assembleForEnforcement", () => {
           transaction: paymentTransaction,
           authorizedOperation: makeInvokeOperation([makeDelegatedEntry()]),
           sorobanData: new SorobanDataBuilder(),
-          resourceFee: 10,
         }),
       AssembleErrors.NOT_SMART_CONTRACT_TRANSACTION_ERROR,
     );

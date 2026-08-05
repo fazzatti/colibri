@@ -1,7 +1,7 @@
 # AssembleForEnforcement
 
-Builds the intermediate transaction needed to enforce completed CAP-71
-delegated credentials.
+Builds the intermediate transaction needed to enforce completed CAP-71 delegated
+credentials.
 
 ## `assembleForEnforcement`
 
@@ -12,34 +12,36 @@ const transaction = await assembleForEnforcement({
   transaction: baseTransaction,
   authorizedOperation,
   sorobanData: recordingSimulation.transactionData,
-  resourceFee: Number(recordingSimulation.minResourceFee),
+  transactionFee: { max: "1000000" },
 });
 ```
 
 ## Input
 
-| Property              | Type                 | Required | Description |
-| --------------------- | -------------------- | -------- | ----------- |
-| `transaction`         | `Transaction`        | Yes      | Original base transaction |
-| `authorizedOperation` | `xdr.Operation`      | Yes      | Operation containing signed auth entries |
-| `sorobanData`         | `SorobanDataBuilder` | No       | Recording-simulation resources |
-| `resourceFee`         | `number`             | Yes      | Recording-simulation resource fee |
+| Property              | Type                 | Required   | Description                                               |
+| --------------------- | -------------------- | ---------- | --------------------------------------------------------- |
+| `transaction`         | `Transaction`        | Yes        | Original base transaction                                 |
+| `authorizedOperation` | `xdr.Operation`      | Yes        | Operation containing signed auth entries                  |
+| `sorobanData`         | `SorobanDataBuilder` | No         | Recording-simulation footprint, limits, and resource fee  |
+| `transactionFee`      | `TransactionFee`     | No         | Explicit fee strategy propagated from `TransactionConfig` |
+| `resourceFee`         | `number`             | Deprecated | Ignored; resource fees are read from `sorobanData`        |
 
 ## Behavior
 
 - Returns the original transaction unchanged when the operation contains no
   delegated credentials.
-- Assembles signed delegated entries with the recording-simulation resources
-  when an enforcing simulation is required.
-- Infers both paths from the operation XDR. There is no caller-provided flag.
+- Assembles signed delegated entries with the recording simulation's Soroban
+  data when an enforcing simulation is required.
+- Applies the same explicit fee strategy used by final assembly, including a
+  total maximum when configured.
+- Infers both paths from operation XDR. There is no caller-provided flag.
 
 ## Errors
 
-| Code      | Description |
-| --------- | ----------- |
+| Code      | Description                                 |
+| --------- | ------------------------------------------- |
 | `AFE_000` | Unexpected assembly-for-enforcement failure |
-| `AFE_001` | Missing transaction |
-| `AFE_002` | Missing authorized operation |
-| `AFE_003` | Missing resource fee |
+| `AFE_001` | Missing transaction                         |
+| `AFE_002` | Missing authorized operation                |
 
 Typed `AssembleTransactionError` failures are preserved.

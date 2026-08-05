@@ -20,7 +20,7 @@ export const assembleForEnforcement = async (
   input: AssembleForEnforcementInput,
 ): Promise<AssembleForEnforcementOutput> => {
   try {
-    const { transaction, authorizedOperation, sorobanData, resourceFee } =
+    const { transaction, authorizedOperation, sorobanData, transactionFee } =
       input;
 
     assertRequiredArgs(
@@ -31,11 +31,6 @@ export const assembleForEnforcement = async (
       { authorizedOperation },
       () => new E.MISSING_AUTHORIZED_OPERATION(input),
     );
-    assertRequiredArgs(
-      { resourceFee },
-      () => new E.MISSING_RESOURCE_FEE(input),
-    );
-
     if (!operationHasDelegatedAuthorization(authorizedOperation)) {
       return transaction;
     }
@@ -48,7 +43,7 @@ export const assembleForEnforcement = async (
       transaction,
       authEntries,
       sorobanData,
-      resourceFee,
+      transactionFee,
     });
   } catch (error) {
     if (

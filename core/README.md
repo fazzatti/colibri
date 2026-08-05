@@ -176,7 +176,8 @@ are plain functions, which makes them easy to test directly and easy to reuse
 outside Colibri's built-in pipelines.
 
 - **BuildTransaction** – Creates transactions with optional memo, preconditions,
-  and either RPC-derived or explicit sequence numbers.
+  either RPC-derived or explicit sequence numbers, and string base fees or
+  explicit base, inclusion, and maximum fee strategies.
 - **SimulateTransaction** – Wraps `Server.simulateTransaction`, producing typed
   success/restore responses and raising specific errors for transport failures,
   generic simulation failures, parsed contract errors, or unrecognized payloads.
@@ -188,7 +189,9 @@ outside Colibri's built-in pipelines.
 - **EnforceSimulation** – Runs the second simulation for delegated credentials
   and passes ordinary transactions through without an RPC call.
 - **AssembleTransaction** – Merges the base transaction, signed auth entries,
-  Soroban data, and resource fee into a ready-to-sign transaction.
+  and simulated Soroban data into a ready-to-sign transaction. Resource fees
+  come from that data and are combined with the configured inclusion fee or
+  total maximum exactly once.
 - **EnvelopeSigningRequirements** – Analyzes both envelope and Soroban
   requirements, yielding a checklist of signatures needed before submission.
 - **SignEnvelope** – Deterministically resolves account and exact extra-signer
@@ -591,10 +594,11 @@ All configurations provide:
 
 Colibri Core ships shared utilities so every layer speaks the same language:
 
-- **Transaction configuration (`common/types`)** – `TransactionConfig` defines
-  fee, timeout, source address, signer list, and optional exact `G...`, `X...`,
-  or `P...` extra-signer preconditions; additional types cover base fees, time
-  bounds, preconditions, and transaction XDR string aliases.
+- **Transaction configuration (`common/types`)** – `TransactionConfig` defines a
+  string base fee or explicit `base`, `inclusion`, or `max` strategy alongside
+  timeout, source address, signer list, and optional exact `G...`, `X...`, or
+  `P...` extra-signer preconditions. For Soroban, `max` caps the complete fee
+  after simulation resources are known.
 - **Assertions and verifiers (`common/assert`, `common/verifiers`)** – Throw
   Colibri errors on invalid input, ensuring consistent error handling from top
   to bottom.

@@ -53,7 +53,6 @@ describe("AssembleTransaction", () => {
         transaction,
         sorobanData: new SorobanDataBuilder(),
         authEntries: [],
-        resourceFee: 0,
       };
 
       const result = await assembleTransaction(input);
@@ -61,7 +60,7 @@ describe("AssembleTransaction", () => {
       assertInstanceOf(result, Transaction);
     });
 
-    it("executes with resourceFee and add it to the total fee", async () => {
+    it("adds the resource fee from Soroban data exactly once", async () => {
       const inclusionFee = "10";
       const transaction = createTestTransaction(inclusionFee);
       const sorobanData = new SorobanDataBuilder();
@@ -71,12 +70,11 @@ describe("AssembleTransaction", () => {
         transaction,
         sorobanData,
         authEntries: [],
-        resourceFee: 5,
       };
 
       const result = await assembleTransaction(input);
       assertInstanceOf(result, Transaction);
-      assertEquals(result.fee, "18"); // 10 inclusion fee + 3 resource fee from soroban data + 5 resource fee from input
+      assertEquals(result.fee, "13");
     });
 
     it("preserves source sequence above Number.MAX_SAFE_INTEGER (2^53)", async () => {
@@ -111,7 +109,6 @@ describe("AssembleTransaction", () => {
         transaction,
         sorobanData: new SorobanDataBuilder(),
         authEntries: [],
-        resourceFee: 0,
       });
 
       assertEquals(result.sequence, builtSeq);
@@ -126,7 +123,6 @@ describe("AssembleTransaction", () => {
         transaction,
         sorobanData: new SorobanDataBuilder(),
         authEntries: [],
-        resourceFee: 0,
       });
 
       assertEquals(
@@ -144,7 +140,6 @@ describe("AssembleTransaction", () => {
         transaction,
         sorobanData,
         authEntries: [],
-        resourceFee: 0,
       };
 
       const result = await assembleTransaction(input);
@@ -187,7 +182,6 @@ describe("AssembleTransaction", () => {
         transaction: nonSmartContractTx,
         sorobanData: new SorobanDataBuilder(),
         authEntries: [],
-        resourceFee: 0,
       };
 
       await assertRejects(
@@ -205,7 +199,6 @@ describe("AssembleTransaction", () => {
         transaction,
         sorobanData: corruptedSorobanData,
         authEntries: [],
-        resourceFee: 0,
       };
 
       await assertRejects(
@@ -229,7 +222,6 @@ describe("AssembleTransaction", () => {
         transaction: transaction,
         sorobanData: new SorobanDataBuilder(),
         authEntries: [],
-        resourceFee: 0,
       };
 
       await assertRejects(
@@ -254,7 +246,6 @@ describe("AssembleTransaction", () => {
         transaction,
         sorobanData: new SorobanDataBuilder(),
         authEntries: [],
-        resourceFee: 0,
       };
 
       try {
@@ -274,7 +265,6 @@ describe("AssembleTransaction", () => {
         transaction: tx,
         sorobanData: new SorobanDataBuilder(),
         authEntries: [],
-        resourceFee: 0,
       };
 
       await assertRejects(
