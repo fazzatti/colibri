@@ -13,18 +13,19 @@ const transaction = await assembleForEnforcement({
   authorizedOperation,
   sorobanData: recordingSimulation.transactionData,
   transactionFee: { max: "1000000" },
+  resourceFee: "25000",
 });
 ```
 
 ## Input
 
-| Property              | Type                 | Required   | Description                                               |
-| --------------------- | -------------------- | ---------- | --------------------------------------------------------- |
-| `transaction`         | `Transaction`        | Yes        | Original base transaction                                 |
-| `authorizedOperation` | `xdr.Operation`      | Yes        | Operation containing signed auth entries                  |
-| `sorobanData`         | `SorobanDataBuilder` | No         | Recording-simulation footprint, limits, and resource fee  |
-| `transactionFee`      | `TransactionFee`     | No         | Explicit fee strategy propagated from `TransactionConfig` |
-| `resourceFee`         | `number`             | Deprecated | Ignored; resource fees are read from `sorobanData`        |
+| Property              | Type                 | Required | Description                                                     |
+| --------------------- | -------------------- | -------- | --------------------------------------------------------------- |
+| `transaction`         | `Transaction`        | Yes      | Original base transaction                                       |
+| `authorizedOperation` | `xdr.Operation`      | Yes      | Operation containing signed auth entries                        |
+| `sorobanData`         | `SorobanDataBuilder` | No       | Recording-simulation footprint, limits, and resource fee        |
+| `transactionFee`      | `TransactionFee`     | No       | Explicit fee strategy propagated from `TransactionConfig`       |
+| `resourceFee`         | `string`             | No       | Overrides the resource fee embedded in the recording simulation |
 
 ## Behavior
 
@@ -34,6 +35,8 @@ const transaction = await assembleForEnforcement({
   data when an enforcing simulation is required.
 - Applies the same explicit fee strategy used by final assembly, including a
   total maximum when configured.
+- Forwards a resource-fee override to delegated assembly without mutating the
+  recording simulation's Soroban data.
 - Infers both paths from operation XDR. There is no caller-provided flag.
 
 ## Errors

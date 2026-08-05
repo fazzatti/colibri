@@ -104,6 +104,25 @@ describe("assembleForEnforcement", () => {
     assertEquals(result.fee, "110");
   });
 
+  it("forwards a resource-fee override during delegated assembly", async () => {
+    const transaction = makeTransaction();
+    const sorobanData = new SorobanDataBuilder().setResourceFee(10);
+
+    const result = await assembleForEnforcement({
+      transaction,
+      authorizedOperation: makeInvokeOperation([makeDelegatedEntry()]),
+      sorobanData,
+      resourceFee: "15",
+    });
+
+    assertEquals(result.fee, "115");
+    assertEquals(
+      result.toEnvelope().v1().tx().ext().value()?.resourceFee().toBigInt(),
+      15n,
+    );
+    assertEquals(sorobanData.build().resourceFee().toBigInt(), 10n);
+  });
+
   it("uses a unique error for each required input", async () => {
     const codes = Object.values(E.Code);
     assertEquals(new Set(codes).size, codes.length);

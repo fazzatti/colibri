@@ -7,8 +7,8 @@ export type AssembleForEnforcementInput = {
   authorizedOperation: xdr.Operation;
   sorobanData?: SorobanDataBuilder;
   transactionFee?: TransactionFee;
-  /** @deprecated Resource fees are read from `sorobanData`. */
-  resourceFee?: number;
+  /** Overrides the resource fee embedded in the provided Soroban data. */
+  resourceFee?: string;
 };
 
 /** @internal */

@@ -23,6 +23,8 @@ export enum Code {
   MAX_FEE_TOO_LOW = "ASM_013",
   TRANSACTION_FEE_TOO_HIGH = "ASM_014",
   TRANSACTION_FEE_BELOW_RESOURCE_FEE = "ASM_015",
+  INVALID_RESOURCE_FEE = "ASM_016",
+  RESOURCE_FEE_BELOW_SIMULATED_MINIMUM = "ASM_017",
 }
 
 /**
@@ -345,6 +347,40 @@ export class TRANSACTION_FEE_BELOW_RESOURCE_FEE_ERROR
   }
 }
 
+/** Raised when an explicit resource-fee override is not an integer string. */
+export class INVALID_RESOURCE_FEE_ERROR extends AssembleTransactionError {
+  /** Creates an invalid resource-fee error. */
+  constructor(input: AssembleTransactionInput, value: unknown) {
+    super({
+      code: Code.INVALID_RESOURCE_FEE,
+      message: "Invalid resource fee!",
+      input,
+      details: `The provided resource fee '${
+        String(value)
+      }' must be a non-negative integer string in stroops.`,
+    });
+  }
+}
+
+/** Raised when an override is below the simulation-derived resource fee. */
+export class RESOURCE_FEE_BELOW_SIMULATED_MINIMUM_ERROR
+  extends AssembleTransactionError {
+  /** Creates an insufficient resource-fee override error. */
+  constructor(
+    input: AssembleTransactionInput,
+    value: bigint,
+    simulatedMinimum: bigint,
+  ) {
+    super({
+      code: Code.RESOURCE_FEE_BELOW_SIMULATED_MINIMUM,
+      message: "Resource fee is below the simulated minimum!",
+      input,
+      details:
+        `The provided resource fee '${value}' cannot be lower than the simulation-derived resource fee '${simulatedMinimum}'.`,
+    });
+  }
+}
+
 /**
  * Assemble-transaction error constructors indexed by stable code.
  */
@@ -367,4 +403,7 @@ export const ERROR_BY_CODE = {
   [Code.TRANSACTION_FEE_TOO_HIGH]: TRANSACTION_FEE_TOO_HIGH_ERROR,
   [Code.TRANSACTION_FEE_BELOW_RESOURCE_FEE]:
     TRANSACTION_FEE_BELOW_RESOURCE_FEE_ERROR,
+  [Code.INVALID_RESOURCE_FEE]: INVALID_RESOURCE_FEE_ERROR,
+  [Code.RESOURCE_FEE_BELOW_SIMULATED_MINIMUM]:
+    RESOURCE_FEE_BELOW_SIMULATED_MINIMUM_ERROR,
 };

@@ -52,8 +52,9 @@ deserialized data.
 For a Soroban `max` strategy, final assembly reads the resource fee from the
 latest simulation result and uses the remaining capacity as the inclusion fee.
 The maximum must cover the resource fee plus at least 100 stroops. Colibri does
-not expose resource fees as configuration because they are produced by
-simulation.
+not expose resource fees in `TransactionConfig` because they are produced by
+simulation. Advanced callers and plugins can override the simulation-derived
+value through the `resourceFee` input of the assembly processes.
 
 The fee encoded in the submitted envelope is a bid. Stellar can charge less than
 that bid when surge pricing does not require the entire amount. A maximum

@@ -13,6 +13,7 @@ const transaction = await assembleTransaction({
   authEntries: signedAuthEntries,
   sorobanData: simulation.transactionData,
   transactionFee: { max: "1000000" },
+  resourceFee: "25000",
 });
 ```
 
@@ -22,19 +23,22 @@ the incoming transaction.
 
 ## Input
 
-| Property         | Type                          | Required   | Description                                           |
-| ---------------- | ----------------------------- | ---------- | ----------------------------------------------------- |
-| `transaction`    | `Transaction`                 | Yes        | Original built transaction                            |
-| `authEntries`    | `SorobanAuthorizationEntry[]` | No         | Signed or unsigned authorization entries              |
-| `sorobanData`    | `SorobanDataBuilder`          | No         | Latest simulation footprint, limits, and resource fee |
-| `transactionFee` | `TransactionFee`              | No         | Explicit `base`, `inclusion`, or `max` strategy       |
-| `resourceFee`    | `number`                      | Deprecated | Ignored; resource fees are read from `sorobanData`    |
+| Property         | Type                          | Required | Description                                                      |
+| ---------------- | ----------------------------- | -------- | ---------------------------------------------------------------- |
+| `transaction`    | `Transaction`                 | Yes      | Original built transaction                                       |
+| `authEntries`    | `SorobanAuthorizationEntry[]` | No       | Signed or unsigned authorization entries                         |
+| `sorobanData`    | `SorobanDataBuilder`          | No       | Latest simulation footprint, limits, and resource fee            |
+| `transactionFee` | `TransactionFee`              | No       | Explicit `base`, `inclusion`, or `max` strategy                  |
+| `resourceFee`    | `string`                      | No       | Overrides the resource fee embedded in the provided Soroban data |
 
 ## Fee Assembly
 
 Soroban transaction XDR stores a total fee and embeds the resource-fee component
-in `SorobanTransactionData`. Colibri always obtains that resource component from
-`sorobanData` and adds it exactly once.
+in `SorobanTransactionData`. Colibri ordinarily obtains that resource component
+from `sorobanData` and adds it exactly once. When `resourceFee` is provided,
+Colibri clones the Soroban data and replaces only its embedded resource fee. The
+override must be a non-negative integer string and cannot be lower than the
+simulation-derived value.
 
 - With no `transactionFee`, assembly subtracts any resource fee already embedded
   in the incoming transaction, preserves the remaining inclusion fee, and
@@ -79,3 +83,5 @@ The process:
 | `ASM_013` | Maximum cannot cover resources plus 100 stroops               |
 | `ASM_014` | Final total fee exceeds the XDR limit                         |
 | `ASM_015` | Incoming transaction total is below its embedded resource fee |
+| `ASM_016` | Resource-fee override is not an integer string                |
+| `ASM_017` | Resource-fee override is below the simulated minimum          |

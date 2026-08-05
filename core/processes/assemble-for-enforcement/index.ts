@@ -20,8 +20,13 @@ export const assembleForEnforcement = async (
   input: AssembleForEnforcementInput,
 ): Promise<AssembleForEnforcementOutput> => {
   try {
-    const { transaction, authorizedOperation, sorobanData, transactionFee } =
-      input;
+    const {
+      transaction,
+      authorizedOperation,
+      sorobanData,
+      transactionFee,
+      resourceFee,
+    } = input;
 
     assertRequiredArgs(
       { transaction },
@@ -44,6 +49,7 @@ export const assembleForEnforcement = async (
       authEntries,
       sorobanData,
       transactionFee,
+      resourceFee,
     });
   } catch (error) {
     if (

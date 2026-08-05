@@ -45,14 +45,14 @@ const assembleWith = (
   transactionFee: TransactionFee | undefined,
   resourceFee = 3,
   transaction = createTransaction(),
-  deprecatedResourceFee?: number,
+  resourceFeeOverride?: string,
 ) =>
   assembleTransaction({
     transaction,
     transactionFee,
     sorobanData: new SorobanDataBuilder().setResourceFee(resourceFee),
     authEntries: [],
-    resourceFee: deprecatedResourceFee,
+    resourceFee: resourceFeeOverride,
   });
 
 describe("assembleTransaction fee strategies", () => {
@@ -67,11 +67,50 @@ describe("assembleTransaction fee strategies", () => {
   });
 
   it("preserves the incoming inclusion fee and uses the simulated resource fee once", async () => {
-    const transaction = await assembleWith(undefined, 3, undefined, 999);
+    const transaction = await assembleWith(undefined, 3);
 
     assertEquals(transaction.fee, "103");
     assertEquals(getTransactionInclusionFee(transaction), 100n);
     assertEquals(getTransactionResourceFee(transaction), 3n);
+  });
+
+  it("overrides the simulated resource fee without mutating its Soroban data", async () => {
+    const sorobanData = new SorobanDataBuilder().setResourceFee(3);
+    const transaction = await assembleTransaction({
+      transaction: createTransaction(),
+      sorobanData,
+      authEntries: [],
+      resourceFee: "5",
+    });
+
+    assertEquals(transaction.fee, "105");
+    assertEquals(getTransactionInclusionFee(transaction), 100n);
+    assertEquals(getTransactionResourceFee(transaction), 5n);
+    assertEquals(sorobanData.build().resourceFee().toBigInt(), 3n);
+  });
+
+  it("applies a resource-fee override when Soroban data is omitted", async () => {
+    const transaction = await assembleTransaction({
+      transaction: createTransaction(),
+      authEntries: [],
+      resourceFee: "5",
+    });
+
+    assertEquals(transaction.fee, "105");
+    assertEquals(getTransactionResourceFee(transaction), 5n);
+  });
+
+  it("uses an overridden resource fee when resolving a maximum", async () => {
+    const transaction = await assembleWith(
+      { max: "500" },
+      3,
+      undefined,
+      "5",
+    );
+
+    assertEquals(transaction.fee, "500");
+    assertEquals(getTransactionInclusionFee(transaction), 495n);
+    assertEquals(getTransactionResourceFee(transaction), 5n);
   });
 
   it("preserves inclusion when replacing previously assembled resources", async () => {
@@ -147,6 +186,40 @@ describe("assembleTransaction fee strategies", () => {
     await assertRejects(
       () => assembleWith({ max: "102" }),
       E.MAX_FEE_TOO_LOW_ERROR,
+    );
+  });
+
+  it("rejects malformed resource-fee overrides", async () => {
+    for (const resourceFee of ["", "-1", "1.5", " 3"]) {
+      await assertRejects(
+        () => assembleWith(undefined, 3, undefined, resourceFee),
+        E.INVALID_RESOURCE_FEE_ERROR,
+      );
+    }
+
+    await assertRejects(
+      () =>
+        assembleTransaction({
+          transaction: createTransaction(),
+          sorobanData: new SorobanDataBuilder().setResourceFee(3),
+          authEntries: [],
+          resourceFee: 5 as unknown as string,
+        }),
+      E.INVALID_RESOURCE_FEE_ERROR,
+    );
+  });
+
+  it("rejects a resource-fee override below the simulated minimum", async () => {
+    await assertRejects(
+      () => assembleWith(undefined, 3, undefined, "2"),
+      E.RESOURCE_FEE_BELOW_SIMULATED_MINIMUM_ERROR,
+    );
+  });
+
+  it("rejects a resource-fee override above the transaction XDR limit", async () => {
+    await assertRejects(
+      () => assembleWith(undefined, 3, undefined, "4294967296"),
+      E.TRANSACTION_FEE_TOO_HIGH_ERROR,
     );
   });
 

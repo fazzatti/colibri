@@ -2,6 +2,7 @@ import {
   Account,
   Operation,
   SignerKey,
+  SorobanDataBuilder,
   TransactionBuilder,
   type xdr,
 } from "stellar-sdk";
@@ -65,12 +66,7 @@ export const assembleTransaction = async (
       (BigInt(transaction.sequence) - 1n).toString(),
     );
 
-    let builtSorobanData: xdr.SorobanTransactionData | undefined;
-    try {
-      builtSorobanData = sorobanData?.build();
-    } catch (error) {
-      throw new E.FAILED_TO_BUILD_SOROBAN_DATA_ERROR(input, error as Error);
-    }
+    const builtSorobanData = buildSorobanData(input, sorobanData);
 
     const resourceFee = builtSorobanData?.resourceFee().toBigInt() ?? 0n;
     const inclusionFee = resolveInclusionFee(input, resourceFee);
@@ -109,6 +105,47 @@ export const assembleTransaction = async (
     }
     throw new E.UNEXPECTED_ERROR(input, e as Error);
   }
+};
+
+const buildSorobanData = (
+  input: AssembleTransactionInput,
+  sorobanData: SorobanDataBuilder | undefined,
+): xdr.SorobanTransactionData | undefined => {
+  let simulatedSorobanData: xdr.SorobanTransactionData | undefined;
+  try {
+    simulatedSorobanData = sorobanData?.build();
+  } catch (error) {
+    throw new E.FAILED_TO_BUILD_SOROBAN_DATA_ERROR(input, error as Error);
+  }
+
+  const { resourceFee } = input;
+  if (resourceFee === undefined) {
+    return simulatedSorobanData;
+  }
+
+  assert(
+    typeof resourceFee === "string" && /^\d+$/.test(resourceFee),
+    new E.INVALID_RESOURCE_FEE_ERROR(input, resourceFee),
+  );
+
+  const override = BigInt(resourceFee);
+  const simulatedMinimum = simulatedSorobanData?.resourceFee().toBigInt() ?? 0n;
+  assert(
+    override >= simulatedMinimum,
+    new E.RESOURCE_FEE_BELOW_SIMULATED_MINIMUM_ERROR(
+      input,
+      override,
+      simulatedMinimum,
+    ),
+  );
+  assert(
+    override <= MAXIMUM_TRANSACTION_FEE,
+    new E.TRANSACTION_FEE_TOO_HIGH_ERROR(input, override),
+  );
+
+  return new SorobanDataBuilder(simulatedSorobanData)
+    .setResourceFee(resourceFee)
+    .build();
 };
 
 const resolveInclusionFee = (

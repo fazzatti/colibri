@@ -7,8 +7,8 @@ export type AssembleTransactionInput = {
   authEntries?: xdr.SorobanAuthorizationEntry[];
   sorobanData?: SorobanDataBuilder;
   transactionFee?: TransactionFee;
-  /** @deprecated Resource fees are read from `sorobanData`. */
-  resourceFee?: number;
+  /** Overrides the resource fee embedded in the provided Soroban data. */
+  resourceFee?: string;
 };
 
 /** @internal */
