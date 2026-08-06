@@ -6,7 +6,6 @@ export enum Code {
   UNEXPECTED_ERROR = "AFE_000",
   MISSING_TRANSACTION = "AFE_001",
   MISSING_AUTHORIZED_OPERATION = "AFE_002",
-  MISSING_RESOURCE_FEE = "AFE_003",
 }
 
 /** Base class for assembly-for-enforcement failures. */
@@ -72,27 +71,9 @@ export class MISSING_AUTHORIZED_OPERATION extends AssembleForEnforcementError {
   }
 }
 
-/** Raised when the resource fee is missing from enforcement assembly input. */
-export class MISSING_RESOURCE_FEE extends AssembleForEnforcementError {
-  /**
-   * Creates a missing-resource-fee error.
-   *
-   * @param input - Original process input.
-   */
-  constructor(input: AssembleForEnforcementInput) {
-    super({
-      code: Code.MISSING_RESOURCE_FEE,
-      message: "Missing required argument: resourceFee",
-      input,
-      details: "The resource fee is required for assembly before enforcement.",
-    });
-  }
-}
-
 /** Assembly-for-enforcement error constructors indexed by stable code. */
 export const ERROR_BY_CODE = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.MISSING_TRANSACTION]: MISSING_TRANSACTION,
   [Code.MISSING_AUTHORIZED_OPERATION]: MISSING_AUTHORIZED_OPERATION,
-  [Code.MISSING_RESOURCE_FEE]: MISSING_RESOURCE_FEE,
 };
