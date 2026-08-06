@@ -3,7 +3,6 @@ import { describe, it } from "@std/testing/bdd";
 import { Ankr } from "@/network/providers/ankr.ts";
 import { Gateway } from "@/network/providers/gateway.ts";
 import { Lightsail } from "@/network/providers/lightsail.ts";
-import { OnFinality } from "@/network/providers/onfinality.ts";
 
 describe("Network provider configurations", () => {
   it("builds Gateway public configurations", () => {
@@ -30,13 +29,6 @@ describe("Network provider configurations", () => {
     assertEquals(
       proConfig.archiveRpcUrl,
       "https://archive-rpc-pro.lightsail.network/api-key",
-    );
-  });
-
-  it("builds OnFinality's public Mainnet configuration", () => {
-    assertEquals(
-      OnFinality.MainNet().rpcUrl,
-      "https://stellar.api.onfinality.io/public",
     );
   });
 

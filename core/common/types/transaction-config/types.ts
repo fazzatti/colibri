@@ -14,8 +14,8 @@ import type {
  * Transaction-level configuration shared by Colibri transaction builders.
  */
 export type TransactionConfig = {
-  /** Base fee in stroops applied to the transaction. */
-  fee: BaseFee;
+  /** Fee value or explicit fee strategy applied to the transaction. */
+  fee: BaseFee | TransactionFee;
   /** Source account that will submit the transaction. */
   source: Ed25519PublicKey;
   /** Timeout, in seconds, applied to the transaction. */
@@ -40,10 +40,48 @@ export type TransactionConfig = {
 export type BaseFee = `${number}`;
 
 /**
+ * String representation of an exact transaction inclusion fee in stroops.
+ */
+export type InclusionFee = `${number}`;
+
+/**
+ * String representation of the maximum total transaction fee in stroops.
+ */
+export type MaxFee = `${number}`;
+
+/**
+ * Explicit transaction-fee strategy.
+ *
+ * Exactly one strategy must be provided. `base` configures the Stellar SDK's
+ * per-operation base-fee bid, `inclusion` configures the transaction's exact
+ * total inclusion-fee bid, and `max` caps the complete transaction fee,
+ * including Soroban resources.
+ */
+export type TransactionFee =
+  | {
+    /** Maximum base-fee bid per operation. */
+    base: BaseFee;
+    inclusion?: never;
+    max?: never;
+  }
+  | {
+    base?: never;
+    /** Exact total inclusion-fee bid for the transaction. */
+    inclusion: InclusionFee;
+    max?: never;
+  }
+  | {
+    base?: never;
+    inclusion?: never;
+    /** Maximum total transaction fee, including Soroban resource fees. */
+    max: MaxFee;
+  };
+
+/**
  * Subset of transaction configuration required to build a fee-bump envelope.
  */
 export type FeeBumpConfig = {
-  fee: TransactionConfig["fee"];
+  fee: BaseFee;
   source: TransactionConfig["source"];
   signers: (EnvelopeSigner | PreAuthTransactionSigner)[];
 };

@@ -16,8 +16,10 @@ import { Buffer } from "buffer";
 import {
   assembleForEnforcementToEnforceSimulation,
   enforceSimulationToAssemble,
+  INVOKE_CONTRACT_INPUT_STEP_ID,
   signAuthEntriesToAssembleForEnforcement,
 } from "@/pipelines/invoke-contract/connectors.ts";
+import type { InvokeContractInput } from "@/pipelines/invoke-contract/types.ts";
 import type { SimulateTransactionOutput } from "@/processes/simulate-transaction/types.ts";
 import {
   BUILD_TRANSACTION_STEP_ID,
@@ -80,6 +82,20 @@ const simulation = (id: string): SimulateTransactionOutput => ({
   _parsed: true,
 });
 
+const invokeInput: InvokeContractInput = {
+  operations: [],
+  config: {
+    fee: { max: "500" },
+    source,
+    timeout: 30,
+    signers: [],
+  },
+};
+const invokeInputWithStringFee: InvokeContractInput = {
+  ...invokeInput,
+  config: { ...invokeInput.config, fee: "100" },
+};
+
 const seedStepOutput = async <Output>(
   context: ReturnType<typeof createRunContext>,
   stepId: string,
@@ -95,6 +111,11 @@ describe("invoke-contract enforcement connectors", () => {
     const recording = simulation("recording");
     await seedStepOutput(context, BUILD_TRANSACTION_STEP_ID, transaction);
     await seedStepOutput(context, SIMULATE_TRANSACTION_STEP_ID, recording);
+    await seedStepOutput(
+      context,
+      INVOKE_CONTRACT_INPUT_STEP_ID,
+      invokeInput,
+    );
 
     const result = await signAuthEntriesToAssembleForEnforcement().runWith(
       { context: { parent: context } },
@@ -103,11 +124,31 @@ describe("invoke-contract enforcement connectors", () => {
 
     assertStrictEquals(result.transaction, transaction);
     assertStrictEquals(result.sorobanData, recording.transactionData);
-    assertEquals(result.resourceFee, 42);
+    assertEquals(result.transactionFee, { max: "500" });
+    assertEquals(result.resourceFee, undefined);
     assertEquals(
       operationHasDelegatedAuthorization(result.authorizedOperation),
       true,
     );
+  });
+
+  it("omits an explicit enforcement strategy for a string fee", async () => {
+    const context = createRunContext();
+    const recording = simulation("recording");
+    await seedStepOutput(context, BUILD_TRANSACTION_STEP_ID, transaction);
+    await seedStepOutput(context, SIMULATE_TRANSACTION_STEP_ID, recording);
+    await seedStepOutput(
+      context,
+      INVOKE_CONTRACT_INPUT_STEP_ID,
+      invokeInputWithStringFee,
+    );
+
+    const result = await signAuthEntriesToAssembleForEnforcement().runWith(
+      { context: { parent: context } },
+      entry,
+    );
+
+    assertEquals(result.transactionFee, undefined);
   });
 
   it("connects the prepared transaction to enforcing simulation", async () => {
@@ -131,6 +172,11 @@ describe("invoke-contract enforcement connectors", () => {
     const enforcing = simulation("enforcing");
     await seedStepOutput(context, BUILD_TRANSACTION_STEP_ID, transaction);
     await seedStepOutput(context, SIGN_AUTH_ENTRIES_STEP_ID, [entry]);
+    await seedStepOutput(
+      context,
+      INVOKE_CONTRACT_INPUT_STEP_ID,
+      invokeInput,
+    );
 
     const result = await enforceSimulationToAssemble().runWith(
       { context: { parent: context } },
@@ -140,6 +186,25 @@ describe("invoke-contract enforcement connectors", () => {
     assertStrictEquals(result.transaction, transaction);
     assertEquals(result.authEntries, [entry]);
     assertStrictEquals(result.sorobanData, enforcing.transactionData);
-    assertEquals(result.resourceFee, 42);
+    assertEquals(result.transactionFee, { max: "500" });
+    assertEquals(result.resourceFee, undefined);
+  });
+
+  it("omits an explicit final strategy for a string fee", async () => {
+    const context = createRunContext();
+    await seedStepOutput(context, BUILD_TRANSACTION_STEP_ID, transaction);
+    await seedStepOutput(context, SIGN_AUTH_ENTRIES_STEP_ID, [entry]);
+    await seedStepOutput(
+      context,
+      INVOKE_CONTRACT_INPUT_STEP_ID,
+      invokeInputWithStringFee,
+    );
+
+    const result = await enforceSimulationToAssemble().runWith(
+      { context: { parent: context } },
+      simulation("enforcing"),
+    );
+
+    assertEquals(result.transactionFee, undefined);
   });
 });

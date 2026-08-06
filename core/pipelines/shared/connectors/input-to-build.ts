@@ -15,8 +15,12 @@ export const createInputToBuild = <Input extends InputWithTransactionConfig>(
   return (input: Input): BuildTransactionInput => {
     const { operations, config } = input;
 
+    const fee = typeof config.fee === "string"
+      ? { baseFee: config.fee }
+      : { transactionFee: config.fee };
+
     return {
-      baseFee: config.fee,
+      ...fee,
       source: config.source,
       networkPassphrase,
       operations,

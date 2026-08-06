@@ -79,13 +79,19 @@ export const signAuthEntriesToAssemble = () =>
 
     const sorobanData = simulateOutput.transactionData;
     const authEntries = signAuthEntriesOutput;
-    const resourceFee = parseInt(simulateOutput.minResourceFee);
+    const inputStep = getRequiredStepOutput<InvokeContractInput>(
+      this,
+      INVOKE_CONTRACT_INPUT_STEP_ID,
+    );
+    const transactionFee = typeof inputStep.config.fee === "string"
+      ? {}
+      : { transactionFee: inputStep.config.fee };
 
     return {
       authEntries,
       transaction,
       sorobanData,
-      resourceFee,
+      ...transactionFee,
     };
   }, { id: "invoke-contract-sign-auth-to-assemble" as const });
 
@@ -103,6 +109,13 @@ export const signAuthEntriesToAssembleForEnforcement = () =>
       SIMULATE_TRANSACTION_STEP_ID,
     );
     const operation = getOperationsFromTransaction(transaction)[0];
+    const inputStep = getRequiredStepOutput<InvokeContractInput>(
+      this,
+      INVOKE_CONTRACT_INPUT_STEP_ID,
+    );
+    const transactionFee = typeof inputStep.config.fee === "string"
+      ? {}
+      : { transactionFee: inputStep.config.fee };
     const authorizedOperation = Operation.invokeHostFunction({
       func: operation.body().invokeHostFunctionOp().hostFunction(),
       auth: signAuthEntriesOutput,
@@ -112,7 +125,7 @@ export const signAuthEntriesToAssembleForEnforcement = () =>
       authorizedOperation,
       transaction,
       sorobanData: simulateOutput.transactionData,
-      resourceFee: parseInt(simulateOutput.minResourceFee),
+      ...transactionFee,
     };
   }, { id: "invoke-contract-sign-auth-to-assemble-for-enforcement" as const });
 
@@ -144,12 +157,19 @@ export const enforceSimulationToAssemble = () =>
       this,
       SIGN_AUTH_ENTRIES_STEP_ID,
     );
+    const inputStep = getRequiredStepOutput<InvokeContractInput>(
+      this,
+      INVOKE_CONTRACT_INPUT_STEP_ID,
+    );
+    const transactionFee = typeof inputStep.config.fee === "string"
+      ? {}
+      : { transactionFee: inputStep.config.fee };
 
     return {
       authEntries,
       transaction,
       sorobanData: simulationOutput.transactionData,
-      resourceFee: parseInt(simulationOutput.minResourceFee),
+      ...transactionFee,
     };
   }, { id: "invoke-contract-enforce-simulation-to-assemble" as const });
 
