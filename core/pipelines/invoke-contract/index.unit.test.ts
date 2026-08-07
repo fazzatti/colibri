@@ -92,6 +92,28 @@ describe("createInvokeContractPipeline", () => {
         assertExists(result.source);
         assertEquals(result.rpc, mockRpc);
       });
+
+      it("preserves an explicit transaction fee strategy", () => {
+        const networkConfig = NetworkConfig.TestNet();
+        const mockRpc = {} as unknown as Server;
+        const input: InvokeContractInput = {
+          operations: [Operation.setOptions({})],
+          config: {
+            fee: { max: "10000000" },
+            source: "GMOCKEDSOURCE",
+            timeout: 30,
+            signers: [],
+          },
+        };
+
+        const result = inputToBuild(
+          mockRpc,
+          networkConfig.networkPassphrase,
+        )(input);
+
+        assertEquals(result.transactionFee, input.config.fee);
+        assertEquals(result.baseFee, undefined);
+      });
     });
 
     describe("signAuthEntriesToAssemble", () => {
@@ -129,6 +151,19 @@ describe("createInvokeContractPipeline", () => {
           SIMULATE_TRANSACTION_STEP_ID,
           mockSimulateOutput,
         );
+        await seedStepOutput(
+          context,
+          INVOKE_CONTRACT_INPUT_STEP_ID,
+          {
+            operations: [],
+            config: {
+              fee: { max: "10000" },
+              source: "GCFX...",
+              timeout: 30,
+              signers: [],
+            },
+          } satisfies InvokeContractInput,
+        );
 
         const connector = signAuthEntriesToAssemble();
 
@@ -141,7 +176,47 @@ describe("createInvokeContractPipeline", () => {
         assertEquals(result.authEntries, mockSignAuthEntriesOutput);
         assertEquals(result.transaction, mockBuildOutput);
         assertEquals(result.sorobanData, mockSimulateOutput.transactionData);
-        assertEquals(result.resourceFee, 5000);
+        assertEquals(result.transactionFee, { max: "10000" });
+        assertEquals(result.resourceFee, undefined);
+      });
+
+      it("omits an explicit strategy for the string fee path", async () => {
+        const context = createRunContext();
+        const transaction = {};
+        const simulation: SimulateTransactionOutput = {
+          id: "1",
+          minResourceFee: "5000",
+          latestLedger: 1,
+          events: [],
+          _parsed: true,
+          result: { auth: [], retval: xdr.ScVal.scvVoid() },
+          transactionData: new SorobanDataBuilder(),
+        };
+        await seedStepOutput(context, BUILD_TRANSACTION_STEP_ID, transaction);
+        await seedStepOutput(
+          context,
+          SIMULATE_TRANSACTION_STEP_ID,
+          simulation,
+        );
+        await seedStepOutput(
+          context,
+          INVOKE_CONTRACT_INPUT_STEP_ID,
+          {
+            operations: [],
+            config: {
+              fee: "100",
+              source: "GCFX...",
+              timeout: 30,
+              signers: [],
+            },
+          } satisfies InvokeContractInput,
+        );
+
+        const result = await signAuthEntriesToAssemble().runWith(
+          { context: { parent: context } },
+        );
+
+        assertEquals(result.transactionFee, undefined);
       });
     });
     describe("envSignReqToSignEnvelope", () => {

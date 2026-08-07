@@ -5,7 +5,6 @@ import { assertEquals } from "@std/assert";
 import { Ankr } from "@/network/providers/ankr.ts";
 import { Gateway } from "@/network/providers/gateway.ts";
 import { Lightsail } from "@/network/providers/lightsail.ts";
-import { OnFinality } from "@/network/providers/onfinality.ts";
 
 /**
  * Extended health response type that includes additional fields missing from the SDK.
@@ -58,17 +57,6 @@ describe("RPC Provider Health Checks", disableSanitizeConfig, () => {
     it("MainNet archive should be healthy", async () => {
       const config = Lightsail.MainNet();
       const server = new Server(config.archiveRpcUrl, {
-        allowHttp: config.allowHttp ?? false,
-      });
-      const health = (await server.getHealth()) as GetHealthResponse;
-      assertEquals(health.status, "healthy");
-    });
-  });
-
-  describe("OnFinality", () => {
-    it("MainNet should be healthy", async () => {
-      const config = OnFinality.MainNet();
-      const server = new Server(config.rpcUrl, {
         allowHttp: config.allowHttp ?? false,
       });
       const health = (await server.getHealth()) as GetHealthResponse;

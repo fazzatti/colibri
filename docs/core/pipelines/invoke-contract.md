@@ -8,8 +8,7 @@ contract interactions.
 This pipeline uses step wrappers around:
 
 1. [BuildTransaction](../processes/build-transaction.md)
-2. [SimulateTransaction](../processes/simulate-transaction.md) in recording
-   mode
+2. [SimulateTransaction](../processes/simulate-transaction.md) in recording mode
 3. [SignAuthEntries](../processes/sign-auth-entries.md)
 4. [AssembleForEnforcement](../processes/assemble-for-enforcement.md)
 5. [EnforceSimulation](../processes/enforce-simulation.md)
@@ -61,6 +60,22 @@ const result = await pipeline.run({
 console.log(result.hash);
 console.log(result.returnValue);
 ```
+
+To cap the complete transaction fee, set `config.fee` to a maximum:
+
+```ts
+config: {
+  source: signer.publicKey(),
+  fee: { max: "1000000" },
+  timeout: 30,
+  signers: [signer],
+}
+```
+
+After each relevant simulation, final assembly subtracts the simulated resource
+fee from that maximum and uses the remainder as inclusion fee. At least 100
+stroops must remain. See [Transaction Config](../transaction-config.md) for all
+fee modes.
 
 ## Typical Use Cases
 

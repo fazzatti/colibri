@@ -78,7 +78,6 @@ describe("assembleForEnforcement", () => {
       transaction,
       authorizedOperation: makeInvokeOperation([makeAuthEntry()]),
       sorobanData: new SorobanDataBuilder(),
-      resourceFee: 10,
     });
 
     assertStrictEquals(result, transaction);
@@ -91,8 +90,7 @@ describe("assembleForEnforcement", () => {
     const result = await assembleForEnforcement({
       transaction,
       authorizedOperation: makeInvokeOperation([delegatedEntry]),
-      sorobanData: new SorobanDataBuilder(),
-      resourceFee: 10,
+      sorobanData: new SorobanDataBuilder().setResourceFee(10),
     });
 
     const assembledAuth = getOperationsFromTransaction(result)[0].body()
@@ -106,6 +104,25 @@ describe("assembleForEnforcement", () => {
     assertEquals(result.fee, "110");
   });
 
+  it("forwards a resource-fee override during delegated assembly", async () => {
+    const transaction = makeTransaction();
+    const sorobanData = new SorobanDataBuilder().setResourceFee(10);
+
+    const result = await assembleForEnforcement({
+      transaction,
+      authorizedOperation: makeInvokeOperation([makeDelegatedEntry()]),
+      sorobanData,
+      resourceFee: "15",
+    });
+
+    assertEquals(result.fee, "115");
+    assertEquals(
+      result.toEnvelope().v1().tx().ext().value()?.resourceFee().toBigInt(),
+      15n,
+    );
+    assertEquals(sorobanData.build().resourceFee().toBigInt(), 10n);
+  });
+
   it("uses a unique error for each required input", async () => {
     const codes = Object.values(E.Code);
     assertEquals(new Set(codes).size, codes.length);
@@ -115,7 +132,6 @@ describe("assembleForEnforcement", () => {
         assembleForEnforcement({
           transaction: undefined,
           authorizedOperation: makeInvokeOperation(),
-          resourceFee: 10,
         } as unknown as AssembleForEnforcementInput),
       E.MISSING_TRANSACTION,
     );
@@ -124,18 +140,8 @@ describe("assembleForEnforcement", () => {
         assembleForEnforcement({
           transaction: makeTransaction(),
           authorizedOperation: undefined,
-          resourceFee: 10,
         } as unknown as AssembleForEnforcementInput),
       E.MISSING_AUTHORIZED_OPERATION,
-    );
-    await assertRejects(
-      () =>
-        assembleForEnforcement({
-          transaction: makeTransaction(),
-          authorizedOperation: makeInvokeOperation(),
-          resourceFee: undefined,
-        } as unknown as AssembleForEnforcementInput),
-      E.MISSING_RESOURCE_FEE,
     );
   });
 
@@ -154,7 +160,6 @@ describe("assembleForEnforcement", () => {
           transaction: paymentTransaction,
           authorizedOperation: makeInvokeOperation([makeDelegatedEntry()]),
           sorobanData: new SorobanDataBuilder(),
-          resourceFee: 10,
         }),
       AssembleErrors.NOT_SMART_CONTRACT_TRANSACTION_ERROR,
     );

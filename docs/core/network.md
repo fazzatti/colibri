@@ -66,7 +66,6 @@ const network = NetworkProviders.Lightsail.MainNet();
 console.log(network.rpcUrl);
 console.log(network.archiveRpcUrl);
 
-const onFinality = NetworkProviders.OnFinality.MainNet();
 const ankrArchive = NetworkProviders.Ankr.MainNet();
 ```
 
