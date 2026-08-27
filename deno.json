@@ -1,6 +1,7 @@
 {
   "workspace": [
     "./core",
+    "./build-verification",
     "./rpc-streamer",
     "./webauth",
     "./plugins/*",
@@ -9,6 +10,7 @@
   "nodeModulesDir": "auto",
   "imports": {
     "jsr:@colibri/core": "./core",
+    "jsr:@colibri/build-verification": "./build-verification",
     "jsr:@colibri/test-tooling": "./test-tooling",
     "jsr:@colibri/webauth": "./webauth",
     "colibri-internal/": "./_internal/",
@@ -23,8 +25,8 @@
     "@std/expect": "jsr:@std/expect@^1.0.0"
   },
   "tasks": {
-    "check": "deno check core/mod.ts rpc-streamer/mod.ts webauth/mod.ts plugins/fee-bump/mod.ts plugins/channel-accounts/mod.ts test-tooling/mod.ts",
-    "check:jsr": "deno doc --lint core/mod.ts && deno doc --lint webauth/mod.ts && deno doc --lint plugins/fee-bump/mod.ts && deno doc --lint plugins/channel-accounts/mod.ts && deno doc --lint test-tooling/mod.ts",
+    "check": "deno check core/mod.ts build-verification/mod.ts build-verification/core.ts build-verification/docker.ts build-verification/cli.ts rpc-streamer/mod.ts webauth/mod.ts plugins/fee-bump/mod.ts plugins/channel-accounts/mod.ts test-tooling/mod.ts",
+    "check:jsr": "deno doc --lint core/mod.ts && deno doc --lint build-verification/mod.ts && deno doc --lint build-verification/core.ts && deno doc --lint build-verification/docker.ts && deno doc --lint build-verification/cli.ts && deno doc --lint webauth/mod.ts && deno doc --lint plugins/fee-bump/mod.ts && deno doc --lint plugins/channel-accounts/mod.ts && deno doc --lint test-tooling/mod.ts",
     "build:webauth-fixtures": "deno run -A _tools/build-webauth-fixtures.ts",
     "check:webauth-fixtures": "deno run -A _tools/build-webauth-fixtures.ts --check",
     "build:delegated-auth-fixtures": "deno run -A _tools/build-delegated-auth-fixtures.ts",

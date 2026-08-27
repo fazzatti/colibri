@@ -69,6 +69,20 @@ npm install @colibri/webauth
 
 ---
 
+### [@colibri/build-verification](./build-verification) <a href="https://jsr.io/@colibri/build-verification"><img src="https://jsr.io/badges/@colibri/build-verification" alt="JSR @colibri/build-verification" /></a>
+
+Reproducible SEP-58 and out-of-band Stellar contract build verification with
+digest-pinned images, exact source hashing, isolated Docker builds, typed
+errors, and exportable evidence.
+
+```sh
+deno add jsr:@colibri/build-verification
+```
+
+[View Documentation →](./build-verification/README.md)
+
+---
+
 ### [@colibri/plugin-fee-bump](./plugins/fee-bump) <a href="https://jsr.io/@colibri/plugin-fee-bump"><img src="https://jsr.io/badges/@colibri/plugin-fee-bump" alt="JSR @colibri/plugin-fee-bump" /></a>
 
 A plugin that enables fee sponsorship by wrapping transactions in Fee Bump

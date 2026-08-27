@@ -1,0 +1,20 @@
+{
+  "name": "@colibri/build-verification",
+  "version": "0.1.0",
+  "exports": {
+    ".": "./mod.ts",
+    "./core": "./core.ts",
+    "./docker": "./docker.ts",
+    "./cli": "./cli.ts"
+  },
+  "license": "MIT",
+  "publish": {
+    "include": ["./**/*.ts", "./README.md", "./LICENSE", "./deno.json"],
+    "exclude": ["./**/*.test.ts"]
+  },
+  "imports": {
+    "@/": "./src/",
+    "@colibri/core": "jsr:@colibri/core@^0.26.0",
+    "dockerode": "npm:dockerode@3.3.3"
+  }
+}
