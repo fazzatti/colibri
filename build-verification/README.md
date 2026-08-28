@@ -2,9 +2,10 @@
 
 Reproducible build verification for Stellar smart contracts.
 
-The package fetches or accepts target contract WASM, reads its build metadata,
-rebuilds the recorded source inside the digest-pinned build image, and compares
-the resulting bytes. It supports strict
+The package resolves a target contract Wasm, reads its build metadata, resolves
+the exact source and OCI image, rebuilds the contract in a bounded disposable
+Docker container, selects the resulting artifact without guessing, and compares
+the raw Wasm bytes. It supports strict
 [SEP-58](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0058.md)
 verification and an explicitly labeled out-of-band mode for older contracts.
 
@@ -14,8 +15,21 @@ verification and an explicitly labeled out-of-band mode for older contracts.
 deno add jsr:@colibri/build-verification jsr:@colibri/core
 ```
 
-Docker is required by the built-in runner. The verifier can also receive a
-custom `ContractBuildRunner` for another disposable execution environment.
+The built-in runner requires a reachable Docker daemon. A custom
+`ContractBuildRunner` can replace Docker when another disposable execution
+environment is required.
+
+## Public entrypoints
+
+- `@colibri/build-verification` exports the complete verifier, pipeline,
+  providers, policies, reporting tools, and domain types.
+- `@colibri/build-verification/core` exports deterministic parsing, recipe,
+  policy, evidence, comparison, and error APIs. Its import graph does not load
+  RPC, HTTP, filesystem, Docker, verifier, or CLI adapters.
+- `@colibri/build-verification/docker` exports the Docker execution boundary and
+  its supporting types and errors.
+- `@colibri/build-verification/cli` is both an importable CLI API and a runnable
+  JSR entrypoint.
 
 ## Strict SEP-58 verification
 
@@ -24,38 +38,42 @@ import { ContractBuildVerifier } from "@colibri/build-verification";
 import { NetworkConfig } from "@colibri/core";
 
 const verifier = new ContractBuildVerifier({
-  network: NetworkConfig.MainNet(),
+  network: { networkConfig: NetworkConfig.MainNet() },
 });
 
 const result = await verifier.verify({
   target: { contractId: "C..." },
 });
 
-if (result.status === "verified") {
-  console.log("Exact build reproduced", result.evidence);
-} else if (result.status === "mismatch") {
-  console.log("Build completed, but the WASM bytes differ", result.evidence);
-} else {
-  console.log("SEP-58 does not apply", result.reason);
+switch (result.status) {
+  case "verified":
+    console.log("Exact build reproduced", result.evidence);
+    break;
+  case "mismatch":
+    console.log("The rebuilt Wasm differs", result.evidence);
+    break;
+  case "notApplicable":
+    console.log("Build verification does not apply", result.reason);
+    break;
 }
 ```
 
-Strict mode is the default. It treats the target WASM metadata as authoritative:
+Strict mode is the default. The target Wasm metadata is authoritative:
 
-- `bldimg` must identify one fully qualified, single-platform image manifest by
-  SHA-256 digest.
+- `bldimg` must identify one fully qualified, SHA-256 digest-pinned,
+  single-platform image manifest.
 - ordered `bldarg` values are replayed, defaulting to `contract`, `build` only
   when they are absent.
-- `bldopt` values are passed as structured arguments, never concatenated into a
+- `bldopt` values remain structured arguments and are never concatenated into a
   shell command.
 - `source_sha256` must match the exact downloaded or supplied archive bytes.
-- non-generated contract metadata is replayed because metadata is part of the
-  final WASM bytes.
-- artifact selection considers only new or changed Cargo release WASM files and
-  fails if choosing one would require guessing.
+- non-generated contract metadata is replayed because metadata contributes to
+  the final Wasm bytes.
+- artifact selection considers only new or changed Cargo release Wasm files and
+  fails if selecting one would require guessing.
 
-If `source_uri` is present, Colibri downloads it. You can instead supply the
-exact archive explicitly:
+When strict metadata contains `source_uri`, the default source provider can
+retrieve it. A caller may instead provide the exact archive explicitly:
 
 ```ts
 await verifier.verify({
@@ -64,37 +82,26 @@ await verifier.verify({
 });
 ```
 
-GitHub archive URLs also have a convenience input:
+## Targets and network configuration
+
+Targets accept direct bytes, a deployed Wasm hash, or a contract ID:
 
 ```ts
-await verifier.verify({
-  target: { wasm: deployedWasm },
-  source: {
-    type: "github",
-    owner: "organization",
-    repository: "contract-repository",
-    ref: "exact-commit-sha",
-  },
-});
+{ target: { wasm: deployedWasm, label: "local fixture" } }
+{ target: { wasmHash: "0123..." } }
+{ target: { contractId: "C..." } }
 ```
 
-Supported source archives are `.tar`, `.tar.gz`, and `.tgz`. Extraction rejects
-absolute paths, parent traversal, links and special entries, multiple top-level
-directories, and configured resource-limit violations.
-
-## Network configuration
-
-Network-backed targets accept the normal Colibri configuration:
+Direct Wasm does not require a network. A Wasm hash or contract ID requires one
+of these mutually exclusive network paths:
 
 ```ts
+import { NetworkConfig } from "@colibri/core";
+
 new ContractBuildVerifier({
-  network: NetworkConfig.TestNet(),
+  network: { networkConfig: NetworkConfig.TestNet() },
 });
-```
 
-Granular inputs and an existing RPC reader are also supported:
-
-```ts
 new ContractBuildVerifier({
   network: {
     rpcUrl: "https://soroban-testnet.stellar.org",
@@ -104,11 +111,57 @@ new ContractBuildVerifier({
 
 new ContractBuildVerifier({
   network: {
-    rpc: existingRpcClient,
+    rpc: existingRpcLedgerEntriesClient,
     networkPassphrase,
   },
 });
 ```
+
+The first form keeps Colibri's existing `NetworkConfig` convenience. The other
+forms allow granular configuration or an existing Core-compatible RPC reader.
+
+## Source inputs
+
+The default source provider accepts all of the following:
+
+```ts
+// Exact in-memory archive bytes.
+{ type: "archive", name: "source.tar.gz", bytes }
+
+// Local archive, or a directory in out-of-band mode only.
+{ type: "path", path: "./source.tar.gz" }
+
+// Policy-checked, DNS-pinned URL retrieval.
+{ type: "url", url: "https://example.com/source.tar.gz" }
+
+// GitHub revision, resolved to an exact commit SHA before downloading.
+{
+  type: "githubArchive",
+  owner: "organization",
+  repository: "contract-repository",
+  revision: "exact-tag-branch-or-commit",
+  format: "tarGzip",
+}
+
+// One exact GitHub release asset.
+{
+  type: "githubReleaseAsset",
+  owner: "organization",
+  repository: "contract-repository",
+  tag: "v1.0.0",
+  asset: "source.tar.gz",
+}
+```
+
+Supported archives are `.tar`, `.tar.gz`, `.tgz`, and `.zip`. Extraction rejects
+absolute paths, parent traversal, links, special entries, duplicate or
+conflicting paths, ambiguous top-level roots, corrupt ZIP entries, and resource
+limit violations.
+
+Pass `githubToken` to the verifier for private or rate-limited GitHub API
+requests. The default provider sends that token only to `api.github.com`, drops
+it before cross-host downloads or redirects, and never places it in evidence or
+logs.
 
 ## Out-of-band verification
 
@@ -123,36 +176,73 @@ const result = await verifier.verify({
     image: "docker.io/stellar/stellar-cli@sha256:...",
     arguments: ["contract", "build"],
     options: ["--package=my-contract"],
+    sourceSha256: "0123...",
   },
 });
 ```
 
-Out-of-band evidence is always labeled `recipeProvenance: "callerSupplied"`. It
-proves that the supplied recipe reproduced the target bytes; it does not prove
-that the recipe came from the deployed contract or its original author.
+Out-of-band evidence always records `recipeProvenance: "callerSupplied"`. A
+matching result proves only that the supplied recipe reproduced the target
+bytes. It does not prove that the deployed contract or its author committed to
+that recipe.
 
-## Image policy
+## Pipeline architecture and plugins
 
-The default `OfficialStellarImagePolicy` accepts only
-`docker.io/stellar/stellar-cli`. The image must still be digest-pinned to one
-platform manifest. A tag or multi-platform index is rejected.
+`ContractBuildVerifier` is a polished facade over one composable Convee
+pipeline. The verifier exposes it as `verificationPipe` and also accepts plugins
+at construction time.
 
-Use a custom policy when your organization trusts another repository:
+```text
+resolve target -> parse metadata -> validate recipe -> resolve source
+  -> resolve image -> execute build -> select artifact -> compare Wasm
+```
+
+Each responsibility is a standalone process with a stable step ID:
+
+- `resolve-verification-target`
+- `parse-contract-metadata`
+- `validate-build-recipe`
+- `resolve-source-archive`
+- `resolve-build-image`
+- `execute-contract-build`
+- `select-build-artifact`
+- `compare-contract-wasm`
+
+The pipeline ID is `BuildVerificationPipeline`. Process outputs carry the
+complete accumulated state, evidence, and bounded logs forward, so plugins can
+observe or extend one intentional boundary without recreating the workflow.
+Lower-level users can call the process functions directly or construct a
+pipeline with `createBuildVerificationPipeline(...)` and explicit dependencies.
+
+## Policies
+
+The default policy set independently evaluates the image, build command, build
+options, and each source request or redirect. Callers can replace only the
+policy boundary they need:
 
 ```ts
+import {
+  ContractBuildVerifier,
+  OfficialStellarImagePolicy,
+} from "@colibri/build-verification";
+
 const verifier = new ContractBuildVerifier({
-  imagePolicy: {
-    validate(image) {
-      if (image.registry !== "registry.example.com") {
-        throw new Error("untrusted registry");
-      }
-    },
+  policy: {
+    image: new OfficialStellarImagePolicy({
+      registry: "registry.example.com",
+      repository: "organization/stellar-cli",
+      sourceRepository: "https://github.com/organization/stellar-cli-docker",
+    }),
   },
 });
 ```
 
-Policy failures are normalized into typed Colibri errors. A digest establishes
-image identity, not that the image or source code is safe.
+The built-in `OfficialStellarImagePolicy` defaults to
+`docker.io/stellar/stellar-cli` and its canonical source repository. It checks
+the exact manifest digest and runtime contract. OCI provenance and SBOM
+referrers are recorded when available, but this package does not claim that an
+unverified provenance signature is valid. A digest establishes image identity,
+not that the image or source code is safe.
 
 ## Build isolation and network access
 
@@ -165,39 +255,67 @@ const verifier = new ContractBuildVerifier({
 ```
 
 Enable it only when the recorded build must download dependencies. The Docker
-runner uses a read-only root filesystem, drops Linux capabilities, enables
-`no-new-privileges`, applies CPU, memory, process, time, archive, and log
-limits, and gives only the source tree and disposable cache locations write
-access.
+runner:
 
-Containers share the host kernel. A hosted verifier should run builds in
-disposable workers or VMs and apply infrastructure-level isolation in addition
-to these local-development controls.
+- pulls and re-inspects the exact approved manifest digest;
+- uses a read-only root filesystem and drops all Linux capabilities;
+- enables `no-new-privileges`;
+- applies CPU, memory, process, timeout, archive, artifact, and log limits;
+- mounts only the disposable source workspace as writable; and
+- owns execution only, leaving artifact collection and selection to separate
+  boundaries.
 
-## Results and evidence
+The evidence reports which runner controls were enforced, including that the
+built-in runner does not claim a hard disk limit. Containers share the host
+kernel. Hosted verification should use disposable workers or VMs and
+infrastructure-level isolation in addition to these local-development controls.
 
-Completed comparisons return only:
+## Results, evidence, logs, and errors
 
-- `verified`: the rebuilt and target WASM bytes are equal.
-- `mismatch`: the build completed but the bytes differ.
-- `notApplicable`: the target is a Stellar Asset Contract or has no strict
-  SEP-58 metadata.
+Completed verification returns one of three statuses:
 
-Downloads, policy decisions, extraction, Docker, build, and artifact failures
-throw unique `BuildVerificationError` subclasses with stable `BLDV_*` codes.
-They are not presented as verification outcomes.
+- `verified`: rebuilt and target Wasm bytes are exactly equal.
+- `mismatch`: the build completed, but the raw bytes differ.
+- `notApplicable`: the target is a Stellar Asset Contract, or strict mode found
+  no SEP-58 metadata.
 
-Write completed evidence to a file:
+Downloads, policy decisions, metadata parsing, extraction, Docker execution,
+artifact selection, and other operational failures throw unique
+`BuildVerificationError` subclasses with stable `BLDV_*` codes. They are never
+reported as `mismatch`.
+
+Write completed evidence and bounded logs atomically:
 
 ```ts
-import { writeVerificationEvidence } from "@colibri/build-verification";
+import {
+  writeVerificationEvidence,
+  writeVerificationLogs,
+} from "@colibri/build-verification";
 
-if ("evidence" in result) {
-  await writeVerificationEvidence("verification.json", result.evidence);
-}
+await writeVerificationEvidence("verification.json", result);
+await writeVerificationLogs("verification.jsonl", result.evidence.logs);
+await writeVerificationLogs("verification.log", result.evidence.logs, {
+  format: "text",
+});
 ```
 
-Build logs are bounded before they enter errors or evidence.
+Evidence and logs retain hashes, sizes, decisions, resolved revisions, image
+facts, execution capabilities, and stage events. They do not retain source
+archive bytes, Wasm bytes, GitHub tokens, URL credentials, or environment
+variable values.
+
+## One-shot API
+
+For one verification without retaining a configured instance:
+
+```ts
+import { verifyContractBuild } from "@colibri/build-verification";
+
+const result = await verifyContractBuild(
+  { target: { contractId: "C..." } },
+  { network: { networkConfig: NetworkConfig.MainNet() } },
+);
+```
 
 ## CLI
 
@@ -207,7 +325,8 @@ Run the package directly from JSR:
 deno run -A jsr:@colibri/build-verification/cli \
   --contract-id C... \
   --network mainnet \
-  --evidence verification.json
+  --evidence verification.json \
+  --logs verification.jsonl
 ```
 
 Out-of-band mode uses a JSON recipe file:
@@ -220,11 +339,39 @@ deno run -A jsr:@colibri/build-verification/cli \
   --allow-build-network
 ```
 
-Use `--help` for all flags. Exit code `0` means `verified` or `notApplicable`,
-`2` means `mismatch`, and `1` means verification did not complete.
+Use `--help` for every target, network, source, and reporting flag. Exit code
+`0` means `verified` or `notApplicable`, `2` means `mismatch`, and `1` means
+verification did not complete.
+
+## Repository validation
+
+The ordinary integration suite exercises the Docker runner against exact local
+fixtures and resolves direct Wasm, Wasm-hash, contract-ID, upgraded-contract,
+and Stellar Asset Contract targets on a disposable Quickstart ledger. Live
+conformance checks are kept in a separate task because public source hosts and
+Stellar networks are external dependencies:
+
+```sh
+deno task test:conformance
+```
+
+That task rebuilds an immutable public GitHub source archive, validates an exact
+GitHub release asset, and deploys and verifies the Colibri fixture contract on
+Testnet. It requires Docker and outbound network access. A scheduled GitHub
+workflow runs the same task weekly, and it can also be dispatched manually.
+
+The upgradeable Rust contract, source archives, compiled Wasm, and provenance
+manifests used by these tests live under `_internal/build-verification/`. They
+are repository-only fixtures and are not included in the JSR package. Rebuild or
+byte-check them with:
+
+```sh
+deno task build:build-verification-fixtures
+deno task check:build-verification-fixtures
+```
 
 ## Scope
 
 This package verifies reproducible contract builds. It does not publish SEP-55
 attestations, manage a hosted build queue, operate a public verification
-registry, or claim that reproduced source code has been audited.
+registry, audit source code, or claim that a reproduced build is safe.

@@ -1,0 +1,21 @@
+{
+  "source": {
+    "owner": "stellar",
+    "repository": "soroban-examples",
+    "revision": "13b9f51d184aabde23dec820e44eed056cf9690f",
+    "format": "tarGzip",
+    "sha256": "99914f1ae0c24483e5269026954be74532976cf3182ff4a30c196f826f53aa5d"
+  },
+  "image": "docker.io/stellar/stellar-cli@sha256:ccdebe3bd4af47e01f275c3da6caeb2752d02b06bc8bc1b3db534432498810c0",
+  "options": [
+    "--locked",
+    "--manifest-path=hello_world/Cargo.toml",
+    "--package=soroban-hello-world-contract",
+    "--optimize"
+  ],
+  "artifact": {
+    "path": "hello_world/target/wasm32v1-none/release/soroban_hello_world_contract.wasm",
+    "sha256": "ba789fe6627de52ebfbd5353f5eb6b7efef23d7e8633ab59051c1a22b2f00a88",
+    "size": 626
+  }
+}

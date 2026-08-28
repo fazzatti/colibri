@@ -4,12 +4,10 @@
  * @module
  */
 
-export * from "@/cli.ts";
-export * from "@/types.ts";
-export { writeVerificationEvidence } from "@/verifier.ts";
-
-import { runBuildVerificationCli } from "@/cli.ts";
+export * from "@/cli/index.ts";
+export { BuildVerificationError, Code } from "@/error/base.ts";
 
 if (import.meta.main) {
+  const { runBuildVerificationCli } = await import("@/cli/run.ts");
   Deno.exit(await runBuildVerificationCli(Deno.args));
 }

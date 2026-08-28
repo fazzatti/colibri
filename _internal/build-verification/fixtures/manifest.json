@@ -1,0 +1,10 @@
+{
+  "stellarCli": "26.1.0",
+  "image": "docker.io/stellar/stellar-cli@sha256:ccdebe3bd4af47e01f275c3da6caeb2752d02b06bc8bc1b3db534432498810c0",
+  "rustupToolchain": "1.95.0",
+  "sourceSha256": "186520876ff72411ffb81923ac3f466ba41a16b8c11fdfe58c060c539ed76146",
+  "artifacts": {
+    "upgradeable-v1.wasm": "3abb668393605a6f711a82a282bdadec5d9a61a5aa4f7808d32a704839bf40bd",
+    "upgradeable-v2.wasm": "243831b6473ef3fe61d3563cbd07d09947369b98d34c514854389efc7a1df721"
+  }
+}

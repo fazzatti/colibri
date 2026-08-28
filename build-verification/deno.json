@@ -9,7 +9,13 @@
   },
   "license": "MIT",
   "publish": {
-    "include": ["./**/*.ts", "./README.md", "./LICENSE", "./deno.json"],
+    "include": [
+      "./**/*.ts",
+      "./src/providers/target/",
+      "./README.md",
+      "./LICENSE",
+      "./deno.json"
+    ],
     "exclude": ["./**/*.test.ts"]
   },
   "imports": {

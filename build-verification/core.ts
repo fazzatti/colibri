@@ -1,12 +1,14 @@
 /**
- * Runtime-independent contract build-verification APIs and types.
+ * Deterministic contract build-verification parsing, policy, comparison,
+ * evidence, and domain APIs.
+ *
+ * This entrypoint does not construct RPC, HTTP, filesystem, Docker, verifier,
+ * or CLI adapters.
  *
  * @module
  */
 
-export * from "@/error.ts";
-export * from "@/hash.ts";
-export * from "@/image.ts";
-export * from "@/metadata.ts";
-export * from "@/types.ts";
-export * from "@/verifier.ts";
+export * from "@/core/index.ts";
+export * from "@/error/base.ts";
+export * from "@/error/core.ts";
+export * from "@/core/policy/error.ts";
