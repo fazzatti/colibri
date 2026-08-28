@@ -114,6 +114,7 @@ const allErrors = (): E.BuildVerificationError<E.Code>[] => {
     new E.BuildRunnerUnexpectedError(cause),
     new E.ArchiveCrcMismatchError("source/file", 1, 2),
     new E.UnsupportedZipFeatureError("source/file", "encrypted"),
+    new E.SourceBuildAccessPreparationFailedError("source", cause),
   ];
 };
 

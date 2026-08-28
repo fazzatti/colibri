@@ -261,6 +261,9 @@ runner:
 - uses a read-only root filesystem and drops all Linux capabilities;
 - enables `no-new-privileges`;
 - applies CPU, memory, process, timeout, archive, artifact, and log limits;
+- runs as the disposable source workspace owner on POSIX hosts so build output
+  remains owned and removable by the verifier;
+- keeps Cargo downloads and home writes in bounded disposable tmpfs mounts;
 - mounts only the disposable source workspace as writable; and
 - owns execution only, leaving artifact collection and selection to separate
   boundaries.

@@ -105,6 +105,7 @@ export enum Code {
   BUILD_RUNNER_UNEXPECTED = "BLDV_095",
   ARCHIVE_CRC_MISMATCH = "BLDV_096",
   UNSUPPORTED_ZIP_FEATURE = "BLDV_097",
+  SOURCE_BUILD_ACCESS_PREPARATION_FAILED = "BLDV_098",
 }
 
 /** Structured metadata retained by every build-verification error. */

@@ -26,14 +26,19 @@ import {
   ImagePullStreamMissingError,
   ImageRuntimeMismatchError,
   RuntimeImageDigestMismatchError,
+  SourceBuildAccessPreparationFailedError,
 } from "./error.ts";
 import { demultiplexDockerLogs } from "./logs.ts";
-import { attachDockerCleanupFailure, DockerBuildRunner } from "./runner.ts";
+import {
+  attachDockerCleanupFailure,
+  DockerBuildRunner,
+  getDockerUserFromSourceOwner,
+} from "./runner.ts";
 
 const plan = (
   overrides: Partial<ContractBuildPlan> = {},
 ): ContractBuildPlan => ({
-  sourceDirectory: "/source",
+  sourceDirectory: Deno.cwd(),
   image: testImageDetails(),
   arguments: ["contract", "build", "--package=hello"],
   rustupToolchain: "1.88.0",
@@ -205,6 +210,21 @@ describe("Docker runner", () => {
     }
   });
 
+  it("aligns POSIX build ownership and lets non-POSIX hosts use the image user", () => {
+    assertEquals(
+      getDockerUserFromSourceOwner({ uid: 1001, gid: 1002 }),
+      "1001:1002",
+    );
+    assertEquals(
+      getDockerUserFromSourceOwner({ uid: null, gid: 1002 }),
+      undefined,
+    );
+    assertEquals(
+      getDockerUserFromSourceOwner({ uid: 1001, gid: null }),
+      undefined,
+    );
+  });
+
   it("decodes and bounds raw and multiplexed Docker logs", () => {
     assertEquals(demultiplexDockerLogs("plain", 100), {
       stdout: "plain",
@@ -246,6 +266,13 @@ describe("Docker runner", () => {
     await assertRejects(
       () => runner.run(plan({ sourceDirectory: "" })),
       BuildPlanInvalidError,
+    );
+    await assertRejects(
+      () =>
+        runner.run(
+          plan({ sourceDirectory: "/definitely/missing/colibri-source" }),
+        ),
+      SourceBuildAccessPreparationFailedError,
     );
     await assertRejects(
       () => runner.run(plan({ rustupToolchain: "" })),
@@ -479,12 +506,19 @@ describe("Docker runner", () => {
         Cmd: string[];
         Env: string[];
         Labels: Record<string, string>;
+        User?: string;
         platform: string;
         HostConfig: Record<string, unknown>;
       };
       assertEquals(config.Image, testImageDetails().reference);
       assertEquals(config.Cmd, plan().arguments);
-      assertEquals(config.Env, ["RUSTUP_TOOLCHAIN=1.88.0"]);
+      assertEquals(config.Env, [
+        "RUSTUP_TOOLCHAIN=1.88.0",
+        "CARGO_HOME=/cargo",
+        "HOME=/tmp",
+      ]);
+      const owner = await Deno.stat(plan().sourceDirectory);
+      assertEquals(config.User, `${owner.uid}:${owner.gid}`);
       assertEquals(config.Labels, {
         "dev.colibri.build-verification.runner": "1",
       });
@@ -495,6 +529,10 @@ describe("Docker runner", () => {
       );
       assertEquals(config.HostConfig.ReadonlyRootfs, true);
       assertEquals(config.HostConfig.CapDrop, ["ALL"]);
+      assertEquals(config.HostConfig.Tmpfs, {
+        "/tmp": "rw,nosuid,nodev,size=268435456,mode=1777",
+        "/cargo": "rw,nosuid,nodev,size=1610612736,mode=1777",
+      });
     }
   });
 

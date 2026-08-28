@@ -293,3 +293,20 @@ export class BuildRunnerUnexpectedError
     });
   }
 }
+
+/** Raised when the Docker runner cannot align build output with the source owner. */
+export class SourceBuildAccessPreparationFailedError
+  extends BuildVerificationError<Code.SOURCE_BUILD_ACCESS_PREPARATION_FAILED> {
+  /** Creates a source-owner discovery error. */
+  constructor(path: string, cause: unknown) {
+    super({
+      code: Code.SOURCE_BUILD_ACCESS_PREPARATION_FAILED,
+      source: "@colibri/build-verification/runners/docker",
+      message: "Failed to prepare source build access",
+      details:
+        "The Docker runner could not identify the disposable source workspace owner.",
+      data: { path },
+      cause,
+    });
+  }
+}

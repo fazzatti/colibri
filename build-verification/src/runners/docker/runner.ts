@@ -29,6 +29,7 @@ import {
   ImagePullStreamMissingError,
   ImageRuntimeMismatchError,
   RuntimeImageDigestMismatchError,
+  SourceBuildAccessPreparationFailedError,
 } from "./error.ts";
 
 const pullImage = async (docker: Dockerode, image: string): Promise<void> => {
@@ -99,6 +100,14 @@ const normalizeDockerRunnerFailure = (
     ? cause
     : new BuildRunnerUnexpectedError(cause);
 
+/** Resolves the non-root Docker user that owns one prepared source workspace. */
+export const getDockerUserFromSourceOwner = (
+  owner: Pick<Deno.FileInfo, "uid" | "gid">,
+): string | undefined =>
+  owner.uid === null || owner.gid === null
+    ? undefined
+    : `${owner.uid}:${owner.gid}`;
+
 /** Docker-backed, resource-bounded execution-only contract build runner. */
 export class DockerBuildRunner implements ContractBuildRunner {
   readonly #docker: Dockerode;
@@ -120,6 +129,16 @@ export class DockerBuildRunner implements ContractBuildRunner {
   async run(input: ContractBuildPlan): Promise<ContractBuildRunnerOutput> {
     validatePlan(input);
     const command = buildDockerCommand(input);
+    let sourceOwner: Deno.FileInfo;
+    try {
+      sourceOwner = await Deno.stat(input.sourceDirectory);
+    } catch (cause) {
+      throw new SourceBuildAccessPreparationFailedError(
+        input.sourceDirectory,
+        cause,
+      );
+    }
+    const user = getDockerUserFromSourceOwner(sourceOwner);
     try {
       await this.#docker.ping();
     } catch (cause) {
@@ -157,7 +176,12 @@ export class DockerBuildRunner implements ContractBuildRunner {
       container = await this.#docker.createContainer({
         Image: input.image.reference,
         Cmd: command,
-        Env: [`RUSTUP_TOOLCHAIN=${input.rustupToolchain}`],
+        Env: [
+          `RUSTUP_TOOLCHAIN=${input.rustupToolchain}`,
+          "CARGO_HOME=/cargo",
+          "HOME=/tmp",
+        ],
+        User: user,
         Labels: { "dev.colibri.build-verification.runner": "1" },
         WorkingDir: "/source",
         AttachStdout: false,
@@ -177,9 +201,7 @@ export class DockerBuildRunner implements ContractBuildRunner {
           PidsLimit: input.limits.pids,
           Tmpfs: {
             "/tmp": "rw,nosuid,nodev,size=268435456,mode=1777",
-            "/stellar/.cargo/registry":
-              "rw,nosuid,nodev,size=1073741824,mode=1777",
-            "/stellar/.cargo/git": "rw,nosuid,nodev,size=536870912,mode=1777",
+            "/cargo": "rw,nosuid,nodev,size=1610612736,mode=1777",
           },
         },
       });
