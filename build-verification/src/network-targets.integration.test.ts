@@ -19,9 +19,9 @@ const FIXTURE_ROOT = new URL(
   import.meta.url,
 );
 const V1_HASH =
-  "3abb668393605a6f711a82a282bdadec5d9a61a5aa4f7808d32a704839bf40bd";
+  "5fdf963895895d6f9420b737172087489681eb45725a6bea32b5802a0f17907e";
 const V2_HASH =
-  "243831b6473ef3fe61d3563cbd07d09947369b98d34c514854389efc7a1df721";
+  "bb32277027fa9a4370b907cd33fbd6aea48ed8864e6e87ca3643c8f5e4c1c136";
 
 type LocalNetwork = {
   readonly rpcUrl: string;
@@ -55,7 +55,7 @@ let sacContractId: string;
 const strictSource = () => ({
   type: "archive" as const,
   bytes: sourceArchive,
-  name: "upgradeable-source.tar",
+  name: "upgradeable-source.tar.gz",
 });
 
 const verifier = (networkInput?: VerificationNetwork): ContractBuildVerifier =>
@@ -69,7 +69,7 @@ beforeAll(async () => {
   const [v1, v2, archive] = await Promise.all([
     Deno.readFile(new URL("upgradeable-v1.wasm", FIXTURE_ROOT)),
     Deno.readFile(new URL("upgradeable-v2.wasm", FIXTURE_ROOT)),
-    Deno.readFile(new URL("upgradeable-source.tar", FIXTURE_ROOT)),
+    Deno.readFile(new URL("upgradeable-source.tar.gz", FIXTURE_ROOT)),
   ]);
   v1Wasm = v1;
   sourceArchive = archive;

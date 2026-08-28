@@ -30,9 +30,11 @@ const SUITE_RUNNER_LABEL_VALUE = crypto.randomUUID();
 const SUITE_RUNNER_LABEL =
   `${SUITE_RUNNER_LABEL_KEY}=${SUITE_RUNNER_LABEL_VALUE}`;
 const V1_HASH =
-  "3abb668393605a6f711a82a282bdadec5d9a61a5aa4f7808d32a704839bf40bd";
+  "5fdf963895895d6f9420b737172087489681eb45725a6bea32b5802a0f17907e";
 const V2_HASH =
-  "243831b6473ef3fe61d3563cbd07d09947369b98d34c514854389efc7a1df721";
+  "bb32277027fa9a4370b907cd33fbd6aea48ed8864e6e87ca3643c8f5e4c1c136";
+const NETWORK_PROBE_HASH =
+  "d49b9cbfbc6d42c87345fb38b07cb38ee1544a2fe4a4c2348970e3dbcbd687a4";
 const limits = Object.freeze({
   ...DEFAULT_BUILD_VERIFICATION_LIMITS,
   timeoutMs: 5 * 60 * 1000,
@@ -40,6 +42,7 @@ const limits = Object.freeze({
 
 const directories: string[] = [];
 let sourceArchive: Uint8Array;
+let networkProbeArchive: Uint8Array;
 let v1Wasm: Uint8Array;
 let v2Wasm: Uint8Array;
 let v1Recipe: ContractBuildRecipe;
@@ -69,7 +72,30 @@ const runnerContainers = async (): Promise<readonly string[]> =>
     filters: { label: [RUNNER_LABEL, SUITE_RUNNER_LABEL] },
   })).map(({ Id }: Dockerode.ContainerInfo) => Id).sort();
 
-const extractedSource = async (): Promise<string> => {
+type SourceFixture = {
+  readonly bytes: Uint8Array;
+  readonly format: "tar" | "tarGzip";
+  readonly name: string;
+  readonly sha256: string;
+};
+
+const vendoredSource = (): SourceFixture => ({
+  bytes: sourceArchive,
+  format: "tarGzip",
+  name: "upgradeable-source.tar.gz",
+  sha256: v1Recipe.sourceSha256!,
+});
+
+const networkProbeSource = (): SourceFixture => ({
+  bytes: networkProbeArchive,
+  format: "tar",
+  name: "upgradeable-network-required-source.tar",
+  sha256: NETWORK_PROBE_HASH,
+});
+
+const extractedSource = async (
+  fixture: SourceFixture = vendoredSource(),
+): Promise<string> => {
   const workspaceDirectory = await Deno.makeTempDir({
     prefix: "colibri-build-verification-docker-integration-",
   });
@@ -78,11 +104,11 @@ const extractedSource = async (): Promise<string> => {
     source: {
       content: "archive",
       kind: "archive",
-      bytes: sourceArchive,
-      name: "upgradeable-source.tar",
-      format: "tar",
-      size: sourceArchive.length,
-      sha256: v1Recipe.sourceSha256!,
+      bytes: fixture.bytes,
+      name: fixture.name,
+      format: fixture.format,
+      size: fixture.bytes.length,
+      sha256: fixture.sha256,
     },
     workspaceDirectory,
     limits,
@@ -92,9 +118,10 @@ const extractedSource = async (): Promise<string> => {
 const exactPlan = async (overrides: {
   readonly allowNetwork?: boolean;
   readonly arguments?: readonly string[];
+  readonly source?: SourceFixture;
   readonly timeoutMs?: number;
 } = {}) => ({
-  sourceDirectory: await extractedSource(),
+  sourceDirectory: await extractedSource(overrides.source),
   image: await new OciContainerImageResolver().resolve(v1Recipe.image),
   arguments: overrides.arguments ?? createContractBuildArguments(v1Recipe),
   rustupToolchain: "1.95.0",
@@ -106,8 +133,11 @@ const exactPlan = async (overrides: {
 });
 
 beforeAll(async () => {
-  [sourceArchive, v1Wasm, v2Wasm] = await Promise.all([
-    Deno.readFile(new URL("upgradeable-source.tar", FIXTURE_ROOT)),
+  [sourceArchive, networkProbeArchive, v1Wasm, v2Wasm] = await Promise.all([
+    Deno.readFile(new URL("upgradeable-source.tar.gz", FIXTURE_ROOT)),
+    Deno.readFile(
+      new URL("upgradeable-network-required-source.tar", FIXTURE_ROOT),
+    ),
     Deno.readFile(new URL("upgradeable-v1.wasm", FIXTURE_ROOT)),
     Deno.readFile(new URL("upgradeable-v2.wasm", FIXTURE_ROOT)),
   ]);
@@ -128,7 +158,10 @@ afterEach(async () => {
 describe("DockerBuildRunner integration", disableSanitizeConfig, () => {
   it("denies dependency retrieval by default and retains bounded failure logs", async () => {
     const error = await assertRejects(
-      async () => await runner.run(await exactPlan()),
+      async () =>
+        await runner.run(
+          await exactPlan({ source: networkProbeSource() }),
+        ),
       BuildCommandFailedError,
     );
     assert(
@@ -154,7 +187,7 @@ describe("DockerBuildRunner integration", disableSanitizeConfig, () => {
       source: {
         type: "archive",
         bytes: sourceArchive,
-        name: "upgradeable-source.tar",
+        name: "upgradeable-source.tar.gz",
       },
     });
 
@@ -190,7 +223,7 @@ describe("DockerBuildRunner integration", disableSanitizeConfig, () => {
       source: {
         type: "archive",
         bytes: sourceArchive,
-        name: "upgradeable-source.tar",
+        name: "upgradeable-source.tar.gz",
       },
       recipe: v2Recipe,
     });

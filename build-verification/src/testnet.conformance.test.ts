@@ -17,7 +17,7 @@ const FIXTURE_ROOT = new URL(
   import.meta.url,
 );
 const V1_HASH =
-  "3abb668393605a6f711a82a282bdadec5d9a61a5aa4f7808d32a704839bf40bd";
+  "5fdf963895895d6f9420b737172087489681eb45725a6bea32b5802a0f17907e";
 const networkConfig = NetworkConfig.TestNet();
 const account = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
 const transactionConfig: TransactionConfig = {
@@ -33,13 +33,13 @@ let contractId: string;
 const source = () => ({
   type: "archive" as const,
   bytes: sourceArchive,
-  name: "upgradeable-source.tar",
+  name: "upgradeable-source.tar.gz",
 });
 
 beforeAll(async () => {
   const [wasm, archive] = await Promise.all([
     Deno.readFile(new URL("upgradeable-v1.wasm", FIXTURE_ROOT)),
-    Deno.readFile(new URL("upgradeable-source.tar", FIXTURE_ROOT)),
+    Deno.readFile(new URL("upgradeable-source.tar.gz", FIXTURE_ROOT)),
   ]);
   sourceArchive = archive;
   await initializeWithFriendbot(
