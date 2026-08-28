@@ -67,7 +67,7 @@ const runnerContainers = async (): Promise<readonly string[]> =>
   (await docker.listContainers({
     all: true,
     filters: { label: [RUNNER_LABEL, SUITE_RUNNER_LABEL] },
-  })).map(({ Id }) => Id).sort();
+  })).map(({ Id }: Dockerode.ContainerInfo) => Id).sort();
 
 const extractedSource = async (): Promise<string> => {
   const workspaceDirectory = await Deno.makeTempDir({

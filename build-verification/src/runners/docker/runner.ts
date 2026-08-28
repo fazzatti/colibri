@@ -145,7 +145,7 @@ export class DockerBuildRunner implements ContractBuildRunner {
         workingDir,
       );
     }
-    const repoDigests = imageInfo.RepoDigests ?? [];
+    const repoDigests: string[] = imageInfo.RepoDigests ?? [];
     const approvedDigest = input.image.manifestDigest;
     if (!repoDigests.some((value) => value.endsWith(`@${approvedDigest}`))) {
       throw new RuntimeImageDigestMismatchError(approvedDigest, repoDigests);
