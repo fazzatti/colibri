@@ -63,6 +63,10 @@
 
 - [WebAuth](packages/webauth.md)
 
+## @colibri/build-verification
+
+- [Contract Build Verification](packages/build-verification.md)
+
 ## @colibri/test-tooling
 
 - [Test Tooling](packages/test-tooling.md)

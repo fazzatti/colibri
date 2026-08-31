@@ -11,6 +11,8 @@ coverage/
 coverage.lcov
 
 target/
+!build-verification/src/providers/target/
+!build-verification/src/providers/target/**
 
 **/.bindings/
 _internal/contracts/*/local-bindings/

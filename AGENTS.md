@@ -91,10 +91,11 @@ has an integration seam for that behavior.
 GitHub Actions behavior matters when changing structure or versions:
 
 - CI runs on pushes and pull requests targeting `main` and `dev`.
-- CI runs `deno lint`, `deno task check`, `deno task check:jsr`, and
-  `deno task test`.
-- CI generates coverage from the `coverage/` directory and uploads it to
-  Codecov.
+- CI runs lint, type, and JSR documentation checks once, while every package's
+  complete test suite runs in a required parallel job.
+- Package jobs upload raw Deno coverage profiles. A final required coverage job
+  recreates the instrumented source cache, merges the profiles into one
+  workspace LCOV report, and uploads it to Codecov.
 - The publish workflow runs only on pushes to `main`.
 - Publish detects package version bumps from each package `deno.json` and then
   creates tags if the tag does not already exist.
@@ -102,6 +103,7 @@ GitHub Actions behavior matters when changing structure or versions:
 Current package version sources:
 
 - `core/deno.json`
+- `build-verification/deno.json`
 - `webauth/deno.json`
 - `rpc-streamer/deno.json`
 - `plugins/fee-bump/deno.json`

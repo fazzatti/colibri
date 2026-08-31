@@ -65,6 +65,9 @@ jobs:
           # Check webauth package
           check_package "webauth" "webauth"
 
+          # Check build-verification package
+          check_package "build-verification" "build-verification"
+
           # Check test-tooling package
           check_package "test-tooling" "test-tooling"
 

@@ -3,7 +3,8 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-# This workflow will install Deno then run `deno lint` and `deno test`.
+# This workflow runs workspace quality checks and every package test suite,
+# aggregates their coverage profiles, and publishes one Codecov report.
 # For more information see: https://github.com/denoland/setup-deno
 
 name: CI
@@ -14,11 +15,16 @@ on:
   pull_request:
     branches: ["main", "dev"]
 
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
-  test:
+  quality:
+    name: quality
     runs-on: ubuntu-latest
 
     steps:
@@ -43,17 +49,111 @@ jobs:
       - name: Run JSR entrypoint checks
         run: deno task check:jsr
 
-      - name: Run tests
-        run: deno task test
+  package_tests:
+    name: test / ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package: core
+            path: core
+            test_flags: --parallel
+          - package: build-verification
+            path: build-verification
+            test_flags: ""
+          - package: webauth
+            path: webauth
+            test_flags: --parallel
+          - package: rpc-streamer
+            path: rpc-streamer
+            test_flags: --parallel
+          - package: plugin-fee-bump
+            path: plugins/fee-bump
+            test_flags: --parallel
+          - package: plugin-channel-accounts
+            path: plugins/channel-accounts
+            test_flags: --parallel
+          - package: test-tooling
+            path: test-tooling
+            test_flags: --parallel
 
-      - name: Generate coverage report
-        run: deno coverage --lcov coverage > coverage.lcov
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.7.11
+
+      - name: Run ${{ matrix.package }} tests
+        run: >-
+          deno test -A --clean ${{ matrix.test_flags }}
+          --coverage=coverage/${{ matrix.package }} --coverage-raw-data-only
+          ${{ matrix.path }}
+
+      - name: Upload ${{ matrix.package }} coverage profile
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.package }}
+          path: coverage/${{ matrix.package }}/*.json
+          if-no-files-found: error
+          retention-days: 1
+
+  coverage:
+    name: coverage
+    needs: package_tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.7.11
+
+      - name: Download package coverage profiles
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: coverage
+
+      - name: Prime instrumented source cache
+        run: >-
+          deno test -A
+          --filter='__coverage_cache_prime_never_matches__'
+          --coverage=coverage-prime --coverage-raw-data-only
+          core build-verification webauth rpc-streamer
+          plugins/fee-bump plugins/channel-accounts test-tooling
+
+      - name: Generate aggregate coverage report
+        run: deno coverage --lcov --output=coverage.lcov coverage/coverage-*
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage.lcov
-          flags: unittests
-          name: codecov-umbrella
+          flags: all-tests
+          name: codecov-aggregate
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  test:
+    name: test
+    if: ${{ always() }}
+    needs: [quality, package_tests, coverage]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Require every CI job to pass
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          PACKAGE_TESTS_RESULT: ${{ needs.package_tests.result }}
+          COVERAGE_RESULT: ${{ needs.coverage.result }}
+        run: |
+          test "$QUALITY_RESULT" = "success"
+          test "$PACKAGE_TESTS_RESULT" = "success"
+          test "$COVERAGE_RESULT" = "success"
