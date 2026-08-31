@@ -37,6 +37,7 @@ Source (choose at most one):
 Execution and reporting:
   --recipe <path>          Select explicit out-of-band mode
   --allow-build-network    Give the build container network access
+  --json                   Print the complete result or error as JSON
   --evidence <path>        Write completed evidence as JSON
   --logs <path>            Write structured logs
   --log-format <jsonl|text>
@@ -66,6 +67,7 @@ const VALUE_FLAGS = new Set([
 const BOOLEAN_FLAGS = new Set([
   "allow-http",
   "allow-build-network",
+  "json",
   "help",
 ]);
 

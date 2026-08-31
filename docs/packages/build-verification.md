@@ -154,6 +154,17 @@ deno run -A jsr:@colibri/build-verification/cli \
   --logs verification.jsonl
 ```
 
+The CLI prints one concise summary by default, for example:
+
+```text
+VERIFIED ba789fe6627de52ebfbd5353f5eb6b7efef23d7e8633ab59051c1a22b2f00a88
+```
+
+Use `--json` to print the complete result or typed error instead. The
+`--evidence` and `--logs` files remain complete regardless of the terminal
+format. Exit codes remain `0` for `verified` or `notApplicable`, `2` for
+`mismatch`, and `1` when verification does not complete.
+
 The package also publishes `/core`, `/docker`, and `/cli` entrypoints. See the
 [package README](../../build-verification/README.md) for every source variant,
 the out-of-band trust boundary, custom image-policy configuration, stable step
