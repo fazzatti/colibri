@@ -1,10 +1,10 @@
 import type {
   ContractBuildVerificationInput,
   ContractBuildVerificationResult,
-} from "../core/index.ts";
-import type { writeVerificationEvidence } from "../reporting/evidence-writer.ts";
-import type { writeVerificationLogs } from "../reporting/log-writer.ts";
-import type { ContractBuildVerifierOptions } from "../verifier/types.ts";
+} from "@/core/index.ts";
+import type { writeVerificationEvidence } from "@/reporting/evidence-writer.ts";
+import type { writeVerificationLogs } from "@/reporting/log-writer.ts";
+import type { ContractBuildVerifierOptions } from "@/verifier/types.ts";
 
 /**
  * Injectable boundaries retained for CLI composition and tests.

@@ -1,20 +1,23 @@
-import { accumulateVerificationEvidence } from "../../core/evidence/accumulate.ts";
-import { createContractBuildArguments } from "../../core/recipe/build-command.ts";
-import { redactContractBuildVerificationInput } from "../../core/types/input.ts";
+import { accumulateVerificationEvidence } from "@/core/evidence/accumulate.ts";
+import { createContractBuildArguments } from "@/core/recipe/build-command.ts";
+import { redactContractBuildVerificationInput } from "@/core/types/input.ts";
 import {
   attachBuildVerificationErrorContext,
   BuildVerificationError,
-} from "../../error/base.ts";
-import { contextualizeProcessError, recordProcessEvent } from "../shared.ts";
+} from "@/error/base.ts";
+import {
+  contextualizeProcessError,
+  recordProcessEvent,
+} from "@/processes/shared.ts";
 import {
   ExecuteContractBuildUnexpectedError,
   WorkspaceCleanupFailedError,
   WorkspaceInitializationFailedError,
-} from "./error.ts";
+} from "@/processes/execute-contract-build/error.ts";
 import type {
   ExecuteContractBuildInput,
   ExecuteContractBuildOutput,
-} from "./types.ts";
+} from "@/processes/execute-contract-build/types.ts";
 
 /** Owns disposable source extraction, execution, candidate capture, and cleanup. */
 export const executeContractBuild = async (
@@ -154,6 +157,6 @@ export const executeContractBuild = async (
 };
 
 /** Error constructors emitted by {@link executeContractBuild}. */
-export * from "./error.ts";
+export * from "@/processes/execute-contract-build/error.ts";
 /** Process contracts used by {@link executeContractBuild}. */
-export * from "./types.ts";
+export * from "@/processes/execute-contract-build/types.ts";

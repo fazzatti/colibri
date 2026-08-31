@@ -2,22 +2,22 @@ import type {
   BuildVerificationLimits,
   VerificationNetwork,
   VerificationPolicy,
-} from "../core/index.ts";
-import type { VerificationArchiveExtractor } from "../archive/types.ts";
-import type { BuildArtifactCollector } from "../artifacts/types.ts";
+} from "@/core/index.ts";
+import type { VerificationArchiveExtractor } from "@/archive/types.ts";
+import type { BuildArtifactCollector } from "@/artifacts/types.ts";
 import type {
   BuildVerificationPipeline,
   BuildVerificationPipelinePlugin,
-} from "../pipelines/build-verification/index.ts";
-import type { ContractBuildWorkspace } from "../processes/execute-contract-build/types.ts";
-import type { ContainerImageResolver } from "../providers/image/types.ts";
-import type { VerificationSourceProvider } from "../providers/source/types.ts";
-import type { VerificationTargetResolver } from "../providers/target/types.ts";
-import type { VerificationLogger } from "../reporting/types.ts";
+} from "@/pipelines/build-verification/index.ts";
+import type { ContractBuildWorkspace } from "@/processes/execute-contract-build/types.ts";
+import type { ContainerImageResolver } from "@/providers/image/types.ts";
+import type { VerificationSourceProvider } from "@/providers/source/types.ts";
+import type { VerificationTargetResolver } from "@/providers/target/types.ts";
+import type { VerificationLogger } from "@/reporting/types.ts";
 import type {
   ContractBuildRunner,
   DockerConnectionConfig,
-} from "../runners/types.ts";
+} from "@/runners/types.ts";
 
 /** Options shared by reusable and one-shot verifier APIs. */
 export type ContractBuildVerifierOptions = {

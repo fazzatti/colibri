@@ -1,4 +1,4 @@
-import { ArchiveLimitExceededError } from "./error.ts";
+import { ArchiveLimitExceededError } from "@/archive/error.ts";
 
 /** Throws when one measured archive value exceeds its configured maximum. */
 export const assertArchiveLimit = (

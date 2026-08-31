@@ -1,19 +1,19 @@
 import { join, relative, resolve } from "node:path";
-import { sha256Hex } from "../core/comparison/compare-wasm.ts";
-import type { BuildVerificationLimits } from "../core/types/limits.ts";
+import { sha256Hex } from "@/core/comparison/compare-wasm.ts";
+import type { BuildVerificationLimits } from "@/core/types/limits.ts";
 import type {
   BuildArtifactCandidate,
   BuildArtifactCollector,
   BuildArtifactSnapshot,
-} from "./types.ts";
+} from "@/artifacts/types.ts";
 import {
   ArtifactCollectionFailedError,
   ArtifactLimitExceededError,
   BuildArtifactReadFailedError,
   BuildArtifactSnapshotFailedError,
   UnsafeArtifactPathError,
-} from "./error.ts";
-import { BuildVerificationError } from "../error/base.ts";
+} from "@/artifacts/error.ts";
+import { BuildVerificationError } from "@/error/base.ts";
 
 const eligible = (path: string): boolean =>
   /(?:^|\/)(?:wasm32v1-none|wasm32-unknown-unknown)\/[^/]+\/[^/]+\.wasm$/

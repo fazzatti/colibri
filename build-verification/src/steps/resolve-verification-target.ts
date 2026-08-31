@@ -1,6 +1,6 @@
 import { type Step, step } from "convee";
-import { resolveVerificationTarget } from "../processes/resolve-verification-target/index.ts";
-import { RESOLVE_VERIFICATION_TARGET_STEP_ID } from "./ids.ts";
+import { resolveVerificationTarget } from "@/processes/resolve-verification-target/index.ts";
+import { RESOLVE_VERIFICATION_TARGET_STEP_ID } from "@/steps/ids.ts";
 
 /** Creates the resolve-verification-target step used in verifier pipelines. */
 export const createResolveVerificationTargetStep = (): Step<

@@ -1,4 +1,4 @@
-import { BuildVerificationError, Code } from "../../error/base.ts";
+import { BuildVerificationError, Code } from "@/error/base.ts";
 
 /** Raised when recipe validation fails outside typed parser or policy errors. */
 export class ValidateBuildRecipeUnexpectedError

@@ -3,7 +3,7 @@ import type {
   PolicyDecision,
   SourceRetrievalFacts,
   SourceRetrievalPolicy,
-} from "./types.ts";
+} from "@/core/policy/types.ts";
 
 /** Options controlling the default host-side source retrieval policy. */
 export type DefaultSourceRetrievalPolicyOptions = {

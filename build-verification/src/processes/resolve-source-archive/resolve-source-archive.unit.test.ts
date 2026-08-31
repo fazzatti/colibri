@@ -1,22 +1,22 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import type { ResolvedVerificationSource } from "../../core/types/source.ts";
+import type { ResolvedVerificationSource } from "@/core/types/source.ts";
 import {
   MissingVerificationSourceError,
   SourceHashMismatchError,
-} from "../../providers/source/error.ts";
+} from "@/providers/source/error.ts";
 import {
   acceptedPolicyDecision,
   TEST_LIMITS,
   TEST_NOW,
-} from "../../testing.test.ts";
+} from "@/testing.test.ts";
 import {
   completeProcessState,
   processSource,
   recipeProcessState,
-} from "../testing.test.ts";
-import { ResolveSourceArchiveUnexpectedError } from "./error.ts";
-import { resolveSourceArchive } from "./index.ts";
+} from "@/processes/testing.test.ts";
+import { ResolveSourceArchiveUnexpectedError } from "@/processes/resolve-source-archive/error.ts";
+import { resolveSourceArchive } from "@/processes/resolve-source-archive/index.ts";
 
 describe("resolveSourceArchive", () => {
   it("passes terminal state through unchanged", async () => {

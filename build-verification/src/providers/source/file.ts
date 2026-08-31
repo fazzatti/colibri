@@ -2,18 +2,18 @@ import { resolve } from "node:path";
 import {
   ArchiveLimitExceededError,
   UnsafeArchiveEntryError,
-} from "../../archive/error.ts";
-import { detectArchiveFormat } from "../../archive/detect.ts";
-import { sha256Hex } from "../../core/comparison/compare-wasm.ts";
-import type { ResolvedVerificationSource } from "../../core/types/index.ts";
+} from "@/archive/error.ts";
+import { detectArchiveFormat } from "@/archive/detect.ts";
+import { sha256Hex } from "@/core/comparison/compare-wasm.ts";
+import type { ResolvedVerificationSource } from "@/core/types/index.ts";
 import type {
   VerificationSourceProvider,
   VerificationSourceProviderInput,
-} from "./types.ts";
+} from "@/providers/source/types.ts";
 import {
   LocalSourceArchiveReadFailedError,
   UnsupportedSourceError,
-} from "./error.ts";
+} from "@/providers/source/error.ts";
 
 /** Provider for local source archives and out-of-band directories. */
 export class FileVerificationSourceProvider

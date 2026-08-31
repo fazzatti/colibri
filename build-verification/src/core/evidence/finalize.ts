@@ -1,10 +1,10 @@
-import type { ContainerImageDetails } from "../policy/types.ts";
+import type { ContainerImageDetails } from "@/core/policy/types.ts";
 import type {
   ContractBuildVerificationEvidence,
   VerificationImageEvidence,
   VerificationLogEvent,
-} from "../types/result.ts";
-import { attachVerificationLogs } from "./accumulate.ts";
+} from "@/core/types/result.ts";
+import { attachVerificationLogs } from "@/core/evidence/accumulate.ts";
 
 const environmentName = (entry: string): string =>
   entry.split("=", 1)[0] || "<unnamed>";

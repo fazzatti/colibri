@@ -1,7 +1,7 @@
 import type Dockerode from "dockerode";
-import type { BuildVerificationLimits } from "../core/types/limits.ts";
-import type { BuildRunnerCapabilities } from "../core/types/result.ts";
-import type { ContainerImageDetails } from "../core/policy/types.ts";
+import type { BuildVerificationLimits } from "@/core/types/limits.ts";
+import type { BuildRunnerCapabilities } from "@/core/types/result.ts";
+import type { ContainerImageDetails } from "@/core/policy/types.ts";
 
 /** Connection settings used by the Docker-backed build runner. */
 export type DockerConnectionConfig = {

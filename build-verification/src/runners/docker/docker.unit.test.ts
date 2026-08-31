@@ -2,10 +2,13 @@ import { Buffer } from "node:buffer";
 import type Dockerode from "dockerode";
 import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { TEST_LIMITS, testImageDetails } from "../../testing.test.ts";
-import type { ContractBuildPlan } from "../types.ts";
-import { buildDockerCommand } from "./command.ts";
-import { detectDockerOptions, resolveDockerOptions } from "./connection.ts";
+import { TEST_LIMITS, testImageDetails } from "@/testing.test.ts";
+import type { ContractBuildPlan } from "@/runners/types.ts";
+import { buildDockerCommand } from "@/runners/docker/command.ts";
+import {
+  detectDockerOptions,
+  resolveDockerOptions,
+} from "@/runners/docker/connection.ts";
 import {
   BuildCommandFailedError,
   BuildLogCollectionFailedError,
@@ -27,13 +30,13 @@ import {
   ImageRuntimeMismatchError,
   RuntimeImageDigestMismatchError,
   SourceBuildAccessPreparationFailedError,
-} from "./error.ts";
-import { demultiplexDockerLogs } from "./logs.ts";
+} from "@/runners/docker/error.ts";
+import { demultiplexDockerLogs } from "@/runners/docker/logs.ts";
 import {
   attachDockerCleanupFailure,
   DockerBuildRunner,
   getDockerUserFromSourceOwner,
-} from "./runner.ts";
+} from "@/runners/docker/runner.ts";
 
 const plan = (
   overrides: Partial<ContractBuildPlan> = {},

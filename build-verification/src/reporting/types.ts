@@ -1,7 +1,7 @@
 import type {
   BuildVerificationLimits,
   VerificationLogEvent,
-} from "../core/types/index.ts";
+} from "@/core/types/index.ts";
 
 /** Boundary receiving live structured verification log events. */
 export interface VerificationLogger {

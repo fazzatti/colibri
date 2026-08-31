@@ -1,4 +1,4 @@
-import type { ContainerImageDetails } from "../../core/policy/types.ts";
+import type { ContainerImageDetails } from "@/core/policy/types.ts";
 
 /** Boundary used to resolve OCI image, runtime, and attestation facts. */
 export interface ContainerImageResolver {

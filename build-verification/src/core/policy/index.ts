@@ -1,7 +1,7 @@
 /** @internal Pure verification policy exports. */
-export * from "./build-command.ts";
-export * from "./build-options.ts";
-export * from "./official-stellar-image.ts";
-export * from "./source-retrieval.ts";
-export * from "./types.ts";
-export * from "./verification.ts";
+export * from "@/core/policy/build-command.ts";
+export * from "@/core/policy/build-options.ts";
+export * from "@/core/policy/official-stellar-image.ts";
+export * from "@/core/policy/source-retrieval.ts";
+export * from "@/core/policy/types.ts";
+export * from "@/core/policy/verification.ts";

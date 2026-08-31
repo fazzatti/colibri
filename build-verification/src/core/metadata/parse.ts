@@ -1,4 +1,4 @@
-import type { ContractMetadataEntry } from "../recipe/types.ts";
+import type { ContractMetadataEntry } from "@/core/recipe/types.ts";
 
 const redactUri = (value: string): string => {
   try {

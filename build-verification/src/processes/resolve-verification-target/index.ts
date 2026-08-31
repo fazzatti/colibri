@@ -1,27 +1,25 @@
 import {
   accumulateVerificationEvidence,
   createVerificationEvidence,
-} from "../../core/evidence/index.ts";
-import {
-  redactContractBuildVerificationInput,
-} from "../../core/types/input.ts";
-import { isContractBuildVerificationInput } from "../../core/recipe/validate.ts";
-import { InvalidVerificationInputError } from "../../error/core.ts";
+} from "@/core/evidence/index.ts";
+import { redactContractBuildVerificationInput } from "@/core/types/input.ts";
+import { isContractBuildVerificationInput } from "@/core/recipe/validate.ts";
+import { InvalidVerificationInputError } from "@/error/core.ts";
 import type {
   ContractBuildVerificationEvidence,
   VerificationLogEvent,
-} from "../../core/types/index.ts";
+} from "@/core/types/index.ts";
 import {
   completeNotApplicable,
   contextualizeProcessError,
   processTimestamp,
   recordProcessEvent,
-} from "../shared.ts";
-import { ResolveVerificationTargetUnexpectedError } from "./error.ts";
+} from "@/processes/shared.ts";
+import { ResolveVerificationTargetUnexpectedError } from "@/processes/resolve-verification-target/error.ts";
 import type {
   ResolveVerificationTargetInput,
   ResolveVerificationTargetOutput,
-} from "./types.ts";
+} from "@/processes/resolve-verification-target/types.ts";
 
 /** Resolves exact target Wasm or completes early for a Stellar Asset Contract. */
 export const resolveVerificationTarget = async (
@@ -100,6 +98,6 @@ export const resolveVerificationTarget = async (
 };
 
 /** Error constructors emitted by {@link resolveVerificationTarget}. */
-export * from "./error.ts";
+export * from "@/processes/resolve-verification-target/error.ts";
 /** Process contracts used by {@link resolveVerificationTarget}. */
-export * from "./types.ts";
+export * from "@/processes/resolve-verification-target/types.ts";

@@ -1,14 +1,14 @@
 import { dirname, join, relative, resolve } from "node:path";
-import type { BuildVerificationLimits } from "../core/types/limits.ts";
+import type { BuildVerificationLimits } from "@/core/types/limits.ts";
 import type {
   VerificationArchiveEntry,
   VerificationArchiveExtractor,
   VerificationArchiveExtractorInput,
   VerificationArchiveExtractorOutput,
-} from "./types.ts";
-import { detectArchiveFormat } from "./detect.ts";
-import { assertArchiveLimit } from "./limits.ts";
-import { normalizeArchivePath } from "./paths.ts";
+} from "@/archive/types.ts";
+import { detectArchiveFormat } from "@/archive/detect.ts";
+import { assertArchiveLimit } from "@/archive/limits.ts";
+import { normalizeArchivePath } from "@/archive/paths.ts";
 import {
   ArchiveCrcMismatchError,
   ArchiveDecodingFailedError,
@@ -20,7 +20,7 @@ import {
   UnsafeArchiveEntryError,
   UnsupportedZipFeatureError,
   ZipDecodingFailedError,
-} from "./error.ts";
+} from "@/archive/error.ts";
 
 const decodeText = (bytes: Uint8Array): string =>
   new TextDecoder().decode(bytes).replace(/\0.*$/s, "").trim();

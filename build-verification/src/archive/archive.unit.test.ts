@@ -5,7 +5,7 @@ import {
   TEST_LIMITS,
   testTar,
   testZip,
-} from "../testing.test.ts";
+} from "@/testing.test.ts";
 import {
   ArchiveCrcMismatchError,
   ArchiveDecodingFailedError,
@@ -19,15 +19,15 @@ import {
   UnsupportedArchiveError,
   UnsupportedZipFeatureError,
   ZipDecodingFailedError,
-} from "./error.ts";
-import { detectArchiveFormat } from "./detect.ts";
+} from "@/archive/error.ts";
+import { detectArchiveFormat } from "@/archive/detect.ts";
 import {
   DefaultVerificationArchiveExtractor,
   materializeArchiveEntries,
   resolveArchiveDestination,
-} from "./extract.ts";
-import { assertArchiveLimit } from "./limits.ts";
-import { normalizeArchivePath } from "./paths.ts";
+} from "@/archive/extract.ts";
+import { assertArchiveLimit } from "@/archive/limits.ts";
+import { normalizeArchivePath } from "@/archive/paths.ts";
 
 const directories: string[] = [];
 const temporaryDirectory = async (): Promise<string> => {

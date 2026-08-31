@@ -1,4 +1,4 @@
-import { BuildVerificationError, Code } from "./base.ts";
+import { BuildVerificationError, Code } from "@/error/base.ts";
 
 /** Raised when mutually exclusive or invalid verifier options are supplied. */
 export class InvalidVerifierOptionsError

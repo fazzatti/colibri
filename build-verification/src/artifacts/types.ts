@@ -1,4 +1,4 @@
-import type { BuildVerificationLimits } from "../core/types/limits.ts";
+import type { BuildVerificationLimits } from "@/core/types/limits.ts";
 
 /** Immutable Wasm candidate copied before workspace cleanup. */
 export type BuildArtifactCandidate = {

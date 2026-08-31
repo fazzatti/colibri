@@ -1,14 +1,17 @@
-import { accumulateVerificationEvidence } from "../../core/evidence/accumulate.ts";
-import { imageDetailsForEvidence } from "../../core/evidence/finalize.ts";
-import { redactContractBuildVerificationInput } from "../../core/types/input.ts";
-import { ImagePolicyRejectedError } from "../../core/policy/error.ts";
-import { ImageToolchainMissingError } from "../../providers/image/error.ts";
-import { contextualizeProcessError, recordProcessEvent } from "../shared.ts";
-import { ResolveBuildImageUnexpectedError } from "./error.ts";
+import { accumulateVerificationEvidence } from "@/core/evidence/accumulate.ts";
+import { imageDetailsForEvidence } from "@/core/evidence/finalize.ts";
+import { redactContractBuildVerificationInput } from "@/core/types/input.ts";
+import { ImagePolicyRejectedError } from "@/core/policy/error.ts";
+import { ImageToolchainMissingError } from "@/providers/image/error.ts";
+import {
+  contextualizeProcessError,
+  recordProcessEvent,
+} from "@/processes/shared.ts";
+import { ResolveBuildImageUnexpectedError } from "@/processes/resolve-build-image/error.ts";
 import type {
   ResolveBuildImageInput,
   ResolveBuildImageOutput,
-} from "./types.ts";
+} from "@/processes/resolve-build-image/types.ts";
 
 /** Resolves OCI facts and applies image trust policy before any Docker pull. */
 export const resolveBuildImage = async (
@@ -66,6 +69,6 @@ export const resolveBuildImage = async (
 };
 
 /** Error constructors emitted by {@link resolveBuildImage}. */
-export * from "./error.ts";
+export * from "@/processes/resolve-build-image/error.ts";
 /** Process contracts used by {@link resolveBuildImage}. */
-export * from "./types.ts";
+export * from "@/processes/resolve-build-image/types.ts";

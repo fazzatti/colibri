@@ -2,7 +2,7 @@ import type {
   ResolvedVerificationTarget,
   VerificationNetworkEvidence,
   VerificationTarget,
-} from "../../core/types/index.ts";
+} from "@/core/types/index.ts";
 
 /** Input passed to a verification-target resolver. */
 export type VerificationTargetResolverInput = {

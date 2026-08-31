@@ -1,6 +1,6 @@
 import { type Step, step } from "convee";
-import { resolveBuildImage } from "../processes/resolve-build-image/index.ts";
-import { RESOLVE_BUILD_IMAGE_STEP_ID } from "./ids.ts";
+import { resolveBuildImage } from "@/processes/resolve-build-image/index.ts";
+import { RESOLVE_BUILD_IMAGE_STEP_ID } from "@/steps/ids.ts";
 
 /** Creates the resolve-build-image step used in verifier pipelines. */
 export const createResolveBuildImageStep = (): Step<

@@ -1,4 +1,4 @@
-import { BuildVerificationError, Code } from "../error/base.ts";
+import { BuildVerificationError, Code } from "@/error/base.ts";
 
 /** Raised when a successful build produces no eligible Wasm. */
 export class BuildArtifactNotFoundError

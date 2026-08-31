@@ -11,11 +11,11 @@ import type {
 type PinnedSourceRequestOptions = RequestOptions & {
   readonly servername?: string;
 };
-import { ArchiveLimitExceededError } from "../../archive/error.ts";
-import { detectArchiveFormat } from "../../archive/detect.ts";
-import { sha256Hex } from "../../core/comparison/compare-wasm.ts";
-import type { ResolvedVerificationSource } from "../../core/types/index.ts";
-import type { VerificationSourceProvider } from "./types.ts";
+import { ArchiveLimitExceededError } from "@/archive/error.ts";
+import { detectArchiveFormat } from "@/archive/detect.ts";
+import { sha256Hex } from "@/core/comparison/compare-wasm.ts";
+import type { ResolvedVerificationSource } from "@/core/types/index.ts";
+import type { VerificationSourceProvider } from "@/providers/source/types.ts";
 import type {
   HttpVerificationSourceProviderOptions,
   SourceAddressResolver,
@@ -23,8 +23,8 @@ import type {
   SourceHttpTransport,
   SourceHttpTransportInput,
   VerificationSourceProviderInput,
-} from "./types.ts";
-import { BuildVerificationError } from "../../error/base.ts";
+} from "@/providers/source/types.ts";
+import { BuildVerificationError } from "@/error/base.ts";
 import {
   SourceDnsResolutionFailedError,
   SourceDownloadFailedError,
@@ -33,7 +33,7 @@ import {
   SourceRedirectLocationMissingError,
   SourceRequestTimedOutError,
   SourceResponseReadFailedError,
-} from "./error.ts";
+} from "@/providers/source/error.ts";
 
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 
@@ -266,7 +266,7 @@ export type PinnedHttpResource = {
   readonly status: number;
   readonly headers: Readonly<Record<string, string>>;
   readonly bytes: Uint8Array;
-  readonly policy: import("../../core/policy/types.ts").PolicyDecision;
+  readonly policy: import("@/core/policy/types.ts").PolicyDecision;
 };
 
 /** Retrieves bytes while revalidating policy and DNS pinning per redirect. */

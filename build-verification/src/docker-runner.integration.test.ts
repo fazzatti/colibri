@@ -4,20 +4,20 @@ import { afterEach, beforeAll, describe, it } from "@std/testing/bdd";
 import Dockerode from "dockerode";
 import {
   type ContractBuildRecipe,
-  ContractBuildVerifier,
   createContractBuildArguments,
   DEFAULT_BUILD_VERIFICATION_LIMITS,
-  DefaultVerificationArchiveExtractor,
-  DockerBuildRunner,
   extractContractMetadata,
-  OciContainerImageResolver,
   parseSep58Recipe,
-} from "../mod.ts";
+} from "@/core/index.ts";
+import { DefaultVerificationArchiveExtractor } from "@/archive/index.ts";
+import { OciContainerImageResolver } from "@/providers/image/index.ts";
+import { DockerBuildRunner } from "@/runners/docker/index.ts";
+import { ContractBuildVerifier } from "@/verifier/index.ts";
 import {
   BuildCommandFailedError,
   BuildTimedOutError,
-} from "./runners/docker/error.ts";
-import { resolveDockerOptions } from "./runners/docker/connection.ts";
+} from "@/runners/docker/error.ts";
+import { resolveDockerOptions } from "@/runners/docker/connection.ts";
 
 const FIXTURE_ROOT = new URL(
   "../../_internal/build-verification/fixtures/",

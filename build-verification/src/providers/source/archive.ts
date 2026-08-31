@@ -1,11 +1,11 @@
-import { ArchiveLimitExceededError } from "../../archive/error.ts";
-import { detectArchiveFormat } from "../../archive/detect.ts";
-import { sha256Hex } from "../../core/comparison/compare-wasm.ts";
-import type { ResolvedVerificationSource } from "../../core/types/index.ts";
+import { ArchiveLimitExceededError } from "@/archive/error.ts";
+import { detectArchiveFormat } from "@/archive/detect.ts";
+import { sha256Hex } from "@/core/comparison/compare-wasm.ts";
+import type { ResolvedVerificationSource } from "@/core/types/index.ts";
 import type {
   VerificationSourceProvider,
   VerificationSourceProviderInput,
-} from "./types.ts";
+} from "@/providers/source/types.ts";
 
 /** Provider for exact in-memory source archive bytes. */
 export class ArchiveVerificationSourceProvider

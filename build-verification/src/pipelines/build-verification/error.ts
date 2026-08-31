@@ -1,4 +1,4 @@
-import { BuildVerificationError, Code } from "../../error/base.ts";
+import { BuildVerificationError, Code } from "@/error/base.ts";
 
 /** Raised when required pipeline dependencies are absent. */
 export class ProcessDependencyMissingError

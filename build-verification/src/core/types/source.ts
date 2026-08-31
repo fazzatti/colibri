@@ -42,7 +42,7 @@ export type ResolvedVerificationSource =
     readonly requestedRevision?: string;
     readonly resolvedRevision?: string;
     readonly contentType?: string;
-    readonly retrievalPolicy?: import("../policy/types.ts").PolicyDecision;
+    readonly retrievalPolicy?: import("@/core/policy/types.ts").PolicyDecision;
     readonly size: number;
     readonly sha256: string;
   }

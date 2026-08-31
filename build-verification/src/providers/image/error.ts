@@ -1,4 +1,4 @@
-import { BuildVerificationError, Code } from "../../error/base.ts";
+import { BuildVerificationError, Code } from "@/error/base.ts";
 
 /** Raised when a build image is not a fully qualified digest reference. */
 export class InvalidImageReferenceError

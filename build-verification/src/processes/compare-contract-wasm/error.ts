@@ -1,4 +1,4 @@
-import { BuildVerificationError, Code } from "../../error/base.ts";
+import { BuildVerificationError, Code } from "@/error/base.ts";
 
 /** Raised when raw byte comparison fails outside its deterministic contract. */
 export class CompareContractWasmUnexpectedError

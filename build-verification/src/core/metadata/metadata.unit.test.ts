@@ -4,18 +4,21 @@ import { xdr } from "stellar-sdk";
 import {
   InvalidTargetWasmError,
   MetadataDecodingFailedError,
-} from "../../error/core.ts";
+} from "@/error/core.ts";
 import {
   concatBytes,
   contractMetadataSection,
   testWasm,
   unsignedLeb128,
-} from "../../testing.test.ts";
+} from "@/testing.test.ts";
 import {
   extractContractMetadata,
   extractContractMetadataSections,
-} from "./extract.ts";
-import { hasSep58Metadata, metadataEntriesForEvidence } from "./parse.ts";
+} from "@/core/metadata/extract.ts";
+import {
+  hasSep58Metadata,
+  metadataEntriesForEvidence,
+} from "@/core/metadata/parse.ts";
 
 const rawSection = (bytes: Uint8Array): Uint8Array => {
   const name = new TextEncoder().encode("contractmetav0");

@@ -1,7 +1,7 @@
 import { basename, dirname, resolve } from "node:path";
-import type { VerificationLogEvent } from "../core/types/result.ts";
-import { LogWriteFailedError } from "./error.ts";
-import type { VerificationLogFormat } from "./types.ts";
+import type { VerificationLogEvent } from "@/core/types/result.ts";
+import { LogWriteFailedError } from "@/reporting/error.ts";
+import type { VerificationLogFormat } from "@/reporting/types.ts";
 
 const renderTextEvent = (event: VerificationLogEvent): string =>
   `${event.timestamp} ${event.level.toUpperCase()} ${event.stage} ${event.code} ${event.message}${

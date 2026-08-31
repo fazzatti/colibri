@@ -8,14 +8,14 @@ import {
   BuildArtifactReadFailedError,
   BuildArtifactSnapshotFailedError,
   UnsafeArtifactPathError,
-} from "./error.ts";
+} from "@/artifacts/error.ts";
 import {
   assertSafeArtifactRelativePath,
   DefaultBuildArtifactCollector,
   readBuildArtifactCandidate,
-} from "./collect.ts";
-import { selectBuildArtifactCandidate } from "./select.ts";
-import { TEST_LIMITS, testRecipe } from "../testing.test.ts";
+} from "@/artifacts/collect.ts";
+import { selectBuildArtifactCandidate } from "@/artifacts/select.ts";
+import { TEST_LIMITS, testRecipe } from "@/testing.test.ts";
 
 const directories: string[] = [];
 const workspace = async (): Promise<string> => {

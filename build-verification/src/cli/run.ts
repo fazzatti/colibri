@@ -1,23 +1,23 @@
 import { ColibriError } from "@colibri/core";
-import { InvalidCliArgumentsError } from "./error.ts";
+import { InvalidCliArgumentsError } from "@/cli/error.ts";
 import {
   BUILD_VERIFICATION_CLI_HELP,
   getBuildVerificationStringFlag,
   parseBuildVerificationFlags,
   verificationInputFromFlags,
   verificationNetworkFromFlags,
-} from "./flags.ts";
+} from "@/cli/flags.ts";
 import {
   type BuildVerificationCliIo,
   DEFAULT_BUILD_VERIFICATION_CLI_IO,
-} from "./io.ts";
-import type { BuildVerificationCliDependencies } from "./types.ts";
+} from "@/cli/io.ts";
+import type { BuildVerificationCliDependencies } from "@/cli/types.ts";
 import {
   writeVerificationEvidence,
   writeVerificationLogs,
-} from "../reporting/index.ts";
-import { ContractBuildVerifier } from "../verifier/contract-build-verifier.ts";
-import type { ContractBuildVerifierOptions } from "../verifier/types.ts";
+} from "@/reporting/index.ts";
+import { ContractBuildVerifier } from "@/verifier/contract-build-verifier.ts";
+import type { ContractBuildVerifierOptions } from "@/verifier/types.ts";
 
 /** Executes the package CLI and returns its process exit code. */
 export const runBuildVerificationCli = async (

@@ -5,9 +5,9 @@ import type {
   ResolvedVerificationTarget,
   VerificationNetworkEvidence,
   VerificationState,
-} from "../../core/types/index.ts";
-import type { VerificationLogging } from "../../reporting/types.ts";
-import type { VerificationTargetResolver } from "../../providers/target/types.ts";
+} from "@/core/types/index.ts";
+import type { VerificationLogging } from "@/reporting/types.ts";
+import type { VerificationTargetResolver } from "@/providers/target/types.ts";
 
 /** Active value produced after exact target resolution. */
 export type ResolvedVerificationTargetValue = {

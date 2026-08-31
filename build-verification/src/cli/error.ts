@@ -1,4 +1,4 @@
-import { BuildVerificationError, Code } from "../error/base.ts";
+import { BuildVerificationError, Code } from "@/error/base.ts";
 
 /** Raised when CLI flags are missing, conflicting, or malformed. */
 export class InvalidCliArgumentsError

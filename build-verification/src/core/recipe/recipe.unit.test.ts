@@ -3,12 +3,12 @@ import { describe, it } from "@std/testing/bdd";
 import {
   DuplicateSep58MetadataError,
   InvalidSep58MetadataError,
-} from "../../error/core.ts";
-import { TEST_IMAGE } from "../../testing.test.ts";
-import { createContractBuildArguments } from "./build-command.ts";
-import { parseOutOfBandRecipe } from "./parse-out-of-band.ts";
-import { parseSep58Recipe } from "./parse-sep58.ts";
-import { isContractBuildVerificationInput } from "./validate.ts";
+} from "@/error/core.ts";
+import { TEST_IMAGE } from "@/testing.test.ts";
+import { createContractBuildArguments } from "@/core/recipe/build-command.ts";
+import { parseOutOfBandRecipe } from "@/core/recipe/parse-out-of-band.ts";
+import { parseSep58Recipe } from "@/core/recipe/parse-sep58.ts";
+import { isContractBuildVerificationInput } from "@/core/recipe/validate.ts";
 
 const hash = "c".repeat(64);
 

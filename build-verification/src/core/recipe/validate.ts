@@ -1,4 +1,4 @@
-import type { ContractBuildVerificationInput } from "../types/input.ts";
+import type { ContractBuildVerificationInput } from "@/core/types/input.ts";
 
 /** Validates the runtime shape of a strict or out-of-band request. */
 export const isContractBuildVerificationInput = (

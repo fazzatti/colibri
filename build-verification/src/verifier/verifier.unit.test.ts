@@ -4,27 +4,27 @@ import { plugin } from "convee";
 import type {
   ResolveBuildImageInput,
   ResolveBuildImageOutput,
-} from "../processes/index.ts";
-import { BUILD_VERIFICATION_PIPELINE_ID } from "../pipelines/build-verification/index.ts";
-import { pipelineTestDependencies } from "../pipelines/build-verification/testing.test.ts";
-import { RESOLVE_BUILD_IMAGE_STEP_ID } from "../steps/ids.ts";
-import { TEST_LIMITS, testWasm } from "../testing.test.ts";
-import { DEFAULT_BUILD_VERIFICATION_LIMITS } from "../core/types/limits.ts";
-import { InvalidVerifierOptionsError } from "../error/core.ts";
-import { DefaultVerificationArchiveExtractor } from "../archive/extract.ts";
-import { DefaultBuildArtifactCollector } from "../artifacts/collect.ts";
-import { OciContainerImageResolver } from "../providers/image/oci.ts";
-import { DefaultVerificationSourceProvider } from "../providers/source/router.ts";
-import { DefaultVerificationTargetResolver } from "../providers/target/default.ts";
-import { DockerBuildRunner } from "../runners/docker/runner.ts";
+} from "@/processes/index.ts";
+import { BUILD_VERIFICATION_PIPELINE_ID } from "@/pipelines/build-verification/index.ts";
+import { pipelineTestDependencies } from "@/pipelines/build-verification/testing.test.ts";
+import { RESOLVE_BUILD_IMAGE_STEP_ID } from "@/steps/ids.ts";
+import { TEST_LIMITS, testWasm } from "@/testing.test.ts";
+import { DEFAULT_BUILD_VERIFICATION_LIMITS } from "@/core/types/limits.ts";
+import { InvalidVerifierOptionsError } from "@/error/core.ts";
+import { DefaultVerificationArchiveExtractor } from "@/archive/extract.ts";
+import { DefaultBuildArtifactCollector } from "@/artifacts/collect.ts";
+import { OciContainerImageResolver } from "@/providers/image/oci.ts";
+import { DefaultVerificationSourceProvider } from "@/providers/source/router.ts";
+import { DefaultVerificationTargetResolver } from "@/providers/target/default.ts";
+import { DockerBuildRunner } from "@/runners/docker/runner.ts";
 import { NetworkConfig } from "@colibri/core";
-import { ContractBuildVerifier } from "./contract-build-verifier.ts";
+import { ContractBuildVerifier } from "@/verifier/contract-build-verifier.ts";
 import {
   createDefaultBuildVerificationDependencies,
   normalizeBuildVerificationLimits,
-} from "./defaults.ts";
-import { verifyContractBuild } from "./function.ts";
-import type { ContractBuildVerifierOptions } from "./types.ts";
+} from "@/verifier/defaults.ts";
+import { verifyContractBuild } from "@/verifier/function.ts";
+import type { ContractBuildVerifierOptions } from "@/verifier/types.ts";
 
 const request = () => ({
   mode: "outOfBand" as const,

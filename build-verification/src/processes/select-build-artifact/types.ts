@@ -1,10 +1,10 @@
-import type { BuildArtifactCandidate } from "../../artifacts/types.ts";
+import type { BuildArtifactCandidate } from "@/artifacts/types.ts";
 import type {
   BuildVerificationLimits,
   VerificationState,
-} from "../../core/index.ts";
-import type { VerificationLogging } from "../../reporting/types.ts";
-import type { ExecutedContractBuildValue } from "../execute-contract-build/types.ts";
+} from "@/core/index.ts";
+import type { VerificationLogging } from "@/reporting/types.ts";
+import type { ExecutedContractBuildValue } from "@/processes/execute-contract-build/types.ts";
 
 /** Active value produced after deterministic artifact selection. */
 export type SelectedBuildArtifactValue = ExecutedContractBuildValue & {

@@ -1,9 +1,9 @@
-import type { ContractBuildRecipe } from "../core/recipe/types.ts";
+import type { ContractBuildRecipe } from "@/core/recipe/types.ts";
 import {
   BuildArtifactAmbiguousError,
   BuildArtifactNotFoundError,
-} from "./error.ts";
-import type { BuildArtifactCandidate } from "./types.ts";
+} from "@/artifacts/error.ts";
+import type { BuildArtifactCandidate } from "@/artifacts/types.ts";
 
 const optionValue = (
   options: readonly string[],

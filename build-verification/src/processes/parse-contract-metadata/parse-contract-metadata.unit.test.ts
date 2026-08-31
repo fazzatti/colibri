@@ -1,15 +1,18 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { InvalidTargetWasmError } from "../../error/core.ts";
-import { completeProcessState, targetProcessState } from "../testing.test.ts";
+import { InvalidTargetWasmError } from "@/error/core.ts";
+import {
+  completeProcessState,
+  targetProcessState,
+} from "@/processes/testing.test.ts";
 import {
   TEST_LIMITS,
   TEST_NOW,
   testWasm,
   testWasmWithMetadata,
-} from "../../testing.test.ts";
-import { ParseContractMetadataUnexpectedError } from "./error.ts";
-import { parseContractMetadata } from "./index.ts";
+} from "@/testing.test.ts";
+import { ParseContractMetadataUnexpectedError } from "@/processes/parse-contract-metadata/error.ts";
+import { parseContractMetadata } from "@/processes/parse-contract-metadata/index.ts";
 
 describe("parseContractMetadata", () => {
   it("passes terminal state through unchanged", async () => {

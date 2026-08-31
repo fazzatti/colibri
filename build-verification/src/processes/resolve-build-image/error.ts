@@ -1,4 +1,4 @@
-import { BuildVerificationError, Code } from "../../error/base.ts";
+import { BuildVerificationError, Code } from "@/error/base.ts";
 
 /** Raised when image resolution fails outside typed resolver or policy errors. */
 export class ResolveBuildImageUnexpectedError

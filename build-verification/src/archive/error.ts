@@ -1,4 +1,4 @@
-import { BuildVerificationError, Code } from "../error/base.ts";
+import { BuildVerificationError, Code } from "@/error/base.ts";
 
 /** Raised when an archive extension or encoding is unsupported. */
 export class UnsupportedArchiveError

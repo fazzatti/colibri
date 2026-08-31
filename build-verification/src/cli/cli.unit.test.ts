@@ -8,9 +8,9 @@ import { describe, it } from "@std/testing/bdd";
 import type {
   ContractBuildVerificationInput,
   ContractBuildVerificationResult,
-} from "../core/index.ts";
-import { testEvidence, testWasm } from "../testing.test.ts";
-import { InvalidCliArgumentsError } from "./error.ts";
+} from "@/core/index.ts";
+import { testEvidence, testWasm } from "@/testing.test.ts";
+import { InvalidCliArgumentsError } from "@/cli/error.ts";
 import {
   BUILD_VERIFICATION_CLI_HELP,
   getBuildVerificationStringFlag,
@@ -19,9 +19,9 @@ import {
   verificationNetworkFromFlags,
   verificationSourceFromFlags,
   verificationTargetFromFlags,
-} from "./flags.ts";
-import type { BuildVerificationCliIo } from "./io.ts";
-import { runBuildVerificationCli } from "./run.ts";
+} from "@/cli/flags.ts";
+import type { BuildVerificationCliIo } from "@/cli/io.ts";
+import { runBuildVerificationCli } from "@/cli/run.ts";
 
 const harness = (overrides: Partial<BuildVerificationCliIo> = {}) => {
   const stdout: string[] = [];

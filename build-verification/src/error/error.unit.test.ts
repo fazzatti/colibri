@@ -6,7 +6,7 @@ import {
 } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { ColibriError } from "@colibri/core";
-import * as E from "../error.ts";
+import * as E from "@/error.ts";
 
 const allErrors = (): E.BuildVerificationError<E.Code>[] => {
   const cause = new Error("cause");

@@ -1,17 +1,20 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { ImagePolicyRejectedError } from "../../core/policy/error.ts";
-import { ImageToolchainMissingError } from "../../providers/image/error.ts";
+import { ImagePolicyRejectedError } from "@/core/policy/error.ts";
+import { ImageToolchainMissingError } from "@/providers/image/error.ts";
 import {
   acceptedPolicyDecision,
   rejectedPolicyDecision,
   TEST_LIMITS,
   TEST_NOW,
   testImageDetails,
-} from "../../testing.test.ts";
-import { completeProcessState, sourceProcessState } from "../testing.test.ts";
-import { ResolveBuildImageUnexpectedError } from "./error.ts";
-import { resolveBuildImage } from "./index.ts";
+} from "@/testing.test.ts";
+import {
+  completeProcessState,
+  sourceProcessState,
+} from "@/processes/testing.test.ts";
+import { ResolveBuildImageUnexpectedError } from "@/processes/resolve-build-image/error.ts";
+import { resolveBuildImage } from "@/processes/resolve-build-image/index.ts";
 
 describe("resolveBuildImage", () => {
   it("passes terminal state through unchanged", async () => {

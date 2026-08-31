@@ -1,9 +1,9 @@
-import type { VerificationLogEvent } from "../core/types/result.ts";
-import { LoggerFailedError } from "./error.ts";
+import type { VerificationLogEvent } from "@/core/types/result.ts";
+import { LoggerFailedError } from "@/reporting/error.ts";
 import type {
   RecordVerificationLogInput,
   VerificationLogger,
-} from "./types.ts";
+} from "@/reporting/types.ts";
 
 const boundEvent = (
   event: VerificationLogEvent,

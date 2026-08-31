@@ -1,9 +1,9 @@
 import type {
   ContractBuildVerificationInput,
   ContractBuildVerificationResult,
-} from "../core/index.ts";
-import { ContractBuildVerifier } from "./contract-build-verifier.ts";
-import type { ContractBuildVerifierOptions } from "./types.ts";
+} from "@/core/index.ts";
+import { ContractBuildVerifier } from "@/verifier/contract-build-verifier.ts";
+import type { ContractBuildVerifierOptions } from "@/verifier/types.ts";
 
 /** Verifies one contract build without retaining a verifier instance. */
 export const verifyContractBuild = (

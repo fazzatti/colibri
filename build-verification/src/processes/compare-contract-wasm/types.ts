@@ -2,9 +2,9 @@ import type {
   BuildVerificationLimits,
   ContractBuildVerificationResult,
   VerificationState,
-} from "../../core/index.ts";
-import type { VerificationLogging } from "../../reporting/types.ts";
-import type { SelectedBuildArtifactValue } from "../select-build-artifact/types.ts";
+} from "@/core/index.ts";
+import type { VerificationLogging } from "@/reporting/types.ts";
+import type { SelectedBuildArtifactValue } from "@/processes/select-build-artifact/types.ts";
 
 /** Input accepted by {@link compareContractWasm}. */
 export type CompareContractWasmInput = {

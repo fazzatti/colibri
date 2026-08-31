@@ -1,18 +1,18 @@
-import { DefaultVerificationArchiveExtractor } from "../archive/extract.ts";
-import { DefaultBuildArtifactCollector } from "../artifacts/collect.ts";
+import { DefaultVerificationArchiveExtractor } from "@/archive/extract.ts";
+import { DefaultBuildArtifactCollector } from "@/artifacts/collect.ts";
 import {
   createDefaultVerificationPolicy,
   DEFAULT_BUILD_VERIFICATION_LIMITS,
-} from "../core/index.ts";
-import type { BuildVerificationLimits } from "../core/index.ts";
-import { InvalidVerifierOptionsError } from "../error/core.ts";
-import type { BuildVerificationPipelineDependencies } from "../pipelines/build-verification/types.ts";
-import { OciContainerImageResolver } from "../providers/image/oci.ts";
-import { DefaultVerificationSourceProvider } from "../providers/source/router.ts";
-import { DefaultVerificationTargetResolver } from "../providers/target/default.ts";
-import { normalizeVerificationNetwork } from "../providers/target/stellar.ts";
-import { DockerBuildRunner } from "../runners/docker/runner.ts";
-import type { ContractBuildVerifierOptions } from "./types.ts";
+} from "@/core/index.ts";
+import type { BuildVerificationLimits } from "@/core/index.ts";
+import { InvalidVerifierOptionsError } from "@/error/core.ts";
+import type { BuildVerificationPipelineDependencies } from "@/pipelines/build-verification/types.ts";
+import { OciContainerImageResolver } from "@/providers/image/oci.ts";
+import { DefaultVerificationSourceProvider } from "@/providers/source/router.ts";
+import { DefaultVerificationTargetResolver } from "@/providers/target/default.ts";
+import { normalizeVerificationNetwork } from "@/providers/target/stellar.ts";
+import { DockerBuildRunner } from "@/runners/docker/runner.ts";
+import type { ContractBuildVerifierOptions } from "@/verifier/types.ts";
 
 /** Merges and validates all verifier resource limits. */
 export const normalizeBuildVerificationLimits = (

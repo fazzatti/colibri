@@ -1,6 +1,6 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { sha256Hex } from "../../core/comparison/index.ts";
+import { sha256Hex } from "@/core/comparison/index.ts";
 import {
   ImageAttestationDecodingFailedError,
   ImageConfigDigestMismatchError,
@@ -11,8 +11,11 @@ import {
   ImageReferrersResolutionFailedError,
   InvalidImageReferenceError,
   MultiArchImageError,
-} from "./error.ts";
-import { OciContainerImageResolver, resolveContainerImage } from "./oci.ts";
+} from "@/providers/image/error.ts";
+import {
+  OciContainerImageResolver,
+  resolveContainerImage,
+} from "@/providers/image/oci.ts";
 
 const encode = (value: unknown): Uint8Array =>
   new TextEncoder().encode(

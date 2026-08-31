@@ -1,5 +1,5 @@
 import type { Buffer } from "node:buffer";
-import { BuildLogCollectionFailedError } from "./error.ts";
+import { BuildLogCollectionFailedError } from "@/runners/docker/error.ts";
 
 const boundedText = (bytes: Uint8Array, maximum: number): string => {
   const truncated = bytes.length > maximum;

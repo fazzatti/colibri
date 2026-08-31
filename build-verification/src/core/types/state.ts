@@ -1,8 +1,8 @@
 import type {
   ContractBuildVerificationResult,
   VerificationLogEvent,
-} from "./result.ts";
-import type { ContractBuildVerificationEvidence } from "./result.ts";
+} from "@/core/types/result.ts";
+import type { ContractBuildVerificationEvidence } from "@/core/types/result.ts";
 
 /** Active pipeline state carrying one stage value and accumulated evidence. */
 export type ActiveVerificationState<Value> = {

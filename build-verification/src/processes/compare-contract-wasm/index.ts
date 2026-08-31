@@ -1,17 +1,17 @@
-import { compareWasmBytes } from "../../core/comparison/compare-wasm.ts";
-import { accumulateVerificationEvidence } from "../../core/evidence/accumulate.ts";
-import { finalizeVerificationEvidence } from "../../core/evidence/finalize.ts";
-import { redactContractBuildVerificationInput } from "../../core/types/input.ts";
+import { compareWasmBytes } from "@/core/comparison/compare-wasm.ts";
+import { accumulateVerificationEvidence } from "@/core/evidence/accumulate.ts";
+import { finalizeVerificationEvidence } from "@/core/evidence/finalize.ts";
+import { redactContractBuildVerificationInput } from "@/core/types/input.ts";
 import {
   contextualizeProcessError,
   processTimestamp,
   recordProcessEvent,
-} from "../shared.ts";
-import { CompareContractWasmUnexpectedError } from "./error.ts";
+} from "@/processes/shared.ts";
+import { CompareContractWasmUnexpectedError } from "@/processes/compare-contract-wasm/error.ts";
 import type {
   CompareContractWasmInput,
   CompareContractWasmOutput,
-} from "./types.ts";
+} from "@/processes/compare-contract-wasm/types.ts";
 
 /** Compares exact raw Wasm bytes and creates the only verified/mismatch result. */
 export const compareContractWasm = async (
@@ -63,6 +63,6 @@ export const compareContractWasm = async (
 };
 
 /** Error constructors emitted by {@link compareContractWasm}. */
-export * from "./error.ts";
+export * from "@/processes/compare-contract-wasm/error.ts";
 /** Process contracts used by {@link compareContractWasm}. */
-export * from "./types.ts";
+export * from "@/processes/compare-contract-wasm/types.ts";

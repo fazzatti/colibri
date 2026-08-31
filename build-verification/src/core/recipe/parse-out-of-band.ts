@@ -1,5 +1,8 @@
-import { InvalidSep58MetadataError } from "../../error/core.ts";
-import type { ContractBuildRecipe, OutOfBandBuildRecipe } from "./types.ts";
+import { InvalidSep58MetadataError } from "@/error/core.ts";
+import type {
+  ContractBuildRecipe,
+  OutOfBandBuildRecipe,
+} from "@/core/recipe/types.ts";
 
 const IMAGE_PATTERN =
   /^(?:localhost(?::\d+)?|[^\s@/]*[.:][^\s@/]*)\/[^\s@]+@sha256:[0-9a-f]{64}$/;

@@ -1,8 +1,8 @@
 import { existsSync, realpathSync } from "node:fs";
 import { homedir } from "node:os";
 import type Dockerode from "dockerode";
-import type { DockerConnectionConfig } from "../types.ts";
-import { DockerConfigurationFailedError } from "./error.ts";
+import type { DockerConnectionConfig } from "@/runners/types.ts";
+import { DockerConfigurationFailedError } from "@/runners/docker/error.ts";
 
 const SOCKET_PATHS = [
   "/var/run/docker.sock",

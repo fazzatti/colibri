@@ -3,7 +3,7 @@ import type {
   ContainerImagePolicy,
   PolicyCheck,
   PolicyDecision,
-} from "./types.ts";
+} from "@/core/policy/types.ts";
 
 /** Trust roots used by the default official Stellar image policy. */
 export type OfficialStellarImagePolicyOptions = {

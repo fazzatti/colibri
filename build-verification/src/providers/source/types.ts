@@ -2,8 +2,8 @@ import type {
   BuildVerificationLimits,
   ResolvedVerificationSource,
   VerificationSource,
-} from "../../core/types/index.ts";
-import type { SourceRetrievalPolicy } from "../../core/policy/types.ts";
+} from "@/core/types/index.ts";
+import type { SourceRetrievalPolicy } from "@/core/policy/types.ts";
 
 /** Input passed to a verification source provider. */
 export type VerificationSourceProviderInput = {

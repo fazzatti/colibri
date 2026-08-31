@@ -2,12 +2,14 @@ import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-c
 import { assert, assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import {
-  ContractBuildVerifier,
   createDefaultVerificationPolicy,
   DEFAULT_BUILD_VERIFICATION_LIMITS,
+} from "@/core/index.ts";
+import {
   GitHubVerificationSourceProvider,
   HttpVerificationSourceProvider,
-} from "../mod.ts";
+} from "@/providers/source/index.ts";
+import { ContractBuildVerifier } from "@/verifier/index.ts";
 
 const COMMIT = "13b9f51d184aabde23dec820e44eed056cf9690f";
 const GITHUB_ARCHIVE_HASH =

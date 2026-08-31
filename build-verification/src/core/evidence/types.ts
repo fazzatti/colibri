@@ -1,4 +1,4 @@
-import type { ContractBuildVerificationEvidence } from "../types/result.ts";
+import type { ContractBuildVerificationEvidence } from "@/core/types/result.ts";
 
 /** Top-level immutable evidence refinement applied by one process. */
 export type VerificationEvidencePatch = Partial<

@@ -1,2 +1,2 @@
 /** Contract build-verification pipeline exports. */
-export * from "./build-verification/index.ts";
+export * from "@/pipelines/build-verification/index.ts";

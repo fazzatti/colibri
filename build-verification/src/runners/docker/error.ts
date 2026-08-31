@@ -1,4 +1,4 @@
-import { BuildVerificationError, Code } from "../../error/base.ts";
+import { BuildVerificationError, Code } from "@/error/base.ts";
 
 /** Raised when Docker connection settings are invalid or ambiguous. */
 export class DockerConfigurationFailedError

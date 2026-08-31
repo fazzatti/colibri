@@ -9,7 +9,7 @@ import {
   createResolveVerificationTargetStep,
   createSelectBuildArtifactStep,
   createValidateBuildRecipeStep,
-} from "../../steps/index.ts";
+} from "@/steps/index.ts";
 import {
   buildVerificationArtifactToComparison,
   buildVerificationExecutionToArtifact,
@@ -19,12 +19,12 @@ import {
   buildVerificationRecipeToSource,
   buildVerificationSourceToImage,
   buildVerificationTargetToMetadata,
-} from "./connectors.ts";
+} from "@/pipelines/build-verification/connectors.ts";
 import {
   BuildVerificationPipelineConstructionError,
   ProcessDependencyMissingError,
-} from "./error.ts";
-import type { CreateBuildVerificationPipelineArgs } from "./types.ts";
+} from "@/pipelines/build-verification/error.ts";
+import type { CreateBuildVerificationPipelineArgs } from "@/pipelines/build-verification/types.ts";
 
 /** Stable id of the contract build-verification pipeline. */
 export const BUILD_VERIFICATION_PIPELINE_ID =
@@ -123,10 +123,10 @@ export type BuildVerificationPipelinePlugin = Parameters<
 >[0];
 
 /** Stable connector ids and connector factories. */
-export * from "./connectors.ts";
+export * from "@/pipelines/build-verification/connectors.ts";
 /** Pipeline-owned error constructors. */
-export * from "./error.ts";
+export * from "@/pipelines/build-verification/error.ts";
 /** Connector runtime helpers. */
-export * from "./runtime.ts";
+export * from "@/pipelines/build-verification/runtime.ts";
 /** Pipeline construction contracts. */
-export * from "./types.ts";
+export * from "@/pipelines/build-verification/types.ts";

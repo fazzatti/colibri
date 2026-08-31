@@ -1,6 +1,6 @@
 /** Build-verification command-line parsing and execution exports. */
-export * from "./error.ts";
-export * from "./flags.ts";
-export * from "./io.ts";
-export * from "./run.ts";
-export * from "./types.ts";
+export * from "@/cli/error.ts";
+export * from "@/cli/flags.ts";
+export * from "@/cli/io.ts";
+export * from "@/cli/run.ts";
+export * from "@/cli/types.ts";

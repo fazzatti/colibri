@@ -5,12 +5,12 @@ import type {
   ContractBuildRunner,
   ContractBuildRunnerOutput,
   DockerConnectionConfig,
-} from "../types.ts";
-import { BuildVerificationError } from "../../error/base.ts";
-import { attachBuildVerificationErrorContext } from "../../error/base.ts";
-import { resolveDockerOptions } from "./connection.ts";
-import { buildDockerCommand } from "./command.ts";
-import { demultiplexDockerLogs } from "./logs.ts";
+} from "@/runners/types.ts";
+import { BuildVerificationError } from "@/error/base.ts";
+import { attachBuildVerificationErrorContext } from "@/error/base.ts";
+import { resolveDockerOptions } from "@/runners/docker/connection.ts";
+import { buildDockerCommand } from "@/runners/docker/command.ts";
+import { demultiplexDockerLogs } from "@/runners/docker/logs.ts";
 import {
   BuildCommandFailedError,
   BuildPlanInvalidError,
@@ -30,7 +30,7 @@ import {
   ImageRuntimeMismatchError,
   RuntimeImageDigestMismatchError,
   SourceBuildAccessPreparationFailedError,
-} from "./error.ts";
+} from "@/runners/docker/error.ts";
 
 const pullImage = async (docker: Dockerode, image: string): Promise<void> => {
   try {

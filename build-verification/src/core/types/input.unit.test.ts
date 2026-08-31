@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { redactContractBuildVerificationInput } from "./input.ts";
+import { redactContractBuildVerificationInput } from "@/core/types/input.ts";
 
 describe("contract build-verification input redaction", () => {
   it("redacts direct Wasm bytes and preserves each network target shape", () => {

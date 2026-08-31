@@ -10,7 +10,7 @@ import {
   NetworkConfig,
   type TransactionConfig,
 } from "@colibri/core";
-import { ContractBuildVerifier } from "../mod.ts";
+import { ContractBuildVerifier } from "@/verifier/index.ts";
 
 const FIXTURE_ROOT = new URL(
   "../../_internal/build-verification/fixtures/",

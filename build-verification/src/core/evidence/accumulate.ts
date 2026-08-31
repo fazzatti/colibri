@@ -1,9 +1,9 @@
-import type { ContractBuildVerificationMode } from "../types/input.ts";
+import type { ContractBuildVerificationMode } from "@/core/types/input.ts";
 import type {
   ContractBuildVerificationEvidence,
   VerificationLogEvent,
-} from "../types/result.ts";
-import type { VerificationEvidencePatch } from "./types.ts";
+} from "@/core/types/result.ts";
+import type { VerificationEvidencePatch } from "@/core/evidence/types.ts";
 
 /** Version recorded in evidence produced by this unpublished package release. */
 export const BUILD_VERIFICATION_PACKAGE_VERSION = "0.1.0";

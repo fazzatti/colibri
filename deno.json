@@ -13,6 +13,7 @@
     "jsr:@colibri/build-verification": "./build-verification",
     "jsr:@colibri/test-tooling": "./test-tooling",
     "jsr:@colibri/webauth": "./webauth",
+    "@colibri/test-tooling": "./test-tooling/mod.ts",
     "colibri-internal/": "./_internal/",
     "colibri-tools/": "./_tools/",
     "stellar-sdk": "npm:@stellar/stellar-sdk@^16.0.1",

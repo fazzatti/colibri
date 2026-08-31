@@ -1,15 +1,18 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { BuildArtifactSnapshotFailedError } from "../../artifacts/error.ts";
-import type { BuildArtifactCandidate } from "../../artifacts/types.ts";
-import { TEST_LIMITS, TEST_NOW, testWasm } from "../../testing.test.ts";
-import { completeProcessState, imageProcessState } from "../testing.test.ts";
+import { BuildArtifactSnapshotFailedError } from "@/artifacts/error.ts";
+import type { BuildArtifactCandidate } from "@/artifacts/types.ts";
+import { TEST_LIMITS, TEST_NOW, testWasm } from "@/testing.test.ts";
+import {
+  completeProcessState,
+  imageProcessState,
+} from "@/processes/testing.test.ts";
 import {
   ExecuteContractBuildUnexpectedError,
   WorkspaceCleanupFailedError,
   WorkspaceInitializationFailedError,
-} from "./error.ts";
-import { executeContractBuild } from "./index.ts";
+} from "@/processes/execute-contract-build/error.ts";
+import { executeContractBuild } from "@/processes/execute-contract-build/index.ts";
 
 const execution = () => ({
   exitCode: 0 as const,

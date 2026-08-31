@@ -1,17 +1,17 @@
-import { sha256Hex } from "../../core/comparison/index.ts";
+import { sha256Hex } from "@/core/comparison/index.ts";
 import type {
   ResolvedVerificationTarget,
   VerificationNetwork,
-} from "../../core/types/index.ts";
+} from "@/core/types/index.ts";
 import type {
   NormalizedVerificationNetwork,
   VerificationTargetResolver,
   VerificationTargetResolverInput,
-} from "./types.ts";
+} from "@/providers/target/types.ts";
 import {
   normalizeVerificationNetwork,
   StellarVerificationTargetResolver,
-} from "./stellar.ts";
+} from "@/providers/target/stellar.ts";
 
 const nowIso = (): string => new Date().toISOString();
 

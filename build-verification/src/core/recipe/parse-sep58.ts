@@ -1,8 +1,11 @@
 import {
   DuplicateSep58MetadataError,
   InvalidSep58MetadataError,
-} from "../../error/core.ts";
-import type { ContractBuildRecipe, ContractMetadataEntry } from "./types.ts";
+} from "@/error/core.ts";
+import type {
+  ContractBuildRecipe,
+  ContractMetadataEntry,
+} from "@/core/recipe/types.ts";
 
 const IMAGE_PATTERN =
   /^(?:localhost(?::\d+)?|[^\s@/]*[.:][^\s@/]*)\/[^\s@]+@sha256:[0-9a-f]{64}$/;

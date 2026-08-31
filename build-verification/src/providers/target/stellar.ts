@@ -8,13 +8,13 @@ import type { ContractId } from "@colibri/core";
 import type {
   ResolvedVerificationTarget,
   VerificationNetwork,
-} from "../../core/types/index.ts";
-import { InvalidVerifierOptionsError } from "../../error/core.ts";
+} from "@/core/types/index.ts";
+import { InvalidVerifierOptionsError } from "@/error/core.ts";
 import type {
   NormalizedVerificationNetwork,
   VerificationTargetResolver,
   VerificationTargetResolverInput,
-} from "./types.ts";
+} from "@/providers/target/types.ts";
 import {
   MissingTargetNetworkError,
   TargetCodeLookupFailedError,
@@ -22,8 +22,8 @@ import {
   TargetInstanceLookupFailedError,
   TargetProviderUnexpectedError,
   TargetRpcInitializationFailedError,
-} from "./error.ts";
-import { BuildVerificationError } from "../../error/base.ts";
+} from "@/providers/target/error.ts";
+import { BuildVerificationError } from "@/error/base.ts";
 
 const nowIso = (): string => new Date().toISOString();
 

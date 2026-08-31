@@ -1,5 +1,5 @@
-import { UnsupportedArchiveError } from "./error.ts";
-import type { VerificationArchiveFormat } from "../core/types/source.ts";
+import { UnsupportedArchiveError } from "@/archive/error.ts";
+import type { VerificationArchiveFormat } from "@/core/types/source.ts";
 
 /** Detects a supported archive format from an explicit hint or stable name. */
 export const detectArchiveFormat = (

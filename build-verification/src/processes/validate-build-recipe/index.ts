@@ -1,25 +1,22 @@
-import { accumulateVerificationEvidence } from "../../core/evidence/accumulate.ts";
-import { metadataEntriesForEvidence } from "../../core/metadata/parse.ts";
-import {
-  parseOutOfBandRecipe,
-  parseSep58Recipe,
-} from "../../core/recipe/index.ts";
-import { redactContractBuildVerificationInput } from "../../core/types/input.ts";
+import { accumulateVerificationEvidence } from "@/core/evidence/accumulate.ts";
+import { metadataEntriesForEvidence } from "@/core/metadata/parse.ts";
+import { parseOutOfBandRecipe, parseSep58Recipe } from "@/core/recipe/index.ts";
+import { redactContractBuildVerificationInput } from "@/core/types/input.ts";
 import {
   CommandPolicyRejectedError,
   OptionPolicyRejectedError,
-} from "../../core/policy/error.ts";
-import { MissingOutOfBandRecipeError } from "../../error/core.ts";
+} from "@/core/policy/error.ts";
+import { MissingOutOfBandRecipeError } from "@/error/core.ts";
 import {
   completeNotApplicable,
   contextualizeProcessError,
   recordProcessEvent,
-} from "../shared.ts";
-import { ValidateBuildRecipeUnexpectedError } from "./error.ts";
+} from "@/processes/shared.ts";
+import { ValidateBuildRecipeUnexpectedError } from "@/processes/validate-build-recipe/error.ts";
 import type {
   ValidateBuildRecipeInput,
   ValidateBuildRecipeOutput,
-} from "./types.ts";
+} from "@/processes/validate-build-recipe/types.ts";
 
 /** Validates exact recipe fields and command/option policies before I/O. */
 export const validateBuildRecipe = async (
@@ -126,6 +123,6 @@ export const validateBuildRecipe = async (
 };
 
 /** Error constructors emitted by {@link validateBuildRecipe}. */
-export * from "./error.ts";
+export * from "@/processes/validate-build-recipe/error.ts";
 /** Process contracts used by {@link validateBuildRecipe}. */
-export * from "./types.ts";
+export * from "@/processes/validate-build-recipe/types.ts";

@@ -1,18 +1,18 @@
 import type {
   BuildVerificationLimits,
   VerificationState,
-} from "../../core/index.ts";
+} from "@/core/index.ts";
 import type {
   BuildArtifactCandidate,
   BuildArtifactCollector,
-} from "../../artifacts/types.ts";
-import type { VerificationArchiveExtractor } from "../../archive/types.ts";
+} from "@/artifacts/types.ts";
+import type { VerificationArchiveExtractor } from "@/archive/types.ts";
 import type {
   ContractBuildRunner,
   ContractBuildRunnerOutput,
-} from "../../runners/types.ts";
-import type { VerificationLogging } from "../../reporting/types.ts";
-import type { ResolvedBuildImageValue } from "../resolve-build-image/types.ts";
+} from "@/runners/types.ts";
+import type { VerificationLogging } from "@/reporting/types.ts";
+import type { ResolvedBuildImageValue } from "@/processes/resolve-build-image/types.ts";
 
 /** Active value produced after execution and candidate capture. */
 export type ExecutedContractBuildValue = ResolvedBuildImageValue & {

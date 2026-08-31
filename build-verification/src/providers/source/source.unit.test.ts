@@ -5,22 +5,22 @@ import type { AddressInfo } from "node:net";
 import {
   ArchiveLimitExceededError,
   UnsafeArchiveEntryError,
-} from "../../archive/error.ts";
+} from "@/archive/error.ts";
 import {
   acceptedPolicyDecision,
   rejectedPolicyDecision,
   TEST_LIMITS,
   testTar,
-} from "../../testing.test.ts";
+} from "@/testing.test.ts";
 import type {
   SourceAddressResolver,
   SourceHttpResponse,
   SourceHttpTransport,
   SourceHttpTransportInput,
   VerificationSourceProviderInput,
-} from "./types.ts";
-import { ArchiveVerificationSourceProvider } from "./archive.ts";
-import { FileVerificationSourceProvider } from "./file.ts";
+} from "@/providers/source/types.ts";
+import { ArchiveVerificationSourceProvider } from "@/providers/source/archive.ts";
+import { FileVerificationSourceProvider } from "@/providers/source/file.ts";
 import {
   buildPinnedSourceRequestOptions,
   collectBoundedSourceResponse,
@@ -30,9 +30,9 @@ import {
   PinnedAddressHttpTransport,
   redactSourceUrl,
   retrievePinnedHttpResource,
-} from "./http.ts";
-import { GitHubVerificationSourceProvider } from "./github.ts";
-import { DefaultVerificationSourceProvider } from "./router.ts";
+} from "@/providers/source/http.ts";
+import { GitHubVerificationSourceProvider } from "@/providers/source/github.ts";
+import { DefaultVerificationSourceProvider } from "@/providers/source/router.ts";
 import {
   GitHubReleaseAssetResolutionFailedError,
   GitHubRevisionResolutionFailedError,
@@ -45,8 +45,8 @@ import {
   SourceRequestTimedOutError,
   SourceResponseReadFailedError,
   UnsupportedSourceError,
-} from "./error.ts";
-import type { SourceRetrievalPolicy } from "../../core/index.ts";
+} from "@/providers/source/error.ts";
+import type { SourceRetrievalPolicy } from "@/core/index.ts";
 
 const directories: string[] = [];
 const temporaryDirectory = async (): Promise<string> => {

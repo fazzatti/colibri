@@ -1,6 +1,6 @@
 import { posix } from "node:path";
-import type { BuildVerificationLimits } from "../core/types/limits.ts";
-import { UnsafeArchiveEntryError } from "./error.ts";
+import type { BuildVerificationLimits } from "@/core/types/limits.ts";
+import { UnsafeArchiveEntryError } from "@/archive/error.ts";
 
 /** Validates and normalizes one portable archive-relative path. */
 export const normalizeArchivePath = (

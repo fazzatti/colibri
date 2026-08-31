@@ -1,5 +1,5 @@
 import type { StepThis } from "convee";
-import { PipelineStepOutputMissingError } from "./error.ts";
+import { PipelineStepOutputMissingError } from "@/pipelines/build-verification/error.ts";
 
 /** Reads one required preceding step output from the active Convee context. */
 export const getRequiredBuildVerificationStepOutput = <Output>(

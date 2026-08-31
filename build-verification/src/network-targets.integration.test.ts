@@ -11,8 +11,9 @@ import {
   StellarAssetContract,
   type TransactionConfig,
 } from "@colibri/core";
-import { StellarTestLedger } from "../../test-tooling/mod.ts";
-import { ContractBuildVerifier, type VerificationNetwork } from "../mod.ts";
+import { StellarTestLedger } from "@colibri/test-tooling";
+import type { VerificationNetwork } from "@/core/index.ts";
+import { ContractBuildVerifier } from "@/verifier/index.ts";
 
 const FIXTURE_ROOT = new URL(
   "../../_internal/build-verification/fixtures/",

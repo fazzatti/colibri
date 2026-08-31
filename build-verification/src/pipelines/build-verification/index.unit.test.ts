@@ -4,14 +4,14 @@ import { ConveeError, plugin } from "convee";
 import type {
   ResolveBuildImageInput,
   ResolveBuildImageOutput,
-} from "../../processes/index.ts";
-import { MissingTargetNetworkError } from "../../providers/target/error.ts";
+} from "@/processes/index.ts";
+import { MissingTargetNetworkError } from "@/providers/target/error.ts";
 import {
   TEST_LIMITS,
   TEST_NOW,
   testWasm,
   testWasmWithMetadata,
-} from "../../testing.test.ts";
+} from "@/testing.test.ts";
 import {
   COMPARE_CONTRACT_WASM_STEP_ID,
   EXECUTE_CONTRACT_BUILD_STEP_ID,
@@ -21,7 +21,7 @@ import {
   RESOLVE_VERIFICATION_TARGET_STEP_ID,
   SELECT_BUILD_ARTIFACT_STEP_ID,
   VALIDATE_BUILD_RECIPE_STEP_ID,
-} from "../../steps/ids.ts";
+} from "@/steps/ids.ts";
 import {
   ARTIFACT_TO_COMPARISON_CONNECTOR_ID,
   EXECUTION_TO_ARTIFACT_CONNECTOR_ID,
@@ -31,16 +31,16 @@ import {
   RECIPE_TO_SOURCE_CONNECTOR_ID,
   SOURCE_TO_IMAGE_CONNECTOR_ID,
   TARGET_TO_METADATA_CONNECTOR_ID,
-} from "./connectors.ts";
+} from "@/pipelines/build-verification/connectors.ts";
 import {
   BuildVerificationPipelineConstructionError,
   ProcessDependencyMissingError,
-} from "./error.ts";
+} from "@/pipelines/build-verification/error.ts";
 import {
   BUILD_VERIFICATION_PIPELINE_ID,
   createBuildVerificationPipeline,
-} from "./index.ts";
-import { pipelineTestDependencies } from "./testing.test.ts";
+} from "@/pipelines/build-verification/index.ts";
+import { pipelineTestDependencies } from "@/pipelines/build-verification/testing.test.ts";
 
 const request = () => ({
   mode: "outOfBand" as const,

@@ -1,12 +1,15 @@
-import { selectBuildArtifactCandidate } from "../../artifacts/select.ts";
-import { accumulateVerificationEvidence } from "../../core/evidence/accumulate.ts";
-import { redactContractBuildVerificationInput } from "../../core/types/input.ts";
-import { contextualizeProcessError, recordProcessEvent } from "../shared.ts";
-import { SelectBuildArtifactUnexpectedError } from "./error.ts";
+import { selectBuildArtifactCandidate } from "@/artifacts/select.ts";
+import { accumulateVerificationEvidence } from "@/core/evidence/accumulate.ts";
+import { redactContractBuildVerificationInput } from "@/core/types/input.ts";
+import {
+  contextualizeProcessError,
+  recordProcessEvent,
+} from "@/processes/shared.ts";
+import { SelectBuildArtifactUnexpectedError } from "@/processes/select-build-artifact/error.ts";
 import type {
   SelectBuildArtifactInput,
   SelectBuildArtifactOutput,
-} from "./types.ts";
+} from "@/processes/select-build-artifact/types.ts";
 
 /** Selects the exact rebuilt Wasm from bounded candidate records. */
 export const selectBuildArtifact = async (
@@ -58,6 +61,6 @@ export const selectBuildArtifact = async (
 };
 
 /** Error constructors emitted by {@link selectBuildArtifact}. */
-export * from "./error.ts";
+export * from "@/processes/select-build-artifact/error.ts";
 /** Process contracts used by {@link selectBuildArtifact}. */
-export * from "./types.ts";
+export * from "@/processes/select-build-artifact/types.ts";

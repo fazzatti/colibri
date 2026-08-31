@@ -1,6 +1,6 @@
 import { type Step, step } from "convee";
-import { parseContractMetadata } from "../processes/parse-contract-metadata/index.ts";
-import { PARSE_CONTRACT_METADATA_STEP_ID } from "./ids.ts";
+import { parseContractMetadata } from "@/processes/parse-contract-metadata/index.ts";
+import { PARSE_CONTRACT_METADATA_STEP_ID } from "@/steps/ids.ts";
 
 /** Creates the parse-contract-metadata step used in verifier pipelines. */
 export const createParseContractMetadataStep = (): Step<

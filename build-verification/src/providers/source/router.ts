@@ -1,14 +1,17 @@
 import type {
   VerificationSourceProvider,
   VerificationSourceProviderInput,
-} from "./types.ts";
-import { ArchiveVerificationSourceProvider } from "./archive.ts";
-import { FileVerificationSourceProvider } from "./file.ts";
-import { HttpVerificationSourceProvider } from "./http.ts";
-import { GitHubVerificationSourceProvider } from "./github.ts";
-import type { SourceRetrievalPolicy } from "../../core/policy/types.ts";
-import type { ResolvedVerificationSource } from "../../core/types/index.ts";
-import type { SourceAddressResolver, SourceHttpTransport } from "./types.ts";
+} from "@/providers/source/types.ts";
+import { ArchiveVerificationSourceProvider } from "@/providers/source/archive.ts";
+import { FileVerificationSourceProvider } from "@/providers/source/file.ts";
+import { HttpVerificationSourceProvider } from "@/providers/source/http.ts";
+import { GitHubVerificationSourceProvider } from "@/providers/source/github.ts";
+import type { SourceRetrievalPolicy } from "@/core/policy/types.ts";
+import type { ResolvedVerificationSource } from "@/core/types/index.ts";
+import type {
+  SourceAddressResolver,
+  SourceHttpTransport,
+} from "@/providers/source/types.ts";
 
 /** Dependencies accepted by the default source-provider router. */
 export type DefaultVerificationSourceProviderOptions = {

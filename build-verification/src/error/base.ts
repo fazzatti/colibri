@@ -3,7 +3,7 @@ import type { Diagnostic } from "@colibri/core";
 import type {
   ContractBuildVerificationEvidence,
   VerificationLogEvent,
-} from "../core/types/result.ts";
+} from "@/core/types/result.ts";
 
 /** Stable codes emitted by `@colibri/build-verification`. */
 export enum Code {

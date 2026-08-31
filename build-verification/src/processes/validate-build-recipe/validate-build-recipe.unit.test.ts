@@ -3,8 +3,8 @@ import { describe, it } from "@std/testing/bdd";
 import {
   CommandPolicyRejectedError,
   OptionPolicyRejectedError,
-} from "../../core/policy/error.ts";
-import { MissingOutOfBandRecipeError } from "../../error/core.ts";
+} from "@/core/policy/error.ts";
+import { MissingOutOfBandRecipeError } from "@/error/core.ts";
 import {
   acceptedPolicyDecision,
   rejectedPolicyDecision,
@@ -12,10 +12,13 @@ import {
   TEST_IMAGE,
   TEST_LIMITS,
   TEST_NOW,
-} from "../../testing.test.ts";
-import { completeProcessState, metadataProcessState } from "../testing.test.ts";
-import { ValidateBuildRecipeUnexpectedError } from "./error.ts";
-import { validateBuildRecipe } from "./index.ts";
+} from "@/testing.test.ts";
+import {
+  completeProcessState,
+  metadataProcessState,
+} from "@/processes/testing.test.ts";
+import { ValidateBuildRecipeUnexpectedError } from "@/processes/validate-build-recipe/error.ts";
+import { validateBuildRecipe } from "@/processes/validate-build-recipe/index.ts";
 
 const acceptedPolicies = () => ({
   commandPolicy: {

@@ -4,9 +4,9 @@ import type {
   BuildVerificationLimits,
   ContractBuildRecipe,
   VerificationState,
-} from "../../core/index.ts";
-import type { VerificationLogging } from "../../reporting/types.ts";
-import type { ParsedContractMetadataValue } from "../parse-contract-metadata/types.ts";
+} from "@/core/index.ts";
+import type { VerificationLogging } from "@/reporting/types.ts";
+import type { ParsedContractMetadataValue } from "@/processes/parse-contract-metadata/types.ts";
 
 /** Active value produced after recipe and execution-policy validation. */
 export type ValidatedBuildRecipeValue = ParsedContractMetadataValue & {

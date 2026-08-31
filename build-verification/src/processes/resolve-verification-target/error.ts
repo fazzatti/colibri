@@ -1,4 +1,4 @@
-import { BuildVerificationError, Code } from "../../error/base.ts";
+import { BuildVerificationError, Code } from "@/error/base.ts";
 
 /** Raised when target resolution fails outside its typed provider contract. */
 export class ResolveVerificationTargetUnexpectedError

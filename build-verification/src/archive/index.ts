@@ -1,7 +1,7 @@
 /** Archive detection, safety validation, and extraction boundaries. */
-export * from "./detect.ts";
-export * from "./error.ts";
-export * from "./extract.ts";
-export * from "./limits.ts";
-export * from "./paths.ts";
-export * from "./types.ts";
+export * from "@/archive/detect.ts";
+export * from "@/archive/error.ts";
+export * from "@/archive/extract.ts";
+export * from "@/archive/limits.ts";
+export * from "@/archive/paths.ts";
+export * from "@/archive/types.ts";

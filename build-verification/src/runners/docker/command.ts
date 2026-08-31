@@ -1,5 +1,5 @@
-import type { ContractBuildPlan } from "../types.ts";
-import { BuildPlanInvalidError } from "./error.ts";
+import type { ContractBuildPlan } from "@/runners/types.ts";
+import { BuildPlanInvalidError } from "@/runners/docker/error.ts";
 
 /** Returns the exact structured argument vector for a validated build plan. */
 export const buildDockerCommand = (input: ContractBuildPlan): string[] => {

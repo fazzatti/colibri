@@ -1,4 +1,4 @@
-import type { ContractMetadataEntry } from "../recipe/types.ts";
+import type { ContractMetadataEntry } from "@/core/recipe/types.ts";
 
 /** One decoded `contractmetav0` custom section. */
 export type ContractMetadataSection = {

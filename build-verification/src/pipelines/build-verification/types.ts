@@ -5,15 +5,15 @@ import type {
   ContainerImagePolicy,
   ContractBuildVerificationInput,
   VerificationNetworkEvidence,
-} from "../../core/index.ts";
-import type { BuildArtifactCollector } from "../../artifacts/types.ts";
-import type { VerificationArchiveExtractor } from "../../archive/types.ts";
-import type { ContractBuildWorkspace } from "../../processes/execute-contract-build/types.ts";
-import type { ContainerImageResolver } from "../../providers/image/types.ts";
-import type { VerificationSourceProvider } from "../../providers/source/types.ts";
-import type { VerificationTargetResolver } from "../../providers/target/types.ts";
-import type { VerificationLogging } from "../../reporting/types.ts";
-import type { ContractBuildRunner } from "../../runners/types.ts";
+} from "@/core/index.ts";
+import type { BuildArtifactCollector } from "@/artifacts/types.ts";
+import type { VerificationArchiveExtractor } from "@/archive/types.ts";
+import type { ContractBuildWorkspace } from "@/processes/execute-contract-build/types.ts";
+import type { ContainerImageResolver } from "@/providers/image/types.ts";
+import type { VerificationSourceProvider } from "@/providers/source/types.ts";
+import type { VerificationTargetResolver } from "@/providers/target/types.ts";
+import type { VerificationLogging } from "@/reporting/types.ts";
+import type { ContractBuildRunner } from "@/runners/types.ts";
 
 /** Dependencies shared by the build-verification pipeline connectors. */
 export type BuildVerificationPipelineDependencies = {

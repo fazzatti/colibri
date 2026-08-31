@@ -2,9 +2,9 @@ import type {
   BuildVerificationLimits,
   ExtractedContractMetadata,
   VerificationState,
-} from "../../core/index.ts";
-import type { VerificationLogging } from "../../reporting/types.ts";
-import type { ResolvedVerificationTargetValue } from "../resolve-verification-target/types.ts";
+} from "@/core/index.ts";
+import type { VerificationLogging } from "@/reporting/types.ts";
+import type { ResolvedVerificationTargetValue } from "@/processes/resolve-verification-target/types.ts";
 
 /** Active value produced after ordered metadata extraction. */
 export type ParsedContractMetadataValue = ResolvedVerificationTargetValue & {

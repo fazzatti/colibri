@@ -1,9 +1,12 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { TEST_LIMITS, TEST_NOW, testWasm } from "../../testing.test.ts";
-import { artifactProcessState, completeProcessState } from "../testing.test.ts";
-import { CompareContractWasmUnexpectedError } from "./error.ts";
-import { compareContractWasm } from "./index.ts";
+import { TEST_LIMITS, TEST_NOW, testWasm } from "@/testing.test.ts";
+import {
+  artifactProcessState,
+  completeProcessState,
+} from "@/processes/testing.test.ts";
+import { CompareContractWasmUnexpectedError } from "@/processes/compare-contract-wasm/error.ts";
+import { compareContractWasm } from "@/processes/compare-contract-wasm/index.ts";
 
 describe("compareContractWasm", () => {
   it("returns an already completed result unchanged", async () => {

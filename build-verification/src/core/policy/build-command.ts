@@ -1,4 +1,7 @@
-import type { BuildCommandPolicy, PolicyDecision } from "./types.ts";
+import type {
+  BuildCommandPolicy,
+  PolicyDecision,
+} from "@/core/policy/types.ts";
 
 /** Stable identifier of the default Stellar contract-build command policy. */
 export const DEFAULT_BUILD_COMMAND_POLICY_ID =

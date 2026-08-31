@@ -2,7 +2,7 @@ import type {
   BuildVerificationLimits,
   ResolvedVerificationSource,
   VerificationArchiveFormat,
-} from "../core/types/index.ts";
+} from "@/core/types/index.ts";
 
 /** One validated regular-file or directory archive entry. */
 export type VerificationArchiveEntry = {

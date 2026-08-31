@@ -1,4 +1,4 @@
-import type { ContractBuildRecipe } from "./types.ts";
+import type { ContractBuildRecipe } from "@/core/recipe/types.ts";
 
 /** Builds the exact structured Stellar CLI argument vector for one recipe. */
 export const createContractBuildArguments = (

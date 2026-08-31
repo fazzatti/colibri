@@ -1,4 +1,4 @@
-import { BuildVerificationError, Code } from "../../error/base.ts";
+import { BuildVerificationError, Code } from "@/error/base.ts";
 
 /** Raised when artifact selection fails outside its typed selector contract. */
 export class SelectBuildArtifactUnexpectedError

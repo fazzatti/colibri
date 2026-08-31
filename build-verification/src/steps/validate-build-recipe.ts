@@ -1,6 +1,6 @@
 import { type Step, step } from "convee";
-import { validateBuildRecipe } from "../processes/validate-build-recipe/index.ts";
-import { VALIDATE_BUILD_RECIPE_STEP_ID } from "./ids.ts";
+import { validateBuildRecipe } from "@/processes/validate-build-recipe/index.ts";
+import { VALIDATE_BUILD_RECIPE_STEP_ID } from "@/steps/ids.ts";
 
 /** Creates the validate-build-recipe step used in verifier pipelines. */
 export const createValidateBuildRecipeStep = (): Step<

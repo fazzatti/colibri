@@ -1,16 +1,19 @@
-import { accumulateVerificationEvidence } from "../../core/evidence/accumulate.ts";
-import { redactContractBuildVerificationInput } from "../../core/types/input.ts";
-import type { VerificationSource } from "../../core/types/source.ts";
+import { accumulateVerificationEvidence } from "@/core/evidence/accumulate.ts";
+import { redactContractBuildVerificationInput } from "@/core/types/input.ts";
+import type { VerificationSource } from "@/core/types/source.ts";
 import {
   MissingVerificationSourceError,
   SourceHashMismatchError,
-} from "../../providers/source/error.ts";
-import { contextualizeProcessError, recordProcessEvent } from "../shared.ts";
-import { ResolveSourceArchiveUnexpectedError } from "./error.ts";
+} from "@/providers/source/error.ts";
+import {
+  contextualizeProcessError,
+  recordProcessEvent,
+} from "@/processes/shared.ts";
+import { ResolveSourceArchiveUnexpectedError } from "@/processes/resolve-source-archive/error.ts";
 import type {
   ResolveSourceArchiveInput,
   ResolveSourceArchiveOutput,
-} from "./types.ts";
+} from "@/processes/resolve-source-archive/types.ts";
 
 /** Resolves bounded exact source bytes and checks the pre-extraction hash. */
 export const resolveSourceArchive = async (
@@ -98,6 +101,6 @@ export const resolveSourceArchive = async (
 };
 
 /** Error constructors emitted by {@link resolveSourceArchive}. */
-export * from "./error.ts";
+export * from "@/processes/resolve-source-archive/error.ts";
 /** Process contracts used by {@link resolveSourceArchive}. */
-export * from "./types.ts";
+export * from "@/processes/resolve-source-archive/types.ts";

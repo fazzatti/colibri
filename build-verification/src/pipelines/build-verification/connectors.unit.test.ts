@@ -10,7 +10,7 @@ import {
   recipeProcessState,
   sourceProcessState,
   targetProcessState,
-} from "../../processes/testing.test.ts";
+} from "@/processes/testing.test.ts";
 import {
   EXECUTE_CONTRACT_BUILD_STEP_ID,
   PARSE_CONTRACT_METADATA_STEP_ID,
@@ -19,7 +19,7 @@ import {
   RESOLVE_VERIFICATION_TARGET_STEP_ID,
   SELECT_BUILD_ARTIFACT_STEP_ID,
   VALIDATE_BUILD_RECIPE_STEP_ID,
-} from "../../steps/ids.ts";
+} from "@/steps/ids.ts";
 import type {
   ExecuteContractBuildOutput,
   ParseContractMetadataOutput,
@@ -28,7 +28,7 @@ import type {
   ResolveVerificationTargetOutput,
   SelectBuildArtifactOutput,
   ValidateBuildRecipeOutput,
-} from "../../processes/index.ts";
+} from "@/processes/index.ts";
 import {
   ARTIFACT_TO_COMPARISON_CONNECTOR_ID,
   buildVerificationArtifactToComparison,
@@ -46,10 +46,10 @@ import {
   RECIPE_TO_SOURCE_CONNECTOR_ID,
   SOURCE_TO_IMAGE_CONNECTOR_ID,
   TARGET_TO_METADATA_CONNECTOR_ID,
-} from "./connectors.ts";
-import { PipelineStepOutputMissingError } from "./error.ts";
-import { getRequiredBuildVerificationStepOutput } from "./runtime.ts";
-import { pipelineTestDependencies } from "./testing.test.ts";
+} from "@/pipelines/build-verification/connectors.ts";
+import { PipelineStepOutputMissingError } from "@/pipelines/build-verification/error.ts";
+import { getRequiredBuildVerificationStepOutput } from "@/pipelines/build-verification/runtime.ts";
+import { pipelineTestDependencies } from "@/pipelines/build-verification/testing.test.ts";
 
 const runtime = (snapshot: { output?: unknown } | undefined): StepThis =>
   ({

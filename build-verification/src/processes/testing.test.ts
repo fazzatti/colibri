@@ -4,7 +4,7 @@ import type {
   ContractBuildVerificationInput,
   ContractBuildVerificationMode,
   ResolvedVerificationSource,
-} from "../core/index.ts";
+} from "@/core/index.ts";
 import {
   acceptedPolicyDecision,
   TEST_NOW,
@@ -12,14 +12,14 @@ import {
   testImageDetails,
   testRecipe,
   testWasm,
-} from "../testing.test.ts";
-import type { ResolvedVerificationTargetValue } from "./resolve-verification-target/types.ts";
-import type { ParsedContractMetadataValue } from "./parse-contract-metadata/types.ts";
-import type { ValidatedBuildRecipeValue } from "./validate-build-recipe/types.ts";
-import type { ResolvedSourceArchiveValue } from "./resolve-source-archive/types.ts";
-import type { ResolvedBuildImageValue } from "./resolve-build-image/types.ts";
-import type { ExecutedContractBuildValue } from "./execute-contract-build/types.ts";
-import type { SelectedBuildArtifactValue } from "./select-build-artifact/types.ts";
+} from "@/testing.test.ts";
+import type { ResolvedVerificationTargetValue } from "@/processes/resolve-verification-target/types.ts";
+import type { ParsedContractMetadataValue } from "@/processes/parse-contract-metadata/types.ts";
+import type { ValidatedBuildRecipeValue } from "@/processes/validate-build-recipe/types.ts";
+import type { ResolvedSourceArchiveValue } from "@/processes/resolve-source-archive/types.ts";
+import type { ResolvedBuildImageValue } from "@/processes/resolve-build-image/types.ts";
+import type { ExecutedContractBuildValue } from "@/processes/execute-contract-build/types.ts";
+import type { SelectedBuildArtifactValue } from "@/processes/select-build-artifact/types.ts";
 
 /** Deterministic out-of-band request shared by process unit tests. */
 export const processRequest = (): ContractBuildVerificationInput => ({

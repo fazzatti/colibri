@@ -1,16 +1,16 @@
 import {
   attachBuildVerificationErrorContext,
   BuildVerificationError,
-} from "../error/base.ts";
+} from "@/error/base.ts";
 import type {
   BuildVerificationLimits,
   ContractBuildVerificationEvidence,
   ContractBuildVerificationResult,
   VerificationLogEvent,
-} from "../core/types/index.ts";
-import { finalizeVerificationEvidence } from "../core/evidence/finalize.ts";
-import { recordVerificationLog } from "../reporting/logger.ts";
-import type { VerificationLogging } from "../reporting/types.ts";
+} from "@/core/types/index.ts";
+import { finalizeVerificationEvidence } from "@/core/evidence/finalize.ts";
+import { recordVerificationLog } from "@/reporting/logger.ts";
+import type { VerificationLogging } from "@/reporting/types.ts";
 
 /** Common process dependencies for bounded logs and deterministic timestamps. */
 export type VerificationProcessRuntime = {

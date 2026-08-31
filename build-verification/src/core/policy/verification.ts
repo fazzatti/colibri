@@ -1,8 +1,8 @@
-import type { VerificationPolicy } from "./types.ts";
-import { DefaultBuildCommandPolicy } from "./build-command.ts";
-import { DefaultBuildOptionPolicy } from "./build-options.ts";
-import { OfficialStellarImagePolicy } from "./official-stellar-image.ts";
-import { DefaultSourceRetrievalPolicy } from "./source-retrieval.ts";
+import type { VerificationPolicy } from "@/core/policy/types.ts";
+import { DefaultBuildCommandPolicy } from "@/core/policy/build-command.ts";
+import { DefaultBuildOptionPolicy } from "@/core/policy/build-options.ts";
+import { OfficialStellarImagePolicy } from "@/core/policy/official-stellar-image.ts";
+import { DefaultSourceRetrievalPolicy } from "@/core/policy/source-retrieval.ts";
 
 /** Creates the conservative policy set with optional caller replacements. */
 export const createDefaultVerificationPolicy = (

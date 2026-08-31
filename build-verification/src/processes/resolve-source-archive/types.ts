@@ -2,10 +2,10 @@ import type {
   BuildVerificationLimits,
   ResolvedVerificationSource,
   VerificationState,
-} from "../../core/index.ts";
-import type { VerificationLogging } from "../../reporting/types.ts";
-import type { VerificationSourceProvider } from "../../providers/source/types.ts";
-import type { ValidatedBuildRecipeValue } from "../validate-build-recipe/types.ts";
+} from "@/core/index.ts";
+import type { VerificationLogging } from "@/reporting/types.ts";
+import type { VerificationSourceProvider } from "@/providers/source/types.ts";
+import type { ValidatedBuildRecipeValue } from "@/processes/validate-build-recipe/types.ts";
 
 /** Active value produced after exact source resolution and hash checking. */
 export type ResolvedSourceArchiveValue = ValidatedBuildRecipeValue & {

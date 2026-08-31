@@ -1,6 +1,6 @@
 import { assert, assertEquals, assertFalse } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { compareWasmBytes, sha256Hex } from "./compare-wasm.ts";
+import { compareWasmBytes, sha256Hex } from "@/core/comparison/compare-wasm.ts";
 
 describe("core comparison", () => {
   it("hashes exact bytes as lowercase SHA-256", async () => {

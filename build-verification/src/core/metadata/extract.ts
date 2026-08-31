@@ -3,12 +3,12 @@ import { xdr } from "stellar-sdk";
 import {
   InvalidTargetWasmError,
   MetadataDecodingFailedError,
-} from "../../error/core.ts";
-import type { ContractMetadataEntry } from "../recipe/types.ts";
+} from "@/error/core.ts";
+import type { ContractMetadataEntry } from "@/core/recipe/types.ts";
 import type {
   ContractMetadataSection,
   ExtractedContractMetadata,
-} from "./types.ts";
+} from "@/core/metadata/types.ts";
 
 type XdrReaderLike = {
   readonly eof: boolean;

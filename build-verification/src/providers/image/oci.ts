@@ -1,14 +1,14 @@
-import { sha256Hex } from "../../core/comparison/compare-wasm.ts";
+import { sha256Hex } from "@/core/comparison/compare-wasm.ts";
 import type {
   ContainerImageDetails,
   ContainerImageProvenance,
   ContainerImageReferrer,
   ContainerImageSbom,
-} from "../../core/policy/types.ts";
+} from "@/core/policy/types.ts";
 import type {
   ContainerImageResolver,
   OciContainerImageResolverOptions,
-} from "./types.ts";
+} from "@/providers/image/types.ts";
 import {
   ImageAttestationDecodingFailedError,
   ImageConfigDigestMismatchError,
@@ -19,7 +19,7 @@ import {
   ImageReferrersResolutionFailedError,
   InvalidImageReferenceError,
   MultiArchImageError,
-} from "./error.ts";
+} from "@/providers/image/error.ts";
 
 const IMAGE_PATTERN =
   /^(?:localhost(?::\d+)?|[^\s@/]*[.:][^\s@/]*)\/[^\s@]+@sha256:[0-9a-f]{64}$/;

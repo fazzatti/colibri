@@ -1,18 +1,18 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { TEST_LIMITS, TEST_NOW, testEvidence } from "../testing.test.ts";
+import { TEST_LIMITS, TEST_NOW, testEvidence } from "@/testing.test.ts";
 import {
   EvidenceWriteFailedError,
   LoggerFailedError,
   LogWriteFailedError,
-} from "./error.ts";
-import { writeVerificationEvidence } from "./evidence-writer.ts";
-import { writeVerificationLogs } from "./log-writer.ts";
+} from "@/reporting/error.ts";
+import { writeVerificationEvidence } from "@/reporting/evidence-writer.ts";
+import { writeVerificationLogs } from "@/reporting/log-writer.ts";
 import {
   BoundedVerificationLogCollector,
   recordVerificationLog,
-} from "./logger.ts";
-import type { VerificationLogEvent } from "../core/types/result.ts";
+} from "@/reporting/logger.ts";
+import type { VerificationLogEvent } from "@/core/types/result.ts";
 
 const event = (
   overrides: Partial<VerificationLogEvent> = {},

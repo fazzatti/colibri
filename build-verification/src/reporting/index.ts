@@ -1,6 +1,6 @@
 /** Structured logging and atomic evidence/log writers. */
-export * from "./error.ts";
-export * from "./evidence-writer.ts";
-export * from "./log-writer.ts";
-export * from "./logger.ts";
-export * from "./types.ts";
+export * from "@/reporting/error.ts";
+export * from "@/reporting/evidence-writer.ts";
+export * from "@/reporting/log-writer.ts";
+export * from "@/reporting/logger.ts";
+export * from "@/reporting/types.ts";

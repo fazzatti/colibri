@@ -2,11 +2,11 @@ import type {
   ContainerImageDetails,
   JsonValue,
   PolicyDecision,
-} from "../policy/types.ts";
-import type { ContractMetadataEntry } from "../recipe/types.ts";
-import type { VerificationNetworkEvidence } from "./network.ts";
-import type { VerificationSourceEvidence } from "./source.ts";
-import type { VerificationTargetEvidence } from "./target.ts";
+} from "@/core/policy/types.ts";
+import type { ContractMetadataEntry } from "@/core/recipe/types.ts";
+import type { VerificationNetworkEvidence } from "@/core/types/network.ts";
+import type { VerificationSourceEvidence } from "@/core/types/source.ts";
+import type { VerificationTargetEvidence } from "@/core/types/target.ts";
 
 /** Stable verification stages used by structured logs and plugins. */
 export type BuildVerificationStage =

@@ -1,13 +1,13 @@
 import type {
   ContractBuildVerificationInput,
   ContractBuildVerificationResult,
-} from "../core/index.ts";
+} from "@/core/index.ts";
 import {
   type BuildVerificationPipeline,
   createBuildVerificationPipeline,
-} from "../pipelines/build-verification/index.ts";
-import { createDefaultBuildVerificationDependencies } from "./defaults.ts";
-import type { ContractBuildVerifierOptions } from "./types.ts";
+} from "@/pipelines/build-verification/index.ts";
+import { createDefaultBuildVerificationDependencies } from "@/verifier/defaults.ts";
+import type { ContractBuildVerifierOptions } from "@/verifier/types.ts";
 
 /** Rebuilds Stellar contract Wasm and compares it byte-for-byte with a target. */
 export class ContractBuildVerifier {

@@ -1,15 +1,15 @@
 import { assert, assertEquals, assertFalse } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { TEST_DIGEST, testImageDetails } from "../../testing.test.ts";
-import { DefaultBuildCommandPolicy } from "./build-command.ts";
-import { DefaultBuildOptionPolicy } from "./build-options.ts";
-import { OfficialStellarImagePolicy } from "./official-stellar-image.ts";
-import { DefaultSourceRetrievalPolicy } from "./source-retrieval.ts";
-import { createDefaultVerificationPolicy } from "./verification.ts";
+import { TEST_DIGEST, testImageDetails } from "@/testing.test.ts";
+import { DefaultBuildCommandPolicy } from "@/core/policy/build-command.ts";
+import { DefaultBuildOptionPolicy } from "@/core/policy/build-options.ts";
+import { OfficialStellarImagePolicy } from "@/core/policy/official-stellar-image.ts";
+import { DefaultSourceRetrievalPolicy } from "@/core/policy/source-retrieval.ts";
+import { createDefaultVerificationPolicy } from "@/core/policy/verification.ts";
 import {
   CommandPolicyRejectedError,
   OptionPolicyRejectedError,
-} from "./error.ts";
+} from "@/core/policy/error.ts";
 
 describe("core verification policies", () => {
   it("accepts only the exact default Stellar contract-build command", () => {

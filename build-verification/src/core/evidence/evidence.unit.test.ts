@@ -1,17 +1,17 @@
 import { assert, assertEquals, assertFalse } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { TEST_NOW, testImageDetails } from "../../testing.test.ts";
+import { TEST_NOW, testImageDetails } from "@/testing.test.ts";
 import {
   accumulateVerificationEvidence,
   attachVerificationLogs,
   BUILD_VERIFICATION_PACKAGE_VERSION,
   createVerificationEvidence,
-} from "./accumulate.ts";
+} from "@/core/evidence/accumulate.ts";
 import {
   finalizeVerificationEvidence,
   imageDetailsForEvidence,
-} from "./finalize.ts";
-import { isCompleteVerificationState } from "../types/state.ts";
+} from "@/core/evidence/finalize.ts";
+import { isCompleteVerificationState } from "@/core/types/state.ts";
 
 describe("core verification evidence", () => {
   it("creates and immutably refines the package evidence seed", () => {

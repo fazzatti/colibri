@@ -16,15 +16,15 @@ import {
 } from "@colibri/core";
 import type { RpcLedgerEntriesClient } from "@colibri/core";
 import type { ContractId } from "@colibri/core";
-import { sha256Hex } from "../../core/comparison/index.ts";
-import { InvalidVerifierOptionsError } from "../../error/core.ts";
-import { TEST_NOW, testWasm } from "../../testing.test.ts";
-import { DefaultVerificationTargetResolver } from "./default.ts";
+import { sha256Hex } from "@/core/comparison/index.ts";
+import { InvalidVerifierOptionsError } from "@/error/core.ts";
+import { TEST_NOW, testWasm } from "@/testing.test.ts";
+import { DefaultVerificationTargetResolver } from "@/providers/target/default.ts";
 import {
   createVerificationLedgerEntries,
   normalizeVerificationNetwork,
   StellarVerificationTargetResolver,
-} from "./stellar.ts";
+} from "@/providers/target/stellar.ts";
 import {
   MissingTargetNetworkError,
   TargetCodeLookupFailedError,
@@ -32,7 +32,7 @@ import {
   TargetInstanceLookupFailedError,
   TargetProviderUnexpectedError,
   TargetRpcInitializationFailedError,
-} from "./error.ts";
+} from "@/providers/target/error.ts";
 
 const contractId = (fill: number): string =>
   StrKey.encodeContract(Buffer.alloc(32, fill));

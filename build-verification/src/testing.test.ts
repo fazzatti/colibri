@@ -2,14 +2,14 @@ import { xdr } from "stellar-sdk";
 import {
   createVerificationEvidence,
   DEFAULT_BUILD_VERIFICATION_LIMITS,
-} from "./core/index.ts";
+} from "@/core/index.ts";
 import type {
   BuildVerificationLimits,
   ContainerImageDetails,
   ContractBuildRecipe,
   ContractMetadataEntry,
   PolicyDecision,
-} from "./core/index.ts";
+} from "@/core/index.ts";
 
 /** Deterministic timestamp shared by package tests. */
 export const TEST_NOW = "2026-08-28T12:00:00.000Z";

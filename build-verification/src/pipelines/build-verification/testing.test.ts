@@ -1,12 +1,12 @@
-import type { BuildVerificationPipelineDependencies } from "./types.ts";
+import type { BuildVerificationPipelineDependencies } from "@/pipelines/build-verification/types.ts";
 import {
   acceptedPolicyDecision,
   TEST_LIMITS,
   TEST_NOW,
   testImageDetails,
   testWasm,
-} from "../../testing.test.ts";
-import { processSource } from "../../processes/testing.test.ts";
+} from "@/testing.test.ts";
+import { processSource } from "@/processes/testing.test.ts";
 
 /** Creates complete injected pipeline dependencies without external I/O. */
 export const pipelineTestDependencies = (

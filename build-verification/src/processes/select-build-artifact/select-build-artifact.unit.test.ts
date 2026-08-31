@@ -3,14 +3,14 @@ import { describe, it } from "@std/testing/bdd";
 import {
   BuildArtifactAmbiguousError,
   BuildArtifactNotFoundError,
-} from "../../artifacts/error.ts";
-import { TEST_LIMITS, TEST_NOW, testWasm } from "../../testing.test.ts";
+} from "@/artifacts/error.ts";
+import { TEST_LIMITS, TEST_NOW, testWasm } from "@/testing.test.ts";
 import {
   completeProcessState,
   executionProcessState,
-} from "../testing.test.ts";
-import { SelectBuildArtifactUnexpectedError } from "./error.ts";
-import { selectBuildArtifact } from "./index.ts";
+} from "@/processes/testing.test.ts";
+import { SelectBuildArtifactUnexpectedError } from "@/processes/select-build-artifact/error.ts";
+import { selectBuildArtifact } from "@/processes/select-build-artifact/index.ts";
 
 const artifact = (path: string) => {
   const bytes = testWasm();

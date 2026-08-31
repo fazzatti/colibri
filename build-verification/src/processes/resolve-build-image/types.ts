@@ -4,10 +4,10 @@ import type {
   ContainerImagePolicy,
   PolicyDecision,
   VerificationState,
-} from "../../core/index.ts";
-import type { ContainerImageResolver } from "../../providers/image/types.ts";
-import type { VerificationLogging } from "../../reporting/types.ts";
-import type { ResolvedSourceArchiveValue } from "../resolve-source-archive/types.ts";
+} from "@/core/index.ts";
+import type { ContainerImageResolver } from "@/providers/image/types.ts";
+import type { VerificationLogging } from "@/reporting/types.ts";
+import type { ResolvedSourceArchiveValue } from "@/processes/resolve-source-archive/types.ts";
 
 /** Active value produced after image resolution and trust evaluation. */
 export type ResolvedBuildImageValue = ResolvedSourceArchiveValue & {

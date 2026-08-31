@@ -1,22 +1,20 @@
-import {
-  accumulateVerificationEvidence,
-} from "../../core/evidence/accumulate.ts";
+import { accumulateVerificationEvidence } from "@/core/evidence/accumulate.ts";
 import {
   extractContractMetadataSections,
   hasSep58Metadata,
   metadataEntriesForEvidence,
-} from "../../core/metadata/index.ts";
-import { redactContractBuildVerificationInput } from "../../core/types/input.ts";
+} from "@/core/metadata/index.ts";
+import { redactContractBuildVerificationInput } from "@/core/types/input.ts";
 import {
   completeNotApplicable,
   contextualizeProcessError,
   recordProcessEvent,
-} from "../shared.ts";
-import { ParseContractMetadataUnexpectedError } from "./error.ts";
+} from "@/processes/shared.ts";
+import { ParseContractMetadataUnexpectedError } from "@/processes/parse-contract-metadata/error.ts";
 import type {
   ParseContractMetadataInput,
   ParseContractMetadataOutput,
-} from "./types.ts";
+} from "@/processes/parse-contract-metadata/types.ts";
 
 /** Parses ordered contract metadata or completes strict mode when SEP-58 is absent. */
 export const parseContractMetadata = async (
@@ -78,6 +76,6 @@ export const parseContractMetadata = async (
 };
 
 /** Error constructors emitted by {@link parseContractMetadata}. */
-export * from "./error.ts";
+export * from "@/processes/parse-contract-metadata/error.ts";
 /** Process contracts used by {@link parseContractMetadata}. */
-export * from "./types.ts";
+export * from "@/processes/parse-contract-metadata/types.ts";

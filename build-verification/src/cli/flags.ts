@@ -5,10 +5,10 @@ import type {
   VerificationNetwork,
   VerificationSource,
   VerificationTarget,
-} from "../core/index.ts";
-import { InvalidCliArgumentsError } from "./error.ts";
-import type { BuildVerificationCliIo } from "./io.ts";
-import type { ParsedBuildVerificationFlags } from "./types.ts";
+} from "@/core/index.ts";
+import { InvalidCliArgumentsError } from "@/cli/error.ts";
+import type { BuildVerificationCliIo } from "@/cli/io.ts";
+import type { ParsedBuildVerificationFlags } from "@/cli/types.ts";
 
 /** Help text printed by the build-verification CLI. */
 export const BUILD_VERIFICATION_CLI_HELP: string = `@colibri/build-verification

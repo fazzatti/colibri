@@ -3,7 +3,7 @@ import type {
   BuildOptionPolicy,
   PolicyCheck,
   PolicyDecision,
-} from "./types.ts";
+} from "@/core/policy/types.ts";
 
 /** Stable identifier of the default Stellar contract-build option policy. */
 export const DEFAULT_BUILD_OPTION_POLICY_ID =

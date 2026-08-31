@@ -1,6 +1,6 @@
-import { detectArchiveFormat } from "../../archive/detect.ts";
-import { sha256Hex } from "../../core/comparison/compare-wasm.ts";
-import type { ResolvedVerificationSource } from "../../core/types/index.ts";
+import { detectArchiveFormat } from "@/archive/detect.ts";
+import { sha256Hex } from "@/core/comparison/compare-wasm.ts";
+import type { ResolvedVerificationSource } from "@/core/types/index.ts";
 import type {
   GitHubSourceCredentials,
   HttpVerificationSourceProviderOptions,
@@ -8,18 +8,18 @@ import type {
   SourceHttpTransport,
   VerificationSourceProvider,
   VerificationSourceProviderInput,
-} from "./types.ts";
+} from "@/providers/source/types.ts";
 import {
   DenoSourceAddressResolver,
   PinnedAddressHttpTransport,
   retrievePinnedHttpResource,
-} from "./http.ts";
+} from "@/providers/source/http.ts";
 import {
   GitHubReleaseAssetResolutionFailedError,
   GitHubRevisionResolutionFailedError,
   UnsupportedSourceError,
-} from "./error.ts";
-import { BuildVerificationError } from "../../error/base.ts";
+} from "@/providers/source/error.ts";
+import { BuildVerificationError } from "@/error/base.ts";
 
 /** Options used by the GitHub revision and release-asset provider. */
 export type GitHubVerificationSourceProviderOptions =

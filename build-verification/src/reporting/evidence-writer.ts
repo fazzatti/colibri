@@ -2,8 +2,8 @@ import { basename, dirname, resolve } from "node:path";
 import type {
   ContractBuildVerificationEvidence,
   ContractBuildVerificationResult,
-} from "../core/types/result.ts";
-import { EvidenceWriteFailedError } from "./error.ts";
+} from "@/core/types/result.ts";
+import { EvidenceWriteFailedError } from "@/reporting/error.ts";
 
 const atomicTextWrite = async (path: string, value: string): Promise<void> => {
   const target = resolve(path);

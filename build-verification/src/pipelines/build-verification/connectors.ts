@@ -8,7 +8,7 @@ import type {
   ResolveVerificationTargetInput,
   SelectBuildArtifactInput,
   ValidateBuildRecipeInput,
-} from "../../processes/index.ts";
+} from "@/processes/index.ts";
 import type {
   ExecuteContractBuildOutput,
   ParseContractMetadataOutput,
@@ -17,9 +17,9 @@ import type {
   ResolveVerificationTargetOutput,
   SelectBuildArtifactOutput,
   ValidateBuildRecipeOutput,
-} from "../../processes/index.ts";
-import type { BuildVerificationPipelineDependencies } from "./types.ts";
-import type { ContractBuildVerificationInput } from "../../core/index.ts";
+} from "@/processes/index.ts";
+import type { BuildVerificationPipelineDependencies } from "@/pipelines/build-verification/types.ts";
+import type { ContractBuildVerificationInput } from "@/core/index.ts";
 import {
   EXECUTE_CONTRACT_BUILD_STEP_ID,
   PARSE_CONTRACT_METADATA_STEP_ID,
@@ -28,8 +28,8 @@ import {
   RESOLVE_VERIFICATION_TARGET_STEP_ID,
   SELECT_BUILD_ARTIFACT_STEP_ID,
   VALIDATE_BUILD_RECIPE_STEP_ID,
-} from "../../steps/ids.ts";
-import { getRequiredBuildVerificationStepOutput } from "./runtime.ts";
+} from "@/steps/ids.ts";
+import { getRequiredBuildVerificationStepOutput } from "@/pipelines/build-verification/runtime.ts";
 
 /** Stable id of the public-input to target-resolution connector. */
 export const INPUT_TO_RESOLVE_TARGET_CONNECTOR_ID =

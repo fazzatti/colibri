@@ -1,6 +1,6 @@
-import type { OutOfBandBuildRecipe } from "../recipe/types.ts";
-import type { VerificationSource } from "./source.ts";
-import type { VerificationTarget } from "./target.ts";
+import type { OutOfBandBuildRecipe } from "@/core/recipe/types.ts";
+import type { VerificationSource } from "@/core/types/source.ts";
+import type { VerificationTarget } from "@/core/types/target.ts";
 
 /** Arguments for strict metadata-driven SEP-58 verification. */
 export type StrictVerificationInput = {
