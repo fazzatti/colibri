@@ -1,4 +1,5 @@
 import type { OutOfBandBuildRecipe } from "@/core/recipe/types.ts";
+import { redactUrlCredentials } from "@/core/types/redaction.ts";
 import type { VerificationSource } from "@/core/types/source.ts";
 import type { VerificationTarget } from "@/core/types/target.ts";
 
@@ -25,17 +26,6 @@ export type ContractBuildVerificationInput =
 /** Normalized verification modes carried through the pipeline. */
 export type ContractBuildVerificationMode = "strictSep58" | "outOfBand";
 
-const redactedLocator = (value: string): string => {
-  try {
-    const url = new URL(value);
-    url.username = "";
-    url.password = "";
-    return url.toString();
-  } catch {
-    return value;
-  }
-};
-
 /** Produces a byte- and credential-free request view for error metadata. */
 export const redactContractBuildVerificationInput = (
   input: ContractBuildVerificationInput,
@@ -58,7 +48,10 @@ export const redactContractBuildVerificationInput = (
         format: input.source.format,
       }
       : input.source.type === "url"
-      ? { type: "url", url: redactedLocator(input.source.url) }
+      ? {
+        type: "url",
+        url: redactUrlCredentials(input.source.url) ?? input.source.url,
+      }
       : input.source
     : undefined;
   return {

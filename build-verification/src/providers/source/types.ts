@@ -54,6 +54,7 @@ export type HttpVerificationSourceProviderOptions = {
   readonly policy: SourceRetrievalPolicy;
   readonly transport?: SourceHttpTransport;
   readonly addressResolver?: SourceAddressResolver;
+  /** Static headers whose credential-bearing values are stripped cross-origin. */
   readonly headers?: Readonly<Record<string, string>>;
 };
 

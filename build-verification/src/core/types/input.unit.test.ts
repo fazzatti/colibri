@@ -54,10 +54,15 @@ describe("contract build-verification input redaction", () => {
         target: { wasm: new Uint8Array() },
         source: {
           type: "url",
-          url: "https://alice:secret@example.com/source.zip",
+          url:
+            "https://alice:secret@example.com/source.zip?token=secret&X-Amz-Signature=signed&page=1",
         },
       }).source,
-      { type: "url", url: "https://example.com/source.zip" },
+      {
+        type: "url",
+        url:
+          "https://example.com/source.zip?token=%3Credacted%3E&X-Amz-Signature=%3Credacted%3E&page=1",
+      },
     );
     assertEquals(
       redactContractBuildVerificationInput({

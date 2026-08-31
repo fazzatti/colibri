@@ -17,6 +17,7 @@ import type {
 export type DefaultVerificationSourceProviderOptions = {
   readonly sourcePolicy: SourceRetrievalPolicy;
   readonly githubToken?: string;
+  /** Static URL headers whose credentials never cross origin boundaries. */
   readonly urlHeaders?: Readonly<Record<string, string>>;
   readonly transport?: SourceHttpTransport;
   readonly addressResolver?: SourceAddressResolver;

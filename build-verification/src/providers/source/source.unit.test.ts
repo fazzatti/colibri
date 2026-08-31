@@ -286,6 +286,58 @@ describe("source providers", () => {
     ]);
   });
 
+  it("never forwards static credential headers after a cross-origin redirect", async () => {
+    const transport = new QueueTransport([
+      {
+        status: 302,
+        headers: { location: "/same-origin" },
+        bytes: new Uint8Array(),
+      },
+      {
+        status: 302,
+        headers: { location: "https://objects.example.com/relay" },
+        bytes: new Uint8Array(),
+      },
+      {
+        status: 302,
+        headers: { location: "https://example.com/final.tar" },
+        bytes: new Uint8Array(),
+      },
+      { status: 200, headers: {}, bytes },
+    ]);
+    await retrievePinnedHttpResource({
+      url: "https://example.com/start.tar",
+      limits: TEST_LIMITS,
+      policy: acceptedPolicy,
+      transport,
+      addressResolver: new FixedAddressResolver(),
+      headers: {
+        authorization: "Bearer secret",
+        cookie: "session=secret",
+        "x-api-key": "secret",
+        accept: "application/x-tar",
+        "x-trace": "trace",
+      },
+    });
+    const authenticatedHeaders = {
+      authorization: "Bearer secret",
+      cookie: "session=secret",
+      "x-api-key": "secret",
+      accept: "application/x-tar",
+      "x-trace": "trace",
+    };
+    const publicHeaders = {
+      accept: "application/x-tar",
+      "x-trace": "trace",
+    };
+    assertEquals(transport.calls.map(({ headers }) => headers), [
+      authenticatedHeaders,
+      authenticatedHeaders,
+      publicHeaders,
+      publicHeaders,
+    ]);
+  });
+
   it("normalizes every pinned retrieval failure occurrence", async () => {
     const base = {
       limits: TEST_LIMITS,
