@@ -12,6 +12,10 @@ import type {
 import { testEvidence, testWasm } from "@/testing.test.ts";
 import { InvalidCliArgumentsError } from "@/cli/error.ts";
 import {
+  formatBuildVerificationErrorSummary,
+  formatBuildVerificationResultSummary,
+} from "@/cli/format.ts";
+import {
   BUILD_VERIFICATION_CLI_HELP,
   getBuildVerificationStringFlag,
   parseBuildVerificationFlags,
@@ -39,9 +43,29 @@ const harness = (overrides: Partial<BuildVerificationCliIo> = {}) => {
   return { stdout, stderr, io };
 };
 
+const TARGET_HASH = "1".repeat(64);
+const REBUILT_HASH = "2".repeat(64);
+const EMPTY_WASM_HASH =
+  "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476";
+
 const result = (
   status: "verified" | "mismatch" = "verified",
-): ContractBuildVerificationResult => ({ status, evidence: testEvidence() });
+): ContractBuildVerificationResult => ({
+  status,
+  evidence: {
+    ...testEvidence(),
+    target: {
+      kind: "wasm",
+      wasmHash: TARGET_HASH,
+      observedAt: "2026-08-28T12:00:00.000Z",
+    },
+    artifact: {
+      path: "target/release/contract.wasm",
+      size: 8,
+      sha256: status === "verified" ? TARGET_HASH : REBUILT_HASH,
+    },
+  },
+});
 
 describe("build-verification CLI flags", () => {
   it("parses value and boolean flags and returns only string values", () => {
@@ -49,12 +73,14 @@ describe("build-verification CLI flags", () => {
       "--wasm",
       "target.wasm",
       "--allow-http",
+      "--json",
     ]);
     assertEquals(
       flags,
       new Map<string, string | true>([
         ["wasm", "target.wasm"],
         ["allow-http", true],
+        ["json", true],
       ]),
     );
     assertEquals(getBuildVerificationStringFlag(flags, "wasm"), "target.wasm");
@@ -347,6 +373,85 @@ describe("build-verification CLI flags", () => {
 });
 
 describe("runBuildVerificationCli", () => {
+  it("formats concise summaries for every completed result and typed error", () => {
+    assertEquals(
+      formatBuildVerificationResultSummary(result()),
+      `VERIFIED ${TARGET_HASH}`,
+    );
+    assertEquals(
+      formatBuildVerificationResultSummary(result("mismatch")),
+      `MISMATCH target=${TARGET_HASH} rebuilt=${REBUILT_HASH}`,
+    );
+    const evidence = testEvidence();
+    assertEquals(
+      formatBuildVerificationResultSummary({
+        status: "notApplicable",
+        reason: "missingSep58Metadata",
+        targetWasmHash: TARGET_HASH,
+        evidence,
+      }),
+      `NOT_APPLICABLE SEP-58 metadata was not found target=${TARGET_HASH}`,
+    );
+    assertEquals(
+      formatBuildVerificationResultSummary({
+        status: "notApplicable",
+        reason: "stellarAssetContract",
+        evidence,
+      }),
+      "NOT_APPLICABLE target is a Stellar Asset Contract",
+    );
+    assertEquals(
+      formatBuildVerificationResultSummary({
+        status: "verified",
+        evidence,
+      }),
+      "VERIFIED",
+    );
+    const targetEvidence = {
+      ...evidence,
+      target: {
+        kind: "wasm" as const,
+        wasmHash: TARGET_HASH,
+        observedAt: "2026-08-28T12:00:00.000Z",
+      },
+    };
+    assertEquals(
+      formatBuildVerificationResultSummary({
+        status: "verified",
+        evidence: targetEvidence,
+      }),
+      `VERIFIED ${TARGET_HASH}`,
+    );
+    assertEquals(
+      formatBuildVerificationResultSummary({
+        status: "notApplicable",
+        reason: "missingSep58Metadata",
+        evidence: targetEvidence,
+      }),
+      `NOT_APPLICABLE SEP-58 metadata was not found target=${TARGET_HASH}`,
+    );
+    assertEquals(
+      formatBuildVerificationResultSummary({
+        status: "mismatch",
+        evidence,
+      }),
+      "MISMATCH target=unknown rebuilt=unknown",
+    );
+    assertEquals(
+      formatBuildVerificationErrorSummary(
+        new InvalidCliArgumentsError("Line one.\nLine two."),
+      ),
+      "ERROR BLDV_031 Invalid command-line arguments: Line one. Line two.",
+    );
+    assertEquals(
+      formatBuildVerificationErrorSummary({
+        code: "TEST",
+        message: "No details",
+      }),
+      "ERROR TEST No details",
+    );
+  });
+
   it("prints standalone help and rejects help combinations", async () => {
     const valid = harness();
     assertEquals(await runBuildVerificationCli(["--help"], valid.io), 0);
@@ -356,7 +461,13 @@ describe("runBuildVerificationCli", () => {
       await runBuildVerificationCli(["--help", "--allow-http"], invalid.io),
       1,
     );
-    assertEquals(JSON.parse(invalid.stderr[0]).code, "BLDV_031");
+    assertStringIncludes(invalid.stderr[0], "ERROR BLDV_031");
+    const invalidJson = harness();
+    assertEquals(
+      await runBuildVerificationCli(["--help", "--json"], invalidJson.io),
+      1,
+    );
+    assertEquals(JSON.parse(invalidJson.stderr[0]).code, "BLDV_031");
   });
 
   it("passes shared network/build options to the high-level verifier", async () => {
@@ -397,7 +508,7 @@ describe("runBuildVerificationCli", () => {
       },
       allowBuildNetwork: true,
     });
-    assertEquals(JSON.parse(test.stdout[0]).status, "verified");
+    assertEquals(test.stdout, [`VERIFIED ${TARGET_HASH}`]);
   });
 
   it("writes evidence and either JSONL or text logs through injected writers", async () => {
@@ -490,6 +601,10 @@ describe("runBuildVerificationCli", () => {
     );
     assertEquals(exit, 2);
     assertEquals(format, { format: "jsonl" });
+    assertEquals(
+      test.stdout,
+      [`MISMATCH target=${TARGET_HASH} rebuilt=${REBUILT_HASH}`],
+    );
   });
 
   it("validates log formatting flags before verification", async () => {
@@ -501,19 +616,25 @@ describe("runBuildVerificationCli", () => {
     ) {
       const test = harness();
       assertEquals(await runBuildVerificationCli(args, test.io), 1);
-      assertEquals(JSON.parse(test.stderr[0]).code, "BLDV_031");
+      assertStringIncludes(test.stderr[0], "ERROR BLDV_031");
     }
   });
 
   it("preserves typed failures and normalizes unexpected failures for stderr", async () => {
     const typed = harness();
     assertEquals(await runBuildVerificationCli(["invalid"], typed.io), 1);
-    assertEquals(JSON.parse(typed.stderr[0]).code, "BLDV_031");
+    assertStringIncludes(typed.stderr[0], "ERROR BLDV_031");
     const unexpected = harness();
     assertEquals(
-      await runBuildVerificationCli(["--wasm", "target.wasm"], unexpected.io, {
-        createVerifier: () => ({ verify: () => Promise.reject("unexpected") }),
-      }),
+      await runBuildVerificationCli(
+        ["--wasm", "target.wasm", "--json"],
+        unexpected.io,
+        {
+          createVerifier: () => ({
+            verify: () => Promise.reject("unexpected"),
+          }),
+        },
+      ),
       1,
     );
     assertEquals(JSON.parse(unexpected.stderr[0]).code, "BLDV_031");
@@ -523,13 +644,33 @@ describe("runBuildVerificationCli", () => {
     );
   });
 
+  it("prints the complete successful result only when JSON is requested", async () => {
+    const test = harness();
+    assertEquals(
+      await runBuildVerificationCli(
+        ["--wasm", "target.wasm", "--json"],
+        test.io,
+        {
+          createVerifier: () => ({ verify: () => Promise.resolve(result()) }),
+        },
+      ),
+      0,
+    );
+    assertEquals(JSON.parse(test.stdout[0]), result());
+  });
+
   it("uses the default verifier for a strict local contract without metadata", async () => {
     const test = harness();
     assertEquals(
       await runBuildVerificationCli(["--wasm", "target.wasm"], test.io),
       0,
     );
-    assertEquals(JSON.parse(test.stdout[0]).status, "notApplicable");
+    assertEquals(
+      test.stdout,
+      [
+        `NOT_APPLICABLE SEP-58 metadata was not found target=${EMPTY_WASM_HASH}`,
+      ],
+    );
   });
 
   it("uses default stdout and stderr terminal boundaries", async () => {
@@ -543,7 +684,7 @@ describe("runBuildVerificationCli", () => {
       assertEquals(await runBuildVerificationCli(["--help"]), 0);
       assertEquals(await runBuildVerificationCli(["invalid"]), 1);
       assertStringIncludes(String(stdout[0]), "@colibri/build-verification");
-      assertEquals(JSON.parse(String(stderr[0])).code, "BLDV_031");
+      assertStringIncludes(String(stderr[0]), "ERROR BLDV_031");
     } finally {
       console.log = originalLog;
       console.error = originalError;
