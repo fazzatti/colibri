@@ -1,6 +1,10 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { ImagePolicyRejectedError } from "@/core/policy/error.ts";
+import {
+  ImagePolicyRejectedError,
+  ImageReferencePolicyRejectedError,
+} from "@/core/policy/error.ts";
+import type { ContainerImagePolicy } from "@/core/policy/types.ts";
 import { ImageToolchainMissingError } from "@/providers/image/error.ts";
 import {
   acceptedPolicyDecision,
@@ -16,6 +20,14 @@ import {
 import { ResolveBuildImageUnexpectedError } from "@/processes/resolve-build-image/error.ts";
 import { resolveBuildImage } from "@/processes/resolve-build-image/index.ts";
 
+const imagePolicy = (
+  overrides: Partial<ContainerImagePolicy> = {},
+): ContainerImagePolicy => ({
+  evaluateReference: () => acceptedPolicyDecision("test.image-reference"),
+  evaluate: () => acceptedPolicyDecision("test.image"),
+  ...overrides,
+});
+
 describe("resolveBuildImage", () => {
   it("passes terminal state through unchanged", async () => {
     const state = completeProcessState();
@@ -23,7 +35,10 @@ describe("resolveBuildImage", () => {
       await resolveBuildImage({
         state,
         resolver: { resolve: () => Promise.reject("unused") },
-        policy: { evaluate: () => Promise.reject("unused") },
+        policy: imagePolicy({
+          evaluateReference: () => Promise.reject("unused"),
+          evaluate: () => Promise.reject("unused"),
+        }),
         limits: TEST_LIMITS,
       }),
       state,
@@ -44,12 +59,19 @@ describe("resolveBuildImage", () => {
           return Promise.resolve(image);
         },
       },
-      policy: {
+      policy: imagePolicy({
+        evaluateReference: (value) => {
+          assertEquals(
+            value.reference,
+            sourceProcessState().value.recipe.image,
+          );
+          return Promise.resolve(acceptedPolicyDecision("test.reference"));
+        },
         evaluate: (value) => {
           assertEquals(value, image);
           return Promise.resolve(decision);
         },
-      },
+      }),
       limits: TEST_LIMITS,
       now: () => TEST_NOW,
     });
@@ -72,7 +94,7 @@ describe("resolveBuildImage", () => {
     const result = await resolveBuildImage({
       state: sourceProcessState(),
       resolver: { resolve: () => Promise.resolve(testImageDetails()) },
-      policy: { evaluate: () => Promise.resolve(acceptedPolicyDecision()) },
+      policy: imagePolicy(),
       limits: TEST_LIMITS,
     });
     assertEquals(
@@ -91,7 +113,7 @@ describe("resolveBuildImage", () => {
             os: undefined,
           })),
       },
-      policy: { evaluate: () => Promise.resolve(acceptedPolicyDecision()) },
+      policy: imagePolicy(),
       limits: TEST_LIMITS,
     });
     assertEquals(
@@ -110,7 +132,9 @@ describe("resolveBuildImage", () => {
         resolveBuildImage({
           state: sourceProcessState(),
           resolver: { resolve: () => Promise.resolve(testImageDetails()) },
-          policy: { evaluate: () => Promise.resolve(rejectedPolicyDecision()) },
+          policy: imagePolicy({
+            evaluate: () => Promise.resolve(rejectedPolicyDecision()),
+          }),
           limits: TEST_LIMITS,
         }),
       ImagePolicyRejectedError,
@@ -125,7 +149,7 @@ describe("resolveBuildImage", () => {
                 rustupToolchain: undefined,
               })),
           },
-          policy: { evaluate: () => Promise.resolve(acceptedPolicyDecision()) },
+          policy: imagePolicy(),
           limits: TEST_LIMITS,
         }),
       ImageToolchainMissingError,
@@ -138,18 +162,45 @@ describe("resolveBuildImage", () => {
         resolveBuildImage({
           state: sourceProcessState(),
           resolver: { resolve: () => Promise.resolve(testImageDetails()) },
-          policy: {
+          policy: imagePolicy({
             evaluate: () =>
               Promise.resolve({
                 ...rejectedPolicyDecision(),
                 reasons: [],
               }),
-          },
+          }),
           limits: TEST_LIMITS,
         }),
       ImagePolicyRejectedError,
     );
     assertEquals(error.details, "The selected image was rejected.");
+  });
+
+  it("rejects untrusted image references before calling the resolver", async () => {
+    let resolved = false;
+    const error = await assertRejects(
+      () =>
+        resolveBuildImage({
+          state: sourceProcessState(),
+          resolver: {
+            resolve: () => {
+              resolved = true;
+              return Promise.resolve(testImageDetails());
+            },
+          },
+          policy: imagePolicy({
+            evaluateReference: () =>
+              Promise.resolve({
+                ...rejectedPolicyDecision(),
+                reasons: [],
+              }),
+          }),
+          limits: TEST_LIMITS,
+        }),
+      ImageReferencePolicyRejectedError,
+    );
+    assertEquals(resolved, false);
+    assertEquals(error.details, "The selected image reference was rejected.");
   });
 
   it("normalizes untyped resolver and policy failures once", async () => {
@@ -158,7 +209,7 @@ describe("resolveBuildImage", () => {
         resolveBuildImage({
           state: sourceProcessState(),
           resolver: { resolve: () => Promise.reject("resolver") },
-          policy: { evaluate: () => Promise.resolve(acceptedPolicyDecision()) },
+          policy: imagePolicy(),
           limits: TEST_LIMITS,
         }),
       ResolveBuildImageUnexpectedError,
@@ -168,7 +219,19 @@ describe("resolveBuildImage", () => {
         resolveBuildImage({
           state: sourceProcessState(),
           resolver: { resolve: () => Promise.resolve(testImageDetails()) },
-          policy: { evaluate: () => Promise.reject("policy") },
+          policy: imagePolicy({ evaluate: () => Promise.reject("policy") }),
+          limits: TEST_LIMITS,
+        }),
+      ResolveBuildImageUnexpectedError,
+    );
+    await assertRejects(
+      () =>
+        resolveBuildImage({
+          state: sourceProcessState(),
+          resolver: { resolve: () => Promise.resolve(testImageDetails()) },
+          policy: imagePolicy({
+            evaluateReference: () => Promise.reject("reference policy"),
+          }),
           limits: TEST_LIMITS,
         }),
       ResolveBuildImageUnexpectedError,

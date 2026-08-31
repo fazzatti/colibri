@@ -1,5 +1,70 @@
 import { BuildVerificationError, Code } from "@/error/base.ts";
 
+/** Raised when the archive provider receives another source variant. */
+export class ArchiveSourceProviderInputMismatchError
+  extends BuildVerificationError<Code.ARCHIVE_SOURCE_PROVIDER_INPUT_MISMATCH> {
+  /** Creates an archive-provider input mismatch. */
+  constructor(actual: string) {
+    super({
+      code: Code.ARCHIVE_SOURCE_PROVIDER_INPUT_MISMATCH,
+      source: "@colibri/build-verification/providers/source/archive",
+      message: "Archive source provider received incompatible input",
+      details:
+        "The archive provider accepts only caller-supplied archive byte sources.",
+      data: { expected: "archive", actual },
+    });
+  }
+}
+
+/** Raised when the file provider receives another source variant. */
+export class FileSourceProviderInputMismatchError
+  extends BuildVerificationError<Code.FILE_SOURCE_PROVIDER_INPUT_MISMATCH> {
+  /** Creates a file-provider input mismatch. */
+  constructor(actual: string) {
+    super({
+      code: Code.FILE_SOURCE_PROVIDER_INPUT_MISMATCH,
+      source: "@colibri/build-verification/providers/source/file",
+      message: "File source provider received incompatible input",
+      details: "The file provider accepts only local path sources.",
+      data: { expected: "path", actual },
+    });
+  }
+}
+
+/** Raised when the HTTP provider receives another source variant. */
+export class HttpSourceProviderInputMismatchError
+  extends BuildVerificationError<Code.HTTP_SOURCE_PROVIDER_INPUT_MISMATCH> {
+  /** Creates an HTTP-provider input mismatch. */
+  constructor(actual: string) {
+    super({
+      code: Code.HTTP_SOURCE_PROVIDER_INPUT_MISMATCH,
+      source: "@colibri/build-verification/providers/source/http",
+      message: "HTTP source provider received incompatible input",
+      details: "The HTTP provider accepts only URL sources.",
+      data: { expected: "url", actual },
+    });
+  }
+}
+
+/** Raised when the GitHub provider receives another source variant. */
+export class GitHubSourceProviderInputMismatchError
+  extends BuildVerificationError<Code.GITHUB_SOURCE_PROVIDER_INPUT_MISMATCH> {
+  /** Creates a GitHub-provider input mismatch. */
+  constructor(actual: string) {
+    super({
+      code: Code.GITHUB_SOURCE_PROVIDER_INPUT_MISMATCH,
+      source: "@colibri/build-verification/providers/source/github",
+      message: "GitHub source provider received incompatible input",
+      details:
+        "The GitHub provider accepts only revision archives or release assets.",
+      data: {
+        expected: ["githubArchive", "githubReleaseAsset"],
+        actual,
+      },
+    });
+  }
+}
+
 /** Raised when no source can be derived or was supplied. */
 export class MissingVerificationSourceError
   extends BuildVerificationError<Code.MISSING_VERIFICATION_SOURCE> {

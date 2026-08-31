@@ -120,6 +120,10 @@ describe("BuildVerificationPipeline", () => {
         },
       },
       imagePolicy: {
+        evaluateReference: (reference) => {
+          calls.push("image-reference-policy");
+          return base.imagePolicy.evaluateReference(reference);
+        },
         evaluate: (image) => {
           calls.push("image-policy");
           return base.imagePolicy.evaluate(image);
@@ -168,6 +172,7 @@ describe("BuildVerificationPipeline", () => {
       "command-policy",
       "option-policy",
       "source",
+      "image-reference-policy",
       "image",
       "image-policy",
       "workspace",

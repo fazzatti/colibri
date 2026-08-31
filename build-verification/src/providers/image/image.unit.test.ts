@@ -1,14 +1,17 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { sha256Hex } from "@/core/comparison/index.ts";
+import { DefaultSourceRetrievalPolicy } from "@/core/policy/source-retrieval.ts";
 import {
   ImageAttestationDecodingFailedError,
+  ImageAuthenticationChallengeInvalidError,
   ImageConfigDigestMismatchError,
   ImageConfigResolutionFailedError,
   ImageManifestDigestMismatchError,
   ImageManifestResolutionFailedError,
   ImageReferrerDigestMismatchError,
   ImageReferrersResolutionFailedError,
+  ImageRegistryRequestRejectedError,
   InvalidImageReferenceError,
   MultiArchImageError,
 } from "@/providers/image/error.ts";
@@ -143,6 +146,10 @@ describe("OCI image provider", () => {
         requested.push(String(request));
         return localhost.fetch(request, init);
       },
+      retrievalPolicy: new DefaultSourceRetrievalPolicy({
+        allowHttp: true,
+        allowPrivateNetwork: true,
+      }),
     }).resolve(localhost.reference);
     assert(requested[0].startsWith("http://localhost:5000/"));
     assertEquals(
@@ -233,6 +240,23 @@ describe("OCI image provider", () => {
       ImageManifestResolutionFailedError,
     );
     assertEquals(attempts, 3);
+
+    await assertRejects(
+      () =>
+        new OciContainerImageResolver({
+          downloadTimeoutMs: 1,
+          fetch: (_request, init) =>
+            new Promise((_resolve, reject) => {
+              const signal = (init as { signal?: AbortSignal } | undefined)
+                ?.signal;
+              signal?.addEventListener(
+                "abort",
+                () => reject(new DOMException("Aborted", "AbortError")),
+              );
+            }),
+        }).resolve(fixture.reference),
+      ImageManifestResolutionFailedError,
+    );
   });
 
   it("rejects invalid references, manifest status, decoding, digest, and indexes", async () => {
@@ -400,7 +424,7 @@ describe("OCI image provider", () => {
     await assertRejects(
       () =>
         resolveContainerImage(reference, () => Promise.resolve(challenge())),
-      ImageManifestResolutionFailedError,
+      ImageAuthenticationChallengeInvalidError,
     );
     await assertRejects(
       () =>
@@ -408,18 +432,27 @@ describe("OCI image provider", () => {
           reference,
           () => Promise.resolve(challenge('Bearer service="registry"')),
         ),
-      ImageManifestResolutionFailedError,
+      ImageAuthenticationChallengeInvalidError,
     );
-    const cancelFailure = new ReadableStream<Uint8Array>({
-      cancel: () => {
-        throw new Error("cancel failed");
-      },
+    await assertRejects(
+      () =>
+        resolveContainerImage(
+          reference,
+          () =>
+            Promise.resolve(
+              challenge('Bearer realm="://malformed"'),
+            ),
+        ),
+      ImageAuthenticationChallengeInvalidError,
+    );
+    const readFailure = new ReadableStream<Uint8Array>({
+      start: (controller) => controller.error(new Error("read failed")),
     });
     await assertRejects(
       () =>
         resolveContainerImage(
           reference,
-          () => Promise.resolve(new Response(cancelFailure, { status: 401 })),
+          () => Promise.resolve(new Response(readFailure, { status: 401 })),
         ),
       ImageManifestResolutionFailedError,
     );
@@ -461,6 +494,124 @@ describe("OCI image provider", () => {
         ImageManifestResolutionFailedError,
       );
     }
+  });
+
+  it("rejects registry redirects before contacting a private destination", async () => {
+    const reference = `docker.io/stellar/stellar-cli@sha256:${"0".repeat(64)}`;
+    let calls = 0;
+    await assertRejects(
+      () =>
+        resolveContainerImage(reference, {
+          fetch: () => {
+            calls += 1;
+            return Promise.resolve(
+              new Response(null, {
+                status: 302,
+                headers: { location: "http://127.0.0.1/internal" },
+              }),
+            );
+          },
+          addressResolver: {
+            resolve: (hostname) =>
+              Promise.resolve(
+                hostname === "127.0.0.1" ? ["127.0.0.1"] : ["93.184.216.34"],
+              ),
+          },
+        }),
+      ImageRegistryRequestRejectedError,
+    );
+    assertEquals(calls, 1);
+
+    calls = 0;
+    await assertRejects(
+      () =>
+        resolveContainerImage(reference, {
+          fetch: () => {
+            calls += 1;
+            return Promise.resolve(
+              new Response(null, {
+                status: 401,
+                headers: {
+                  "www-authenticate": 'Bearer realm="http://127.0.0.1/token"',
+                },
+              }),
+            );
+          },
+          addressResolver: {
+            resolve: (hostname) =>
+              Promise.resolve(
+                hostname === "127.0.0.1" ? ["127.0.0.1"] : ["93.184.216.34"],
+              ),
+          },
+        }),
+      ImageRegistryRequestRejectedError,
+    );
+    assertEquals(calls, 1);
+
+    calls = 0;
+    await assertRejects(
+      () =>
+        resolveContainerImage(reference, {
+          fetch: () => {
+            calls += 1;
+            if (calls === 1) {
+              return Promise.resolve(
+                new Response(null, {
+                  status: 401,
+                  headers: {
+                    "www-authenticate":
+                      'Bearer realm="https://auth.example/token"',
+                  },
+                }),
+              );
+            }
+            if (calls === 2) {
+              return Promise.resolve(Response.json({ token: "secret" }));
+            }
+            return Promise.resolve(
+              new Response(null, {
+                status: 302,
+                headers: { location: "http://127.0.0.1/internal" },
+              }),
+            );
+          },
+          addressResolver: {
+            resolve: (hostname) =>
+              Promise.resolve(
+                hostname === "127.0.0.1" ? ["127.0.0.1"] : ["93.184.216.34"],
+              ),
+          },
+        }),
+      ImageRegistryRequestRejectedError,
+    );
+    assertEquals(calls, 3);
+
+    const fixture = await createFixture();
+    calls = 0;
+    await assertRejects(
+      () =>
+        resolveContainerImage(fixture.reference, {
+          fetch: (request, init) => {
+            calls += 1;
+            return String(request).includes("/referrers/")
+              ? Promise.resolve(
+                new Response(null, {
+                  status: 302,
+                  headers: { location: "http://127.0.0.1/internal" },
+                }),
+              )
+              : fixture.fetch(request, init);
+          },
+          addressResolver: {
+            resolve: (hostname) =>
+              Promise.resolve(
+                hostname === "127.0.0.1" ? ["127.0.0.1"] : ["93.184.216.34"],
+              ),
+          },
+        }),
+      ImageRegistryRequestRejectedError,
+    );
+    assertEquals(calls, 3);
   });
 
   it("parses provenance and SBOM referrers without claiming signatures", async () => {
@@ -682,6 +833,33 @@ describe("OCI image provider", () => {
           referrerFetch(new Response("different")),
         ),
       ImageReferrerDigestMismatchError,
+    );
+
+    const missingLayerDigestManifest = encode({
+      layers: [{ mediaType: "application/vnd.in-toto+json" }],
+    });
+    const missingLayerDigest = await digestOf(missingLayerDigestManifest);
+    const missingLayerDigestIndex = Response.json({
+      manifests: [{
+        digest: missingLayerDigest,
+        mediaType: "application/vnd.oci.image.manifest.v1+json",
+      }],
+    });
+    const missingLayerDigestFetch: typeof fetch = (request, init) => {
+      const url = String(request);
+      if (url.includes("/referrers/")) {
+        return Promise.resolve(missingLayerDigestIndex.clone());
+      }
+      if (url.includes(`/manifests/${missingLayerDigest}`)) {
+        return Promise.resolve(
+          new Response(Uint8Array.from(missingLayerDigestManifest)),
+        );
+      }
+      return fixture.fetch(request, init);
+    };
+    await assertRejects(
+      () => resolveContainerImage(fixture.reference, missingLayerDigestFetch),
+      ImageReferrersResolutionFailedError,
     );
 
     const malformedManifest = encode("not-json");

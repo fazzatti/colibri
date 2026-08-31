@@ -26,6 +26,7 @@ import type {
 } from "@/providers/source/types.ts";
 import { BuildVerificationError } from "@/error/base.ts";
 import {
+  HttpSourceProviderInputMismatchError,
   SourceDnsResolutionFailedError,
   SourceDownloadFailedError,
   SourcePolicyRejectedError,
@@ -280,6 +281,7 @@ export const retrievePinnedHttpResource = async (args: {
     | Readonly<Record<string, string>>
     | ((url: URL) => Readonly<Record<string, string>>);
   readonly maxBytes?: number;
+  readonly acceptStatus?: (status: number) => boolean;
 }): Promise<PinnedHttpResource> => {
   const requested = redactSourceUrl(args.url);
   const retrieve = async (
@@ -338,7 +340,10 @@ export const retrievePinnedHttpResource = async (args: {
         redirect + 1,
       );
     }
-    if (response.status < 200 || response.status >= 300) {
+    if (
+      (response.status < 200 || response.status >= 300) &&
+      !args.acceptStatus?.(response.status)
+    ) {
       throw new SourceDownloadFailedError(
         redactSourceUrl(current),
         undefined,
@@ -379,7 +384,7 @@ export class HttpVerificationSourceProvider
     input: VerificationSourceProviderInput,
   ): Promise<ResolvedVerificationSource> {
     if (input.source.type !== "url") {
-      throw new TypeError("HTTP provider requires a URL source");
+      throw new HttpSourceProviderInputMismatchError(input.source.type);
     }
     const response = await retrievePinnedHttpResource({
       url: input.source.url,

@@ -15,6 +15,21 @@ export class ImagePolicyRejectedError
   }
 }
 
+/** Raised before I/O when an image reference violates its trust policy. */
+export class ImageReferencePolicyRejectedError
+  extends BuildVerificationError<Code.IMAGE_REFERENCE_POLICY_REJECTED> {
+  /** Creates a pre-I/O image-reference policy rejection. */
+  constructor(reference: string, details: string) {
+    super({
+      code: Code.IMAGE_REFERENCE_POLICY_REJECTED,
+      source: "@colibri/build-verification/processes/resolve-build-image",
+      message: "Build image reference rejected by policy",
+      details,
+      data: { reference },
+    });
+  }
+}
+
 /** Raised when a command policy rejects producer-controlled arguments. */
 export class CommandPolicyRejectedError
   extends BuildVerificationError<Code.COMMAND_POLICY_REJECTED> {

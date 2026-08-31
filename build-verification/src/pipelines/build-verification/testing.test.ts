@@ -25,6 +25,8 @@ export const pipelineTestDependencies = (
   sourceProvider: { resolve: () => Promise.resolve(processSource()) },
   imageResolver: { resolve: () => Promise.resolve(testImageDetails()) },
   imagePolicy: {
+    evaluateReference: () =>
+      Promise.resolve(acceptedPolicyDecision("image-reference")),
     evaluate: () => Promise.resolve(acceptedPolicyDecision("image")),
   },
   commandPolicy: {

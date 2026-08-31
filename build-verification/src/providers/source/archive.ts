@@ -6,6 +6,7 @@ import type {
   VerificationSourceProvider,
   VerificationSourceProviderInput,
 } from "@/providers/source/types.ts";
+import { ArchiveSourceProviderInputMismatchError } from "@/providers/source/error.ts";
 
 /** Provider for exact source archive bytes supplied directly by the caller. */
 export class ArchiveVerificationSourceProvider
@@ -15,7 +16,7 @@ export class ArchiveVerificationSourceProvider
     input: VerificationSourceProviderInput,
   ): Promise<ResolvedVerificationSource> {
     if (input.source.type !== "archive") {
-      throw new TypeError("Archive provider requires an archive source");
+      throw new ArchiveSourceProviderInputMismatchError(input.source.type);
     }
     if (input.source.bytes.length > input.limits.maxArchiveBytes) {
       throw new ArchiveLimitExceededError(

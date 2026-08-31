@@ -1,4 +1,6 @@
 import { Buffer } from "node:buffer";
+import { EventEmitter } from "node:events";
+import { Readable } from "node:stream";
 import type Dockerode from "dockerode";
 import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
@@ -31,7 +33,10 @@ import {
   RuntimeImageDigestMismatchError,
   SourceBuildAccessPreparationFailedError,
 } from "@/runners/docker/error.ts";
-import { demultiplexDockerLogs } from "@/runners/docker/logs.ts";
+import {
+  collectBoundedDockerLogStream,
+  demultiplexDockerLogs,
+} from "@/runners/docker/logs.ts";
 import {
   attachDockerCleanupFailure,
   DockerBuildRunner,
@@ -59,6 +64,26 @@ const frame = (stream: 1 | 2, text: string): Uint8Array => {
   return bytes;
 };
 
+const logStream = (...chunks: Uint8Array[]): NodeJS.ReadableStream =>
+  Readable.from(chunks.map((chunk) => Buffer.from(chunk)));
+
+const eventLogStream = (): EventEmitter & NodeJS.ReadableStream => {
+  const stream = new EventEmitter() as EventEmitter & NodeJS.ReadableStream;
+  stream.resume = () => stream;
+  return stream;
+};
+
+const mockContainer = (
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> => ({
+  attach: () => Promise.resolve(logStream()),
+  start: () => Promise.resolve(),
+  wait: () => Promise.resolve({ StatusCode: 0 }),
+  kill: () => Promise.resolve(),
+  remove: () => Promise.resolve(),
+  ...overrides,
+});
+
 const baseDocker = (
   containerOverrides: Record<string, unknown> = {},
 ): Record<string, unknown> => ({
@@ -83,15 +108,7 @@ const baseDocker = (
         ],
       }),
   }),
-  createContainer: () =>
-    Promise.resolve({
-      start: () => Promise.resolve(),
-      wait: () => Promise.resolve({ StatusCode: 0 }),
-      kill: () => Promise.resolve(),
-      logs: () => Promise.resolve(Buffer.alloc(0)),
-      remove: () => Promise.resolve(),
-      ...containerOverrides,
-    }),
+  createContainer: () => Promise.resolve(mockContainer(containerOverrides)),
 });
 
 const runWith = (
@@ -228,7 +245,7 @@ describe("Docker runner", () => {
     );
   });
 
-  it("decodes and bounds raw and multiplexed Docker logs", () => {
+  it("decodes and bounds raw, buffered, and streamed Docker logs", async () => {
     assertEquals(demultiplexDockerLogs("plain", 100), {
       stdout: "plain",
       stderr: "",
@@ -260,6 +277,78 @@ describe("Docker runner", () => {
         demultiplexDockerLogs(Buffer.from(frame(1, "out").subarray(0, 9)), 100),
       BuildLogCollectionFailedError,
     );
+    assertEquals(
+      await collectBoundedDockerLogStream(
+        logStream(
+          frame(1, "long output"),
+          frame(2, "error output"),
+        ),
+        4,
+      ),
+      {
+        stdout: "long\n[logs truncated by Colibri]",
+        stderr: "erro\n[logs truncated by Colibri]",
+      },
+    );
+    const split = frame(1, "split");
+    assertEquals(
+      await collectBoundedDockerLogStream(
+        logStream(
+          split.subarray(0, 3),
+          split.subarray(3, 8),
+          split.subarray(8),
+          frame(1, ""),
+        ),
+        100,
+      ),
+      { stdout: "split", stderr: "" },
+    );
+    assertEquals(
+      await collectBoundedDockerLogStream(
+        Readable.from([String.fromCharCode(...frame(2, "string"))]),
+        100,
+      ),
+      { stdout: "", stderr: "string" },
+    );
+    await assertRejects(
+      () =>
+        collectBoundedDockerLogStream(
+          logStream(frame(1, "out").subarray(0, 9)),
+          100,
+        ),
+      BuildLogCollectionFailedError,
+    );
+    await assertRejects(
+      () =>
+        collectBoundedDockerLogStream(
+          logStream(new Uint8Array([3, 0, 0, 0, 0, 0, 0, 0])),
+          100,
+        ),
+      BuildLogCollectionFailedError,
+    );
+
+    const nonByte = eventLogStream();
+    const nonByteResult = collectBoundedDockerLogStream(nonByte, 100);
+    nonByte.emit("data", 1);
+    await assertRejects(() => nonByteResult, BuildLogCollectionFailedError);
+
+    const failed = eventLogStream();
+    const failedResult = collectBoundedDockerLogStream(failed, 100);
+    failed.emit("error", new BuildLogCollectionFailedError(new Error("log")));
+    await assertRejects(() => failedResult, BuildLogCollectionFailedError);
+
+    const closed = eventLogStream();
+    const closedResult = collectBoundedDockerLogStream(closed, 100);
+    closed.emit("close");
+    await assertRejects(() => closedResult, BuildLogCollectionFailedError);
+
+    const repeated = eventLogStream();
+    repeated.removeListener = () => repeated;
+    const repeatedResult = collectBoundedDockerLogStream(repeated, 100);
+    repeated.emit("data", 1);
+    repeated.emit("error", new Error("already settled"));
+    repeated.emit("end");
+    await assertRejects(() => repeatedResult, BuildLogCollectionFailedError);
   });
 
   it("rejects invalid execution plans before Docker is contacted", async () => {
@@ -389,10 +478,26 @@ describe("Docker runner", () => {
       () =>
         runWith({
           createContainer: () =>
-            Promise.resolve({
+            Promise.resolve(mockContainer({
               start: () => Promise.reject(new Error("start")),
-              remove: () => Promise.resolve(),
-            }),
+            })),
+        }),
+      ContainerStartFailedError,
+    );
+    await assertRejects(
+      () =>
+        runWith({
+          createContainer: () => {
+            const stream = new Readable({
+              read() {
+                this.destroy(new Error("log stream"));
+              },
+            });
+            return Promise.resolve(mockContainer({
+              attach: () => Promise.resolve(stream),
+              start: () => Promise.reject(new Error("start")),
+            }));
+          },
         }),
       ContainerStartFailedError,
     );
@@ -400,11 +505,9 @@ describe("Docker runner", () => {
       () =>
         runWith({
           createContainer: () =>
-            Promise.resolve({
-              start: () => Promise.resolve(),
+            Promise.resolve(mockContainer({
               wait: () => Promise.reject(new Error("wait")),
-              remove: () => Promise.resolve(),
-            }),
+            })),
         }),
       ContainerWaitFailedError,
     );
@@ -413,13 +516,11 @@ describe("Docker runner", () => {
       () =>
         runWith({
           createContainer: () =>
-            Promise.resolve({
-              start: () => Promise.resolve(),
+            Promise.resolve(mockContainer({
+              attach: () => Promise.resolve(logStream(frame(1, "timed out"))),
               wait: () => new Promise(() => {}),
               kill: () => Promise.resolve(),
-              logs: () => Promise.resolve(Buffer.from("timed out")),
-              remove: () => Promise.resolve(),
-            }),
+            })),
         }, shortPlan),
       BuildTimedOutError,
     );
@@ -427,12 +528,10 @@ describe("Docker runner", () => {
       () =>
         runWith({
           createContainer: () =>
-            Promise.resolve({
-              start: () => Promise.resolve(),
+            Promise.resolve(mockContainer({
               wait: () => new Promise(() => {}),
               kill: () => Promise.reject(new Error("kill")),
-              remove: () => Promise.resolve(),
-            }),
+            })),
         }, shortPlan),
       ContainerKillFailedError,
     );
@@ -440,12 +539,9 @@ describe("Docker runner", () => {
       () =>
         runWith({
           createContainer: () =>
-            Promise.resolve({
-              start: () => Promise.resolve(),
-              wait: () => Promise.resolve({ StatusCode: 0 }),
-              logs: () => Promise.reject(new Error("logs")),
-              remove: () => Promise.resolve(),
-            }),
+            Promise.resolve(mockContainer({
+              attach: () => Promise.reject(new Error("logs")),
+            })),
         }),
       ContainerLogsFailedError,
     );
@@ -453,12 +549,10 @@ describe("Docker runner", () => {
       () =>
         runWith({
           createContainer: () =>
-            Promise.resolve({
-              start: () => Promise.resolve(),
+            Promise.resolve(mockContainer({
+              attach: () => Promise.resolve(logStream(frame(2, "failed"))),
               wait: () => Promise.resolve({ StatusCode: 9 }),
-              logs: () => Promise.resolve(Buffer.from("failed")),
-              remove: () => Promise.resolve(),
-            }),
+            })),
         }),
       BuildCommandFailedError,
     );
@@ -481,16 +575,10 @@ describe("Docker runner", () => {
         ...baseDocker(),
         createContainer: (options: Record<string, unknown>) => {
           createOptions = options;
-          return Promise.resolve({
-            start: () => Promise.resolve(),
-            wait: () => Promise.resolve({ StatusCode: 0 }),
-            logs: () =>
-              Promise.resolve(Buffer.concat([
-                Buffer.from(frame(1, "out")),
-                Buffer.from(frame(2, "err")),
-              ])),
-            remove: () => Promise.resolve(),
-          });
+          return Promise.resolve(mockContainer({
+            attach: () =>
+              Promise.resolve(logStream(frame(1, "out"), frame(2, "err"))),
+          }));
         },
       };
       const output = await DockerBuildRunner.fromDockerClient(
@@ -532,6 +620,10 @@ describe("Docker runner", () => {
       );
       assertEquals(config.HostConfig.ReadonlyRootfs, true);
       assertEquals(config.HostConfig.CapDrop, ["ALL"]);
+      assertEquals(config.HostConfig.LogConfig, {
+        Type: "none",
+        Config: {},
+      });
       assertEquals(config.HostConfig.Tmpfs, {
         "/tmp": "rw,nosuid,nodev,size=268435456,mode=1777",
         "/cargo": "rw,nosuid,nodev,size=1610612736,mode=1777",
@@ -545,12 +637,7 @@ describe("Docker runner", () => {
       ...baseDocker(),
       createContainer: (options: Record<string, unknown>) => {
         createOptions = options;
-        return Promise.resolve({
-          start: () => Promise.resolve(),
-          wait: () => Promise.resolve({ StatusCode: 0 }),
-          logs: () => Promise.resolve(Buffer.alloc(0)),
-          remove: () => Promise.resolve(),
-        });
+        return Promise.resolve(mockContainer());
       },
     };
     const image = testImageDetails({ architecture: undefined, os: undefined });
@@ -565,12 +652,10 @@ describe("Docker runner", () => {
       () =>
         runWith({
           createContainer: () =>
-            Promise.resolve({
-              start: () => Promise.resolve(),
+            Promise.resolve(mockContainer({
               wait: () => Promise.resolve({ StatusCode: 1 }),
-              logs: () => Promise.resolve(Buffer.alloc(0)),
               remove: () => Promise.reject(new Error("cleanup")),
-            }),
+            })),
         }),
       BuildCommandFailedError,
     );
@@ -582,12 +667,9 @@ describe("Docker runner", () => {
       () =>
         runWith({
           createContainer: () =>
-            Promise.resolve({
-              start: () => Promise.resolve(),
-              wait: () => Promise.resolve({ StatusCode: 0 }),
-              logs: () => Promise.resolve(Buffer.alloc(0)),
+            Promise.resolve(mockContainer({
               remove: () => Promise.reject(new Error("cleanup")),
-            }),
+            })),
         }),
       ContainerCleanupFailedError,
     );

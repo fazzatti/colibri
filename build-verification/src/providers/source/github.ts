@@ -17,6 +17,7 @@ import {
 import {
   GitHubReleaseAssetResolutionFailedError,
   GitHubRevisionResolutionFailedError,
+  GitHubSourceProviderInputMismatchError,
   UnsupportedSourceError,
 } from "@/providers/source/error.ts";
 import { BuildVerificationError } from "@/error/base.ts";
@@ -85,7 +86,7 @@ export class GitHubVerificationSourceProvider
       input.source.type !== "githubArchive" &&
       input.source.type !== "githubReleaseAsset"
     ) {
-      throw new TypeError("GitHub provider requires a GitHub source");
+      throw new GitHubSourceProviderInputMismatchError(input.source.type);
     }
     const repository = validateRepository(
       input.source.owner,

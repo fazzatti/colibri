@@ -1,4 +1,3 @@
-import type { Buffer } from "node:buffer";
 import Dockerode from "dockerode";
 import type {
   ContractBuildPlan,
@@ -10,7 +9,7 @@ import { BuildVerificationError } from "@/error/base.ts";
 import { attachBuildVerificationErrorContext } from "@/error/base.ts";
 import { resolveDockerOptions } from "@/runners/docker/connection.ts";
 import { buildDockerCommand } from "@/runners/docker/command.ts";
-import { demultiplexDockerLogs } from "@/runners/docker/logs.ts";
+import { collectBoundedDockerLogStream } from "@/runners/docker/logs.ts";
 import {
   BuildCommandFailedError,
   BuildPlanInvalidError,
@@ -184,13 +183,15 @@ export class DockerBuildRunner implements ContractBuildRunner {
         User: user,
         Labels: { "dev.colibri.build-verification.runner": "1" },
         WorkingDir: "/source",
-        AttachStdout: false,
-        AttachStderr: false,
+        AttachStdout: true,
+        AttachStderr: true,
+        Tty: false,
         platform: input.image.os && input.image.architecture
           ? `${input.image.os}/${input.image.architecture}`
           : undefined,
         HostConfig: {
           Binds: [`${input.sourceDirectory}:/source:rw`],
+          LogConfig: { Type: "none", Config: {} },
           NetworkMode: input.allowNetwork ? "bridge" : "none",
           ReadonlyRootfs: true,
           Privileged: false,
@@ -211,9 +212,26 @@ export class DockerBuildRunner implements ContractBuildRunner {
 
     let primaryError: unknown;
     let output: ContractBuildRunnerOutput | undefined;
+    let logCollection: Promise<{ stdout: string; stderr: string }> | undefined;
     let timedOut = false;
     let statusCode = -1;
     try {
+      const maxLogBytes = input.limits.maxLogBytes;
+      try {
+        const stream = await container.attach({
+          stream: true,
+          stdin: false,
+          stdout: true,
+          stderr: true,
+        });
+        logCollection = collectBoundedDockerLogStream(
+          stream,
+          maxLogBytes,
+        );
+        logCollection.catch(() => {});
+      } catch (cause) {
+        throw new ContainerLogsFailedError(cause);
+      }
       try {
         await container.start();
       } catch (cause) {
@@ -244,17 +262,7 @@ export class DockerBuildRunner implements ContractBuildRunner {
         if (timeout !== undefined) clearTimeout(timeout);
       }
 
-      let rawLogs: Buffer | string;
-      try {
-        rawLogs = await container.logs({
-          stdout: true,
-          stderr: true,
-          timestamps: false,
-        });
-      } catch (cause) {
-        throw new ContainerLogsFailedError(cause);
-      }
-      const logs = demultiplexDockerLogs(rawLogs, input.limits.maxLogBytes);
+      const logs = await logCollection;
       if (timedOut) {
         throw new BuildTimedOutError(
           input.limits.timeoutMs,

@@ -1,8 +1,12 @@
 import { accumulateVerificationEvidence } from "@/core/evidence/accumulate.ts";
 import { imageDetailsForEvidence } from "@/core/evidence/finalize.ts";
 import { redactContractBuildVerificationInput } from "@/core/types/input.ts";
-import { ImagePolicyRejectedError } from "@/core/policy/error.ts";
+import {
+  ImagePolicyRejectedError,
+  ImageReferencePolicyRejectedError,
+} from "@/core/policy/error.ts";
 import { ImageToolchainMissingError } from "@/providers/image/error.ts";
+import { parseContainerImageReference } from "@/providers/image/reference.ts";
 import {
   contextualizeProcessError,
   recordProcessEvent,
@@ -21,7 +25,20 @@ export const resolveBuildImage = async (
   let evidence = input.state.evidence;
   let logs = input.state.logs;
   try {
-    const image = await input.resolver.resolve(input.state.value.recipe.image);
+    const imageReference = parseContainerImageReference(
+      input.state.value.recipe.image,
+    );
+    const referenceDecision = await input.policy.evaluateReference(
+      imageReference,
+    );
+    if (!referenceDecision.accepted) {
+      throw new ImageReferencePolicyRejectedError(
+        imageReference.reference,
+        referenceDecision.reasons.join(" ") ||
+          "The selected image reference was rejected.",
+      );
+    }
+    const image = await input.resolver.resolve(imageReference.reference);
     const decision = await input.policy.evaluate(image);
     if (!decision.accepted) {
       throw new ImagePolicyRejectedError(

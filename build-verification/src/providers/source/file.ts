@@ -11,6 +11,7 @@ import type {
   VerificationSourceProviderInput,
 } from "@/providers/source/types.ts";
 import {
+  FileSourceProviderInputMismatchError,
   LocalSourceArchiveReadFailedError,
   UnsupportedSourceError,
 } from "@/providers/source/error.ts";
@@ -23,7 +24,7 @@ export class FileVerificationSourceProvider
     input: VerificationSourceProviderInput,
   ): Promise<ResolvedVerificationSource> {
     if (input.source.type !== "path") {
-      throw new TypeError("File provider requires a path source");
+      throw new FileSourceProviderInputMismatchError(input.source.type);
     }
     const path = resolve(input.source.path);
     let stat: Deno.FileInfo;

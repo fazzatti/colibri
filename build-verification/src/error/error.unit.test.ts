@@ -115,6 +115,17 @@ const allErrors = (): E.BuildVerificationError<E.Code>[] => {
     new E.ArchiveCrcMismatchError("source/file", 1, 2),
     new E.UnsupportedZipFeatureError("source/file", "encrypted"),
     new E.SourceBuildAccessPreparationFailedError("source", cause),
+    new E.ImageReferencePolicyRejectedError("image", "reason"),
+    new E.ArchiveSourceProviderInputMismatchError("path"),
+    new E.FileSourceProviderInputMismatchError("url"),
+    new E.HttpSourceProviderInputMismatchError("path"),
+    new E.GitHubSourceProviderInputMismatchError("archive"),
+    new E.ImageAuthenticationChallengeInvalidError("image", cause),
+    new E.ImageRegistryRequestRejectedError(
+      "image",
+      "https://registry.example",
+      cause,
+    ),
   ];
 };
 

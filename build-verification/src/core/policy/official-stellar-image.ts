@@ -1,6 +1,7 @@
 import type {
   ContainerImageDetails,
   ContainerImagePolicy,
+  ContainerImageReference,
   PolicyCheck,
   PolicyDecision,
 } from "@/core/policy/types.ts";
@@ -35,13 +36,41 @@ export class OfficialStellarImagePolicy implements ContainerImagePolicy {
     );
   }
 
+  /** Rejects untrusted registries and repositories before registry I/O. */
+  evaluateReference(reference: ContainerImageReference): PolicyDecision {
+    const checks: PolicyCheck[] = [
+      {
+        name: "image-trust-root",
+        passed: reference.registry === this.#registry &&
+          reference.repository === this.#repository,
+      },
+      {
+        name: "digest-pinned",
+        passed: /^sha256:[0-9a-f]{64}$/.test(reference.digest),
+      },
+    ];
+    const accepted = checks.every(({ passed }) => passed);
+    return {
+      accepted,
+      policy: OFFICIAL_STELLAR_IMAGE_POLICY_ID,
+      version: "1",
+      checks,
+      reasons: accepted ? [] : [
+        "The image reference does not satisfy the configured official Stellar CLI trust root.",
+      ],
+      warnings: [],
+    };
+  }
+
   /** Evaluates already resolved OCI, runtime, provenance, and SBOM facts. */
   evaluate(details: ContainerImageDetails): PolicyDecision {
-    const trustRoot = details.registry === this.#registry &&
-      details.repository === this.#repository;
-    const digestPinned = /^sha256:[0-9a-f]{64}$/.test(
-      details.requestedDigest,
-    ) && details.requestedDigest === details.manifestDigest;
+    const referenceDecision = this.evaluateReference({
+      reference: details.reference,
+      registry: details.registry,
+      repository: details.repository,
+      digest: details.requestedDigest,
+    });
+    const digestResolved = details.requestedDigest === details.manifestDigest;
     const singlePlatform = !details.resolvedThroughIndex &&
       !!details.architecture && !!details.os;
     const entrypoint = details.entrypoint?.length === 1 &&
@@ -59,8 +88,8 @@ export class OfficialStellarImagePolicy implements ContainerImagePolicy {
         normalizeRepository(value) === this.#sourceRepository
       );
     const checks: PolicyCheck[] = [
-      { name: "image-trust-root", passed: trustRoot },
-      { name: "digest-pinned", passed: digestPinned },
+      ...referenceDecision.checks,
+      { name: "digest-resolved", passed: digestResolved },
       { name: "single-platform-manifest", passed: singlePlatform },
       { name: "stellar-entrypoint", passed: entrypoint },
       { name: "source-workdir", passed: workingDirectory },

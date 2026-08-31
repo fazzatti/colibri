@@ -34,8 +34,12 @@ import {
 import { GitHubVerificationSourceProvider } from "@/providers/source/github.ts";
 import { DefaultVerificationSourceProvider } from "@/providers/source/router.ts";
 import {
+  ArchiveSourceProviderInputMismatchError,
+  FileSourceProviderInputMismatchError,
   GitHubReleaseAssetResolutionFailedError,
   GitHubRevisionResolutionFailedError,
+  GitHubSourceProviderInputMismatchError,
+  HttpSourceProviderInputMismatchError,
   LocalSourceArchiveReadFailedError,
   SourceDnsResolutionFailedError,
   SourceDownloadFailedError,
@@ -130,7 +134,7 @@ describe("source providers", () => {
         new ArchiveVerificationSourceProvider().resolve(
           input({ type: "path", path: "." }),
         ),
-      TypeError,
+      ArchiveSourceProviderInputMismatchError,
     );
   });
 
@@ -181,7 +185,7 @@ describe("source providers", () => {
     await assertRejects(
       () =>
         provider.resolve(input({ type: "url", url: "https://example.com" })),
-      TypeError,
+      FileSourceProviderInputMismatchError,
     );
 
     const socketPath = `${root}/source.socket`;
@@ -608,7 +612,7 @@ describe("source providers", () => {
     assertEquals(result.format, "tar");
     await assertRejects(
       () => provider.resolve(input({ type: "path", path: "." })),
-      TypeError,
+      HttpSourceProviderInputMismatchError,
     );
     const invalidName = new HttpVerificationSourceProvider({
       policy: acceptedPolicy,
@@ -738,7 +742,7 @@ describe("source providers", () => {
     await assertRejects(
       () =>
         provider.resolve(input({ type: "url", url: "https://example.com" })),
-      TypeError,
+      GitHubSourceProviderInputMismatchError,
     );
     await assertRejects(
       () =>

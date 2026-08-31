@@ -5,24 +5,43 @@ import type {
   ContainerImageReferrer,
   ContainerImageSbom,
 } from "@/core/policy/types.ts";
+import { DefaultSourceRetrievalPolicy } from "@/core/policy/source-retrieval.ts";
+import { DEFAULT_BUILD_VERIFICATION_LIMITS } from "@/core/types/limits.ts";
 import type {
   ContainerImageResolver,
   OciContainerImageResolverOptions,
 } from "@/providers/image/types.ts";
 import {
   ImageAttestationDecodingFailedError,
+  ImageAuthenticationChallengeInvalidError,
   ImageConfigDigestMismatchError,
   ImageConfigResolutionFailedError,
   ImageManifestDigestMismatchError,
   ImageManifestResolutionFailedError,
   ImageReferrerDigestMismatchError,
   ImageReferrersResolutionFailedError,
-  InvalidImageReferenceError,
+  ImageRegistryRequestRejectedError,
   MultiArchImageError,
 } from "@/providers/image/error.ts";
+import { parseContainerImageReference } from "@/providers/image/reference.ts";
+import {
+  collectBoundedSourceResponse,
+  DenoSourceAddressResolver,
+  PinnedAddressHttpTransport,
+  redactSourceUrl,
+  retrievePinnedHttpResource,
+} from "@/providers/source/http.ts";
+import {
+  SourcePolicyRejectedError,
+  SourceRequestTimedOutError,
+} from "@/providers/source/error.ts";
+import type {
+  SourceAddressResolver,
+  SourceHttpResponse,
+  SourceHttpTransport,
+  SourceHttpTransportInput,
+} from "@/providers/source/types.ts";
 
-const IMAGE_PATTERN =
-  /^(?:localhost(?::\d+)?|[^\s@/]*[.:][^\s@/]*)\/[^\s@]+@sha256:[0-9a-f]{64}$/;
 const MANIFEST_ACCEPT = [
   "application/vnd.oci.image.manifest.v1+json",
   "application/vnd.oci.image.index.v1+json",
@@ -34,11 +53,8 @@ const INDEX_MEDIA_TYPES = new Set([
   "application/vnd.docker.distribution.manifest.list.v2+json",
 ]);
 const REGISTRY_FETCH_RETRY_DELAYS_MS = [0, 25, 100] as const;
-
-type ParsedImageReference = {
-  readonly registry: string;
-  readonly repository: string;
-  readonly digest: string;
+const INJECTED_FETCH_ADDRESS_RESOLVER: SourceAddressResolver = {
+  resolve: () => Promise.resolve(["93.184.216.34"]),
 };
 
 type OciDescriptor = {
@@ -49,25 +65,15 @@ type OciDescriptor = {
   readonly annotations?: Record<string, string>;
 };
 
-const parseImageReference = (reference: string): ParsedImageReference => {
-  if (!IMAGE_PATTERN.test(reference)) {
-    throw new InvalidImageReferenceError(reference);
-  }
-  const slash = reference.indexOf("/");
-  const at = reference.lastIndexOf("@");
-  return {
-    registry: reference.slice(0, slash),
-    repository: reference.slice(slash + 1, at),
-    digest: reference.slice(at + 1),
-  };
-};
-
 const registryOrigin = (registry: string): string => {
   if (registry === "docker.io") return "https://registry-1.docker.io";
   return `${registry.startsWith("localhost") ? "http" : "https"}://${registry}`;
 };
 
-const parseBearerChallenge = (header: string | null): URL | null => {
+const parseBearerChallenge = (
+  reference: string,
+  header: string | null,
+): URL | null => {
   if (!header?.startsWith("Bearer ")) return null;
   const values = Object.fromEntries(
     [...header.slice(7).matchAll(/([a-z]+)="([^"]*)"/g)].map((match) => [
@@ -76,88 +82,168 @@ const parseBearerChallenge = (header: string | null): URL | null => {
     ]),
   );
   if (!values.realm) return null;
-  const url = new URL(values.realm);
+  let url: URL;
+  try {
+    url = new URL(values.realm);
+  } catch (cause) {
+    throw new ImageAuthenticationChallengeInvalidError(reference, cause);
+  }
   if (values.service) url.searchParams.set("service", values.service);
   if (values.scope) url.searchParams.set("scope", values.scope);
   return url;
 };
 
-const discardResponse = async (response: Response): Promise<void> => {
-  try {
-    await response.body?.cancel();
-  } catch {
-    // The response status remains the authoritative registry failure.
+class FetchImageHttpTransport implements SourceHttpTransport {
+  readonly #fetcher: typeof fetch;
+
+  constructor(fetcher: typeof fetch) {
+    this.#fetcher = fetcher;
   }
-};
+
+  async request(input: SourceHttpTransportInput): Promise<SourceHttpResponse> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), input.timeoutMs);
+    let response: Response;
+    try {
+      response = await this.#fetcher(input.url, {
+        headers: input.headers,
+        redirect: "manual",
+        signal: controller.signal,
+      });
+    } catch (cause) {
+      if (controller.signal.aborted) {
+        throw new SourceRequestTimedOutError(input.url, input.timeoutMs);
+      }
+      throw cause;
+    } finally {
+      clearTimeout(timeout);
+    }
+    return {
+      status: response.status,
+      headers: Object.fromEntries(response.headers.entries()),
+      bytes: await collectBoundedSourceResponse(
+        response.body ?? new ReadableStream<Uint8Array>({
+          start: (controller) => controller.close(),
+        }),
+        input.maxBytes,
+      ),
+    };
+  }
+}
 
 class RegistryClient {
   readonly #reference: string;
-  readonly #parsed: ParsedImageReference;
-  readonly #fetcher: typeof fetch;
+  readonly #parsed: ReturnType<typeof parseContainerImageReference>;
+  readonly #policy: NonNullable<
+    OciContainerImageResolverOptions["retrievalPolicy"]
+  >;
+  readonly #transport: SourceHttpTransport;
+  readonly #addressResolver: SourceAddressResolver;
+  readonly #downloadTimeoutMs: number;
+  readonly #maxRedirects: number;
   #token?: string;
 
   constructor(
     reference: string,
-    parsed: ParsedImageReference,
-    fetcher: typeof fetch,
+    parsed: ReturnType<typeof parseContainerImageReference>,
+    options: {
+      readonly policy: NonNullable<
+        OciContainerImageResolverOptions["retrievalPolicy"]
+      >;
+      readonly transport: SourceHttpTransport;
+      readonly addressResolver: SourceAddressResolver;
+      readonly downloadTimeoutMs: number;
+      readonly maxRedirects: number;
+    },
   ) {
     this.#reference = reference;
     this.#parsed = parsed;
-    this.#fetcher = fetcher;
+    this.#policy = options.policy;
+    this.#transport = options.transport;
+    this.#addressResolver = options.addressResolver;
+    this.#downloadTimeoutMs = options.downloadTimeoutMs;
+    this.#maxRedirects = options.maxRedirects;
   }
 
-  async #fetch(input: string | URL, init: RequestInit): Promise<Response> {
+  async #fetch(
+    input: string | URL,
+    headers: Readonly<Record<string, string>>,
+    maximum: number,
+  ): Promise<Awaited<ReturnType<typeof retrievePinnedHttpResource>>> {
     let lastCause: unknown;
     for (const delayMs of REGISTRY_FETCH_RETRY_DELAYS_MS) {
       if (delayMs > 0) {
         await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
       try {
-        return await this.#fetcher(input, init);
+        return await retrievePinnedHttpResource({
+          url: String(input),
+          limits: {
+            ...DEFAULT_BUILD_VERIFICATION_LIMITS,
+            downloadTimeoutMs: this.#downloadTimeoutMs,
+            maxRedirects: this.#maxRedirects,
+          },
+          policy: this.#policy,
+          transport: this.#transport,
+          addressResolver: this.#addressResolver,
+          headers,
+          maxBytes: maximum,
+          acceptStatus: () => true,
+        });
       } catch (cause) {
+        if (cause instanceof SourcePolicyRejectedError) {
+          throw new ImageRegistryRequestRejectedError(
+            this.#reference,
+            redactSourceUrl(String(input)),
+            cause,
+          );
+        }
         lastCause = cause;
       }
     }
     throw lastCause;
   }
 
-  async request(path: string, accept: string): Promise<Response> {
+  async request(
+    path: string,
+    accept: string,
+    maximum: number,
+  ): Promise<Awaited<ReturnType<typeof retrievePinnedHttpResource>>> {
     const url = `${
       registryOrigin(this.#parsed.registry)
     }/v2/${this.#parsed.repository}/${path}`;
-    let response: Response;
+    let response: Awaited<ReturnType<typeof retrievePinnedHttpResource>>;
     try {
       response = await this.#fetch(url, {
-        headers: {
-          accept,
-          ...(this.#token ? { authorization: `Bearer ${this.#token}` } : {}),
-        },
-      });
+        accept,
+        ...(this.#token ? { authorization: `Bearer ${this.#token}` } : {}),
+      }, maximum);
     } catch (cause) {
+      if (cause instanceof ImageRegistryRequestRejectedError) throw cause;
       throw new ImageManifestResolutionFailedError(this.#reference, cause);
     }
     if (response.status !== 401 || this.#token) return response;
     const tokenUrl = parseBearerChallenge(
-      response.headers.get("www-authenticate"),
+      this.#reference,
+      response.headers["www-authenticate"] ?? null,
     );
-    await discardResponse(response);
     if (!tokenUrl) {
-      throw new ImageManifestResolutionFailedError(
-        this.#reference,
-        undefined,
-        response.status,
-      );
+      throw new ImageAuthenticationChallengeInvalidError(this.#reference);
     }
-    let tokenResponse: Response;
+    let tokenResponse: Awaited<
+      ReturnType<typeof retrievePinnedHttpResource>
+    >;
     try {
-      tokenResponse = await this.#fetch(tokenUrl, {
-        headers: { accept: "application/json" },
-      });
+      tokenResponse = await this.#fetch(
+        tokenUrl,
+        { accept: "application/json" },
+        Math.min(maximum, 1024 * 1024),
+      );
     } catch (cause) {
+      if (cause instanceof ImageRegistryRequestRejectedError) throw cause;
       throw new ImageManifestResolutionFailedError(this.#reference, cause);
     }
-    if (!tokenResponse.ok) {
-      await discardResponse(tokenResponse);
+    if (tokenResponse.status < 200 || tokenResponse.status >= 300) {
       throw new ImageManifestResolutionFailedError(
         this.#reference,
         undefined,
@@ -165,7 +251,9 @@ class RegistryClient {
       );
     }
     try {
-      const body = await tokenResponse.json() as {
+      const body = JSON.parse(
+        new TextDecoder().decode(tokenResponse.bytes),
+      ) as {
         token?: string;
         access_token?: string;
       };
@@ -185,57 +273,40 @@ class RegistryClient {
       );
     }
     try {
-      return await this.#fetch(url, {
-        headers: { accept, authorization: `Bearer ${this.#token}` },
-      });
+      return await this.#fetch(
+        url,
+        { accept, authorization: `Bearer ${this.#token}` },
+        maximum,
+      );
     } catch (cause) {
+      if (cause instanceof ImageRegistryRequestRejectedError) throw cause;
       throw new ImageManifestResolutionFailedError(this.#reference, cause);
     }
   }
 }
 
-const boundedBytes = async (
-  response: Response,
-  maximum: number,
-): Promise<Uint8Array> => {
-  const declared = Number(response.headers.get("content-length"));
-  if (Number.isFinite(declared) && declared > maximum) {
-    throw new RangeError("OCI metadata exceeds its configured byte limit");
-  }
-  if (!response.body) return new Uint8Array();
-  const chunks: Uint8Array[] = [];
-  let total = 0;
-  for await (const chunk of response.body) {
-    total += chunk.length;
-    if (total > maximum) {
-      throw new RangeError("OCI metadata exceeds its configured byte limit");
-    }
-    chunks.push(Uint8Array.from(chunk));
-  }
-  const bytes = new Uint8Array(total);
-  let offset = 0;
-  for (const chunk of chunks) {
-    bytes.set(chunk, offset);
-    offset += chunk.length;
-  }
-  return bytes;
-};
-
 const fetchDescriptorBytes = async (
   client: RegistryClient,
+  reference: string,
   descriptor: OciDescriptor,
   maximum: number,
   owner: "config" | "referrer",
 ): Promise<Uint8Array> => {
   if (!descriptor.digest || !/^sha256:[0-9a-f]{64}$/.test(descriptor.digest)) {
-    throw new TypeError(`OCI ${owner} descriptor omitted a sha256 digest`);
+    const cause = new TypeError(
+      `OCI ${owner} descriptor omitted a sha256 digest`,
+    );
+    if (owner === "config") {
+      throw new ImageConfigResolutionFailedError(reference, cause);
+    }
+    throw new ImageReferrersResolutionFailedError(reference, cause);
   }
   const response = await client.request(
     `blobs/${descriptor.digest}`,
     descriptor.mediaType ?? "application/octet-stream",
+    maximum,
   );
-  if (!response.ok) {
-    await discardResponse(response);
+  if (response.status < 200 || response.status >= 300) {
     if (owner === "config") {
       throw new ImageConfigResolutionFailedError(
         descriptor.digest,
@@ -249,7 +320,7 @@ const fetchDescriptorBytes = async (
       response.status,
     );
   }
-  const bytes = await boundedBytes(response, maximum);
+  const bytes = response.bytes;
   const actual = `sha256:${await sha256Hex(bytes)}`;
   if (actual !== descriptor.digest) {
     if (owner === "config") {
@@ -339,17 +410,18 @@ const resolveReferrers = async (
   provenance: ContainerImageProvenance;
   sbom: ContainerImageSbom;
 }> => {
-  let response: Response;
+  let response: Awaited<ReturnType<typeof retrievePinnedHttpResource>>;
   try {
     response = await client.request(
       `referrers/${digest}`,
       "application/vnd.oci.image.index.v1+json",
+      maximum,
     );
   } catch (cause) {
+    if (cause instanceof ImageRegistryRequestRejectedError) throw cause;
     throw new ImageReferrersResolutionFailedError(reference, cause);
   }
   if (response.status === 404) {
-    await discardResponse(response);
     return {
       referrers: [],
       provenance: {
@@ -363,8 +435,7 @@ const resolveReferrers = async (
       sbom: { present: false, formats: [] },
     };
   }
-  if (!response.ok) {
-    await discardResponse(response);
+  if (response.status < 200 || response.status >= 300) {
     throw new ImageReferrersResolutionFailedError(
       reference,
       undefined,
@@ -374,7 +445,7 @@ const resolveReferrers = async (
   let descriptors: OciDescriptor[];
   try {
     const index = JSON.parse(
-      new TextDecoder().decode(await boundedBytes(response, maximum)),
+      new TextDecoder().decode(response.bytes),
     ) as { manifests?: OciDescriptor[] };
     descriptors = index.manifests ?? [];
   } catch (cause) {
@@ -409,16 +480,18 @@ const resolveReferrers = async (
     const manifestResponse = await client.request(
       `manifests/${descriptor.digest}`,
       MANIFEST_ACCEPT,
+      maximum,
     );
-    if (!manifestResponse.ok) {
-      await discardResponse(manifestResponse);
+    if (
+      manifestResponse.status < 200 || manifestResponse.status >= 300
+    ) {
       throw new ImageReferrersResolutionFailedError(
         reference,
         undefined,
         manifestResponse.status,
       );
     }
-    const manifestBytes = await boundedBytes(manifestResponse, maximum);
+    const manifestBytes = manifestResponse.bytes;
     const manifestActual = `sha256:${await sha256Hex(manifestBytes)}`;
     if (manifestActual !== descriptor.digest) {
       throw new ImageReferrerDigestMismatchError(
@@ -440,6 +513,7 @@ const resolveReferrers = async (
       if (!isAttestation) continue;
       const bytes = await fetchDescriptorBytes(
         client,
+        reference,
         layer,
         maximum,
         "referrer",
@@ -472,27 +546,52 @@ const resolveReferrers = async (
 
 /** OCI resolver that separates registry facts from image trust decisions. */
 export class OciContainerImageResolver implements ContainerImageResolver {
-  readonly #fetcher: typeof fetch;
+  readonly #policy: NonNullable<
+    OciContainerImageResolverOptions["retrievalPolicy"]
+  >;
+  readonly #transport: SourceHttpTransport;
+  readonly #addressResolver: SourceAddressResolver;
+  readonly #downloadTimeoutMs: number;
+  readonly #maxRedirects: number;
   readonly #maxMetadataBytes: number;
   readonly #maxReferrers: number;
 
   /** Creates a resolver with bounded registry metadata ingestion. */
   constructor(options: OciContainerImageResolverOptions = {}) {
-    this.#fetcher = options.fetch ?? globalThis.fetch;
+    this.#policy = options.retrievalPolicy ??
+      new DefaultSourceRetrievalPolicy();
+    this.#transport = options.transport ??
+      (options.fetch
+        ? new FetchImageHttpTransport(options.fetch)
+        : new PinnedAddressHttpTransport());
+    this.#addressResolver = options.addressResolver ??
+      (options.fetch
+        ? INJECTED_FETCH_ADDRESS_RESOLVER
+        : new DenoSourceAddressResolver());
+    this.#downloadTimeoutMs = options.downloadTimeoutMs ??
+      DEFAULT_BUILD_VERIFICATION_LIMITS.downloadTimeoutMs;
+    this.#maxRedirects = options.maxRedirects ??
+      DEFAULT_BUILD_VERIFICATION_LIMITS.maxRedirects;
     this.#maxMetadataBytes = options.maxMetadataBytes ?? 16 * 1024 * 1024;
     this.#maxReferrers = options.maxReferrers ?? 64;
   }
 
   /** Resolves manifest, image config, provenance, and SBOM observations. */
   async resolve(reference: string): Promise<ContainerImageDetails> {
-    const parsed = parseImageReference(reference);
-    const client = new RegistryClient(reference, parsed, this.#fetcher);
+    const parsed = parseContainerImageReference(reference);
+    const client = new RegistryClient(reference, parsed, {
+      policy: this.#policy,
+      transport: this.#transport,
+      addressResolver: this.#addressResolver,
+      downloadTimeoutMs: this.#downloadTimeoutMs,
+      maxRedirects: this.#maxRedirects,
+    });
     const response = await client.request(
       `manifests/${parsed.digest}`,
       MANIFEST_ACCEPT,
+      this.#maxMetadataBytes,
     );
-    if (!response.ok) {
-      await discardResponse(response);
+    if (response.status < 200 || response.status >= 300) {
       throw new ImageManifestResolutionFailedError(
         reference,
         undefined,
@@ -502,7 +601,7 @@ export class OciContainerImageResolver implements ContainerImageResolver {
     let manifestBytes: Uint8Array;
     let manifest: { mediaType?: string; config?: OciDescriptor };
     try {
-      manifestBytes = await boundedBytes(response, this.#maxMetadataBytes);
+      manifestBytes = response.bytes;
       manifest = JSON.parse(new TextDecoder().decode(manifestBytes));
     } catch (cause) {
       throw new ImageManifestResolutionFailedError(
@@ -520,7 +619,7 @@ export class OciContainerImageResolver implements ContainerImageResolver {
       );
     }
     const mediaType = manifest.mediaType ??
-      response.headers.get("content-type")?.split(";", 1)[0] ?? "";
+      response.headers["content-type"]?.split(";", 1)[0] ?? "";
     if (INDEX_MEDIA_TYPES.has(mediaType)) {
       throw new MultiArchImageError(reference, mediaType);
     }
@@ -543,6 +642,7 @@ export class OciContainerImageResolver implements ContainerImageResolver {
     try {
       const configBytes = await fetchDescriptorBytes(
         client,
+        reference,
         manifest.config,
         this.#maxMetadataBytes,
         "config",
@@ -588,8 +688,20 @@ export class OciContainerImageResolver implements ContainerImageResolver {
 }
 
 /** Resolves one image through the default OCI resolver. */
-export const resolveContainerImage = (
+export function resolveContainerImage(
   reference: string,
-  fetcher: typeof fetch = globalThis.fetch,
-): Promise<ContainerImageDetails> =>
-  new OciContainerImageResolver({ fetch: fetcher }).resolve(reference);
+  options?: OciContainerImageResolverOptions,
+): Promise<ContainerImageDetails>;
+/** Resolves one image through an explicitly controlled fetch boundary. */
+export function resolveContainerImage(
+  reference: string,
+  fetcher: typeof fetch,
+): Promise<ContainerImageDetails>;
+export function resolveContainerImage(
+  reference: string,
+  options: OciContainerImageResolverOptions | typeof fetch = {},
+): Promise<ContainerImageDetails> {
+  return new OciContainerImageResolver(
+    typeof options === "function" ? { fetch: options } : options,
+  ).resolve(reference);
+}

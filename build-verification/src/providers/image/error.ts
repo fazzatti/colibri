@@ -15,6 +15,40 @@ export class InvalidImageReferenceError
   }
 }
 
+/** Raised when an OCI Bearer challenge does not contain a safe token URL. */
+export class ImageAuthenticationChallengeInvalidError
+  extends BuildVerificationError<Code.IMAGE_AUTHENTICATION_CHALLENGE_INVALID> {
+  /** Creates a malformed image-registry authentication challenge error. */
+  constructor(reference: string, cause?: unknown) {
+    super({
+      code: Code.IMAGE_AUTHENTICATION_CHALLENGE_INVALID,
+      source: "@colibri/build-verification/providers/image/oci",
+      message: "Invalid image registry authentication challenge",
+      details:
+        "The registry Bearer challenge did not provide a valid policy-checkable token endpoint.",
+      data: { reference },
+      cause,
+    });
+  }
+}
+
+/** Raised when host retrieval policy blocks a registry or token request. */
+export class ImageRegistryRequestRejectedError
+  extends BuildVerificationError<Code.IMAGE_REGISTRY_REQUEST_REJECTED> {
+  /** Creates a pre-transport registry request rejection. */
+  constructor(reference: string, url: string, cause: unknown) {
+    super({
+      code: Code.IMAGE_REGISTRY_REQUEST_REJECTED,
+      source: "@colibri/build-verification/providers/image/oci",
+      message: "Image registry request rejected by policy",
+      details:
+        "The registry, redirect, or authentication endpoint was rejected before transport I/O.",
+      data: { reference, url },
+      cause,
+    });
+  }
+}
+
 /** Raised when the pinned OCI manifest cannot be resolved. */
 export class ImageManifestResolutionFailedError
   extends BuildVerificationError<Code.IMAGE_MANIFEST_RESOLUTION_FAILED> {

@@ -222,8 +222,10 @@ pipeline with `createBuildVerificationPipeline(...)` and explicit dependencies.
 ## Policies
 
 The default policy set independently evaluates the image, build command, build
-options, and each source request or redirect. Callers can replace only the
-policy boundary they need:
+options, and each source request or redirect. Image policies first evaluate the
+digest-pinned reference before any registry request, then evaluate the resolved
+manifest and runtime facts. Callers can replace only the policy boundary they
+need:
 
 ```ts
 import {
@@ -244,7 +246,10 @@ const verifier = new ContractBuildVerifier({
 
 The built-in `OfficialStellarImagePolicy` defaults to
 `docker.io/stellar/stellar-cli` and its canonical source repository. It checks
-the exact manifest digest and runtime contract. OCI provenance and SBOM
+the registry, repository, and requested digest before registry I/O, followed by
+the exact resolved manifest digest and runtime contract. Registry requests,
+redirect destinations, and bearer-token endpoints are DNS-pinned and evaluated
+by the source-retrieval policy before transport I/O. OCI provenance and SBOM
 referrers are recorded when available, but this package does not claim that an
 unverified provenance signature is valid. A digest establishes image identity,
 not that the image or source code is safe.
@@ -266,6 +271,8 @@ runner:
 - uses a read-only root filesystem and drops all Linux capabilities;
 - enables `no-new-privileges`;
 - applies CPU, memory, process, timeout, archive, artifact, and log limits;
+- streams and bounds stdout and stderr before retaining them in host memory,
+  while disabling Docker daemon log persistence for the build container;
 - runs as the disposable source workspace owner on POSIX hosts so build output
   remains owned and removable by the verifier;
 - keeps Cargo downloads and home writes in bounded disposable tmpfs mounts;

@@ -72,7 +72,7 @@ possible.
 
 Callers may provide:
 
-- exact in-memory archive bytes;
+- exact archive bytes already available to their application;
 - a local archive;
 - a local directory in out-of-band mode;
 - a policy-checked URL;
@@ -119,12 +119,16 @@ evidence, and bounded structured logs pass through every stage.
 
 - Build-container network access is disabled unless `allowBuildNetwork: true` is
   set.
-- The default image policy accepts the configured official Stellar CLI trust
-  root and requires an exact single-platform manifest digest.
-- Source URL policy is checked again after every redirect, and HTTP connections
-  are pinned to the approved DNS results.
+- The default image policy checks the configured official Stellar CLI registry,
+  repository, and requested digest before any registry request, then requires
+  the resolved single-platform manifest to have that exact digest.
+- Source and image-registry retrieval policies are checked again after every
+  redirect. Bearer-token endpoints are checked as separate requests, and HTTP
+  connections are pinned to the approved DNS results.
 - Docker execution uses a read-only root filesystem, drops capabilities, and
   applies CPU, memory, PID, time, output, archive, and artifact limits.
+- Docker output is streamed and bounded before it is retained in host memory,
+  and daemon log persistence is disabled for build containers.
 - The runner executes only. Artifact collection and selection are separate
   boundaries.
 - Evidence records provenance and SBOM observations without claiming an
@@ -154,12 +158,3 @@ The package also publishes `/core`, `/docker`, and `/cli` entrypoints. See the
 [package README](../../build-verification/README.md) for every source variant,
 the out-of-band trust boundary, custom image-policy configuration, stable step
 IDs, granular RPC inputs, and CLI flags.
-
-## Validation in this repository
-
-The normal integration suite uses disposable Docker builds, a local Quickstart
-ledger, immutable open-source inputs, and Testnet. Every build-verification test
-runs as part of the repository's required CI workflow. The Rust contracts,
-compiled Wasm, source archives, and manifests under
-`_internal/build-verification/` are test fixtures only; they are not published
-with the package.

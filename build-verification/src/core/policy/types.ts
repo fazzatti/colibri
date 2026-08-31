@@ -48,6 +48,14 @@ export type ContainerImageReferrer = {
   readonly annotations: Readonly<Record<string, string>>;
 };
 
+/** Digest-pinned image reference facts available without registry I/O. */
+export type ContainerImageReference = {
+  readonly reference: string;
+  readonly registry: string;
+  readonly repository: string;
+  readonly digest: string;
+};
+
 /** Image facts resolved before an image policy makes its decision. */
 export type ContainerImageDetails = {
   readonly reference: string;
@@ -72,6 +80,10 @@ export type ContainerImageDetails = {
 
 /** Policy boundary used to accept or reject one resolved container image. */
 export interface ContainerImagePolicy {
+  /** Evaluates reference trust roots before any registry request is made. */
+  evaluateReference(
+    reference: ContainerImageReference,
+  ): PolicyDecision | Promise<PolicyDecision>;
   /** Evaluates resolved facts without performing registry or Docker I/O. */
   evaluate(
     details: ContainerImageDetails,

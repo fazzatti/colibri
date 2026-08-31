@@ -65,7 +65,12 @@ export const createDefaultBuildVerificationDependencies = (
         urlHeaders: options.urlHeaders,
       }),
     imageResolver: options.imageResolver ??
-      new OciContainerImageResolver({ fetch: options.fetch }),
+      new OciContainerImageResolver({
+        fetch: options.fetch,
+        retrievalPolicy: policy.source,
+        downloadTimeoutMs: limits.downloadTimeoutMs,
+        maxRedirects: limits.maxRedirects,
+      }),
     imagePolicy: policy.image,
     commandPolicy: policy.command,
     optionPolicy: policy.options,
