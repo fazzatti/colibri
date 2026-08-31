@@ -348,20 +348,13 @@ verification did not complete.
 
 ## Repository validation
 
-The ordinary integration suite exercises the Docker runner against exact local
-fixtures and resolves direct Wasm, Wasm-hash, contract-ID, upgraded-contract,
-and Stellar Asset Contract targets on a disposable Quickstart ledger. Live
-conformance checks are kept in a separate task because public source hosts and
-Stellar networks are external dependencies:
-
-```sh
-deno task test:conformance
-```
-
-That task rebuilds an immutable public GitHub source archive, validates an exact
-GitHub release asset, and deploys and verifies the Colibri fixture contract on
-Testnet. It requires Docker and outbound network access. A scheduled GitHub
-workflow runs the same task weekly, and it can also be dispatched manually.
+The integration suite exercises the Docker runner against exact local fixtures;
+resolves direct Wasm, Wasm-hash, contract-ID, upgraded-contract, and Stellar
+Asset Contract targets on a disposable Quickstart ledger; rebuilds immutable
+open-source GitHub inputs; and deploys and verifies the Colibri fixture contract
+on Testnet. The open-source and Testnet cases require Docker and outbound
+network access. They run as required build-verification tests in the
+repository's normal CI workflow.
 
 The upgradeable Rust contract, source archives, compiled Wasm, and provenance
 manifests used by these tests live under `_internal/build-verification/`. They

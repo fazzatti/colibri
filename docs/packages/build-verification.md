@@ -157,9 +157,9 @@ IDs, granular RPC inputs, and CLI flags.
 
 ## Validation in this repository
 
-The normal integration suite uses disposable Docker builds and a local
-Quickstart ledger. Live open-source and Testnet checks run separately with
-`deno task test:conformance` and through the scheduled Build Verification
-Conformance workflow. The Rust contracts, compiled Wasm, source archives, and
-manifests under `_internal/build-verification/` are test fixtures only; they are
-not published with the package.
+The normal integration suite uses disposable Docker builds, a local Quickstart
+ledger, immutable open-source inputs, and Testnet. Every build-verification test
+runs as part of the repository's required CI workflow. The Rust contracts,
+compiled Wasm, source archives, and manifests under
+`_internal/build-verification/` are test fixtures only; they are not published
+with the package.

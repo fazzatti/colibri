@@ -33,10 +33,9 @@
     "check:delegated-auth-fixtures": "deno run -A _tools/build-delegated-auth-fixtures.ts --check",
     "build:build-verification-fixtures": "deno run -A _tools/build-build-verification-fixtures.ts",
     "check:build-verification-fixtures": "deno run -A _tools/build-build-verification-fixtures.ts --check",
-    "test": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.conformance.test.ts' --coverage=coverage",
-    "test:unit": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.integration.test.ts' --ignore='**/*.testnet.integration.test.ts' --ignore='**/*.conformance.test.ts' --coverage=coverage",
-    "test:integration": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.unit.test.ts' --ignore='**/*.conformance.test.ts' --coverage=coverage",
-    "test:conformance": "deno test -A --clean build-verification/src/public-sources.conformance.test.ts build-verification/src/testnet.conformance.test.ts",
+    "test": "deno test -A --parallel --clean --ignore='_*/' --coverage=coverage",
+    "test:unit": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.integration.test.ts' --ignore='**/*.testnet.integration.test.ts' --coverage=coverage",
+    "test:integration": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.unit.test.ts' --coverage=coverage",
     "test:file": "deno test -A --parallel --clean --ignore='_*/'"
   },
   "lint": {
