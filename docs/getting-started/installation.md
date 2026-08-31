@@ -7,8 +7,8 @@ Deno-first TypeScript projects.
 
 - [Deno](https://deno.land/) `v2.0` or later
 - A reachable Docker daemon such as Docker Desktop or OrbStack if you plan to
-  use `@colibri/test-tooling` or the built-in
-  `@colibri/build-verification` runner
+  use `@colibri/test-tooling` or the built-in `@colibri/build-verification`
+  runner
 
 ## Installing Packages
 
@@ -34,7 +34,7 @@ This will add imports similar to:
   "imports": {
     "@colibri/core": "jsr:@colibri/core@^0.26.0",
     "@colibri/webauth": "jsr:@colibri/webauth@^0.1.3",
-    "@colibri/build-verification": "jsr:@colibri/build-verification@^0.1.0",
+    "@colibri/build-verification": "jsr:@colibri/build-verification@^0.2.0",
     "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.2.14",
     "@colibri/test-tooling": "jsr:@colibri/test-tooling@^0.3.1",
     "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.10.1",

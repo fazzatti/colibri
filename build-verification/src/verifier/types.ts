@@ -34,6 +34,10 @@ export type ContractBuildVerifierOptions = {
   readonly logger?: VerificationLogger;
   readonly strictLogger?: boolean;
   readonly githubToken?: string;
+  /**
+   * Static headers for direct URL sources. Credential-bearing headers are
+   * removed permanently when retrieval crosses an origin boundary.
+   */
   readonly urlHeaders?: Readonly<Record<string, string>>;
   readonly docker?: DockerConnectionConfig;
   readonly fetch?: typeof globalThis.fetch;

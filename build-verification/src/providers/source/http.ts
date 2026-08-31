@@ -14,6 +14,10 @@ type PinnedSourceRequestOptions = RequestOptions & {
 import { ArchiveLimitExceededError } from "@/archive/error.ts";
 import { detectArchiveFormat } from "@/archive/detect.ts";
 import { sha256Hex } from "@/core/comparison/compare-wasm.ts";
+import {
+  isCredentialBearingName,
+  redactUrlCredentials,
+} from "@/core/types/redaction.ts";
 import type { ResolvedVerificationSource } from "@/core/types/index.ts";
 import type { VerificationSourceProvider } from "@/providers/source/types.ts";
 import type {
@@ -40,24 +44,15 @@ const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 
 /** Removes embedded URL credentials before a locator reaches errors/evidence. */
 export const redactSourceUrl = (value: string): string => {
-  try {
-    const url = new URL(value);
-    url.username = "";
-    url.password = "";
-    for (const key of [...url.searchParams.keys()]) {
-      if (
-        /^(?:sig|jwt)$/i.test(key) ||
-        /(?:^|[_-])(?:token|key|auth|signature|secret|credential)(?:$|[_-])/i
-          .test(key)
-      ) {
-        url.searchParams.set(key, "<redacted>");
-      }
-    }
-    return url.toString();
-  } catch {
-    return "<invalid-url>";
-  }
+  return redactUrlCredentials(value) ?? "<invalid-url>";
 };
+
+const withoutCredentialHeaders = (
+  headers: Readonly<Record<string, string>>,
+): Readonly<Record<string, string>> =>
+  Object.fromEntries(
+    Object.entries(headers).filter(([name]) => !isCredentialBearingName(name)),
+  );
 
 const stripIpv6Brackets = (hostname: string): string =>
   hostname.startsWith("[") && hostname.endsWith("]")
@@ -287,6 +282,7 @@ export const retrievePinnedHttpResource = async (args: {
   const retrieve = async (
     current: string,
     redirect: number,
+    allowStaticCredentials: boolean,
   ): Promise<PinnedHttpResource> => {
     let parsed: URL;
     try {
@@ -312,7 +308,9 @@ export const retrievePinnedHttpResource = async (args: {
         url: current,
         headers: typeof args.headers === "function"
           ? args.headers(parsed)
-          : args.headers ?? {},
+          : allowStaticCredentials
+          ? args.headers ?? {}
+          : withoutCredentialHeaders(args.headers ?? {}),
         approvedAddresses: addresses,
         timeoutMs: args.limits.downloadTimeoutMs,
         maxBytes: args.maxBytes ?? args.limits.maxArchiveBytes,
@@ -335,9 +333,11 @@ export const retrievePinnedHttpResource = async (args: {
           response.status,
         );
       }
+      const redirected = new URL(location, current);
       return await retrieve(
-        new URL(location, current).toString(),
+        redirected.toString(),
         redirect + 1,
+        allowStaticCredentials && redirected.origin === parsed.origin,
       );
     }
     if (
@@ -359,7 +359,7 @@ export const retrievePinnedHttpResource = async (args: {
       policy: policyDecision,
     };
   };
-  return await retrieve(args.url, 0);
+  return await retrieve(args.url, 0, true);
 };
 
 /** HTTP source provider with redirect revalidation and DNS-pinned transport. */
