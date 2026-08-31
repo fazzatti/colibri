@@ -170,7 +170,7 @@ describe("build-verification error catalog", () => {
     const evidence = {
       package: {
         name: "@colibri/build-verification" as const,
-        version: "0.1.0",
+        version: "0.2.0",
       },
       mode: "outOfBand" as const,
       logs: [],

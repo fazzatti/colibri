@@ -1,6 +1,10 @@
 import { ColibriError } from "@colibri/core";
 import { InvalidCliArgumentsError } from "@/cli/error.ts";
 import {
+  formatBuildVerificationErrorSummary,
+  formatBuildVerificationResultSummary,
+} from "@/cli/format.ts";
+import {
   BUILD_VERIFICATION_CLI_HELP,
   getBuildVerificationStringFlag,
   parseBuildVerificationFlags,
@@ -25,6 +29,7 @@ export const runBuildVerificationCli = async (
   io: BuildVerificationCliIo = DEFAULT_BUILD_VERIFICATION_CLI_IO,
   dependencies: BuildVerificationCliDependencies = {},
 ): Promise<number> => {
+  const jsonOutput = args.includes("--json");
   try {
     const flags = parseBuildVerificationFlags(args);
     if (flags.has("help")) {
@@ -69,14 +74,22 @@ export const runBuildVerificationCli = async (
         { format: logFormat === "text" ? "text" : "jsonl" },
       );
     }
-    io.stdout(JSON.stringify(result, null, 2));
+    io.stdout(
+      jsonOutput
+        ? JSON.stringify(result, null, 2)
+        : formatBuildVerificationResultSummary(result),
+    );
     return result.status === "mismatch" ? 2 : 0;
   } catch (cause) {
     const error = ColibriError.is(cause) ? cause : new InvalidCliArgumentsError(
       "The CLI encountered an unexpected failure before verification completed.",
       { cause: String(cause) },
     );
-    io.stderr(JSON.stringify(error.toJSON(), null, 2));
+    io.stderr(
+      jsonOutput
+        ? JSON.stringify(error.toJSON(), null, 2)
+        : formatBuildVerificationErrorSummary(error),
+    );
     return 1;
   }
 };

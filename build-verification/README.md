@@ -344,6 +344,23 @@ deno run -A jsr:@colibri/build-verification/cli \
   --logs verification.jsonl
 ```
 
+The default terminal output is one concise line while `--evidence` and `--logs`
+retain the complete records in their requested files:
+
+```text
+VERIFIED ba789fe6627de52ebfbd5353f5eb6b7efef23d7e8633ab59051c1a22b2f00a88
+```
+
+Pass `--json` when stdout or stderr must contain the complete machine-readable
+result or typed Colibri error:
+
+```sh
+deno run -A jsr:@colibri/build-verification/cli \
+  --contract-id C... \
+  --network mainnet \
+  --json
+```
+
 Out-of-band mode uses a JSON recipe file:
 
 ```sh
@@ -356,7 +373,8 @@ deno run -A jsr:@colibri/build-verification/cli \
 
 Use `--help` for every target, network, source, and reporting flag. Exit code
 `0` means `verified` or `notApplicable`, `2` means `mismatch`, and `1` means
-verification did not complete.
+verification did not complete. Summary mode preserves those exit codes; it
+changes only the terminal presentation.
 
 ## Scope
 
