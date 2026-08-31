@@ -7,7 +7,8 @@ Deno-first TypeScript projects.
 
 - [Deno](https://deno.land/) `v2.0` or later
 - A reachable Docker daemon such as Docker Desktop or OrbStack if you plan to
-  use `@colibri/test-tooling`
+  use `@colibri/test-tooling` or the built-in
+  `@colibri/build-verification` runner
 
 ## Installing Packages
 
@@ -19,6 +20,7 @@ deno add jsr:@colibri/core
 
 # Optional packages
 deno add jsr:@colibri/webauth
+deno add jsr:@colibri/build-verification
 deno add jsr:@colibri/rpc-streamer
 deno add jsr:@colibri/test-tooling
 deno add jsr:@colibri/plugin-fee-bump
@@ -32,6 +34,7 @@ This will add imports similar to:
   "imports": {
     "@colibri/core": "jsr:@colibri/core@^0.26.0",
     "@colibri/webauth": "jsr:@colibri/webauth@^0.1.3",
+    "@colibri/build-verification": "jsr:@colibri/build-verification@^0.1.0",
     "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.2.14",
     "@colibri/test-tooling": "jsr:@colibri/test-tooling@^0.3.1",
     "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.10.1",
@@ -47,6 +50,7 @@ import { Contract, NetworkConfig } from "jsr:@colibri/core";
 import { RPCStreamer } from "jsr:@colibri/rpc-streamer";
 import { StellarTestLedger } from "jsr:@colibri/test-tooling";
 import { WebAuthClient } from "jsr:@colibri/webauth";
+import { ContractBuildVerifier } from "jsr:@colibri/build-verification";
 ```
 
 ## Package Overview
@@ -65,6 +69,12 @@ Streaming helpers for live and historical Stellar RPC ingestion.
 
 Unified SEP-10 and SEP-45 Web Authentication with automatic account routing,
 explicit protocol clients, and contract authorization hooks.
+
+### [@colibri/build-verification](../packages/build-verification.md)
+
+Strict SEP-58 and explicitly caller-directed out-of-band contract build
+verification with digest-pinned images, safe source extraction, bounded Docker
+execution, and typed evidence.
 
 ### [@colibri/test-tooling](../packages/test-tooling.md)
 
