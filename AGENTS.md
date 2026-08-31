@@ -90,7 +90,8 @@ has an integration seam for that behavior.
 
 GitHub Actions behavior matters when changing structure or versions:
 
-- CI runs on pushes and pull requests targeting `main` and `dev`.
+- CI runs on pull requests targeting `main` and `dev`, and can be started
+  manually through `workflow_dispatch`.
 - CI runs lint, type, and JSR documentation checks once, while every package's
   complete test suite runs in a required parallel job.
 - Package jobs upload raw Deno coverage profiles. A final required coverage job
