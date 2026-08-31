@@ -125,7 +125,7 @@ forms allow granular configuration or an existing Core-compatible RPC reader.
 The default source provider accepts all of the following:
 
 ```ts
-// Exact in-memory archive bytes.
+// Archive bytes already available to the caller as a Uint8Array.
 { type: "archive", name: "source.tar.gz", bytes }
 
 // Local archive, or a directory in out-of-band mode only.
@@ -152,6 +152,11 @@ The default source provider accepts all of the following:
   asset: "source.tar.gz",
 }
 ```
+
+The `archive` form accepts bytes acquired by the caller and does not infer how
+they were transported. Colibri copies and hashes those exact bytes. In strict
+SEP-58 verification, their hash must match the `source_sha256` committed in the
+target contract metadata.
 
 Supported archives are `.tar`, `.tar.gz`, `.tgz`, and `.zip`. Extraction rejects
 absolute paths, parent traversal, links, special entries, duplicate or
@@ -345,26 +350,6 @@ deno run -A jsr:@colibri/build-verification/cli \
 Use `--help` for every target, network, source, and reporting flag. Exit code
 `0` means `verified` or `notApplicable`, `2` means `mismatch`, and `1` means
 verification did not complete.
-
-## Repository validation
-
-The integration suite exercises the Docker runner against exact local fixtures;
-resolves direct Wasm, Wasm-hash, contract-ID, upgraded-contract, and Stellar
-Asset Contract targets on a disposable Quickstart ledger; rebuilds immutable
-open-source GitHub inputs; and deploys and verifies the Colibri fixture contract
-on Testnet. The open-source and Testnet cases require Docker and outbound
-network access. They run as required build-verification tests in the
-repository's normal CI workflow.
-
-The upgradeable Rust contract, source archives, compiled Wasm, and provenance
-manifests used by these tests live under `_internal/build-verification/`. They
-are repository-only fixtures and are not included in the JSR package. Rebuild or
-byte-check them with:
-
-```sh
-deno task build:build-verification-fixtures
-deno task check:build-verification-fixtures
-```
 
 ## Scope
 

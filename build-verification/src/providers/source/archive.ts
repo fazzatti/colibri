@@ -7,10 +7,10 @@ import type {
   VerificationSourceProviderInput,
 } from "@/providers/source/types.ts";
 
-/** Provider for exact in-memory source archive bytes. */
+/** Provider for exact source archive bytes supplied directly by the caller. */
 export class ArchiveVerificationSourceProvider
   implements VerificationSourceProvider {
-  /** Resolves bounded raw bytes without copying credentials or extracting. */
+  /** Resolves bounded caller-supplied bytes without retrieving or extracting. */
   async resolve(
     input: VerificationSourceProviderInput,
   ): Promise<ResolvedVerificationSource> {
