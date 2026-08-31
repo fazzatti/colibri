@@ -121,6 +121,14 @@ jobs:
           pattern: coverage-*
           path: coverage
 
+      - name: Prime instrumented source cache
+        run: >-
+          deno test -A
+          --filter='__coverage_cache_prime_never_matches__'
+          --coverage=coverage-prime --coverage-raw-data-only
+          core build-verification webauth rpc-streamer
+          plugins/fee-bump plugins/channel-accounts test-tooling
+
       - name: Generate aggregate coverage report
         run: deno coverage --lcov --output=coverage.lcov coverage/coverage-*
 
