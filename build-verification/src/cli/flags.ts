@@ -6,18 +6,46 @@ import type {
   VerificationSource,
   VerificationTarget,
 } from "@/core/index.ts";
-import { InvalidCliArgumentsError } from "@/cli/error.ts";
+import { BUILD_VERIFICATION_PACKAGE_VERSION } from "@/core/index.ts";
+import {
+  CliAllowHttpRequiresNetworkError,
+  CliDuplicateFlagError,
+  CliEnvironmentReadFailedError,
+  CliEnvironmentValueMissingError,
+  CliFlagValueMissingError,
+  CliGitHubFormatInvalidError,
+  CliGitHubReleaseInvalidError,
+  CliGitHubRevisionConflictError,
+  CliGitHubSourceIncompleteError,
+  CliGitHubTokenSourceRequiredError,
+  CliNetworkConfigurationConflictError,
+  CliNetworkConfigurationIncompleteError,
+  CliNetworkPresetInvalidError,
+  CliOutOfBandSourceRequiredError,
+  CliPositionalArgumentUnsupportedError,
+  CliRecipeFileReadFailedError,
+  CliRecipeJsonInvalidError,
+  CliSourceSelectionInvalidError,
+  CliTargetFileReadFailedError,
+  CliTargetSelectionInvalidError,
+  CliUnknownFlagError,
+} from "@/cli/error.ts";
 import type { BuildVerificationCliIo } from "@/cli/io.ts";
 import type { ParsedBuildVerificationFlags } from "@/cli/types.ts";
 
 /** Help text printed by the build-verification CLI. */
-export const BUILD_VERIFICATION_CLI_HELP: string = `@colibri/build-verification
+const RUNNABLE_CLI =
+  `jsr:@colibri/build-verification@${BUILD_VERIFICATION_PACKAGE_VERSION}/cli`;
+
+/** Help text printed by the build-verification CLI. */
+export const BUILD_VERIFICATION_CLI_HELP: string =
+  `@colibri/build-verification ${BUILD_VERIFICATION_PACKAGE_VERSION}
 
 Strict SEP-58 verification:
-  deno run -A jsr:@colibri/build-verification/cli --contract-id C... --network testnet
+  deno run -A ${RUNNABLE_CLI} --contract-id C... --network testnet
 
 Out-of-band verification:
-  deno run -A jsr:@colibri/build-verification/cli --wasm target.wasm --source ./source.tar.gz --recipe recipe.json
+  deno run -A ${RUNNABLE_CLI} --wasm target.wasm --source ./source.tar.gz --recipe recipe.json
 
 Targets (choose one):
   --contract-id <id>       Resolve a deployed contract through Stellar RPC
@@ -31,17 +59,29 @@ Network:
 Source (choose at most one):
   --source <path>
   --source-url <url>
-  --github-owner <owner> --github-repository <repo> --github-revision <revision>
+  --github-owner <owner> --github-repository <repo> --github-revision <revision> [--github-format <tar.gz|zip>]
   --github-owner <owner> --github-repository <repo> --github-release-tag <tag> --github-release-asset <asset>
+  --github-token-env <name>  Read a GitHub token from an environment variable
 
 Execution and reporting:
   --recipe <path>          Select explicit out-of-band mode
-  --allow-build-network    Give the build container network access
+  --allow-build-network    Allow the build container to access the network
+  --container-name-prefix <prefix>  Prefix for unique build-container names
   --json                   Print the complete result or error as JSON
-  --evidence <path>        Write completed evidence as JSON
+  --evidence <path>        Write completed evidence or a failure report as JSON
   --logs <path>            Write structured logs
   --log-format <jsonl|text>
-  --help
+  --quiet                  Suppress the interactive verification spinner
+  -h, --help
+
+Docker is required by the default runner. Build-container networking is denied
+unless --allow-build-network is supplied.
+
+Exit codes:
+  0  Verified
+  1  Verification or reporting failed
+  2  Rebuilt Wasm does not match the target
+  3  Verification is not applicable
 `;
 
 const VALUE_FLAGS = new Set([
@@ -59,7 +99,9 @@ const VALUE_FLAGS = new Set([
   "github-format",
   "github-release-tag",
   "github-release-asset",
+  "github-token-env",
   "recipe",
+  "container-name-prefix",
   "evidence",
   "logs",
   "log-format",
@@ -68,6 +110,7 @@ const BOOLEAN_FLAGS = new Set([
   "allow-http",
   "allow-build-network",
   "json",
+  "quiet",
   "help",
 ]);
 
@@ -78,30 +121,29 @@ export const parseBuildVerificationFlags = (
   const flags: ParsedBuildVerificationFlags = new Map();
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
+    if (argument === "-h") {
+      if (flags.has("help")) throw new CliDuplicateFlagError("-h");
+      flags.set("help", true);
+      continue;
+    }
     if (!argument.startsWith("--")) {
-      throw new InvalidCliArgumentsError(
-        "Every CLI argument must be a named --flag.",
-        { argument },
-      );
+      if (argument.startsWith("-")) throw new CliUnknownFlagError(argument);
+      throw new CliPositionalArgumentUnsupportedError(argument);
     }
     const name = argument.slice(2);
     if (!VALUE_FLAGS.has(name) && !BOOLEAN_FLAGS.has(name)) {
-      throw new InvalidCliArgumentsError(`Unknown flag --${name}.`, { name });
+      throw new CliUnknownFlagError(argument);
     }
     if (flags.has(name)) {
-      throw new InvalidCliArgumentsError(`Flag --${name} cannot be repeated.`, {
-        name,
-      });
+      throw new CliDuplicateFlagError(argument);
     }
     if (BOOLEAN_FLAGS.has(name)) {
       flags.set(name, true);
       continue;
     }
     const value = args[index + 1];
-    if (!value || value.startsWith("--")) {
-      throw new InvalidCliArgumentsError(`Flag --${name} requires a value.`, {
-        name,
-      });
+    if (!value || value === "-h" || value.startsWith("--")) {
+      throw new CliFlagValueMissingError(argument);
     }
     flags.set(name, value);
     index += 1;
@@ -127,19 +169,14 @@ export const verificationTargetFromFlags = async (
   const wasmHash = getBuildVerificationStringFlag(flags, "wasm-hash");
   const wasmPath = getBuildVerificationStringFlag(flags, "wasm");
   if ([contractId, wasmHash, wasmPath].filter(Boolean).length !== 1) {
-    throw new InvalidCliArgumentsError(
-      "Choose exactly one target: --contract-id, --wasm-hash, or --wasm.",
-    );
+    throw new CliTargetSelectionInvalidError();
   }
   if (contractId) return { contractId };
   if (wasmHash) return { wasmHash };
   try {
     return { wasm: await io.readFile(wasmPath!), label: wasmPath };
   } catch (cause) {
-    throw new InvalidCliArgumentsError(
-      "The --wasm target file could not be read.",
-      { path: wasmPath, cause: String(cause) },
-    );
+    throw new CliTargetFileReadFailedError(wasmPath!, cause);
   }
 };
 
@@ -154,9 +191,7 @@ export const verificationNetworkFromFlags = (
     "network-passphrase",
   );
   if (preset && (rpcUrl || passphrase)) {
-    throw new InvalidCliArgumentsError(
-      "--network cannot be combined with granular RPC flags.",
-    );
+    throw new CliNetworkConfigurationConflictError();
   }
   if (preset) {
     if (preset === "mainnet") {
@@ -168,16 +203,11 @@ export const verificationNetworkFromFlags = (
     if (preset === "futurenet") {
       return { networkConfig: NetworkConfig.FutureNet() };
     }
-    throw new InvalidCliArgumentsError(
-      "--network must be mainnet, testnet, or futurenet.",
-      { preset },
-    );
+    throw new CliNetworkPresetInvalidError(preset);
   }
   if (rpcUrl || passphrase) {
     if (!rpcUrl || !passphrase) {
-      throw new InvalidCliArgumentsError(
-        "Granular network configuration requires both --rpc-url and --network-passphrase.",
-      );
+      throw new CliNetworkConfigurationIncompleteError();
     }
     return {
       rpcUrl,
@@ -186,9 +216,7 @@ export const verificationNetworkFromFlags = (
     };
   }
   if (flags.has("allow-http")) {
-    throw new InvalidCliArgumentsError(
-      "--allow-http requires granular RPC flags.",
-    );
+    throw new CliAllowHttpRequiresNetworkError();
   }
   return undefined;
 };
@@ -211,38 +239,27 @@ export const verificationSourceFromFlags = (
     "github-release-asset",
   );
   const format = getBuildVerificationStringFlag(flags, "github-format");
-  const groups = [!!path, !!url, !!revision || !!tag || !!asset].filter(
-    Boolean,
-  );
-  if (groups.length > 1) {
-    throw new InvalidCliArgumentsError(
-      "Choose only one local, URL, GitHub revision, or GitHub release source.",
-    );
-  }
   const hasGitHubFlag = [owner, repository, revision, tag, asset, format].some(
     Boolean,
   );
+  const groups = [!!path, !!url, hasGitHubFlag].filter(Boolean);
+  if (groups.length > 1) {
+    throw new CliSourceSelectionInvalidError();
+  }
   if (!hasGitHubFlag) {
     if (path) return { type: "path", path };
     if (url) return { type: "url", url };
     return undefined;
   }
   if (!owner || !repository) {
-    throw new InvalidCliArgumentsError(
-      "Every GitHub source requires --github-owner and --github-repository.",
-    );
+    throw new CliGitHubSourceIncompleteError();
   }
   if (revision) {
     if (tag || asset) {
-      throw new InvalidCliArgumentsError(
-        "A GitHub revision cannot be combined with release flags.",
-      );
+      throw new CliGitHubRevisionConflictError();
     }
     if (format !== undefined && format !== "tar.gz" && format !== "zip") {
-      throw new InvalidCliArgumentsError(
-        "--github-format must be tar.gz or zip.",
-        { format },
-      );
+      throw new CliGitHubFormatInvalidError(format);
     }
     return {
       type: "githubArchive",
@@ -253,11 +270,37 @@ export const verificationSourceFromFlags = (
     };
   }
   if (!tag || !asset || format) {
-    throw new InvalidCliArgumentsError(
-      "A GitHub release source requires both release flags and does not use --github-format.",
-    );
+    throw new CliGitHubReleaseInvalidError();
   }
   return { type: "githubReleaseAsset", owner, repository, tag, asset };
+};
+
+/** Reads an explicitly selected GitHub token without exposing it in arguments. */
+export const verificationGitHubTokenFromFlags = (
+  flags: ParsedBuildVerificationFlags,
+  io: BuildVerificationCliIo,
+): string | undefined => {
+  const environmentName = getBuildVerificationStringFlag(
+    flags,
+    "github-token-env",
+  );
+  if (!environmentName) return undefined;
+  const hasGitHubSource = [
+    "github-revision",
+    "github-release-tag",
+    "github-release-asset",
+  ].some((flag) => flags.has(flag));
+  if (!hasGitHubSource) throw new CliGitHubTokenSourceRequiredError();
+  let value: string | undefined;
+  try {
+    value = (io.getEnv ?? Deno.env.get)(environmentName);
+  } catch (cause) {
+    throw new CliEnvironmentReadFailedError(environmentName, cause);
+  }
+  if (!value?.trim()) {
+    throw new CliEnvironmentValueMissingError(environmentName);
+  }
+  return value;
 };
 
 /** Builds the strict or explicitly out-of-band request from parsed flags. */
@@ -270,18 +313,19 @@ export const verificationInputFromFlags = async (
   const recipePath = getBuildVerificationStringFlag(flags, "recipe");
   if (!recipePath) return { mode: "strictSep58", target, source };
   if (!source) {
-    throw new InvalidCliArgumentsError(
-      "Out-of-band --recipe mode requires an explicit source.",
-    );
+    throw new CliOutOfBandSourceRequiredError();
+  }
+  let encodedRecipe: string;
+  try {
+    encodedRecipe = await io.readTextFile(recipePath);
+  } catch (cause) {
+    throw new CliRecipeFileReadFailedError(recipePath, cause);
   }
   let recipe: OutOfBandBuildRecipe;
   try {
-    recipe = JSON.parse(await io.readTextFile(recipePath));
+    recipe = JSON.parse(encodedRecipe);
   } catch (cause) {
-    throw new InvalidCliArgumentsError(
-      "The out-of-band recipe file could not be read as JSON.",
-      { path: recipePath, cause: String(cause) },
-    );
+    throw new CliRecipeJsonInvalidError(recipePath, cause);
   }
   return { mode: "outOfBand", target, source, recipe };
 };

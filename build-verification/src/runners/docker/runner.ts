@@ -3,7 +3,7 @@ import type {
   ContractBuildPlan,
   ContractBuildRunner,
   ContractBuildRunnerOutput,
-  DockerConnectionConfig,
+  DockerBuildRunnerConfig,
 } from "@/runners/types.ts";
 import { BuildVerificationError } from "@/error/base.ts";
 import { attachBuildVerificationErrorContext } from "@/error/base.ts";
@@ -21,6 +21,7 @@ import {
   ContainerLogsFailedError,
   ContainerStartFailedError,
   ContainerWaitFailedError,
+  DockerContainerNamePrefixInvalidError,
   DockerUnavailableError,
   ImageInspectionFailedError,
   ImagePullFailedError,
@@ -30,6 +31,21 @@ import {
   RuntimeImageDigestMismatchError,
   SourceBuildAccessPreparationFailedError,
 } from "@/runners/docker/error.ts";
+
+const DEFAULT_CONTAINER_NAME_PREFIX = "colibri-build-verification";
+const CONTAINER_NAME_PREFIX_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_.-]*$/;
+
+const normalizeContainerNamePrefix = (prefix: unknown): string => {
+  if (prefix === undefined) return DEFAULT_CONTAINER_NAME_PREFIX;
+  if (typeof prefix !== "string") {
+    throw new DockerContainerNamePrefixInvalidError(prefix);
+  }
+  const normalized = prefix.trim();
+  if (!normalized || !CONTAINER_NAME_PREFIX_PATTERN.test(normalized)) {
+    throw new DockerContainerNamePrefixInvalidError(prefix);
+  }
+  return normalized;
+};
 
 const pullImage = async (docker: Dockerode, image: string): Promise<void> => {
   try {
@@ -110,18 +126,25 @@ export const getDockerUserFromSourceOwner = (
 /** Docker-backed, resource-bounded execution-only contract build runner. */
 export class DockerBuildRunner implements ContractBuildRunner {
   readonly #docker: Dockerode;
+  readonly #containerNamePrefix: string;
 
   /** Creates a runner from explicit Docker settings or local discovery. */
-  constructor(config?: DockerConnectionConfig);
+  constructor(config?: DockerBuildRunnerConfig);
   /** @internal Creates a runner around a controlled Docker client. */
-  constructor(config: DockerConnectionConfig, docker: Dockerode);
-  constructor(config: DockerConnectionConfig = {}, docker?: Dockerode) {
+  constructor(config: DockerBuildRunnerConfig, docker: Dockerode);
+  constructor(config: DockerBuildRunnerConfig = {}, docker?: Dockerode) {
+    this.#containerNamePrefix = normalizeContainerNamePrefix(
+      config.containerNamePrefix,
+    );
     this.#docker = docker ?? new Dockerode(resolveDockerOptions(config));
   }
 
   /** Creates a runner around a controlled client for boundary tests. */
-  static fromDockerClient(docker: Dockerode): DockerBuildRunner {
-    return new DockerBuildRunner({}, docker);
+  static fromDockerClient(
+    docker: Dockerode,
+    config: DockerBuildRunnerConfig = {},
+  ): DockerBuildRunner {
+    return new DockerBuildRunner(config, docker);
   }
 
   /** Executes a validated plan without collecting or selecting Wasm artifacts. */
@@ -173,6 +196,7 @@ export class DockerBuildRunner implements ContractBuildRunner {
     let container: Dockerode.Container;
     try {
       container = await this.#docker.createContainer({
+        name: `${this.#containerNamePrefix}-${crypto.randomUUID()}`,
         Image: input.image.reference,
         Cmd: command,
         Env: [

@@ -308,7 +308,7 @@ export const retrievePinnedHttpResource = async (args: {
         url: current,
         headers: typeof args.headers === "function"
           ? args.headers(parsed)
-          : allowStaticCredentials
+          : allowStaticCredentials && parsed.protocol === "https:"
           ? args.headers ?? {}
           : withoutCredentialHeaders(args.headers ?? {}),
         approvedAddresses: addresses,

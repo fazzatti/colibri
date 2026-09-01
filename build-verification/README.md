@@ -285,6 +285,19 @@ built-in runner does not claim a hard disk limit. Containers share the host
 kernel. Hosted verification should use disposable workers or VMs and
 infrastructure-level isolation in addition to these local-development controls.
 
+Build containers receive a descriptive, unique name using the
+`colibri-build-verification-<unique-id>` pattern. A caller can replace only the
+prefix when several applications share one Docker daemon:
+
+```ts
+const verifier = new ContractBuildVerifier({
+  docker: { containerNamePrefix: "my-contract-verifier" },
+});
+```
+
+The runner still appends a unique ID to every container and removes it after the
+build; a custom prefix never turns a build container into a reusable one.
+
 ## Results, evidence, logs, and errors
 
 Completed verification returns one of three statuses:
@@ -298,6 +311,13 @@ Downloads, policy decisions, metadata parsing, extraction, Docker execution,
 artifact selection, and other operational failures throw unique
 `BuildVerificationError` subclasses with stable `BLDV_*` codes. They are never
 reported as `mismatch`.
+
+Version `0.3.0` replaces the former catch-all
+`INVALID_CLI_ARGUMENTS` (`BLDV_031`) code with occurrence-specific CLI errors
+in the `BLDV_106` through `BLDV_131` range. This is an intentional pre-1.0
+breaking change: integrations must branch on the precise new error code instead
+of treating `CLI_POSITIONAL_ARGUMENT_UNSUPPORTED` or any other single code as a
+one-to-one replacement.
 
 Write completed evidence and bounded logs atomically:
 
@@ -337,15 +357,18 @@ const result = await verifyContractBuild(
 Run the package directly from JSR:
 
 ```sh
-deno run -A jsr:@colibri/build-verification/cli \
+deno run -A jsr:@colibri/build-verification@0.3.0/cli \
   --contract-id C... \
   --network mainnet \
   --evidence verification.json \
   --logs verification.jsonl
 ```
 
-The default terminal output is one concise line while `--evidence` and `--logs`
-retain the complete records in their requested files:
+The default terminal output is one concise line. Interactive terminals receive
+an animated stage status on standard error without contaminating standard
+output; pass `--quiet` to suppress it. Animation is disabled automatically for
+`--json` and non-interactive output. `--evidence` and `--logs` retain complete
+records in their requested files:
 
 ```text
 VERIFIED ba789fe6627de52ebfbd5353f5eb6b7efef23d7e8633ab59051c1a22b2f00a88
@@ -355,7 +378,7 @@ Pass `--json` when stdout or stderr must contain the complete machine-readable
 result or typed Colibri error:
 
 ```sh
-deno run -A jsr:@colibri/build-verification/cli \
+deno run -A jsr:@colibri/build-verification@0.3.0/cli \
   --contract-id C... \
   --network mainnet \
   --json
@@ -364,17 +387,65 @@ deno run -A jsr:@colibri/build-verification/cli \
 Out-of-band mode uses a JSON recipe file:
 
 ```sh
-deno run -A jsr:@colibri/build-verification/cli \
+deno run -A jsr:@colibri/build-verification@0.3.0/cli \
   --wasm deployed.wasm \
   --source source.tar.gz \
   --recipe recipe.json \
   --allow-build-network
 ```
 
-Use `--help` for every target, network, source, and reporting flag. Exit code
-`0` means `verified` or `notApplicable`, `2` means `mismatch`, and `1` means
-verification did not complete. Summary mode preserves those exit codes; it
-changes only the terminal presentation.
+Private or rate-limited GitHub sources read a token from an explicitly named
+environment variable so the token never appears in process arguments:
+
+```sh
+deno run -A jsr:@colibri/build-verification@0.3.0/cli \
+  --wasm deployed.wasm \
+  --github-owner organization \
+  --github-repository private-contract \
+  --github-revision exact-commit \
+  --github-token-env GITHUB_TOKEN \
+  --recipe recipe.json
+```
+
+Use `--container-name-prefix my-contract-verifier` to distinguish which
+application or CI job created a disposable build container. The unique suffix is
+always added by Colibri.
+
+`-A` is the shortest invocation. The default Docker runner has also been
+validated without process or FFI permission using this narrower capability set:
+
+```sh
+deno run \
+  --allow-read \
+  --allow-write \
+  --allow-net \
+  --allow-env \
+  --allow-sys=homedir \
+  jsr:@colibri/build-verification@0.3.0/cli \
+  --contract-id C... \
+  --network mainnet
+```
+
+Read access covers local inputs and Docker socket discovery; write access covers
+the disposable workspace and requested reports; network access covers RPC,
+source, registry, and Docker endpoints; environment access is required by the
+Dockerode dependency graph; and `homedir` is used to discover desktop Docker
+sockets. Use path- and host-scoped permissions when the concrete inputs and
+Docker endpoint are known.
+
+An empty invocation, `-h`, or `--help` prints every target, network, source, and
+reporting flag. Exit codes are intentionally unambiguous:
+
+- `0`: the rebuilt Wasm was verified;
+- `1`: verification or reporting did not complete;
+- `2`: the rebuilt Wasm differs from the target; and
+- `3`: verification is not applicable, including missing strict SEP-58 metadata
+  or a Stellar Asset Contract target.
+
+When verification fails after it begins, `--evidence` writes a structured
+failure report containing the typed error and available partial evidence, while
+`--logs` writes every bounded event accumulated before the failure. Summary mode
+changes only terminal presentation, never exit behavior or report detail.
 
 ## Scope
 
