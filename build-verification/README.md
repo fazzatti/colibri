@@ -358,9 +358,10 @@ deno run -A jsr:@colibri/build-verification@0.3.0/cli \
 ```
 
 The default terminal output is one concise line. Interactive terminals receive
-live stage progress on standard error without contaminating standard output;
-pass `--quiet` to suppress it. `--evidence` and `--logs` retain complete records
-in their requested files:
+an animated stage status on standard error without contaminating standard
+output; pass `--quiet` to suppress it. Animation is disabled automatically for
+`--json` and non-interactive output. `--evidence` and `--logs` retain complete
+records in their requested files:
 
 ```text
 VERIFIED ba789fe6627de52ebfbd5353f5eb6b7efef23d7e8633ab59051c1a22b2f00a88

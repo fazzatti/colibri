@@ -71,7 +71,7 @@ Execution and reporting:
   --evidence <path>        Write completed evidence or a failure report as JSON
   --logs <path>            Write structured logs
   --log-format <jsonl|text>
-  --quiet                  Suppress interactive progress events
+  --quiet                  Suppress the interactive verification spinner
   -h, --help
 
 Docker is required by the default runner. Build-container networking is denied

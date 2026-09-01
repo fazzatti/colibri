@@ -1,5 +1,8 @@
 import { ColibriError } from "@colibri/core";
-import type { ContractBuildVerificationEvidence } from "@/core/index.ts";
+import type {
+  ContractBuildVerificationEvidence,
+  ContractBuildVerificationResult,
+} from "@/core/index.ts";
 import {
   CliHelpConflictError,
   CliLogFormatInvalidError,
@@ -25,6 +28,10 @@ import {
   DEFAULT_BUILD_VERIFICATION_CLI_IO,
 } from "@/cli/io.ts";
 import { buildVerificationFailureReport } from "@/cli/report.ts";
+import {
+  createBuildVerificationSpinner,
+  formatBuildVerificationSpinnerStatus,
+} from "@/cli/spinner.ts";
 import {
   type BuildVerificationCliDependencies,
   BuildVerificationCliExitCode,
@@ -84,14 +91,25 @@ export const runBuildVerificationCli = async (
       flags,
       "container-name-prefix",
     );
+    const network = verificationNetworkFromFlags(flags);
+    const githubToken = verificationGitHubTokenFromFlags(flags, io);
+    const interactiveProgress = !jsonOutput && !flags.has("quiet") &&
+      io.stderrIsTerminal?.() === true;
+    const spinner = interactiveProgress && io.stderrWrite
+      ? createBuildVerificationSpinner({ write: io.stderrWrite })
+      : undefined;
     const options: ContractBuildVerifierOptions = {
-      network: verificationNetworkFromFlags(flags),
+      network,
       allowBuildNetwork: flags.has("allow-build-network"),
-      githubToken: verificationGitHubTokenFromFlags(flags, io),
+      githubToken,
       ...(containerNamePrefix ? { docker: { containerNamePrefix } } : {}),
-      logger: !jsonOutput && !flags.has("quiet") &&
-          io.stderrIsTerminal?.()
-        ? { log: (event) => io.stderr(formatBuildVerificationProgress(event)) }
+      logger: interactiveProgress
+        ? {
+          log: (event) =>
+            spinner
+              ? spinner.update(formatBuildVerificationSpinnerStatus(event))
+              : io.stderr(formatBuildVerificationProgress(event)),
+        }
         : undefined,
     };
     let verifier:
@@ -99,17 +117,22 @@ export const runBuildVerificationCli = async (
         NonNullable<BuildVerificationCliDependencies["createVerifier"]>
       >
       | undefined;
+    let result: ContractBuildVerificationResult;
     try {
-      verifier = dependencies.createVerifier?.(options);
-      if (!verifier) {
-        verifier = new (await import("@/verifier/contract-build-verifier.ts"))
-          .ContractBuildVerifier(options);
+      try {
+        verifier = dependencies.createVerifier?.(options);
+        if (!verifier) {
+          verifier = new (await import("@/verifier/contract-build-verifier.ts"))
+            .ContractBuildVerifier(options);
+        }
+      } catch (cause) {
+        if (ColibriError.is(cause)) throw cause;
+        throw new CliRuntimeInitializationFailedError(cause);
       }
-    } catch (cause) {
-      if (ColibriError.is(cause)) throw cause;
-      throw new CliRuntimeInitializationFailedError(cause);
+      result = await verifier.verify(input);
+    } finally {
+      spinner?.stop();
     }
-    const result = await verifier.verify(input);
     completedEvidence = result.evidence;
     if (evidencePath) {
       const writeEvidence = dependencies.writeEvidence ??

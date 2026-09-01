@@ -158,15 +158,16 @@ deno run -A jsr:@colibri/build-verification@0.3.0/cli \
   --logs verification.jsonl
 ```
 
-The CLI prints one concise summary by default and sends live progress only to
-interactive standard error, for example:
+The CLI prints one concise summary by default and sends an animated stage status
+only to interactive standard error, for example:
 
 ```text
 VERIFIED ba789fe6627de52ebfbd5353f5eb6b7efef23d7e8633ab59051c1a22b2f00a88
 ```
 
 Use `--json` to print the complete result or typed error instead, and `--quiet`
-to suppress interactive progress. An empty invocation, `-h`, or `--help` prints
+to suppress the interactive spinner. The animation is also disabled when
+standard error is not a terminal. An empty invocation, `-h`, or `--help` prints
 the full command reference. `--github-token-env` reads a token from the selected
 environment variable without exposing it in process arguments.
 

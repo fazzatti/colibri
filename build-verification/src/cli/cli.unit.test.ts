@@ -50,9 +50,11 @@ import {
 const harness = (overrides: Partial<BuildVerificationCliIo> = {}) => {
   const stdout: string[] = [];
   const stderr: string[] = [];
+  const stderrWrites: string[] = [];
   const io: BuildVerificationCliIo = {
     stdout: (value) => stdout.push(value),
     stderr: (value) => stderr.push(value),
+    stderrWrite: (value) => stderrWrites.push(value),
     readFile: () => Promise.resolve(testWasm()),
     readTextFile: () =>
       Promise.resolve(JSON.stringify({
@@ -62,7 +64,7 @@ const harness = (overrides: Partial<BuildVerificationCliIo> = {}) => {
     stderrIsTerminal: () => false,
     ...overrides,
   };
-  return { stdout, stderr, io };
+  return { stdout, stderr, stderrWrites, io };
 };
 
 const assertThrowsCode = (callback: () => unknown, code: Code): void => {
@@ -712,7 +714,7 @@ describe("runBuildVerificationCli", () => {
     assertEquals(test.stderr.some((value) => value.includes("secret")), false);
   });
 
-  it("prints live progress only for interactive non-JSON runs", async () => {
+  it("animates progress only for interactive non-JSON runs", async () => {
     const event: VerificationLogEvent = {
       timestamp: "2026-09-01T12:00:00.000Z",
       stage: "resolve-verification-target",
@@ -721,7 +723,7 @@ describe("runBuildVerificationCli", () => {
       message: "Target resolved.",
     };
     for (
-      const [extraArgs, terminal, expectedProgress] of [
+      const [extraArgs, terminal, expectedSpinner] of [
         [[], true, true],
         [["--quiet"], true, false],
         [["--json"], true, false],
@@ -742,10 +744,67 @@ describe("runBuildVerificationCli", () => {
         },
       );
       assertEquals(
-        test.stderr.includes(formatBuildVerificationProgress(event)),
-        expectedProgress,
+        test.stderrWrites.some((value) =>
+          value.includes("Verifying contract build")
+        ),
+        expectedSpinner,
       );
+      assertEquals(test.stderr.length, 0);
+      if (expectedSpinner) {
+        assertStringIncludes(
+          test.stderrWrites.join(""),
+          "Resolving verification target…",
+        );
+        assertEquals(test.stderrWrites.at(-1), "\r\x1b[2K");
+      }
     }
+  });
+
+  it("retains line progress when an interactive custom IO has no raw writer", async () => {
+    const event: VerificationLogEvent = {
+      timestamp: "2026-09-01T12:00:00.000Z",
+      stage: "resolve-verification-target",
+      level: "info",
+      code: "BLDV_TARGET_RESOLVED",
+      message: "Target resolved.",
+    };
+    const test = harness({
+      stderrIsTerminal: () => true,
+      stderrWrite: undefined,
+    });
+    await runBuildVerificationCli(
+      ["--wasm", "target.wasm"],
+      test.io,
+      {
+        createVerifier: (options) => ({
+          verify: async () => {
+            await options.logger?.log(event);
+            return result();
+          },
+        }),
+      },
+    );
+    assertEquals(test.stderr, [formatBuildVerificationProgress(event)]);
+    assertEquals(test.stderrWrites, []);
+  });
+
+  it("clears the interactive spinner before printing a failure", async () => {
+    const test = harness({ stderrIsTerminal: () => true });
+    assertEquals(
+      await runBuildVerificationCli(
+        ["--wasm", "target.wasm"],
+        test.io,
+        {
+          createVerifier: () => ({
+            verify: () =>
+              Promise.reject(new DockerUnavailableError(new Error("offline"))),
+          }),
+        },
+      ),
+      BuildVerificationCliExitCode.Failed,
+    );
+    assertEquals(test.stderrWrites.at(-1), "\r\x1b[2K");
+    assertStringIncludes(test.stderr[0], `ERROR ${Code.DOCKER_UNAVAILABLE}`);
   });
 
   it("writes evidence and either JSONL or text logs through injected writers", async () => {
@@ -1333,6 +1392,11 @@ describe("runBuildVerificationCli", () => {
         typeof DEFAULT_BUILD_VERIFICATION_CLI_IO.stderrIsTerminal?.(),
         "boolean",
       );
+      assertEquals(
+        typeof DEFAULT_BUILD_VERIFICATION_CLI_IO.stderrWrite,
+        "function",
+      );
+      DEFAULT_BUILD_VERIFICATION_CLI_IO.stderrWrite?.("");
       assertEquals(
         await runBuildVerificationCli(["--help"]),
         BuildVerificationCliExitCode.Verified,
