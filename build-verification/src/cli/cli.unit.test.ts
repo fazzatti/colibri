@@ -1,6 +1,7 @@
 import {
   assertEquals,
   assertRejects,
+  assertStrictEquals,
   assertStringIncludes,
   assertThrows,
 } from "@std/assert";
@@ -924,6 +925,78 @@ describe("runBuildVerificationCli", () => {
     );
   });
 
+  it("returns typed JSON for cyclic, bigint, and reporting failure causes", async () => {
+    const cyclic: Record<string, unknown> = {};
+    cyclic.self = cyclic;
+    for (
+      const [cause, expectedCause] of [
+        [cyclic, { type: "Object" }],
+        [7n, { type: "bigint", value: "7" }],
+      ] as const
+    ) {
+      const test = harness();
+      assertEquals(
+        await runBuildVerificationCli(
+          ["--wasm", "target.wasm", "--json"],
+          test.io,
+          {
+            createVerifier: () => ({
+              verify: () => Promise.reject(cause),
+            }),
+          },
+        ),
+        BuildVerificationCliExitCode.Failed,
+      );
+      const output = JSON.parse(test.stderr[0]);
+      assertEquals(output.code, Code.CLI_UNEXPECTED_FAILURE);
+      assertEquals(output.meta.cause, expectedCause);
+    }
+
+    const typedError = new DockerUnavailableError(cyclic);
+    const typed = harness();
+    assertEquals(
+      await runBuildVerificationCli(
+        ["--wasm", "target.wasm", "--json"],
+        typed.io,
+        {
+          createVerifier: () => ({ verify: () => Promise.reject(typedError) }),
+        },
+      ),
+      BuildVerificationCliExitCode.Failed,
+    );
+    assertStrictEquals(typedError.meta?.cause, cyclic);
+    assertEquals(JSON.parse(typed.stderr[0]).meta.cause, { type: "Object" });
+
+    const reporting = harness();
+    assertEquals(
+      await runBuildVerificationCli(
+        [
+          "--wasm",
+          "target.wasm",
+          "--json",
+          "--evidence",
+          "failure.json",
+          "--logs",
+          "failure.jsonl",
+        ],
+        reporting.io,
+        {
+          createVerifier: () => ({ verify: () => Promise.reject(typedError) }),
+          writeEvidence: () => Promise.reject(cyclic),
+          writeLogs: () => Promise.reject(11n),
+        },
+      ),
+      BuildVerificationCliExitCode.Failed,
+    );
+    const reportingOutput = JSON.parse(reporting.stderr[0]);
+    assertEquals(
+      reportingOutput.reportingErrors.map(
+        (error: { meta: { cause: unknown } }) => error.meta.cause,
+      ),
+      [{ type: "Object" }, { type: "bigint", value: "11" }],
+    );
+  });
+
   it("writes partial evidence and logs when verification fails", async () => {
     const event: VerificationLogEvent = {
       timestamp: "2026-09-01T12:00:00.000Z",
@@ -983,8 +1056,10 @@ describe("runBuildVerificationCli", () => {
       const evidencePath = `${directory}/failure.json`;
       const logsPath = `${directory}/failure.jsonl`;
       const evidence = testEvidence();
+      const cyclic: Record<string, unknown> = {};
+      cyclic.self = cyclic;
       const failure = attachBuildVerificationErrorContext(
-        new DockerUnavailableError(new Error("offline")),
+        new DockerUnavailableError(cyclic),
         { evidence, logs: [] },
       );
       assertEquals(
@@ -1007,6 +1082,7 @@ describe("runBuildVerificationCli", () => {
       const report = JSON.parse(await Deno.readTextFile(evidencePath));
       assertEquals(report.status, "failed");
       assertEquals(report.error.code, Code.DOCKER_UNAVAILABLE);
+      assertEquals(report.error.meta.cause, { type: "Object" });
       assertEquals(report.evidence, evidence);
       assertEquals(await Deno.readTextFile(logsPath), "");
     } finally {
@@ -1201,6 +1277,19 @@ describe("runBuildVerificationCli", () => {
       buildVerificationFailureReport(missingSerializedMeta).error,
       { code: "TEST" },
     );
+    for (const serializedData of [undefined, "invalid", []] as const) {
+      const invalidSerializedData = ColibriError.unexpected({
+        meta: { data: { safe: true } },
+      });
+      invalidSerializedData.toJSON = () => ({
+        code: "TEST",
+        meta: { data: serializedData },
+      });
+      assertEquals(
+        buildVerificationFailureReport(invalidSerializedData).error.code,
+        "TEST",
+      );
+    }
   });
 
   it("prints the complete successful result only when JSON is requested", async () => {

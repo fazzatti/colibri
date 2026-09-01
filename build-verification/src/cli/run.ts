@@ -34,6 +34,7 @@ import {
   EvidenceWriteFailedError,
   LogWriteFailedError,
 } from "@/reporting/error.ts";
+import { serializeBuildVerificationError } from "@/reporting/serialize-error.ts";
 import type { ContractBuildVerifierOptions } from "@/verifier/types.ts";
 
 /** Executes the package CLI and returns its process exit code. */
@@ -183,14 +184,16 @@ export const runBuildVerificationCli = async (
         );
       }
     }
-    const serializedError = error.toJSON();
+    const serializedError = failure.error;
     io.stderr(
       jsonOutput
         ? JSON.stringify(
           reportingErrors.length > 0
             ? {
               ...serializedError,
-              reportingErrors: reportingErrors.map((value) => value.toJSON()),
+              reportingErrors: reportingErrors.map(
+                serializeBuildVerificationError,
+              ),
             }
             : serializedError,
           null,

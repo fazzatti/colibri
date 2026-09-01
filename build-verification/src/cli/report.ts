@@ -3,7 +3,9 @@ import type {
   ContractBuildVerificationEvidence,
   VerificationLogEvent,
 } from "@/core/index.ts";
+import type { JsonValue } from "@/core/policy/types.ts";
 import type { BuildVerificationFailureReport } from "@/reporting/types.ts";
+import { serializeBuildVerificationError } from "@/reporting/serialize-error.ts";
 
 const errorData = (
   error: ColibriError,
@@ -37,14 +39,25 @@ const serializedErrorWithoutReportContext = (
   error: ColibriError,
   data: Readonly<Record<string, unknown>> | undefined,
 ): Readonly<Record<string, unknown>> => {
-  const serialized = error.toJSON();
+  const serialized = serializeBuildVerificationError(error);
   if (!data) return serialized;
-  const { evidence: _evidence, logs: _logs, ...remainingData } = data;
   const meta = serialized.meta;
-  if (!meta || typeof meta !== "object") return serialized;
+  if (!meta || typeof meta !== "object" || Array.isArray(meta)) {
+    return serialized;
+  }
+  const serializedMeta = meta as Readonly<Record<string, JsonValue>>;
+  const serializedData = serializedMeta.data;
+  if (
+    !serializedData || typeof serializedData !== "object" ||
+    Array.isArray(serializedData)
+  ) {
+    return serialized;
+  }
+  const { evidence: _evidence, logs: _logs, ...remainingData } =
+    serializedData as Readonly<Record<string, JsonValue>>;
   return {
     ...serialized,
-    meta: { ...meta, data: remainingData },
+    meta: { ...serializedMeta, data: remainingData },
   };
 };
 
