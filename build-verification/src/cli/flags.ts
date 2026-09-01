@@ -66,6 +66,7 @@ Source (choose at most one):
 Execution and reporting:
   --recipe <path>          Select explicit out-of-band mode
   --allow-build-network    Allow the build container to access the network
+  --container-name-prefix <prefix>  Prefix for unique build-container names
   --json                   Print the complete result or error as JSON
   --evidence <path>        Write completed evidence or a failure report as JSON
   --logs <path>            Write structured logs
@@ -100,6 +101,7 @@ const VALUE_FLAGS = new Set([
   "github-release-asset",
   "github-token-env",
   "recipe",
+  "container-name-prefix",
   "evidence",
   "logs",
   "log-format",

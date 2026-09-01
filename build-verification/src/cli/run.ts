@@ -79,10 +79,15 @@ export const runBuildVerificationCli = async (
     }
     logFormat = requestedLogFormat === "text" ? "text" : "jsonl";
     const input = await verificationInputFromFlags(flags, io);
+    const containerNamePrefix = getBuildVerificationStringFlag(
+      flags,
+      "container-name-prefix",
+    );
     const options: ContractBuildVerifierOptions = {
       network: verificationNetworkFromFlags(flags),
       allowBuildNetwork: flags.has("allow-build-network"),
       githubToken: verificationGitHubTokenFromFlags(flags, io),
+      ...(containerNamePrefix ? { docker: { containerNamePrefix } } : {}),
       logger: !jsonOutput && !flags.has("quiet") &&
           io.stderrIsTerminal?.()
         ? { log: (event) => io.stderr(formatBuildVerificationProgress(event)) }

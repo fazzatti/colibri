@@ -138,6 +138,7 @@ export enum Code {
   CLI_GITHUB_TOKEN_SOURCE_REQUIRED = "BLDV_129",
   CLI_UNEXPECTED_FAILURE = "BLDV_130",
   CLI_RUNTIME_INITIALIZATION_FAILED = "BLDV_131",
+  DOCKER_CONTAINER_NAME_PREFIX_INVALID = "BLDV_132",
 }
 
 /** Structured metadata retained by every build-verification error. */

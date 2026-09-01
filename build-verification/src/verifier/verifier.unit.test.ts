@@ -16,6 +16,7 @@ import { DefaultBuildArtifactCollector } from "@/artifacts/collect.ts";
 import { OciContainerImageResolver } from "@/providers/image/oci.ts";
 import { DefaultVerificationSourceProvider } from "@/providers/source/router.ts";
 import { DefaultVerificationTargetResolver } from "@/providers/target/default.ts";
+import { DockerContainerNamePrefixInvalidError } from "@/runners/docker/error.ts";
 import { DockerBuildRunner } from "@/runners/docker/runner.ts";
 import { NetworkConfig } from "@colibri/core";
 import { ContractBuildVerifier } from "@/verifier/contract-build-verifier.ts";
@@ -157,6 +158,13 @@ describe("ContractBuildVerifier", () => {
           { strictLogger: 1 } as never,
         ),
       InvalidVerifierOptionsError,
+    );
+    assertThrows(
+      () =>
+        createDefaultBuildVerificationDependencies({
+          docker: { containerNamePrefix: "invalid prefix" },
+        }),
+      DockerContainerNamePrefixInvalidError,
     );
   });
 

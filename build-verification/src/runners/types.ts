@@ -9,6 +9,17 @@ export type DockerConnectionConfig = {
   readonly dockerSocketPath?: string;
 };
 
+/** Docker runner configuration, including its unique container-name prefix. */
+export type DockerBuildRunnerConfig = DockerConnectionConfig & {
+  /**
+   * Prefix applied to each disposable build container's unique name.
+   *
+   * Defaults to `colibri-build-verification`. The runner always appends a
+   * unique execution id and never treats the resulting container as reusable.
+   */
+  readonly containerNamePrefix?: string;
+};
+
 /** Exact execution plan passed to a contract build runner. */
 export type ContractBuildPlan = {
   readonly sourceDirectory: string;

@@ -640,6 +640,8 @@ describe("runBuildVerificationCli", () => {
         "passphrase",
         "--allow-http",
         "--allow-build-network",
+        "--container-name-prefix",
+        "contract-verifier",
       ],
       test.io,
       {
@@ -664,6 +666,7 @@ describe("runBuildVerificationCli", () => {
       },
       allowBuildNetwork: true,
       githubToken: undefined,
+      docker: { containerNamePrefix: "contract-verifier" },
       logger: undefined,
     });
     assertEquals(test.stdout, [`VERIFIED ${TARGET_HASH}`]);

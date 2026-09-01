@@ -16,7 +16,7 @@ import type { VerificationTargetResolver } from "@/providers/target/types.ts";
 import type { VerificationLogger } from "@/reporting/types.ts";
 import type {
   ContractBuildRunner,
-  DockerConnectionConfig,
+  DockerBuildRunnerConfig,
 } from "@/runners/types.ts";
 
 /** Options shared by reusable and one-shot verifier APIs. */
@@ -39,7 +39,8 @@ export type ContractBuildVerifierOptions = {
    * removed permanently when retrieval crosses an origin boundary.
    */
   readonly urlHeaders?: Readonly<Record<string, string>>;
-  readonly docker?: DockerConnectionConfig;
+  /** Docker connection and disposable build-container naming configuration. */
+  readonly docker?: DockerBuildRunnerConfig;
   readonly fetch?: typeof globalThis.fetch;
   readonly plugins?: readonly BuildVerificationPipelinePlugin[];
   /** @internal Injectable clock used by deterministic tests. */

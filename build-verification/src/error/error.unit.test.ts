@@ -32,6 +32,7 @@ const allErrors = (): E.BuildVerificationError<E.Code>[] => {
     new E.ImageManifestResolutionFailedError("image", cause, 404),
     new E.MultiArchImageError("image", "index"),
     new E.DockerConfigurationFailedError("details", { socket: "x" }),
+    new E.DockerContainerNamePrefixInvalidError("invalid prefix"),
     new E.DockerUnavailableError(cause),
     new E.ImagePullFailedError("image", cause),
     new E.ImageRuntimeMismatchError("image", ["sh"], "/"),

@@ -285,6 +285,19 @@ built-in runner does not claim a hard disk limit. Containers share the host
 kernel. Hosted verification should use disposable workers or VMs and
 infrastructure-level isolation in addition to these local-development controls.
 
+Build containers receive a descriptive, unique name using the
+`colibri-build-verification-<unique-id>` pattern. A caller can replace only the
+prefix when several applications share one Docker daemon:
+
+```ts
+const verifier = new ContractBuildVerifier({
+  docker: { containerNamePrefix: "my-contract-verifier" },
+});
+```
+
+The runner still appends a unique ID to every container and removes it after the
+build; a custom prefix never turns a build container into a reusable one.
+
 ## Results, evidence, logs, and errors
 
 Completed verification returns one of three statuses:
@@ -385,6 +398,10 @@ deno run -A jsr:@colibri/build-verification@0.3.0/cli \
   --github-token-env GITHUB_TOKEN \
   --recipe recipe.json
 ```
+
+Use `--container-name-prefix my-contract-verifier` to distinguish which
+application or CI job created a disposable build container. The unique suffix is
+always added by Colibri.
 
 `-A` is the shortest invocation. The default Docker runner has also been
 validated without process or FFI permission using this narrower capability set:

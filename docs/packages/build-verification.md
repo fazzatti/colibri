@@ -129,6 +129,10 @@ evidence, and bounded structured logs pass through every stage.
   applies CPU, memory, PID, time, output, archive, and artifact limits.
 - Docker output is streamed and bounded before it is retained in host memory,
   and daemon log persistence is disabled for build containers.
+- Disposable build containers use `colibri-build-verification-<unique-id>`
+  names. Configure `docker.containerNamePrefix` in the API, or
+  `--container-name-prefix` in the CLI, to replace only the prefix; Colibri
+  always appends the unique suffix.
 - The runner executes only. Artifact collection and selection are separate
   boundaries.
 - Evidence records provenance and SBOM observations without claiming an
