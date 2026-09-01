@@ -127,6 +127,24 @@ describe("build-verification CLI flags", () => {
     );
   });
 
+  it("accepts value tokens that begin with a single hyphen", () => {
+    assertEquals(
+      parseBuildVerificationFlags([
+        "--wasm",
+        "-contract.wasm",
+        "--network-passphrase",
+        "-passphrase",
+        "--source",
+        "-",
+      ]),
+      new Map<string, string | true>([
+        ["wasm", "-contract.wasm"],
+        ["network-passphrase", "-passphrase"],
+        ["source", "-"],
+      ]),
+    );
+  });
+
   it("parses short help and gives every malformed flag shape a unique code", () => {
     assertEquals(
       parseBuildVerificationFlags(["-h"]),

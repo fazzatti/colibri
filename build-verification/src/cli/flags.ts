@@ -142,7 +142,7 @@ export const parseBuildVerificationFlags = (
       continue;
     }
     const value = args[index + 1];
-    if (!value || value.startsWith("-")) {
+    if (!value || value === "-h" || value.startsWith("--")) {
       throw new CliFlagValueMissingError(argument);
     }
     flags.set(name, value);

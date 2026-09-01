@@ -68,6 +68,11 @@ Operational failures throw typed Colibri errors with stable `BLDV_*` codes.
 `mismatch` is returned only after a build completes and raw-byte comparison is
 possible.
 
+In `0.3.0`, the former catch-all `INVALID_CLI_ARGUMENTS` (`BLDV_031`) code was
+replaced by occurrence-specific CLI errors in the `BLDV_106` through
+`BLDV_131` range. Consumers should handle the precise error code; there is no
+single replacement for every formerly invalid CLI argument.
+
 ## Source inputs
 
 Callers may provide:

@@ -312,6 +312,13 @@ artifact selection, and other operational failures throw unique
 `BuildVerificationError` subclasses with stable `BLDV_*` codes. They are never
 reported as `mismatch`.
 
+Version `0.3.0` replaces the former catch-all
+`INVALID_CLI_ARGUMENTS` (`BLDV_031`) code with occurrence-specific CLI errors
+in the `BLDV_106` through `BLDV_131` range. This is an intentional pre-1.0
+breaking change: integrations must branch on the precise new error code instead
+of treating `CLI_POSITIONAL_ARGUMENT_UNSUPPORTED` or any other single code as a
+one-to-one replacement.
+
 Write completed evidence and bounded logs atomically:
 
 ```ts
