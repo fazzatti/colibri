@@ -1,13 +1,13 @@
-import { xdr, Address, scValToBigInt } from "stellar-sdk";
+import { Address, scValToBigInt, type xdr } from "stellar-sdk";
 import type {
-  ScValParsed,
-  ScValTypeName,
-  ScValRecord,
   ScValMap,
+  ScValParsed,
+  ScValRecord,
+  ScValTypeName,
 } from "@/common/helpers/xdr/types.ts";
 import {
-  UNSUPPORTED_SCVAL_TYPE,
   UNKNOWN_SCVAL_TYPE,
+  UNSUPPORTED_SCVAL_TYPE,
 } from "@/common/helpers/xdr/error.ts";
 
 /**
@@ -19,93 +19,94 @@ import {
  * @internal
  */
 export function parseScVal(scv: xdr.ScVal): ScValParsed {
-  const type = scv.switch();
-
-  switch (type.value) {
+  switch (scv.type) {
     // Void
-    case xdr.ScValType.scvVoid().value:
+    case "scvVoid":
       return null;
 
     // Boolean
-    case xdr.ScValType.scvBool().value:
-      return scv.b();
+    case "scvBool":
+      return scv.b;
 
     // Integers - small (fit in number)
-    case xdr.ScValType.scvU32().value:
-      return scv.u32();
+    case "scvU32":
+      return scv.u32;
 
-    case xdr.ScValType.scvI32().value:
-      return scv.i32();
+    case "scvI32":
+      return scv.i32;
 
     // Integers - large (use bigint)
-    case xdr.ScValType.scvU64().value:
-    case xdr.ScValType.scvI64().value:
-    case xdr.ScValType.scvU128().value:
-    case xdr.ScValType.scvI128().value:
-    case xdr.ScValType.scvU256().value:
-    case xdr.ScValType.scvI256().value:
+    case "scvU64":
+    case "scvI64":
+    case "scvU128":
+    case "scvI128":
+    case "scvU256":
+    case "scvI256":
       return scValToBigInt(scv);
 
     // Timepoint and Duration (also bigint)
-    case xdr.ScValType.scvTimepoint().value:
-      return scValToBigInt(xdr.ScVal.scvU64(scv.timepoint()));
+    case "scvTimepoint":
+      return scv.timepoint;
 
-    case xdr.ScValType.scvDuration().value:
-      return scValToBigInt(xdr.ScVal.scvU64(scv.duration()));
+    case "scvDuration":
+      return scv.duration;
 
     // Strings
-    case xdr.ScValType.scvSymbol().value:
-      return scv.sym().toString();
+    case "scvSymbol":
+      return scv.sym.asStringOrBytes();
 
-    case xdr.ScValType.scvString().value:
-      return scv.str().toString();
+    case "scvString":
+      return scv.str.asStringOrBytes();
+
+    case "scvExecutableTag":
+      return scv.executableTag.asStringOrBytes();
 
     // Bytes
-    case xdr.ScValType.scvBytes().value:
-      return Uint8Array.from(scv.bytes());
+    case "scvBytes":
+      return Uint8Array.from(scv.bytes.toBytes());
 
     // Address - convert to strkey string
-    case xdr.ScValType.scvAddress().value:
+    case "scvAddress":
       return Address.fromScVal(scv).toString();
 
     // Vec (also used for tuples and union values)
-    case xdr.ScValType.scvVec().value: {
-      const vec = scv.vec() ?? [];
+    case "scvVec": {
+      const vec = scv.vec ?? [];
       return vec.map(parseScVal);
     }
 
     // Map (also used for structs)
-    case xdr.ScValType.scvMap().value: {
-      const entries = scv.map() ?? [];
+    case "scvMap": {
+      const entries = scv.map ?? [];
       return parseScValMap(entries);
     }
 
     // Error
-    case xdr.ScValType.scvError().value: {
-      const err = scv.error();
+    case "scvError": {
+      const err = scv.error;
       return {
-        type: err.switch().name,
-        code: err.value(),
+        type: err.type,
+        code: err.type === "sceContract" ? err.contractCode : err.code.value,
       } as ScValRecord;
     }
 
     // Contract instance
-    case xdr.ScValType.scvContractInstance().value: {
-      const instance = scv.instance();
+    case "scvContractInstance": {
+      const instance = scv.instance;
       return {
-        executable: instance.executable().switch().name,
+        executable: instance.executable.type,
       } as ScValRecord;
     }
 
     // Ledger key types - these are rarely seen in events, return basic info
-    case xdr.ScValType.scvLedgerKeyContractInstance().value:
+    case "scvLedgerKeyContractInstance":
       return { ledgerKeyType: "contractInstance" } as ScValRecord;
 
-    case xdr.ScValType.scvLedgerKeyNonce().value:
+    case "scvLedgerKeyNonce":
       return { ledgerKeyType: "nonce" } as ScValRecord;
 
     default:
-      throw new UNSUPPORTED_SCVAL_TYPE(type.name);
+      throw new UNSUPPORTED_SCVAL_TYPE((scv as { type: string }).type);
   }
 }
 
@@ -114,29 +115,25 @@ export function parseScVal(scv: xdr.ScVal): ScValParsed {
  * or a Map (if keys are mixed types).
  */
 function parseScValMap(entries: xdr.ScMapEntry[]): ScValRecord | ScValMap {
-  // Check if all keys are symbols or strings
-  const allStringKeys = entries.every((entry) => {
-    const keyType = entry.key().switch().value;
-    return (
-      keyType === xdr.ScValType.scvSymbol().value ||
-      keyType === xdr.ScValType.scvString().value
-    );
-  });
+  const parsed = entries.map((entry) => ({
+    key: parseScVal(entry.key),
+    value: parseScVal(entry.val),
+  }));
+  const allStringKeys = parsed.every((entry) => typeof entry.key === "string");
 
   if (allStringKeys) {
     // Return as plain object
     const result: ScValRecord = {};
-    for (const entry of entries) {
-      const key = parseScVal(entry.key()) as string;
-      result[key] = parseScVal(entry.val());
+    for (const entry of parsed) {
+      result[entry.key as string] = entry.value;
     }
     return result;
   }
 
   // Return as Map for non-string keys
   const result: ScValMap = new Map();
-  for (const entry of entries) {
-    result.set(parseScVal(entry.key()), parseScVal(entry.val()));
+  for (const entry of parsed) {
+    result.set(entry.key, entry.value);
   }
   return result;
 }
@@ -150,55 +147,55 @@ function parseScValMap(entries: xdr.ScMapEntry[]): ScValRecord | ScValMap {
  * @internal
  */
 export function getScValTypeName(scv: xdr.ScVal): ScValTypeName {
-  const type = scv.switch();
-
-  switch (type.value) {
-    case xdr.ScValType.scvVoid().value:
+  switch (scv.type) {
+    case "scvVoid":
       return "void";
-    case xdr.ScValType.scvBool().value:
+    case "scvBool":
       return "bool";
-    case xdr.ScValType.scvU32().value:
+    case "scvU32":
       return "u32";
-    case xdr.ScValType.scvI32().value:
+    case "scvI32":
       return "i32";
-    case xdr.ScValType.scvU64().value:
+    case "scvU64":
       return "u64";
-    case xdr.ScValType.scvI64().value:
+    case "scvI64":
       return "i64";
-    case xdr.ScValType.scvU128().value:
+    case "scvU128":
       return "u128";
-    case xdr.ScValType.scvI128().value:
+    case "scvI128":
       return "i128";
-    case xdr.ScValType.scvU256().value:
+    case "scvU256":
       return "u256";
-    case xdr.ScValType.scvI256().value:
+    case "scvI256":
       return "i256";
-    case xdr.ScValType.scvTimepoint().value:
+    case "scvTimepoint":
       return "timepoint";
-    case xdr.ScValType.scvDuration().value:
+    case "scvDuration":
       return "duration";
-    case xdr.ScValType.scvSymbol().value:
+    case "scvSymbol":
       return "symbol";
-    case xdr.ScValType.scvString().value:
+    case "scvString":
       return "string";
-    case xdr.ScValType.scvBytes().value:
+    case "scvExecutableTag":
+      return "executableTag";
+    case "scvBytes":
       return "bytes";
-    case xdr.ScValType.scvAddress().value:
+    case "scvAddress":
       return "address";
-    case xdr.ScValType.scvVec().value:
+    case "scvVec":
       return "vec";
-    case xdr.ScValType.scvMap().value:
+    case "scvMap":
       return "map";
-    case xdr.ScValType.scvError().value:
+    case "scvError":
       return "error";
-    case xdr.ScValType.scvContractInstance().value:
+    case "scvContractInstance":
       return "contractInstance";
-    case xdr.ScValType.scvLedgerKeyContractInstance().value:
+    case "scvLedgerKeyContractInstance":
       return "ledgerKeyContractInstance";
-    case xdr.ScValType.scvLedgerKeyNonce().value:
+    case "scvLedgerKeyNonce":
       return "ledgerKeyNonce";
     default:
-      throw new UNKNOWN_SCVAL_TYPE(type.name);
+      throw new UNKNOWN_SCVAL_TYPE((scv as { type: string }).type);
   }
 }
 
@@ -228,7 +225,7 @@ export function isScValMap(value: ScValParsed): value is ScValMap {
  * @internal
  */
 export function asUnion(
-  value: ScValParsed
+  value: ScValParsed,
 ): { tag: string; values: ScValParsed[] } | undefined {
   if (!Array.isArray(value) || value.length === 0) {
     return undefined;

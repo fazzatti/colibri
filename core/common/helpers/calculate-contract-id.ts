@@ -1,8 +1,7 @@
 import { Address, hash, xdr } from "stellar-sdk";
-import { Buffer } from "buffer";
 import { StrKey } from "@/strkeys/index.ts";
 import type { BinaryData } from "@/common/types/index.ts";
-import { toBuffer } from "@/common/helpers/internal-buffer.ts";
+import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 
 /**
  * Calculates the expected contract ID from an address and salt.
@@ -15,7 +14,7 @@ export function calculateContractId(
   sourceAddress: string,
   salt: BinaryData,
 ): string {
-  const networkId = hash(Buffer.from(networkPassphrase));
+  const networkId = hash(new TextEncoder().encode(networkPassphrase));
 
   const preimage = xdr.HashIdPreimage.envelopeTypeContractId(
     new xdr.HashIdPreimageContractId({
@@ -23,11 +22,11 @@ export function calculateContractId(
       contractIdPreimage: xdr.ContractIdPreimage.contractIdPreimageFromAddress(
         new xdr.ContractIdPreimageFromAddress({
           address: new Address(sourceAddress).toScAddress(),
-          salt: toBuffer(salt),
+          salt: toUint8Array(salt),
         }),
       ),
     }),
   );
 
-  return StrKey.encodeContract(hash(preimage.toXDR()));
+  return StrKey.encodeContract(hash(preimage.toXdr()));
 }

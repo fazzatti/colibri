@@ -24,7 +24,7 @@ import { softTryToXDR } from "@/common/helpers/xdr/soft-try-to-xdr.ts";
 export const getAddressSignerFromAuthEntry = (
   authEntry: xdr.SorobanAuthorizationEntry,
 ): Ed25519PublicKey | ContractId => {
-  const authEntryXDR = () => softTryToXDR(() => authEntry.toXDR("base64"));
+  const authEntryXDR = () => softTryToXDR(() => authEntry.toXdr("base64"));
 
   let addressCredentials: xdr.SorobanAddressCredentials | null;
   try {
@@ -44,7 +44,7 @@ export const getAddressSignerFromAuthEntry = (
   let signer: string;
   try {
     signer = Address.fromScAddress(
-      addressCredentials.address(),
+      addressCredentials.address,
     ).toString();
   } catch (cause) {
     throw new FAILED_TO_GET_AUTH_ENTRY_SIGNER(

@@ -1,6 +1,3 @@
-import { randomBytes } from "crypto";
-import { Buffer } from "buffer";
-export const generateRandomSalt = (): Buffer => {
-  // Generate 32 cryptographically secure random bytes
-  return Buffer.from(randomBytes(32));
-};
+/** Generates a cryptographically secure 32-byte contract salt. */
+export const generateRandomSalt = (): Uint8Array =>
+  crypto.getRandomValues(new Uint8Array(32));

@@ -28,15 +28,18 @@ export const getStellarAssetContractIdFromFailedSimulationResponse = (
   try {
     const events = response.events;
 
-    const dataVec: xdr.ScVal[] | null = events
-      ? events[0].event().body().v0().data().vec()
+    const data = events?.[0]?.event.body.v0.data;
+    const dataVec: xdr.ScVal[] | null = data?.type === "scvVec"
+      ? data.vec
       : [];
 
     if (
-      dataVec?.[0]?.value()?.toString() === "contract already exists" &&
-      dataVec[1]?.bytes()
+      dataVec?.[0]?.value?.toString() === "contract already exists" &&
+      dataVec[1]?.type === "scvBytes"
     ) {
-      const contractId = Address.contract(dataVec[1].bytes()).toString();
+      const contractId = Address.contract(
+        dataVec[1].bytes.toBytes(),
+      ).toString();
       return contractId as ContractId;
     }
 

@@ -46,20 +46,21 @@ describe("parseChangeTrustAsset", () => {
     const assetB = new Asset("USDC", issuer.publicKey());
 
     // Create liquidity pool parameters
-    const constantProductParams =
-      new xdr.LiquidityPoolConstantProductParameters({
-        assetA: assetA.toXDRObject(),
-        assetB: assetB.toXDRObject(),
-        fee: 30, // 0.3%
-      });
+    const constantProductParams = new xdr
+      .LiquidityPoolConstantProductParameters({
+      assetA: assetA.toXdrObject(),
+      assetB: assetB.toXdrObject(),
+      fee: 30, // 0.3%
+    });
 
-    const liquidityPoolParams =
-      xdr.LiquidityPoolParameters.liquidityPoolConstantProduct(
-        constantProductParams
+    const liquidityPoolParams = xdr.LiquidityPoolParameters
+      .liquidityPoolConstantProduct(
+        constantProductParams,
       );
 
-    const changeTrustAsset =
-      xdr.ChangeTrustAsset.assetTypePoolShare(liquidityPoolParams);
+    const changeTrustAsset = xdr.ChangeTrustAsset.assetTypePoolShare(
+      liquidityPoolParams,
+    );
 
     const result = parseChangeTrustAsset(changeTrustAsset);
     assertStringIncludes(result, "pool:");
@@ -75,14 +76,13 @@ describe("parseChangeTrustAsset", () => {
       // deno-lint-ignore no-explicit-any
       () => parseChangeTrustAsset(mockAsset as any),
       UNKNOWN_CHANGE_TRUST_ASSET_TYPE,
-      "Unknown ChangeTrustAsset type"
+      "Unknown ChangeTrustAsset type",
     );
   });
 
-  it("should handle switch result as string (non-object)", () => {
-    // Some XDR versions may return the type name directly as a string
+  it("should read the canonical string type discriminator", () => {
     const mockAsset = {
-      switch: () => "assetTypeNative", // Returns string instead of object
+      type: "assetTypeNative",
     };
 
     // deno-lint-ignore no-explicit-any

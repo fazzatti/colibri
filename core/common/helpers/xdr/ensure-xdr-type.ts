@@ -10,12 +10,12 @@ import { FAILED_TO_PARSE_XDR } from "@/common/helpers/xdr/error.ts";
  *
  * **Input handling:**
  * - **Already parsed object** → Returns as-is (no parsing)
- * - **Base64 string** → Parses using `xdrType.fromXDR(value, "base64")`
- * - **Uint8Array** → Parses using `xdrType.fromXDR(value)`
+ * - **Base64 string** → Parses using `xdrType.fromXdr(value, "base64")`
+ * - **Uint8Array** → Parses using `xdrType.fromXdr(value)`
  *
  * @template T - The XDR type to parse (e.g., `xdr.LedgerHeader`)
  * @param value - Input value in any supported format
- * @param xdrType - XDR type constructor (must have a `fromXDR` method)
+ * @param xdrType - XDR type constructor (must have a `fromXdr` method)
  * @returns Parsed XDR object of type T
  * @throws {FAILED_TO_PARSE_XDR} If the value cannot be parsed as the specified XDR type
  *
@@ -34,7 +34,7 @@ import { FAILED_TO_PARSE_XDR } from "@/common/helpers/xdr/error.ts";
 export function ensureXdrType<T>(
   value: string | Uint8Array | T,
   xdrType: {
-    fromXDR(xdr: string | Uint8Array, format?: string): T;
+    fromXdr(xdr: string | Uint8Array, format?: string): T;
     name?: string;
   }
 ): T {
@@ -46,9 +46,9 @@ export function ensureXdrType<T>(
   // Parse from string (base64) or Uint8Array
   try {
     if (typeof value === "string") {
-      return xdrType.fromXDR(value, "base64");
+      return xdrType.fromXdr(value, "base64");
     }
-    return xdrType.fromXDR(value as Uint8Array);
+    return xdrType.fromXdr(value as Uint8Array);
   } catch (error) {
     throw new FAILED_TO_PARSE_XDR(
       typeof value,

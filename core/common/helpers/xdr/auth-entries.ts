@@ -4,28 +4,31 @@ import type {
   FnArg,
   InvocationParams,
 } from "@/common/helpers/xdr/types.ts";
+import { getAddressCredentialsFromAuthEntry } from "@/common/helpers/xdr/get-address-credentials-from-auth-entry.ts";
+import {
+  MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_PARAMS,
+  UNSUPPORTED_AUTHORIZED_FUNCTION,
+} from "@/common/helpers/xdr/error.ts";
 
 const invocationToParams = (
   invocation: xdr.SorobanAuthorizedInvocation
 ): InvocationParams => {
-  const args = invocation.function().contractFn().args();
+  if (invocation.function.type !== "sorobanAuthorizedFunctionTypeContractFn") {
+    throw new UNSUPPORTED_AUTHORIZED_FUNCTION(invocation.function.type);
+  }
+  const contractFn = invocation.function.contractFn;
+  const args = contractFn.args;
 
   return {
     function: {
       contractAddress: Address.fromScAddress(
-        invocation.function().contractFn().contractAddress()
+        contractFn.contractAddress
       ).toString(),
-      functionName: invocation
-        .function()
-        .contractFn()
-        .functionName()
-        .toString(),
+      functionName: contractFn.functionName.toString(),
       args: parseScValArgs(args),
     },
     subInvocations: [
-      ...invocation
-        .subInvocations()
-        .map((subInvocation) => invocationToParams(subInvocation)),
+      ...invocation.subInvocations.map(invocationToParams),
     ],
   };
 };
@@ -55,21 +58,21 @@ export const paramsToInvocation = (
 export const authEntryToParams = (
   entry: xdr.SorobanAuthorizationEntry
 ): AuthEntryParams => {
-  const credentials = entry.credentials();
-  const rootInvocation = entry.rootInvocation();
+  const credentials = getAddressCredentialsFromAuthEntry(entry);
+  if (!credentials) {
+    throw new MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_PARAMS();
+  }
 
   const entryParams: AuthEntryParams = {
     credentials: {
       address: Address.fromScAddress(
-        credentials.address().address()
+        credentials.address
       ).toString(),
-      nonce: credentials.address().nonce().toString(),
-      signatureExpirationLedger: credentials
-        .address()
-        .signatureExpirationLedger(),
-      signature: credentials.address().signature().toXDR("base64"),
+      nonce: credentials.nonce.toString(),
+      signatureExpirationLedger: credentials.signatureExpirationLedger,
+      signature: credentials.signature.toXdr("base64"),
     },
-    rootInvocation: invocationToParams(rootInvocation),
+    rootInvocation: invocationToParams(entry.rootInvocation),
   };
 
   return entryParams;
@@ -78,7 +81,7 @@ export const authEntryToParams = (
 const isScValArray = (
   args: FnArg[] | xdr.ScVal[]
 ): args is xdr.ScVal[] => {
-  return args.length > 0 && args[0] instanceof xdr.ScVal;
+  return args.length > 0 && xdr.ScVal.is(args[0]);
 };
 
 const fnArgToScVal = (arg: FnArg): xdr.ScVal => {
@@ -102,7 +105,7 @@ const isFnArg = (arg: FnArg | undefined): arg is FnArg => {
 const parseScValArg = (value: xdr.ScVal): FnArg | undefined => {
   const nativeValue = scValToNative(value);
 
-  switch (value.switch().name) {
+  switch (value.type) {
     case "scvVoid":
     case "scvBool":
       return { value: nativeValue };
@@ -149,11 +152,11 @@ export const paramsToAuthEntry = (
     credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
       new xdr.SorobanAddressCredentials({
         address: Address.fromString(credParams.address).toScAddress(),
-        nonce: new xdr.Int64(credParams.nonce),
+        nonce: xdr.Int64(credParams.nonce),
         signatureExpirationLedger: credParams.signatureExpirationLedger,
         signature: !credParams.signature
           ? xdr.ScVal.scvVoid()
-          : xdr.ScVal.fromXDR(credParams.signature, "base64"),
+          : xdr.ScVal.fromXdr(credParams.signature, "base64"),
       })
     ),
   });

@@ -44,30 +44,30 @@ export const getRequiredOperationThresholdForClassicOperation = (
     let source;
 
     switch (operation.type) {
-      case xdr.OperationType.allowTrust().name:
-      case xdr.OperationType.bumpSequence().name:
-      case xdr.OperationType.setTrustLineFlags().name:
+      case xdr.OperationType.allowTrust.name:
+      case xdr.OperationType.bumpSequence.name:
+      case xdr.OperationType.setTrustLineFlags.name:
         thresholdLevel = OperationThreshold.low;
         source = operation.source;
         break;
 
-      case xdr.OperationType.createAccount().name:
-      case xdr.OperationType.payment().name:
-      case xdr.OperationType.pathPaymentStrictSend().name:
-      case xdr.OperationType.pathPaymentStrictReceive().name:
-      case xdr.OperationType.manageSellOffer().name:
-      case xdr.OperationType.manageBuyOffer().name:
-      case xdr.OperationType.createPassiveSellOffer().name:
-      case xdr.OperationType.changeTrust().name:
-      case xdr.OperationType.manageData().name:
-      case xdr.OperationType.createClaimableBalance().name:
-      case xdr.OperationType.claimClaimableBalance().name:
-      case xdr.OperationType.beginSponsoringFutureReserves().name:
-      case xdr.OperationType.endSponsoringFutureReserves().name:
-      case xdr.OperationType.clawback().name:
-      case xdr.OperationType.clawbackClaimableBalance().name:
-      case xdr.OperationType.liquidityPoolDeposit().name:
-      case xdr.OperationType.liquidityPoolWithdraw().name:
+      case xdr.OperationType.createAccount.name:
+      case xdr.OperationType.payment.name:
+      case xdr.OperationType.pathPaymentStrictSend.name:
+      case xdr.OperationType.pathPaymentStrictReceive.name:
+      case xdr.OperationType.manageSellOffer.name:
+      case xdr.OperationType.manageBuyOffer.name:
+      case xdr.OperationType.createPassiveSellOffer.name:
+      case xdr.OperationType.changeTrust.name:
+      case xdr.OperationType.manageData.name:
+      case xdr.OperationType.createClaimableBalance.name:
+      case xdr.OperationType.claimClaimableBalance.name:
+      case xdr.OperationType.beginSponsoringFutureReserves.name:
+      case xdr.OperationType.endSponsoringFutureReserves.name:
+      case xdr.OperationType.clawback.name:
+      case xdr.OperationType.clawbackClaimableBalance.name:
+      case xdr.OperationType.liquidityPoolDeposit.name:
+      case xdr.OperationType.liquidityPoolWithdraw.name:
         source = operation.source;
         break;
       case "revokeAccountSponsorship":
@@ -77,10 +77,10 @@ export const getRequiredOperationThresholdForClassicOperation = (
       case "revokeClaimableBalanceSponsorship":
       case "revokeLiquidityPoolSponsorship":
       case "revokeSignerSponsorship":
-      case xdr.OperationType.revokeSponsorship().name:
+      case xdr.OperationType.revokeSponsorship.name:
         source = operation.source;
         break;
-      case xdr.OperationType.setOptions().name:
+      case xdr.OperationType.setOptions.name:
         if (
           (operation as Operation.SetOptions).masterWeight ||
           (operation as Operation.SetOptions).signer ||
@@ -92,7 +92,7 @@ export const getRequiredOperationThresholdForClassicOperation = (
         }
         source = operation.source;
         break;
-      case xdr.OperationType.accountMerge().name:
+      case xdr.OperationType.accountMerge.name:
         thresholdLevel = OperationThreshold.high;
         source = operation.source;
         break;

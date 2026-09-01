@@ -1,5 +1,5 @@
 import type { BinaryData } from "@/common/types/index.ts";
-import { toBuffer } from "@/common/helpers/internal-buffer.ts";
+import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 
 /**
  * Converts any Colibri-supported binary input into a stable Uint8Array shape.
@@ -8,10 +8,9 @@ import { toBuffer } from "@/common/helpers/internal-buffer.ts";
  * ArrayBufferView.
  * @returns A defensive copy of the input bytes as a Uint8Array.
  *
- * This is the public binary normalization helper. Internal Stellar SDK
- * boundaries may still convert the result to Buffer without exposing that
- * package-specific type to Colibri consumers.
+ * This is the public binary normalization helper. Stellar SDK 17 boundaries
+ * consume `Uint8Array` directly, so callers never need a Node `Buffer`.
  */
 export function normalizeBinaryData(value: BinaryData): Uint8Array {
-  return toBuffer(value);
+  return toUint8Array(value).slice();
 }

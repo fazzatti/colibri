@@ -17,14 +17,14 @@ import type { xdr } from "stellar-sdk";
  * @internal
  */
 export function parseMuxedAccount(muxedXdr: xdr.MuxedAccount): string {
-  switch (muxedXdr.switch().name) {
+  switch (muxedXdr.type) {
     case "keyTypeEd25519":
-      return StrKey.encodeEd25519PublicKey(muxedXdr.ed25519());
+      return StrKey.encodeEd25519PublicKey(muxedXdr.ed25519.toBytes());
 
     case "keyTypeMuxedEd25519": {
-      const med = muxedXdr.med25519();
-      const ed25519 = med.ed25519(); // 32 bytes
-      const id = med.id().toBigInt(); // bigint
+      const med = muxedXdr.med25519;
+      const ed25519 = med.ed25519.toBytes(); // 32 bytes
+      const id = med.id; // bigint
 
       // encodeMed25519PublicKey expects 40 bytes: 32 bytes ed25519 + 8 bytes id (big-endian)
       const idBuffer = new Uint8Array(8);
@@ -36,12 +36,12 @@ export function parseMuxedAccount(muxedXdr: xdr.MuxedAccount): string {
       combined.set(ed25519, 0);
       combined.set(idBuffer, 32);
 
-      // SDK encodeMed25519PublicKey accepts Uint8Array at runtime, type definition expects Buffer
-      // deno-lint-ignore no-explicit-any
-      return StrKey.encodeMed25519PublicKey(combined as any);
+      return StrKey.encodeMed25519PublicKey(combined);
     }
 
     default:
-      throw new UNKNOWN_MUXED_ACCOUNT_TYPE(muxedXdr.switch().name);
+      throw new UNKNOWN_MUXED_ACCOUNT_TYPE(
+        (muxedXdr as { type: string }).type,
+      );
   }
 }

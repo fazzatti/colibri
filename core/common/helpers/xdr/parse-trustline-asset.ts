@@ -1,4 +1,3 @@
-import { Buffer } from "buffer";
 import { StrKey } from "@/strkeys/index.ts";
 import { toStellarAssetCanonicalString } from "@/asset/sep11/index.ts";
 import { UNKNOWN_TRUSTLINE_ASSET_TYPE } from "@/common/helpers/xdr/error.ts";
@@ -19,28 +18,34 @@ import type { xdr } from "stellar-sdk";
 export function parseTrustLineAsset(
   assetXdr: xdr.TrustLineAsset,
 ): ChangeTrustAssetString {
-  switch (assetXdr.switch().name) {
+  switch (assetXdr.type) {
     case "assetTypeNative":
       return "native";
 
     case "assetTypeCreditAlphanum4": {
-      const asset = assetXdr.alphaNum4();
-      const code = asset.assetCode().toString("utf8").replace(/\0/g, "");
-      const issuer = StrKey.encodeEd25519PublicKey(asset.issuer().ed25519());
+      const asset = assetXdr.alphaNum4;
+      const code = asset.assetCode.toString().replace(/\0/g, "");
+      const issuer = StrKey.encodeEd25519PublicKey(
+        asset.issuer.ed25519.toBytes(),
+      );
       return toStellarAssetCanonicalString(code, issuer);
     }
 
     case "assetTypeCreditAlphanum12": {
-      const asset = assetXdr.alphaNum12();
-      const code = asset.assetCode().toString("utf8").replace(/\0/g, "");
-      const issuer = StrKey.encodeEd25519PublicKey(asset.issuer().ed25519());
+      const asset = assetXdr.alphaNum12;
+      const code = asset.assetCode.toString().replace(/\0/g, "");
+      const issuer = StrKey.encodeEd25519PublicKey(
+        asset.issuer.ed25519.toBytes(),
+      );
       return toStellarAssetCanonicalString(code, issuer);
     }
 
     case "assetTypePoolShare":
-      return `pool:${StrKey.encodeLiquidityPool(Buffer.from(assetXdr.liquidityPoolId() as unknown as Uint8Array))}`;
+      return `pool:${StrKey.encodeLiquidityPool(assetXdr.liquidityPoolId.toBytes())}`;
 
     default:
-      throw new UNKNOWN_TRUSTLINE_ASSET_TYPE(assetXdr.switch().name);
+      throw new UNKNOWN_TRUSTLINE_ASSET_TYPE(
+        (assetXdr as { type: string }).type,
+      );
   }
 }

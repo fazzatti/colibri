@@ -38,39 +38,41 @@ export type ChangeTrustAssetString =
 export function parseChangeTrustAsset(
   assetXdr: xdr.ChangeTrustAsset
 ): ChangeTrustAssetString {
-  const switchResult = assetXdr.switch();
-  const assetType =
-    typeof switchResult === "object" ? switchResult.name : switchResult;
-
-  switch (assetType) {
+  switch (assetXdr.type) {
     case "assetTypeNative":
       return "native";
 
     case "assetTypeCreditAlphanum4": {
-      const asset = assetXdr.alphaNum4();
-      const code = asset.assetCode().toString("utf8").replace(/\0/g, "");
-      const issuer = StrKey.encodeEd25519PublicKey(asset.issuer().ed25519());
+      const asset = assetXdr.alphaNum4;
+      const code = asset.assetCode.toString().replace(/\0/g, "");
+      const issuer = StrKey.encodeEd25519PublicKey(
+        asset.issuer.ed25519.toBytes(),
+      );
       return toStellarAssetCanonicalString(code, issuer);
     }
 
     case "assetTypeCreditAlphanum12": {
-      const asset = assetXdr.alphaNum12();
-      const code = asset.assetCode().toString("utf8").replace(/\0/g, "");
-      const issuer = StrKey.encodeEd25519PublicKey(asset.issuer().ed25519());
+      const asset = assetXdr.alphaNum12;
+      const code = asset.assetCode.toString().replace(/\0/g, "");
+      const issuer = StrKey.encodeEd25519PublicKey(
+        asset.issuer.ed25519.toBytes(),
+      );
       return toStellarAssetCanonicalString(code, issuer);
     }
 
     case "assetTypePoolShare": {
-      const params = assetXdr.liquidityPool();
+      const params = assetXdr.liquidityPool;
       // Liquidity pool ID would need to be computed from parameters
       // For now, return a generic identifier
-      const paramsHex = Array.from(params.toXDR(), (b) =>
+      const paramsHex = Array.from(params.toXdr(), (b) =>
         b.toString(16).padStart(2, "0")
       ).join("");
       return `pool:${paramsHex}` as LiquidityPoolShareString;
     }
 
     default:
-      throw new UNKNOWN_CHANGE_TRUST_ASSET_TYPE(String(assetType));
+      throw new UNKNOWN_CHANGE_TRUST_ASSET_TYPE(
+        String((assetXdr as { type: string }).type),
+      );
   }
 }

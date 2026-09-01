@@ -1,4 +1,4 @@
-import { xdr } from "stellar-sdk";
+import type { xdr } from "stellar-sdk";
 
 /**
  * Returns whether an invoke-host-function operation contains delegated Soroban
@@ -9,16 +9,14 @@ import { xdr } from "stellar-sdk";
  */
 export const operationHasDelegatedAuthorization = (
   operation: xdr.Operation,
-): boolean => {
-  if (
-    operation.body().switch().value !==
-      xdr.OperationType.invokeHostFunction().value
-  ) {
+): operation is xdr.Operation & {
+  readonly body: xdr.OperationBodyInvokeHostFunction;
+} => {
+  if (operation.body.type !== "invokeHostFunction") {
     return false;
   }
 
-  return operation.body().invokeHostFunctionOp().auth().some((entry) =>
-    entry.credentials().switch().value ===
-      xdr.SorobanCredentialsType.sorobanCredentialsAddressWithDelegates().value
+  return operation.body.invokeHostFunctionOp.auth.some((entry) =>
+    entry.credentials.type === "sorobanCredentialsAddressWithDelegates"
   );
 };

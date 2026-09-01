@@ -1,4 +1,4 @@
-import { Transaction } from "stellar-sdk";
+import { Transaction, xdr } from "stellar-sdk";
 import type { TransactionFee } from "@/common/types/transaction-config/types.ts";
 
 export const MINIMUM_BASE_FEE = 100n;
@@ -48,8 +48,9 @@ export const parseTransactionFee = (
 export const getTransactionResourceFee = (
   transaction: Transaction,
 ): bigint =>
-  transaction.toEnvelope().v1().tx().ext().value()?.resourceFee().toBigInt() ??
-    0n;
+  transaction.tx.ext.type === "sorobanData"
+    ? transaction.tx.ext.sorobanData.resourceFee
+    : 0n;
 
 export const getTransactionInclusionFee = (
   transaction: Transaction,
@@ -59,8 +60,36 @@ export const setTransactionFee = (
   transaction: Transaction,
   fee: bigint,
 ): Transaction => {
-  const envelope = transaction.toEnvelope();
-  envelope.v1().tx().fee(Number(fee));
+  const current = transaction.tx;
+  const envelope = current instanceof xdr.Transaction
+    ? xdr.TransactionEnvelope.envelopeTypeTx(
+      new xdr.TransactionV1Envelope({
+        tx: new xdr.Transaction({
+          sourceAccount: current.sourceAccount,
+          fee: Number(fee),
+          seqNum: current.seqNum,
+          cond: current.cond,
+          memo: current.memo,
+          operations: current.operations,
+          ext: current.ext,
+        }),
+        signatures: transaction.signatures,
+      }),
+    )
+    : xdr.TransactionEnvelope.envelopeTypeTxV0(
+      new xdr.TransactionV0Envelope({
+        tx: new xdr.TransactionV0({
+          sourceAccountEd25519: current.sourceAccountEd25519,
+          fee: Number(fee),
+          seqNum: current.seqNum,
+          timeBounds: current.timeBounds,
+          memo: current.memo,
+          operations: current.operations,
+          ext: current.ext,
+        }),
+        signatures: transaction.signatures,
+      }),
+    );
 
   return new Transaction(envelope, transaction.networkPassphrase);
 };

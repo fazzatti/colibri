@@ -376,8 +376,8 @@ describe("StellarAssetContract token invocations", () => {
     assertEquals(receivedArgs.operationArgs.function, Method.Trust);
     assertEquals(receivedArgs.operationArgs.args.length, 1);
     assertEquals(
-      receivedArgs.operationArgs.args[0].toXDR("base64"),
-      nativeToScVal(address, { type: "address" }).toXDR("base64"),
+      receivedArgs.operationArgs.args[0].toXdr("base64"),
+      nativeToScVal(address, { type: "address" }).toXdr("base64"),
     );
     assertStrictEquals(receivedArgs.operationArgs.auth, auth);
     assertStrictEquals(receivedArgs.config, txConfig);

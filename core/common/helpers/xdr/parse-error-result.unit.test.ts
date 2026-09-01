@@ -11,9 +11,9 @@ describe("parseErrorResult", () => {
 
   it("should parse error result with switch", () => {
     const errorResult = new xdr.TransactionResult({
-      feeCharged: new xdr.Int64(100),
+      feeCharged: xdr.Int64(100),
       result: xdr.TransactionResultResult.txSuccess([]),
-      ext: xdr.TransactionResultExt.fromXDR("AAAAAA==", "base64"),
+      ext: xdr.TransactionResultExt.fromXdr("AAAAAA==", "base64"),
     });
 
     const result = parseErrorResult(errorResult);
@@ -24,9 +24,9 @@ describe("parseErrorResult", () => {
   it("should parse error result with results", () => {
     // Create a minimal transaction result with operation results
     const errorResult = new xdr.TransactionResult({
-      feeCharged: new xdr.Int64(100),
+      feeCharged: xdr.Int64(100),
       result: xdr.TransactionResultResult.txFailed([]),
-      ext: xdr.TransactionResultExt.fromXDR("AAAAAA==", "base64"),
+      ext: xdr.TransactionResultExt.fromXdr("AAAAAA==", "base64"),
     });
 
     const result = parseErrorResult(errorResult);
@@ -36,16 +36,14 @@ describe("parseErrorResult", () => {
     assertEquals(result[0], "txFailed");
   });
 
-  it("should parse error result using results flatMap when switch is missing", () => {
-    // Mock an error result that has results() but no valid switch().name
+  it("should parse operation results when the result has no type", () => {
     const mockResult = {
-      result: () => ({
-        switch: null, // No switch method
-        results: () => [
+      result: {
+        results: [
           { toString: () => "operation_result_1" },
           { toString: () => "operation_result_2" },
         ],
-      }),
+      },
     } as unknown as xdr.TransactionResult;
 
     const result = parseErrorResult(mockResult);
@@ -58,9 +56,7 @@ describe("parseErrorResult", () => {
 
   it("should throw error for unexpected TransactionResult format", () => {
     const invalidErrorResult = {
-      result: () => ({
-        // Missing switch, results, and flatMap
-      }),
+      result: {},
     } as unknown as xdr.TransactionResult;
 
     assertThrows(() => parseErrorResult(invalidErrorResult));

@@ -32,7 +32,7 @@ describe("parseTrustLineAsset", () => {
   it("parses liquidity-pool share assets", () => {
     const poolId = new Uint8Array(32).fill(9);
     const asset = xdr.TrustLineAsset.assetTypePoolShare(
-      poolId as unknown as xdr.PoolId,
+      new xdr.PoolId(poolId),
     );
 
     const result = parseTrustLineAsset(asset);
@@ -45,7 +45,7 @@ describe("parseTrustLineAsset", () => {
       () =>
         parseTrustLineAsset(
           {
-            switch: () => ({ name: "unknownAssetType" }),
+            type: "unknownAssetType",
           } as unknown as xdr.TrustLineAsset,
         ),
       UNKNOWN_TRUSTLINE_ASSET_TYPE,
