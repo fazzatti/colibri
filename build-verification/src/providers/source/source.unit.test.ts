@@ -336,6 +336,26 @@ describe("source providers", () => {
       publicHeaders,
       publicHeaders,
     ]);
+
+    const noHeaderTransport = new QueueTransport([
+      {
+        status: 302,
+        headers: { location: "https://objects.example.com/final.tar" },
+        bytes: new Uint8Array(),
+      },
+      { status: 200, headers: {}, bytes },
+    ]);
+    await retrievePinnedHttpResource({
+      url: "https://example.com/start.tar",
+      limits: TEST_LIMITS,
+      policy: acceptedPolicy,
+      transport: noHeaderTransport,
+      addressResolver: new FixedAddressResolver(),
+    });
+    assertEquals(noHeaderTransport.calls.map(({ headers }) => headers), [
+      {},
+      {},
+    ]);
   });
 
   it("normalizes every pinned retrieval failure occurrence", async () => {

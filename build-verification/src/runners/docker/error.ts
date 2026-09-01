@@ -15,6 +15,22 @@ export class DockerConfigurationFailedError
   }
 }
 
+/** Raised when a build-container name prefix cannot form a valid Docker name. */
+export class DockerContainerNamePrefixInvalidError
+  extends BuildVerificationError<Code.DOCKER_CONTAINER_NAME_PREFIX_INVALID> {
+  /** Creates an invalid build-container name-prefix error. */
+  constructor(prefix: unknown) {
+    super({
+      code: Code.DOCKER_CONTAINER_NAME_PREFIX_INVALID,
+      source: "@colibri/build-verification/runners/docker",
+      message: "Invalid Docker build-container name prefix",
+      details:
+        "The prefix must start with an alphanumeric character and contain only letters, numbers, periods, underscores, or hyphens.",
+      data: { prefix },
+    });
+  }
+}
+
 /** Raised when the configured Docker daemon cannot be reached. */
 export class DockerUnavailableError
   extends BuildVerificationError<Code.DOCKER_UNAVAILABLE> {

@@ -24,3 +24,11 @@ export type BuildVerificationCliDependencies = {
 
 /** Parsed build-verification command-line flag map. */
 export type ParsedBuildVerificationFlags = Map<string, string | true>;
+
+/** Stable exit codes returned by the runnable build-verification CLI. */
+export enum BuildVerificationCliExitCode {
+  Verified = 0,
+  Failed = 1,
+  Mismatch = 2,
+  NotApplicable = 3,
+}
