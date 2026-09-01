@@ -5,7 +5,10 @@ import type { Server } from "stellar-sdk/rpc";
 import type { InvokeContractPipeline } from "@/pipelines/invoke-contract/index.ts";
 import type { ReadFromContractPipeline } from "@/pipelines/read-from-contract/index.ts";
 import type { ContractErrorMatcher } from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
-import type { ExternalExecutableRef } from "stellar-sdk";
+import type { ExternalExecutableRef } from "@/common/types/index.ts";
+
+/** @internal */
+type ContractSpec = Spec;
 
 /**
  * Plugin accepted by the contract's owned invoke pipeline.
@@ -73,7 +76,7 @@ export type ContractConfig =
 /** Shared options accepted with every contract source. */
 export type ContractConfigCommon = {
   /** Contract ABI specification used to encode method arguments and return values. */
-  spec?: Spec;
+  spec?: ContractSpec;
   /**
    * Plugins installed on the contract's owned pipelines during construction.
    *

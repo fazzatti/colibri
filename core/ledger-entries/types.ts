@@ -1,6 +1,7 @@
-import type { ExternalExecutableRef, xdr } from "stellar-sdk";
+import type { xdr } from "stellar-sdk";
 import type {
   BinaryData,
+  ExternalExecutableRef,
   LedgerKeyLike,
   ScValLike,
   TrustlineAssetLike,
@@ -611,6 +612,7 @@ export declare const LEDGER_KEY_BRAND: unique symbol;
  * Compile-time branded ledger key that preserves the decoded entry type.
  *
  * At runtime this is still a plain Stellar SDK ledger-key object.
+ * @internal
  */
 export type TypedLedgerKey<
   TEntry extends AnyLedgerEntry,

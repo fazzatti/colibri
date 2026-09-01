@@ -1,8 +1,10 @@
 import { Server } from "stellar-sdk/rpc";
 import type { Api } from "stellar-sdk/rpc";
 import { Address, xdr } from "stellar-sdk";
-import type { ExternalExecutableRef } from "stellar-sdk";
-import type { LedgerKeyLike } from "@/common/types/index.ts";
+import type {
+  ExternalExecutableRef,
+  LedgerKeyLike,
+} from "@/common/types/index.ts";
 import * as E from "@/ledger-entries/error.ts";
 import {
   buildAccountLedgerKey,

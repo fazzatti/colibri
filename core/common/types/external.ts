@@ -1,6 +1,7 @@
 import type {
   Asset,
   Contract,
+  ExternalExecutableRef as StellarExternalExecutableRef,
   FeeBumpTransaction,
   Transaction,
   xdr,
@@ -15,29 +16,62 @@ import type { Api } from "stellar-sdk/rpc";
  */
 export type BinaryData = ArrayBuffer | ArrayBufferView;
 
-/** Canonical SDK 17 XDR value accepted by low-level Colibri APIs. */
+/**
+ * Canonical SDK 17 XDR value accepted by low-level Colibri APIs.
+ * @internal
+ */
 export type XdrSerializable = xdr.XdrValue;
 
-/** Canonical Stellar ledger-key value. */
+/**
+ * Canonical Stellar ledger-key value.
+ * @internal
+ */
 export type LedgerKeyLike = xdr.LedgerKey;
 
-/** Canonical Stellar asset accepted when deriving a trustline ledger key. */
+/**
+ * Canonical Stellar asset accepted when deriving a trustline ledger key.
+ * @internal
+ */
 export type TrustlineAssetLike = Asset;
 
-/** Canonical Stellar transaction envelopes accepted by signer helpers. */
+/**
+ * Canonical Stellar transaction envelopes accepted by signer helpers.
+ * @internal
+ */
 export type SignableTransaction = Transaction | FeeBumpTransaction;
 
-/** Canonical Soroban authorization-entry value. */
+/**
+ * Canonical Soroban authorization-entry value.
+ * @internal
+ */
 export type SorobanAuthorizationEntryLike = xdr.SorobanAuthorizationEntry;
 
-/** Canonical Soroban contract value. */
+/**
+ * Canonical Soroban contract value.
+ * @internal
+ */
 export type ScValLike = xdr.ScVal;
 
-/** Canonical Stellar RPC event-filter payload. */
+/**
+ * Canonical Stellar RPC event-filter payload.
+ * @internal
+ */
 export type RpcEventFilterLike = Api.EventFilter;
 
-/** Canonical contract wrapper returned by Stellar RPC event payloads. */
+/**
+ * Canonical contract wrapper returned by Stellar RPC event payloads.
+ * @internal
+ */
 export type ContractAddressLike = Contract;
 
-/** Canonical Stellar RPC event response. */
+/**
+ * Canonical Stellar RPC event response.
+ * @internal
+ */
 export type RpcEventResponseLike = Api.EventResponse;
+
+/**
+ * Canonical SDK 17 external executable reference.
+ * @internal
+ */
+export type ExternalExecutableRef = StellarExternalExecutableRef;

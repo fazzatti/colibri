@@ -1,4 +1,4 @@
-import type { ExternalExecutableRef } from "stellar-sdk";
+import type { ExternalExecutableRef } from "@colibri/core";
 
 /** A contract Wasm supplied directly or resolved from a Stellar network. */
 export type VerificationTarget =

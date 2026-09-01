@@ -4,7 +4,6 @@ import {
   Operation,
   xdr,
 } from "stellar-sdk";
-import type { ExternalExecutableRef } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import { Spec } from "stellar-sdk/contract";
 import {
@@ -40,6 +39,7 @@ import type { ContractId } from "@/strkeys/types.ts";
 import type { NetworkConfig } from "@/network/index.ts";
 import type {
   BinaryData,
+  ExternalExecutableRef,
   LedgerKeyLike,
   ScValLike,
   SorobanAuthorizationEntryLike,
