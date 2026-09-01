@@ -99,11 +99,12 @@ describe("verification reporting", () => {
     );
   });
 
-  it("writes stable evidence JSON from evidence or completed result", async () => {
+  it("writes stable evidence JSON from evidence, results, or failures", async () => {
     const directory = await Deno.makeTempDir();
     try {
       const first = `${directory}/evidence.json`;
       const second = `${directory}/result.json`;
+      const third = `${directory}/failure.json`;
       const evidence = testEvidence();
       await writeVerificationEvidence(first, evidence);
       await writeVerificationEvidence(second, { status: "verified", evidence });
@@ -114,6 +115,17 @@ describe("verification reporting", () => {
       assertEquals(
         await Deno.readTextFile(second),
         await Deno.readTextFile(first),
+      );
+      const failure = {
+        status: "failed" as const,
+        error: { code: "BLDV_TEST" },
+        evidence,
+        logs: evidence.logs,
+      };
+      await writeVerificationEvidence(third, failure);
+      assertEquals(
+        await Deno.readTextFile(third),
+        `${JSON.stringify(failure, null, 2)}\n`,
       );
     } finally {
       await Deno.remove(directory, { recursive: true });

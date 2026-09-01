@@ -5,27 +5,46 @@ import {
   assertThrows,
 } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
+import { ColibriError } from "@colibri/core";
 import type {
   ContractBuildVerificationInput,
   ContractBuildVerificationResult,
+  VerificationLogEvent,
 } from "@/core/index.ts";
 import { testEvidence, testWasm } from "@/testing.test.ts";
-import { InvalidCliArgumentsError } from "@/cli/error.ts";
+import { CliUnexpectedFailureError } from "@/cli/error.ts";
 import {
   formatBuildVerificationErrorSummary,
+  formatBuildVerificationProgress,
   formatBuildVerificationResultSummary,
 } from "@/cli/format.ts";
 import {
   BUILD_VERIFICATION_CLI_HELP,
   getBuildVerificationStringFlag,
   parseBuildVerificationFlags,
+  verificationGitHubTokenFromFlags,
   verificationInputFromFlags,
   verificationNetworkFromFlags,
   verificationSourceFromFlags,
   verificationTargetFromFlags,
 } from "@/cli/flags.ts";
-import type { BuildVerificationCliIo } from "@/cli/io.ts";
+import {
+  type BuildVerificationCliIo,
+  DEFAULT_BUILD_VERIFICATION_CLI_IO,
+} from "@/cli/io.ts";
+import { buildVerificationFailureReport } from "@/cli/report.ts";
 import { runBuildVerificationCli } from "@/cli/run.ts";
+import { BuildVerificationCliExitCode } from "@/cli/types.ts";
+import {
+  attachBuildVerificationErrorContext,
+  BuildVerificationError,
+  Code,
+} from "@/error/base.ts";
+import { DockerUnavailableError } from "@/runners/docker/error.ts";
+import {
+  EvidenceWriteFailedError,
+  LogWriteFailedError,
+} from "@/reporting/error.ts";
 
 const harness = (overrides: Partial<BuildVerificationCliIo> = {}) => {
   const stdout: string[] = [];
@@ -38,9 +57,24 @@ const harness = (overrides: Partial<BuildVerificationCliIo> = {}) => {
       Promise.resolve(JSON.stringify({
         image: `docker.io/stellar/stellar-cli@sha256:${"a".repeat(64)}`,
       })),
+    getEnv: () => undefined,
+    stderrIsTerminal: () => false,
     ...overrides,
   };
   return { stdout, stderr, io };
+};
+
+const assertThrowsCode = (callback: () => unknown, code: Code): void => {
+  const error = assertThrows(callback, BuildVerificationError);
+  assertEquals(error.code, code);
+};
+
+const assertRejectsCode = async (
+  callback: () => Promise<unknown>,
+  code: Code,
+): Promise<void> => {
+  const error = await assertRejects(callback, BuildVerificationError);
+  assertEquals(error.code, code);
 };
 
 const TARGET_HASH = "1".repeat(64);
@@ -90,19 +124,27 @@ describe("build-verification CLI flags", () => {
     );
   });
 
-  it("rejects positional, unknown, repeated, and valueless flags", () => {
+  it("parses short help and gives every malformed flag shape a unique code", () => {
+    assertEquals(
+      parseBuildVerificationFlags(["-h"]),
+      new Map<string, string | true>([["help", true]]),
+    );
     for (
-      const args of [
-        ["positional"],
-        ["--unknown"],
-        ["--wasm", "a", "--wasm", "b"],
-        ["--wasm"],
-        ["--wasm", "--help"],
-      ]
+      const [args, code] of [
+        [["positional"], Code.CLI_POSITIONAL_ARGUMENT_UNSUPPORTED],
+        [["-x"], Code.CLI_UNKNOWN_FLAG],
+        [["--unknown"], Code.CLI_UNKNOWN_FLAG],
+        [["--wasm", "a", "--wasm", "b"], Code.CLI_DUPLICATE_FLAG],
+        [["-h", "--help"], Code.CLI_DUPLICATE_FLAG],
+        [["--help", "-h"], Code.CLI_DUPLICATE_FLAG],
+        [["--wasm"], Code.CLI_FLAG_VALUE_MISSING],
+        [["--wasm", "--help"], Code.CLI_FLAG_VALUE_MISSING],
+        [["--wasm", "-h"], Code.CLI_FLAG_VALUE_MISSING],
+      ] as const
     ) {
-      assertThrows(
+      assertThrowsCode(
         () => parseBuildVerificationFlags(args),
-        InvalidCliArgumentsError,
+        code,
       );
     }
   });
@@ -130,25 +172,25 @@ describe("build-verification CLI flags", () => {
       ),
       { wasm: testWasm(), label: "target.wasm" },
     );
-    await assertRejects(
+    await assertRejectsCode(
       () => verificationTargetFromFlags(new Map(), io),
-      InvalidCliArgumentsError,
+      Code.CLI_TARGET_SELECTION_INVALID,
     );
-    await assertRejects(
+    await assertRejectsCode(
       () =>
         verificationTargetFromFlags(
           parseBuildVerificationFlags(["--wasm", "a", "--wasm-hash", "b"]),
           io,
         ),
-      InvalidCliArgumentsError,
+      Code.CLI_TARGET_SELECTION_INVALID,
     );
-    await assertRejects(
+    await assertRejectsCode(
       () =>
         verificationTargetFromFlags(
           parseBuildVerificationFlags(["--wasm", "missing"]),
           harness({ readFile: () => Promise.reject(new Error("missing")) }).io,
         ),
-      InvalidCliArgumentsError,
+      Code.CLI_TARGET_FILE_READ_FAILED,
     );
   });
 
@@ -175,17 +217,26 @@ describe("build-verification CLI flags", () => {
     );
     assertEquals(verificationNetworkFromFlags(new Map()), undefined);
     for (
-      const args of [
-        ["--network", "testnet", "--rpc-url", "https://rpc"],
-        ["--network", "unknown"],
-        ["--rpc-url", "https://rpc"],
-        ["--network-passphrase", "passphrase"],
-        ["--allow-http"],
-      ]
+      const [args, code] of [
+        [
+          ["--network", "testnet", "--rpc-url", "https://rpc"],
+          Code.CLI_NETWORK_CONFIGURATION_CONFLICT,
+        ],
+        [["--network", "unknown"], Code.CLI_NETWORK_PRESET_INVALID],
+        [
+          ["--rpc-url", "https://rpc"],
+          Code.CLI_NETWORK_CONFIGURATION_INCOMPLETE,
+        ],
+        [
+          ["--network-passphrase", "passphrase"],
+          Code.CLI_NETWORK_CONFIGURATION_INCOMPLETE,
+        ],
+        [["--allow-http"], Code.CLI_ALLOW_HTTP_REQUIRES_NETWORK],
+      ] as const
     ) {
-      assertThrows(
+      assertThrowsCode(
         () => verificationNetworkFromFlags(parseBuildVerificationFlags(args)),
-        InvalidCliArgumentsError,
+        code,
       );
     }
   });
@@ -261,56 +312,75 @@ describe("build-verification CLI flags", () => {
 
   it("rejects every ambiguous or incomplete source group", () => {
     for (
-      const args of [
-        ["--source", "a", "--source-url", "b"],
-        ["--github-revision", "abc"],
+      const [args, code] of [
         [
-          "--github-owner",
-          "o",
-          "--github-repository",
-          "r",
-          "--github-revision",
-          "abc",
-          "--github-release-tag",
-          "v1",
-          "--github-release-asset",
-          "a",
+          ["--source", "a", "--source-url", "b"],
+          Code.CLI_SOURCE_SELECTION_INVALID,
         ],
         [
-          "--github-owner",
-          "o",
-          "--github-repository",
-          "r",
-          "--github-revision",
-          "abc",
-          "--github-format",
-          "tar",
+          ["--source", "a", "--github-owner", "o"],
+          Code.CLI_SOURCE_SELECTION_INVALID,
+        ],
+        [["--github-revision", "abc"], Code.CLI_GITHUB_SOURCE_INCOMPLETE],
+        [
+          [
+            "--github-owner",
+            "o",
+            "--github-repository",
+            "r",
+            "--github-revision",
+            "abc",
+            "--github-release-tag",
+            "v1",
+            "--github-release-asset",
+            "a",
+          ],
+          Code.CLI_GITHUB_REVISION_CONFLICT,
         ],
         [
-          "--github-owner",
-          "o",
-          "--github-repository",
-          "r",
-          "--github-release-tag",
-          "v1",
+          [
+            "--github-owner",
+            "o",
+            "--github-repository",
+            "r",
+            "--github-revision",
+            "abc",
+            "--github-format",
+            "tar",
+          ],
+          Code.CLI_GITHUB_FORMAT_INVALID,
         ],
         [
-          "--github-owner",
-          "o",
-          "--github-repository",
-          "r",
-          "--github-release-tag",
-          "v1",
-          "--github-release-asset",
-          "a",
-          "--github-format",
-          "zip",
+          [
+            "--github-owner",
+            "o",
+            "--github-repository",
+            "r",
+            "--github-release-tag",
+            "v1",
+          ],
+          Code.CLI_GITHUB_RELEASE_INVALID,
         ],
-      ]
+        [
+          [
+            "--github-owner",
+            "o",
+            "--github-repository",
+            "r",
+            "--github-release-tag",
+            "v1",
+            "--github-release-asset",
+            "a",
+            "--github-format",
+            "zip",
+          ],
+          Code.CLI_GITHUB_RELEASE_INVALID,
+        ],
+      ] as const
     ) {
-      assertThrows(
+      assertThrowsCode(
         () => verificationSourceFromFlags(parseBuildVerificationFlags(args)),
-        InvalidCliArgumentsError,
+        code,
       );
     }
   });
@@ -334,7 +404,7 @@ describe("build-verification CLI flags", () => {
       io,
     );
     assertEquals(outOfBand.mode, "outOfBand");
-    await assertRejects(
+    await assertRejectsCode(
       () =>
         verificationInputFromFlags(
           parseBuildVerificationFlags([
@@ -345,15 +415,18 @@ describe("build-verification CLI flags", () => {
           ]),
           io,
         ),
-      InvalidCliArgumentsError,
+      Code.CLI_OUT_OF_BAND_SOURCE_REQUIRED,
     );
     for (
-      const readTextFile of [
-        () => Promise.reject(new Error("missing")),
-        () => Promise.resolve("not-json"),
-      ]
+      const [readTextFile, code] of [
+        [
+          () => Promise.reject(new Error("missing")),
+          Code.CLI_RECIPE_FILE_READ_FAILED,
+        ],
+        [() => Promise.resolve("not-json"), Code.CLI_RECIPE_JSON_INVALID],
+      ] as const
     ) {
-      await assertRejects(
+      await assertRejectsCode(
         () =>
           verificationInputFromFlags(
             parseBuildVerificationFlags([
@@ -366,9 +439,73 @@ describe("build-verification CLI flags", () => {
             ]),
             harness({ readTextFile }).io,
           ),
-        InvalidCliArgumentsError,
+        code,
       );
     }
+  });
+
+  it("reads GitHub tokens only from an explicit environment source", () => {
+    assertEquals(
+      verificationGitHubTokenFromFlags(new Map(), harness().io),
+      undefined,
+    );
+    const flags = parseBuildVerificationFlags([
+      "--github-owner",
+      "stellar",
+      "--github-repository",
+      "example",
+      "--github-revision",
+      "abc",
+      "--github-token-env",
+      "GITHUB_TOKEN",
+    ]);
+    assertEquals(
+      verificationGitHubTokenFromFlags(
+        flags,
+        harness({
+          getEnv: (name) => name === "GITHUB_TOKEN" ? "secret" : undefined,
+        }).io,
+      ),
+      "secret",
+    );
+    assertThrowsCode(
+      () =>
+        verificationGitHubTokenFromFlags(
+          parseBuildVerificationFlags([
+            "--wasm",
+            "target.wasm",
+            "--github-token-env",
+            "GITHUB_TOKEN",
+          ]),
+          harness().io,
+        ),
+      Code.CLI_GITHUB_TOKEN_SOURCE_REQUIRED,
+    );
+    assertThrowsCode(
+      () => verificationGitHubTokenFromFlags(flags, harness().io),
+      Code.CLI_ENVIRONMENT_VALUE_MISSING,
+    );
+    assertThrowsCode(
+      () =>
+        verificationGitHubTokenFromFlags(
+          flags,
+          harness({
+            getEnv: () => {
+              throw new Error("denied");
+            },
+          }).io,
+        ),
+      Code.CLI_ENVIRONMENT_READ_FAILED,
+    );
+    const fallbackFlags = new Map(flags);
+    fallbackFlags.set("github-token-env", "PATH");
+    assertEquals(
+      verificationGitHubTokenFromFlags(fallbackFlags, {
+        ...harness().io,
+        getEnv: undefined,
+      }),
+      Deno.env.get("PATH"),
+    );
   });
 });
 
@@ -439,9 +576,9 @@ describe("runBuildVerificationCli", () => {
     );
     assertEquals(
       formatBuildVerificationErrorSummary(
-        new InvalidCliArgumentsError("Line one.\nLine two."),
+        new CliUnexpectedFailureError("Line one.\nLine two."),
       ),
-      "ERROR BLDV_031 Invalid command-line arguments: Line one. Line two.",
+      "ERROR BLDV_130 Unexpected command-line failure: The CLI failed outside a recognized verification or reporting path.",
     );
     assertEquals(
       formatBuildVerificationErrorSummary({
@@ -450,24 +587,43 @@ describe("runBuildVerificationCli", () => {
       }),
       "ERROR TEST No details",
     );
+    const progress: VerificationLogEvent = {
+      timestamp: "2026-09-01T12:00:00.000Z",
+      stage: "resolve-verification-target",
+      level: "info",
+      code: "BLDV_TARGET_RESOLVED",
+      message: "Target\nresolved.",
+    };
+    assertEquals(
+      formatBuildVerificationProgress(progress),
+      "INFO resolve-verification-target BLDV_TARGET_RESOLVED Target resolved.",
+    );
   });
 
-  it("prints standalone help and rejects help combinations", async () => {
-    const valid = harness();
-    assertEquals(await runBuildVerificationCli(["--help"], valid.io), 0);
-    assertEquals(valid.stdout, [BUILD_VERIFICATION_CLI_HELP]);
+  it("prints help for empty, short, or long invocations and rejects combinations", async () => {
+    for (const args of [[], ["-h"], ["--help"]]) {
+      const valid = harness();
+      assertEquals(
+        await runBuildVerificationCli(args, valid.io),
+        BuildVerificationCliExitCode.Verified,
+      );
+      assertEquals(valid.stdout, [BUILD_VERIFICATION_CLI_HELP]);
+    }
+    assertStringIncludes(BUILD_VERIFICATION_CLI_HELP, "-h, --help");
+    assertStringIncludes(BUILD_VERIFICATION_CLI_HELP, "--github-format");
+    assertStringIncludes(BUILD_VERIFICATION_CLI_HELP, "@0.3.0/cli");
     const invalid = harness();
     assertEquals(
       await runBuildVerificationCli(["--help", "--allow-http"], invalid.io),
-      1,
+      BuildVerificationCliExitCode.Failed,
     );
-    assertStringIncludes(invalid.stderr[0], "ERROR BLDV_031");
+    assertStringIncludes(invalid.stderr[0], "ERROR BLDV_110");
     const invalidJson = harness();
     assertEquals(
       await runBuildVerificationCli(["--help", "--json"], invalidJson.io),
-      1,
+      BuildVerificationCliExitCode.Failed,
     );
-    assertEquals(JSON.parse(invalidJson.stderr[0]).code, "BLDV_031");
+    assertEquals(JSON.parse(invalidJson.stderr[0]).code, "BLDV_110");
   });
 
   it("passes shared network/build options to the high-level verifier", async () => {
@@ -498,7 +654,7 @@ describe("runBuildVerificationCli", () => {
         },
       },
     );
-    assertEquals(exit, 0);
+    assertEquals(exit, BuildVerificationCliExitCode.Verified);
     assertEquals(observedInput?.mode, "strictSep58");
     assertEquals(observedOptions, {
       network: {
@@ -507,8 +663,85 @@ describe("runBuildVerificationCli", () => {
         allowHttp: true,
       },
       allowBuildNetwork: true,
+      githubToken: undefined,
+      logger: undefined,
     });
     assertEquals(test.stdout, [`VERIFIED ${TARGET_HASH}`]);
+  });
+
+  it("passes an environment-backed GitHub token without exposing it in arguments", async () => {
+    const test = harness({
+      getEnv: (name) => name === "PRIVATE_GITHUB_TOKEN" ? "secret" : undefined,
+    });
+    let observedOptions: unknown;
+    assertEquals(
+      await runBuildVerificationCli(
+        [
+          "--wasm",
+          "target.wasm",
+          "--github-owner",
+          "stellar",
+          "--github-repository",
+          "example",
+          "--github-revision",
+          "abc",
+          "--github-token-env",
+          "PRIVATE_GITHUB_TOKEN",
+          "--recipe",
+          "recipe.json",
+        ],
+        test.io,
+        {
+          createVerifier: (options) => {
+            observedOptions = options;
+            return { verify: () => Promise.resolve(result()) };
+          },
+        },
+      ),
+      BuildVerificationCliExitCode.Verified,
+    );
+    assertEquals(
+      (observedOptions as { githubToken?: string }).githubToken,
+      "secret",
+    );
+    assertEquals(test.stdout.some((value) => value.includes("secret")), false);
+    assertEquals(test.stderr.some((value) => value.includes("secret")), false);
+  });
+
+  it("prints live progress only for interactive non-JSON runs", async () => {
+    const event: VerificationLogEvent = {
+      timestamp: "2026-09-01T12:00:00.000Z",
+      stage: "resolve-verification-target",
+      level: "info",
+      code: "BLDV_TARGET_RESOLVED",
+      message: "Target resolved.",
+    };
+    for (
+      const [extraArgs, terminal, expectedProgress] of [
+        [[], true, true],
+        [["--quiet"], true, false],
+        [["--json"], true, false],
+        [[], false, false],
+      ] as const
+    ) {
+      const test = harness({ stderrIsTerminal: () => terminal });
+      await runBuildVerificationCli(
+        ["--wasm", "target.wasm", ...extraArgs],
+        test.io,
+        {
+          createVerifier: (options) => ({
+            verify: async () => {
+              await options.logger?.log(event);
+              return result();
+            },
+          }),
+        },
+      );
+      assertEquals(
+        test.stderr.includes(formatBuildVerificationProgress(event)),
+        expectedProgress,
+      );
+    }
   });
 
   it("writes evidence and either JSONL or text logs through injected writers", async () => {
@@ -539,7 +772,7 @@ describe("runBuildVerificationCli", () => {
           },
         },
       );
-      assertEquals(exit, 0);
+      assertEquals(exit, BuildVerificationCliExitCode.Verified);
       assertEquals(writes[0], ["evidence", "evidence.json", result()]);
       assertEquals(writes[1], ["logs", "events.log", [], { format }]);
     }
@@ -566,7 +799,7 @@ describe("runBuildVerificationCli", () => {
             createVerifier: () => ({ verify: () => Promise.resolve(result()) }),
           },
         ),
-        0,
+        BuildVerificationCliExitCode.Verified,
       );
       assertEquals(
         JSON.parse(await Deno.readTextFile(evidencePath)).package.name,
@@ -599,7 +832,7 @@ describe("runBuildVerificationCli", () => {
         },
       },
     );
-    assertEquals(exit, 2);
+    assertEquals(exit, BuildVerificationCliExitCode.Mismatch);
     assertEquals(format, { format: "jsonl" });
     assertEquals(
       test.stdout,
@@ -609,21 +842,35 @@ describe("runBuildVerificationCli", () => {
 
   it("validates log formatting flags before verification", async () => {
     for (
-      const args of [
-        ["--wasm", "target.wasm", "--log-format", "xml", "--logs", "events"],
-        ["--wasm", "target.wasm", "--log-format", "text"],
-      ]
+      const [args, code] of [
+        [
+          ["--wasm", "target.wasm", "--log-format", "xml", "--logs", "events"],
+          Code.CLI_LOG_FORMAT_INVALID,
+        ],
+        [
+          ["--wasm", "target.wasm", "--log-format", "text"],
+          Code.CLI_LOG_FORMAT_REQUIRES_LOGS,
+        ],
+      ] as const
     ) {
       const test = harness();
-      assertEquals(await runBuildVerificationCli(args, test.io), 1);
-      assertStringIncludes(test.stderr[0], "ERROR BLDV_031");
+      assertEquals(
+        await runBuildVerificationCli(args, test.io, {
+          writeLogs: () => Promise.resolve(),
+        }),
+        BuildVerificationCliExitCode.Failed,
+      );
+      assertStringIncludes(test.stderr[0], `ERROR ${code}`);
     }
   });
 
   it("preserves typed failures and normalizes unexpected failures for stderr", async () => {
     const typed = harness();
-    assertEquals(await runBuildVerificationCli(["invalid"], typed.io), 1);
-    assertStringIncludes(typed.stderr[0], "ERROR BLDV_031");
+    assertEquals(
+      await runBuildVerificationCli(["invalid"], typed.io),
+      BuildVerificationCliExitCode.Failed,
+    );
+    assertStringIncludes(typed.stderr[0], "ERROR BLDV_106");
     const unexpected = harness();
     assertEquals(
       await runBuildVerificationCli(
@@ -635,12 +882,321 @@ describe("runBuildVerificationCli", () => {
           }),
         },
       ),
-      1,
+      BuildVerificationCliExitCode.Failed,
     );
-    assertEquals(JSON.parse(unexpected.stderr[0]).code, "BLDV_031");
+    assertEquals(JSON.parse(unexpected.stderr[0]).code, "BLDV_130");
     assertStringIncludes(
       JSON.parse(unexpected.stderr[0]).details,
-      "unexpected failure",
+      "outside a recognized",
+    );
+
+    const runtime = harness();
+    await runBuildVerificationCli(
+      ["--wasm", "target.wasm"],
+      runtime.io,
+      {
+        createVerifier: () => {
+          throw new Error("runtime");
+        },
+      },
+    );
+    assertStringIncludes(
+      runtime.stderr[0],
+      `ERROR ${Code.CLI_RUNTIME_INITIALIZATION_FAILED}`,
+    );
+
+    const typedRuntime = harness();
+    await runBuildVerificationCli(
+      ["--wasm", "target.wasm"],
+      typedRuntime.io,
+      {
+        createVerifier: () => {
+          throw new DockerUnavailableError(new Error("offline"));
+        },
+      },
+    );
+    assertStringIncludes(
+      typedRuntime.stderr[0],
+      `ERROR ${Code.DOCKER_UNAVAILABLE}`,
+    );
+  });
+
+  it("writes partial evidence and logs when verification fails", async () => {
+    const event: VerificationLogEvent = {
+      timestamp: "2026-09-01T12:00:00.000Z",
+      stage: "execute-contract-build",
+      level: "error",
+      code: "BLDV_BUILD_FAILED",
+      message: "Build failed.",
+    };
+    const evidence = { ...testEvidence(), logs: [event] };
+    const failure = attachBuildVerificationErrorContext(
+      new DockerUnavailableError(new Error("offline")),
+      { evidence, logs: [event] },
+    );
+    const writes: unknown[] = [];
+    const test = harness();
+    assertEquals(
+      await runBuildVerificationCli(
+        [
+          "--wasm",
+          "target.wasm",
+          "--evidence",
+          "failure.json",
+          "--logs",
+          "failure.jsonl",
+        ],
+        test.io,
+        {
+          createVerifier: () => ({ verify: () => Promise.reject(failure) }),
+          writeEvidence: (path, value) => {
+            writes.push(["evidence", path, value]);
+            return Promise.resolve();
+          },
+          writeLogs: (path, logs, options) => {
+            writes.push(["logs", path, logs, options]);
+            return Promise.resolve();
+          },
+        },
+      ),
+      BuildVerificationCliExitCode.Failed,
+    );
+    const report = (writes[0] as [
+      string,
+      string,
+      { status: string; error: { code: string } },
+    ])[2];
+    assertEquals(report.status, "failed");
+    assertEquals(report.error.code, Code.DOCKER_UNAVAILABLE);
+    assertEquals(writes[1], ["logs", "failure.jsonl", [event], {
+      format: "jsonl",
+    }]);
+    assertStringIncludes(test.stderr[0], `ERROR ${Code.DOCKER_UNAVAILABLE}`);
+  });
+
+  it("uses package writers for failure evidence and logs", async () => {
+    const directory = await Deno.makeTempDir();
+    try {
+      const evidencePath = `${directory}/failure.json`;
+      const logsPath = `${directory}/failure.jsonl`;
+      const evidence = testEvidence();
+      const failure = attachBuildVerificationErrorContext(
+        new DockerUnavailableError(new Error("offline")),
+        { evidence, logs: [] },
+      );
+      assertEquals(
+        await runBuildVerificationCli(
+          [
+            "--wasm",
+            "target.wasm",
+            "--evidence",
+            evidencePath,
+            "--logs",
+            logsPath,
+          ],
+          harness().io,
+          {
+            createVerifier: () => ({ verify: () => Promise.reject(failure) }),
+          },
+        ),
+        BuildVerificationCliExitCode.Failed,
+      );
+      const report = JSON.parse(await Deno.readTextFile(evidencePath));
+      assertEquals(report.status, "failed");
+      assertEquals(report.error.code, Code.DOCKER_UNAVAILABLE);
+      assertEquals(report.evidence, evidence);
+      assertEquals(await Deno.readTextFile(logsPath), "");
+    } finally {
+      await Deno.remove(directory, { recursive: true });
+    }
+  });
+
+  it("reports secondary failure-artifact errors without hiding the primary error", async () => {
+    const failure = new DockerUnavailableError(new Error("offline"));
+    const test = harness();
+    assertEquals(
+      await runBuildVerificationCli(
+        [
+          "--wasm",
+          "target.wasm",
+          "--json",
+          "--evidence",
+          "failure.json",
+          "--logs",
+          "failure.jsonl",
+        ],
+        test.io,
+        {
+          createVerifier: () => ({ verify: () => Promise.reject(failure) }),
+          writeEvidence: () =>
+            Promise.reject(
+              new EvidenceWriteFailedError("failure.json", failure),
+            ),
+          writeLogs: () =>
+            Promise.reject(new LogWriteFailedError("failure.jsonl", failure)),
+        },
+      ),
+      BuildVerificationCliExitCode.Failed,
+    );
+    const output = JSON.parse(test.stderr[0]);
+    assertEquals(output.code, Code.DOCKER_UNAVAILABLE);
+    assertEquals(
+      output.reportingErrors.map(({ code }: { code: string }) => code),
+      [Code.EVIDENCE_WRITE_FAILED, Code.LOG_WRITE_FAILED],
+    );
+
+    const unexpectedReporting = harness();
+    await runBuildVerificationCli(
+      [
+        "--wasm",
+        "target.wasm",
+        "--json",
+        "--evidence",
+        "failure.json",
+        "--logs",
+        "failure.jsonl",
+      ],
+      unexpectedReporting.io,
+      {
+        createVerifier: () => ({ verify: () => Promise.reject(failure) }),
+        writeEvidence: () => Promise.reject("unexpected writer failure"),
+        writeLogs: () => Promise.reject("unexpected log writer failure"),
+      },
+    );
+    assertEquals(
+      JSON.parse(unexpectedReporting.stderr[0]).reportingErrors.map(
+        ({ code }: { code: string }) => code,
+      ),
+      [Code.EVIDENCE_WRITE_FAILED, Code.LOG_WRITE_FAILED],
+    );
+
+    const summary = harness();
+    await runBuildVerificationCli(
+      ["--wasm", "target.wasm", "--evidence", "failure.json"],
+      summary.io,
+      {
+        createVerifier: () => ({ verify: () => Promise.reject(failure) }),
+        writeEvidence: () =>
+          Promise.reject(new EvidenceWriteFailedError("failure.json", failure)),
+      },
+    );
+    assertStringIncludes(summary.stderr[0], `ERROR ${Code.DOCKER_UNAVAILABLE}`);
+    assertStringIncludes(
+      summary.stderr[1],
+      `ERROR ${Code.EVIDENCE_WRITE_FAILED}`,
+    );
+  });
+
+  it("does not retry the artifact writer that caused the primary failure", async () => {
+    let evidenceCalls = 0;
+    const evidenceFailure = harness();
+    assertEquals(
+      await runBuildVerificationCli(
+        ["--wasm", "target.wasm", "--evidence", "evidence.json"],
+        evidenceFailure.io,
+        {
+          createVerifier: () => ({ verify: () => Promise.resolve(result()) }),
+          writeEvidence: () => {
+            evidenceCalls += 1;
+            return Promise.reject(
+              new EvidenceWriteFailedError("evidence.json", new Error("write")),
+            );
+          },
+        },
+      ),
+      BuildVerificationCliExitCode.Failed,
+    );
+    assertEquals(evidenceCalls, 1);
+    assertStringIncludes(
+      evidenceFailure.stderr[0],
+      `ERROR ${Code.EVIDENCE_WRITE_FAILED}`,
+    );
+
+    let logCalls = 0;
+    const logFailure = harness();
+    assertEquals(
+      await runBuildVerificationCli(
+        ["--wasm", "target.wasm", "--logs", "logs.jsonl"],
+        logFailure.io,
+        {
+          createVerifier: () => ({ verify: () => Promise.resolve(result()) }),
+          writeLogs: () => {
+            logCalls += 1;
+            return Promise.reject(
+              new LogWriteFailedError("logs.jsonl", new Error("write")),
+            );
+          },
+        },
+      ),
+      BuildVerificationCliExitCode.Failed,
+    );
+    assertEquals(logCalls, 1);
+    assertStringIncludes(
+      logFailure.stderr[0],
+      `ERROR ${Code.LOG_WRITE_FAILED}`,
+    );
+  });
+
+  it("builds bounded failure reports from context or fallback evidence", () => {
+    const event: VerificationLogEvent = {
+      timestamp: "2026-09-01T12:00:00.000Z",
+      stage: "execute-contract-build",
+      level: "error",
+      code: "BLDV_BUILD_FAILED",
+      message: "Build failed.",
+    };
+    const evidence = { ...testEvidence(), logs: [event] };
+    const contextual = buildVerificationFailureReport(
+      attachBuildVerificationErrorContext(
+        new DockerUnavailableError(new Error("offline")),
+        { evidence, logs: [event] },
+      ),
+    );
+    assertEquals(contextual.evidence, evidence);
+    assertEquals(contextual.logs, [event]);
+    assertEquals(
+      (contextual.error.meta as { data: Record<string, unknown> }).data
+        .evidence,
+      undefined,
+    );
+    assertEquals(
+      (contextual.error.meta as { data: Record<string, unknown> }).data.logs,
+      undefined,
+    );
+    const fallback = buildVerificationFailureReport(
+      new CliUnexpectedFailureError("unexpected"),
+      evidence,
+    );
+    assertEquals(fallback.evidence, evidence);
+    assertEquals(fallback.logs, [event]);
+    const empty = buildVerificationFailureReport(
+      new CliUnexpectedFailureError("unexpected"),
+    );
+    assertEquals(empty.evidence, undefined);
+    assertEquals(empty.logs, []);
+    const noData = buildVerificationFailureReport(ColibriError.unexpected());
+    assertEquals(noData.evidence, undefined);
+    assertEquals(noData.logs, []);
+
+    const invalidContexts = [
+      { evidence: "invalid" },
+      { evidence: {} },
+      { evidence: { package: {} } },
+    ];
+    for (const data of invalidContexts) {
+      const invalidContext = ColibriError.unexpected({ meta: { data } });
+      const report = buildVerificationFailureReport(invalidContext);
+      assertEquals(report.evidence, undefined);
+      assertEquals(report.logs, []);
+    }
+
+    const missingSerializedMeta = ColibriError.unexpected({
+      meta: { data: { safe: true } },
+    });
+    missingSerializedMeta.toJSON = () => ({ code: "TEST" });
+    assertEquals(
+      buildVerificationFailureReport(missingSerializedMeta).error,
+      { code: "TEST" },
     );
   });
 
@@ -654,7 +1210,7 @@ describe("runBuildVerificationCli", () => {
           createVerifier: () => ({ verify: () => Promise.resolve(result()) }),
         },
       ),
-      0,
+      BuildVerificationCliExitCode.Verified,
     );
     assertEquals(JSON.parse(test.stdout[0]), result());
   });
@@ -663,7 +1219,7 @@ describe("runBuildVerificationCli", () => {
     const test = harness();
     assertEquals(
       await runBuildVerificationCli(["--wasm", "target.wasm"], test.io),
-      0,
+      BuildVerificationCliExitCode.NotApplicable,
     );
     assertEquals(
       test.stdout,
@@ -681,10 +1237,20 @@ describe("runBuildVerificationCli", () => {
     console.log = (...values) => stdout.push(...values);
     console.error = (...values) => stderr.push(...values);
     try {
-      assertEquals(await runBuildVerificationCli(["--help"]), 0);
-      assertEquals(await runBuildVerificationCli(["invalid"]), 1);
+      assertEquals(
+        typeof DEFAULT_BUILD_VERIFICATION_CLI_IO.stderrIsTerminal?.(),
+        "boolean",
+      );
+      assertEquals(
+        await runBuildVerificationCli(["--help"]),
+        BuildVerificationCliExitCode.Verified,
+      );
+      assertEquals(
+        await runBuildVerificationCli(["invalid"]),
+        BuildVerificationCliExitCode.Failed,
+      );
       assertStringIncludes(String(stdout[0]), "@colibri/build-verification");
-      assertStringIncludes(String(stderr[0]), "ERROR BLDV_031");
+      assertStringIncludes(String(stderr[0]), "ERROR BLDV_106");
     } finally {
       console.log = originalLog;
       console.error = originalError;

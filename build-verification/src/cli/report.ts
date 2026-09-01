@@ -1,0 +1,64 @@
+import type { ColibriError } from "@colibri/core";
+import type {
+  ContractBuildVerificationEvidence,
+  VerificationLogEvent,
+} from "@/core/index.ts";
+import type { BuildVerificationFailureReport } from "@/reporting/types.ts";
+
+const errorData = (
+  error: ColibriError,
+): Readonly<Record<string, unknown>> | undefined => {
+  const data = error.meta?.data;
+  return data && typeof data === "object"
+    ? data as Readonly<Record<string, unknown>>
+    : undefined;
+};
+
+const contextualEvidence = (
+  data: Readonly<Record<string, unknown>> | undefined,
+): ContractBuildVerificationEvidence | undefined => {
+  const evidence = data?.evidence;
+  if (!evidence || typeof evidence !== "object") return undefined;
+  if (!("package" in evidence) || !("logs" in evidence)) return undefined;
+  return evidence as ContractBuildVerificationEvidence;
+};
+
+const contextualLogs = (
+  data: Readonly<Record<string, unknown>> | undefined,
+  evidence?: ContractBuildVerificationEvidence,
+): readonly VerificationLogEvent[] => {
+  const logs = data?.logs;
+  return Array.isArray(logs)
+    ? logs as readonly VerificationLogEvent[]
+    : evidence?.logs ?? [];
+};
+
+const serializedErrorWithoutReportContext = (
+  error: ColibriError,
+  data: Readonly<Record<string, unknown>> | undefined,
+): Readonly<Record<string, unknown>> => {
+  const serialized = error.toJSON();
+  if (!data) return serialized;
+  const { evidence: _evidence, logs: _logs, ...remainingData } = data;
+  const meta = serialized.meta;
+  if (!meta || typeof meta !== "object") return serialized;
+  return {
+    ...serialized,
+    meta: { ...meta, data: remainingData },
+  };
+};
+
+/** Builds a serializable report from one typed CLI or verification failure. */
+export const buildVerificationFailureReport = (
+  error: ColibriError,
+  fallbackEvidence?: ContractBuildVerificationEvidence,
+): BuildVerificationFailureReport => {
+  const data = errorData(error);
+  const evidence = contextualEvidence(data) ?? fallbackEvidence;
+  return {
+    status: "failed",
+    error: serializedErrorWithoutReportContext(error, data),
+    evidence,
+    logs: contextualLogs(data, evidence),
+  };
+};

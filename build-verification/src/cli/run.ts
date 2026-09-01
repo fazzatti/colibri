@@ -1,13 +1,22 @@
 import { ColibriError } from "@colibri/core";
-import { InvalidCliArgumentsError } from "@/cli/error.ts";
+import type { ContractBuildVerificationEvidence } from "@/core/index.ts";
+import {
+  CliHelpConflictError,
+  CliLogFormatInvalidError,
+  CliLogFormatRequiresLogsError,
+  CliRuntimeInitializationFailedError,
+  CliUnexpectedFailureError,
+} from "@/cli/error.ts";
 import {
   formatBuildVerificationErrorSummary,
+  formatBuildVerificationProgress,
   formatBuildVerificationResultSummary,
 } from "@/cli/format.ts";
 import {
   BUILD_VERIFICATION_CLI_HELP,
   getBuildVerificationStringFlag,
   parseBuildVerificationFlags,
+  verificationGitHubTokenFromFlags,
   verificationInputFromFlags,
   verificationNetworkFromFlags,
 } from "@/cli/flags.ts";
@@ -15,12 +24,16 @@ import {
   type BuildVerificationCliIo,
   DEFAULT_BUILD_VERIFICATION_CLI_IO,
 } from "@/cli/io.ts";
-import type { BuildVerificationCliDependencies } from "@/cli/types.ts";
+import { buildVerificationFailureReport } from "@/cli/report.ts";
 import {
-  writeVerificationEvidence,
-  writeVerificationLogs,
-} from "@/reporting/index.ts";
-import { ContractBuildVerifier } from "@/verifier/contract-build-verifier.ts";
+  type BuildVerificationCliDependencies,
+  BuildVerificationCliExitCode,
+} from "@/cli/types.ts";
+import { Code } from "@/error/base.ts";
+import {
+  EvidenceWriteFailedError,
+  LogWriteFailedError,
+} from "@/reporting/error.ts";
 import type { ContractBuildVerifierOptions } from "@/verifier/types.ts";
 
 /** Executes the package CLI and returns its process exit code. */
@@ -29,67 +42,162 @@ export const runBuildVerificationCli = async (
   io: BuildVerificationCliIo = DEFAULT_BUILD_VERIFICATION_CLI_IO,
   dependencies: BuildVerificationCliDependencies = {},
 ): Promise<number> => {
+  if (args.length === 0) {
+    io.stdout(BUILD_VERIFICATION_CLI_HELP);
+    return BuildVerificationCliExitCode.Verified;
+  }
   const jsonOutput = args.includes("--json");
+  let evidencePath: string | undefined;
+  let logsPath: string | undefined;
+  let logFormat: "jsonl" | "text" = "jsonl";
+  let evidenceWritten = false;
+  let logsWritten = false;
+  let completedEvidence: ContractBuildVerificationEvidence | undefined;
   try {
     const flags = parseBuildVerificationFlags(args);
     if (flags.has("help")) {
       if (flags.size !== 1) {
-        throw new InvalidCliArgumentsError(
-          "--help cannot be combined with other flags.",
-        );
+        throw new CliHelpConflictError();
       }
       io.stdout(BUILD_VERIFICATION_CLI_HELP);
-      return 0;
+      return BuildVerificationCliExitCode.Verified;
     }
-    const logFormat = getBuildVerificationStringFlag(flags, "log-format");
-    const logsPath = getBuildVerificationStringFlag(flags, "logs");
-    if (logFormat && logFormat !== "jsonl" && logFormat !== "text") {
-      throw new InvalidCliArgumentsError(
-        "--log-format must be jsonl or text.",
-        { logFormat },
-      );
+    const requestedLogFormat = getBuildVerificationStringFlag(
+      flags,
+      "log-format",
+    );
+    logsPath = getBuildVerificationStringFlag(flags, "logs");
+    evidencePath = getBuildVerificationStringFlag(flags, "evidence");
+    if (
+      requestedLogFormat && requestedLogFormat !== "jsonl" &&
+      requestedLogFormat !== "text"
+    ) {
+      throw new CliLogFormatInvalidError(requestedLogFormat);
     }
-    if (logFormat && !logsPath) {
-      throw new InvalidCliArgumentsError("--log-format requires --logs.");
+    if (requestedLogFormat && !logsPath) {
+      throw new CliLogFormatRequiresLogsError();
     }
+    logFormat = requestedLogFormat === "text" ? "text" : "jsonl";
     const input = await verificationInputFromFlags(flags, io);
     const options: ContractBuildVerifierOptions = {
       network: verificationNetworkFromFlags(flags),
       allowBuildNetwork: flags.has("allow-build-network"),
+      githubToken: verificationGitHubTokenFromFlags(flags, io),
+      logger: !jsonOutput && !flags.has("quiet") &&
+          io.stderrIsTerminal?.()
+        ? { log: (event) => io.stderr(formatBuildVerificationProgress(event)) }
+        : undefined,
     };
-    const verifier = dependencies.createVerifier?.(options) ??
-      new ContractBuildVerifier(options);
+    let verifier:
+      | ReturnType<
+        NonNullable<BuildVerificationCliDependencies["createVerifier"]>
+      >
+      | undefined;
+    try {
+      verifier = dependencies.createVerifier?.(options);
+      if (!verifier) {
+        verifier = new (await import("@/verifier/contract-build-verifier.ts"))
+          .ContractBuildVerifier(options);
+      }
+    } catch (cause) {
+      if (ColibriError.is(cause)) throw cause;
+      throw new CliRuntimeInitializationFailedError(cause);
+    }
     const result = await verifier.verify(input);
-    const evidencePath = getBuildVerificationStringFlag(flags, "evidence");
+    completedEvidence = result.evidence;
     if (evidencePath) {
-      await (dependencies.writeEvidence ?? writeVerificationEvidence)(
+      const writeEvidence = dependencies.writeEvidence ??
+        (await import("@/reporting/evidence-writer.ts"))
+          .writeVerificationEvidence;
+      await writeEvidence(
         evidencePath,
         result,
       );
+      evidenceWritten = true;
     }
     if (logsPath) {
-      await (dependencies.writeLogs ?? writeVerificationLogs)(
+      const writeLogs = dependencies.writeLogs ??
+        (await import("@/reporting/log-writer.ts")).writeVerificationLogs;
+      await writeLogs(
         logsPath,
         result.evidence.logs,
-        { format: logFormat === "text" ? "text" : "jsonl" },
+        { format: logFormat },
       );
+      logsWritten = true;
     }
     io.stdout(
       jsonOutput
         ? JSON.stringify(result, null, 2)
         : formatBuildVerificationResultSummary(result),
     );
-    return result.status === "mismatch" ? 2 : 0;
+    return result.status === "mismatch"
+      ? BuildVerificationCliExitCode.Mismatch
+      : result.status === "notApplicable"
+      ? BuildVerificationCliExitCode.NotApplicable
+      : BuildVerificationCliExitCode.Verified;
   } catch (cause) {
-    const error = ColibriError.is(cause) ? cause : new InvalidCliArgumentsError(
-      "The CLI encountered an unexpected failure before verification completed.",
-      { cause: String(cause) },
-    );
+    const error = ColibriError.is(cause)
+      ? cause
+      : new CliUnexpectedFailureError(cause);
+    const failure = buildVerificationFailureReport(error, completedEvidence);
+    const reportingErrors: ColibriError[] = [];
+    if (
+      evidencePath && !evidenceWritten &&
+      error.code !== Code.EVIDENCE_WRITE_FAILED
+    ) {
+      try {
+        const writeEvidence = dependencies.writeEvidence ??
+          (await import("@/reporting/evidence-writer.ts"))
+            .writeVerificationEvidence;
+        await writeEvidence(
+          evidencePath,
+          failure,
+        );
+      } catch (reportingCause) {
+        reportingErrors.push(
+          ColibriError.is(reportingCause)
+            ? reportingCause
+            : new EvidenceWriteFailedError(evidencePath, reportingCause),
+        );
+      }
+    }
+    if (logsPath && !logsWritten && error.code !== Code.LOG_WRITE_FAILED) {
+      try {
+        const writeLogs = dependencies.writeLogs ??
+          (await import("@/reporting/log-writer.ts")).writeVerificationLogs;
+        await writeLogs(
+          logsPath,
+          failure.logs,
+          { format: logFormat },
+        );
+      } catch (reportingCause) {
+        reportingErrors.push(
+          ColibriError.is(reportingCause)
+            ? reportingCause
+            : new LogWriteFailedError(logsPath, reportingCause),
+        );
+      }
+    }
+    const serializedError = error.toJSON();
     io.stderr(
       jsonOutput
-        ? JSON.stringify(error.toJSON(), null, 2)
+        ? JSON.stringify(
+          reportingErrors.length > 0
+            ? {
+              ...serializedError,
+              reportingErrors: reportingErrors.map((value) => value.toJSON()),
+            }
+            : serializedError,
+          null,
+          2,
+        )
         : formatBuildVerificationErrorSummary(error),
     );
-    return 1;
+    if (!jsonOutput) {
+      for (const reportingError of reportingErrors) {
+        io.stderr(formatBuildVerificationErrorSummary(reportingError));
+      }
+    }
+    return BuildVerificationCliExitCode.Failed;
   }
 };

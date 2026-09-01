@@ -1,4 +1,7 @@
-import type { ContractBuildVerificationResult } from "@/core/index.ts";
+import type {
+  ContractBuildVerificationResult,
+  VerificationLogEvent,
+} from "@/core/index.ts";
 
 const oneLine = (value: string): string => value.replace(/\s+/g, " ").trim();
 
@@ -59,3 +62,11 @@ export const formatBuildVerificationErrorSummary = (
     ? `ERROR ${error.code} ${message}: ${details}`
     : `ERROR ${error.code} ${message}`;
 };
+
+/** Formats one live verification event without contaminating standard output. */
+export const formatBuildVerificationProgress = (
+  event: VerificationLogEvent,
+): string =>
+  `${event.level.toUpperCase()} ${event.stage} ${event.code} ${
+    oneLine(event.message)
+  }`;

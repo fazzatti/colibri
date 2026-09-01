@@ -139,31 +139,37 @@ Container isolation alone is intended for the local developer workflow.
 
 ## Evidence, logs, and CLI
 
-`writeVerificationEvidence(...)` writes stable JSON.
-`writeVerificationLogs(...)` writes bounded JSONL or text logs. Neither surface
-retains source bytes, Wasm bytes, URL credentials, GitHub tokens, or
-environment-variable values.
+`writeVerificationEvidence(...)` writes stable completed evidence or a
+structured failure report. `writeVerificationLogs(...)` writes bounded JSONL or
+text logs. Neither surface retains source bytes, Wasm bytes, URL credentials,
+GitHub tokens, or environment-variable values.
 
 Run the package directly from JSR:
 
 ```bash
-deno run -A jsr:@colibri/build-verification/cli \
+deno run -A jsr:@colibri/build-verification@0.3.0/cli \
   --contract-id C... \
   --network mainnet \
   --evidence verification.json \
   --logs verification.jsonl
 ```
 
-The CLI prints one concise summary by default, for example:
+The CLI prints one concise summary by default and sends live progress only to
+interactive standard error, for example:
 
 ```text
 VERIFIED ba789fe6627de52ebfbd5353f5eb6b7efef23d7e8633ab59051c1a22b2f00a88
 ```
 
-Use `--json` to print the complete result or typed error instead. The
-`--evidence` and `--logs` files remain complete regardless of the terminal
-format. Exit codes remain `0` for `verified` or `notApplicable`, `2` for
-`mismatch`, and `1` when verification does not complete.
+Use `--json` to print the complete result or typed error instead, and `--quiet`
+to suppress interactive progress. An empty invocation, `-h`, or `--help` prints
+the full command reference. `--github-token-env` reads a token from the selected
+environment variable without exposing it in process arguments.
+
+The `--evidence` and `--logs` files retain partial diagnostics when verification
+fails. Exit code `0` means `verified`, `1` means verification or reporting did
+not complete, `2` means `mismatch`, and `3` means `notApplicable`. This prevents
+a contract without strict SEP-58 metadata from silently passing a CI gate.
 
 The package also publishes `/core`, `/docker`, and `/cli` entrypoints. See the
 [package README](../../build-verification/README.md) for every source variant,
