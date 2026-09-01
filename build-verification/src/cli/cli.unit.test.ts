@@ -193,9 +193,72 @@ describe("build-verification CLI flags", () => {
       ),
       { wasm: testWasm(), label: "target.wasm" },
     );
+    assertEquals(
+      await verificationTargetFromFlags(
+        parseBuildVerificationFlags([
+          "--external-ref-owner",
+          "COWNER",
+          "--external-ref-tag",
+          "release",
+        ]),
+        io,
+      ),
+      { externalRef: { owner: "COWNER", tag: "release" } },
+    );
+    assertEquals(
+      await verificationTargetFromFlags(
+        parseBuildVerificationFlags([
+          "--external-ref-owner",
+          "COWNER",
+          "--external-ref-tag-base64",
+          "Af8=",
+        ]),
+        io,
+      ),
+      { externalRef: { owner: "COWNER", tag: new Uint8Array([1, 255]) } },
+    );
     await assertRejectsCode(
       () => verificationTargetFromFlags(new Map(), io),
       Code.CLI_TARGET_SELECTION_INVALID,
+    );
+    await assertRejectsCode(
+      () =>
+        verificationTargetFromFlags(
+          parseBuildVerificationFlags([
+            "--external-ref-owner",
+            "COWNER",
+          ]),
+          io,
+        ),
+      Code.CLI_EXTERNAL_REFERENCE_INCOMPLETE,
+    );
+    await assertRejectsCode(
+      () =>
+        verificationTargetFromFlags(
+          parseBuildVerificationFlags([
+            "--external-ref-owner",
+            "COWNER",
+            "--external-ref-tag",
+            "release",
+            "--external-ref-tag-base64",
+            "AQ==",
+          ]),
+          io,
+        ),
+      Code.CLI_EXTERNAL_REFERENCE_INCOMPLETE,
+    );
+    await assertRejectsCode(
+      () =>
+        verificationTargetFromFlags(
+          parseBuildVerificationFlags([
+            "--external-ref-owner",
+            "COWNER",
+            "--external-ref-tag-base64",
+            "not-base64!",
+          ]),
+          io,
+        ),
+      Code.CLI_EXTERNAL_REFERENCE_TAG_INVALID,
     );
     await assertRejectsCode(
       () =>
@@ -632,7 +695,8 @@ describe("runBuildVerificationCli", () => {
     }
     assertStringIncludes(BUILD_VERIFICATION_CLI_HELP, "-h, --help");
     assertStringIncludes(BUILD_VERIFICATION_CLI_HELP, "--github-format");
-    assertStringIncludes(BUILD_VERIFICATION_CLI_HELP, "@0.3.0/cli");
+    assertStringIncludes(BUILD_VERIFICATION_CLI_HELP, "--external-ref-owner");
+    assertStringIncludes(BUILD_VERIFICATION_CLI_HELP, "@0.4.0/cli");
     const invalid = harness();
     assertEquals(
       await runBuildVerificationCli(["--help", "--allow-http"], invalid.io),

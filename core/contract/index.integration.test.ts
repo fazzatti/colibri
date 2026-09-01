@@ -197,7 +197,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       assertExists(contract);
       assertExists(contract.getWasmHash());
 
-      await contract.loadSpecFromDeployedContract();
+      await contract.loadSpecFromNetwork();
 
       assertExists(contract.getSpec());
     });
@@ -223,7 +223,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
         E.MISSING_REQUIRED_PROPERTY,
       );
 
-      await contract.loadSpecFromDeployedContract();
+      await contract.loadSpecFromNetwork();
 
       assertExists(contract.getWasmHash());
       assertExists(contract.getSpec());

@@ -63,11 +63,7 @@ const allErrors = (): E.BuildVerificationError<E.Code>[] => {
     new E.TargetHashMismatchError("a", "b"),
     new E.TargetInstanceLookupFailedError("C123", cause),
     new E.TargetCodeLookupFailedError("target", cause),
-    new E.ExternalReferenceTargetUnsupportedError(
-      "CTARGET",
-      "COWNER",
-      new Uint8Array([1, 2, 3]),
-    ),
+    new E.TargetExternalReferenceLookupFailedError("externalRef", cause),
     new E.TargetProviderUnexpectedError(cause),
     new E.CommandPolicyRejectedError(["contract"], ["reason"]),
     new E.OptionPolicyRejectedError(["--bad"], ["reason"]),
@@ -157,6 +153,8 @@ const allErrors = (): E.BuildVerificationError<E.Code>[] => {
     new E.CliGitHubTokenSourceRequiredError(),
     new E.CliUnexpectedFailureError(cause),
     new E.CliRuntimeInitializationFailedError(cause),
+    new E.CliExternalReferenceIncompleteError(),
+    new E.CliExternalReferenceTagInvalidError("invalid", cause),
   ];
 };
 
@@ -201,7 +199,7 @@ describe("build-verification error catalog", () => {
     const evidence = {
       package: {
         name: "@colibri/build-verification" as const,
-        version: "0.3.0",
+        version: "0.4.0",
       },
       mode: "outOfBand" as const,
       logs: [],

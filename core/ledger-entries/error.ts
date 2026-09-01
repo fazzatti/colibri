@@ -75,6 +75,10 @@ export enum Code {
   UNSUPPORTED_RPC_LEDGER_KEY = "LDE_012",
   UNSUPPORTED_XDR_VARIANT = "LDE_013",
   INVALID_OFFER_ID = "LDE_014",
+  INVALID_EXTERNAL_REFERENCE = "LDE_015",
+  EXTERNAL_REFERENCE_OWNER_NOT_CONTRACT = "LDE_016",
+  EXTERNAL_REFERENCE_ENTRY_NOT_FOUND = "LDE_017",
+  EXTERNAL_REFERENCE_VALUE_INVALID = "LDE_018",
 }
 
 /**
@@ -381,6 +385,95 @@ export class UNSUPPORTED_XDR_VARIANT extends LedgerEntriesError<Code> {
   }
 }
 
+/** Raised when an external executable reference cannot be decoded. */
+export class INVALID_EXTERNAL_REFERENCE extends LedgerEntriesError<Code> {
+  /**
+   * Creates an invalid-external-reference error.
+   *
+   * @param cause - Failure raised while decoding the owner or tag.
+   */
+  constructor(cause: Error) {
+    super({
+      code: Code.INVALID_EXTERNAL_REFERENCE,
+      message: "Invalid external executable reference",
+      details:
+        "The external executable reference owner or tag could not be converted to Stellar XDR.",
+      cause,
+      data: {},
+    });
+  }
+}
+
+/** Raised when an executable-reference owner is not a contract address. */
+export class EXTERNAL_REFERENCE_OWNER_NOT_CONTRACT
+  extends LedgerEntriesError<Code> {
+  /**
+   * Creates an invalid-owner error.
+   *
+   * @param executableOwner - Address encoded in the external reference.
+   */
+  constructor(executableOwner: string) {
+    super({
+      code: Code.EXTERNAL_REFERENCE_OWNER_NOT_CONTRACT,
+      message: "External executable reference owner is not a contract",
+      details:
+        "Executable-reference mappings live in contract storage, so their owner must be a Stellar contract address.",
+      data: { executableOwner },
+    });
+  }
+}
+
+/** Raised when the owner has no live persistent mapping for a referenced tag. */
+export class EXTERNAL_REFERENCE_ENTRY_NOT_FOUND
+  extends LedgerEntriesError<Code> {
+  /**
+   * Creates a missing-reference-entry error.
+   *
+   * @param executableOwner - Contract that owns the mapping.
+   * @param tag - Exact referenced tag bytes.
+   */
+  constructor(executableOwner: string, tag: Uint8Array) {
+    super({
+      code: Code.EXTERNAL_REFERENCE_ENTRY_NOT_FOUND,
+      message: "External executable reference entry not found",
+      details:
+        "No live persistent executable-tag entry matched the owner and tag on the connected RPC server.",
+      data: { executableOwner, tag: Uint8Array.from(tag) },
+    });
+  }
+}
+
+/** Raised when an executable-tag entry does not contain a 32-byte Wasm hash. */
+export class EXTERNAL_REFERENCE_VALUE_INVALID extends LedgerEntriesError<Code> {
+  /**
+   * Creates an invalid-reference-value error.
+   *
+   * @param executableOwner - Contract that owns the mapping.
+   * @param tag - Exact referenced tag bytes.
+   * @param valueType - ScVal discriminator stored at the mapping key.
+   * @param valueLength - Byte length when the value is bytes.
+   */
+  constructor(
+    executableOwner: string,
+    tag: Uint8Array,
+    valueType: string,
+    valueLength?: number,
+  ) {
+    super({
+      code: Code.EXTERNAL_REFERENCE_VALUE_INVALID,
+      message: "External executable reference value is invalid",
+      details:
+        "An executable-tag entry must contain exactly the 32-byte hash of uploaded contract Wasm.",
+      data: {
+        executableOwner,
+        tag: Uint8Array.from(tag),
+        valueType,
+        valueLength,
+      },
+    });
+  }
+}
+
 /**
  * Error code to class mapping.
  */
@@ -400,4 +493,9 @@ export const ERROR_LDE = {
   [Code.CONTRACT_INSTANCE_HAS_NO_WASM_HASH]: CONTRACT_INSTANCE_HAS_NO_WASM_HASH,
   [Code.UNSUPPORTED_RPC_LEDGER_KEY]: UNSUPPORTED_RPC_LEDGER_KEY,
   [Code.UNSUPPORTED_XDR_VARIANT]: UNSUPPORTED_XDR_VARIANT,
+  [Code.INVALID_EXTERNAL_REFERENCE]: INVALID_EXTERNAL_REFERENCE,
+  [Code.EXTERNAL_REFERENCE_OWNER_NOT_CONTRACT]:
+    EXTERNAL_REFERENCE_OWNER_NOT_CONTRACT,
+  [Code.EXTERNAL_REFERENCE_ENTRY_NOT_FOUND]: EXTERNAL_REFERENCE_ENTRY_NOT_FOUND,
+  [Code.EXTERNAL_REFERENCE_VALUE_INVALID]: EXTERNAL_REFERENCE_VALUE_INVALID,
 } as const;

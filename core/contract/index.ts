@@ -4,6 +4,7 @@ import {
   Operation,
   xdr,
 } from "stellar-sdk";
+import type { ExternalExecutableRef } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import { Spec } from "stellar-sdk/contract";
 import {
@@ -46,11 +47,16 @@ import type {
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { InvokeContractOutput } from "@/pipelines/invoke-contract/types.ts";
 import { StrKey } from "@/strkeys/index.ts";
+import {
+  buildContractCodeLedgerKey,
+  LedgerEntries,
+} from "@/ledger-entries/index.ts";
 import type { ReadFromContractOutput } from "@/pipelines/read-from-contract/types.ts";
 import type {
   ContractErrorMatcherPluginConfig,
   KnownContractErrorMap,
 } from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
+import type { ContractCodeLedgerEntry } from "@/ledger-entries/types.ts";
 
 type PipelinePluginIdentity = {
   readonly id: string;
@@ -84,6 +90,8 @@ export class Contract {
   protected wasmHash?: string;
   /** @internal */
   protected contractId?: ContractId;
+  /** @internal */
+  protected externalRef?: ExternalExecutableRef;
 
   /**
    * Creates a contract client bound to the provided network and contract configuration.
@@ -118,7 +126,18 @@ export class Contract {
       rpc,
     });
 
-    const { spec, contractId, wasm, wasmHash, plugins } = contractConfig;
+    const { spec, contractId, wasm, wasmHash, externalRef, plugins } =
+      contractConfig;
+    const configuredSources: string[] = [];
+    if (contractId !== undefined) configuredSources.push("contractId");
+    if (wasm !== undefined) configuredSources.push("wasm");
+    if (wasmHash !== undefined) configuredSources.push("wasmHash");
+    if (externalRef !== undefined) configuredSources.push("externalRef");
+
+    if (configuredSources.length > 1) {
+      throw new E.CONTRACT_CONFIG_SOURCES_CONFLICT(configuredSources);
+    }
+    assert(configuredSources.length === 1, new E.INVALID_CONTRACT_CONFIG());
 
     for (const plugin of plugins?.invokePipe ?? []) {
       this.invokePipe.use(plugin);
@@ -143,11 +162,9 @@ export class Contract {
     if (wasmHash) {
       this.wasmHash = wasmHash;
     }
-
-    const hasValidContractConfig = this.contractId || this.wasm ||
-      this.wasmHash;
-
-    assert(hasValidContractConfig, new E.INVALID_CONTRACT_CONFIG());
+    if (externalRef) {
+      this.externalRef = externalRef;
+    }
   }
 
   //==========================================
@@ -165,9 +182,11 @@ export class Contract {
   /** @internal */
   protected require(arg: "contractId"): ContractId;
   /** @internal */
+  protected require(arg: "externalRef"): ExternalExecutableRef;
+  /** @internal */
   protected require(
-    arg: "spec" | "contractId" | "wasm" | "wasmHash",
-  ): ContractId | Spec | Uint8Array | string {
+    arg: "spec" | "contractId" | "wasm" | "wasmHash" | "externalRef",
+  ): ContractId | ExternalExecutableRef | Spec | Uint8Array | string {
     assert(this[arg], new E.MISSING_REQUIRED_PROPERTY(arg));
     return this[arg];
   }
@@ -262,6 +281,11 @@ export class Contract {
     return this.require("wasmHash");
   }
 
+  /** Returns the CAP-85 executable reference configured for deployment. */
+  public getExternalRef(): ExternalExecutableRef {
+    return this.require("externalRef");
+  }
+
   /** @internal */
   public getContractFootprint(): LedgerKeyLike {
     return new StellarContract(this.getContractId()).getFootprint();
@@ -269,21 +293,8 @@ export class Contract {
 
   /** @internal */
   public async getContractCodeLedgerEntry(): Promise<Api.LedgerEntryResult> {
-    const ledgerEntries = (await this.rpc.getLedgerEntries(
-      xdr.LedgerKey.contractCode(
-        new xdr.LedgerKeyContractCode({
-          hash: xdr.decodeBytes(this.getWasmHash(), "hex"),
-        }),
-      ),
-    )) as Api.GetLedgerEntriesResponse;
-
-    const contractCode = ledgerEntries.entries.find(
-      (entry) => entry.key.type === "contractCode",
-    );
-
-    assert(contractCode, new E.CONTRACT_CODE_NOT_FOUND(this.getWasmHash()));
-
-    return contractCode as Api.LedgerEntryResult;
+    const code = await this.getNetworkContractCode();
+    return code.xdr as Api.LedgerEntryResult;
   }
 
   /** @internal */
@@ -346,7 +357,7 @@ export class Contract {
   }
 
   /**
-   * Deploys a new instance of this client's uploaded Wasm.
+   * Deploys a new contract instance from uploaded Wasm or an external reference.
    *
    * @param {TransactionConfig} config - The transaction configuration object to use in this transaction.
    * @param {T} constructorArgs - The arguments to pass to the contract constructor, if any.
@@ -355,7 +366,7 @@ export class Contract {
    *
    * @description - Deploys a new instance of the contract to the network and stores the contract id in the contract instance.
    *
-   * @requires - The wasm hash to be set in the contract instance.
+   * @requires - A Wasm hash or external executable reference to be configured.
    */
   public async deploy<T>({
     config,
@@ -366,8 +377,6 @@ export class Contract {
     constructorArgs?: T;
     salt?: BinaryData;
   }): Promise<InvokeContractOutput> {
-    const wasmHash = this.getWasmHash();
-
     const contractSalt = salt || generateRandomSalt();
 
     try {
@@ -375,12 +384,20 @@ export class Contract {
         ? this.getSpec().funcArgsToScVals("__constructor", constructorArgs)
         : undefined;
 
-      const deployOperation = Operation.createCustomContract({
+      const common = {
         address: new Address(config.source),
-        wasmHash: xdr.decodeBytes(wasmHash, "hex"),
         salt: toUint8Array(contractSalt),
         constructorArgs: encodedArgs,
-      });
+      };
+      const deployOperation = this.externalRef
+        ? Operation.createCustomContract({
+          ...common,
+          externalRef: this.externalRef,
+        })
+        : Operation.createCustomContract({
+          ...common,
+          wasmHash: xdr.decodeBytes(this.getWasmHash(), "hex"),
+        });
 
       const result = await this.invokePipe.run({
         config,
@@ -426,30 +443,22 @@ export class Contract {
   }
 
   /**
-   * Loads the contract specification from the deployed contract code.
+   * Loads the contract specification from code available on the network.
    *
    * @param {void} args - No arguments.
    *
    * @returns {Promise<void>} - The output of the invocation.
    *
-   * @description - Loads the contract specification from the wasm binaries deployed on-chain and stores it in the contract instance.
+   * @description Resolves a configured Wasm hash, external reference, or
+   * contract id to the currently selected network Wasm, then replaces this
+   * client's local Wasm and specification. Calling this method again
+   * intentionally refreshes mutable external-reference mappings.
    *
-   * @requires - The wasm hash or the contract id to be set in the contract instance.
+   * @requires - A Wasm hash, external reference, or contract id to be configured.
    */
-  public async loadSpecFromDeployedContract(): Promise<void> {
-    this.requireNoSpec();
-
-    if (!this.wasmHash) await this.loadWasmHashFromContractInstance();
-
-    const contractCodeEntry = await this.getContractCodeLedgerEntry();
-
-    assert(
-      contractCodeEntry.val.type === "contractCode",
-      new E.CONTRACT_CODE_NOT_FOUND(this.getWasmHash()),
-    );
-    const wasm = contractCodeEntry.val.contractCode.code;
-
-    this.wasm = wasm;
+  public async loadSpecFromNetwork(): Promise<void> {
+    const contractCode = await this.getNetworkContractCode();
+    this.wasm = Uint8Array.from(contractCode.code);
 
     await this.loadSpecFromWasm();
   }
@@ -490,7 +499,7 @@ export class Contract {
       if (this.wasm) {
         await this.loadSpecFromWasm();
       } else {
-        await this.loadSpecFromDeployedContract();
+        await this.loadSpecFromNetwork();
       }
     }
 
@@ -507,47 +516,38 @@ export class Contract {
     return errors;
   }
 
-  /**
-   * Loads the Wasm hash referenced by this client's contract instance.
-   *
-   * @param {void} args - No arguments.
-   *
-   * @returns {Promise<void>} - The output of the invocation.
-   *
-   * @description - Loads the code wasm hash from the network and stores it in the contract instance.
-   *
-   * @requires - The the contract id to be set in the contract instance.
-   */
-  public async loadWasmHashFromContractInstance(): Promise<void> {
-    this.requireNo("wasmHash");
-    const contractInstanceEntry = await this.getContractInstanceLedgerEntry();
+  /** @internal */
+  private async getNetworkContractCode(): Promise<ContractCodeLedgerEntry> {
+    const ledger = new LedgerEntries({ rpc: this.rpc });
+    let wasmHash = this.wasmHash;
 
-    assert(
-      contractInstanceEntry.val.type === "contractData" &&
-        contractInstanceEntry.val.contractData.val.type ===
-          "scvContractInstance",
-      new E.CONTRACT_INSTANCE_NOT_FOUND(this.getContractId()),
-    );
-    const executable = contractInstanceEntry.val.contractData.val.instance
-      .executable;
-
-    if (executable.type === "contractExecutableExternalRef") {
-      throw new E.EXTERNAL_REF_EXECUTABLE_UNSUPPORTED(
-        Address.fromScAddress(executable.externalRef.executableOwner)
-          .toString(),
-        executable.externalRef.tag.bytes,
-      );
-    }
-    if (executable.type === "contractExecutableStellarAsset") {
-      throw new E.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM();
-    }
-    if (executable.type !== "contractExecutableWasm") {
-      throw new E.UNKNOWN_CONTRACT_EXECUTABLE(
-        (executable as { type: string }).type,
-      );
+    if (this.contractId) {
+      const resolved = await ledger.resolveContractExecutable({
+        contractId: this.contractId,
+      });
+      if (resolved.executable.type === "stellarAsset") {
+        throw new E.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM();
+      }
+      wasmHash = resolved.resolvedWasmHash;
+      if (resolved.executable.type === "wasm") {
+        this.wasmHash = wasmHash;
+      }
+    } else if (this.externalRef) {
+      const resolved = await ledger.resolveContractExecutable({
+        externalRef: this.externalRef,
+      });
+      wasmHash = resolved.resolvedWasmHash;
     }
 
-    this.wasmHash = executable.wasmHash.toString();
+    if (!wasmHash) {
+      throw new E.NETWORK_EXECUTABLE_NOT_AVAILABLE();
+    }
+
+    const code = await ledger.get(buildContractCodeLedgerKey({
+      hash: wasmHash,
+    }));
+    assert(code, new E.CONTRACT_CODE_NOT_FOUND(wasmHash));
+    return code;
   }
 
   //==========================================

@@ -1,4 +1,5 @@
 import { NetworkConfig } from "@colibri/core";
+import { xdr } from "stellar-sdk";
 import type {
   ContractBuildVerificationInput,
   OutOfBandBuildRecipe,
@@ -12,6 +13,8 @@ import {
   CliDuplicateFlagError,
   CliEnvironmentReadFailedError,
   CliEnvironmentValueMissingError,
+  CliExternalReferenceIncompleteError,
+  CliExternalReferenceTagInvalidError,
   CliFlagValueMissingError,
   CliGitHubFormatInvalidError,
   CliGitHubReleaseInvalidError,
@@ -51,6 +54,10 @@ Targets (choose one):
   --contract-id <id>       Resolve a deployed contract through Stellar RPC
   --wasm-hash <hex>        Resolve deployed contract code through Stellar RPC
   --wasm <path>            Verify local Wasm bytes
+  --external-ref-owner <contract-id> --external-ref-tag <text>
+                            Resolve an owner-scoped textual executable tag
+  --external-ref-owner <contract-id> --external-ref-tag-base64 <base64>
+                            Resolve arbitrary executable-tag bytes
 
 Network:
   --network <mainnet|testnet|futurenet>
@@ -88,6 +95,9 @@ const VALUE_FLAGS = new Set([
   "contract-id",
   "wasm-hash",
   "wasm",
+  "external-ref-owner",
+  "external-ref-tag",
+  "external-ref-tag-base64",
   "network",
   "rpc-url",
   "network-passphrase",
@@ -168,11 +178,55 @@ export const verificationTargetFromFlags = async (
   const contractId = getBuildVerificationStringFlag(flags, "contract-id");
   const wasmHash = getBuildVerificationStringFlag(flags, "wasm-hash");
   const wasmPath = getBuildVerificationStringFlag(flags, "wasm");
-  if ([contractId, wasmHash, wasmPath].filter(Boolean).length !== 1) {
+  const externalRefOwner = getBuildVerificationStringFlag(
+    flags,
+    "external-ref-owner",
+  );
+  const externalRefTag = getBuildVerificationStringFlag(
+    flags,
+    "external-ref-tag",
+  );
+  const externalRefTagBase64 = getBuildVerificationStringFlag(
+    flags,
+    "external-ref-tag-base64",
+  );
+  const hasExternalRef = !!(
+    externalRefOwner || externalRefTag || externalRefTagBase64
+  );
+  if (
+    [!!contractId, !!wasmHash, !!wasmPath, hasExternalRef].filter(Boolean)
+      .length !== 1
+  ) {
     throw new CliTargetSelectionInvalidError();
   }
   if (contractId) return { contractId };
   if (wasmHash) return { wasmHash };
+  if (hasExternalRef) {
+    if (
+      !externalRefOwner ||
+      [!!externalRefTag, !!externalRefTagBase64].filter(Boolean).length !== 1
+    ) {
+      throw new CliExternalReferenceIncompleteError();
+    }
+    if (externalRefTag !== undefined) {
+      return {
+        externalRef: { owner: externalRefOwner, tag: externalRefTag },
+      };
+    }
+    try {
+      return {
+        externalRef: {
+          owner: externalRefOwner,
+          tag: xdr.decodeBytes(externalRefTagBase64!, "base64"),
+        },
+      };
+    } catch (cause) {
+      throw new CliExternalReferenceTagInvalidError(
+        externalRefTagBase64!,
+        cause,
+      );
+    }
+  }
   try {
     return { wasm: await io.readFile(wasmPath!), label: wasmPath };
   } catch (cause) {

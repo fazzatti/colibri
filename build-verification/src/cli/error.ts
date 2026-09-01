@@ -126,7 +126,35 @@ export class CliTargetSelectionInvalidError
     super(
       Code.CLI_TARGET_SELECTION_INVALID,
       "Invalid verification target selection",
-      "Choose exactly one of --contract-id, --wasm-hash, or --wasm.",
+      "Choose exactly one of --contract-id, --wasm-hash, --wasm, or one complete external-reference group.",
+    );
+  }
+}
+
+/** Raised when external-reference target flags do not form one complete target. */
+export class CliExternalReferenceIncompleteError
+  extends BuildVerificationCliError<Code.CLI_EXTERNAL_REFERENCE_INCOMPLETE> {
+  /** Creates an incomplete external-reference target error. */
+  constructor() {
+    super(
+      Code.CLI_EXTERNAL_REFERENCE_INCOMPLETE,
+      "Incomplete external-reference target",
+      "An external-reference target requires --external-ref-owner and exactly one of --external-ref-tag or --external-ref-tag-base64.",
+    );
+  }
+}
+
+/** Raised when an external-reference tag is not valid base64. */
+export class CliExternalReferenceTagInvalidError
+  extends BuildVerificationCliError<Code.CLI_EXTERNAL_REFERENCE_TAG_INVALID> {
+  /** Creates an invalid external-reference-tag error. */
+  constructor(value: string, cause: unknown) {
+    super(
+      Code.CLI_EXTERNAL_REFERENCE_TAG_INVALID,
+      "Invalid external-reference tag",
+      "The --external-ref-tag-base64 value must contain valid base64-encoded tag bytes.",
+      { value },
+      cause,
     );
   }
 }

@@ -84,16 +84,23 @@ await verifier.verify({
 
 ## Targets and network configuration
 
-Targets accept direct bytes, a deployed Wasm hash, or a contract ID:
+Targets accept direct bytes, a deployed Wasm hash, a contract ID, or a CAP-85
+external executable reference:
 
 ```ts
 { target: { wasm: deployedWasm, label: "local fixture" } }
 { target: { wasmHash: "0123..." } }
 { target: { contractId: "C..." } }
+{ target: { externalRef: { owner: "COWNER...", tag: "stable" } } }
 ```
 
-Direct Wasm does not require a network. A Wasm hash or contract ID requires one
-of these mutually exclusive network paths:
+Contract IDs are inspected automatically: ordinary Wasm instances resolve their
+direct hash, Stellar Asset Contracts return `notApplicable`, and CAP-85
+instances follow their external reference. A direct external-reference target
+allows verification without first deploying an instance.
+
+Direct Wasm does not require a network. A Wasm hash, contract ID, or external
+reference requires one of these mutually exclusive network paths:
 
 ```ts
 import { NetworkConfig } from "@colibri/core";
@@ -119,6 +126,12 @@ new ContractBuildVerifier({
 
 The first form keeps Colibri's existing `NetworkConfig` convenience. The other
 forms allow granular configuration or an existing Core-compatible RPC reader.
+
+External-reference evidence records the owner, the exact tag bytes as base64,
+the resolved Wasm hash, and the ledgers at which the instance, reference, and
+code entries were observed. A verified result proves that the Wasm selected by
+that mapping at the recorded observation rebuilt exactly. It does not claim that
+the owner/tag mapping is immutable; rerun verification to observe later changes.
 
 ## Source inputs
 
@@ -312,12 +325,12 @@ artifact selection, and other operational failures throw unique
 `BuildVerificationError` subclasses with stable `BLDV_*` codes. They are never
 reported as `mismatch`.
 
-Version `0.3.0` replaces the former catch-all
-`INVALID_CLI_ARGUMENTS` (`BLDV_031`) code with occurrence-specific CLI errors
-in the `BLDV_106` through `BLDV_131` range. This is an intentional pre-1.0
-breaking change: integrations must branch on the precise new error code instead
-of treating `CLI_POSITIONAL_ARGUMENT_UNSUPPORTED` or any other single code as a
-one-to-one replacement.
+Version `0.3.0` replaces the former catch-all `INVALID_CLI_ARGUMENTS`
+(`BLDV_031`) code with occurrence-specific CLI errors in the `BLDV_106` through
+`BLDV_131` range. This is an intentional pre-1.0 breaking change: integrations
+must branch on the precise new error code instead of treating
+`CLI_POSITIONAL_ARGUMENT_UNSUPPORTED` or any other single code as a one-to-one
+replacement.
 
 Write completed evidence and bounded logs atomically:
 
@@ -362,6 +375,21 @@ deno run -A jsr:@colibri/build-verification@0.4.0/cli \
   --network mainnet \
   --evidence verification.json \
   --logs verification.jsonl
+```
+
+Verify an external reference directly with either a UTF-8 tag or lossless base64
+tag bytes:
+
+```sh
+deno run -A jsr:@colibri/build-verification@0.4.0/cli \
+  --external-ref-owner COWNER... \
+  --external-ref-tag stable \
+  --network testnet
+
+deno run -A jsr:@colibri/build-verification@0.4.0/cli \
+  --external-ref-owner COWNER... \
+  --external-ref-tag-base64 c3RhYmxl \
+  --network testnet
 ```
 
 The default terminal output is one concise line. Interactive terminals receive

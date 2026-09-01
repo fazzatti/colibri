@@ -38,7 +38,9 @@ export const redactContractBuildVerificationInput = (
     }
     : "wasmHash" in input.target
     ? { kind: "wasmHash", ...input.target }
-    : { kind: "contractId", ...input.target };
+    : "contractId" in input.target
+    ? { kind: "contractId", ...input.target }
+    : { kind: "externalRef", label: input.target.label };
   const source = input.source
     ? input.source.type === "archive"
       ? {

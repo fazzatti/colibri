@@ -1,7 +1,6 @@
 import { Buffer } from "node:buffer";
 import {
   assertEquals,
-  assertExists,
   assertRejects,
   assertStrictEquals,
   assertThrows,
@@ -11,6 +10,7 @@ import { Address, xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import {
   buildContractCodeLedgerKey,
+  buildContractDataLedgerKey,
   buildContractInstanceLedgerKey,
   NetworkConfig,
   StrKey,
@@ -27,9 +27,9 @@ import {
   StellarVerificationTargetResolver,
 } from "@/providers/target/stellar.ts";
 import {
-  ExternalReferenceTargetUnsupportedError,
   MissingTargetNetworkError,
   TargetCodeLookupFailedError,
+  TargetExternalReferenceLookupFailedError,
   TargetHashMismatchError,
   TargetInstanceLookupFailedError,
   TargetProviderUnexpectedError,
@@ -72,6 +72,29 @@ const codeEntry = (
     }),
   ),
 });
+
+const externalReferenceEntry = (
+  owner: string,
+  tag: Uint8Array,
+  hash: string,
+): { key: xdr.LedgerKey; val: xdr.LedgerEntryData } => {
+  const tagValue = xdr.ScVal.scvExecutableTag(new xdr.XdrString(tag));
+  return {
+    key: buildContractDataLedgerKey({
+      contractId: owner as ContractId,
+      key: tagValue,
+    }) as unknown as xdr.LedgerKey,
+    val: xdr.LedgerEntryData.contractData(
+      new xdr.ContractDataEntry({
+        ext: xdr.ExtensionPoint.v0(),
+        contract: Address.fromString(owner).toScAddress(),
+        key: tagValue,
+        durability: xdr.ContractDataDurability.persistent,
+        val: xdr.ScVal.scvBytes(Buffer.from(hash, "hex")),
+      }),
+    ),
+  };
+};
 
 const rpcFromEntries = (
   entries: readonly { key: xdr.LedgerKey; val: xdr.LedgerEntryData }[],
@@ -309,11 +332,79 @@ describe("verification target providers", () => {
     });
   });
 
-  it("rejects CAP-85 external references without misclassifying them as SAC", async () => {
+  it("resolves contract-id and direct CAP-85 references with observation evidence", async () => {
     const id = contractId(20);
     const owner = contractId(21);
     const tag = new Uint8Array([0x66, 0x6c, 0x65, 0x65, 0xff]);
+    const wasm = testWasm();
+    const hash = await sha256Hex(wasm);
     const resolver = new StellarVerificationTargetResolver(
+      normalizeVerificationNetwork({
+        rpc: rpcFromEntries([
+          instanceEntry(
+            id,
+            xdr.ContractExecutable.contractExecutableExternalRef(
+              new xdr.ContractExecutableExternalRef({
+                executableOwner: Address.fromString(owner).toScAddress(),
+                tag,
+              }),
+            ),
+          ),
+          externalReferenceEntry(owner, tag, hash),
+          codeEntry(hash, wasm),
+        ]),
+        networkPassphrase: "network",
+      }),
+      () => TEST_NOW,
+    );
+
+    const byContract = await resolver.resolve({ target: { contractId: id } });
+    assertEquals(byContract.applicability, "wasm");
+    if (byContract.applicability !== "wasm") throw new Error("unreachable");
+    assertEquals(byContract.kind, "contractId");
+    assertEquals(byContract.wasmHash, hash);
+    assertEquals(byContract.externalReference, {
+      executableOwner: owner,
+      tag: { encoding: "base64", value: xdr.encodeBytes(tag, "base64") },
+      instance: { observedAtLedger: 10, lastModifiedLedgerSeq: 2 },
+      reference: { observedAtLedger: 10, lastModifiedLedgerSeq: 3 },
+    });
+
+    const direct = await resolver.resolve({
+      target: { externalRef: { owner, tag }, label: "release slot" },
+    });
+    assertEquals(direct.applicability, "wasm");
+    if (direct.applicability !== "wasm") throw new Error("unreachable");
+    assertEquals(direct.kind, "externalRef");
+    assertEquals(direct.contractId, undefined);
+    assertEquals(direct.label, "release slot");
+    assertEquals(direct.externalReference?.instance, undefined);
+    assertEquals(direct.externalReference?.reference, {
+      observedAtLedger: 10,
+      lastModifiedLedgerSeq: 3,
+    });
+  });
+
+  it("keeps external-reference lookup failures distinct", async () => {
+    const owner = contractId(22);
+    const resolver = new StellarVerificationTargetResolver(
+      normalizeVerificationNetwork({
+        rpc: rpcFromEntries([]),
+        networkPassphrase: "network",
+      }),
+    );
+
+    await assertRejects(
+      () =>
+        resolver.resolve({
+          target: { externalRef: { owner, tag: "missing" } },
+        }),
+      TargetExternalReferenceLookupFailedError,
+    );
+
+    const id = contractId(23);
+    const tag = new Uint8Array([1, 2, 3]);
+    const byContract = new StellarVerificationTargetResolver(
       normalizeVerificationNetwork({
         rpc: rpcFromEntries([
           instanceEntry(
@@ -328,20 +419,54 @@ describe("verification target providers", () => {
         ]),
         networkPassphrase: "network",
       }),
-      () => TEST_NOW,
+    );
+    await assertRejects(
+      () => byContract.resolve({ target: { contractId: id } }),
+      TargetExternalReferenceLookupFailedError,
     );
 
-    const error = await assertRejects(
-      () => resolver.resolve({ target: { contractId: id } }),
-      ExternalReferenceTargetUnsupportedError,
+    const missingCode = new StellarVerificationTargetResolver(
+      normalizeVerificationNetwork({
+        rpc: rpcFromEntries([
+          externalReferenceEntry(owner, tag, "a".repeat(64)),
+        ]),
+        networkPassphrase: "network",
+      }),
     );
+    await assertRejects(
+      () =>
+        missingCode.resolve({
+          target: { externalRef: { owner, tag } },
+        }),
+      TargetCodeLookupFailedError,
+    );
+  });
 
-    assertExists(error.meta);
-    assertEquals(error.meta.data, {
-      contractId: id,
-      executableOwner: owner,
-      tag,
+  it("rejects an impossible SAC result for a direct external reference", async () => {
+    const owner = contractId(24);
+    const resolver = new StellarVerificationTargetResolver({
+      ledgerEntries: {
+        resolveContractExecutable: () =>
+          Promise.resolve({
+            contractId: owner,
+            executable: { type: "stellarAsset" },
+            instance: { observedAtLedger: 1 },
+          }),
+      } as never,
+      evidence: {
+        networkPassphrase: "network",
+        input: "rpc",
+        allowHttp: false,
+      },
     });
+
+    await assertRejects(
+      () =>
+        resolver.resolve({
+          target: { externalRef: { owner, tag: "stable" } },
+        }),
+      TargetProviderUnexpectedError,
+    );
   });
 
   it("keeps instance and code lookup failures unique", async () => {
@@ -422,10 +547,14 @@ describe("verification target providers", () => {
     const id = contractId(5);
     const contractResolver = new StellarVerificationTargetResolver({
       ledgerEntries: {
-        contractInstance: () =>
+        resolveContractExecutable: () =>
           Promise.resolve({
             executable: { type: "wasm", wasmHash: requested },
-            lastModifiedLedgerSeq: 1,
+            resolvedWasmHash: requested,
+            instance: {
+              observedAtLedger: 1,
+              lastModifiedLedgerSeq: 1,
+            },
           }),
         contractCode: () =>
           Promise.resolve({

@@ -5,6 +5,7 @@ import type { Server } from "stellar-sdk/rpc";
 import type { InvokeContractPipeline } from "@/pipelines/invoke-contract/index.ts";
 import type { ReadFromContractPipeline } from "@/pipelines/read-from-contract/index.ts";
 import type { ContractErrorMatcher } from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
+import type { ExternalExecutableRef } from "stellar-sdk";
 
 /**
  * Plugin accepted by the contract's owned invoke pipeline.
@@ -60,15 +61,19 @@ export type ContractConstructorArgs = {
 };
 
 /** @internal */
-export type ContractConfig = {
+export type ContractConfig =
+  & ContractConfigCommon
+  & (
+    | ContractConfigWasm
+    | ContractConfigWasmHash
+    | ContractConfigId
+    | ContractConfigExternalRef
+  );
+
+/** Shared options accepted with every contract source. */
+export type ContractConfigCommon = {
   /** Contract ABI specification used to encode method arguments and return values. */
   spec?: Spec;
-  /** Already-deployed contract id to bind this client to. */
-  contractId?: string;
-  /** Contract wasm bytes used for upload/deploy flows. */
-  wasm?: BinaryData;
-  /** Uploaded wasm hash used for deploy flows. */
-  wasmHash?: string;
   /**
    * Plugins installed on the contract's owned pipelines during construction.
    *
@@ -92,19 +97,36 @@ export type ContractConfig = {
    * ```
    */
   plugins?: ContractPipelinePlugins;
-} & (ContractConfigWasm | ContractConfigWasmHash | ContractConfigId);
+};
 
-/** @internal */
+/** Contract configuration backed by local Wasm bytes. */
 export type ContractConfigWasm = {
   wasm: BinaryData;
+  wasmHash?: never;
+  contractId?: never;
+  externalRef?: never;
 };
 
-/** @internal */
+/** Contract configuration backed by an uploaded Wasm hash. */
 export type ContractConfigWasmHash = {
   wasmHash: string;
+  wasm?: never;
+  contractId?: never;
+  externalRef?: never;
 };
 
-/** @internal */
+/** Contract configuration bound to an already-deployed contract. */
 export type ContractConfigId = {
   contractId: string;
+  wasm?: never;
+  wasmHash?: never;
+  externalRef?: never;
+};
+
+/** Contract configuration backed by a CAP-85 external executable reference. */
+export type ContractConfigExternalRef = {
+  externalRef: ExternalExecutableRef;
+  wasm?: never;
+  wasmHash?: never;
+  contractId?: never;
 };

@@ -15,6 +15,7 @@ import { NetworkConfig } from "@/network/index.ts";
 import { NetworkType } from "@/network/types.ts";
 import { Address, Operation, xdr } from "stellar-sdk";
 import type { Spec } from "stellar-sdk/contract";
+import type { Api } from "stellar-sdk/rpc";
 import type { ContractId } from "@/strkeys/types.ts";
 import {
   CONTRACT_ERROR_MATCHER_PLUGIN_ID,
@@ -25,10 +26,19 @@ import {
   ERRORS_CONTRACT_SPEC,
 } from "colibri-internal/tests/specs/errors-contract.ts";
 import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";
+import {
+  buildContractCodeLedgerKey,
+  buildContractDataLedgerKey,
+  buildContractInstanceLedgerKey,
+} from "@/ledger-entries/index.ts";
 
 class TestContract extends Contract {
   public requireNoContractIdForTest(): void {
     this.requireNoContractId();
+  }
+
+  public requireNoSpecForTest(): void {
+    this.requireNoSpec();
   }
 }
 
@@ -38,6 +48,88 @@ const hasContractErrorMatcherPlugin = (
   (plugins as readonly { id: string }[]).some((plugin) =>
     plugin.id === CONTRACT_ERROR_MATCHER_PLUGIN_ID
   );
+
+const NETWORK_CONTRACT_ID =
+  "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId;
+
+const sha256Hex = async (bytes: Uint8Array): Promise<string> =>
+  xdr.encodeBytes(
+    new Uint8Array(
+      await crypto.subtle.digest("SHA-256", Uint8Array.from(bytes)),
+    ),
+    "hex",
+  );
+
+const rpcWithLedgerEntries = (
+  entries: readonly Api.LedgerEntryResult[],
+): Server => {
+  const byKey = new Map(
+    entries.map((entry) => [entry.key.toXdr("base64"), entry]),
+  );
+  return {
+    getLedgerEntries: (...keys: xdr.LedgerKey[]) =>
+      Promise.resolve({
+        entries: keys.flatMap((key) => {
+          const entry = byKey.get(key.toXdr("base64"));
+          return entry ? [entry] : [];
+        }),
+        latestLedger: 100,
+      }),
+  } as unknown as Server;
+};
+
+const contractCodeEntry = (
+  hash: string,
+  wasm: Uint8Array,
+): Api.LedgerEntryResult => ({
+  key: buildContractCodeLedgerKey({ hash }),
+  val: xdr.LedgerEntryData.contractCode(
+    new xdr.ContractCodeEntry({
+      ext: xdr.ContractCodeEntryExt.v0(),
+      hash: xdr.decodeBytes(hash, "hex"),
+      code: wasm,
+    }),
+  ),
+});
+
+const contractInstanceEntry = (
+  executable: xdr.ContractExecutable,
+): Api.LedgerEntryResult => ({
+  key: buildContractInstanceLedgerKey({ contractId: NETWORK_CONTRACT_ID }),
+  val: xdr.LedgerEntryData.contractData(
+    new xdr.ContractDataEntry({
+      ext: xdr.ExtensionPoint.v0(),
+      contract: Address.fromString(NETWORK_CONTRACT_ID).toScAddress(),
+      key: xdr.ScVal.scvLedgerKeyContractInstance(),
+      durability: xdr.ContractDataDurability.persistent,
+      val: xdr.ScVal.scvContractInstance(
+        new xdr.ScContractInstance({ executable, storage: [] }),
+      ),
+    }),
+  ),
+});
+
+const externalReferenceEntry = (
+  tag: Uint8Array,
+  hash: string,
+): Api.LedgerEntryResult => {
+  const key = xdr.ScVal.scvExecutableTag(new xdr.XdrString(tag));
+  return {
+    key: buildContractDataLedgerKey({
+      contractId: NETWORK_CONTRACT_ID,
+      key,
+    }),
+    val: xdr.LedgerEntryData.contractData(
+      new xdr.ContractDataEntry({
+        ext: xdr.ExtensionPoint.v0(),
+        contract: Address.fromString(NETWORK_CONTRACT_ID).toScAddress(),
+        key,
+        durability: xdr.ContractDataDurability.persistent,
+        val: xdr.ScVal.scvBytes(xdr.decodeBytes(hash, "hex")),
+      }),
+    ),
+  };
+};
 
 describe("Contract", () => {
   describe("construction", () => {
@@ -142,6 +234,24 @@ describe("Contract", () => {
         true,
       );
     });
+
+    it("accepts a CAP-85 external executable reference", () => {
+      const externalRef = {
+        owner: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+        tag: new Uint8Array([0x72, 0x65, 0x6c, 0xff]),
+      } as const;
+      const contract = new Contract({
+        networkConfig: NetworkConfig.CustomNet({
+          type: NetworkType.TESTNET,
+          networkPassphrase: "Test Network",
+        }),
+        contractConfig: { externalRef },
+        rpc: {} as Server,
+      });
+
+      assertEquals(contract.getExternalRef(), externalRef);
+      assertThrows(() => contract.getWasmHash(), E.MISSING_REQUIRED_PROPERTY);
+    });
   });
 
   describe("construction Errors", () => {
@@ -213,6 +323,28 @@ describe("Contract", () => {
       );
     });
 
+    it("throws a unique error when mutually exclusive sources are combined", () => {
+      assertThrows(
+        () =>
+          new Contract({
+            networkConfig: NetworkConfig.CustomNet({
+              type: NetworkType.TESTNET,
+              networkPassphrase: "Test Network",
+            }),
+            contractConfig: {
+              wasmHash: "ab".repeat(32),
+              externalRef: {
+                owner:
+                  "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                tag: "release",
+              },
+            } as unknown as ContractConfig,
+            rpc: {} as Server,
+          }),
+        E.CONTRACT_CONFIG_SOURCES_CONFLICT,
+      );
+    });
+
     it("throws MISSING_REQUIRED_PROPERTY if contract is missing required properties", () => {
       const mockWasm = Buffer.from("mock");
       const mockRpc = {} as unknown as Server;
@@ -267,37 +399,7 @@ describe("Contract", () => {
     });
     const mockRpc = {} as unknown as Server;
 
-    const contractForExecutable = (
-      executable: xdr.ContractExecutable,
-    ): Contract => {
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          contractId:
-            "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId,
-        },
-        rpc: mockRpc,
-      });
-      stub(
-        contract,
-        "getContractInstanceLedgerEntry",
-        () =>
-          Promise.resolve({
-            val: {
-              type: "contractData",
-              contractData: {
-                val: {
-                  type: "scvContractInstance",
-                  instance: { executable },
-                },
-              },
-            },
-          } as never),
-      );
-      return contract;
-    };
-
-    it("executes the protected requireNoContractId helper", () => {
+    it("executes the protected unset-property helpers", () => {
       const contract = new TestContract({
         networkConfig,
         contractConfig: {
@@ -307,6 +409,7 @@ describe("Contract", () => {
       });
 
       contract.requireNoContractIdForTest();
+      contract.requireNoSpecForTest();
 
       const contractWithId = new TestContract({
         networkConfig,
@@ -321,53 +424,164 @@ describe("Contract", () => {
         () => contractWithId.requireNoContractIdForTest(),
         E.PROPERTY_ALREADY_SET,
       );
-    });
 
-    it("rejects an external-reference executable with exact typed evidence", async () => {
-      const tag = new Uint8Array([0x66, 0x6c, 0x65, 0x65, 0xff]);
-      const owner = "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM";
-      const contract = contractForExecutable(
-        xdr.ContractExecutable.contractExecutableExternalRef(
-          new xdr.ContractExecutableExternalRef({
-            executableOwner: Address.fromString(owner).toScAddress(),
-            tag,
-          }),
-        ),
-      );
-
-      const error = await assertRejects(
-        () => contract.loadWasmHashFromContractInstance(),
-        E.EXTERNAL_REF_EXECUTABLE_UNSUPPORTED,
-      );
-
-      assertEquals(error.meta.data, {
-        executableOwner: owner,
-        tag,
+      const contractWithSpec = new TestContract({
+        networkConfig,
+        contractConfig: {
+          wasmHash: "mockHash",
+          spec: ERRORS_CONTRACT_SPEC,
+        },
+        rpc: mockRpc,
       });
+      assertThrows(
+        () => contractWithSpec.requireNoSpecForTest(),
+        E.PROPERTY_ALREADY_SET,
+      );
     });
 
-    it("rejects a Stellar Asset Contract as a distinct no-Wasm case", async () => {
-      const contract = contractForExecutable(
-        xdr.ContractExecutable.contractExecutableStellarAsset(),
-      );
+    it("builds external-reference deployments through the existing invoke pipeline", async () => {
+      const externalRef = {
+        owner: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+        tag: new Uint8Array([0x72, 0x65, 0x6c, 0xff]),
+      } as const;
+      const contract = new Contract({
+        networkConfig,
+        contractConfig: { externalRef },
+        rpc: mockRpc,
+      });
+      const salt = new Uint8Array(32).fill(7);
+      let operation:
+        | ReturnType<typeof Operation.createCustomContract>
+        | undefined;
+      Object.defineProperty(contract, "invokePipe", {
+        configurable: true,
+        value: {
+          run: (input: {
+            operations: ReturnType<typeof Operation.createCustomContract>[];
+          }) => {
+            operation = input.operations[0];
+            return Promise.reject(new Error("stop after operation assembly"));
+          },
+        },
+      });
 
       await assertRejects(
-        () => contract.loadWasmHashFromContractInstance(),
-        E.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM,
+        () =>
+          contract.deploy({
+            config: {
+              source:
+                "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF",
+              fee: "100",
+              timeout: 30,
+              signers: [],
+            },
+            salt,
+          }),
+        E.FAILED_TO_DEPLOY_CONTRACT,
+      );
+
+      assertExists(operation);
+      assertEquals(
+        operation.toXdr("base64"),
+        Operation.createCustomContract({
+          address: new Address(
+            "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF",
+          ),
+          externalRef,
+          salt,
+        }).toXdr("base64"),
       );
     });
 
-    it("rejects an unknown executable discriminator with its own error", async () => {
-      const contract = contractForExecutable(
-        { type: "futureExecutable" } as unknown as xdr.ContractExecutable,
+    it("loads current network specs from direct and external executables", async () => {
+      const wasm = await loadWasmFile(
+        "./_internal/tests/compiled-contracts/errors_contract.wasm",
+      );
+      const hash = await sha256Hex(wasm);
+      const tag = new Uint8Array([0x72, 0x65, 0x6c, 0xff]);
+      const code = contractCodeEntry(hash, wasm);
+
+      const byHash = new Contract({
+        networkConfig,
+        contractConfig: { wasmHash: hash },
+        rpc: rpcWithLedgerEntries([code]),
+      });
+      await byHash.loadSpecFromNetwork();
+      assertEquals([...byHash.getWasm()], [...wasm]);
+      assertExists(byHash.getSpec());
+      const rawCode = await byHash.getContractCodeLedgerEntry();
+      assertEquals(
+        rawCode.key.toXdr("base64"),
+        code.key.toXdr("base64"),
       );
 
-      const error = await assertRejects(
-        () => contract.loadWasmHashFromContractInstance(),
-        E.UNKNOWN_CONTRACT_EXECUTABLE,
+      const byContract = new Contract({
+        networkConfig,
+        contractConfig: { contractId: NETWORK_CONTRACT_ID },
+        rpc: rpcWithLedgerEntries([
+          contractInstanceEntry(
+            xdr.ContractExecutable.contractExecutableWasm(
+              xdr.decodeBytes(hash, "hex"),
+            ),
+          ),
+          code,
+        ]),
+      });
+      await byContract.loadSpecFromNetwork();
+      assertEquals(byContract.getWasmHash(), hash);
+
+      const byExternalRef = new Contract({
+        networkConfig,
+        contractConfig: {
+          externalRef: { owner: NETWORK_CONTRACT_ID, tag },
+        },
+        rpc: rpcWithLedgerEntries([
+          externalReferenceEntry(tag, hash),
+          code,
+        ]),
+      });
+      await byExternalRef.loadSpecFromNetwork();
+      assertEquals([...byExternalRef.getWasm()], [...wasm]);
+      assertThrows(
+        () => byExternalRef.getWasmHash(),
+        E.MISSING_REQUIRED_PROPERTY,
+      );
+    });
+
+    it("keeps network executable lookup failures occurrence-specific", async () => {
+      const localWasm = new Contract({
+        networkConfig,
+        contractConfig: { wasm: new Uint8Array([1]) },
+        rpc: rpcWithLedgerEntries([]),
+      });
+      await assertRejects(
+        () => localWasm.loadSpecFromNetwork(),
+        E.NETWORK_EXECUTABLE_NOT_AVAILABLE,
       );
 
-      assertEquals(error.meta.data, { executableType: "futureExecutable" });
+      const missingCode = new Contract({
+        networkConfig,
+        contractConfig: { wasmHash: "ab".repeat(32) },
+        rpc: rpcWithLedgerEntries([]),
+      });
+      await assertRejects(
+        () => missingCode.loadSpecFromNetwork(),
+        E.CONTRACT_CODE_NOT_FOUND,
+      );
+
+      const stellarAsset = new Contract({
+        networkConfig,
+        contractConfig: { contractId: NETWORK_CONTRACT_ID },
+        rpc: rpcWithLedgerEntries([
+          contractInstanceEntry(
+            xdr.ContractExecutable.contractExecutableStellarAsset(),
+          ),
+        ]),
+      });
+      await assertRejects(
+        () => stellarAsset.loadSpecFromNetwork(),
+        E.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM,
+      );
     });
 
     it("loads contract errors from an existing spec and installs the matcher on both owned pipelines", async () => {
@@ -433,7 +647,7 @@ describe("Contract", () => {
       });
       const loadSpecStub = stub(
         contract,
-        "loadSpecFromDeployedContract",
+        "loadSpecFromNetwork",
         () => Promise.resolve(),
       );
       const getSpecStub = stub(contract, "getSpec", () => ERRORS_CONTRACT_SPEC);

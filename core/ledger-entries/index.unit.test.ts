@@ -49,6 +49,8 @@ const CLAIMABLE_BALANCE_ID =
 const DATA_NAME = "profile";
 const OFFER_ID = 17n;
 const ASSET = new Asset("USD", ISSUER);
+const EXTERNAL_TAG = new Uint8Array([0x72, 0x65, 0x6c, 0x65, 0xff]);
+const EXTERNAL_WASM_HASH = "cd".repeat(32);
 
 function makeRpc(entries: Api.LedgerEntryResult[]): Server {
   const byKey = new Map(
@@ -309,6 +311,40 @@ function makeContractCodeResult(): Api.LedgerEntryResult {
   );
 
   return makeResult(key, val);
+}
+
+function makeExternalReferenceResult(
+  value: xdr.ScVal = xdr.ScVal.scvBytes(
+    Buffer.from(EXTERNAL_WASM_HASH, "hex"),
+  ),
+): Api.LedgerEntryResult {
+  const tag = xdr.ScVal.scvExecutableTag(new xdr.XdrString(EXTERNAL_TAG));
+  const key = buildContractDataLedgerKey({
+    contractId: CONTRACT_ID,
+    key: tag,
+  });
+  const val = xdr.LedgerEntryData.contractData(
+    new xdr.ContractDataEntry({
+      ext: xdr.ExtensionPoint.v0(),
+      contract: Address.fromString(CONTRACT_ID).toScAddress(),
+      key: tag,
+      durability: xdr.ContractDataDurability.persistent,
+      val: value,
+    }),
+  );
+
+  return makeResult(key, val, { lastModifiedLedgerSeq: 88 });
+}
+
+function makeExternalContractInstanceResult(): Api.LedgerEntryResult {
+  return makeContractInstanceResult(
+    xdr.ContractExecutable.contractExecutableExternalRef(
+      new xdr.ContractExecutableExternalRef({
+        executableOwner: Address.fromString(CONTRACT_ID).toScAddress(),
+        tag: EXTERNAL_TAG,
+      }),
+    ),
+  );
 }
 
 function makeConfigSettingResult(): Api.LedgerEntryResult {
@@ -703,6 +739,60 @@ describe("LedgerEntries", () => {
       assertEquals(entry.hash, "ab".repeat(32));
     });
 
+    it("resolves direct and owner-tag contract executables with ledger observations", async () => {
+      const direct = await ledger.resolveContractExecutable({
+        contractId: CONTRACT_ID,
+      });
+      assertEquals(direct.executable.type, "wasm");
+      assertEquals(direct.resolvedWasmHash, "ab".repeat(32));
+      assertEquals(direct.instance?.observedAtLedger, 123456);
+
+      const externalLedger = new LedgerEntries({
+        rpc: makeRpc([
+          makeExternalContractInstanceResult(),
+          makeExternalReferenceResult(),
+        ]),
+      });
+      const fromContract = await externalLedger.resolveContractExecutable({
+        contractId: CONTRACT_ID,
+      });
+      assertEquals(fromContract.executable, {
+        type: "externalRef",
+        executableOwner: CONTRACT_ID,
+        tag: EXTERNAL_TAG,
+      });
+      assertEquals(fromContract.resolvedWasmHash, EXTERNAL_WASM_HASH);
+      assertEquals(fromContract.instance?.observedAtLedger, 123456);
+      assertEquals(fromContract.reference, {
+        observedAtLedger: 123456,
+        lastModifiedLedgerSeq: 88,
+      });
+
+      const directReference = await externalLedger.resolveContractExecutable({
+        externalRef: { owner: CONTRACT_ID, tag: EXTERNAL_TAG },
+      });
+      assertEquals(directReference.contractId, undefined);
+      assertEquals(directReference.instance, undefined);
+      assertEquals(directReference.resolvedWasmHash, EXTERNAL_WASM_HASH);
+
+      const xdrReference = await externalLedger.resolveContractExecutable({
+        externalRef: new xdr.ContractExecutableExternalRef({
+          executableOwner: Address.fromString(CONTRACT_ID).toScAddress(),
+          tag: EXTERNAL_TAG,
+        }),
+      });
+      assertEquals(xdrReference.resolvedWasmHash, EXTERNAL_WASM_HASH);
+
+      const addressReference = await externalLedger
+        .resolveContractExecutable({
+          externalRef: {
+            owner: Address.fromString(CONTRACT_ID),
+            tag: EXTERNAL_TAG,
+          },
+        });
+      assertEquals(addressReference.resolvedWasmHash, EXTERNAL_WASM_HASH);
+    });
+
     it("decodes config setting entries", async () => {
       const entry = await ledger.configSetting({
         configSettingId: "configSettingContractMaxSizeBytes",
@@ -778,6 +868,101 @@ describe("LedgerEntries", () => {
       await assertRejects(
         () => ledger.contractCode({ contractId: CONTRACT_ID }),
         E.CONTRACT_INSTANCE_HAS_NO_WASM_HASH,
+      );
+    });
+
+    it("resolves contract code through an external executable reference", async () => {
+      const code = makeResult(
+        buildContractCodeLedgerKey({ hash: EXTERNAL_WASM_HASH }),
+        xdr.LedgerEntryData.contractCode(
+          new xdr.ContractCodeEntry({
+            ext: xdr.ContractCodeEntryExt.v0(),
+            hash: Buffer.from(EXTERNAL_WASM_HASH, "hex"),
+            code: Buffer.from([9, 8, 7]),
+          }),
+        ),
+      );
+      const ledger = new LedgerEntries({
+        rpc: makeRpc([
+          makeExternalContractInstanceResult(),
+          makeExternalReferenceResult(),
+          code,
+        ]),
+      });
+
+      const entry = await ledger.contractCode({ contractId: CONTRACT_ID });
+
+      assertEquals(entry.hash, EXTERNAL_WASM_HASH);
+      assertEquals(entry.code, new Uint8Array([9, 8, 7]));
+    });
+
+    it("keeps external-reference resolution failures occurrence-specific", async () => {
+      const noInstance = new LedgerEntries({ rpc: makeRpc([]) });
+      await assertRejects(
+        () => noInstance.resolveContractExecutable({ contractId: CONTRACT_ID }),
+        E.LEDGER_ENTRY_NOT_FOUND,
+      );
+
+      const missing = new LedgerEntries({
+        rpc: makeRpc([makeExternalContractInstanceResult()]),
+      });
+      await assertRejects(
+        () => missing.resolveContractExecutable({ contractId: CONTRACT_ID }),
+        E.EXTERNAL_REFERENCE_ENTRY_NOT_FOUND,
+      );
+
+      const invalidValue = new LedgerEntries({
+        rpc: makeRpc([
+          makeExternalContractInstanceResult(),
+          makeExternalReferenceResult(xdr.ScVal.scvBytes(new Uint8Array(31))),
+        ]),
+      });
+      await assertRejects(
+        () =>
+          invalidValue.resolveContractExecutable({ contractId: CONTRACT_ID }),
+        E.EXTERNAL_REFERENCE_VALUE_INVALID,
+      );
+
+      await assertRejects(
+        () =>
+          invalidValue.resolveContractExecutable({
+            externalRef: { owner: ACCOUNT_ID, tag: "release" },
+          }),
+        E.EXTERNAL_REFERENCE_OWNER_NOT_CONTRACT,
+      );
+      await assertRejects(
+        () =>
+          invalidValue.resolveContractExecutable({
+            externalRef: { owner: "not-an-address", tag: "release" },
+          }),
+        E.INVALID_EXTERNAL_REFERENCE,
+      );
+
+      const nonErrorCause = {
+        get owner(): string {
+          throw "invalid owner";
+        },
+        tag: "release",
+      };
+      await assertRejects(
+        () =>
+          invalidValue.resolveContractExecutable({
+            externalRef: nonErrorCause,
+          }),
+        E.INVALID_EXTERNAL_REFERENCE,
+      );
+
+      const invalidType = new LedgerEntries({
+        rpc: makeRpc([
+          makeExternalReferenceResult(xdr.ScVal.scvU32(7)),
+        ]),
+      });
+      await assertRejects(
+        () =>
+          invalidType.resolveContractExecutable({
+            externalRef: { owner: CONTRACT_ID, tag: EXTERNAL_TAG },
+          }),
+        E.EXTERNAL_REFERENCE_VALUE_INVALID,
       );
     });
 

@@ -75,6 +75,38 @@ describe("resolveVerificationTarget", () => {
     );
   });
 
+  it("retains lossless external-reference evidence", async () => {
+    const externalReference = {
+      executableOwner:
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+      tag: { encoding: "base64" as const, value: "AP8=" },
+      instance: { observedAtLedger: 101, lastModifiedLedgerSeq: 90 },
+      reference: { observedAtLedger: 101, lastModifiedLedgerSeq: 100 },
+    };
+    const result = await resolveVerificationTarget({
+      request: processRequest(),
+      resolver: {
+        resolve: () =>
+          Promise.resolve({
+            applicability: "wasm",
+            kind: "contractId",
+            contractId:
+              "CBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4",
+            wasm: testWasm(),
+            wasmHash: "target-hash",
+            externalReference,
+            observedAt: TEST_NOW,
+          }),
+      },
+      limits: TEST_LIMITS,
+      now: () => TEST_NOW,
+    });
+
+    assertEquals(result.state, "active");
+    if (result.state !== "active") return;
+    assertEquals(result.evidence.target?.externalReference, externalReference);
+  });
+
   it("rejects invalid runtime input before calling a provider", async () => {
     let called = false;
     await assertRejects(

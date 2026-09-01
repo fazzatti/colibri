@@ -73,9 +73,9 @@ export enum Code {
   CONTRACT_CODE_NOT_FOUND = "CONTR_010",
   INVALID_CONTRACT_ID = "CONTR_011",
   CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED = "CONTR_012",
-  EXTERNAL_REF_EXECUTABLE_UNSUPPORTED = "CONTR_013",
+  CONTRACT_CONFIG_SOURCES_CONFLICT = "CONTR_013",
   STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM = "CONTR_014",
-  UNKNOWN_CONTRACT_EXECUTABLE = "CONTR_015",
+  NETWORK_EXECUTABLE_NOT_AVAILABLE = "CONTR_015",
 }
 
 // Currently unused, reserving
@@ -144,8 +144,26 @@ export class INVALID_CONTRACT_CONFIG extends ContractError<Code> {
       code: Code.INVALID_CONTRACT_CONFIG,
       message: `Invalid contract configuration`,
       details:
-        `The contract must be initialized with at least one of the following: contractId, wasm, wasmHash.`,
+        `The contract must be initialized with exactly one of the following: contractId, wasm, wasmHash, externalRef.`,
       data: {},
+    });
+  }
+}
+
+/** Raised when multiple mutually exclusive contract sources are configured. */
+export class CONTRACT_CONFIG_SOURCES_CONFLICT extends ContractError<Code> {
+  /**
+   * Creates a conflicting-contract-sources error.
+   *
+   * @param configuredSources - Source property names supplied together.
+   */
+  constructor(configuredSources: readonly string[]) {
+    super({
+      code: Code.CONTRACT_CONFIG_SOURCES_CONFLICT,
+      message: "Contract configuration sources conflict",
+      details:
+        "Contract configuration must select exactly one of contractId, wasm, wasmHash, or externalRef.",
+      data: { configuredSources: [...configuredSources] },
     });
   }
 }
@@ -317,20 +335,6 @@ export class CONTRACT_CODE_NOT_FOUND extends ContractError<Code> {
   }
 }
 
-/** Raised when direct-Wasm loading reaches a CAP-85 external reference. */
-export class EXTERNAL_REF_EXECUTABLE_UNSUPPORTED extends ContractError<Code> {
-  /** Creates an unsupported external-reference executable error. */
-  constructor(executableOwner: string, tag: Uint8Array) {
-    super({
-      code: Code.EXTERNAL_REF_EXECUTABLE_UNSUPPORTED,
-      message: "External-reference contract executable is not supported",
-      details:
-        "This operation requires direct WASM code. Phase A recognizes CAP-85 external references but does not resolve their owner and tag mapping.",
-      data: { executableOwner, tag: Uint8Array.from(tag) },
-    });
-  }
-}
-
 /** Raised when a Stellar Asset Contract is queried for a Wasm hash. */
 export class STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM extends ContractError<Code> {
   /** Creates a Stellar Asset Contract executable error. */
@@ -345,16 +349,16 @@ export class STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM extends ContractError<Code> {
   }
 }
 
-/** Raised for an executable discriminator unknown to this Colibri version. */
-export class UNKNOWN_CONTRACT_EXECUTABLE extends ContractError<Code> {
-  /** Creates an unknown contract-executable error. */
-  constructor(executableType: string) {
+/** Raised when network loading has no deployed or uploaded executable source. */
+export class NETWORK_EXECUTABLE_NOT_AVAILABLE extends ContractError<Code> {
+  /** Creates a missing-network-executable error. */
+  constructor() {
     super({
-      code: Code.UNKNOWN_CONTRACT_EXECUTABLE,
-      message: `Unknown contract executable: ${executableType}`,
+      code: Code.NETWORK_EXECUTABLE_NOT_AVAILABLE,
+      message: "Network executable is not available",
       details:
-        "The contract instance contains an executable variant this Colibri version cannot interpret.",
-      data: { executableType },
+        "Loading contract code from the network requires a contract id, uploaded Wasm hash, or external executable reference.",
+      data: {},
     });
   }
 }
@@ -429,9 +433,8 @@ export const ERROR_CONTR = {
   [Code.INVALID_CONTRACT_ID]: INVALID_CONTRACT_ID,
   [Code.CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED]:
     CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED,
-  [Code.EXTERNAL_REF_EXECUTABLE_UNSUPPORTED]:
-    EXTERNAL_REF_EXECUTABLE_UNSUPPORTED,
+  [Code.CONTRACT_CONFIG_SOURCES_CONFLICT]: CONTRACT_CONFIG_SOURCES_CONFLICT,
   [Code.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM]:
     STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM,
-  [Code.UNKNOWN_CONTRACT_EXECUTABLE]: UNKNOWN_CONTRACT_EXECUTABLE,
+  [Code.NETWORK_EXECUTABLE_NOT_AVAILABLE]: NETWORK_EXECUTABLE_NOT_AVAILABLE,
 };

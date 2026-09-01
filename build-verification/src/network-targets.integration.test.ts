@@ -11,7 +11,9 @@ import {
   StellarAssetContract,
   type TransactionConfig,
 } from "@colibri/core";
+import { xdr } from "stellar-sdk";
 import { StellarTestLedger } from "@colibri/test-tooling";
+import { EXECUTABLE_REF_MANAGER_SPEC } from "colibri-internal/tests/specs/executable-ref-manager.ts";
 import type { VerificationNetwork } from "@/core/index.ts";
 import { ContractBuildVerifier } from "@/verifier/index.ts";
 
@@ -23,6 +25,7 @@ const V1_HASH =
   "5fdf963895895d6f9420b737172087489681eb45725a6bea32b5802a0f17907e";
 const V2_HASH =
   "bb32277027fa9a4370b907cd33fbd6aea48ed8864e6e87ca3643c8f5e4c1c136";
+const EXTERNAL_REF_TAG = "stable";
 
 type LocalNetwork = {
   readonly rpcUrl: string;
@@ -48,10 +51,12 @@ let network: LocalNetwork;
 let networkConfig: ReturnType<typeof NetworkConfig.CustomNet>;
 let sourceArchive: Uint8Array;
 let v1Wasm: Uint8Array;
+let executableRefManagerWasm: Uint8Array;
 let v1WasmHash: string;
 let v2WasmHash: string;
 let contractId: string;
 let sacContractId: string;
+let executableRefManager: Contract;
 
 const strictSource = () => ({
   type: "archive" as const,
@@ -67,12 +72,19 @@ const verifier = (networkInput?: VerificationNetwork): ContractBuildVerifier =>
   });
 
 beforeAll(async () => {
-  const [v1, v2, archive] = await Promise.all([
+  const [v1, v2, archive, manager] = await Promise.all([
     Deno.readFile(new URL("upgradeable-v1.wasm", FIXTURE_ROOT)),
     Deno.readFile(new URL("upgradeable-v2.wasm", FIXTURE_ROOT)),
     Deno.readFile(new URL("upgradeable-source.tar.gz", FIXTURE_ROOT)),
+    Deno.readFile(
+      new URL(
+        "../../_internal/tests/compiled-contracts/executable_ref_manager_contract.wasm",
+        import.meta.url,
+      ),
+    ),
   ]);
   v1Wasm = v1;
+  executableRefManagerWasm = manager;
   sourceArchive = archive;
   await ledger.start();
   network = await ledger.getNetworkDetails() as LocalNetwork;
@@ -98,6 +110,16 @@ beforeAll(async () => {
   });
   await v2Contract.uploadWasm(transactionConfig);
   v2WasmHash = v2Contract.getWasmHash();
+
+  executableRefManager = new Contract({
+    networkConfig,
+    contractConfig: {
+      wasm: executableRefManagerWasm,
+      spec: EXECUTABLE_REF_MANAGER_SPEC,
+    },
+  });
+  await executableRefManager.uploadWasm(transactionConfig);
+  await executableRefManager.deploy({ config: transactionConfig });
 
   sacContractId = (await StellarAssetContract.deploy({
     code: "BLDVERIFY",
@@ -160,7 +182,7 @@ describe("Quickstart build-verification targets", disableSanitizeConfig, () => {
       networkConfig,
       contractConfig: { contractId },
     });
-    await deployed.loadSpecFromDeployedContract();
+    await deployed.loadSpecFromNetwork();
     assertEquals(await deployed.read({ method: "version" }), 1);
     await deployed.invoke({
       method: "upgrade",
@@ -182,6 +204,78 @@ describe("Quickstart build-verification targets", disableSanitizeConfig, () => {
     });
     assertEquals(oldHash.status, "verified");
     assertEquals(oldHash.evidence.target?.wasmHash, V1_HASH);
+
+    await executableRefManager.invoke({
+      method: "set",
+      methodArgs: {
+        tag: EXTERNAL_REF_TAG,
+        wasm_hash: xdr.decodeBytes(v1WasmHash, "hex"),
+      },
+      config: transactionConfig,
+    });
+    const externalRef = {
+      owner: executableRefManager.getContractId(),
+      tag: EXTERNAL_REF_TAG,
+    } as const;
+    const externalContract = new Contract({
+      networkConfig,
+      contractConfig: { externalRef },
+    });
+    await externalContract.loadSpecFromNetwork();
+    await externalContract.deploy({ config: transactionConfig });
+    assertEquals(await externalContract.read({ method: "version" }), 1);
+
+    const byExternalContract = await verifier({ networkConfig }).verify({
+      target: { contractId: externalContract.getContractId() },
+      source: strictSource(),
+    });
+    assertEquals(byExternalContract.status, "verified");
+    assertEquals(byExternalContract.evidence.target?.wasmHash, V1_HASH);
+    assertEquals(
+      byExternalContract.evidence.target?.externalReference?.executableOwner,
+      executableRefManager.getContractId(),
+    );
+    assertEquals(
+      byExternalContract.evidence.target?.externalReference?.tag,
+      { encoding: "base64", value: "c3RhYmxl" },
+    );
+    assertEquals(
+      byExternalContract.evidence.target?.externalReference?.instance !==
+        undefined,
+      true,
+    );
+    assertEquals(
+      byExternalContract.evidence.target?.externalReference?.reference !==
+        undefined,
+      true,
+    );
+
+    await executableRefManager.invoke({
+      method: "set",
+      methodArgs: {
+        tag: EXTERNAL_REF_TAG,
+        wasm_hash: xdr.decodeBytes(v2WasmHash, "hex"),
+      },
+      config: transactionConfig,
+    });
+    await externalContract.loadSpecFromNetwork();
+    assertEquals(await externalContract.read({ method: "version" }), 2);
+
+    const byExternalRef = await verifier({ networkConfig }).verify({
+      target: { externalRef },
+      source: strictSource(),
+    });
+    assertEquals(byExternalRef.status, "verified");
+    assertEquals(byExternalRef.evidence.target?.kind, "externalRef");
+    assertEquals(byExternalRef.evidence.target?.wasmHash, V2_HASH);
+    assertEquals(
+      byExternalRef.evidence.target?.externalReference?.instance,
+      undefined,
+    );
+    assertEquals(
+      byExternalRef.evidence.target?.externalReference?.reference !== undefined,
+      true,
+    );
 
     const beforeSac = Date.now();
     const sac = await verifier({ networkConfig }).verify({

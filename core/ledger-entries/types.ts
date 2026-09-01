@@ -1,4 +1,4 @@
-import type { xdr } from "stellar-sdk";
+import type { ExternalExecutableRef, xdr } from "stellar-sdk";
 import type {
   BinaryData,
   LedgerKeyLike,
@@ -155,6 +155,19 @@ export type ContractCodeLookupArgs =
   | BuildContractCodeLedgerKeyArgs
   | {
     contractId: ContractId;
+  };
+
+/**
+ * Arguments accepted when resolving the executable used by a contract.
+ */
+export type ResolveContractExecutableArgs =
+  | {
+    contractId: ContractId;
+    externalRef?: never;
+  }
+  | {
+    contractId?: never;
+    externalRef: ExternalExecutableRef;
   };
 
 /**
@@ -353,6 +366,44 @@ export type ContractExecutableView =
     type: "externalRef";
     executableOwner: string;
     tag: Uint8Array;
+  };
+
+/** Ledger observation attached to one executable-resolution lookup. */
+export type ContractExecutableLedgerObservation = {
+  /** Ledger sequence reported by RPC when the lookup was performed. */
+  observedAtLedger: number;
+  /** Ledger that last modified the observed entry, when RPC provides it. */
+  lastModifiedLedgerSeq?: number;
+};
+
+/**
+ * Exact executable and resolution facts observed from Stellar ledger entries.
+ *
+ * External references retain both their owner-scoped tag and the Wasm hash
+ * that tag resolved to at the observed ledger. The resolved hash is an
+ * observation, not a promise that the owner will keep the mapping unchanged.
+ */
+export type ResolvedContractExecutable =
+  | {
+    contractId?: ContractId;
+    executable: Extract<ContractExecutableView, { type: "wasm" }>;
+    resolvedWasmHash: string;
+    instance?: ContractExecutableLedgerObservation;
+    reference?: never;
+  }
+  | {
+    contractId?: ContractId;
+    executable: Extract<ContractExecutableView, { type: "externalRef" }>;
+    resolvedWasmHash: string;
+    instance?: ContractExecutableLedgerObservation;
+    reference: ContractExecutableLedgerObservation;
+  }
+  | {
+    contractId: ContractId;
+    executable: Extract<ContractExecutableView, { type: "stellarAsset" }>;
+    resolvedWasmHash?: never;
+    instance: ContractExecutableLedgerObservation;
+    reference?: never;
   };
 
 /**
@@ -563,61 +614,54 @@ export declare const LEDGER_KEY_BRAND: unique symbol;
  */
 export type TypedLedgerKey<
   TEntry extends AnyLedgerEntry,
-  TKey extends LedgerKeyLike = LedgerKeyLike,
-> = TKey & { readonly [LEDGER_KEY_BRAND]: TEntry };
+  TVariant extends xdr.LedgerKey["type"] = xdr.LedgerKey["type"],
+> = Extract<xdr.LedgerKey, { readonly type: TVariant }> & {
+  readonly [LEDGER_KEY_BRAND]: TEntry;
+};
 
 /** Typed account ledger key. */
-export type AccountLedgerKey = TypedLedgerKey<
-  AccountLedgerEntry,
-  xdr.LedgerKeyAccountArm
->;
+export type AccountLedgerKey = TypedLedgerKey<AccountLedgerEntry, "account">;
 /** Typed trustline ledger key. */
 export type TrustlineLedgerKey = TypedLedgerKey<
   TrustlineLedgerEntry,
-  xdr.LedgerKeyTrustline
+  "trustline"
 >;
 /** Typed offer ledger key. */
-export type OfferLedgerKey = TypedLedgerKey<
-  OfferLedgerEntry,
-  xdr.LedgerKeyOfferArm
->;
+export type OfferLedgerKey = TypedLedgerKey<OfferLedgerEntry, "offer">;
 /** Typed data ledger key. */
-export type DataLedgerKey = TypedLedgerKey<
-  DataLedgerEntry,
-  xdr.LedgerKeyDataArm
->;
+export type DataLedgerKey = TypedLedgerKey<DataLedgerEntry, "data">;
 /** Typed claimable-balance ledger key. */
 export type ClaimableBalanceLedgerKey = TypedLedgerKey<
   ClaimableBalanceLedgerEntry,
-  xdr.LedgerKeyClaimableBalanceArm
+  "claimableBalance"
 >;
 /** Typed liquidity-pool ledger key. */
 export type LiquidityPoolLedgerKey = TypedLedgerKey<
   LiquidityPoolLedgerEntry,
-  xdr.LedgerKeyLiquidityPoolArm
+  "liquidityPool"
 >;
 /** Typed contract-data ledger key. */
 export type ContractDataLedgerKey = TypedLedgerKey<
   ContractDataLedgerEntry,
-  xdr.LedgerKeyContractDataArm
+  "contractData"
 >;
 /** Typed contract-instance ledger key. */
 export type ContractInstanceLedgerKey = TypedLedgerKey<
   ContractInstanceLedgerEntry,
-  xdr.LedgerKeyContractDataArm
+  "contractData"
 >;
 /** Typed contract-code ledger key. */
 export type ContractCodeLedgerKey = TypedLedgerKey<
   ContractCodeLedgerEntry,
-  xdr.LedgerKeyContractCodeArm
+  "contractCode"
 >;
 /** Typed config-setting ledger key. */
 export type ConfigSettingLedgerKey = TypedLedgerKey<
   ConfigSettingLedgerEntry,
-  xdr.LedgerKeyConfigSettingArm
+  "configSetting"
 >;
 /** Typed TTL ledger key. */
-export type TtlLedgerKey = TypedLedgerKey<TtlLedgerEntry, xdr.LedgerKeyTtlArm>;
+export type TtlLedgerKey = TypedLedgerKey<TtlLedgerEntry, "ttl">;
 
 /**
  * Any branded ledger key emitted by the public builder helpers.

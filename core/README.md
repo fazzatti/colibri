@@ -251,6 +251,38 @@ spec or WASM and install the matcher on both `readPipe` and `invokePipe`. If you
 need constructor-time setup, pass plugins intentionally through
 `contractConfig.plugins`.
 
+## Contract executables
+
+The high-level `Contract` client accepts exactly one executable source: `wasm`,
+`wasmHash`, `contractId`, or a CAP-85 `externalRef`. External references use the
+Stellar SDK owner/tag shape and deploy through the same invocation pipeline as
+direct Wasm hashes:
+
+```ts
+const contract = new Contract({
+  networkConfig,
+  contractConfig: {
+    externalRef: { owner: "COWNER...", tag: "stable" },
+  },
+});
+
+await contract.loadSpecFromNetwork();
+await contract.deploy({ config });
+```
+
+`loadSpecFromNetwork()` also accepts a deployed `contractId`. It distinguishes
+direct Wasm, Stellar Asset Contracts, and external references, resolving the
+current owner/tag mapping when necessary. Calling it again deliberately
+refreshes a mutable external mapping instead of treating an earlier resolved
+hash as permanent.
+
+The same behavior is available at the ledger layer through
+`LedgerEntries.resolveContractExecutable(...)` and
+`LedgerEntries.contractCode({ contractId })`. Resolution returns the raw
+external owner/tag, the Wasm hash observed at that moment, and relevant ledger
+observations. Colibri does not impose a manager-contract design; applications
+can manage mappings through ordinary contract invocation.
+
 ## Accounts & signers
 
 ### NativeAccount

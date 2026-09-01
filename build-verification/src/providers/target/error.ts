@@ -10,7 +10,7 @@ export class MissingTargetNetworkError
       source: "@colibri/build-verification/providers/target",
       message: "Missing target network",
       details:
-        "A contract id or Wasm hash target requires networkConfig, rpc, or rpcUrl plus networkPassphrase.",
+        "A contract id, Wasm hash, or external-reference target requires networkConfig, rpc, or rpcUrl plus networkPassphrase.",
     });
   }
 }
@@ -114,26 +114,19 @@ export class TargetProviderUnexpectedError
   }
 }
 
-/** Raised when verification targets a CAP-85 external-reference contract. */
-export class ExternalReferenceTargetUnsupportedError
-  extends BuildVerificationError<Code.EXTERNAL_REFERENCE_TARGET_UNSUPPORTED> {
-  /** Creates an unsupported external-reference target error. */
-  constructor(
-    contractId: string,
-    executableOwner: string,
-    tag: Uint8Array,
-  ) {
+/** Raised when an owner/tag executable reference cannot be resolved. */
+export class TargetExternalReferenceLookupFailedError
+  extends BuildVerificationError<Code.TARGET_EXTERNAL_REFERENCE_LOOKUP_FAILED> {
+  /** Creates an external-reference lookup error. */
+  constructor(target: string, cause: unknown) {
     super({
-      code: Code.EXTERNAL_REFERENCE_TARGET_UNSUPPORTED,
+      code: Code.TARGET_EXTERNAL_REFERENCE_LOOKUP_FAILED,
       source: "@colibri/build-verification/providers/target/stellar",
-      message: "External-reference verification target is not supported",
+      message: "Failed to resolve external executable reference",
       details:
-        "Phase A recognizes CAP-85 external references but does not resolve their mutable owner and tag mapping to Wasm.",
-      data: {
-        contractId,
-        executableOwner,
-        tag: Uint8Array.from(tag),
-      },
+        "The owner-scoped executable tag could not be resolved to its currently selected Wasm hash through Stellar RPC.",
+      data: { target },
+      cause,
     });
   }
 }
