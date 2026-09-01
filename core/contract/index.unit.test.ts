@@ -6,14 +6,14 @@ import {
 } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { stub } from "@std/testing/mock";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { Contract } from "@/contract/index.ts";
 import * as E from "@/contract/error.ts";
 import type { Server } from "stellar-sdk/rpc";
 import type { ContractConfig } from "@/contract/types.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { NetworkType } from "@/network/types.ts";
-import { Operation } from "stellar-sdk";
+import { Address, Operation, xdr } from "stellar-sdk";
 import type { Spec } from "stellar-sdk/contract";
 import type { ContractId } from "@/strkeys/types.ts";
 import {
@@ -71,7 +71,7 @@ describe("Contract", () => {
       });
       assertExists(contract);
 
-      assertEquals(contract.getWasm(), mockWasm);
+      assertEquals(contract.getWasm(), Uint8Array.from(mockWasm));
     });
 
     it("accepts structural binary wasm inputs without requiring Colibri's Buffer type", () => {
@@ -267,6 +267,36 @@ describe("Contract", () => {
     });
     const mockRpc = {} as unknown as Server;
 
+    const contractForExecutable = (
+      executable: xdr.ContractExecutable,
+    ): Contract => {
+      const contract = new Contract({
+        networkConfig,
+        contractConfig: {
+          contractId:
+            "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId,
+        },
+        rpc: mockRpc,
+      });
+      stub(
+        contract,
+        "getContractInstanceLedgerEntry",
+        () =>
+          Promise.resolve({
+            val: {
+              type: "contractData",
+              contractData: {
+                val: {
+                  type: "scvContractInstance",
+                  instance: { executable },
+                },
+              },
+            },
+          } as never),
+      );
+      return contract;
+    };
+
     it("executes the protected requireNoContractId helper", () => {
       const contract = new TestContract({
         networkConfig,
@@ -291,6 +321,53 @@ describe("Contract", () => {
         () => contractWithId.requireNoContractIdForTest(),
         E.PROPERTY_ALREADY_SET,
       );
+    });
+
+    it("rejects an external-reference executable with exact typed evidence", async () => {
+      const tag = new Uint8Array([0x66, 0x6c, 0x65, 0x65, 0xff]);
+      const owner = "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM";
+      const contract = contractForExecutable(
+        xdr.ContractExecutable.contractExecutableExternalRef(
+          new xdr.ContractExecutableExternalRef({
+            executableOwner: Address.fromString(owner).toScAddress(),
+            tag,
+          }),
+        ),
+      );
+
+      const error = await assertRejects(
+        () => contract.loadWasmHashFromContractInstance(),
+        E.EXTERNAL_REF_EXECUTABLE_UNSUPPORTED,
+      );
+
+      assertEquals(error.meta.data, {
+        executableOwner: owner,
+        tag,
+      });
+    });
+
+    it("rejects a Stellar Asset Contract as a distinct no-Wasm case", async () => {
+      const contract = contractForExecutable(
+        xdr.ContractExecutable.contractExecutableStellarAsset(),
+      );
+
+      await assertRejects(
+        () => contract.loadWasmHashFromContractInstance(),
+        E.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM,
+      );
+    });
+
+    it("rejects an unknown executable discriminator with its own error", async () => {
+      const contract = contractForExecutable(
+        { type: "futureExecutable" } as unknown as xdr.ContractExecutable,
+      );
+
+      const error = await assertRejects(
+        () => contract.loadWasmHashFromContractInstance(),
+        E.UNKNOWN_CONTRACT_EXECUTABLE,
+      );
+
+      assertEquals(error.meta.data, { executableType: "futureExecutable" });
     });
 
     it("loads contract errors from an existing spec and installs the matcher on both owned pipelines", async () => {
@@ -570,8 +647,8 @@ describe("Contract", () => {
         args: [],
       });
       assertEquals(
-        runInput.operations[0].toXDR("base64"),
-        expectedOperation.toXDR("base64"),
+        runInput.operations[0].toXdr("base64"),
+        expectedOperation.toXdr("base64"),
       );
     });
   });

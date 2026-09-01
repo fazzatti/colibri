@@ -3,16 +3,16 @@ import { assertEquals, assertExists, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { xdr } from "stellar-sdk";
 import {
+  isIncludedInFilters,
   isLedgerCloseMetaV1,
   isLedgerCloseMetaV2,
-  isIncludedInFilters,
   parseEventsFromLedgerCloseMeta,
 } from "./ledger-close-meta.ts";
 import type { EventFilter } from "@/event/event-filter/index.ts";
 import type { EventType } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import * as E from "@/event/parsing/error.ts";
-import type { Buffer } from "buffer";
+import type { Buffer } from "node:buffer";
 import type { BoundedArray } from "@/common/helpers/bounded-array.ts";
 import type { TopicFilter } from "@/event/event-filter/types.ts";
 import type { Api } from "stellar-sdk/rpc";
@@ -25,86 +25,102 @@ const createMockFilter = (options: {
   matchesType?: (type: EventType) => boolean;
   matchesContractId?: (id: ContractId) => boolean;
   matchesTopics?: (topics: xdr.ScVal[]) => boolean;
-}): EventFilter =>
-  ({
-    matchesType: options.matchesType ?? (() => true),
-    matchesContractId: options.matchesContractId ?? (() => true),
-    matchesTopics: options.matchesTopics ?? (() => true),
-    _type: undefined,
-    _contractIds: undefined,
-    _topics: undefined,
-    encodeTopics: function (
-      _topicFilter: TopicFilter
-    ): BoundedArray<string, 0, 4> {
-      throw new Error("Function not implemented.");
-    },
-    toRawEventFilter: function (): Api.EventFilter {
-      throw new Error("Function not implemented.");
-    },
-  } as unknown as EventFilter);
+}): EventFilter => ({
+  matchesType: options.matchesType ?? (() => true),
+  matchesContractId: options.matchesContractId ?? (() => true),
+  matchesTopics: options.matchesTopics ?? (() => true),
+  _type: undefined,
+  _contractIds: undefined,
+  _topics: undefined,
+  encodeTopics: function (
+    _topicFilter: TopicFilter,
+  ): BoundedArray<string, 0, 4> {
+    throw new Error("Function not implemented.");
+  },
+  toRawEventFilter: function (): Api.EventFilter {
+    throw new Error("Function not implemented.");
+  },
+} as unknown as EventFilter);
 
-const createMockLedgerCloseMeta = (version: number) => {
+const createMockLedgerCloseMeta = (
+  version: number,
+  options?: {
+    ledgerSequence?: number;
+    closeTime?: string;
+    txProcessing?: unknown[];
+  },
+) => {
+  const metadata = {
+    ledgerHeader: {
+      header: {
+        ledgerSeq: options?.ledgerSequence ?? 12345,
+        scpValue: {
+          closeTime: {
+            toString: () => options?.closeTime ?? "1234567890",
+          },
+        },
+      },
+    },
+    txProcessing: options?.txProcessing ?? [],
+  };
   return {
-    switch: () => version,
-    v1: () => createMockLedgerCloseMetaV1V2(),
-    v2: () => createMockLedgerCloseMetaV1V2(),
+    type: `v${version}`,
+    ...(version === 1 ? { v1: metadata } : {}),
+    ...(version === 2 ? { v2: metadata } : {}),
+    toXdrObject: () => ({ v: version }),
   } as unknown as xdr.LedgerCloseMeta;
 };
-
-const createMockLedgerCloseMetaV1V2 = () => ({
-  ledgerHeader: () => ({
-    header: () => ({
-      ledgerSeq: () => 12345,
-      scpValue: () => ({
-        closeTime: () => ({
-          toString: () => "1234567890",
-        }),
-      }),
-    }),
-  }),
-  txProcessing: () => [],
-});
 
 const createMockTxProcessing = (options?: {
   contractId?: Buffer | Uint8Array | null;
   eventType?: string;
   isSuccess?: boolean;
+  operationCount?: number;
+  transactionMetaVersion?: string;
 }) => ({
-  txApplyProcessing: () => ({
-    v4: () => ({
-      operations: () => [
-        {
-          events: () => [
-            {
-              type: () => ({
-                name: options?.eventType ?? "contract",
-              }),
-              contractId: () => options?.contractId ?? null,
-              body: () => ({
-                v0: () => ({
-                  topics: () => [],
-                  data: () => xdr.ScVal.scvVoid(),
-                }),
-              }),
+  txApplyProcessing: {
+    type: options?.transactionMetaVersion ?? "v4",
+    v4: {
+      operations: Array.from(
+        { length: options?.operationCount ?? 1 },
+        () => ({
+          events: [{
+            type: {
+              name: options?.eventType ?? "contract",
             },
-          ],
-        },
-      ],
-    }),
-  }),
-  result: () => ({
-    transactionHash: () => ({
-      toString: () => "abc123def456",
-    }),
-    result: () => ({
-      result: () => ({
-        switch: () => ({
-          name: options?.isSuccess !== false ? "txSuccess" : "txFailed",
+            contractId: options?.contractId
+              ? new xdr.ContractId(options.contractId)
+              : null,
+            body: {
+              v0: {
+                topics: [],
+                data: xdr.ScVal.scvVoid(),
+              },
+            },
+          }],
         }),
-      }),
-    }),
-  }),
+      ),
+    },
+  },
+  result: {
+    transactionHash: {
+      toString: () => "abc123def456",
+    },
+    result: {
+      result: {
+        type: options?.isSuccess !== false ? "txSuccess" : "txFailed",
+      },
+    },
+  },
 });
+
+const acceptsLedgerCloseMeta = (
+  _value: unknown,
+): _value is xdr.LedgerCloseMeta => true;
+
+const rejectsLedgerCloseMeta = (
+  _value: unknown,
+): _value is xdr.LedgerCloseMeta => false;
 
 // =============================================================================
 // Tests: isLedgerCloseMetaV1
@@ -377,527 +393,367 @@ describe("parseEventsFromLedgerCloseMeta", () => {
   describe("validation", () => {
     it("throws INVALID_LEDGER_CLOSE_META_XDR for invalid XDR", async () => {
       // Mock isValid to return false
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => false;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = rejectsLedgerCloseMeta;
 
       try {
         const meta = createMockLedgerCloseMeta(1);
         await assertRejects(
           () => parseEventsFromLedgerCloseMeta(meta, async () => {}),
-          E.INVALID_LEDGER_CLOSE_META_XDR
+          E.INVALID_LEDGER_CLOSE_META_XDR,
         );
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
 
     it("throws UNSUPPORTED_LEDGER_CLOSE_META_VERSION for unsupported version", async () => {
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => true;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
 
       try {
         const meta = createMockLedgerCloseMeta(0); // Version 0 is unsupported
         await assertRejects(
           () => parseEventsFromLedgerCloseMeta(meta, async () => {}),
-          E.UNSUPPORTED_LEDGER_CLOSE_META_VERSION
+          E.UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
         );
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
 
     it("throws UNSUPPORTED_LEDGER_CLOSE_META_VERSION for version 3", async () => {
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => true;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
 
       try {
         const meta = createMockLedgerCloseMeta(3);
         await assertRejects(
           () => parseEventsFromLedgerCloseMeta(meta, async () => {}),
-          E.UNSUPPORTED_LEDGER_CLOSE_META_VERSION
+          E.UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
         );
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
+      }
+    });
+
+    it("throws a specific error for transaction metadata before v4", async () => {
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
+
+      try {
+        const meta = createMockLedgerCloseMeta(2, {
+          txProcessing: [
+            createMockTxProcessing({ transactionMetaVersion: "v3" }),
+          ],
+        });
+        await assertRejects(
+          () => parseEventsFromLedgerCloseMeta(meta, async () => {}),
+          E.UNSUPPORTED_TRANSACTION_META_VERSION,
+        );
+      } finally {
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
   });
 
   describe("event parsing", () => {
     it("calls onEvent for each event in V1 metadata", async () => {
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => true;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
 
       const events: unknown[] = [];
-      const mockMeta = {
-        switch: () => 1,
-        v1: () => ({
-          ledgerHeader: () => ({
-            header: () => ({
-              ledgerSeq: () => 100,
-              scpValue: () => ({
-                closeTime: () => ({
-                  toString: () => "1700000000",
-                }),
-              }),
-            }),
-          }),
-          txProcessing: () => [createMockTxProcessing()],
-        }),
-      } as unknown as xdr.LedgerCloseMeta;
+      const mockMeta = createMockLedgerCloseMeta(1, {
+        ledgerSequence: 100,
+        closeTime: "1700000000",
+        txProcessing: [createMockTxProcessing()],
+      });
 
       try {
         await parseEventsFromLedgerCloseMeta(
           mockMeta,
           async (event: unknown) => {
             events.push(event);
-          }
+          },
         );
 
         assertEquals(events.length, 1);
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
 
     it("calls onEvent for each event in V2 metadata", async () => {
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => true;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
 
       const events: unknown[] = [];
-      const mockMeta = {
-        switch: () => 2,
-        v2: () => ({
-          ledgerHeader: () => ({
-            header: () => ({
-              ledgerSeq: () => 200,
-              scpValue: () => ({
-                closeTime: () => ({
-                  toString: () => "1700000000",
-                }),
-              }),
-            }),
-          }),
-          txProcessing: () => [createMockTxProcessing()],
-        }),
-      } as unknown as xdr.LedgerCloseMeta;
+      const mockMeta = createMockLedgerCloseMeta(2, {
+        ledgerSequence: 200,
+        closeTime: "1700000000",
+        txProcessing: [createMockTxProcessing()],
+      });
 
       try {
         await parseEventsFromLedgerCloseMeta(
           mockMeta,
           async (event: unknown) => {
             events.push(event);
-          }
+          },
         );
 
         assertEquals(events.length, 1);
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
 
     it("extracts correct ledger sequence", async () => {
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => true;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
 
       let capturedEvent: { ledger?: number } = {};
-      const mockMeta = {
-        switch: () => 1,
-        v1: () => ({
-          ledgerHeader: () => ({
-            header: () => ({
-              ledgerSeq: () => 54321,
-              scpValue: () => ({
-                closeTime: () => ({
-                  toString: () => "1700000000",
-                }),
-              }),
-            }),
-          }),
-          txProcessing: () => [createMockTxProcessing()],
-        }),
-      } as unknown as xdr.LedgerCloseMeta;
+      const mockMeta = createMockLedgerCloseMeta(1, {
+        ledgerSequence: 54321,
+        closeTime: "1700000000",
+        txProcessing: [createMockTxProcessing()],
+      });
 
       try {
         await parseEventsFromLedgerCloseMeta(
           mockMeta,
           async (event: { ledger?: number }) => {
             capturedEvent = event;
-          }
+          },
         );
 
         assertEquals(capturedEvent.ledger, 54321);
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
 
     it("extracts correct ledgerClosedAt", async () => {
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => true;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
 
       let capturedEvent: { ledgerClosedAt?: string } = {};
-      const mockMeta = {
-        switch: () => 1,
-        v1: () => ({
-          ledgerHeader: () => ({
-            header: () => ({
-              ledgerSeq: () => 100,
-              scpValue: () => ({
-                closeTime: () => ({
-                  toString: () => "1699999999",
-                }),
-              }),
-            }),
-          }),
-          txProcessing: () => [createMockTxProcessing()],
-        }),
-      } as unknown as xdr.LedgerCloseMeta;
+      const mockMeta = createMockLedgerCloseMeta(1, {
+        ledgerSequence: 100,
+        closeTime: "1699999999",
+        txProcessing: [createMockTxProcessing()],
+      });
 
       try {
         await parseEventsFromLedgerCloseMeta(
           mockMeta,
           async (event: { ledgerClosedAt?: string }) => {
             capturedEvent = event;
-          }
+          },
         );
 
         assertEquals(capturedEvent.ledgerClosedAt, "1699999999");
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
 
     it("extracts correct txHash", async () => {
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => true;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
 
       let capturedEvent: { txHash?: string } = {};
-      const mockMeta = {
-        switch: () => 1,
-        v1: () => ({
-          ledgerHeader: () => ({
-            header: () => ({
-              ledgerSeq: () => 100,
-              scpValue: () => ({
-                closeTime: () => ({
-                  toString: () => "1700000000",
-                }),
-              }),
-            }),
-          }),
-          txProcessing: () => [createMockTxProcessing()],
-        }),
-      } as unknown as xdr.LedgerCloseMeta;
+      const mockMeta = createMockLedgerCloseMeta(1, {
+        ledgerSequence: 100,
+        closeTime: "1700000000",
+        txProcessing: [createMockTxProcessing()],
+      });
 
       try {
         await parseEventsFromLedgerCloseMeta(
           mockMeta,
           async (event: { txHash?: string }) => {
             capturedEvent = event;
-          }
+          },
         );
 
         assertEquals(capturedEvent.txHash, "abc123def456");
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
 
     it("extracts correct transactionIndex", async () => {
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => true;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
 
       const events: { transactionIndex?: number }[] = [];
-      const mockMeta = {
-        switch: () => 1,
-        v1: () => ({
-          ledgerHeader: () => ({
-            header: () => ({
-              ledgerSeq: () => 100,
-              scpValue: () => ({
-                closeTime: () => ({
-                  toString: () => "1700000000",
-                }),
-              }),
-            }),
-          }),
-          txProcessing: () => [
-            createMockTxProcessing(),
-            createMockTxProcessing(),
-          ],
-        }),
-      } as unknown as xdr.LedgerCloseMeta;
+      const mockMeta = createMockLedgerCloseMeta(1, {
+        ledgerSequence: 100,
+        closeTime: "1700000000",
+        txProcessing: [
+          createMockTxProcessing(),
+          createMockTxProcessing(),
+        ],
+      });
 
       try {
         await parseEventsFromLedgerCloseMeta(
           mockMeta,
           async (event: { transactionIndex?: number }) => {
             events.push(event);
-          }
+          },
         );
 
         assertEquals(events[0].transactionIndex, 1);
         assertEquals(events[1].transactionIndex, 2);
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
 
     it("extracts correct operationIndex", async () => {
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => true;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
 
       const events: { operationIndex?: number }[] = [];
-      const mockMeta = {
-        switch: () => 1,
-        v1: () => ({
-          ledgerHeader: () => ({
-            header: () => ({
-              ledgerSeq: () => 100,
-              scpValue: () => ({
-                closeTime: () => ({
-                  toString: () => "1700000000",
-                }),
-              }),
-            }),
-          }),
-          txProcessing: () => [
-            {
-              txApplyProcessing: () => ({
-                v4: () => ({
-                  operations: () => [
-                    {
-                      events: () => [
-                        {
-                          type: () => ({ name: "contract" }),
-                          contractId: () => null,
-                          body: () => ({
-                            v0: () => ({
-                              topics: () => [],
-                              data: () => xdr.ScVal.scvVoid(),
-                            }),
-                          }),
-                        },
-                      ],
-                    },
-                    {
-                      events: () => [
-                        {
-                          type: () => ({ name: "contract" }),
-                          contractId: () => null,
-                          body: () => ({
-                            v0: () => ({
-                              topics: () => [],
-                              data: () => xdr.ScVal.scvVoid(),
-                            }),
-                          }),
-                        },
-                      ],
-                    },
-                  ],
-                }),
-              }),
-              result: () => ({
-                transactionHash: () => ({
-                  toString: () => "hash",
-                }),
-                result: () => ({
-                  result: () => ({
-                    switch: () => ({ name: "txSuccess" }),
-                  }),
-                }),
-              }),
-            },
-          ],
-        }),
-      } as unknown as xdr.LedgerCloseMeta;
+      const mockMeta = createMockLedgerCloseMeta(1, {
+        ledgerSequence: 100,
+        closeTime: "1700000000",
+        txProcessing: [createMockTxProcessing({ operationCount: 2 })],
+      });
 
       try {
         await parseEventsFromLedgerCloseMeta(
           mockMeta,
           async (event: { operationIndex?: number }) => {
             events.push(event);
-          }
+          },
         );
 
         assertEquals(events[0].operationIndex, 1);
         assertEquals(events[1].operationIndex, 2);
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
 
     it("extracts correct event type", async () => {
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => true;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
 
       let capturedEvent: { type?: string } = {};
-      const mockMeta = {
-        switch: () => 1,
-        v1: () => ({
-          ledgerHeader: () => ({
-            header: () => ({
-              ledgerSeq: () => 100,
-              scpValue: () => ({
-                closeTime: () => ({
-                  toString: () => "1700000000",
-                }),
-              }),
-            }),
-          }),
-          txProcessing: () => [createMockTxProcessing({ eventType: "system" })],
-        }),
-      } as unknown as xdr.LedgerCloseMeta;
+      const mockMeta = createMockLedgerCloseMeta(1, {
+        ledgerSequence: 100,
+        closeTime: "1700000000",
+        txProcessing: [createMockTxProcessing({ eventType: "system" })],
+      });
 
       try {
         await parseEventsFromLedgerCloseMeta(
           mockMeta,
           async (event: { type?: string }) => {
             capturedEvent = event;
-          }
+          },
         );
 
         assertEquals(capturedEvent.type, "system");
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
 
     it("sets inSuccessfulContractCall correctly for success", async () => {
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => true;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
 
       let capturedEvent: { inSuccessfulContractCall?: boolean } = {};
-      const mockMeta = {
-        switch: () => 1,
-        v1: () => ({
-          ledgerHeader: () => ({
-            header: () => ({
-              ledgerSeq: () => 100,
-              scpValue: () => ({
-                closeTime: () => ({
-                  toString: () => "1700000000",
-                }),
-              }),
-            }),
-          }),
-          txProcessing: () => [createMockTxProcessing({ isSuccess: true })],
-        }),
-      } as unknown as xdr.LedgerCloseMeta;
+      const mockMeta = createMockLedgerCloseMeta(1, {
+        ledgerSequence: 100,
+        closeTime: "1700000000",
+        txProcessing: [createMockTxProcessing({ isSuccess: true })],
+      });
 
       try {
         await parseEventsFromLedgerCloseMeta(
           mockMeta,
           async (event: { inSuccessfulContractCall?: boolean }) => {
             capturedEvent = event;
-          }
+          },
         );
 
         assertEquals(capturedEvent.inSuccessfulContractCall, true);
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
 
     it("sets inSuccessfulContractCall correctly for failure", async () => {
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => true;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
 
       let capturedEvent: { inSuccessfulContractCall?: boolean } = {};
-      const mockMeta = {
-        switch: () => 1,
-        v1: () => ({
-          ledgerHeader: () => ({
-            header: () => ({
-              ledgerSeq: () => 100,
-              scpValue: () => ({
-                closeTime: () => ({
-                  toString: () => "1700000000",
-                }),
-              }),
-            }),
-          }),
-          txProcessing: () => [createMockTxProcessing({ isSuccess: false })],
-        }),
-      } as unknown as xdr.LedgerCloseMeta;
+      const mockMeta = createMockLedgerCloseMeta(1, {
+        ledgerSequence: 100,
+        closeTime: "1700000000",
+        txProcessing: [createMockTxProcessing({ isSuccess: false })],
+      });
 
       try {
         await parseEventsFromLedgerCloseMeta(
           mockMeta,
           async (event: { inSuccessfulContractCall?: boolean }) => {
             capturedEvent = event;
-          }
+          },
         );
 
         assertEquals(capturedEvent.inSuccessfulContractCall, false);
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
 
     it("handles null contract ID", async () => {
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => true;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
 
       let capturedEvent: { contractId?: unknown } = {};
-      const mockMeta = {
-        switch: () => 1,
-        v1: () => ({
-          ledgerHeader: () => ({
-            header: () => ({
-              ledgerSeq: () => 100,
-              scpValue: () => ({
-                closeTime: () => ({
-                  toString: () => "1700000000",
-                }),
-              }),
-            }),
-          }),
-          txProcessing: () => [createMockTxProcessing({ contractId: null })],
-        }),
-      } as unknown as xdr.LedgerCloseMeta;
+      const mockMeta = createMockLedgerCloseMeta(1, {
+        ledgerSequence: 100,
+        closeTime: "1700000000",
+        txProcessing: [createMockTxProcessing({ contractId: null })],
+      });
 
       try {
         await parseEventsFromLedgerCloseMeta(
           mockMeta,
           async (event: { contractId?: unknown }) => {
             capturedEvent = event;
-          }
+          },
         );
 
         assertEquals(capturedEvent.contractId, undefined);
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
 
     it("extracts contract ID when present", async () => {
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => true;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
 
       // Create a valid 32-byte contract ID buffer
       const contractIdBuffer = new Uint8Array(32);
       contractIdBuffer.fill(0xab);
 
       let capturedEvent: any = undefined;
-      const mockMeta = {
-        switch: () => 1,
-        v1: () => ({
-          ledgerHeader: () => ({
-            header: () => ({
-              ledgerSeq: () => 100,
-              scpValue: () => ({
-                closeTime: () => ({
-                  toString: () => "1700000000",
-                }),
-              }),
-            }),
-          }),
-          txProcessing: () => [
-            createMockTxProcessing({ contractId: contractIdBuffer }),
-          ],
-        }),
-      } as unknown as xdr.LedgerCloseMeta;
+      const mockMeta = createMockLedgerCloseMeta(1, {
+        ledgerSequence: 100,
+        closeTime: "1700000000",
+        txProcessing: [
+          createMockTxProcessing({ contractId: contractIdBuffer }),
+        ],
+      });
 
       try {
         await parseEventsFromLedgerCloseMeta(mockMeta, async (event: any) => {
@@ -911,36 +767,25 @@ describe("parseEventsFromLedgerCloseMeta", () => {
         assertEquals(typeof address, "string");
         assertEquals(address.startsWith("C"), true);
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
   });
 
   describe("filtering", () => {
     it("calls onEvent for all events when filters is explicitly undefined", async () => {
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => true;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
 
       const events: unknown[] = [];
-      const mockMeta = {
-        switch: () => 1,
-        v1: () => ({
-          ledgerHeader: () => ({
-            header: () => ({
-              ledgerSeq: () => 100,
-              scpValue: () => ({
-                closeTime: () => ({
-                  toString: () => "1700000000",
-                }),
-              }),
-            }),
-          }),
-          txProcessing: () => [
-            createMockTxProcessing(),
-            createMockTxProcessing(),
-          ],
-        }),
-      } as unknown as xdr.LedgerCloseMeta;
+      const mockMeta = createMockLedgerCloseMeta(1, {
+        ledgerSequence: 100,
+        closeTime: "1700000000",
+        txProcessing: [
+          createMockTxProcessing(),
+          createMockTxProcessing(),
+        ],
+      });
 
       try {
         // Explicitly pass undefined as filters to test the `filters || []` fallback
@@ -949,82 +794,60 @@ describe("parseEventsFromLedgerCloseMeta", () => {
           async (event: unknown) => {
             events.push(event);
           },
-          undefined
+          undefined,
         );
 
         assertEquals(events.length, 2);
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
 
     it("calls onEvent for all events when no filters provided", async () => {
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => true;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
 
       const events: unknown[] = [];
-      const mockMeta = {
-        switch: () => 1,
-        v1: () => ({
-          ledgerHeader: () => ({
-            header: () => ({
-              ledgerSeq: () => 100,
-              scpValue: () => ({
-                closeTime: () => ({
-                  toString: () => "1700000000",
-                }),
-              }),
-            }),
-          }),
-          txProcessing: () => [
-            createMockTxProcessing(),
-            createMockTxProcessing(),
-          ],
-        }),
-      } as unknown as xdr.LedgerCloseMeta;
+      const mockMeta = createMockLedgerCloseMeta(1, {
+        ledgerSequence: 100,
+        closeTime: "1700000000",
+        txProcessing: [
+          createMockTxProcessing(),
+          createMockTxProcessing(),
+        ],
+      });
 
       try {
         await parseEventsFromLedgerCloseMeta(
           mockMeta,
           async (event: unknown) => {
             events.push(event);
-          }
+          },
         );
 
         assertEquals(events.length, 2);
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
 
     it("applies filters to events", async () => {
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => true;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
 
       const events: unknown[] = [];
       const filter = createMockFilter({
         matchesType: (type) => type === "system",
       });
 
-      const mockMeta = {
-        switch: () => 1,
-        v1: () => ({
-          ledgerHeader: () => ({
-            header: () => ({
-              ledgerSeq: () => 100,
-              scpValue: () => ({
-                closeTime: () => ({
-                  toString: () => "1700000000",
-                }),
-              }),
-            }),
-          }),
-          txProcessing: () => [
-            createMockTxProcessing({ eventType: "contract" }),
-            createMockTxProcessing({ eventType: "system" }),
-          ],
-        }),
-      } as unknown as xdr.LedgerCloseMeta;
+      const mockMeta = createMockLedgerCloseMeta(1, {
+        ledgerSequence: 100,
+        closeTime: "1700000000",
+        txProcessing: [
+          createMockTxProcessing({ eventType: "contract" }),
+          createMockTxProcessing({ eventType: "system" }),
+        ],
+      });
 
       try {
         await parseEventsFromLedgerCloseMeta(
@@ -1032,40 +855,29 @@ describe("parseEventsFromLedgerCloseMeta", () => {
           async (event: unknown) => {
             events.push(event);
           },
-          [filter]
+          [filter],
         );
 
         assertEquals(events.length, 1);
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
 
     it("does not call onEvent for non-matching events", async () => {
-      const originalIsValid = xdr.LedgerCloseMeta.isValid;
-      xdr.LedgerCloseMeta.isValid = () => true;
+      const originalIsValid = xdr.LedgerCloseMeta.is;
+      xdr.LedgerCloseMeta.is = acceptsLedgerCloseMeta;
 
       const events: unknown[] = [];
       const filter = createMockFilter({
         matchesType: () => false,
       });
 
-      const mockMeta = {
-        switch: () => 1,
-        v1: () => ({
-          ledgerHeader: () => ({
-            header: () => ({
-              ledgerSeq: () => 100,
-              scpValue: () => ({
-                closeTime: () => ({
-                  toString: () => "1700000000",
-                }),
-              }),
-            }),
-          }),
-          txProcessing: () => [createMockTxProcessing()],
-        }),
-      } as unknown as xdr.LedgerCloseMeta;
+      const mockMeta = createMockLedgerCloseMeta(1, {
+        ledgerSequence: 100,
+        closeTime: "1700000000",
+        txProcessing: [createMockTxProcessing()],
+      });
 
       try {
         await parseEventsFromLedgerCloseMeta(
@@ -1073,12 +885,12 @@ describe("parseEventsFromLedgerCloseMeta", () => {
           async (event: unknown) => {
             events.push(event);
           },
-          [filter]
+          [filter],
         );
 
         assertEquals(events.length, 0);
       } finally {
-        xdr.LedgerCloseMeta.isValid = originalIsValid;
+        xdr.LedgerCloseMeta.is = originalIsValid;
       }
     });
   });

@@ -6,7 +6,7 @@ import {
   assertThrows,
 } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { Address, Asset, Keypair, xdr } from "stellar-sdk";
 import type { Api, Server } from "stellar-sdk/rpc";
 import { NetworkConfig } from "@/network/index.ts";
@@ -52,14 +52,14 @@ const ASSET = new Asset("USD", ISSUER);
 
 function makeRpc(entries: Api.LedgerEntryResult[]): Server {
   const byKey = new Map(
-    entries.map((entry) => [entry.key.toXDR("base64"), entry]),
+    entries.map((entry) => [entry.key.toXdr("base64"), entry]),
   );
 
   return {
     getLedgerEntries: (...keys: xdr.LedgerKey[]) =>
       Promise.resolve({
         entries: keys.flatMap((key) => {
-          const entry = byKey.get(key.toXDR("base64"));
+          const entry = byKey.get(key.toXdr("base64"));
           return entry ? [entry] : [];
         }),
         latestLedger: 123456,
@@ -88,8 +88,8 @@ function makeAccountResult(): Api.LedgerEntryResult {
       seqNum: xdr.Int64.fromString("42"),
       numSubEntries: 3,
       inflationDest: Keypair.fromPublicKey(SECOND_ACCOUNT_ID).xdrAccountId(),
-      flags: xdr.AccountFlags.authRequiredFlag().value |
-        xdr.AccountFlags.authClawbackEnabledFlag().value,
+      flags: xdr.AccountFlags.authRequiredFlag.value |
+        xdr.AccountFlags.authClawbackEnabledFlag.value,
       homeDomain: "colibri.dev",
       thresholds: Buffer.from([1, 2, 3, 4]),
       signers: [
@@ -100,7 +100,7 @@ function makeAccountResult(): Api.LedgerEntryResult {
           weight: 10,
         }),
       ],
-      ext: new xdr.AccountEntryExt(0),
+      ext: xdr.AccountEntryExt.v0(),
     }),
   );
 
@@ -115,15 +115,14 @@ function makeTrustlineResult(): Api.LedgerEntryResult {
       asset: ASSET.toTrustLineXDRObject() as xdr.TrustLineAsset,
       balance: xdr.Int64.fromString("500"),
       limit: xdr.Int64.fromString("1000"),
-      flags: xdr.TrustLineFlags.authorizedFlag().value,
-      ext: new xdr.TrustLineEntryExt(
-        1,
+      flags: xdr.TrustLineFlags.authorizedFlag.value,
+      ext: xdr.TrustLineEntryExt.v1(
         new xdr.TrustLineEntryV1({
           liabilities: new xdr.Liabilities({
             buying: xdr.Int64.fromString("11"),
             selling: xdr.Int64.fromString("22"),
           }),
-          ext: new xdr.TrustLineEntryV1Ext(0),
+          ext: xdr.TrustLineEntryV1Ext.v0(),
         }),
       ),
     }),
@@ -141,12 +140,12 @@ function makeOfferResult(): Api.LedgerEntryResult {
     new xdr.OfferEntry({
       sellerId: Keypair.fromPublicKey(ACCOUNT_ID).xdrAccountId(),
       offerId: xdr.Int64.fromString(String(OFFER_ID)),
-      selling: Asset.native().toXDRObject(),
-      buying: ASSET.toXDRObject(),
+      selling: Asset.native().toXdrObject(),
+      buying: ASSET.toXdrObject(),
       amount: xdr.Int64.fromString("77"),
       price: new xdr.Price({ n: 3, d: 2 }),
-      flags: xdr.OfferEntryFlags.passiveFlag().value,
-      ext: new xdr.OfferEntryExt(0),
+      flags: xdr.OfferEntryFlags.passiveFlag.value,
+      ext: xdr.OfferEntryExt.v0(),
     }),
   );
 
@@ -163,7 +162,7 @@ function makeDataResult(): Api.LedgerEntryResult {
       accountId: Keypair.fromPublicKey(ACCOUNT_ID).xdrAccountId(),
       dataName: DATA_NAME,
       dataValue: Buffer.from("hello"),
-      ext: new xdr.DataEntryExt(0),
+      ext: xdr.DataEntryExt.v0(),
     }),
   );
 
@@ -176,11 +175,11 @@ function makeClaimableBalanceResult(): Api.LedgerEntryResult {
   });
   const val = xdr.LedgerEntryData.claimableBalance(
     new xdr.ClaimableBalanceEntry({
-      balanceId: xdr.ClaimableBalanceId.fromXDR(
+      balanceId: xdr.ClaimableBalanceId.fromXdr(
         xdr.ClaimableBalanceId.claimableBalanceIdTypeV0(
           Buffer.from(StrKey.decodeClaimableBalance(CLAIMABLE_BALANCE_ID))
             .subarray(1),
-        ).toXDR(),
+        ).toXdr(),
       ),
       claimants: [
         xdr.Claimant.claimantTypeV0(
@@ -193,13 +192,12 @@ function makeClaimableBalanceResult(): Api.LedgerEntryResult {
           }),
         ),
       ],
-      asset: Asset.native().toXDRObject(),
+      asset: Asset.native().toXdrObject(),
       amount: xdr.Int64.fromString("99"),
-      ext: new xdr.ClaimableBalanceEntryExt(
-        1,
+      ext: xdr.ClaimableBalanceEntryExt.v1(
         new xdr.ClaimableBalanceEntryExtensionV1({
-          ext: new xdr.ClaimableBalanceEntryExtensionV1Ext(0),
-          flags: xdr.ClaimableBalanceFlags.claimableBalanceClawbackEnabledFlag()
+          ext: xdr.ClaimableBalanceEntryExtensionV1Ext.v0(),
+          flags: xdr.ClaimableBalanceFlags.claimableBalanceClawbackEnabledFlag
             .value,
         }),
       ),
@@ -215,14 +213,14 @@ function makeLiquidityPoolResult(): Api.LedgerEntryResult {
   });
   const val = xdr.LedgerEntryData.liquidityPool(
     new xdr.LiquidityPoolEntry({
-      liquidityPoolId: Buffer.from(
-        StrKey.decodeLiquidityPool(LIQUIDITY_POOL_ID),
-      ) as unknown as xdr.PoolId,
+      liquidityPoolId: new xdr.PoolId(
+        Buffer.from(StrKey.decodeLiquidityPool(LIQUIDITY_POOL_ID)),
+      ),
       body: xdr.LiquidityPoolEntryBody.liquidityPoolConstantProduct(
         new xdr.LiquidityPoolEntryConstantProduct({
           params: new xdr.LiquidityPoolConstantProductParameters({
-            assetA: Asset.native().toXDRObject(),
-            assetB: ASSET.toXDRObject(),
+            assetA: Asset.native().toXdrObject(),
+            assetB: ASSET.toXdrObject(),
             fee: 30,
           }),
           reserveA: xdr.Int64.fromString("100"),
@@ -244,10 +242,10 @@ function makeContractDataResult(): Api.LedgerEntryResult {
   });
   const val = xdr.LedgerEntryData.contractData(
     new xdr.ContractDataEntry({
-      ext: new xdr.ExtensionPoint(0),
+      ext: xdr.ExtensionPoint.v0(),
       contract: Address.fromString(CONTRACT_ID).toScAddress(),
       key: xdr.ScVal.scvSymbol("greeting"),
-      durability: xdr.ContractDataDurability.persistent(),
+      durability: xdr.ContractDataDurability.persistent,
       val: xdr.ScVal.scvString("hello"),
     }),
   );
@@ -262,10 +260,10 @@ function makeContractInstanceResult(
   const key = buildContractInstanceLedgerKey({ contractId: CONTRACT_ID });
   const val = xdr.LedgerEntryData.contractData(
     new xdr.ContractDataEntry({
-      ext: new xdr.ExtensionPoint(0),
+      ext: xdr.ExtensionPoint.v0(),
       contract: Address.fromString(CONTRACT_ID).toScAddress(),
       key: xdr.ScVal.scvLedgerKeyContractInstance(),
-      durability: xdr.ContractDataDurability.persistent(),
+      durability: xdr.ContractDataDurability.persistent,
       val: xdr.ScVal.scvContractInstance(
         new xdr.ScContractInstance({
           executable,
@@ -287,12 +285,11 @@ function makeContractCodeResult(): Api.LedgerEntryResult {
   const key = buildContractCodeLedgerKey({ hash: "ab".repeat(32) });
   const val = xdr.LedgerEntryData.contractCode(
     new xdr.ContractCodeEntry({
-      ext: new xdr.ContractCodeEntryExt(
-        1,
+      ext: xdr.ContractCodeEntryExt.v1(
         new xdr.ContractCodeEntryV1({
-          ext: new xdr.ExtensionPoint(0),
+          ext: xdr.ExtensionPoint.v0(),
           costInputs: new xdr.ContractCodeCostInputs({
-            ext: new xdr.ExtensionPoint(0),
+            ext: xdr.ExtensionPoint.v0(),
             nInstructions: 1,
             nFunctions: 2,
             nGlobals: 3,
@@ -396,10 +393,11 @@ describe("LedgerEntries", () => {
       });
       const withRpc = new LedgerEntries({
         rpc: {
-          getLedgerEntries: () => Promise.resolve({
-            entries: [],
-            latestLedger: 1,
-          }),
+          getLedgerEntries: () =>
+            Promise.resolve({
+              entries: [],
+              latestLedger: 1,
+            }),
         } as unknown as Server,
       });
 
@@ -409,14 +407,14 @@ describe("LedgerEntries", () => {
       assertEquals(entries, []);
     });
 
-    it("accepts ledger keys whose base64 serialization returns bytes", async () => {
+    it("matches canonical ledger keys decoded from base64 XDR", async () => {
       const responseKey = buildAccountLedgerKey({
         accountId: ACCOUNT_ID,
       }) as unknown as xdr.LedgerKey;
-      const requestKey = buildAccountLedgerKey({
-        accountId: ACCOUNT_ID,
-      }) as unknown as xdr.LedgerKey;
-      const originalToXdr = requestKey.toXDR.bind(requestKey);
+      const requestKey = xdr.LedgerKey.fromXdr(
+        responseKey.toXdr("base64"),
+        "base64",
+      );
       const accountEntry = new xdr.AccountEntry({
         accountId: Keypair.fromPublicKey(ACCOUNT_ID).xdrAccountId(),
         balance: xdr.Int64.fromString("10"),
@@ -427,34 +425,21 @@ describe("LedgerEntries", () => {
         homeDomain: "",
         thresholds: Buffer.from([0, 0, 0, 0]),
         signers: [],
-        ext: new xdr.AccountEntryExt(0),
-      });
-
-      Object.defineProperty(requestKey, "toXDR", {
-        value: (format?: "raw" | "hex" | "base64") => {
-          if (format === "base64") {
-            return new TextEncoder().encode(String(originalToXdr("base64")));
-          }
-
-          if (format === "hex") {
-            return originalToXdr("hex");
-          }
-
-          return originalToXdr("raw");
-        },
+        ext: xdr.AccountEntryExt.v0(),
       });
 
       const ledger = new LedgerEntries({
         rpc: {
-          getLedgerEntries: () => Promise.resolve({
-            entries: [
-              makeResult(
-                responseKey,
-                xdr.LedgerEntryData.account(accountEntry),
-              ),
-            ],
-            latestLedger: 1,
-          }),
+          getLedgerEntries: () =>
+            Promise.resolve({
+              entries: [
+                makeResult(
+                  responseKey,
+                  xdr.LedgerEntryData.account(accountEntry),
+                ),
+              ],
+              latestLedger: 1,
+            }),
         } as unknown as Server,
       });
 
@@ -467,14 +452,11 @@ describe("LedgerEntries", () => {
       assertEquals(entry.balance, 10n);
     });
 
-    it("accepts ledger keys whose serializer returns raw bytes for base64 requests", async () => {
+    it("matches canonical ledger keys decoded from raw XDR", async () => {
       const responseKey = buildAccountLedgerKey({
         accountId: ACCOUNT_ID,
       }) as unknown as xdr.LedgerKey;
-      const requestKey = buildAccountLedgerKey({
-        accountId: ACCOUNT_ID,
-      }) as unknown as xdr.LedgerKey;
-      const originalToXdr = requestKey.toXDR.bind(requestKey);
+      const requestKey = xdr.LedgerKey.fromXdr(responseKey.toXdr());
       const accountEntry = new xdr.AccountEntry({
         accountId: Keypair.fromPublicKey(ACCOUNT_ID).xdrAccountId(),
         balance: xdr.Int64.fromString("10"),
@@ -485,34 +467,21 @@ describe("LedgerEntries", () => {
         homeDomain: "",
         thresholds: Buffer.from([0, 0, 0, 0]),
         signers: [],
-        ext: new xdr.AccountEntryExt(0),
-      });
-
-      Object.defineProperty(requestKey, "toXDR", {
-        value: (format?: "raw" | "hex" | "base64") => {
-          if (format === "base64") {
-            return originalToXdr("raw");
-          }
-
-          if (format === "hex") {
-            return originalToXdr("hex");
-          }
-
-          return originalToXdr("raw");
-        },
+        ext: xdr.AccountEntryExt.v0(),
       });
 
       const ledger = new LedgerEntries({
         rpc: {
-          getLedgerEntries: () => Promise.resolve({
-            entries: [
-              makeResult(
-                responseKey,
-                xdr.LedgerEntryData.account(accountEntry),
-              ),
-            ],
-            latestLedger: 1,
-          }),
+          getLedgerEntries: () =>
+            Promise.resolve({
+              entries: [
+                makeResult(
+                  responseKey,
+                  xdr.LedgerEntryData.account(accountEntry),
+                ),
+              ],
+              latestLedger: 1,
+            }),
         } as unknown as Server,
       });
 
@@ -562,17 +531,17 @@ describe("LedgerEntries", () => {
       });
       const ttl = buildTtlLedgerKey({ key: contractInstance });
 
-      assertEquals(account.switch().name, "account");
-      assertEquals(trustline.switch().name, "trustline");
-      assertEquals(offer.switch().name, "offer");
-      assertEquals(data.switch().name, "data");
-      assertEquals(claimableBalance.switch().name, "claimableBalance");
-      assertEquals(liquidityPool.switch().name, "liquidityPool");
-      assertEquals(contractData.switch().name, "contractData");
-      assertEquals(contractInstance.switch().name, "contractData");
-      assertEquals(contractCode.switch().name, "contractCode");
-      assertEquals(configSetting.switch().name, "configSetting");
-      assertEquals(ttl.switch().name, "ttl");
+      assertEquals(account.type, "account");
+      assertEquals(trustline.type, "trustline");
+      assertEquals(offer.type, "offer");
+      assertEquals(data.type, "data");
+      assertEquals(claimableBalance.type, "claimableBalance");
+      assertEquals(liquidityPool.type, "liquidityPool");
+      assertEquals(contractData.type, "contractData");
+      assertEquals(contractInstance.type, "contractData");
+      assertEquals(contractCode.type, "contractCode");
+      assertEquals(configSetting.type, "configSetting");
+      assertEquals(ttl.type, "ttl");
     });
 
     it("validates string inputs on the builders", () => {

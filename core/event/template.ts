@@ -1,18 +1,17 @@
-import { Buffer } from "buffer";
 import { Address, xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { Event } from "@/event/event.ts";
 import * as E from "@/event/error.ts";
 import type {
-  EventSchema,
-  SchemaFieldType,
   AllFieldNames,
+  EventSchema,
   FieldTypeFor,
-  TopicFilterArgs,
+  SchemaFieldType,
   TopicFieldNames,
+  TopicFilterArgs,
 } from "@/event/types.ts";
 import type { ScValParsed } from "@/common/helpers/xdr/types.ts";
-import type { TopicFilter, Segment } from "@/event/event-filter/types.ts";
+import type { Segment, TopicFilter } from "@/event/event-filter/types.ts";
 import type { Prettify } from "@/common/ts-helpers.ts";
 
 /**
@@ -33,7 +32,7 @@ function valueToScVal(value: unknown, type: SchemaFieldType): xdr.ScVal {
     case "i32":
       return xdr.ScVal.scvI32(value as number);
     case "bytes":
-      return xdr.ScVal.scvBytes(Buffer.from(value as Uint8Array));
+      return xdr.ScVal.scvBytes(value as Uint8Array);
     // For larger integers, we'd need nativeToScVal - keeping simple for now
     default:
       throw new E.UNSUPPORTED_SCHEMA_FIELD_TYPE(type);
@@ -175,7 +174,7 @@ export abstract class EventTemplate<S extends EventSchema> extends Event {
    */
   static fromEvent<T extends EventTemplate<EventSchema>>(
     this: { schema: EventSchema; is(event: Event): boolean; prototype: T },
-    event: Event
+    event: Event,
   ): T {
     if (!this.is(event)) {
       const schema = this.schema;
@@ -196,7 +195,7 @@ export abstract class EventTemplate<S extends EventSchema> extends Event {
    */
   static tryFromEvent<T extends EventTemplate<EventSchema>>(
     this: { schema: EventSchema; is(event: Event): boolean; prototype: T },
-    event: Event
+    event: Event,
   ): T | undefined {
     if (!this.is(event)) {
       return undefined;
@@ -222,7 +221,7 @@ export abstract class EventTemplate<S extends EventSchema> extends Event {
    */
   static override fromEventResponse<T extends EventTemplate<EventSchema>>(
     this: { schema: EventSchema; is(event: Event): boolean; prototype: T },
-    response: Api.EventResponse
+    response: Api.EventResponse,
   ): T {
     const event = Event.fromEventResponse(response);
     if (!this.is(event)) {
@@ -253,7 +252,7 @@ export abstract class EventTemplate<S extends EventSchema> extends Event {
    */
   static tryFromEventResponse<T extends EventTemplate<EventSchema>>(
     this: { schema: EventSchema; is(event: Event): boolean; prototype: T },
-    response: Api.EventResponse
+    response: Api.EventResponse,
   ): T | undefined {
     const event = Event.fromEventResponse(response);
     if (!this.is(event)) {
@@ -286,7 +285,7 @@ export abstract class EventTemplate<S extends EventSchema> extends Event {
    */
   static toTopicFilter<Schema extends EventSchema>(
     this: { schema: Schema },
-    args: Prettify<TopicFilterArgs<Schema>> = {} as TopicFilterArgs<Schema>
+    args: Prettify<TopicFilterArgs<Schema>> = {} as TopicFilterArgs<Schema>,
   ): TopicFilter {
     const schema = this.schema;
     const filter: Segment[] = [xdr.ScVal.scvSymbol(schema.name)];

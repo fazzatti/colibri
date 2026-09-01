@@ -1,3 +1,4 @@
+import type { xdr } from "stellar-sdk";
 import type {
   BinaryData,
   LedgerKeyLike,
@@ -160,7 +161,7 @@ export type ContractCodeLookupArgs =
  * Minimal XDR union surface preserved on decoded ledger entries.
  */
 export type LedgerEntryValueXdr = XdrSerializable & {
-  switch(): { name: string; value: number };
+  readonly type: string;
 };
 
 /**
@@ -347,6 +348,11 @@ export type ContractExecutableView =
   }
   | {
     type: "stellarAsset";
+  }
+  | {
+    type: "externalRef";
+    executableOwner: string;
+    tag: Uint8Array;
   };
 
 /**
@@ -354,8 +360,8 @@ export type ContractExecutableView =
  */
 export type ConfigSettingValue =
   | number
+  | bigint
   | bigint[]
-  | readonly { toBigInt(): bigint }[]
   | readonly XdrSerializable[]
   | XdrSerializable;
 
@@ -373,7 +379,8 @@ export type BaseLedgerEntry = {
  * Shared metadata preserved on a specific decoded ledger-entry result.
  */
 export type BaseLedgerEntryOf<TKind extends LedgerEntryKind> =
-  Omit<BaseLedgerEntry, "type"> & {
+  & Omit<BaseLedgerEntry, "type">
+  & {
     type: TKind;
   };
 
@@ -554,34 +561,63 @@ export declare const LEDGER_KEY_BRAND: unique symbol;
  *
  * At runtime this is still a plain Stellar SDK ledger-key object.
  */
-export type TypedLedgerKey<TEntry extends AnyLedgerEntry> = LedgerKeyLike & {
-  readonly [LEDGER_KEY_BRAND]: TEntry;
-};
+export type TypedLedgerKey<
+  TEntry extends AnyLedgerEntry,
+  TKey extends LedgerKeyLike = LedgerKeyLike,
+> = TKey & { readonly [LEDGER_KEY_BRAND]: TEntry };
 
 /** Typed account ledger key. */
-export type AccountLedgerKey = TypedLedgerKey<AccountLedgerEntry>;
+export type AccountLedgerKey = TypedLedgerKey<
+  AccountLedgerEntry,
+  xdr.LedgerKeyAccountArm
+>;
 /** Typed trustline ledger key. */
-export type TrustlineLedgerKey = TypedLedgerKey<TrustlineLedgerEntry>;
+export type TrustlineLedgerKey = TypedLedgerKey<
+  TrustlineLedgerEntry,
+  xdr.LedgerKeyTrustline
+>;
 /** Typed offer ledger key. */
-export type OfferLedgerKey = TypedLedgerKey<OfferLedgerEntry>;
+export type OfferLedgerKey = TypedLedgerKey<
+  OfferLedgerEntry,
+  xdr.LedgerKeyOfferArm
+>;
 /** Typed data ledger key. */
-export type DataLedgerKey = TypedLedgerKey<DataLedgerEntry>;
+export type DataLedgerKey = TypedLedgerKey<
+  DataLedgerEntry,
+  xdr.LedgerKeyDataArm
+>;
 /** Typed claimable-balance ledger key. */
-export type ClaimableBalanceLedgerKey =
-  TypedLedgerKey<ClaimableBalanceLedgerEntry>;
+export type ClaimableBalanceLedgerKey = TypedLedgerKey<
+  ClaimableBalanceLedgerEntry,
+  xdr.LedgerKeyClaimableBalanceArm
+>;
 /** Typed liquidity-pool ledger key. */
-export type LiquidityPoolLedgerKey = TypedLedgerKey<LiquidityPoolLedgerEntry>;
+export type LiquidityPoolLedgerKey = TypedLedgerKey<
+  LiquidityPoolLedgerEntry,
+  xdr.LedgerKeyLiquidityPoolArm
+>;
 /** Typed contract-data ledger key. */
-export type ContractDataLedgerKey = TypedLedgerKey<ContractDataLedgerEntry>;
+export type ContractDataLedgerKey = TypedLedgerKey<
+  ContractDataLedgerEntry,
+  xdr.LedgerKeyContractDataArm
+>;
 /** Typed contract-instance ledger key. */
-export type ContractInstanceLedgerKey =
-  TypedLedgerKey<ContractInstanceLedgerEntry>;
+export type ContractInstanceLedgerKey = TypedLedgerKey<
+  ContractInstanceLedgerEntry,
+  xdr.LedgerKeyContractDataArm
+>;
 /** Typed contract-code ledger key. */
-export type ContractCodeLedgerKey = TypedLedgerKey<ContractCodeLedgerEntry>;
+export type ContractCodeLedgerKey = TypedLedgerKey<
+  ContractCodeLedgerEntry,
+  xdr.LedgerKeyContractCodeArm
+>;
 /** Typed config-setting ledger key. */
-export type ConfigSettingLedgerKey = TypedLedgerKey<ConfigSettingLedgerEntry>;
+export type ConfigSettingLedgerKey = TypedLedgerKey<
+  ConfigSettingLedgerEntry,
+  xdr.LedgerKeyConfigSettingArm
+>;
 /** Typed TTL ledger key. */
-export type TtlLedgerKey = TypedLedgerKey<TtlLedgerEntry>;
+export type TtlLedgerKey = TypedLedgerKey<TtlLedgerEntry, xdr.LedgerKeyTtlArm>;
 
 /**
  * Any branded ledger key emitted by the public builder helpers.
@@ -602,5 +638,5 @@ export type AnyTypedLedgerKey =
 /**
  * Infers the decoded entry type for a ledger key produced by a builder helper.
  */
-export type EntryFromLedgerKey<TKey extends LedgerKeyLike> =
-  TKey extends TypedLedgerKey<infer TEntry> ? TEntry : AnyLedgerEntry;
+export type EntryFromLedgerKey<TKey extends LedgerKeyLike> = TKey extends
+  TypedLedgerKey<infer TEntry> ? TEntry : AnyLedgerEntry;

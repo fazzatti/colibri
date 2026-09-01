@@ -2,7 +2,7 @@ import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-c
 import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
-import type { Buffer } from "buffer";
+import type { Buffer } from "node:buffer";
 import { Asset, Operation } from "stellar-sdk";
 import { StellarTestLedger } from "../../test-tooling/mod.ts";
 import {

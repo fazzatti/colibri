@@ -8,7 +8,7 @@
 
 // deno-lint-ignore-file no-explicit-any
 
-import { describe, it, beforeAll } from "@std/testing/bdd";
+import { beforeAll, describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { Ledger } from "@/ledger-parser/ledger/index.ts";
 import { Transaction } from "@/ledger-parser/transaction/index.ts";
@@ -17,7 +17,7 @@ import {
   loadV2Fixtures,
 } from "colibri-internal/tests/fixtures/rpc/get_ledgers/index.ts";
 import { INVALID_TRANSACTION_INDEX } from "@/ledger-parser/error.ts";
-import type { rpc } from "stellar-sdk";
+import { Keypair, type rpc, xdr } from "stellar-sdk";
 
 describe("Transaction", () => {
   let v2Fixtures: rpc.Api.RawLedgerResponse[];
@@ -75,7 +75,7 @@ describe("Transaction", () => {
       const sourceAccount = transaction.sourceAccount;
       expect(sourceAccount).toBeDefined();
       expect(
-        sourceAccount.startsWith("G") || sourceAccount.startsWith("M")
+        sourceAccount.startsWith("G") || sourceAccount.startsWith("M"),
       ).toBe(true);
     });
 
@@ -130,20 +130,23 @@ describe("Transaction", () => {
     } as any;
 
     // Helper to create mock TransactionResultMeta - returns as any for mocking
-    function createMockTxResultMeta(): any {
+    function createMockTxResultMeta(code = 0, fee = 100n): any {
       return {
-        txApplyProcessing: () => ({}),
-        result: () => ({
-          result: () => ({
-            result: () => ({
-              switch: () => ({ value: 0 }), // txSuccess
-            }),
-            feeCharged: () => ({ toBigInt: () => 100n }),
-          }),
-          transactionHash: () => new Uint8Array(32).fill(1),
-        }),
+        txApplyProcessing: {},
+        result: {
+          result: {
+            result: { toXdrObject: () => ({ code }) },
+            feeCharged: fee,
+          },
+          transactionHash: new xdr.Hash(new Uint8Array(32).fill(code || 1)),
+        },
       };
     }
+
+    const inflationOperation = () => ({
+      sourceAccount: null,
+      body: { type: "inflation" },
+    });
 
     it("should throw for envelope operations when envelope not available", () => {
       const tx = Transaction.fromMeta(mockLedger, createMockTxResultMeta(), 0);
@@ -156,26 +159,23 @@ describe("Transaction", () => {
 
     it("should handle envelopeTypeTxV0 (type 0)", () => {
       const mockEnvelope = {
-        switch: () => ({ value: 0 }), // envelopeTypeTxV0
-        v0: () => ({
-          tx: () => ({
-            sourceAccountEd25519: () => new Uint8Array(32).fill(1),
-            seqNum: () => ({ toBigInt: () => 123n }),
-            operations: () => [
-              {
-                sourceAccount: () => null,
-                body: () => ({ switch: () => ({ value: 9 }) }), // inflation
-              },
-            ],
-          }),
-        }),
+        type: "envelopeTypeTxV0",
+        v0: {
+          tx: {
+            sourceAccountEd25519: new xdr.Uint256Bytes(
+              new Uint8Array(32).fill(1),
+            ),
+            seqNum: 123n,
+            operations: [inflationOperation()],
+          },
+        },
       };
 
       const tx = Transaction.fromMetaWithEnvelope(
         mockLedger,
         createMockTxResultMeta(),
         mockEnvelope as any,
-        0
+        0,
       );
 
       expect(tx.hasEnvelope).toBe(true);
@@ -187,29 +187,21 @@ describe("Transaction", () => {
 
     it("should handle envelopeTypeTx (type 2)", () => {
       const mockEnvelope = {
-        switch: () => ({ value: 2 }), // envelopeTypeTx
-        v1: () => ({
-          tx: () => ({
-            sourceAccount: () => ({
-              switch: () => ({ value: 0, name: "keyTypeEd25519" }),
-              ed25519: () => new Uint8Array(32).fill(1),
-            }),
-            seqNum: () => ({ toBigInt: () => 789n }),
-            operations: () => [
-              {
-                sourceAccount: () => null,
-                body: () => ({ switch: () => ({ value: 9 }) }),
-              },
-            ],
-          }),
-        }),
+        type: "envelopeTypeTx",
+        v1: {
+          tx: {
+            sourceAccount: Keypair.random().xdrMuxedAccount(),
+            seqNum: 789n,
+            operations: [inflationOperation()],
+          },
+        },
       };
 
       const tx = Transaction.fromMetaWithEnvelope(
         mockLedger,
         createMockTxResultMeta(),
         mockEnvelope as any,
-        0
+        0,
       );
 
       expect(tx.hasEnvelope).toBe(true);
@@ -220,39 +212,28 @@ describe("Transaction", () => {
 
     it("should handle envelopeTypeTxFeeBump (type 5)", () => {
       const mockEnvelope = {
-        switch: () => ({ value: 5 }), // envelopeTypeTxFeeBump
-        feeBump: () => ({
-          tx: () => ({
-            feeSource: () => ({
-              switch: () => ({ value: 0, name: "keyTypeEd25519" }),
-              ed25519: () => new Uint8Array(32).fill(2),
-            }),
-            innerTx: () => ({
-              v1: () => ({
-                tx: () => ({
-                  seqNum: () => ({ toBigInt: () => 456n }),
-                  sourceAccount: () => ({
-                    switch: () => ({ value: 0, name: "keyTypeEd25519" }),
-                    ed25519: () => new Uint8Array(32).fill(3),
-                  }),
-                  operations: () => [
-                    {
-                      sourceAccount: () => null,
-                      body: () => ({ switch: () => ({ value: 9 }) }),
-                    },
-                  ],
-                }),
-              }),
-            }),
-          }),
-        }),
+        type: "envelopeTypeTxFeeBump",
+        feeBump: {
+          tx: {
+            feeSource: Keypair.random().xdrMuxedAccount(),
+            innerTx: {
+              v1: {
+                tx: {
+                  seqNum: 456n,
+                  sourceAccount: Keypair.random().xdrMuxedAccount(),
+                  operations: [inflationOperation()],
+                },
+              },
+            },
+          },
+        },
       };
 
       const tx = Transaction.fromMetaWithEnvelope(
         mockLedger,
         createMockTxResultMeta(),
         mockEnvelope as any,
-        0
+        0,
       );
 
       expect(tx.hasEnvelope).toBe(true);
@@ -263,17 +244,19 @@ describe("Transaction", () => {
 
     it("should throw for unsupported envelope type", () => {
       const mockEnvelope = {
-        switch: () => ({ value: 99 }), // Unknown type
+        type: "unknown_99",
       };
 
       const tx = Transaction.fromMetaWithEnvelope(
         mockLedger,
         createMockTxResultMeta(),
         mockEnvelope as any,
-        0
+        0,
       );
 
-      expect(() => tx.sourceAccount).toThrow("Unsupported envelope type: 99");
+      expect(() => tx.sourceAccount).toThrow(
+        "Unsupported envelope type: unknown_99",
+      );
     });
 
     it("should handle all result codes", () => {
@@ -302,20 +285,11 @@ describe("Transaction", () => {
       ];
 
       for (const { code, name } of resultCodes) {
-        const mockMeta = {
-          txApplyProcessing: () => ({}),
-          result: () => ({
-            result: () => ({
-              result: () => ({
-                switch: () => ({ value: code }),
-              }),
-              feeCharged: () => ({ toBigInt: () => 100n }),
-            }),
-            transactionHash: () => new Uint8Array(32).fill(code),
-          }),
-        } as any;
-
-        const tx = Transaction.fromMeta(mockLedger, mockMeta, 0);
+        const tx = Transaction.fromMeta(
+          mockLedger,
+          createMockTxResultMeta(code),
+          0,
+        );
         expect(tx.resultCode).toBe(name);
         expect(tx.successful).toBe(code === 0);
       }
@@ -323,28 +297,28 @@ describe("Transaction", () => {
 
     it("should return 0n for unknown envelope type in sequence getter", () => {
       const mockEnvelope = {
-        switch: () => ({ value: 3 }), // Some other type (not 0, 2, or 5)
+        type: "envelopeTypeScp",
       };
 
       const tx = Transaction.fromMetaWithEnvelope(
         mockLedger,
         createMockTxResultMeta(),
         mockEnvelope as any,
-        0
+        0,
       );
       expect(tx.sequence).toBe(0n);
     });
 
     it("should return empty array for unknown envelope type in operations getter", () => {
       const mockEnvelope = {
-        switch: () => ({ value: 3 }), // Some other type (not 0, 2, or 5)
+        type: "envelopeTypeScp",
       };
 
       const tx = Transaction.fromMetaWithEnvelope(
         mockLedger,
         createMockTxResultMeta(),
         mockEnvelope as any,
-        0
+        0,
       );
       expect(tx.operations).toEqual([]);
       expect(tx.operationCount).toBe(0);
@@ -359,7 +333,7 @@ describe("Transaction", () => {
           mockLedger,
           createMockTxResultMeta(),
           {} as any,
-          -1
+          -1,
         )
       ).toThrow(INVALID_TRANSACTION_INDEX);
     });
@@ -371,33 +345,21 @@ describe("Transaction", () => {
 
     it("should get operation by index", () => {
       const mockEnvelope = {
-        switch: () => ({ value: 2 }),
-        v1: () => ({
-          tx: () => ({
-            sourceAccount: () => ({
-              switch: () => ({ value: 0, name: "keyTypeEd25519" }),
-              ed25519: () => new Uint8Array(32).fill(1),
-            }),
-            seqNum: () => ({ toBigInt: () => 123n }),
-            operations: () => [
-              {
-                sourceAccount: () => null,
-                body: () => ({ switch: () => ({ value: 9 }) }),
-              },
-              {
-                sourceAccount: () => null,
-                body: () => ({ switch: () => ({ value: 9 }) }),
-              },
-            ],
-          }),
-        }),
+        type: "envelopeTypeTx",
+        v1: {
+          tx: {
+            sourceAccount: Keypair.random().xdrMuxedAccount(),
+            seqNum: 123n,
+            operations: [inflationOperation(), inflationOperation()],
+          },
+        },
       };
 
       const tx = Transaction.fromMetaWithEnvelope(
         mockLedger,
         createMockTxResultMeta(),
         mockEnvelope as any,
-        0
+        0,
       );
 
       expect(tx.getOperation(0)).toBeDefined();
@@ -407,24 +369,21 @@ describe("Transaction", () => {
 
     it("should serialize to JSON with envelope", () => {
       const mockEnvelope = {
-        switch: () => ({ value: 2 }),
-        v1: () => ({
-          tx: () => ({
-            sourceAccount: () => ({
-              switch: () => ({ value: 0, name: "keyTypeEd25519" }),
-              ed25519: () => new Uint8Array(32).fill(1),
-            }),
-            seqNum: () => ({ toBigInt: () => 123n }),
-            operations: () => [],
-          }),
-        }),
+        type: "envelopeTypeTx",
+        v1: {
+          tx: {
+            sourceAccount: Keypair.random().xdrMuxedAccount(),
+            seqNum: 123n,
+            operations: [],
+          },
+        },
       };
 
       const tx = Transaction.fromMetaWithEnvelope(
         mockLedger,
         createMockTxResultMeta(),
         mockEnvelope as any,
-        0
+        0,
       );
       const json = tx.toJSON();
 
@@ -439,18 +398,11 @@ describe("Transaction", () => {
     });
 
     it("should parse fee from result", () => {
-      const mockMeta = {
-        txApplyProcessing: () => ({}),
-        result: () => ({
-          result: () => ({
-            result: () => ({ switch: () => ({ value: 0 }) }),
-            feeCharged: () => ({ toBigInt: () => 500n }),
-          }),
-          transactionHash: () => new Uint8Array(32).fill(1),
-        }),
-      } as any;
-
-      const tx = Transaction.fromMeta(mockLedger, mockMeta, 0);
+      const tx = Transaction.fromMeta(
+        mockLedger,
+        createMockTxResultMeta(0, 500n),
+        0,
+      );
       expect(tx.fee).toBe(500n);
     });
   });

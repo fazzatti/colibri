@@ -234,12 +234,12 @@ describe("EventFilter Errors", () => {
       };
 
       assertEquals(
-        data.filterSegment.toXDR("base64"),
-        filterSegment.toXDR("base64")
+        data.filterSegment.toXdr("base64"),
+        filterSegment.toXdr("base64")
       );
       assertEquals(
-        data.eventSegment.toXDR("base64"),
-        eventSegment.toXDR("base64")
+        data.eventSegment.toXdr("base64"),
+        eventSegment.toXdr("base64")
       );
     });
   });
@@ -324,7 +324,7 @@ describe("EventFilter", () => {
       const raw = filter.toRawEventFilter();
 
       assertExists(raw.topics);
-      assertEquals(raw.topics[0][0], scVal.toXDR("base64"));
+      assertEquals(raw.topics[0][0], scVal.toXdr("base64"));
     });
 
     it("should encode mixed topic filters", () => {
@@ -334,7 +334,7 @@ describe("EventFilter", () => {
       const raw = filter.toRawEventFilter();
 
       assertExists(raw.topics);
-      assertEquals(raw.topics[0][0], scVal.toXDR("base64"));
+      assertEquals(raw.topics[0][0], scVal.toXdr("base64"));
       assertEquals(raw.topics[0][1], "*");
       assertEquals(raw.topics[0][2], "**");
     });
@@ -553,9 +553,9 @@ describe("EventFilter", () => {
     });
 
     it("should throw FAILED_TO_CHECK_FILTER_SEGMENT when XDR encoding fails", () => {
-      // Create a corrupted ScVal-like object that will throw on toXDR
+      // Create a corrupted ScVal-like object that will throw on toXdr
       const corruptedScVal = Object.create(xdr.ScVal.prototype);
-      corruptedScVal.toXDR = () => {
+      corruptedScVal.toXdr = () => {
         throw new Error("XDR encoding failed");
       };
 

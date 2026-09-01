@@ -1,22 +1,20 @@
 import { xdr } from "stellar-sdk";
-import { Buffer } from "buffer";
 import { parseScVal, parseScVals } from "@/common/helpers/xdr/scval.ts";
 import type { ScValParsed } from "@/common/helpers/xdr/types.ts";
-import type {
-  RpcEventResponseLike,
-  ScValLike,
-} from "@/common/types/index.ts";
-import { isEventId, type EventId } from "@/event/event-id/index.ts";
+import type { RpcEventResponseLike, ScValLike } from "@/common/types/index.ts";
+import { type EventId, isEventId } from "@/event/event-id/index.ts";
 import { EventType, type IEvent } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import * as E from "@/event/error.ts";
 
-type EventConstructorArgs = Omit<RpcEventResponseLike, "type" | "contractId"> & {
-  type: EventType;
-  contractId?: ContractId;
-};
+type EventConstructorArgs =
+  & Omit<RpcEventResponseLike, "type" | "contractId">
+  & {
+    type: EventType;
+    contractId?: ContractId;
+  };
 
 /**
  * Normalized event wrapper for Stellar RPC event payloads.
@@ -137,11 +135,5 @@ export class Event implements IEvent {
   }
 }
 
-const toXdrScVal = (value: ScValLike): xdr.ScVal => {
-  const serialized = value.toXDR("base64");
-  const base64 = typeof serialized === "string"
-    ? serialized
-    : Buffer.from(serialized).toString("base64");
-
-  return xdr.ScVal.fromXDR(base64, "base64");
-};
+const toXdrScVal = (value: ScValLike): xdr.ScVal =>
+  xdr.ScVal.fromXdr(value.toXdr());

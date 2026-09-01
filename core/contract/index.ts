@@ -6,7 +6,6 @@ import {
 } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import { Spec } from "stellar-sdk/contract";
-import { Buffer } from "buffer";
 import {
   createInvokeContractPipeline,
   type InvokeContractPipeline,
@@ -29,7 +28,7 @@ import {
 } from "@/common/helpers/get-transaction-response.ts";
 import { processSpecEntryStream } from "@/common/helpers/wasm.ts";
 import { generateRandomSalt } from "@/common/helpers/generate-random-salt.ts";
-import { toBuffer } from "@/common/helpers/internal-buffer.ts";
+import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 import * as E from "@/contract/error.ts";
 import type {
   ContractConstructorArgs,
@@ -80,7 +79,7 @@ export class Contract {
   /** @internal */
   protected spec?: Spec;
   /** @internal */
-  protected wasm?: Buffer;
+  protected wasm?: Uint8Array;
   /** @internal */
   protected wasmHash?: string;
   /** @internal */
@@ -139,7 +138,7 @@ export class Contract {
       this.contractId = contractId;
     }
     if (wasm) {
-      this.wasm = toBuffer(wasm);
+      this.wasm = toUint8Array(wasm);
     }
     if (wasmHash) {
       this.wasmHash = wasmHash;
@@ -160,7 +159,7 @@ export class Contract {
   /** @internal */
   protected require(arg: "spec"): Spec;
   /** @internal */
-  protected require(arg: "wasm"): Buffer;
+  protected require(arg: "wasm"): Uint8Array;
   /** @internal */
   protected require(arg: "wasmHash"): string;
   /** @internal */
@@ -168,7 +167,7 @@ export class Contract {
   /** @internal */
   protected require(
     arg: "spec" | "contractId" | "wasm" | "wasmHash",
-  ): ContractId | Spec | Buffer | string {
+  ): ContractId | Spec | Uint8Array | string {
     assert(this[arg], new E.MISSING_REQUIRED_PROPERTY(arg));
     return this[arg];
   }
@@ -273,13 +272,13 @@ export class Contract {
     const ledgerEntries = (await this.rpc.getLedgerEntries(
       xdr.LedgerKey.contractCode(
         new xdr.LedgerKeyContractCode({
-          hash: Buffer.from(this.getWasmHash(), "hex"),
+          hash: xdr.decodeBytes(this.getWasmHash(), "hex"),
         }),
       ),
     )) as Api.GetLedgerEntriesResponse;
 
     const contractCode = ledgerEntries.entries.find(
-      (entry) => entry.key.switch().name === "contractCode",
+      (entry) => entry.key.type === "contractCode",
     );
 
     assert(contractCode, new E.CONTRACT_CODE_NOT_FOUND(this.getWasmHash()));
@@ -298,7 +297,7 @@ export class Contract {
     )) as Api.GetLedgerEntriesResponse;
 
     const contractInstance = ledgerEntries.entries.find(
-      (entry) => entry.key.switch().name === "contractData",
+      (entry) => entry.key.type === "contractData",
     );
 
     assert(
@@ -315,6 +314,8 @@ export class Contract {
   //
 
   /**
+   * Uploads this client's Wasm to the configured Stellar network.
+   *
    * @param {TransactionConfig} config - The transaction configuration object to use in this transaction.
    *
    * @description - Uploads the contract wasm to the network and stores the wasm hash in this contract instance.
@@ -345,9 +346,12 @@ export class Contract {
   }
 
   /**
+   * Deploys a new instance of this client's uploaded Wasm.
+   *
    * @param {TransactionConfig} config - The transaction configuration object to use in this transaction.
    * @param {T} constructorArgs - The arguments to pass to the contract constructor, if any.
-   * @param {Buffer} salt - The salt to use for the contract deployment. When not provided, a random salt will be generated.
+   * @param salt - The 32-byte deployment salt. When omitted, a random
+   * `Uint8Array` salt is generated.
    *
    * @description - Deploys a new instance of the contract to the network and stores the contract id in the contract instance.
    *
@@ -373,8 +377,8 @@ export class Contract {
 
       const deployOperation = Operation.createCustomContract({
         address: new Address(config.source),
-        wasmHash: Buffer.from(wasmHash, "hex"),
-        salt: toBuffer(contractSalt),
+        wasmHash: xdr.decodeBytes(wasmHash, "hex"),
+        salt: toUint8Array(contractSalt),
         constructorArgs: encodedArgs,
       });
 
@@ -394,6 +398,8 @@ export class Contract {
   }
 
   /**
+   * Loads the contract specification from this client's local Wasm.
+   *
    * @param {void} args - No arguments.
    *
    * @returns {Promise<void>} - The output of the invocation.
@@ -414,13 +420,14 @@ export class Contract {
     // There should only be one such section, so we take the first one.
     // We then parse the section as a stream of XDR-encoded SpecEntry objects.
 
-    const bufferSection = Buffer.from(xdrSections[0]);
-    const specEntryArray = processSpecEntryStream(bufferSection);
+    const specEntryArray = processSpecEntryStream(xdrSections[0]);
     const spec = new Spec(specEntryArray);
     this.spec = spec;
   }
 
   /**
+   * Loads the contract specification from the deployed contract code.
+   *
    * @param {void} args - No arguments.
    *
    * @returns {Promise<void>} - The output of the invocation.
@@ -436,7 +443,11 @@ export class Contract {
 
     const contractCodeEntry = await this.getContractCodeLedgerEntry();
 
-    const wasm = contractCodeEntry.val.contractCode().code();
+    assert(
+      contractCodeEntry.val.type === "contractCode",
+      new E.CONTRACT_CODE_NOT_FOUND(this.getWasmHash()),
+    );
+    const wasm = contractCodeEntry.val.contractCode.code;
 
     this.wasm = wasm;
 
@@ -497,6 +508,8 @@ export class Contract {
   }
 
   /**
+   * Loads the Wasm hash referenced by this client's contract instance.
+   *
    * @param {void} args - No arguments.
    *
    * @returns {Promise<void>} - The output of the invocation.
@@ -509,14 +522,32 @@ export class Contract {
     this.requireNo("wasmHash");
     const contractInstanceEntry = await this.getContractInstanceLedgerEntry();
 
-    const wasmHash = contractInstanceEntry.val
-      .contractData()
-      .val()
-      .instance()
-      .executable()
-      .wasmHash();
+    assert(
+      contractInstanceEntry.val.type === "contractData" &&
+        contractInstanceEntry.val.contractData.val.type ===
+          "scvContractInstance",
+      new E.CONTRACT_INSTANCE_NOT_FOUND(this.getContractId()),
+    );
+    const executable = contractInstanceEntry.val.contractData.val.instance
+      .executable;
 
-    this.wasmHash = wasmHash.toString("hex");
+    if (executable.type === "contractExecutableExternalRef") {
+      throw new E.EXTERNAL_REF_EXECUTABLE_UNSUPPORTED(
+        Address.fromScAddress(executable.externalRef.executableOwner)
+          .toString(),
+        executable.externalRef.tag.bytes,
+      );
+    }
+    if (executable.type === "contractExecutableStellarAsset") {
+      throw new E.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM();
+    }
+    if (executable.type !== "contractExecutableWasm") {
+      throw new E.UNKNOWN_CONTRACT_EXECUTABLE(
+        (executable as { type: string }).type,
+      );
+    }
+
+    this.wasmHash = executable.wasmHash.toString();
   }
 
   //==========================================
@@ -526,6 +557,8 @@ export class Contract {
   //
 
   /**
+   * Simulates a read-only contract method and decodes its result.
+   *
    * @args {SorobanSimulateArgs<object>} args - The arguments for the invocation.
    * @param {string} args.method - The method to invoke as it is identified in the contract.
    * @param {object} args.methodArgs - The arguments for the method invocation.
@@ -560,6 +593,8 @@ export class Contract {
   }
 
   /**
+   * Invokes a state-changing contract method through the invoke pipeline.
+   *
    * @param {string} method - The method to invoke as it is identified in the contract.
    * @param {object} .methodArgs - The arguments for the method invocation.
    * @param {TransactionConfig} config - The transaction configuration object to use in this transaction.
@@ -631,6 +666,8 @@ export class Contract {
   }
 
   /**
+   * Simulates a read-only method using already encoded ScVal arguments.
+   *
    * @param {string} method - The method to invoke as it is identified in the contract.
    * @param {ScValLike[]} methodArgs - The arguments for the method invocation in ScVal array.
    *

@@ -73,6 +73,9 @@ export enum Code {
   CONTRACT_CODE_NOT_FOUND = "CONTR_010",
   INVALID_CONTRACT_ID = "CONTR_011",
   CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED = "CONTR_012",
+  EXTERNAL_REF_EXECUTABLE_UNSUPPORTED = "CONTR_013",
+  STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM = "CONTR_014",
+  UNKNOWN_CONTRACT_EXECUTABLE = "CONTR_015",
 }
 
 // Currently unused, reserving
@@ -102,7 +105,8 @@ export class MISSING_ARG extends ContractError<Code> {
     super({
       code: Code.MISSING_ARG,
       message: `Missing required argument: ${argName}`,
-      details: `The argument '${argName}' is required to construct a new Contract instance but was not provided.`,
+      details:
+        `The argument '${argName}' is required to construct a new Contract instance but was not provided.`,
       data: { argName },
     });
   }
@@ -117,7 +121,8 @@ export class MISSING_RPC_URL extends ContractError<Code> {
     super({
       code: Code.MISSING_RPC_URL,
       message: `Missing required argument: rpcUrl`,
-      details: `The argument 'rpcUrl' is required in the provided 'networkConfig'.`,
+      details:
+        `The argument 'rpcUrl' is required in the provided 'networkConfig'.`,
       diagnostic: {
         suggestion:
           "Either provide a 'rpc' instance or a valid 'rpcUrl' in the 'networkConfig'.",
@@ -138,7 +143,8 @@ export class INVALID_CONTRACT_CONFIG extends ContractError<Code> {
     super({
       code: Code.INVALID_CONTRACT_CONFIG,
       message: `Invalid contract configuration`,
-      details: `The contract must be initialized with at least one of the following: contractId, wasm, wasmHash.`,
+      details:
+        `The contract must be initialized with at least one of the following: contractId, wasm, wasmHash.`,
       data: {},
     });
   }
@@ -157,7 +163,8 @@ export class FAILED_TO_UPLOAD_WASM extends ContractError<Code> {
     super({
       code: Code.FAILED_TO_UPLOAD_WASM,
       message: `Failed to upload WASM to the network`,
-      details: `An error occurred while attempting to upload the provided WASM to the Stellar network. See the 'cause' for more details.`,
+      details:
+        `An error occurred while attempting to upload the provided WASM to the Stellar network. See the 'cause' for more details.`,
       cause,
       data: {},
     });
@@ -177,10 +184,13 @@ export class MISSING_REQUIRED_PROPERTY extends ContractError<Code> {
     super({
       code: Code.MISSING_REQUIRED_PROPERTY,
       message: `Missing required contract property: ${propertyName}`,
-      details: `The contract property '${propertyName}' is required but was not set.`,
+      details:
+        `The contract property '${propertyName}' is required but was not set.`,
       diagnostic: {
-        suggestion: `Ensure that the contract is initialized and configured to include the required property.`,
-        rootCause: `The contract cannot execute the function called properly without the required property '${propertyName}'.`,
+        suggestion:
+          `Ensure that the contract is initialized and configured to include the required property.`,
+        rootCause:
+          `The contract cannot execute the function called properly without the required property '${propertyName}'.`,
       },
       data: { propertyName },
     });
@@ -198,8 +208,10 @@ export class MISSING_SPEC_IN_WASM extends ContractError<Code> {
       message: `Missing spec in WASM`,
       details: `The provided WASM does not contain a valid spec.`,
       diagnostic: {
-        suggestion: `Ensure that the WASM file is correctly compiled and includes the necessary spec information.`,
-        rootCause: `The contract could not load a 'Spec' from the WASM binaries. These are included in the 'contractspecv0' section of the compiled file.`,
+        suggestion:
+          `Ensure that the WASM file is correctly compiled and includes the necessary spec information.`,
+        rootCause:
+          `The contract could not load a 'Spec' from the WASM binaries. These are included in the 'contractspecv0' section of the compiled file.`,
       },
       data: {},
     });
@@ -219,7 +231,8 @@ export class FAILED_TO_DEPLOY_CONTRACT extends ContractError<Code> {
     super({
       code: Code.FAILED_TO_DEPLOY_CONTRACT,
       message: `Failed to deploy contract to the network`,
-      details: `An error occurred while attempting to deploy the contract to the Stellar network. See the 'cause' for more details.`,
+      details:
+        `An error occurred while attempting to deploy the contract to the Stellar network. See the 'cause' for more details.`,
       cause,
       data: {},
     });
@@ -239,10 +252,13 @@ export class PROPERTY_ALREADY_SET extends ContractError<Code> {
     super({
       code: Code.PROPERTY_ALREADY_SET,
       message: `Property already set: ${propertyName}`,
-      details: `The contract property '${propertyName}' has already been set and cannot be modified.`,
+      details:
+        `The contract property '${propertyName}' has already been set and cannot be modified.`,
       diagnostic: {
-        suggestion: `If you need to change the value of '${propertyName}', consider creating a new Contract instance.`,
-        rootCause: `To maintain the integrity and consistency of the contract, certain properties are immutable once set. The function called attempted to modify such a property.`,
+        suggestion:
+          `If you need to change the value of '${propertyName}', consider creating a new Contract instance.`,
+        rootCause:
+          `To maintain the integrity and consistency of the contract, certain properties are immutable once set. The function called attempted to modify such a property.`,
       },
       data: { propertyName },
     });
@@ -262,10 +278,13 @@ export class CONTRACT_INSTANCE_NOT_FOUND extends ContractError<Code> {
     super({
       code: Code.CONTRACT_INSTANCE_NOT_FOUND,
       message: `Contract instance not found: ${contractId}`,
-      details: `The contract instance with ID '${contractId}' was not found on the Stellar network.`,
+      details:
+        `The contract instance with ID '${contractId}' was not found on the Stellar network.`,
       diagnostic: {
-        suggestion: `Verify that the contract ID is correct and that the contract has been deployed to the network.`,
-        rootCause: `The contract ID provided does not correspond to any existing contract instance on the network. This could be due to a typo in the ID or because the contract has not been deployed yet.`,
+        suggestion:
+          `Verify that the contract ID is correct and that the contract has been deployed to the network.`,
+        rootCause:
+          `The contract ID provided does not correspond to any existing contract instance on the network. This could be due to a typo in the ID or because the contract has not been deployed yet.`,
       },
       data: { contractId },
     });
@@ -285,12 +304,57 @@ export class CONTRACT_CODE_NOT_FOUND extends ContractError<Code> {
     super({
       code: Code.CONTRACT_CODE_NOT_FOUND,
       message: `Contract code not found for WASM hash: ${wasmHash}`,
-      details: `No contract code was found on the Stellar network for the provided WASM hash '${wasmHash}'.`,
+      details:
+        `No contract code was found on the Stellar network for the provided WASM hash '${wasmHash}'.`,
       diagnostic: {
-        suggestion: `Ensure that the WASM hash is correct and that the corresponding contract code has been uploaded to the network.`,
-        rootCause: `The WASM hash provided does not match any contract code stored on the network. This could be due to an incorrect hash or because the contract code has not been uploaded yet.`,
+        suggestion:
+          `Ensure that the WASM hash is correct and that the corresponding contract code has been uploaded to the network.`,
+        rootCause:
+          `The WASM hash provided does not match any contract code stored on the network. This could be due to an incorrect hash or because the contract code has not been uploaded yet.`,
       },
       data: { wasmHash },
+    });
+  }
+}
+
+/** Raised when direct-Wasm loading reaches a CAP-85 external reference. */
+export class EXTERNAL_REF_EXECUTABLE_UNSUPPORTED extends ContractError<Code> {
+  /** Creates an unsupported external-reference executable error. */
+  constructor(executableOwner: string, tag: Uint8Array) {
+    super({
+      code: Code.EXTERNAL_REF_EXECUTABLE_UNSUPPORTED,
+      message: "External-reference contract executable is not supported",
+      details:
+        "This operation requires direct WASM code. Phase A recognizes CAP-85 external references but does not resolve their owner and tag mapping.",
+      data: { executableOwner, tag: Uint8Array.from(tag) },
+    });
+  }
+}
+
+/** Raised when a Stellar Asset Contract is queried for a Wasm hash. */
+export class STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM extends ContractError<Code> {
+  /** Creates a Stellar Asset Contract executable error. */
+  constructor() {
+    super({
+      code: Code.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM,
+      message: "Stellar Asset Contract executable has no Wasm hash",
+      details:
+        "Stellar Asset Contracts use the built-in protocol executable and cannot provide uploaded Wasm code.",
+      data: {},
+    });
+  }
+}
+
+/** Raised for an executable discriminator unknown to this Colibri version. */
+export class UNKNOWN_CONTRACT_EXECUTABLE extends ContractError<Code> {
+  /** Creates an unknown contract-executable error. */
+  constructor(executableType: string) {
+    super({
+      code: Code.UNKNOWN_CONTRACT_EXECUTABLE,
+      message: `Unknown contract executable: ${executableType}`,
+      details:
+        "The contract instance contains an executable variant this Colibri version cannot interpret.",
+      data: { executableType },
     });
   }
 }
@@ -310,8 +374,10 @@ export class INVALID_CONTRACT_ID extends ContractError<Code> {
       message: `Invalid contract ID: ${contractId}`,
       details: `The provided contract ID '${contractId}' is not valid.`,
       diagnostic: {
-        suggestion: `Ensure that the contract ID is correctly formatted and valid.`,
-        rootCause: `The contract ID does not conform to the expected format or criteria.`,
+        suggestion:
+          `Ensure that the contract ID is correctly formatted and valid.`,
+        rootCause:
+          `The contract ID does not conform to the expected format or criteria.`,
       },
       data: { contractId },
     });
@@ -363,4 +429,9 @@ export const ERROR_CONTR = {
   [Code.INVALID_CONTRACT_ID]: INVALID_CONTRACT_ID,
   [Code.CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED]:
     CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED,
+  [Code.EXTERNAL_REF_EXECUTABLE_UNSUPPORTED]:
+    EXTERNAL_REF_EXECUTABLE_UNSUPPORTED,
+  [Code.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM]:
+    STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM,
+  [Code.UNKNOWN_CONTRACT_EXECUTABLE]: UNKNOWN_CONTRACT_EXECUTABLE,
 };

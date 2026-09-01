@@ -104,7 +104,7 @@ export class LedgerEntries {
     }
 
     for (const key of keys) {
-      if (key.switch().name === "ttl") {
+      if (key.type === "ttl") {
         throw new E.UNSUPPORTED_RPC_LEDGER_KEY("ttl");
       }
     }
