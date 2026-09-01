@@ -357,7 +357,7 @@ const result = await verifyContractBuild(
 Run the package directly from JSR:
 
 ```sh
-deno run -A jsr:@colibri/build-verification@0.3.0/cli \
+deno run -A jsr:@colibri/build-verification@0.4.0/cli \
   --contract-id C... \
   --network mainnet \
   --evidence verification.json \
@@ -378,7 +378,7 @@ Pass `--json` when stdout or stderr must contain the complete machine-readable
 result or typed Colibri error:
 
 ```sh
-deno run -A jsr:@colibri/build-verification@0.3.0/cli \
+deno run -A jsr:@colibri/build-verification@0.4.0/cli \
   --contract-id C... \
   --network mainnet \
   --json
@@ -387,7 +387,7 @@ deno run -A jsr:@colibri/build-verification@0.3.0/cli \
 Out-of-band mode uses a JSON recipe file:
 
 ```sh
-deno run -A jsr:@colibri/build-verification@0.3.0/cli \
+deno run -A jsr:@colibri/build-verification@0.4.0/cli \
   --wasm deployed.wasm \
   --source source.tar.gz \
   --recipe recipe.json \
@@ -398,7 +398,7 @@ Private or rate-limited GitHub sources read a token from an explicitly named
 environment variable so the token never appears in process arguments:
 
 ```sh
-deno run -A jsr:@colibri/build-verification@0.3.0/cli \
+deno run -A jsr:@colibri/build-verification@0.4.0/cli \
   --wasm deployed.wasm \
   --github-owner organization \
   --github-repository private-contract \
@@ -421,7 +421,7 @@ deno run \
   --allow-net \
   --allow-env \
   --allow-sys=homedir \
-  jsr:@colibri/build-verification@0.3.0/cli \
+  jsr:@colibri/build-verification@0.4.0/cli \
   --contract-id C... \
   --network mainnet
 ```

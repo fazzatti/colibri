@@ -18,7 +18,9 @@ integrated pipelines.
 ## Installation
 
 Colibri Core is published on [JSR](https://jsr.io/@colibri/core) and ships
-entirely as TypeScript modules.
+entirely as TypeScript modules. Deno `v2.0` or later is supported directly;
+Node.js consumers should use `v22.12` or later, matching the minimum runtime of
+the underlying Stellar SDK 17 dependency.
 
 ```sh
 # Deno (JSR)

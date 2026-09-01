@@ -156,7 +156,7 @@ GitHub tokens, or environment-variable values.
 Run the package directly from JSR:
 
 ```bash
-deno run -A jsr:@colibri/build-verification@0.3.0/cli \
+deno run -A jsr:@colibri/build-verification@0.4.0/cli \
   --contract-id C... \
   --network mainnet \
   --evidence verification.json \

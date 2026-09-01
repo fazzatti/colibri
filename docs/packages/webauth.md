@@ -106,11 +106,11 @@ import { xdr } from "npm:@stellar/stellar-sdk";
 
 const authorize: ContractAuthHandler = async (entry, context) => {
   const authorizedXdr = await authorizeForMyContract(
-    entry.toXDR(),
+    entry.toXdr(),
     context.validUntilLedgerSeq,
     context.networkPassphrase,
   );
-  return xdr.SorobanAuthorizationEntry.fromXDR(authorizedXdr);
+  return xdr.SorobanAuthorizationEntry.fromXdr(authorizedXdr);
 };
 
 const jwt = await client.sep45.authenticate({
