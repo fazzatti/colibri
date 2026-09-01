@@ -9,7 +9,7 @@ import {
   MemoText,
   Transaction,
   xdr,
-  Address,
+  Keypair,
 } from "stellar-sdk";
 import { buildTransaction } from "@/processes/build-transaction/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
@@ -342,14 +342,14 @@ describe("BuildTransaction", () => {
       assertInstanceOf(tx, Transaction);
       assertEquals(tx.extraSigners, [
         xdr.SignerKey.signerKeyTypeEd25519(
-          Address.fromString(
-            "GD5PUITTMNVKWHSLXIWU732MOSEONSMYCXU3A5KS2USRWQONMYO5TTFN"
-          ).toBuffer()
+          Keypair.fromPublicKey(
+            "GD5PUITTMNVKWHSLXIWU732MOSEONSMYCXU3A5KS2USRWQONMYO5TTFN",
+          ).rawPublicKey(),
         ),
         xdr.SignerKey.signerKeyTypeEd25519(
-          Address.fromString(
-            "GCYBQHY7TX6FIDSIN4HY5TVNDJ5OQJWSD3SY3LW6BIZ64MZGKQTAWDZ3"
-          ).toBuffer()
+          Keypair.fromPublicKey(
+            "GCYBQHY7TX6FIDSIN4HY5TVNDJ5OQJWSD3SY3LW6BIZ64MZGKQTAWDZ3",
+          ).rawPublicKey(),
         ),
       ] as unknown);
     });
@@ -373,7 +373,7 @@ describe("BuildTransaction", () => {
 
     describe("Soroban", () => {
       it("sets soroban data when provided", async () => {
-        const sorobanData = xdr.SorobanTransactionData.fromXDR(
+        const sorobanData = xdr.SorobanTransactionData.fromXdr(
           "AAAAAAAAAAEAAAAGAAAAAdeSi3LCcDzP6vfrn/TvTVBKVai5efybRQ6iyEK00c5hAAAAFAAAAAEAAAADAAAAAAAAAAClZfo0zWnOlyv/PMqOyXKqStHsqtWMrbGglMLWqW3QSgAAAAAAAAAA1Tj2cXkwgEDkIjbwQd5c0TGjzOviEzegDNCm43OsOIIAAAAGAAAAAAAAAAClZfo0zWnOlyv/PMqOyXKqStHsqtWMrbGglMLWqW3QSgAAABUVJxzMNVgPHAAAAAAACx/aAAABIAAAAWwAAAAAAANzIQ==",
           "base64"
         );

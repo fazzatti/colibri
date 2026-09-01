@@ -19,8 +19,13 @@ const assertConfirmedFee = (
   result: ClassicTransactionOutput,
   expectedEnvelopeFee: bigint,
 ) => {
-  const envelopeFee = BigInt(result.response.envelopeXdr.v1().tx().fee());
-  const chargedFee = result.response.resultXdr.feeCharged().toBigInt();
+  const envelope = result.response.envelopeXdr;
+  assertEquals(envelope.type, "envelopeTypeTx");
+  if (envelope.type !== "envelopeTypeTx") {
+    throw new Error("Expected a v1 transaction envelope");
+  }
+  const envelopeFee = BigInt(envelope.v1.tx.fee);
+  const chargedFee = result.response.resultXdr.feeCharged;
 
   assertEquals(envelopeFee, expectedEnvelopeFee);
   assert(chargedFee > 0n);

@@ -1,7 +1,6 @@
 import { hash as sha256 } from "stellar-sdk";
-import { Buffer } from "buffer";
 import { assert } from "@/common/assert/assert.ts";
-import { toBuffer } from "@/common/helpers/internal-buffer.ts";
+import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
 import type {
   BinaryData,
@@ -13,7 +12,7 @@ import { StrKey } from "@/strkeys/index.ts";
 import * as E from "@/signer/hash-x/error.ts";
 
 type HashXSignableTransaction = SignableTransaction & {
-  signHashX(preimage: Buffer): void;
+  signHashX(preimage: Uint8Array): void;
 };
 
 /**
@@ -25,7 +24,7 @@ type HashXSignableTransaction = SignableTransaction & {
  */
 export class HashXSigner {
   private readonly targets = new Set<Ed25519PublicKey>();
-  private readonly hashBytes: Buffer;
+  private readonly hashBytes: Uint8Array;
   private readonly key: Sha256Hash;
 
   /** Returns a defensive copy of the configured preimage. */
@@ -38,20 +37,20 @@ export class HashXSigner {
   destroy: () => void;
 
   /** Derives the protocol SHA-256 digest for retained preimage bytes. */
-  private static deriveHash(preimage: Buffer): Buffer {
-    return Buffer.from(sha256(preimage));
+  private static deriveHash(preimage: Uint8Array): Uint8Array {
+    return sha256(preimage);
   }
 
   private constructor(preimage: BinaryData, hidePreimage: boolean) {
-    let bytes: Buffer;
+    let bytes: Uint8Array;
     try {
-      bytes = toBuffer(preimage);
+      bytes = toUint8Array(preimage);
     } catch (cause) {
       throw new E.FAILED_TO_NORMALIZE_PREIMAGE(cause as Error);
     }
     assert(bytes.length <= 64, new E.INVALID_PREIMAGE_LENGTH(bytes.length));
 
-    let retainedPreimage: Buffer | null = Buffer.from(bytes);
+    let retainedPreimage: Uint8Array | null = bytes.slice();
 
     try {
       this.hashBytes = HashXSigner.deriveHash(bytes);
@@ -71,7 +70,7 @@ export class HashXSigner {
       }
       : () => {
         assert(isDefined(retainedPreimage), new E.SIGNER_DESTROYED());
-        return Buffer.from(retainedPreimage);
+        return retainedPreimage.slice();
       };
 
     this.signTransaction = (
@@ -81,7 +80,7 @@ export class HashXSigner {
 
       try {
         (transaction as HashXSignableTransaction).signHashX(
-          Buffer.from(retainedPreimage),
+          retainedPreimage.slice(),
         );
       } catch (cause) {
         throw new E.FAILED_TO_ADD_PREIMAGE_SIGNATURE(
@@ -91,7 +90,7 @@ export class HashXSigner {
       }
 
       try {
-        return transaction.toXDR("base64") as TransactionXDRBase64;
+        return transaction.toXdr() as TransactionXDRBase64;
       } catch (cause) {
         throw new E.FAILED_TO_SERIALIZE_TRANSACTION(
           this.key,
@@ -141,7 +140,7 @@ export class HashXSigner {
 
   /** Returns a defensive copy of the SHA-256 preimage digest. */
   hash(): BinaryData {
-    return Buffer.from(this.hashBytes);
+    return this.hashBytes.slice();
   }
 
   /** Returns the `X...` signer key derived from the preimage. */

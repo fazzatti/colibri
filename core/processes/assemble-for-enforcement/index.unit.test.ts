@@ -10,7 +10,7 @@ import {
   TransactionBuilder,
   xdr,
 } from "stellar-sdk";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { assembleForEnforcement } from "@/processes/assemble-for-enforcement/index.ts";
 import type { AssembleForEnforcementInput } from "@/processes/assemble-for-enforcement/types.ts";
 import * as E from "@/processes/assemble-for-enforcement/error.ts";
@@ -42,7 +42,7 @@ const makeAuthEntry = () =>
     credentials: xdr.SorobanCredentials.sorobanCredentialsAddressV2(
       new xdr.SorobanAddressCredentials({
         address: rootAddress.toScAddress(),
-        nonce: new xdr.Int64(1),
+        nonce: xdr.Int64(1),
         signatureExpirationLedger: 0,
         signature: xdr.ScVal.scvVoid(),
       }),
@@ -93,13 +93,16 @@ describe("assembleForEnforcement", () => {
       sorobanData: new SorobanDataBuilder().setResourceFee(10),
     });
 
-    const assembledAuth = getOperationsFromTransaction(result)[0].body()
-      .invokeHostFunctionOp().auth();
+    const body = getOperationsFromTransaction(result)[0].body;
+    assertEquals(body.type, "invokeHostFunction");
+    if (body.type !== "invokeHostFunction") {
+      throw new Error("Expected an invoke-host-function operation");
+    }
+    const assembledAuth = body.invokeHostFunctionOp.auth;
     assertEquals(assembledAuth.length, 1);
     assertEquals(
-      assembledAuth[0].credentials().switch().value,
-      xdr.SorobanCredentialsType.sorobanCredentialsAddressWithDelegates()
-        .value,
+      assembledAuth[0].credentials.type,
+      "sorobanCredentialsAddressWithDelegates",
     );
     assertEquals(result.fee, "110");
   });
@@ -117,10 +120,12 @@ describe("assembleForEnforcement", () => {
 
     assertEquals(result.fee, "115");
     assertEquals(
-      result.toEnvelope().v1().tx().ext().value()?.resourceFee().toBigInt(),
+      result.tx.ext.type === "sorobanData"
+        ? result.tx.ext.sorobanData.resourceFee
+        : undefined,
       15n,
     );
-    assertEquals(sorobanData.build().resourceFee().toBigInt(), 10n);
+    assertEquals(sorobanData.build().resourceFee, 10n);
   });
 
   it("uses a unique error for each required input", async () => {

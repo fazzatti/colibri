@@ -1,12 +1,16 @@
-import { Buffer } from "buffer";
 import { assert } from "@/common/assert/assert.ts";
-import { toBuffer } from "@/common/helpers/internal-buffer.ts";
+import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 import type { BinaryData, SignableTransaction } from "@/common/types/index.ts";
 import type { Ed25519PublicKey, PreAuthTx } from "@/strkeys/types.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import * as E from "@/signer/pre-authorized-transaction/error.ts";
 
-type HashableTransaction = SignableTransaction & { hash(): Buffer };
+type HashableTransaction = SignableTransaction & { hash(): Uint8Array };
+
+const bytesEqual = (left: Uint8Array, right: Uint8Array): boolean =>
+  left.length === right.length && left.every((byte, index) =>
+    byte === right[index]
+  );
 
 /**
  * Signer that authorizes one exact transaction through its pre-authorized hash.
@@ -16,20 +20,20 @@ type HashableTransaction = SignableTransaction & { hash(): Buffer };
  */
 export class PreAuthorizedTransactionSigner {
   private readonly targets = new Set<Ed25519PublicKey>();
-  private readonly hashBytes: Buffer;
+  private readonly hashBytes: Uint8Array;
   private readonly key: PreAuthTx;
 
   private constructor(hash: BinaryData | PreAuthTx) {
     if (typeof hash === "string") {
       this.key = hash;
       try {
-        this.hashBytes = Buffer.from(StrKey.decodePreAuthTx(hash));
+        this.hashBytes = StrKey.decodePreAuthTx(hash);
       } catch (cause) {
         throw new E.FAILED_TO_DECODE_SIGNER_KEY(hash, cause as Error);
       }
     } else {
       try {
-        this.hashBytes = toBuffer(hash);
+        this.hashBytes = toUint8Array(hash).slice();
       } catch (cause) {
         throw new E.FAILED_TO_NORMALIZE_TRANSACTION_HASH(cause as Error);
       }
@@ -80,7 +84,7 @@ export class PreAuthorizedTransactionSigner {
 
   /** Returns a defensive copy of the authorized transaction hash. */
   hash(): BinaryData {
-    return Buffer.from(this.hashBytes);
+    return this.hashBytes.slice();
   }
 
   /** Returns the pre-authorized transaction's `T...` signer key. */
@@ -110,18 +114,16 @@ export class PreAuthorizedTransactionSigner {
 
   /** Returns whether the supplied transaction exactly matches this signer. */
   authorizesTransaction(transaction: SignableTransaction): boolean {
-    let transactionHash: Buffer;
+    let transactionHash: Uint8Array;
     try {
-      transactionHash = Buffer.from(
-        (transaction as HashableTransaction).hash(),
-      );
+      transactionHash = (transaction as HashableTransaction).hash();
     } catch (cause) {
       throw new E.FAILED_TO_HASH_TRANSACTION_DURING_AUTHORIZATION(
         this.key,
         cause as Error,
       );
     }
-    return transactionHash.equals(this.hashBytes);
+    return bytesEqual(transactionHash, this.hashBytes);
   }
 }
 

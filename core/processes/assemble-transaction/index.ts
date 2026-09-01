@@ -52,8 +52,13 @@ export const assembleTransaction = async (
       new E.UNSUPPORTED_OPERATION_ERROR(input, opType),
     );
 
+    const body = op.body;
+    assert(
+      body.type === "invokeHostFunction",
+      new E.UNSUPPORTED_OPERATION_ERROR(input, body.type),
+    );
     const authorizedOperation = Operation.invokeHostFunction({
-      func: op.body().invokeHostFunctionOp().hostFunction(),
+      func: body.invokeHostFunctionOp.hostFunction,
       auth: authEntries,
     });
 
@@ -68,7 +73,7 @@ export const assembleTransaction = async (
 
     const builtSorobanData = buildSorobanData(input, sorobanData);
 
-    const resourceFee = builtSorobanData?.resourceFee().toBigInt() ?? 0n;
+    const resourceFee = builtSorobanData?.resourceFee ?? 0n;
     const inclusionFee = resolveInclusionFee(input, resourceFee);
 
     let assembledTransaction;
@@ -129,7 +134,7 @@ const buildSorobanData = (
   );
 
   const override = BigInt(resourceFee);
-  const simulatedMinimum = simulatedSorobanData?.resourceFee().toBigInt() ?? 0n;
+  const simulatedMinimum = simulatedSorobanData?.resourceFee ?? 0n;
   assert(
     override >= simulatedMinimum,
     new E.RESOURCE_FEE_BELOW_SIMULATED_MINIMUM_ERROR(

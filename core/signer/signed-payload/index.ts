@@ -4,9 +4,8 @@ import {
   type xdr,
   xdr as stellarXdr,
 } from "stellar-sdk";
-import { Buffer } from "buffer";
 import { assert } from "@/common/assert/assert.ts";
-import { toBuffer } from "@/common/helpers/internal-buffer.ts";
+import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 import type {
   BinaryData,
   SignableTransaction,
@@ -17,7 +16,7 @@ import type { Ed25519PublicKey, SignedPayload } from "@/strkeys/types.ts";
 import * as E from "@/signer/signed-payload/error.ts";
 
 type PayloadSigningCapability = Pick<KeypairSigner, "publicKey" | "sign">;
-type HashableTransaction = SignableTransaction & { hash(): Buffer };
+type HashableTransaction = SignableTransaction & { hash(): Uint8Array };
 type DecoratedSignatureTransaction = SignableTransaction & {
   addDecoratedSignature(signature: xdr.DecoratedSignature): void;
 };
@@ -33,15 +32,15 @@ type DecoratedSignatureTransaction = SignableTransaction & {
 export class Ed25519SignedPayloadSigner {
   private readonly targets = new Set<Ed25519PublicKey>();
   private readonly signer: PayloadSigningCapability;
-  private readonly payloadBytes: Buffer;
-  private readonly publicKeyBytes: Buffer;
+  private readonly payloadBytes: Uint8Array;
+  private readonly publicKeyBytes: Uint8Array;
   private readonly publicKeyValue: Ed25519PublicKey;
   private readonly key: SignedPayload;
 
   /** Builds the signed-payload arm of Stellar's signer-key XDR union. */
   private static buildSignerKeyXdr(
-    publicKey: Buffer,
-    payload: Buffer,
+    publicKey: Uint8Array,
+    payload: Uint8Array,
   ): xdr.SignerKey {
     const signedPayload = new stellarXdr.SignerKeyEd25519SignedPayload({
       ed25519: publicKey,
@@ -58,7 +57,7 @@ export class Ed25519SignedPayloadSigner {
   ) {
     this.signer = signer;
     try {
-      this.payloadBytes = toBuffer(payload);
+      this.payloadBytes = toUint8Array(payload).slice();
     } catch (cause) {
       throw new E.FAILED_TO_NORMALIZE_PAYLOAD(cause as Error);
     }
@@ -74,8 +73,8 @@ export class Ed25519SignedPayloadSigner {
     }
 
     try {
-      this.publicKeyBytes = Buffer.from(
-        StellarStrKey.decodeEd25519PublicKey(this.publicKeyValue),
+      this.publicKeyBytes = StellarStrKey.decodeEd25519PublicKey(
+        this.publicKeyValue,
       );
     } catch (cause) {
       throw new E.FAILED_TO_DECODE_PUBLIC_KEY(
@@ -132,11 +131,9 @@ export class Ed25519SignedPayloadSigner {
     signer: Pick<KeypairSigner, "publicKey" | "sign">;
     transaction: SignableTransaction;
   }): Ed25519SignedPayloadSigner {
-    let payload: Buffer;
+    let payload: Uint8Array;
     try {
-      payload = Buffer.from(
-        (args.transaction as HashableTransaction).hash(),
-      );
+      payload = (args.transaction as HashableTransaction).hash();
     } catch (cause) {
       throw new E.FAILED_TO_HASH_TRANSACTION(cause as Error);
     }
@@ -145,7 +142,7 @@ export class Ed25519SignedPayloadSigner {
 
   /** Returns a defensive copy of the raw payload embedded in the signer key. */
   payload(): BinaryData {
-    return Buffer.from(this.payloadBytes);
+    return this.payloadBytes.slice();
   }
 
   /** Returns the Ed25519 public key bound to the payload. */
@@ -187,14 +184,14 @@ export class Ed25519SignedPayloadSigner {
   ): TransactionXDRBase64 {
     let signatureData: BinaryData;
     try {
-      signatureData = this.signer.sign(Buffer.from(this.payloadBytes));
+      signatureData = this.signer.sign(this.payloadBytes.slice());
     } catch (cause) {
       throw new E.FAILED_TO_SIGN_PAYLOAD(this.key, cause as Error);
     }
 
-    let signature: Buffer;
+    let signature: Uint8Array;
     try {
-      signature = toBuffer(signatureData);
+      signature = toUint8Array(signatureData);
     } catch (cause) {
       throw new E.FAILED_TO_NORMALIZE_SIGNATURE(
         this.key,
@@ -205,21 +202,16 @@ export class Ed25519SignedPayloadSigner {
     let decoratedSignature: xdr.DecoratedSignature;
     try {
       const publicKeyHint = this.publicKeyBytes.subarray(-4);
-      let payloadHint = Buffer.from(this.payloadBytes.subarray(-4));
-      if (payloadHint.length < 4) {
-        payloadHint = Buffer.concat([
-          payloadHint,
-          Buffer.alloc(4 - payloadHint.length),
-        ]);
-      }
-      const hint = Buffer.from(
-        payloadHint.map((byte, index) => byte ^ publicKeyHint[index]),
+      const payloadHint = new Uint8Array(4);
+      payloadHint.set(this.payloadBytes.subarray(-4));
+      const hint = payloadHint.map((byte, index) =>
+        byte ^ publicKeyHint[index]
       );
       decoratedSignature = new stellarXdr.DecoratedSignature({
         hint,
         signature,
       });
-      decoratedSignature.toXDR();
+      decoratedSignature.toXdr();
     } catch (cause) {
       throw new E.FAILED_TO_BUILD_DECORATED_SIGNATURE(
         this.key,
@@ -239,7 +231,7 @@ export class Ed25519SignedPayloadSigner {
     }
 
     try {
-      return transaction.toXDR("base64") as TransactionXDRBase64;
+      return transaction.toXdr() as TransactionXDRBase64;
     } catch (cause) {
       throw new E.FAILED_TO_SERIALIZE_TRANSACTION(
         this.key,

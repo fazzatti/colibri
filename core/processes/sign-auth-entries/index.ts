@@ -150,11 +150,7 @@ const getSourceCredentialAuth = (
   authEntries: xdr.SorobanAuthorizationEntry[],
 ): xdr.SorobanAuthorizationEntry[] => {
   return authEntries.filter((entry) => {
-    const credentials = entry.credentials();
-    return (
-      credentials.switch() ===
-        xdr.SorobanCredentialsType.sorobanCredentialsSourceAccount()
-    );
+    return entry.credentials.type === "sorobanCredentialsSourceAccount";
   });
 };
 
@@ -162,16 +158,7 @@ const getAddressCredentialAuth = (
   authEntries: xdr.SorobanAuthorizationEntry[],
 ): xdr.SorobanAuthorizationEntry[] => {
   return authEntries.filter((entry) => {
-    const credentials = entry.credentials();
-    return (
-      credentials.switch().value ===
-        xdr.SorobanCredentialsType.sorobanCredentialsAddress().value ||
-      credentials.switch().value ===
-        xdr.SorobanCredentialsType.sorobanCredentialsAddressV2().value ||
-      credentials.switch().value ===
-        xdr.SorobanCredentialsType.sorobanCredentialsAddressWithDelegates()
-          .value
-    );
+    return entry.credentials.type !== "sorobanCredentialsSourceAccount";
   });
 };
 
@@ -185,10 +172,8 @@ const separateSignedAndUnsignedAuthEntries = (
   const unsigned: xdr.SorobanAuthorizationEntry[] = [];
 
   for (const entry of authEntries) {
-    const credentials = entry.credentials();
-
-    const isSourceAccount = credentials.switch() ===
-      xdr.SorobanCredentialsType.sorobanCredentialsSourceAccount();
+    const isSourceAccount = entry.credentials.type ===
+      "sorobanCredentialsSourceAccount";
 
     // An entry is considered unsigned if it's not a source account and every
     // signature node is empty. A signature can be empty if it's either an empty
@@ -196,9 +181,9 @@ const separateSignedAndUnsignedAuthEntries = (
     const signatures = getAuthEntrySignatures(entry);
     const isSignatureEmpty = !isSourceAccount &&
       signatures.every((signature) =>
-        signature.toXDR("base64") ===
-          xdr.ScVal.scvVec([]).toXDR("base64") ||
-        signature.toXDR("base64") === xdr.ScVal.scvVoid().toXDR("base64")
+        signature.toXdr("base64") ===
+          xdr.ScVal.scvVec([]).toXdr("base64") ||
+        signature.toXdr("base64") === xdr.ScVal.scvVoid().toXdr("base64")
       );
 
     if (isSourceAccount || isSignatureEmpty) {

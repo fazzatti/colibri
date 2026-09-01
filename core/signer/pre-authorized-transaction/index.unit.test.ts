@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertFalse, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { stub } from "@std/testing/mock";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import {
   Account,
   Keypair,
@@ -31,12 +31,12 @@ describe("PreAuthorizedTransactionSigner", () => {
     const signer = PreAuthorizedTransactionSigner.fromTransaction(transaction);
 
     assertEquals(
-      Buffer.from(signer.hash() as Uint8Array).toString("hex"),
-      transaction.hash().toString("hex"),
+      signer.hash(),
+      transaction.hash(),
     );
     assertEquals(
-      StrKey.decodePreAuthTx(signer.signerKey()).toString("hex"),
-      transaction.hash().toString("hex"),
+      StrKey.decodePreAuthTx(signer.signerKey()),
+      transaction.hash(),
     );
     assert(signer.authorizesTransaction(transaction));
     assertFalse(signer.authorizesTransaction(buildTransaction("2")));
@@ -58,10 +58,14 @@ describe("PreAuthorizedTransactionSigner", () => {
 
   it("returns defensive hash and target copies", () => {
     const signer = PreAuthorizedTransactionSigner.fromHash(Buffer.alloc(32, 1));
-    const hash = signer.hash() as Buffer;
+    const hash = signer.hash() as Uint8Array;
     hash.fill(0);
 
-    assertFalse(Buffer.from(signer.hash() as Uint8Array).equals(hash));
+    assertFalse(
+      (signer.hash() as Uint8Array).every((byte, index) =>
+        byte === hash[index]
+      ),
+    );
     assertEquals(signer.getTargets(), []);
 
     signer.addTarget(account);

@@ -184,7 +184,7 @@ export class MISSING_SIGNER extends SignAuthEntriesError {
     this.meta = {
       data: {
         input,
-        authEntryXDR: authEntry.toXDR("base64"),
+        authEntryXDR: authEntry.toXdr("base64"),
       },
       cause: null,
     };
@@ -233,7 +233,7 @@ export class FAILED_TO_SIGN_AUTH_ENTRY extends SignAuthEntriesError {
     this.meta = {
       data: {
         input,
-        authEntryXDR: entry.toXDR("base64"),
+        authEntryXDR: entry.toXdr("base64"),
       },
       cause: cause,
     };
