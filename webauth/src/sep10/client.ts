@@ -1,4 +1,3 @@
-import { Buffer } from "buffer";
 import {
   isKeypairSigner,
   normalizeBinaryData,
@@ -40,8 +39,8 @@ function signTransaction(
     transaction.sign(signer);
     return;
   }
-  const signature = Buffer.from(
-    normalizeBinaryData(signer.sign(normalizeBinaryData(transaction.hash()))),
+  const signature = normalizeBinaryData(
+    signer.sign(normalizeBinaryData(transaction.hash())),
   );
   const hint = StellarKeypair.fromPublicKey(signer.publicKey()).signatureHint();
   transaction.signatures.push(new xdr.DecoratedSignature({ hint, signature }));
@@ -245,7 +244,7 @@ export class Sep10Client {
       });
     }
     return new Sep10SignedChallenge(
-      transaction.toXDR(),
+      transaction.toXdr(),
       challenge.verified,
       challenge.networkPassphrase,
     );
@@ -264,7 +263,7 @@ export class Sep10Client {
     const response = await this.#config.transport.post(
       this.#config.endpoint,
       "transaction",
-      challenge.toXDR(),
+      challenge.toXdr(),
       this.#config.submissionFormat,
       "sep10",
     );

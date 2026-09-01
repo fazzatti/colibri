@@ -1,4 +1,4 @@
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { assertEquals, assertNotStrictEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Address, Keypair, StrKey, xdr } from "stellar-sdk";
@@ -41,6 +41,28 @@ function verify(
 
 function expectCode(fn: () => unknown, code: string): void {
   assertEquals(assertThrows(fn, Sep45Error).code, code);
+}
+
+function withAddressSignature(
+  entry: xdr.SorobanAuthorizationEntry,
+  signature: xdr.ScVal,
+): xdr.SorobanAuthorizationEntry {
+  const credentials = entry.credentials;
+  if (credentials.type !== "sorobanCredentialsAddress") {
+    throw new Error("Expected legacy address credentials");
+  }
+  return new xdr.SorobanAuthorizationEntry({
+    credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
+      new xdr.SorobanAddressCredentials({
+        address: credentials.address.address,
+        nonce: credentials.address.nonce,
+        signatureExpirationLedger:
+          credentials.address.signatureExpirationLedger,
+        signature,
+      }),
+    ),
+    rootInvocation: entry.rootInvocation,
+  });
 }
 
 describe("SEP-45 challenge verification", () => {
@@ -188,9 +210,11 @@ describe("SEP-45 challenge verification", () => {
       Sep45Code.INVALID_ROLE,
     );
 
-    const legacy = sep45Entry(fixture, fixture.contractAccount)
-      .credentials()
-      .address();
+    const legacyEntry = sep45Entry(fixture, fixture.contractAccount);
+    if (legacyEntry.credentials.type !== "sorobanCredentialsAddress") {
+      throw new Error("Expected legacy address credentials");
+    }
+    const legacy = legacyEntry.credentials.address;
     entries[0] = sep45Entry(fixture, fixture.contractAccount, {
       credentials: xdr.SorobanCredentials.sorobanCredentialsAddressV2(legacy),
     });
@@ -219,7 +243,7 @@ describe("SEP-45 challenge verification", () => {
       [
         sep45Entry(fixture, fixture.contractAccount, {
           subInvocations: [
-            sep45Entry(fixture, fixture.contractAccount).rootInvocation(),
+            sep45Entry(fixture, fixture.contractAccount).rootInvocation,
           ],
         }),
         Sep45Code.INVALID_INVOCATION,
@@ -232,24 +256,37 @@ describe("SEP-45 challenge verification", () => {
       ],
     ];
 
-    const createContract = sep45Entry(fixture, fixture.contractAccount);
-    createContract.rootInvocation().function(
-      xdr.SorobanAuthorizedFunction
-        .sorobanAuthorizedFunctionTypeCreateContractHostFn(
-          new xdr.CreateContractArgs({
-            contractIdPreimage: xdr.ContractIdPreimage
-              .contractIdPreimageFromAddress(
-                new xdr.ContractIdPreimageFromAddress({
-                  address: Address.fromString(fixture.server.publicKey())
-                    .toScAddress(),
-                  salt: Buffer.alloc(32),
-                }),
+    const originalCreateContract = sep45Entry(
+      fixture,
+      fixture.contractAccount,
+    );
+    const createContract = new xdr.SorobanAuthorizationEntry({
+      credentials: originalCreateContract.credentials,
+      rootInvocation: new xdr.SorobanAuthorizedInvocation({
+        function: xdr.SorobanAuthorizedFunction
+          .sorobanAuthorizedFunctionTypeCreateContractHostFn(
+            new xdr.CreateContractArgs({
+              contractIdPreimage: xdr.ContractIdPreimage
+                .contractIdPreimageFromAddress(
+                  new xdr.ContractIdPreimageFromAddress({
+                    address: Address.fromString(fixture.server.publicKey())
+                      .toScAddress(),
+                    salt: Buffer.alloc(32),
+                  }),
+                ),
+              executable: xdr.ContractExecutable.contractExecutableWasm(
+                Buffer.alloc(32),
               ),
-            executable: xdr.ContractExecutable.contractExecutableWasm(
-              Buffer.alloc(32),
-            ),
-          }),
-        ),
+            }),
+          ),
+        subInvocations: originalCreateContract.rootInvocation.subInvocations,
+      }),
+    });
+    assertEquals(
+      hasSep45ClientDomainArguments(
+        encodeSep45AuthorizationEntries([createContract]),
+      ),
+      false,
     );
     cases.push([createContract, Sep45Code.INVALID_INVOCATION]);
 
@@ -267,8 +304,11 @@ describe("SEP-45 challenge verification", () => {
     const fixture = createWebAuthFixture();
     const challenge = await buildSep45Challenge(fixture);
     const entries = decodeSep45AuthorizationEntries(challenge.xdr);
-    const duplicate = sep45ArgumentScVal(sep45Arguments(fixture));
-    duplicate.map()?.push(duplicate.map()![0]);
+    const original = sep45ArgumentScVal(sep45Arguments(fixture));
+    if (original.type !== "scvMap" || !original.map) {
+      throw new Error("Expected a SEP-45 argument map");
+    }
+    const duplicate = xdr.ScVal.scvMap([...original.map, original.map[0]]);
     const malformedArguments = [
       duplicate,
       xdr.ScVal.scvMap(null),
@@ -429,7 +469,7 @@ describe("SEP-45 challenge verification", () => {
     const fixture = createWebAuthFixture();
     const challenge = await buildSep45Challenge(fixture);
     const entries = decodeSep45AuthorizationEntries(challenge.xdr);
-    entries[1].credentials().address().signature(xdr.ScVal.scvVoid());
+    entries[1] = withAddressSignature(entries[1], xdr.ScVal.scvVoid());
     const vectorError = assertThrows(
       () => verify(fixture, encodeSep45AuthorizationEntries(entries)),
       Sep45Error,
@@ -440,7 +480,8 @@ describe("SEP-45 challenge verification", () => {
       "SEP-45 server signature must be a vector",
     );
 
-    entries[1].credentials().address().signature(
+    entries[1] = withAddressSignature(
+      entries[1],
       xdr.ScVal.scvVec([xdr.ScVal.scvString("not-a-signature-map")]),
     );
     const signatureError = assertThrows(
@@ -453,7 +494,8 @@ describe("SEP-45 challenge verification", () => {
       "SEP-45 server entry has no matching Ed25519 signature",
     );
 
-    entries[1].credentials().address().signature(
+    entries[1] = withAddressSignature(
+      entries[1],
       xdr.ScVal.scvVec([
         xdr.ScVal.scvMap([
           new xdr.ScMapEntry({

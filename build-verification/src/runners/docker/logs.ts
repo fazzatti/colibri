@@ -1,4 +1,3 @@
-import type { Buffer } from "node:buffer";
 import { BuildLogCollectionFailedError } from "@/runners/docker/error.ts";
 
 const boundedText = (bytes: Uint8Array, maximum: number): string => {
@@ -159,7 +158,7 @@ export const collectBoundedDockerLogStream = (
 
 /** Decodes and bounds Docker's raw or multiplexed log representation. */
 export const demultiplexDockerLogs = (
-  value: Buffer | string,
+  value: Uint8Array | string,
   maximum: number,
 ): { stdout: string; stderr: string } => {
   try {

@@ -1,4 +1,4 @@
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import {
   assertEquals,
   assertNotStrictEquals,
@@ -6,7 +6,7 @@ import {
   assertThrows,
 } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { buildAuthorizationEntryPreimage, hash } from "stellar-sdk";
+import { buildAuthorizationEntryPreimage, hash, xdr } from "stellar-sdk";
 import {
   createWebAuthFixture,
   sep45Entry,
@@ -27,6 +27,13 @@ function derInteger(value: Uint8Array): Uint8Array {
     bytes = Uint8Array.from([0, ...bytes]);
   }
   return Uint8Array.from([0x02, bytes.length, ...bytes]);
+}
+
+function encodeBase64Url(value: Uint8Array): string {
+  return xdr.encodeBytes(value, "base64")
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(/=+$/u, "");
 }
 
 function rawToDer(raw: Uint8Array): Uint8Array {
@@ -99,13 +106,13 @@ describe("SEP-45 passkey fixtures", () => {
     assertEquals(clientData.type, "webauthn.get");
     assertEquals(clientData.origin, TEST_PASSKEY_ORIGIN);
     assertEquals(clientData.crossOrigin, false);
-    const expectedChallenge = hash(
+    const expectedChallenge = encodeBase64Url(hash(
       buildAuthorizationEntryPreimage(
         entry,
         context.validUntilLedgerSeq,
         context.networkPassphrase,
-      ).toXDR(),
-    ).toString("base64url");
+      ).toXdr(),
+    ));
     assertEquals(clientData.challenge, expectedChallenge);
 
     const rpIdHash = new Uint8Array(
@@ -143,15 +150,35 @@ describe("SEP-45 passkey fixtures", () => {
     );
 
     const authorized = await credential.authorize(entry, context);
-    const fields = authorized.credentials().address().signature().map()!;
+    if (authorized.credentials.type !== "sorobanCredentialsAddress") {
+      throw new Error("Expected legacy address credentials");
+    }
+    const signature = authorized.credentials.address.signature;
+    if (signature.type !== "scvMap" || !signature.map) {
+      throw new Error("Expected a passkey signature map");
+    }
+    const fields = signature.map;
     assertEquals(fields.length, 3);
-    assertEquals(fields[0].key().sym().toString(), "authenticator_data");
-    assertEquals(fields[2].val().bytes().length, 64);
+    assertEquals(
+      fields[0].key.type === "scvSymbol"
+        ? fields[0].key.sym.toString()
+        : undefined,
+      "authenticator_data",
+    );
+    assertEquals(
+      fields[2].val.type === "scvBytes"
+        ? fields[2].val.bytes.toBytes().length
+        : undefined,
+      64,
+    );
     assertNotStrictEquals(authorized, entry);
 
     const manuallySet = setPasskeyAssertion(entry, assertion);
     assertEquals(
-      manuallySet.credentials().address().signature().map()?.length,
+      manuallySet.credentials.type === "sorobanCredentialsAddress" &&
+        manuallySet.credentials.address.signature.type === "scvMap"
+        ? manuallySet.credentials.address.signature.map?.length
+        : undefined,
       3,
     );
   });

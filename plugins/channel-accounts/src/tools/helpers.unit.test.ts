@@ -5,7 +5,7 @@ import {
   assertNotStrictEquals,
 } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { Keypair, xdr } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import {
@@ -65,14 +65,12 @@ describe("ChannelAccounts helpers", () => {
     const rpc = {
       getAccountEntry() {
         return Promise.resolve({
-          signers() {
-            return [{
-              weight: () => 1,
-              key: () => ({
-                ed25519: () => StrKey.decodeEd25519PublicKey(sponsor.address()),
-              }),
-            }];
-          },
+          signers: [new xdr.Signer({
+            weight: 1,
+            key: xdr.SignerKey.signerKeyTypeEd25519(
+              StrKey.decodeEd25519PublicKey(sponsor.address()),
+            ),
+          })],
         });
       },
     } as unknown as Server;
@@ -84,14 +82,12 @@ describe("ChannelAccounts helpers", () => {
     const rpc = {
       getAccountEntry() {
         return Promise.resolve({
-          signers() {
-            return [{
-              weight: () => 1,
-              key: () => {
-                throw new Error("bad signer");
-              },
-            }];
-          },
+          signers: [{
+            weight: 1,
+            get key(): never {
+              throw new Error("bad signer");
+            },
+          }],
         });
       },
     } as unknown as Server;
@@ -128,7 +124,7 @@ describe("ChannelAccounts helpers", () => {
     const sorobanEntry = {} as xdr.SorobanAuthorizationEntry;
     const transactionXdr = await proxySigner.signTransaction({
       signatures: [],
-      toXDR: () => "fresh-xdr",
+      toXdr: () => "fresh-xdr",
     } as never);
 
     assertEquals(proxySigner.publicKey(), channel.address());
@@ -166,7 +162,7 @@ describe("ChannelAccounts helpers", () => {
           signature: Buffer.from("already-signed"),
         }),
       ],
-      toXDR: () => "already-signed-xdr",
+      toXdr: () => "already-signed-xdr",
     } as never);
 
     assertEquals(signedTransactionXdr, "already-signed-xdr");

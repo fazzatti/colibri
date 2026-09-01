@@ -1,4 +1,3 @@
-import { Buffer } from "buffer";
 import {
   Address,
   buildAuthorizationEntryPreimage,
@@ -28,6 +27,11 @@ const KNOWN_ARGUMENTS = new Set([
   "nonce",
 ]);
 
+function equalBytes(left: Uint8Array, right: Uint8Array): boolean {
+  return left.length === right.length &&
+    left.every((byte, index) => byte === right[index]);
+}
+
 function fail(
   code: (typeof Sep45Code)[keyof typeof Sep45Code],
   message: string,
@@ -40,7 +44,8 @@ function fail(
 function legacyAddressCredentials(
   entry: xdr.SorobanAuthorizationEntry,
 ): xdr.SorobanAddressCredentials {
-  const credentialType = entry.credentials().switch().name;
+  const credentials = entry.credentials;
+  const credentialType = credentials.type;
   if (credentialType === "sorobanCredentialsSourceAccount") {
     return fail(
       Sep45Code.INVALID_ROLE,
@@ -54,7 +59,7 @@ function legacyAddressCredentials(
       { credentialType },
     );
   }
-  return entry.credentials().address();
+  return credentials.address;
 }
 
 interface ParsedInvocation {
@@ -67,15 +72,15 @@ function parseInvocation(
   entry: xdr.SorobanAuthorizationEntry,
   webAuthContractId: string,
 ): ParsedInvocation {
-  const invocation = entry.rootInvocation();
-  if (invocation.subInvocations().length !== 0) {
+  const invocation = entry.rootInvocation;
+  if (invocation.subInvocations.length !== 0) {
     return fail(
       Sep45Code.INVALID_INVOCATION,
       "SEP-45 authorization entries cannot contain subinvocations",
     );
   }
   if (
-    invocation.function().switch().name !==
+    invocation.function.type !==
       "sorobanAuthorizedFunctionTypeContractFn"
   ) {
     return fail(
@@ -83,13 +88,13 @@ function parseInvocation(
       "SEP-45 root invocation must be a contract function",
     );
   }
-  const contractFunction = invocation.function().contractFn();
+  const contractFunction = invocation.function.contractFn;
   const contractId = Address.fromScAddress(
-    contractFunction.contractAddress(),
+    contractFunction.contractAddress,
   ).toString();
   if (
     contractId !== webAuthContractId ||
-    contractFunction.functionName().toString() !== "web_auth_verify"
+    contractFunction.functionName.toString() !== "web_auth_verify"
   ) {
     return fail(
       Sep45Code.INVALID_INVOCATION,
@@ -97,18 +102,18 @@ function parseInvocation(
       {
         expectedContract: webAuthContractId,
         actualContract: contractId,
-        actualFunction: contractFunction.functionName().toString(),
+        actualFunction: contractFunction.functionName.toString(),
       },
     );
   }
-  const args = contractFunction.args();
-  if (args.length !== 1 || args[0].switch().name !== "scvMap") {
+  const args = contractFunction.args;
+  if (args.length !== 1 || args[0].type !== "scvMap") {
     return fail(
       Sep45Code.INVALID_ARGUMENTS,
       "SEP-45 web_auth_verify requires exactly one map argument",
     );
   }
-  const map = args[0].map();
+  const map = args[0].map;
   if (!map) {
     return fail(
       Sep45Code.INVALID_ARGUMENTS,
@@ -119,15 +124,15 @@ function parseInvocation(
   const encodedPairs: string[] = [];
   for (const item of map) {
     if (
-      item.key().switch().name !== "scvSymbol" ||
-      item.val().switch().name !== "scvString"
+      item.key.type !== "scvSymbol" ||
+      item.val.type !== "scvString"
     ) {
       return fail(
         Sep45Code.INVALID_ARGUMENTS,
         "SEP-45 map keys must be Symbols and values must be Strings",
       );
     }
-    const key = item.key().sym().toString();
+    const key = item.key.sym.toString();
     if (Object.hasOwn(values, key)) {
       return fail(
         Sep45Code.INVALID_ARGUMENTS,
@@ -135,14 +140,14 @@ function parseInvocation(
         { key },
       );
     }
-    values[key] = item.val().str().toString();
+    values[key] = item.val.str.toString();
     encodedPairs.push(
-      `${item.key().toXDR("hex")}:${item.val().toXDR("hex")}`,
+      `${item.key.toXdr("hex")}:${item.val.toXdr("hex")}`,
     );
   }
   encodedPairs.sort();
   return {
-    argument: xdr.ScVal.fromXDR(args[0].toXDR()),
+    argument: xdr.ScVal.fromXdr(args[0].toXdr()),
     values,
     canonical: encodedPairs.join("|"),
   };
@@ -171,9 +176,9 @@ function verifyServerSignature(
   networkPassphrase: string,
 ): number {
   const credentials = legacyAddressCredentials(entry);
-  const expiration = credentials.signatureExpirationLedger();
+  const expiration = credentials.signatureExpirationLedger;
   try {
-    const nativeSignature = scValToNative(credentials.signature());
+    const nativeSignature = scValToNative(credentials.signature);
     if (!Array.isArray(nativeSignature)) {
       return fail(
         Sep45Code.SERVER_SIGNATURE_NOT_VECTOR,
@@ -187,7 +192,7 @@ function verifyServerSignature(
         entry,
         expiration,
         networkPassphrase,
-      ).toXDR(),
+      ).toXdr(),
     );
     const keypair = Keypair.fromPublicKey(serverAccount);
     const valid = nativeSignature.some((candidate) => {
@@ -200,8 +205,8 @@ function verifyServerSignature(
       return (
         publicKey instanceof Uint8Array &&
         signature instanceof Uint8Array &&
-        Buffer.from(publicKey).equals(Buffer.from(expectedKey)) &&
-        keypair.verify(payload, Buffer.from(signature))
+        equalBytes(publicKey, expectedKey) &&
+        keypair.verify(payload, signature)
       );
     });
     if (!valid) {
@@ -231,23 +236,29 @@ export function hasSep45ClientDomainArguments(
 ): boolean {
   const entries = decodeSep45AuthorizationEntries(authorizationEntriesXdr);
   for (const entry of entries) {
-    try {
-      const invocation = entry.rootInvocation().function().contractFn();
-      const map = invocation.args()[0]?.map();
-      if (!map) {
+    const authorizedFunction = entry.rootInvocation.function;
+    if (
+      authorizedFunction.type !==
+        "sorobanAuthorizedFunctionTypeContractFn"
+    ) {
+      continue;
+    }
+    const invocation = authorizedFunction.contractFn;
+    const firstArgument = invocation.args[0];
+    const map = firstArgument?.type === "scvMap"
+      ? firstArgument.map
+      : undefined;
+    if (!map) {
+      continue;
+    }
+    for (const item of map) {
+      if (item.key.type !== "scvSymbol") {
         continue;
       }
-      for (const item of map) {
-        if (item.key().switch().name !== "scvSymbol") {
-          continue;
-        }
-        const key = item.key().sym().toString();
-        if (key === "client_domain" || key === "client_domain_account") {
-          return true;
-        }
+      const key = item.key.sym.toString();
+      if (key === "client_domain" || key === "client_domain_account") {
+        return true;
       }
-    } catch {
-      continue;
     }
   }
   return false;
@@ -268,7 +279,7 @@ export function verifySep45Challenge(
 
   entries.forEach((entry, index) => {
     const credentials = legacyAddressCredentials(entry);
-    const address = Address.fromScAddress(credentials.address()).toString();
+    const address = Address.fromScAddress(credentials.address).toString();
     const invocation = parseInvocation(entry, input.webAuthContractId);
     if (
       canonicalArguments !== undefined &&

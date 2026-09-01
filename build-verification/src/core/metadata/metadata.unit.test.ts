@@ -72,7 +72,7 @@ describe("core contract metadata", () => {
     );
     const encoded = new Uint8Array(
       xdr.ScMetaEntry.scMetaV0(new xdr.ScMetaV0({ key: "a", val: "b" }))
-        .toXDR(),
+        .toXdr(),
     );
     encoded[9] = 1;
     assertThrows(

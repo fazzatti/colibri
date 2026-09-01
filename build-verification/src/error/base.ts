@@ -139,6 +139,7 @@ export enum Code {
   CLI_UNEXPECTED_FAILURE = "BLDV_130",
   CLI_RUNTIME_INITIALIZATION_FAILED = "BLDV_131",
   DOCKER_CONTAINER_NAME_PREFIX_INVALID = "BLDV_132",
+  EXTERNAL_REFERENCE_TARGET_UNSUPPORTED = "BLDV_133",
 }
 
 /** Structured metadata retained by every build-verification error. */

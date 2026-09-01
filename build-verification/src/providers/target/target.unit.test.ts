@@ -1,6 +1,7 @@
 import { Buffer } from "node:buffer";
 import {
   assertEquals,
+  assertExists,
   assertRejects,
   assertStrictEquals,
   assertThrows,
@@ -26,6 +27,7 @@ import {
   StellarVerificationTargetResolver,
 } from "@/providers/target/stellar.ts";
 import {
+  ExternalReferenceTargetUnsupportedError,
   MissingTargetNetworkError,
   TargetCodeLookupFailedError,
   TargetHashMismatchError,
@@ -46,10 +48,10 @@ const instanceEntry = (
   }) as unknown as xdr.LedgerKey,
   val: xdr.LedgerEntryData.contractData(
     new xdr.ContractDataEntry({
-      ext: new xdr.ExtensionPoint(0),
+      ext: xdr.ExtensionPoint.v0(),
       contract: Address.fromString(id).toScAddress(),
       key: xdr.ScVal.scvLedgerKeyContractInstance(),
-      durability: xdr.ContractDataDurability.persistent(),
+      durability: xdr.ContractDataDurability.persistent,
       val: xdr.ScVal.scvContractInstance(
         new xdr.ScContractInstance({ executable, storage: [] }),
       ),
@@ -64,7 +66,7 @@ const codeEntry = (
   key: buildContractCodeLedgerKey({ hash }) as unknown as xdr.LedgerKey,
   val: xdr.LedgerEntryData.contractCode(
     new xdr.ContractCodeEntry({
-      ext: new xdr.ContractCodeEntryExt(0),
+      ext: xdr.ContractCodeEntryExt.v0(),
       hash: Buffer.from(hash, "hex"),
       code: Buffer.from(wasm),
     }),
@@ -75,14 +77,14 @@ const rpcFromEntries = (
   entries: readonly { key: xdr.LedgerKey; val: xdr.LedgerEntryData }[],
 ): RpcLedgerEntriesClient => {
   const byKey = new Map(entries.map((entry, index) => [
-    entry.key.toXDR("base64") as string,
+    entry.key.toXdr("base64") as string,
     { ...entry, lastModifiedLedgerSeq: index + 2 },
   ]));
   return {
     getLedgerEntries: (...keys) =>
       Promise.resolve({
         entries: keys.flatMap((key) => {
-          const entry = byKey.get(key.toXDR("base64") as string);
+          const entry = byKey.get(key.toXdr("base64") as string);
           return entry ? [entry as unknown as Api.LedgerEntryResult] : [];
         }),
         latestLedger: 10,
@@ -304,6 +306,41 @@ describe("verification target providers", () => {
       contractId: id,
       lastModifiedLedgerSeq: 2,
       observedAt: TEST_NOW,
+    });
+  });
+
+  it("rejects CAP-85 external references without misclassifying them as SAC", async () => {
+    const id = contractId(20);
+    const owner = contractId(21);
+    const tag = new Uint8Array([0x66, 0x6c, 0x65, 0x65, 0xff]);
+    const resolver = new StellarVerificationTargetResolver(
+      normalizeVerificationNetwork({
+        rpc: rpcFromEntries([
+          instanceEntry(
+            id,
+            xdr.ContractExecutable.contractExecutableExternalRef(
+              new xdr.ContractExecutableExternalRef({
+                executableOwner: Address.fromString(owner).toScAddress(),
+                tag,
+              }),
+            ),
+          ),
+        ]),
+        networkPassphrase: "network",
+      }),
+      () => TEST_NOW,
+    );
+
+    const error = await assertRejects(
+      () => resolver.resolve({ target: { contractId: id } }),
+      ExternalReferenceTargetUnsupportedError,
+    );
+
+    assertExists(error.meta);
+    assertEquals(error.meta.data, {
+      contractId: id,
+      executableOwner: owner,
+      tag,
     });
   });
 

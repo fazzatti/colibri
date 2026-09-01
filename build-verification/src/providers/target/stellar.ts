@@ -16,6 +16,7 @@ import type {
   VerificationTargetResolverInput,
 } from "@/providers/target/types.ts";
 import {
+  ExternalReferenceTargetUnsupportedError,
   MissingTargetNetworkError,
   TargetCodeLookupFailedError,
   TargetHashMismatchError,
@@ -154,7 +155,14 @@ export class StellarVerificationTargetResolver
     } catch (cause) {
       throw new TargetInstanceLookupFailedError(target.contractId, cause);
     }
-    if (instance.executable.type !== "wasm") {
+    if (instance.executable.type === "externalRef") {
+      throw new ExternalReferenceTargetUnsupportedError(
+        target.contractId,
+        instance.executable.executableOwner,
+        instance.executable.tag,
+      );
+    }
+    if (instance.executable.type === "stellarAsset") {
       return {
         applicability: "stellarAssetContract",
         kind: "contractId",

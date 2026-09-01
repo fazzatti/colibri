@@ -63,6 +63,11 @@ const allErrors = (): E.BuildVerificationError<E.Code>[] => {
     new E.TargetHashMismatchError("a", "b"),
     new E.TargetInstanceLookupFailedError("C123", cause),
     new E.TargetCodeLookupFailedError("target", cause),
+    new E.ExternalReferenceTargetUnsupportedError(
+      "CTARGET",
+      "COWNER",
+      new Uint8Array([1, 2, 3]),
+    ),
     new E.TargetProviderUnexpectedError(cause),
     new E.CommandPolicyRejectedError(["contract"], ["reason"]),
     new E.OptionPolicyRejectedError(["--bad"], ["reason"]),

@@ -1,4 +1,3 @@
-import { Buffer } from "buffer";
 import {
   Keypair,
   type Operation,
@@ -28,7 +27,7 @@ function decodeTransaction(
   networkPassphrase: string,
 ): Transaction {
   try {
-    return TransactionBuilder.fromXDR(
+    return TransactionBuilder.fromXdr(
       transactionXdr,
       networkPassphrase,
     ) as Transaction;
@@ -172,7 +171,7 @@ export function verifySep10Challenge(
     const manageData = operation as Operation.ManageData;
     const source = manageData.source ?? transaction.source;
     const value = manageData.value
-      ? Buffer.from(manageData.value).toString()
+      ? new TextDecoder().decode(manageData.value)
       : undefined;
 
     if (manageData.name === "web_auth_domain") {
@@ -241,7 +240,7 @@ export function verifySep10Challenge(
   const serverKey = Keypair.fromPublicKey(input.serverAccount);
   const transactionHash = transaction.hash();
   const validServerSignature = transaction.signatures.some((signature) =>
-    serverKey.verify(transactionHash, signature.signature())
+    serverKey.verify(transactionHash, signature.signature.toBytes())
   );
   if (!validServerSignature) {
     fail(

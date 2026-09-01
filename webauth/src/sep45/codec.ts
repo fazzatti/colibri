@@ -1,22 +1,6 @@
-import { Buffer } from "buffer";
 import { xdr } from "stellar-sdk";
 import { Sep45Code, Sep45Error } from "@/error.ts";
 import type { SorobanAuthorizationEntry } from "@/stellar-sdk-types.ts";
-
-function encodeEntries(
-  entries: SorobanAuthorizationEntry[],
-): Buffer {
-  // `SorobanAuthorizationEntries` is a generated variable-array instance.
-  // js-xdr 4 exposes array encoding through the static XdrType implementation,
-  // while its generated TypeScript declaration still presents it as an
-  // instance method. Borrowing the static encoder keeps this exact and avoids
-  // manually reimplementing XDR framing.
-  const encode = xdr.SorobanAuthorizationEntry.toXDR as unknown as (
-    this: typeof xdr.SorobanAuthorizationEntries,
-    value: SorobanAuthorizationEntry[],
-  ) => Buffer;
-  return encode.call(xdr.SorobanAuthorizationEntries, entries);
-}
 
 /** Decodes an exact variable-length Soroban authorization-entry array. */
 export function decodeSep45AuthorizationEntries(
@@ -35,8 +19,11 @@ export function decodeSep45AuthorizationEntries(
   }
 
   try {
-    const bytes = Buffer.from(value, "base64");
-    const entries = xdr.SorobanAuthorizationEntries.fromXDR(bytes);
+    const entries = xdr.decodeArray(
+      xdr.SorobanAuthorizationEntry,
+      value,
+      "base64",
+    );
     if (entries.length === 0) {
       throw new Sep45Error({
         code: Sep45Code.EMPTY_ENTRIES,
@@ -60,12 +47,16 @@ export function decodeSep45AuthorizationEntries(
 export function encodeSep45AuthorizationEntries(
   entries: SorobanAuthorizationEntry[],
 ): string {
-  return encodeEntries(entries).toString("base64");
+  return xdr.encodeArray(
+    xdr.SorobanAuthorizationEntry,
+    entries,
+    "base64",
+  );
 }
 
 /** Deep-clones an authorization entry through XDR. */
 export function cloneSep45AuthorizationEntry(
   entry: SorobanAuthorizationEntry,
 ): SorobanAuthorizationEntry {
-  return xdr.SorobanAuthorizationEntry.fromXDR(entry.toXDR());
+  return xdr.SorobanAuthorizationEntry.fromXdr(entry.toXdr());
 }

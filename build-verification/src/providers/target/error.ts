@@ -113,3 +113,27 @@ export class TargetProviderUnexpectedError
     });
   }
 }
+
+/** Raised when verification targets a CAP-85 external-reference contract. */
+export class ExternalReferenceTargetUnsupportedError
+  extends BuildVerificationError<Code.EXTERNAL_REFERENCE_TARGET_UNSUPPORTED> {
+  /** Creates an unsupported external-reference target error. */
+  constructor(
+    contractId: string,
+    executableOwner: string,
+    tag: Uint8Array,
+  ) {
+    super({
+      code: Code.EXTERNAL_REFERENCE_TARGET_UNSUPPORTED,
+      source: "@colibri/build-verification/providers/target/stellar",
+      message: "External-reference verification target is not supported",
+      details:
+        "Phase A recognizes CAP-85 external references but does not resolve their mutable owner and tag mapping to Wasm.",
+      data: {
+        contractId,
+        executableOwner,
+        tag: Uint8Array.from(tag),
+      },
+    });
+  }
+}

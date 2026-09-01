@@ -6,7 +6,7 @@ function cloneTransaction(
   transactionXdr: string,
   networkPassphrase: string,
 ): Transaction {
-  return TransactionBuilder.fromXDR(
+  return TransactionBuilder.fromXdr(
     transactionXdr,
     networkPassphrase,
   ) as Transaction;
@@ -63,7 +63,7 @@ export class Sep10Challenge {
   }
 
   /** Original verified transaction-envelope XDR. */
-  toXDR(): string {
+  toXdr(): string {
     return this.#verified.transactionXdr;
   }
 
@@ -101,7 +101,7 @@ export class Sep10SignedChallenge {
   }
 
   /** Signed transaction-envelope XDR. */
-  toXDR(): string {
+  toXdr(): string {
     return this.#transactionXdr;
   }
 
