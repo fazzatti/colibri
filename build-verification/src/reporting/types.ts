@@ -1,5 +1,6 @@
 import type {
   BuildVerificationLimits,
+  ContractBuildVerificationEvidence,
   VerificationLogEvent,
 } from "@/core/types/index.ts";
 
@@ -25,3 +26,11 @@ export type RecordVerificationLogInput = {
 
 /** Output format supported by {@link writeVerificationLogs}. */
 export type VerificationLogFormat = "jsonl" | "text";
+
+/** Serializable evidence report retained when verification does not complete. */
+export type BuildVerificationFailureReport = {
+  readonly status: "failed";
+  readonly error: Readonly<Record<string, unknown>>;
+  readonly evidence?: ContractBuildVerificationEvidence;
+  readonly logs: readonly VerificationLogEvent[];
+};

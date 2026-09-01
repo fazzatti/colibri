@@ -2,7 +2,14 @@ import { Buffer } from "node:buffer";
 import { EventEmitter } from "node:events";
 import { Readable } from "node:stream";
 import type Dockerode from "dockerode";
-import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
+import {
+  assert,
+  assertEquals,
+  assertMatch,
+  assertNotEquals,
+  assertRejects,
+  assertThrows,
+} from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { TEST_LIMITS, testImageDetails } from "@/testing.test.ts";
 import type { ContractBuildPlan } from "@/runners/types.ts";
@@ -24,6 +31,7 @@ import {
   ContainerStartFailedError,
   ContainerWaitFailedError,
   DockerConfigurationFailedError,
+  DockerContainerNamePrefixInvalidError,
   DockerUnavailableError,
   ImageInspectionFailedError,
   ImagePullFailedError,
@@ -593,6 +601,7 @@ describe("Docker runner", () => {
       assertEquals(output.runner, { name: "colibri-docker", version: "1" });
       assertEquals(output.capabilities.hardDiskLimit, false);
       const config = createOptions as {
+        name: string;
         Image: string;
         Cmd: string[];
         Env: string[];
@@ -601,6 +610,10 @@ describe("Docker runner", () => {
         platform: string;
         HostConfig: Record<string, unknown>;
       };
+      assertMatch(
+        config.name,
+        /^colibri-build-verification-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+      );
       assertEquals(config.Image, testImageDetails().reference);
       assertEquals(config.Cmd, plan().arguments);
       assertEquals(config.Env, [
@@ -629,6 +642,53 @@ describe("Docker runner", () => {
         "/cargo": "rw,nosuid,nodev,size=1610612736,mode=1777",
       });
     }
+  });
+
+  it("uses a caller prefix only as the prefix of a unique container name", async () => {
+    const names: string[] = [];
+    const docker = {
+      ...baseDocker(),
+      createContainer: (options: { name: string }) => {
+        names.push(options.name);
+        return Promise.resolve(mockContainer());
+      },
+    };
+    const runner = DockerBuildRunner.fromDockerClient(
+      docker as unknown as Dockerode,
+      { containerNamePrefix: " custom.verifier " },
+    );
+
+    await runner.run(plan());
+    await runner.run(plan());
+
+    assertMatch(
+      names[0],
+      /^custom\.verifier-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
+    assertMatch(
+      names[1],
+      /^custom\.verifier-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
+    assertNotEquals(names[0], names[1]);
+
+    for (const prefix of ["", " ", "-invalid", "invalid prefix", "/invalid"]) {
+      assertThrows(
+        () =>
+          DockerBuildRunner.fromDockerClient(
+            docker as unknown as Dockerode,
+            { containerNamePrefix: prefix },
+          ),
+        DockerContainerNamePrefixInvalidError,
+      );
+    }
+    assertThrows(
+      () =>
+        DockerBuildRunner.fromDockerClient(
+          docker as unknown as Dockerode,
+          { containerNamePrefix: 42 as unknown as string },
+        ),
+      DockerContainerNamePrefixInvalidError,
+    );
   });
 
   it("lets Docker select a platform only when OCI facts omit it", async () => {

@@ -214,9 +214,9 @@ describe("source providers", () => {
   it("redacts source URL credentials and invalid locators", () => {
     assertEquals(
       redactSourceUrl(
-        "https://user:password@example.com/a?token=visible&sig=secret&jwt=secret&page=1",
+        "https://user:password@example.com/a?token=visible&sig=secret&jwt=secret&page=1#access_token=fragment-secret&section=docs",
       ),
-      "https://example.com/a?token=%3Credacted%3E&sig=%3Credacted%3E&jwt=%3Credacted%3E&page=1",
+      "https://example.com/a?token=%3Credacted%3E&sig=%3Credacted%3E&jwt=%3Credacted%3E&page=1#access_token=%3Credacted%3E&section=docs",
     );
     assertEquals(redactSourceUrl("not a URL"), "<invalid-url>");
     assertEquals(
@@ -335,6 +335,39 @@ describe("source providers", () => {
       authenticatedHeaders,
       publicHeaders,
       publicHeaders,
+    ]);
+
+    const insecureTransport = new QueueTransport([
+      { status: 200, headers: {}, bytes },
+    ]);
+    await retrievePinnedHttpResource({
+      url: "http://example.com/source.tar",
+      limits: TEST_LIMITS,
+      policy: acceptedPolicy,
+      transport: insecureTransport,
+      addressResolver: new FixedAddressResolver(),
+      headers: authenticatedHeaders,
+    });
+    assertEquals(insecureTransport.calls[0].headers, publicHeaders);
+
+    const noHeaderTransport = new QueueTransport([
+      {
+        status: 302,
+        headers: { location: "https://objects.example.com/final.tar" },
+        bytes: new Uint8Array(),
+      },
+      { status: 200, headers: {}, bytes },
+    ]);
+    await retrievePinnedHttpResource({
+      url: "https://example.com/start.tar",
+      limits: TEST_LIMITS,
+      policy: acceptedPolicy,
+      transport: noHeaderTransport,
+      addressResolver: new FixedAddressResolver(),
+    });
+    assertEquals(noHeaderTransport.calls.map(({ headers }) => headers), [
+      {},
+      {},
     ]);
   });
 

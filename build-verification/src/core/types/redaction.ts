@@ -19,6 +19,16 @@ export const redactUrlCredentials = (value: string): string | undefined => {
         url.searchParams.set(key, "<redacted>");
       }
     }
+    const fragment = new URLSearchParams(url.hash.slice(1));
+    const credentialFragmentNames = [...fragment.keys()].filter(
+      isCredentialBearingName,
+    );
+    if (credentialFragmentNames.length > 0) {
+      for (const key of credentialFragmentNames) {
+        fragment.set(key, "<redacted>");
+      }
+      url.hash = fragment.toString();
+    }
     return url.toString();
   } catch {
     return undefined;

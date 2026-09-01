@@ -50,7 +50,7 @@ export const redactContractBuildVerificationInput = (
       : input.source.type === "url"
       ? {
         type: "url",
-        url: redactUrlCredentials(input.source.url) ?? input.source.url,
+        url: redactUrlCredentials(input.source.url) ?? "<invalid-url>",
       }
       : input.source
     : undefined;

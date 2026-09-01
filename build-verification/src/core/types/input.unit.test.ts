@@ -55,13 +55,13 @@ describe("contract build-verification input redaction", () => {
         source: {
           type: "url",
           url:
-            "https://alice:secret@example.com/source.zip?token=secret&X-Amz-Signature=signed&page=1",
+            "https://alice:secret@example.com/source.zip?token=secret&X-Amz-Signature=signed&page=1#access_token=fragment-secret&section=docs",
         },
       }).source,
       {
         type: "url",
         url:
-          "https://example.com/source.zip?token=%3Credacted%3E&X-Amz-Signature=%3Credacted%3E&page=1",
+          "https://example.com/source.zip?token=%3Credacted%3E&X-Amz-Signature=%3Credacted%3E&page=1#access_token=%3Credacted%3E&section=docs",
       },
     );
     assertEquals(
@@ -69,7 +69,7 @@ describe("contract build-verification input redaction", () => {
         target: { wasm: new Uint8Array() },
         source: { type: "url", url: "not a URL" },
       }).source,
-      { type: "url", url: "not a URL" },
+      { type: "url", url: "<invalid-url>" },
     );
     assertEquals(
       redactContractBuildVerificationInput({
