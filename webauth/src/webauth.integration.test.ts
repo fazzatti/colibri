@@ -9,7 +9,7 @@ import {
   NetworkConfig,
   type TransactionConfig,
 } from "@colibri/core";
-import { StellarTestLedger } from "../../test-tooling/mod.ts";
+import { StellarTestLedger } from "@colibri/test-tooling";
 import { Keypair, rpc, type xdr } from "stellar-sdk";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";

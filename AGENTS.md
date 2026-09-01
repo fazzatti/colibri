@@ -418,17 +418,23 @@ The repo largely follows Deno/TypeScript defaults plus a few local conventions:
 - public APIs are documented
 - comments should explain non-obvious behavior, not restate code
 
-There is also a custom lint rule in:
+There are also custom lint rules in:
 
 - `_tools/lint/enum-requires-own-file.ts`
+- `_tools/lint/no-relative-imports.ts`
 
-It is currently wired into:
+The enum rule is currently wired into:
 
 - `core/deno.json`
 - `test-tooling/deno.json`
 
-That rule requires enums with more than 50 members to live alone in their file.
-If you add or expand large enums in those packages, keep that rule in mind.
+It requires enums with more than 50 members to live alone in their file. If you
+add or expand large enums in those packages, keep that rule in mind.
+
+The no-relative-imports rule applies across every published package, including
+its tests. Use the package-local `@/` alias for imports within a package and a
+configured package alias for cross-package imports. Repository-only `_internal`
+and `_tools` files remain outside that package boundary.
 
 ## Change Checklist
 

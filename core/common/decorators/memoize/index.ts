@@ -67,7 +67,7 @@ import type {
   DecoratorContext,
   MemoizeOptionResolver,
   MemoizeOptions,
-} from "./types.ts";
+} from "@/common/decorators/memoize/types.ts";
 
 /**
  * Default key function for method arguments.

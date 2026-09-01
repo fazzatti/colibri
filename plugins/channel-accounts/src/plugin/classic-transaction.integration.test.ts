@@ -19,7 +19,7 @@ import {
   type xdr,
 } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
-import { createFeeBumpPlugin } from "../../../fee-bump/mod.ts";
+import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
 import {
   type ChannelAccount,
   ChannelAccounts,

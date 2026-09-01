@@ -42,6 +42,9 @@ jobs:
       - name: Run linter
         run: deno lint
 
+      - name: Test custom lint rules
+        run: deno task test:lint-rules
+
       - name: Run type checks
         run: deno task check
 

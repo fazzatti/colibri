@@ -7,7 +7,7 @@ import {
   isLedgerCloseMetaV1,
   isLedgerCloseMetaV2,
   parseEventsFromLedgerCloseMeta,
-} from "./ledger-close-meta.ts";
+} from "@/event/parsing/ledger-close-meta.ts";
 import type { EventFilter } from "@/event/event-filter/index.ts";
 import type { EventType } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";

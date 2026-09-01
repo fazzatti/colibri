@@ -17,7 +17,7 @@ import {
   TransactionBuilder,
   type xdr,
 } from "stellar-sdk";
-import { createFeeBumpPlugin } from "../../../fee-bump/mod.ts";
+import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
 import { ChannelAccounts, createChannelAccountsPlugin } from "@/index.ts";
 
 const asEnvelopeXdr = (

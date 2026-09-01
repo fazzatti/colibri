@@ -4,7 +4,7 @@ import {
   isBoundedArray,
   asBoundedArray,
   type BoundedArray,
-} from "./bounded-array.ts";
+} from "@/common/helpers/bounded-array.ts";
 
 describe("BoundedArray", () => {
   describe("compile-time type constraints", () => {

@@ -4,7 +4,7 @@ import { assert, assertEquals, assertRejects } from "@std/assert";
 import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
 import type { Buffer } from "node:buffer";
 import { Asset, Operation } from "stellar-sdk";
-import { StellarTestLedger } from "../../test-tooling/mod.ts";
+import { StellarTestLedger } from "@colibri/test-tooling";
 import {
   buildAccountLedgerKey,
   buildConfigSettingLedgerKey,

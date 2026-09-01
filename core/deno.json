@@ -6,7 +6,10 @@
     ".": "./mod.ts"
   },
   "lint": {
-    "plugins": ["../_tools/lint/enum-requires-own-file.ts"]
+    "plugins": [
+      "../_tools/lint/enum-requires-own-file.ts",
+      "../_tools/lint/no-relative-imports.ts"
+    ]
   },
   "publish": {
     "include": ["mod.ts", "./**/*.ts", "README.md", "LICENSE", "./deno.json"],

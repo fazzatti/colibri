@@ -5,7 +5,7 @@ import {
   createEventId,
   createEventIdFromParts,
   parseEventId,
-} from "./index.ts";
+} from "@/event/event-id/index.ts";
 import type { TOID } from "@/toid/types.ts";
 import * as E from "@/event/event-id/error.ts";
 

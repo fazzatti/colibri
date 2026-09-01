@@ -1,15 +1,15 @@
 // deno-lint-ignore-file no-explicit-any
 import { assertEquals, assertRejects, assertStrictEquals } from "@std/assert";
 import { afterEach, describe, it } from "@std/testing/bdd";
-import { StellarAssetContract } from "./index.ts";
+import { StellarAssetContract } from "@/asset/sac/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import { SIMULATION_FAILED } from "@/processes/simulate-transaction/error.ts";
-import * as SACError from "./error.ts";
+import * as SACError from "@/asset/sac/error.ts";
 import type { Server } from "stellar-sdk/rpc";
 import { Asset, nativeToScVal, type TransactionBuilder } from "stellar-sdk";
-import { Method } from "./types.ts";
+import { Method } from "@/asset/sac/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 
 describe("StellarAssetContract initialization", () => {
