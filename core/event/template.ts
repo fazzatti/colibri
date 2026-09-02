@@ -43,38 +43,36 @@ function valueToScVal(value: unknown, type: SchemaFieldType): xdr.ScVal {
  * Validates a parsed value matches the expected schema field type.
  */
 function validateFieldType(value: ScValParsed, type: SchemaFieldType): boolean {
-  switch (type) {
-    case "address":
-    case "string":
-    case "symbol":
-      return typeof value === "string";
-    case "bool":
-      return typeof value === "boolean";
-    case "u32":
-    case "i32":
-      return typeof value === "number";
-    case "u64":
-    case "i64":
-    case "u128":
-    case "i128":
-    case "u256":
-    case "i256":
-    case "timepoint":
-    case "duration":
-      return typeof value === "bigint";
-    case "bytes":
-      return value instanceof Uint8Array;
-    case "vec":
-      return Array.isArray(value);
-    case "map":
-      return (
-        value instanceof Map ||
-        (typeof value === "object" && value !== null && !Array.isArray(value))
-      );
-    default:
-      return true;
-  }
+  if (STRING_FIELD_TYPES.has(type)) return typeof value === "string";
+  if (NUMBER_FIELD_TYPES.has(type)) return typeof value === "number";
+  if (BIGINT_FIELD_TYPES.has(type)) return typeof value === "bigint";
+  if (type === "bool") return typeof value === "boolean";
+  if (type === "bytes") return value instanceof Uint8Array;
+  if (type === "vec") return Array.isArray(value);
+  if (type === "map") return isMapValue(value);
+  return true;
 }
+
+const STRING_FIELD_TYPES = new Set<SchemaFieldType>([
+  "address",
+  "string",
+  "symbol",
+]);
+const NUMBER_FIELD_TYPES = new Set<SchemaFieldType>(["u32", "i32"]);
+const BIGINT_FIELD_TYPES = new Set<SchemaFieldType>([
+  "u64",
+  "i64",
+  "u128",
+  "i128",
+  "u256",
+  "i256",
+  "timepoint",
+  "duration",
+]);
+
+const isMapValue = (value: ScValParsed): boolean =>
+  value instanceof Map ||
+  (typeof value === "object" && value !== null && !Array.isArray(value));
 
 /**
  * Base class for schema-driven events.

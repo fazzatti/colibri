@@ -8,9 +8,9 @@ import { memoize } from "@/common/decorators/memoize/index.ts";
 // deno-coverage-ignore-stop
 import type { xdr } from "stellar-sdk";
 import {
+  parseAccountId,
   parseAsset,
   parseChangeTrustAsset,
-  parseAccountId,
   parseMuxedAccount,
 } from "@/common/helpers/xdr/index.ts";
 import {
@@ -21,6 +21,8 @@ import type { Transaction } from "@/ledger-parser/transaction/index.ts";
 
 const toHex = (bytes: Uint8Array): string =>
   Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+
+const UNPARSED_OPERATION_BODY = Symbol("unparsed-operation-body");
 
 /**
  * Operation class with type-specific parsing delegation
@@ -44,7 +46,7 @@ export class Operation {
   private constructor(
     transaction: Transaction,
     rawOperation: xdr.Operation,
-    index: number
+    index: number,
   ) {
     this.transaction = transaction;
     this.rawOperation = rawOperation;
@@ -57,7 +59,7 @@ export class Operation {
   static fromXdr(
     transaction: Transaction,
     rawOperation: xdr.Operation,
-    index: number
+    index: number,
   ): Operation {
     if (index < 0) {
       throw new INVALID_OPERATION_INDEX(index, transaction.index, -1);
@@ -95,7 +97,19 @@ export class Operation {
   @memoize()
   get body(): unknown {
     const opBody = this.rawOperation.body;
+    const offerBody = this.parseOfferOperationBody(opBody);
+    if (offerBody !== UNPARSED_OPERATION_BODY) return offerBody;
 
+    const accountBody = this.parseAccountOperationBody(opBody);
+    if (accountBody !== UNPARSED_OPERATION_BODY) return accountBody;
+
+    return this.parseSorobanOperationBody(opBody);
+  }
+
+  /** @internal */
+  private parseOfferOperationBody(
+    opBody: xdr.OperationBody,
+  ): unknown | typeof UNPARSED_OPERATION_BODY {
     switch (opBody.type) {
       case "createAccount":
         return this.parseCreateAccount(opBody.createAccountOp);
@@ -105,12 +119,12 @@ export class Operation {
 
       case "pathPaymentStrictReceive":
         return this.parsePathPaymentStrictReceive(
-          opBody.pathPaymentStrictReceiveOp
+          opBody.pathPaymentStrictReceiveOp,
         );
 
       case "pathPaymentStrictSend":
         return this.parsePathPaymentStrictSend(
-          opBody.pathPaymentStrictSendOp
+          opBody.pathPaymentStrictSendOp,
         );
 
       case "manageSellOffer":
@@ -121,7 +135,7 @@ export class Operation {
 
       case "createPassiveSellOffer":
         return this.parseCreatePassiveSellOffer(
-          opBody.createPassiveSellOfferOp
+          opBody.createPassiveSellOfferOp,
         );
 
       case "setOptions":
@@ -130,6 +144,16 @@ export class Operation {
       case "changeTrust":
         return this.parseChangeTrust(opBody.changeTrustOp);
 
+      default:
+        return UNPARSED_OPERATION_BODY;
+    }
+  }
+
+  /** @internal */
+  private parseAccountOperationBody(
+    opBody: xdr.OperationBody,
+  ): unknown | typeof UNPARSED_OPERATION_BODY {
+    switch (opBody.type) {
       case "allowTrust":
         return this.parseAllowTrust(opBody.allowTrustOp);
 
@@ -147,22 +171,30 @@ export class Operation {
 
       case "createClaimableBalance":
         return this.parseCreateClaimableBalance(
-          opBody.createClaimableBalanceOp
+          opBody.createClaimableBalanceOp,
         );
 
       case "claimClaimableBalance":
         return this.parseClaimClaimableBalance(
-          opBody.claimClaimableBalanceOp
+          opBody.claimClaimableBalanceOp,
         );
 
       case "beginSponsoringFutureReserves":
         return this.parseBeginSponsoringFutureReserves(
-          opBody.beginSponsoringFutureReservesOp
+          opBody.beginSponsoringFutureReservesOp,
         );
 
       case "endSponsoringFutureReserves":
         return {}; // No body
 
+      default:
+        return UNPARSED_OPERATION_BODY;
+    }
+  }
+
+  /** @internal */
+  private parseSorobanOperationBody(opBody: xdr.OperationBody): unknown {
+    switch (opBody.type) {
       case "revokeSponsorship":
         return this.parseRevokeSponsorship(opBody.revokeSponsorshipOp);
 
@@ -171,7 +203,7 @@ export class Operation {
 
       case "clawbackClaimableBalance":
         return this.parseClawbackClaimableBalance(
-          opBody.clawbackClaimableBalanceOp
+          opBody.clawbackClaimableBalanceOp,
         );
 
       case "setTrustLineFlags":
@@ -182,7 +214,7 @@ export class Operation {
 
       case "liquidityPoolWithdraw":
         return this.parseLiquidityPoolWithdraw(
-          opBody.liquidityPoolWithdrawOp
+          opBody.liquidityPoolWithdrawOp,
         );
 
       case "invokeHostFunction":
@@ -307,11 +339,11 @@ export class Operation {
       homeDomain: op.homeDomain?.toString(),
       signer: op.signer
         ? {
-            key: signerKey && "toBytes" in signerKey
-              ? toHex(signerKey.toBytes())
-              : signerKey?.toXdr("hex"),
-            weight: op.signer.weight,
-          }
+          key: signerKey && "toBytes" in signerKey
+            ? toHex(signerKey.toBytes())
+            : signerKey?.toXdr("hex"),
+          weight: op.signer.weight,
+        }
         : undefined,
     };
   }
@@ -380,7 +412,7 @@ export class Operation {
 
   /** @internal */
   private parseBeginSponsoringFutureReserves(
-    op: xdr.BeginSponsoringFutureReservesOp
+    op: xdr.BeginSponsoringFutureReservesOp,
   ): unknown {
     return {
       sponsoredId: parseAccountId(op.sponsoredId),

@@ -1288,6 +1288,41 @@ describe("RPCStreamer", () => {
       assertEquals(ingestCount, 3); // 95000, 95001, 95002
     });
 
+    it("waits without a second health lookup when skipLedgerWaitIfBehind is disabled", async () => {
+      const streamer = new RPCStreamer<string>({
+        rpcUrl: TEST_RPC_URL,
+        ingestLive: async (_rpc, ledgerSequence, _onData, stopLedger) => ({
+          nextLedger: ledgerSequence + 1,
+          shouldWait: true,
+          hitStopLedger: stopLedger !== undefined &&
+            ledgerSequence >= stopLedger,
+        }),
+        ingestArchive: createMockArchiveIngest(),
+        options: { waitLedgerIntervalMs: 10, pagingIntervalMs: 5 },
+      });
+
+      let healthCallCount = 0;
+      const healthStub = stub(streamer.rpc, "getHealth", () => {
+        healthCallCount++;
+        return Promise.resolve(
+          createMockHealthResponse({
+            oldestLedger: 90000,
+            latestLedger: 95002,
+          }),
+        );
+      });
+      stubs.push(healthStub);
+
+      const startTime = Date.now();
+      await streamer.start(async () => {}, {
+        startLedger: 95000,
+        stopLedger: 95001,
+      });
+
+      assertEquals(Date.now() - startTime >= 10, true);
+      assertEquals(healthCallCount, 3);
+    });
+
     it("waits when skipLedgerWaitIfBehind is true but caught up", async () => {
       let ingestCount = 0;
       const streamer = new RPCStreamer<string>({

@@ -45,6 +45,7 @@ deno lint
 deno task check
 deno task check:jsr
 deno task check:package-versions
+deno task check:crap
 deno task test
 deno task test:unit
 deno task test:integration
@@ -60,6 +61,8 @@ What they mean:
   Public exports need valid docs.
 - `deno task check:package-versions`: verify that package-version constants used
   at runtime match their package `deno.json` metadata.
+- `deno task check:crap`: enforce the maximum CRAP score of 15 against the
+  aggregate `coverage.lcov` report. Missing function coverage fails the check.
 - `deno task test`: run the full suite, including unit and integration tests.
 - `deno task test:unit`: run fast unit coverage without integration tests.
 - `deno task test:integration`: run integration tests only.
@@ -73,6 +76,7 @@ deno lint
 deno task check
 deno task check:jsr
 deno task check:package-versions
+deno task check:crap
 deno task test:unit
 ```
 

@@ -123,6 +123,131 @@ export const getDockerUserFromSourceOwner = (
     ? undefined
     : `${owner.uid}:${owner.gid}`;
 
+const prepareDockerExecution = async (
+  docker: Dockerode,
+  input: ContractBuildPlan,
+): Promise<{ command: string[]; user?: string; approvedDigest: string }> => {
+  const command = buildDockerCommand(input);
+  let sourceOwner: Deno.FileInfo;
+  try {
+    sourceOwner = await Deno.stat(input.sourceDirectory);
+  } catch (cause) {
+    throw new SourceBuildAccessPreparationFailedError(
+      input.sourceDirectory,
+      cause,
+    );
+  }
+  try {
+    await docker.ping();
+  } catch (cause) {
+    throw new DockerUnavailableError(cause);
+  }
+  await pullImage(docker, input.image.reference);
+
+  let imageInfo: Dockerode.ImageInspectInfo;
+  try {
+    imageInfo = await docker.getImage(input.image.reference).inspect();
+  } catch (cause) {
+    throw new ImageInspectionFailedError(input.image.reference, cause);
+  }
+  const entrypoint = imageInfo.Config.Entrypoint;
+  const workingDir = imageInfo.Config.WorkingDir;
+  if (
+    !entrypoint || entrypoint.length !== 1 || entrypoint[0] !== "stellar" ||
+    workingDir !== "/source"
+  ) {
+    throw new ImageRuntimeMismatchError(
+      input.image.reference,
+      entrypoint,
+      workingDir,
+    );
+  }
+  const repoDigests: string[] = imageInfo.RepoDigests ?? [];
+  const approvedDigest = input.image.manifestDigest;
+  if (!repoDigests.some((value) => value.endsWith(`@${approvedDigest}`))) {
+    throw new RuntimeImageDigestMismatchError(approvedDigest, repoDigests);
+  }
+  return {
+    command,
+    user: getDockerUserFromSourceOwner(sourceOwner),
+    approvedDigest,
+  };
+};
+
+const attachContainerLogs = async (
+  container: Dockerode.Container,
+  maximum: number,
+): Promise<{
+  collection: Promise<{ stdout: string; stderr: string }>;
+}> => {
+  try {
+    const stream = await container.attach({
+      stream: true,
+      stdin: false,
+      stdout: true,
+      stderr: true,
+    });
+    const logs = collectBoundedDockerLogStream(stream, maximum);
+    logs.catch(() => {});
+    return { collection: logs };
+  } catch (cause) {
+    throw new ContainerLogsFailedError(cause);
+  }
+};
+
+const startBuildContainer = async (
+  container: Dockerode.Container,
+): Promise<void> => {
+  try {
+    await container.start();
+  } catch (cause) {
+    throw new ContainerStartFailedError(cause);
+  }
+};
+
+const waitForBuildContainer = async (
+  container: Dockerode.Container,
+  timeoutMs: number,
+): Promise<{ statusCode: number; timedOut: boolean }> => {
+  let timeout = 0;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeout = setTimeout(
+      () => reject(new BuildTimedOutError(timeoutMs, "", "")),
+      timeoutMs,
+    );
+  });
+  try {
+    const wait = await Promise.race([container.wait(), timeoutPromise]);
+    clearTimeout(timeout);
+    return { statusCode: wait.StatusCode, timedOut: false };
+  } catch (cause) {
+    clearTimeout(timeout);
+    if (!(cause instanceof BuildTimedOutError)) {
+      throw new ContainerWaitFailedError(cause);
+    }
+    try {
+      await container.kill();
+    } catch (killCause) {
+      throw new ContainerKillFailedError(killCause);
+    }
+    return { statusCode: -1, timedOut: true };
+  }
+};
+
+const assertSuccessfulBuild = (
+  statusCode: number,
+  timedOut: boolean,
+  timeoutMs: number,
+  logs: { stdout: string; stderr: string },
+): void => {
+  if (timedOut) {
+    throw new BuildTimedOutError(timeoutMs, logs.stdout, logs.stderr);
+  }
+  if (statusCode !== 0) {
+    throw new BuildCommandFailedError(statusCode, logs.stdout, logs.stderr);
+  }
+};
+
 /** Docker-backed, resource-bounded execution-only contract build runner. */
 export class DockerBuildRunner implements ContractBuildRunner {
   readonly #docker: Dockerode;
@@ -147,55 +272,13 @@ export class DockerBuildRunner implements ContractBuildRunner {
     return new DockerBuildRunner(config, docker);
   }
 
-  /** Executes a validated plan without collecting or selecting Wasm artifacts. */
-  async run(input: ContractBuildPlan): Promise<ContractBuildRunnerOutput> {
-    validatePlan(input);
-    const command = buildDockerCommand(input);
-    let sourceOwner: Deno.FileInfo;
+  async #createContainer(
+    input: ContractBuildPlan,
+    command: string[],
+    user?: string,
+  ): Promise<Dockerode.Container> {
     try {
-      sourceOwner = await Deno.stat(input.sourceDirectory);
-    } catch (cause) {
-      throw new SourceBuildAccessPreparationFailedError(
-        input.sourceDirectory,
-        cause,
-      );
-    }
-    const user = getDockerUserFromSourceOwner(sourceOwner);
-    try {
-      await this.#docker.ping();
-    } catch (cause) {
-      throw new DockerUnavailableError(cause);
-    }
-    await pullImage(this.#docker, input.image.reference);
-
-    let imageInfo: Dockerode.ImageInspectInfo;
-    try {
-      imageInfo = await this.#docker.getImage(input.image.reference).inspect();
-    } catch (cause) {
-      throw new ImageInspectionFailedError(input.image.reference, cause);
-    }
-    const entrypoint = imageInfo.Config.Entrypoint;
-    const workingDir = imageInfo.Config.WorkingDir;
-    if (
-      !entrypoint || entrypoint.length !== 1 || entrypoint[0] !== "stellar" ||
-      workingDir !== "/source"
-    ) {
-      throw new ImageRuntimeMismatchError(
-        input.image.reference,
-        entrypoint,
-        workingDir,
-      );
-    }
-    const repoDigests: string[] = imageInfo.RepoDigests ?? [];
-    const approvedDigest = input.image.manifestDigest;
-    if (!repoDigests.some((value) => value.endsWith(`@${approvedDigest}`))) {
-      throw new RuntimeImageDigestMismatchError(approvedDigest, repoDigests);
-    }
-
-    const started = performance.now();
-    let container: Dockerode.Container;
-    try {
-      container = await this.#docker.createContainer({
+      return await this.#docker.createContainer({
         name: `${this.#containerNamePrefix}-${crypto.randomUUID()}`,
         Image: input.image.reference,
         Cmd: command,
@@ -233,87 +316,68 @@ export class DockerBuildRunner implements ContractBuildRunner {
     } catch (cause) {
       throw new ContainerCreationFailedError(cause);
     }
+  }
+
+  async #executeBuild(
+    container: Dockerode.Container,
+    input: ContractBuildPlan,
+    started: number,
+    approvedDigest: string,
+  ): Promise<ContractBuildRunnerOutput> {
+    const { collection: logCollection } = await attachContainerLogs(
+      container,
+      input.limits.maxLogBytes,
+    );
+    await startBuildContainer(container);
+    const { statusCode, timedOut } = await waitForBuildContainer(
+      container,
+      input.limits.timeoutMs,
+    );
+    const logs = await logCollection;
+    assertSuccessfulBuild(
+      statusCode,
+      timedOut,
+      input.limits.timeoutMs,
+      logs,
+    );
+    return {
+      exitCode: 0,
+      stdout: logs.stdout,
+      stderr: logs.stderr,
+      durationMs: Math.round(performance.now() - started),
+      runtimeImageDigest: approvedDigest,
+      runner: { name: "colibri-docker", version: "1" },
+      capabilities: {
+        networkIsolation: true,
+        readOnlyRootFilesystem: true,
+        cpuLimit: true,
+        memoryLimit: true,
+        pidLimit: true,
+        timeout: true,
+        hardDiskLimit: false,
+      },
+    };
+  }
+
+  /** Executes a validated plan without collecting or selecting Wasm artifacts. */
+  async run(input: ContractBuildPlan): Promise<ContractBuildRunnerOutput> {
+    validatePlan(input);
+    const { command, user, approvedDigest } = await prepareDockerExecution(
+      this.#docker,
+      input,
+    );
+    const started = performance.now();
+    const container = await this.#createContainer(input, command, user);
 
     let primaryError: unknown;
     let output: ContractBuildRunnerOutput | undefined;
-    let logCollection: Promise<{ stdout: string; stderr: string }> | undefined;
-    let timedOut = false;
-    let statusCode = -1;
     try {
-      const maxLogBytes = input.limits.maxLogBytes;
-      try {
-        const stream = await container.attach({
-          stream: true,
-          stdin: false,
-          stdout: true,
-          stderr: true,
-        });
-        logCollection = collectBoundedDockerLogStream(
-          stream,
-          maxLogBytes,
-        );
-        logCollection.catch(() => {});
-      } catch (cause) {
-        throw new ContainerLogsFailedError(cause);
-      }
-      try {
-        await container.start();
-      } catch (cause) {
-        throw new ContainerStartFailedError(cause);
-      }
-      let timeout: number | undefined;
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        timeout = setTimeout(
-          () => reject(new BuildTimedOutError(input.limits.timeoutMs, "", "")),
-          input.limits.timeoutMs,
-        );
-      });
-      try {
-        const wait = await Promise.race([container.wait(), timeoutPromise]);
-        statusCode = wait.StatusCode;
-      } catch (cause) {
-        if (cause instanceof BuildTimedOutError) {
-          timedOut = true;
-          try {
-            await container.kill();
-          } catch (killCause) {
-            throw new ContainerKillFailedError(killCause);
-          }
-        } else {
-          throw new ContainerWaitFailedError(cause);
-        }
-      } finally {
-        if (timeout !== undefined) clearTimeout(timeout);
-      }
-
-      const logs = await logCollection;
-      if (timedOut) {
-        throw new BuildTimedOutError(
-          input.limits.timeoutMs,
-          logs.stdout,
-          logs.stderr,
-        );
-      }
-      if (statusCode !== 0) {
-        throw new BuildCommandFailedError(statusCode, logs.stdout, logs.stderr);
-      }
-      output = {
-        exitCode: 0,
-        stdout: logs.stdout,
-        stderr: logs.stderr,
-        durationMs: Math.round(performance.now() - started),
-        runtimeImageDigest: approvedDigest,
-        runner: { name: "colibri-docker", version: "1" },
-        capabilities: {
-          networkIsolation: true,
-          readOnlyRootFilesystem: true,
-          cpuLimit: true,
-          memoryLimit: true,
-          pidLimit: true,
-          timeout: true,
-          hardDiskLimit: false,
-        },
-      };
+      output = await this.#executeBuild(
+        container,
+        input,
+        started,
+        approvedDigest,
+      );
     } catch (cause) {
       primaryError = cause;
     }

@@ -58,22 +58,17 @@ const unknownCause = (value: unknown): JsonValue | undefined => {
   return { type: objectType(value) };
 };
 
-const jsonValue = (
+const UNHANDLED_JSON_VALUE = Symbol("unhandled-json-value");
+
+const primitiveJsonValue = (
   value: unknown,
-  ancestors: WeakSet<object>,
-  depth: number,
-  isCause = false,
-): JsonValue | undefined => {
-  if (isCause) return unknownCause(value);
+): JsonValue | undefined | typeof UNHANDLED_JSON_VALUE => {
   if (
     value === undefined || typeof value === "function" ||
     typeof value === "symbol"
-  ) {
-    return undefined;
-  }
+  ) return undefined;
   if (
-    value === null || typeof value === "string" ||
-    typeof value === "boolean"
+    value === null || typeof value === "string" || typeof value === "boolean"
   ) {
     return value;
   }
@@ -82,50 +77,73 @@ const jsonValue = (
   }
   if (typeof value === "bigint") return bigintValue(value);
   if (value instanceof Error) return errorCause(value);
+  return UNHANDLED_JSON_VALUE;
+};
+
+const specialObjectJsonValue = (
+  value: object,
+  ancestors: WeakSet<object>,
+  depth: number,
+): JsonValue | typeof UNHANDLED_JSON_VALUE => {
   if (depth >= MAXIMUM_JSON_DEPTH) return MAXIMUM_DEPTH_VALUE;
   if (value instanceof Date) {
     return Number.isNaN(value.getTime()) ? "Invalid Date" : value.toISOString();
   }
   if (value instanceof ArrayBuffer || ArrayBuffer.isView(value)) {
-    return {
-      type: objectType(value),
-      byteLength: value.byteLength,
-    };
+    return { type: objectType(value), byteLength: value.byteLength };
   }
   if (ancestors.has(value)) return CIRCULAR_VALUE;
-  ancestors.add(value);
+  return UNHANDLED_JSON_VALUE;
+};
+
+const objectEntriesJsonValue = (
+  value: object,
+  ancestors: WeakSet<object>,
+  depth: number,
+): JsonValue => {
+  if (Array.isArray(value)) {
+    return value.map((entry) => jsonValue(entry, ancestors, depth + 1) ?? null);
+  }
+  let keys: string[];
   try {
-    if (Array.isArray(value)) {
-      return value.map((entry) =>
-        jsonValue(entry, ancestors, depth + 1) ?? null
-      );
-    }
-    let keys: string[];
+    keys = Object.keys(value);
+  } catch {
+    return UNREADABLE_VALUE;
+  }
+  const output: Record<string, JsonValue> = Object.create(null);
+  for (const key of keys) {
+    let entry: unknown;
     try {
-      keys = Object.keys(value);
+      entry = Reflect.get(value, key);
     } catch {
-      return UNREADABLE_VALUE;
+      output[key] = UNREADABLE_VALUE;
+      continue;
     }
-    const output: Record<string, JsonValue> = Object.create(null);
-    for (const key of keys) {
-      let entry: unknown;
-      try {
-        entry = Reflect.get(value, key);
-      } catch {
-        output[key] = UNREADABLE_VALUE;
-        continue;
-      }
-      const normalized = jsonValue(
-        entry,
-        ancestors,
-        depth + 1,
-        key === "cause",
-      );
-      if (normalized !== undefined) output[key] = normalized;
-    }
-    return output;
+    const normalized = jsonValue(entry, ancestors, depth + 1, key === "cause");
+    if (normalized !== undefined) output[key] = normalized;
+  }
+  return output;
+};
+
+const jsonValue = (
+  value: unknown,
+  ancestors: WeakSet<object>,
+  depth: number,
+  isCause = false,
+): JsonValue | undefined => {
+  if (isCause) return unknownCause(value);
+  const primitive = primitiveJsonValue(value);
+  if (primitive !== UNHANDLED_JSON_VALUE) return primitive;
+
+  const object = value as object;
+  const special = specialObjectJsonValue(object, ancestors, depth);
+  if (special !== UNHANDLED_JSON_VALUE) return special;
+
+  ancestors.add(object);
+  try {
+    return objectEntriesJsonValue(object, ancestors, depth);
   } finally {
-    ancestors.delete(value);
+    ancestors.delete(object);
   }
 };
 

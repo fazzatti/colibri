@@ -115,6 +115,18 @@ const isPromiseLike = (value: unknown): value is PromiseLike<unknown> =>
   "then" in value &&
   typeof value.then === "function";
 
+const getCacheMap = (
+  instance: Record<symbol, Map<string, unknown>>,
+  key: symbol,
+): Map<string, unknown> => {
+  const existing = instance[key];
+  if (existing) return existing;
+
+  const cache = new Map<string, unknown>();
+  instance[key] = cache;
+  return cache;
+};
+
 /**
  * Memoize decorator factory.
  *
@@ -320,20 +332,15 @@ function memoizeMethod<T extends (...args: unknown[]) => unknown>(
     this: Record<symbol, Map<string, unknown>>,
     ...args: unknown[]
   ): unknown {
-    // Initialize cache maps if needed
-    if (!(cacheMapKey in this)) {
-      this[cacheMapKey] = new Map();
-    }
-    if (!(timestampsMapKey in this)) {
-      this[timestampsMapKey] = new Map();
-    }
-    if (!(timersMapKey in this)) {
-      this[timersMapKey] = new Map();
-    }
-
-    const cacheMap = this[cacheMapKey];
-    const timestampsMap = this[timestampsMapKey] as Map<string, number>;
-    const timersMap = this[timersMapKey] as Map<string, number>;
+    const cacheMap = getCacheMap(this, cacheMapKey);
+    const timestampsMap = getCacheMap(
+      this,
+      timestampsMapKey,
+    ) as Map<string, number>;
+    const timersMap = getCacheMap(
+      this,
+      timersMapKey,
+    ) as Map<string, number>;
     const key = keyFn(...args);
     const now = Date.now();
     const cachedAt = timestampsMap.get(key) as number | undefined;

@@ -11,7 +11,7 @@ import {
 } from "@/common/helpers/xdr/error.ts";
 
 const invocationToParams = (
-  invocation: xdr.SorobanAuthorizedInvocation
+  invocation: xdr.SorobanAuthorizedInvocation,
 ): InvocationParams => {
   if (invocation.function.type !== "sorobanAuthorizedFunctionTypeContractFn") {
     throw new UNSUPPORTED_AUTHORIZED_FUNCTION(invocation.function.type);
@@ -22,7 +22,7 @@ const invocationToParams = (
   return {
     function: {
       contractAddress: Address.fromScAddress(
-        contractFn.contractAddress
+        contractFn.contractAddress,
       ).toString(),
       functionName: contractFn.functionName.toString(),
       args: parseScValArgs(args),
@@ -34,29 +34,29 @@ const invocationToParams = (
 };
 
 export const paramsToInvocation = (
-  params: InvocationParams
+  params: InvocationParams,
 ): xdr.SorobanAuthorizedInvocation => {
   const args = isScValArray(params.function.args)
     ? params.function.args
     : params.function.args.map(fnArgToScVal);
 
   return new xdr.SorobanAuthorizedInvocation({
-    function:
-      xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
+    function: xdr.SorobanAuthorizedFunction
+      .sorobanAuthorizedFunctionTypeContractFn(
         new xdr.InvokeContractArgs({
           contractAddress: Address.fromString(
-            params.function.contractAddress
+            params.function.contractAddress,
           ).toScAddress(),
           functionName: params.function.functionName,
           args: args,
-        })
+        }),
       ),
     subInvocations: params.subInvocations?.map(paramsToInvocation) || [],
   });
 };
 
 export const authEntryToParams = (
-  entry: xdr.SorobanAuthorizationEntry
+  entry: xdr.SorobanAuthorizationEntry,
 ): AuthEntryParams => {
   const credentials = getAddressCredentialsFromAuthEntry(entry);
   if (!credentials) {
@@ -66,7 +66,7 @@ export const authEntryToParams = (
   const entryParams: AuthEntryParams = {
     credentials: {
       address: Address.fromScAddress(
-        credentials.address
+        credentials.address,
       ).toString(),
       nonce: credentials.nonce.toString(),
       signatureExpirationLedger: credentials.signatureExpirationLedger,
@@ -79,7 +79,7 @@ export const authEntryToParams = (
 };
 
 const isScValArray = (
-  args: FnArg[] | xdr.ScVal[]
+  args: FnArg[] | xdr.ScVal[],
 ): args is xdr.ScVal[] => {
   return args.length > 0 && xdr.ScVal.is(args[0]);
 };
@@ -104,46 +104,52 @@ const isFnArg = (arg: FnArg | undefined): arg is FnArg => {
 
 const parseScValArg = (value: xdr.ScVal): FnArg | undefined => {
   const nativeValue = scValToNative(value);
-
-  switch (value.type) {
-    case "scvVoid":
-    case "scvBool":
-      return { value: nativeValue };
-    case "scvU32":
-      return { value: String(nativeValue), type: "u32" };
-    case "scvI32":
-      return { value: String(nativeValue), type: "i32" };
-    case "scvU64":
-      return { value: String(nativeValue), type: "u64" };
-    case "scvI64":
-      return { value: String(nativeValue), type: "i64" };
-    case "scvU128":
-      return { value: String(nativeValue), type: "u128" };
-    case "scvAddress":
-      return { value: String(nativeValue), type: "address" };
-    case "scvI128":
-      return { value: String(nativeValue), type: "i128" };
-    case "scvU256":
-      return { value: String(nativeValue), type: "u256" };
-    case "scvI256":
-      return { value: String(nativeValue), type: "i256" };
-    case "scvTimepoint":
-      return { value: String(nativeValue), type: "timepoint" };
-    case "scvDuration":
-      return { value: String(nativeValue), type: "duration" };
-    case "scvBytes":
-      return { value: nativeValue, type: "bytes" };
-    case "scvString":
-      return { value: nativeValue, type: "string" };
-    case "scvSymbol":
-      return { value: nativeValue, type: "symbol" };
-    default:
-      return undefined;
+  if (value.type === "scvVoid" || value.type === "scvBool") {
+    return { value: nativeValue };
   }
+
+  const type = SCVAL_FN_ARG_TYPES.get(value.type);
+  if (type === undefined) return;
+
+  const parsedValue = STRINGIFIED_FN_ARG_TYPES.has(type)
+    ? String(nativeValue)
+    : nativeValue;
+  return { value: parsedValue, type } as FnArg;
 };
 
+const SCVAL_FN_ARG_TYPES = new Map<string, NonNullable<FnArg["type"]>>([
+  ["scvU32", "u32"],
+  ["scvI32", "i32"],
+  ["scvU64", "u64"],
+  ["scvI64", "i64"],
+  ["scvU128", "u128"],
+  ["scvI128", "i128"],
+  ["scvU256", "u256"],
+  ["scvI256", "i256"],
+  ["scvTimepoint", "timepoint"],
+  ["scvDuration", "duration"],
+  ["scvAddress", "address"],
+  ["scvBytes", "bytes"],
+  ["scvString", "string"],
+  ["scvSymbol", "symbol"],
+]);
+
+const STRINGIFIED_FN_ARG_TYPES = new Set<NonNullable<FnArg["type"]>>([
+  "u32",
+  "i32",
+  "u64",
+  "i64",
+  "u128",
+  "i128",
+  "u256",
+  "i256",
+  "timepoint",
+  "duration",
+  "address",
+]);
+
 export const paramsToAuthEntry = (
-  param: AuthEntryParams
+  param: AuthEntryParams,
 ): xdr.SorobanAuthorizationEntry => {
   const credParams = param.credentials;
 
@@ -157,13 +163,13 @@ export const paramsToAuthEntry = (
         signature: !credParams.signature
           ? xdr.ScVal.scvVoid()
           : xdr.ScVal.fromXdr(credParams.signature, "base64"),
-      })
+      }),
     ),
   });
 };
 
 export const paramsToAuthEntries = (
-  authEntryParams: AuthEntryParams[]
+  authEntryParams: AuthEntryParams[],
 ): xdr.SorobanAuthorizationEntry[] => {
   return authEntryParams.map(paramsToAuthEntry);
 };

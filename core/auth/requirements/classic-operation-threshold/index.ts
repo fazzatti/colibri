@@ -1,8 +1,4 @@
-import {
-  type Operation,
-  type OperationRecord,
-  xdr,
-} from "stellar-sdk";
+import { type Operation, type OperationRecord, xdr } from "stellar-sdk";
 import { muxedAddressToBaseAccount } from "@/address/index.ts";
 import * as E from "@/auth/requirements/classic-operation-threshold/error.ts";
 import { ColibriError } from "@/error/index.ts";
@@ -31,8 +27,87 @@ const setSourceSigner = (
   }
 
   throw ColibriError.unexpected({
-    message: `Invalid source account: '${source}' does not fit the expected format`,
+    message:
+      `Invalid source account: '${source}' does not fit the expected format`,
   });
+};
+
+const LOW_THRESHOLD_OPERATIONS = new Set<string>([
+  xdr.OperationType.allowTrust.name,
+  xdr.OperationType.bumpSequence.name,
+  xdr.OperationType.setTrustLineFlags.name,
+]);
+
+const MEDIUM_THRESHOLD_OPERATIONS = new Set<string>([
+  xdr.OperationType.createAccount.name,
+  xdr.OperationType.payment.name,
+  xdr.OperationType.pathPaymentStrictSend.name,
+  xdr.OperationType.pathPaymentStrictReceive.name,
+  xdr.OperationType.manageSellOffer.name,
+  xdr.OperationType.manageBuyOffer.name,
+  xdr.OperationType.createPassiveSellOffer.name,
+  xdr.OperationType.changeTrust.name,
+  xdr.OperationType.manageData.name,
+  xdr.OperationType.createClaimableBalance.name,
+  xdr.OperationType.claimClaimableBalance.name,
+  xdr.OperationType.beginSponsoringFutureReserves.name,
+  xdr.OperationType.endSponsoringFutureReserves.name,
+  xdr.OperationType.clawback.name,
+  xdr.OperationType.clawbackClaimableBalance.name,
+  xdr.OperationType.liquidityPoolDeposit.name,
+  xdr.OperationType.liquidityPoolWithdraw.name,
+  "revokeAccountSponsorship",
+  "revokeTrustlineSponsorship",
+  "revokeOfferSponsorship",
+  "revokeDataSponsorship",
+  "revokeClaimableBalanceSponsorship",
+  "revokeLiquidityPoolSponsorship",
+  "revokeSignerSponsorship",
+  xdr.OperationType.revokeSponsorship.name,
+]);
+
+const setOptionsRequiresHighThreshold = (
+  operation: Operation.SetOptions,
+): boolean =>
+  Boolean(
+    operation.masterWeight ||
+      operation.signer ||
+      operation.lowThreshold ||
+      operation.medThreshold ||
+      operation.highThreshold,
+  );
+
+const getThresholdLevel = (
+  operation: OperationRecord,
+): OperationThreshold | undefined => {
+  if (LOW_THRESHOLD_OPERATIONS.has(operation.type)) {
+    return OperationThreshold.low;
+  }
+  if (MEDIUM_THRESHOLD_OPERATIONS.has(operation.type)) {
+    return OperationThreshold.medium;
+  }
+  if (operation.type === xdr.OperationType.accountMerge.name) {
+    return OperationThreshold.high;
+  }
+  if (operation.type !== xdr.OperationType.setOptions.name) return;
+
+  return setOptionsRequiresHighThreshold(operation as Operation.SetOptions)
+    ? OperationThreshold.high
+    : OperationThreshold.medium;
+};
+
+const getOperationSigner = (
+  operation: OperationRecord,
+): SignatureRequirementRaw["address"] => {
+  try {
+    return setSourceSigner(operation.source);
+  } catch (error) {
+    throw new E.FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE(
+      operation,
+      operation.source,
+      error as Error,
+    );
+  }
 };
 
 /** Returns the signer threshold required for a classic Stellar operation. */
@@ -40,77 +115,10 @@ export const getRequiredOperationThresholdForClassicOperation = (
   operation: OperationRecord,
 ): SignatureRequirementRaw | void => {
   try {
-    let thresholdLevel = OperationThreshold.medium;
-    let source;
+    const thresholdLevel = getThresholdLevel(operation);
+    if (thresholdLevel === undefined) return;
 
-    switch (operation.type) {
-      case xdr.OperationType.allowTrust.name:
-      case xdr.OperationType.bumpSequence.name:
-      case xdr.OperationType.setTrustLineFlags.name:
-        thresholdLevel = OperationThreshold.low;
-        source = operation.source;
-        break;
-
-      case xdr.OperationType.createAccount.name:
-      case xdr.OperationType.payment.name:
-      case xdr.OperationType.pathPaymentStrictSend.name:
-      case xdr.OperationType.pathPaymentStrictReceive.name:
-      case xdr.OperationType.manageSellOffer.name:
-      case xdr.OperationType.manageBuyOffer.name:
-      case xdr.OperationType.createPassiveSellOffer.name:
-      case xdr.OperationType.changeTrust.name:
-      case xdr.OperationType.manageData.name:
-      case xdr.OperationType.createClaimableBalance.name:
-      case xdr.OperationType.claimClaimableBalance.name:
-      case xdr.OperationType.beginSponsoringFutureReserves.name:
-      case xdr.OperationType.endSponsoringFutureReserves.name:
-      case xdr.OperationType.clawback.name:
-      case xdr.OperationType.clawbackClaimableBalance.name:
-      case xdr.OperationType.liquidityPoolDeposit.name:
-      case xdr.OperationType.liquidityPoolWithdraw.name:
-        source = operation.source;
-        break;
-      case "revokeAccountSponsorship":
-      case "revokeTrustlineSponsorship":
-      case "revokeOfferSponsorship":
-      case "revokeDataSponsorship":
-      case "revokeClaimableBalanceSponsorship":
-      case "revokeLiquidityPoolSponsorship":
-      case "revokeSignerSponsorship":
-      case xdr.OperationType.revokeSponsorship.name:
-        source = operation.source;
-        break;
-      case xdr.OperationType.setOptions.name:
-        if (
-          (operation as Operation.SetOptions).masterWeight ||
-          (operation as Operation.SetOptions).signer ||
-          (operation as Operation.SetOptions).lowThreshold ||
-          (operation as Operation.SetOptions).medThreshold ||
-          (operation as Operation.SetOptions).highThreshold
-        ) {
-          thresholdLevel = OperationThreshold.high;
-        }
-        source = operation.source;
-        break;
-      case xdr.OperationType.accountMerge.name:
-        thresholdLevel = OperationThreshold.high;
-        source = operation.source;
-        break;
-
-      default:
-        return;
-    }
-
-    try {
-      const address = setSourceSigner(source);
-      return { address, thresholdLevel };
-    } catch (e) {
-      throw new E.FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE(
-        operation,
-        source,
-        e as Error,
-      );
-    }
+    return { address: getOperationSigner(operation), thresholdLevel };
   } catch (e) {
     if (e instanceof E.ClassicOperationThresholdError) {
       throw e;

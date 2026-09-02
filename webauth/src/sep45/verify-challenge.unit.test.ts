@@ -463,6 +463,28 @@ describe("SEP-45 challenge verification", () => {
         item.code,
       );
     }
+
+    const values = sep45Arguments(fixture, {
+      client_domain: "wallet.test",
+      client_domain_account: fixture.clientDomain.publicKey(),
+    });
+    const unexpected = sep45Entry(
+      fixture,
+      StrKey.encodeContract(Buffer.alloc(32, 5)),
+      { values },
+    );
+    const challenge = await buildSep45Challenge(fixture, {
+      values,
+      extraEntries: [unexpected],
+    });
+    expectCode(
+      () =>
+        verify(fixture, challenge.xdr, {
+          clientDomain: "wallet.test",
+          clientDomainAccount: fixture.clientDomain.publicKey(),
+        }),
+      Sep45Code.INVALID_ROLE,
+    );
   });
 
   it("verifySep45Challenge verifies server signature and expiration", async () => {

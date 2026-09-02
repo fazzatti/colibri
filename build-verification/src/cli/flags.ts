@@ -281,6 +281,28 @@ export const verificationSourceFromFlags = (
 ): VerificationSource | undefined => {
   const path = getBuildVerificationStringFlag(flags, "source");
   const url = getBuildVerificationStringFlag(flags, "source-url");
+  const github = githubSourceFlags(flags);
+  const groups = [!!path, !!url, github.present].filter(Boolean);
+  if (groups.length > 1) throw new CliSourceSelectionInvalidError();
+  if (github.present) return githubSourceFromFlags(github);
+  if (path) return { type: "path", path };
+  if (url) return { type: "url", url };
+  return undefined;
+};
+
+type GitHubSourceFlags = {
+  owner?: string;
+  repository?: string;
+  revision?: string;
+  tag?: string;
+  asset?: string;
+  format?: string;
+  present: boolean;
+};
+
+const githubSourceFlags = (
+  flags: ParsedBuildVerificationFlags,
+): GitHubSourceFlags => {
   const owner = getBuildVerificationStringFlag(flags, "github-owner");
   const repository = getBuildVerificationStringFlag(
     flags,
@@ -293,25 +315,24 @@ export const verificationSourceFromFlags = (
     "github-release-asset",
   );
   const format = getBuildVerificationStringFlag(flags, "github-format");
-  const hasGitHubFlag = [owner, repository, revision, tag, asset, format].some(
-    Boolean,
-  );
-  const groups = [!!path, !!url, hasGitHubFlag].filter(Boolean);
-  if (groups.length > 1) {
-    throw new CliSourceSelectionInvalidError();
-  }
-  if (!hasGitHubFlag) {
-    if (path) return { type: "path", path };
-    if (url) return { type: "url", url };
-    return undefined;
-  }
-  if (!owner || !repository) {
-    throw new CliGitHubSourceIncompleteError();
-  }
+  return {
+    owner,
+    repository,
+    revision,
+    tag,
+    asset,
+    format,
+    present: [owner, repository, revision, tag, asset, format].some(Boolean),
+  };
+};
+
+const githubSourceFromFlags = (
+  flags: GitHubSourceFlags,
+): VerificationSource => {
+  const { owner, repository, revision, tag, asset, format } = flags;
+  if (!owner || !repository) throw new CliGitHubSourceIncompleteError();
   if (revision) {
-    if (tag || asset) {
-      throw new CliGitHubRevisionConflictError();
-    }
+    if (tag || asset) throw new CliGitHubRevisionConflictError();
     if (format !== undefined && format !== "tar.gz" && format !== "zip") {
       throw new CliGitHubFormatInvalidError(format);
     }
@@ -323,9 +344,7 @@ export const verificationSourceFromFlags = (
       format: format === "zip" ? "zip" : "tarGzip",
     };
   }
-  if (!tag || !asset || format) {
-    throw new CliGitHubReleaseInvalidError();
-  }
+  if (!tag || !asset || format) throw new CliGitHubReleaseInvalidError();
   return { type: "githubReleaseAsset", owner, repository, tag, asset };
 };
 
