@@ -1,11 +1,11 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Buffer } from "buffer";
-import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
+import { Buffer } from "node:buffer";
+import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
 import { EventTemplate } from "@/event/template.ts";
 import type { ContractId } from "@/strkeys/types.ts";
-import { EventType, type EventSchema } from "@/event/types.ts";
+import { type EventSchema, EventType } from "@/event/types.ts";
 
 // Test schema for a simple custom event
 const TestEventSchema = {
@@ -35,10 +35,10 @@ class TestEvent extends EventTemplate<typeof TestEventSchema> {
 function createMockEvent(
   topics: xdr.ScVal[],
   value: xdr.ScVal,
-  contractId?: string
+  contractId?: string,
 ): Event {
-  const contract =
-    contractId ?? "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+  const contract = contractId ??
+    "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
   return new Event({
     id: "0000000000000000000-0000000000",
@@ -60,7 +60,7 @@ describe("Event", () => {
     it("should create an Event from valid args", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("transfer")],
-        xdr.ScVal.scvU32(100)
+        xdr.ScVal.scvU32(100),
       );
 
       assertExists(event);
@@ -104,7 +104,7 @@ describe("Event", () => {
             value: xdr.ScVal.scvU32(100),
           }),
         Error,
-        "Invalid event: contractId is not a valid ContractId"
+        "Invalid event: contractId is not a valid ContractId",
       );
     });
 
@@ -126,7 +126,7 @@ describe("Event", () => {
             value: xdr.ScVal.scvU32(100),
           }),
         Error,
-        "Invalid event: id is not a valid EventId"
+        "Invalid event: id is not a valid EventId",
       );
     });
   });
@@ -140,7 +140,7 @@ describe("Event", () => {
           new Address(userAddress).toScVal(),
           xdr.ScVal.scvU32(42),
         ],
-        xdr.ScVal.scvVoid()
+        xdr.ScVal.scvVoid(),
       );
 
       const topics = event.topics;
@@ -151,7 +151,15 @@ describe("Event", () => {
       assertEquals(topics[2], 42);
     });
 
-    it("normalizes xdr-like topic inputs before parsing", () => {
+    it("parses canonical SDK values decoded from base64 XDR", () => {
+      const normalizedTopic = xdr.ScVal.fromXdr(
+        xdr.ScVal.scvSymbol("normalized").toXdr("base64"),
+        "base64",
+      );
+      const normalizedValue = xdr.ScVal.fromXdr(
+        xdr.ScVal.scvU32(7).toXdr("base64"),
+        "base64",
+      );
       const event = new Event({
         id: "0000000000000000000-0000000000",
         type: EventType.Contract,
@@ -161,21 +169,21 @@ describe("Event", () => {
         operationIndex: 0,
         inSuccessfulContractCall: true,
         txHash: "abc123",
-        topic: [{
-          toXDR: () => xdr.ScVal.scvSymbol("normalized").toXDR("base64"),
-        }],
-        value: {
-          toXDR: () => xdr.ScVal.scvU32(7).toXDR("base64"),
-        },
+        topic: [normalizedTopic],
+        value: normalizedValue,
       });
 
       assertEquals(event.topics, ["normalized"]);
       assertEquals(event.value, 7);
     });
 
-    it("normalizes xdr-like topic inputs when they return raw bytes", () => {
-      const normalizedTopic = xdr.ScVal.scvSymbol("bytes-normalized");
-      const normalizedValue = xdr.ScVal.scvU32(9);
+    it("parses canonical SDK values decoded from raw XDR", () => {
+      const normalizedTopic = xdr.ScVal.fromXdr(
+        xdr.ScVal.scvSymbol("bytes-normalized").toXdr(),
+      );
+      const normalizedValue = xdr.ScVal.fromXdr(
+        xdr.ScVal.scvU32(9).toXdr(),
+      );
       const event = new Event({
         id: "0000000000000000000-0000000000",
         type: EventType.Contract,
@@ -185,12 +193,8 @@ describe("Event", () => {
         operationIndex: 0,
         inSuccessfulContractCall: true,
         txHash: "abc123",
-        topic: [{
-          toXDR: () => normalizedTopic.toXDR(),
-        }],
-        value: {
-          toXDR: () => normalizedValue.toXDR(),
-        },
+        topic: [normalizedTopic],
+        value: normalizedValue,
       });
 
       assertEquals(event.topics, ["bytes-normalized"]);
@@ -202,7 +206,7 @@ describe("Event", () => {
     it("should parse scvalValue to ScValParsed", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("test")],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(event.value, 1000000n);
@@ -216,7 +220,7 @@ describe("Event", () => {
             key: xdr.ScVal.scvSymbol("amount"),
             val: xdr.ScVal.scvU32(100),
           }),
-        ])
+        ]),
       );
 
       const value = event.value as Record<string, unknown>;
@@ -251,7 +255,7 @@ describe("Event", () => {
       assertEquals(event.type, EventType.Contract);
       assertEquals(
         event.contractId,
-        "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+        "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
       );
     });
 
@@ -295,7 +299,7 @@ describe("Event", () => {
       assertThrows(
         () => Event.fromEventResponse(response),
         Error,
-        "Unknown event type: unknown_type"
+        "Unknown event type: unknown_type",
       );
     });
 
@@ -321,7 +325,7 @@ describe("Event", () => {
       assertThrows(
         () => Event.fromEventResponse(response),
         Error,
-        "Invalid event: contractId is not a valid ContractId"
+        "Invalid event: contractId is not a valid ContractId",
       );
     });
 
@@ -358,7 +362,7 @@ describe("EventTemplate", () => {
           new Address(userAddress).toScVal(),
           xdr.ScVal.scvBool(true),
         ],
-        xdr.ScVal.scvU32(42)
+        xdr.ScVal.scvU32(42),
       );
 
       assertEquals(TestEvent.is(event), true);
@@ -372,7 +376,7 @@ describe("EventTemplate", () => {
           new Address(userAddress).toScVal(),
           xdr.ScVal.scvBool(true),
         ],
-        xdr.ScVal.scvU32(42)
+        xdr.ScVal.scvU32(42),
       );
 
       assertEquals(TestEvent.is(event), false);
@@ -381,7 +385,7 @@ describe("EventTemplate", () => {
     it("should return false for wrong topic count", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("test_event")],
-        xdr.ScVal.scvU32(42)
+        xdr.ScVal.scvU32(42),
       );
 
       assertEquals(TestEvent.is(event), false);
@@ -394,7 +398,7 @@ describe("EventTemplate", () => {
           xdr.ScVal.scvU32(123), // should be address
           xdr.ScVal.scvBool(true),
         ],
-        xdr.ScVal.scvU32(42)
+        xdr.ScVal.scvU32(42),
       );
 
       assertEquals(TestEvent.is(event), false);
@@ -408,7 +412,7 @@ describe("EventTemplate", () => {
           new Address(userAddress).toScVal(),
           xdr.ScVal.scvBool(true),
         ],
-        xdr.ScVal.scvString("wrong") // should be u32
+        xdr.ScVal.scvString("wrong"), // should be u32
       );
 
       assertEquals(TestEvent.is(event), false);
@@ -424,7 +428,7 @@ describe("EventTemplate", () => {
           new Address(userAddress).toScVal(),
           xdr.ScVal.scvBool(true),
         ],
-        xdr.ScVal.scvU32(42)
+        xdr.ScVal.scvU32(42),
       );
 
       const testEvent = TestEvent.fromEvent(event);
@@ -438,13 +442,13 @@ describe("EventTemplate", () => {
     it("should throw for non-matching event", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("wrong_event")],
-        xdr.ScVal.scvU32(42)
+        xdr.ScVal.scvU32(42),
       );
 
       assertThrows(
         () => TestEvent.fromEvent(event),
         Error,
-        "does not match test_event schema"
+        "does not match test_event schema",
       );
     });
   });
@@ -458,7 +462,7 @@ describe("EventTemplate", () => {
           new Address(userAddress).toScVal(),
           xdr.ScVal.scvBool(true),
         ],
-        xdr.ScVal.scvU32(42)
+        xdr.ScVal.scvU32(42),
       );
 
       const testEvent = TestEvent.tryFromEvent(event);
@@ -470,7 +474,7 @@ describe("EventTemplate", () => {
     it("should return undefined for non-matching event", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("wrong_event")],
-        xdr.ScVal.scvU32(42)
+        xdr.ScVal.scvU32(42),
       );
 
       const result = TestEvent.tryFromEvent(event);
@@ -488,7 +492,7 @@ describe("EventTemplate", () => {
           new Address(userAddress).toScVal(),
           xdr.ScVal.scvBool(false),
         ],
-        xdr.ScVal.scvU32(99)
+        xdr.ScVal.scvU32(99),
       );
 
       const testEvent = TestEvent.fromEvent(event);
@@ -505,7 +509,7 @@ describe("EventTemplate", () => {
           new Address(userAddress).toScVal(),
           xdr.ScVal.scvBool(true),
         ],
-        xdr.ScVal.scvU32(12345)
+        xdr.ScVal.scvU32(12345),
       );
 
       const testEvent = TestEvent.fromEvent(event);
@@ -519,7 +523,7 @@ describe("EventTemplate", () => {
       const filter = TestEvent.toTopicFilter({});
 
       assertEquals(filter.length, 3);
-      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals(filter[1], "*"); // wildcard
       assertEquals(filter[2], "*"); // wildcard
     });
@@ -529,8 +533,8 @@ describe("EventTemplate", () => {
       const filter = TestEvent.toTopicFilter({ user: userAddress });
 
       assertEquals(filter.length, 3);
-      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
-      assertEquals((filter[1] as xdr.ScVal).switch().name, "scvAddress");
+      assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
+      assertEquals((filter[1] as xdr.ScVal).type, "scvAddress");
       assertEquals(filter[2], "*"); // wildcard
     });
 
@@ -538,9 +542,9 @@ describe("EventTemplate", () => {
       const filter = TestEvent.toTopicFilter({ flag: true });
 
       assertEquals(filter.length, 3);
-      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals(filter[1], "*"); // wildcard
-      assertEquals((filter[2] as xdr.ScVal).switch().name, "scvBool");
+      assertEquals((filter[2] as xdr.ScVal).type, "scvBool");
     });
 
     it("should create filter with all fields specified", () => {
@@ -551,9 +555,9 @@ describe("EventTemplate", () => {
       });
 
       assertEquals(filter.length, 3);
-      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
-      assertEquals((filter[1] as xdr.ScVal).switch().name, "scvAddress");
-      assertEquals((filter[2] as xdr.ScVal).switch().name, "scvBool");
+      assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
+      assertEquals((filter[1] as xdr.ScVal).type, "scvAddress");
+      assertEquals((filter[2] as xdr.ScVal).type, "scvBool");
     });
   });
 });
@@ -581,7 +585,7 @@ describe("EventTemplate with bigint value", () => {
     const senderAddress = Keypair.random().publicKey();
     const event = createMockEvent(
       [xdr.ScVal.scvSymbol("big_event"), new Address(senderAddress).toScVal()],
-      nativeToScVal(9999999999999n, { type: "i128" })
+      nativeToScVal(9999999999999n, { type: "i128" }),
     );
 
     assertEquals(BigIntEvent.is(event), true);
@@ -594,7 +598,7 @@ describe("EventTemplate with bigint value", () => {
     const senderAddress = Keypair.random().publicKey();
     const event = createMockEvent(
       [xdr.ScVal.scvSymbol("big_event"), new Address(senderAddress).toScVal()],
-      xdr.ScVal.scvU32(100) // wrong - should be i128
+      xdr.ScVal.scvU32(100), // wrong - should be i128
     );
 
     assertEquals(BigIntEvent.is(event), false);
@@ -620,7 +624,7 @@ describe("EventTemplate with bytes value", () => {
   it("should validate bytes value type", () => {
     const event = createMockEvent(
       [xdr.ScVal.scvSymbol("bytes_event")],
-      xdr.ScVal.scvBytes(Buffer.from([1, 2, 3, 4, 5]))
+      xdr.ScVal.scvBytes(Buffer.from([1, 2, 3, 4, 5])),
     );
 
     assertEquals(BytesEvent.is(event), true);

@@ -1,6 +1,6 @@
 import { assert, assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Asset, Keypair, xdr } from "stellar-sdk";
+import { Asset, Keypair } from "stellar-sdk";
 import { NativeAccount } from "@/account/native/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
@@ -27,7 +27,7 @@ describe("NativeAccount", () => {
     it("throws on invalid Ed25519 public key", () => {
       assertThrows(
         () => NativeAccount.fromAddress(INVALID_ADDRESS as Ed25519PublicKey),
-        E.UNSUPPORTED_ADDRESS_TYPE
+        E.UNSUPPORTED_ADDRESS_TYPE,
       );
     });
 
@@ -37,7 +37,7 @@ describe("NativeAccount", () => {
 
       assertThrows(
         () => NativeAccount.fromAddress(muxedAddr),
-        E.UNSUPPORTED_ADDRESS_TYPE
+        E.UNSUPPORTED_ADDRESS_TYPE,
       );
     });
   });
@@ -53,7 +53,7 @@ describe("NativeAccount", () => {
     it("throws on invalid Ed25519 public key", () => {
       assertThrows(
         () => NativeAccount.fromPublicKey(INVALID_ADDRESS as Ed25519PublicKey),
-        E.INVALID_ED25519_PUBLIC_KEY
+        E.INVALID_ED25519_PUBLIC_KEY,
       );
     });
   });
@@ -89,7 +89,7 @@ describe("NativeAccount", () => {
 
       assertThrows(
         () => account.muxedAddress("not-a-number" as MuxedId),
-        E.INVALID_MUXED_ID
+        E.INVALID_MUXED_ID,
       );
     });
 
@@ -98,7 +98,7 @@ describe("NativeAccount", () => {
 
       assertThrows(
         () => account.muxedAddress("-123" as MuxedId),
-        E.INVALID_MUXED_ID
+        E.INVALID_MUXED_ID,
       );
     });
 
@@ -115,12 +115,13 @@ describe("NativeAccount", () => {
       const account = NativeAccount.fromAddress(TEST_ADDRESS);
       const ledgerKey = account.getAccountLedgerKey();
 
-      assertEquals(ledgerKey.switch(), xdr.LedgerEntryType.account());
+      assertEquals(ledgerKey.type, "account");
 
-      const accountId = ledgerKey.account()?.accountId();
-      const expectedPublicKey =
-        Keypair.fromPublicKey(TEST_ADDRESS).xdrPublicKey();
-      assertEquals(accountId?.toXDR(), expectedPublicKey.toXDR());
+      assertExists(ledgerKey.account);
+      const accountId = ledgerKey.account.accountId;
+      const expectedPublicKey = Keypair.fromPublicKey(TEST_ADDRESS)
+        .xdrPublicKey();
+      assertEquals(accountId?.toXdr(), expectedPublicKey.toXdr());
     });
   });
 
@@ -131,12 +132,13 @@ describe("NativeAccount", () => {
       const asset = new Asset("USD", issuer);
       const ledgerKey = account.getTrustlineLedgerKey(asset);
 
-      assertEquals(ledgerKey.switch(), xdr.LedgerEntryType.trustline());
+      assertEquals(ledgerKey.type, "trustline");
 
-      const accountId = ledgerKey.trustLine()?.accountId();
-      const expectedAccountId =
-        Keypair.fromPublicKey(TEST_ADDRESS).xdrAccountId();
-      assertEquals(accountId?.toXDR(), expectedAccountId.toXDR());
+      assertExists(ledgerKey.trustLine);
+      const accountId = ledgerKey.trustLine.accountId;
+      const expectedAccountId = Keypair.fromPublicKey(TEST_ADDRESS)
+        .xdrAccountId();
+      assertEquals(accountId?.toXdr(), expectedAccountId.toXdr());
     });
 
     it("generates different keys for different assets", () => {
@@ -148,7 +150,7 @@ describe("NativeAccount", () => {
       const key1 = account.getTrustlineLedgerKey(asset1);
       const key2 = account.getTrustlineLedgerKey(asset2);
 
-      assert(key1.toXDR().toString() !== key2.toXDR().toString());
+      assert(key1.toXdr().toString() !== key2.toXdr().toString());
     });
   });
 
@@ -167,7 +169,7 @@ describe("NativeAccount", () => {
   describe("signer", () => {
     it("throws when no signer is attached", () => {
       const account = NativeAccount.fromAddress(
-        TEST_ADDRESS
+        TEST_ADDRESS,
       ) as unknown as WithSigner<NativeAccount>;
 
       assertThrows(() => account.signer(), E.MISSING_MASTER_SIGNER);
@@ -187,7 +189,7 @@ describe("NativeAccount", () => {
       // Only signer() should throw
       assertThrows(
         () => (account as WithSigner<NativeAccount>).signer(),
-        E.MISSING_MASTER_SIGNER
+        E.MISSING_MASTER_SIGNER,
       );
     });
   });

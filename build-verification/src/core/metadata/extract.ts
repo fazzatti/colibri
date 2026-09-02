@@ -1,4 +1,3 @@
-import { Buffer } from "node:buffer";
 import { xdr } from "stellar-sdk";
 import {
   InvalidTargetWasmError,
@@ -10,70 +9,15 @@ import type {
   ExtractedContractMetadata,
 } from "@/core/metadata/types.ts";
 
-type XdrReaderLike = {
-  readonly eof: boolean;
-  read(size: number): Buffer;
-  readInt32BE(): number;
-  readUInt32BE(): number;
-};
-
-class MetadataXdrReader implements XdrReaderLike {
-  #offset = 0;
-  readonly #bytes: Buffer;
-
-  constructor(bytes: Uint8Array) {
-    this.#bytes = Buffer.from(bytes);
-  }
-
-  get eof(): boolean {
-    return this.#offset === this.#bytes.length;
-  }
-
-  #advance(size: number): number {
-    const from = this.#offset;
-    this.#offset += size;
-    if (this.#offset > this.#bytes.length) {
-      throw new RangeError("XDR value exceeds metadata section boundary");
-    }
-    const padding = 4 - (size % 4 || 4);
-    for (let index = 0; index < padding; index += 1) {
-      if (this.#bytes[this.#offset + index] !== 0) {
-        throw new RangeError("XDR metadata contains invalid padding");
-      }
-    }
-    this.#offset += padding;
-    return from;
-  }
-
-  read(size: number): Buffer {
-    const from = this.#advance(size);
-    return this.#bytes.subarray(from, from + size);
-  }
-
-  readInt32BE(): number {
-    return this.#bytes.readInt32BE(this.#advance(4));
-  }
-
-  readUInt32BE(): number {
-    return this.#bytes.readUInt32BE(this.#advance(4));
-  }
-}
-
 const decodeMetadataSection = (
   bytes: Uint8Array,
   section: number,
 ): ContractMetadataEntry[] => {
-  const reader = new MetadataXdrReader(bytes);
-  const entries: ContractMetadataEntry[] = [];
   try {
-    while (!reader.eof) {
-      const entry = xdr.ScMetaEntry.read(reader as never);
-      entries.push({
-        key: entry.value().key().toString(),
-        value: entry.value().val().toString(),
-      });
-    }
-    return entries;
+    return xdr.decodeStream(xdr.ScMetaEntry, bytes).map((entry) => ({
+      key: entry.v0.key.toString(),
+      value: entry.v0.val.toString(),
+    }));
   } catch (cause) {
     throw new MetadataDecodingFailedError(section, cause);
   }

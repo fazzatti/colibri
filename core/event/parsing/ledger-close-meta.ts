@@ -12,15 +12,15 @@ import { isDefined } from "@/common/type-guards/is-defined.ts";
 /** Returns `true` when the metadata payload is version 1. */
 export const isLedgerCloseMetaV1 = (
   metadataXdr: xdr.LedgerCloseMeta,
-): boolean => {
-  return metadataXdr.switch() === 1;
+): metadataXdr is xdr.LedgerCloseMetaV1Arm => {
+  return metadataXdr.type === "v1";
 };
 
 /** Returns `true` when the metadata payload is version 2. */
 export const isLedgerCloseMetaV2 = (
   metadataXdr: xdr.LedgerCloseMeta,
-): boolean => {
-  return metadataXdr.switch() === 2;
+): metadataXdr is xdr.LedgerCloseMetaV2Arm => {
+  return metadataXdr.type === "v2";
 };
 
 /** Parses contract events from a ledger-close metadata payload. */
@@ -30,7 +30,7 @@ export const parseEventsFromLedgerCloseMeta = async (
   filters?: EventFilter[],
 ): Promise<void> => {
   assert(
-    xdr.LedgerCloseMeta.isValid(metadataXdr),
+    xdr.LedgerCloseMeta.is(metadataXdr),
     new E.INVALID_LEDGER_CLOSE_META_XDR(),
   );
 
@@ -40,49 +40,54 @@ export const parseEventsFromLedgerCloseMeta = async (
     | undefined;
 
   if (isLedgerCloseMetaV1(metadataXdr)) {
-    ledgerCloseMeta = metadataXdr.v1();
+    ledgerCloseMeta = metadataXdr.v1;
   }
 
   if (isLedgerCloseMetaV2(metadataXdr)) {
-    ledgerCloseMeta = metadataXdr.v2();
+    ledgerCloseMeta = metadataXdr.v2;
   }
 
   assert(
     isDefined(ledgerCloseMeta),
-    new E.UNSUPPORTED_LEDGER_CLOSE_META_VERSION(metadataXdr.switch()),
+    new E.UNSUPPORTED_LEDGER_CLOSE_META_VERSION(
+      metadataXdr.toXdrObject().v,
+    ),
   );
 
-  const ledgerSequence = ledgerCloseMeta.ledgerHeader().header().ledgerSeq();
+  const ledgerSequence = ledgerCloseMeta.ledgerHeader.header.ledgerSeq;
   const ledgerClosedAt = ledgerCloseMeta
-    .ledgerHeader()
-    .header()
-    .scpValue()
-    .closeTime()
+    .ledgerHeader
+    .header
+    .scpValue
+    .closeTime
     .toString();
   let transactionIndex = 0;
 
-  for (const txProcessing of ledgerCloseMeta.txProcessing()) {
+  for (const txProcessing of ledgerCloseMeta.txProcessing) {
     transactionIndex++;
 
-    const operations = txProcessing.txApplyProcessing().v4().operations();
-    const txHash = txProcessing.result().transactionHash().toString("hex");
+    const transactionMeta = txProcessing.txApplyProcessing;
+    if (transactionMeta.type !== "v4") {
+      throw new E.UNSUPPORTED_TRANSACTION_META_VERSION(transactionMeta.type);
+    }
+    const operations = transactionMeta.v4.operations;
+    const txHash = txProcessing.result.transactionHash.toString();
     const inSuccessfulContractCall =
-      txProcessing.result().result().result().switch().name ===
-      xdr.TransactionResultCode.txSuccess().name;
+      txProcessing.result.result.result.type === "txSuccess";
     let operationIndex = 0;
 
     for (const op of operations) {
       operationIndex++;
       let eventIndex = 0;
 
-      for (const event of op.events()) {
+      for (const event of op.events) {
         eventIndex++;
 
-        const topic = event.body().v0().topics();
-        const value = event.body().v0().data();
-        const type = event.type().name;
+        const topic = event.body.v0.topics;
+        const value = event.body.v0.data;
+        const type = event.type.name;
 
-        const contractIdXdr = event.contractId();
+        const contractIdXdr = event.contractId;
 
         const contractId =
           contractIdXdr !== null

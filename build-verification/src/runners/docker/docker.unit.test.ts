@@ -180,6 +180,10 @@ describe("Docker runner", () => {
       port: 2375,
     });
     assertEquals(typeof resolveDockerOptions(), "object");
+    assert(
+      new DockerBuildRunner({ dockerSocketPath: "/socket" }) instanceof
+        DockerBuildRunner,
+    );
   });
 
   it("rejects ambiguous or invalid Docker settings", () => {
@@ -283,6 +287,14 @@ describe("Docker runner", () => {
     assertThrows(
       () =>
         demultiplexDockerLogs(Buffer.from(frame(1, "out").subarray(0, 9)), 100),
+      BuildLogCollectionFailedError,
+    );
+    assertThrows(
+      () =>
+        demultiplexDockerLogs(
+          Buffer.concat([Buffer.from(frame(1, "out")), Buffer.from([1])]),
+          100,
+        ),
       BuildLogCollectionFailedError,
     );
     assertEquals(

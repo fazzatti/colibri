@@ -44,8 +44,8 @@ export const ContractAuth: {
         context.validUntilLedgerSeq,
         context.networkPassphrase,
       );
-      return xdr.SorobanAuthorizationEntry.fromXDR(
-        (signed as xdr.SorobanAuthorizationEntry).toXDR(),
+      return xdr.SorobanAuthorizationEntry.fromXdr(
+        (signed as xdr.SorobanAuthorizationEntry).toXdr(),
       );
     };
   },

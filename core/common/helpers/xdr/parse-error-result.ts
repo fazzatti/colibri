@@ -14,26 +14,22 @@ export const parseErrorResult = (
 ): string[] | null => {
   if (!errorResult) return null;
 
-  if (
-    errorResult.result &&
-    errorResult.result().switch &&
-    errorResult.result().switch().name
-  ) {
-    return [errorResult.result().switch().name];
+  const result = errorResult.result as unknown as {
+    type?: string;
+    results?: { toString(): string }[];
+  };
+
+  if (result?.type) {
+    return [result.type];
   }
 
-  if (
-    errorResult.result &&
-    errorResult.result().results &&
-    errorResult.result().results().flatMap
-  ) {
-    return errorResult
-      .result()
-      .results()
-      .flatMap((r) => r.toString());
+  if (result?.results && Array.isArray(result.results)) {
+    return result.results.flatMap((operationResult) =>
+      operationResult.toString()
+    );
   }
 
   throw new FAILED_TO_PARSE_ERROR_RESULT(
-    softTryToXDR(() => errorResult.toXDR("base64"))
+    softTryToXDR(() => errorResult.toXdr("base64"))
   );
 };

@@ -145,8 +145,8 @@ describe("FeeBump Plugin", () => {
       assertEquals(
         (
           interceptedInput.transaction as FeeBumpTransaction
-        ).innerTransaction.toXDR(),
-        mockTransaction.toXDR(),
+        ).innerTransaction.toXdr(),
+        mockTransaction.toXdr(),
       );
     });
 

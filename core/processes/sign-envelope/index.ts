@@ -147,7 +147,7 @@ export const signEnvelope = async (
       }
 
       try {
-        signedTransaction = TransactionBuilder.fromXDR(
+        signedTransaction = TransactionBuilder.fromXdr(
           signedTransactionXdr,
           passphrase,
         ) as typeof transaction;

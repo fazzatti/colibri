@@ -5,7 +5,7 @@ import {
   assertNotEquals,
   assertThrows,
 } from "@std/assert";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { describe, it } from "@std/testing/bdd";
 import {
   Account,
@@ -312,14 +312,15 @@ describe("LocalSigner", () => {
   });
 
   describe("sign (raw data)", () => {
-    it("signs raw data and returns a Buffer", () => {
+    it("signs raw data and returns Uint8Array bytes", () => {
       const signer = LocalSigner.fromSecret(TEST_SECRET);
       const data = Buffer.from("test message to sign");
 
       const signature = signer.sign(data);
 
       assertExists(signature);
-      assert(Buffer.isBuffer(signature));
+      assert(signature instanceof Uint8Array);
+      assertEquals(Buffer.isBuffer(signature), false);
       assertEquals(signature.length, 64); // Ed25519 signatures are 64 bytes
     });
 

@@ -86,7 +86,7 @@ describe("assembleTransaction fee strategies", () => {
     assertEquals(transaction.fee, "105");
     assertEquals(getTransactionInclusionFee(transaction), 100n);
     assertEquals(getTransactionResourceFee(transaction), 5n);
-    assertEquals(sorobanData.build().resourceFee().toBigInt(), 3n);
+    assertEquals(sorobanData.build().resourceFee, 3n);
   });
 
   it("applies a resource-fee override when Soroban data is omitted", async () => {

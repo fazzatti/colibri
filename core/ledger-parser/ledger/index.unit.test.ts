@@ -3,7 +3,7 @@
  * @description Unit tests for Ledger class
  */
 
-import { describe, it, beforeAll } from "@std/testing/bdd";
+import { beforeAll, describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { Ledger } from "@/ledger-parser/ledger/index.ts";
 import {
@@ -12,12 +12,13 @@ import {
   loadV2Fixtures,
 } from "colibri-internal/tests/fixtures/rpc/get_ledgers/index.ts";
 import {
-  INVALID_LEDGER_ENTRY,
   INVALID_HEADER_XDR,
+  INVALID_LEDGER_ENTRY,
   INVALID_METADATA_XDR,
   UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
 } from "@/ledger-parser/error.ts";
-import type { rpc } from "stellar-sdk";
+import { type rpc, xdr } from "stellar-sdk";
+import { CAP83_EMPTY_TX_SET_LEDGER_CLOSE_META_RECORD_BASE64 } from "colibri-internal/tests/fixtures/cap83-empty-tx-set.ts";
 
 describe("Ledger", () => {
   let fixtures: rpc.Api.RawLedgerResponse[];
@@ -44,7 +45,7 @@ describe("Ledger", () => {
 
       // deno-lint-ignore no-explicit-any
       expect(() => Ledger.fromEntry(invalidEntry as any)).toThrow(
-        INVALID_LEDGER_ENTRY
+        INVALID_LEDGER_ENTRY,
       );
     });
 
@@ -53,7 +54,7 @@ describe("Ledger", () => {
 
       // deno-lint-ignore no-explicit-any
       expect(() => Ledger.fromEntry(invalidEntry as any)).toThrow(
-        INVALID_LEDGER_ENTRY
+        INVALID_LEDGER_ENTRY,
       );
     });
 
@@ -62,7 +63,7 @@ describe("Ledger", () => {
 
       // deno-lint-ignore no-explicit-any
       expect(() => Ledger.fromEntry(invalidEntry as any)).toThrow(
-        INVALID_LEDGER_ENTRY
+        INVALID_LEDGER_ENTRY,
       );
     });
   });
@@ -321,28 +322,26 @@ describe("Ledger", () => {
       // Mock the meta property to return a fake version
       Object.defineProperty(ledger, "meta", {
         get: () => ({
-          switch: () => 99, // Unsupported version
+          type: "v99", // Unsupported version
         }),
         configurable: true,
       });
 
       expect(() => ledger.version).toThrow(
-        UNSUPPORTED_LEDGER_CLOSE_META_VERSION
+        UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
       );
     });
 
     it("should throw UNSUPPORTED_LEDGER_CLOSE_META_VERSION for unknown version in transactions getter", () => {
-      // Create a mock that returns an unsupported version
       const ledger = Ledger.fromEntry(ledgerEntry);
 
-      // Mock the version property to return an unknown value
-      Object.defineProperty(ledger, "version", {
-        get: () => "v99" as "v0" | "v1" | "v2",
+      Object.defineProperty(ledger, "meta", {
+        get: () => ({ type: "v99" }),
         configurable: true,
       });
 
       expect(() => ledger.transactions).toThrow(
-        UNSUPPORTED_LEDGER_CLOSE_META_VERSION
+        UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
       );
     });
 
@@ -399,16 +398,17 @@ describe("Ledger", () => {
       const originalMeta = ledger.meta;
       Object.defineProperty(ledger, "meta", {
         get: () => {
-          const v0 = originalMeta.v0();
+          if (originalMeta.type !== "v0") {
+            throw new Error("Expected v0 ledger metadata");
+          }
+          const v0 = originalMeta.v0;
           return {
-            switch: () => 0,
-            v0: () => ({
+            type: "v0",
+            v0: {
               ...v0,
-              txSet: () => ({
-                txes: () => [], // Empty envelopes
-              }),
-              txProcessing: () => v0.txProcessing(),
-            }),
+              txSet: { ...v0.txSet, txs: [] },
+              txProcessing: v0.txProcessing,
+            },
           };
         },
         configurable: true,
@@ -425,54 +425,58 @@ describe("Ledger", () => {
       }
     });
 
-    it("should handle phase.switch().name fallback for arm detection", () => {
-      // This tests line 275: the ?? fallback when arm() is not available
+    it("should handle canonical phase type discriminators", () => {
       const multiFixtures = loadMultiVersionFixtures();
       const ledger = Ledger.fromEntry(multiFixtures.lcm_v2);
 
-      // Mock the extractEnvelopesFromGeneralizedTxSet to test the fallback path
-      // Create a phase that has no arm() method, forcing use of switch().name
-      // deno-lint-ignore no-explicit-any
-      const originalExtract = (ledger as any)
-        .extractEnvelopesFromGeneralizedTxSet;
-
-      // deno-lint-ignore no-explicit-any
-      (ledger as any).extractEnvelopesFromGeneralizedTxSet = function (
-        // deno-lint-ignore no-explicit-any
-        txSet: any
-      ) {
-        const txSetV1 = txSet.v1TxSet();
-        const phases = txSetV1.phases();
-
-        // Wrap phases to remove arm() method
-        const wrappedPhases = phases.map(
-          // deno-lint-ignore no-explicit-any
-          (phase: any) => ({
-            // Remove arm(), keep switch()
-            switch: phase.switch.bind(phase),
-            v0Components: phase.v0Components?.bind(phase),
-            parallelTxsComponent: phase.parallelTxsComponent?.bind(phase),
-          })
-        );
-
-        // Create mock txSet with wrapped phases
-        const mockTxSet = {
-          v1TxSet: () => ({
-            phases: () => wrappedPhases,
-          }),
-        };
-
-        // Call original with mock
-        return originalExtract.call(this, mockTxSet);
-      };
-
-      // Clear memoized transactions
-      // deno-lint-ignore no-explicit-any
-      delete (ledger as any)._transactions;
-
-      // Should still work using switch().name fallback
       const transactions = ledger.transactions;
       expect(transactions.length).toBeGreaterThan(0);
+    });
+
+    it("treats the canonical CAP-83 value as a valid empty ledger", () => {
+      const record = xdr.decodeBytes(
+        CAP83_EMPTY_TX_SET_LEDGER_CLOSE_META_RECORD_BASE64,
+        "base64",
+      );
+      const marker = new DataView(
+        record.buffer,
+        record.byteOffset,
+        4,
+      ).getUint32(0);
+      expect(marker >>> 31).toBe(1);
+      expect(marker & 0x7fff_ffff).toBe(record.length - 4);
+
+      const meta = xdr.LedgerCloseMeta.fromXdr(record.subarray(4));
+      expect(meta.type).toBe("v2");
+      if (meta.type !== "v2") {
+        throw new Error("Expected the CAP-83 v2 ledger fixture");
+      }
+      const headerEntry = meta.v2.ledgerHeader;
+      expect(headerEntry.header.scpValue.ext.type).toBe(
+        "stellarValueEmptyTxSet",
+      );
+      expect(headerEntry.header.scpValue.txSetHash.toString()).toBe(
+        "0".repeat(64),
+      );
+
+      const ledger = Ledger.fromEntry({
+        sequence: headerEntry.header.ledgerSeq,
+        hash: headerEntry.hash.toString(),
+        ledgerCloseTime: headerEntry.header.scpValue.closeTime.toString(),
+        headerXdr: headerEntry.toXdr("base64"),
+        metadataXdr: meta.toXdr("base64"),
+      });
+
+      expect(ledger.version).toBe("v2");
+      expect(ledger.protocolVersion).toBe(27);
+      expect(ledger.sequence).toBe(5);
+      expect(ledger.closedAt.toISOString()).toBe(
+        "1970-01-01T00:00:15.000Z",
+      );
+      expect(ledger.transactions).toEqual([]);
+      expect(ledger.transactionCount).toBe(0);
+      expect(ledger.getTransaction(0)).toBeUndefined();
+      expect(ledger.toJSON().transactionCount).toBe(0);
     });
   });
 });

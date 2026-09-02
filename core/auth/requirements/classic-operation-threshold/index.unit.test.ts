@@ -23,7 +23,7 @@ import {
 } from "@/signer/types.ts";
 
 const helperGetOpObj = (op: xdr.Operation) => {
-  return Operation.fromXDRObject(op);
+  return Operation.fromXdrObject(op);
 };
 
 describe("Auth classic operation threshold", () => {

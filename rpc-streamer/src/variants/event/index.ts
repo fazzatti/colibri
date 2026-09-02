@@ -18,7 +18,7 @@ import type {
   DataHandler,
   LiveIngestionResult,
 } from "@/types.ts";
-import type { EventStreamerConfig } from "./types.ts";
+import type { EventStreamerConfig } from "@/variants/event/types.ts";
 
 /**
  * Creates the live ingestion function for events.

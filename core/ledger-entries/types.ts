@@ -1,5 +1,7 @@
+import type { xdr } from "stellar-sdk";
 import type {
   BinaryData,
+  ExternalExecutableRef,
   LedgerKeyLike,
   ScValLike,
   TrustlineAssetLike,
@@ -157,10 +159,23 @@ export type ContractCodeLookupArgs =
   };
 
 /**
+ * Arguments accepted when resolving the executable used by a contract.
+ */
+export type ResolveContractExecutableArgs =
+  | {
+    contractId: ContractId;
+    externalRef?: never;
+  }
+  | {
+    contractId?: never;
+    externalRef: ExternalExecutableRef;
+  };
+
+/**
  * Minimal XDR union surface preserved on decoded ledger entries.
  */
 export type LedgerEntryValueXdr = XdrSerializable & {
-  switch(): { name: string; value: number };
+  readonly type: string;
 };
 
 /**
@@ -347,6 +362,49 @@ export type ContractExecutableView =
   }
   | {
     type: "stellarAsset";
+  }
+  | {
+    type: "externalRef";
+    executableOwner: string;
+    tag: Uint8Array;
+  };
+
+/** Ledger observation attached to one executable-resolution lookup. */
+export type ContractExecutableLedgerObservation = {
+  /** Ledger sequence reported by RPC when the lookup was performed. */
+  observedAtLedger: number;
+  /** Ledger that last modified the observed entry, when RPC provides it. */
+  lastModifiedLedgerSeq?: number;
+};
+
+/**
+ * Exact executable and resolution facts observed from Stellar ledger entries.
+ *
+ * External references retain both their owner-scoped tag and the Wasm hash
+ * that tag resolved to at the observed ledger. The resolved hash is an
+ * observation, not a promise that the owner will keep the mapping unchanged.
+ */
+export type ResolvedContractExecutable =
+  | {
+    contractId?: ContractId;
+    executable: Extract<ContractExecutableView, { type: "wasm" }>;
+    resolvedWasmHash: string;
+    instance?: ContractExecutableLedgerObservation;
+    reference?: never;
+  }
+  | {
+    contractId?: ContractId;
+    executable: Extract<ContractExecutableView, { type: "externalRef" }>;
+    resolvedWasmHash: string;
+    instance?: ContractExecutableLedgerObservation;
+    reference: ContractExecutableLedgerObservation;
+  }
+  | {
+    contractId: ContractId;
+    executable: Extract<ContractExecutableView, { type: "stellarAsset" }>;
+    resolvedWasmHash?: never;
+    instance: ContractExecutableLedgerObservation;
+    reference?: never;
   };
 
 /**
@@ -354,8 +412,8 @@ export type ContractExecutableView =
  */
 export type ConfigSettingValue =
   | number
+  | bigint
   | bigint[]
-  | readonly { toBigInt(): bigint }[]
   | readonly XdrSerializable[]
   | XdrSerializable;
 
@@ -373,7 +431,8 @@ export type BaseLedgerEntry = {
  * Shared metadata preserved on a specific decoded ledger-entry result.
  */
 export type BaseLedgerEntryOf<TKind extends LedgerEntryKind> =
-  Omit<BaseLedgerEntry, "type"> & {
+  & Omit<BaseLedgerEntry, "type">
+  & {
     type: TKind;
   };
 
@@ -553,35 +612,58 @@ export declare const LEDGER_KEY_BRAND: unique symbol;
  * Compile-time branded ledger key that preserves the decoded entry type.
  *
  * At runtime this is still a plain Stellar SDK ledger-key object.
+ * @internal
  */
-export type TypedLedgerKey<TEntry extends AnyLedgerEntry> = LedgerKeyLike & {
+export type TypedLedgerKey<
+  TEntry extends AnyLedgerEntry,
+  TVariant extends xdr.LedgerKey["type"] = xdr.LedgerKey["type"],
+> = Extract<xdr.LedgerKey, { readonly type: TVariant }> & {
   readonly [LEDGER_KEY_BRAND]: TEntry;
 };
 
 /** Typed account ledger key. */
-export type AccountLedgerKey = TypedLedgerKey<AccountLedgerEntry>;
+export type AccountLedgerKey = TypedLedgerKey<AccountLedgerEntry, "account">;
 /** Typed trustline ledger key. */
-export type TrustlineLedgerKey = TypedLedgerKey<TrustlineLedgerEntry>;
+export type TrustlineLedgerKey = TypedLedgerKey<
+  TrustlineLedgerEntry,
+  "trustline"
+>;
 /** Typed offer ledger key. */
-export type OfferLedgerKey = TypedLedgerKey<OfferLedgerEntry>;
+export type OfferLedgerKey = TypedLedgerKey<OfferLedgerEntry, "offer">;
 /** Typed data ledger key. */
-export type DataLedgerKey = TypedLedgerKey<DataLedgerEntry>;
+export type DataLedgerKey = TypedLedgerKey<DataLedgerEntry, "data">;
 /** Typed claimable-balance ledger key. */
-export type ClaimableBalanceLedgerKey =
-  TypedLedgerKey<ClaimableBalanceLedgerEntry>;
+export type ClaimableBalanceLedgerKey = TypedLedgerKey<
+  ClaimableBalanceLedgerEntry,
+  "claimableBalance"
+>;
 /** Typed liquidity-pool ledger key. */
-export type LiquidityPoolLedgerKey = TypedLedgerKey<LiquidityPoolLedgerEntry>;
+export type LiquidityPoolLedgerKey = TypedLedgerKey<
+  LiquidityPoolLedgerEntry,
+  "liquidityPool"
+>;
 /** Typed contract-data ledger key. */
-export type ContractDataLedgerKey = TypedLedgerKey<ContractDataLedgerEntry>;
+export type ContractDataLedgerKey = TypedLedgerKey<
+  ContractDataLedgerEntry,
+  "contractData"
+>;
 /** Typed contract-instance ledger key. */
-export type ContractInstanceLedgerKey =
-  TypedLedgerKey<ContractInstanceLedgerEntry>;
+export type ContractInstanceLedgerKey = TypedLedgerKey<
+  ContractInstanceLedgerEntry,
+  "contractData"
+>;
 /** Typed contract-code ledger key. */
-export type ContractCodeLedgerKey = TypedLedgerKey<ContractCodeLedgerEntry>;
+export type ContractCodeLedgerKey = TypedLedgerKey<
+  ContractCodeLedgerEntry,
+  "contractCode"
+>;
 /** Typed config-setting ledger key. */
-export type ConfigSettingLedgerKey = TypedLedgerKey<ConfigSettingLedgerEntry>;
+export type ConfigSettingLedgerKey = TypedLedgerKey<
+  ConfigSettingLedgerEntry,
+  "configSetting"
+>;
 /** Typed TTL ledger key. */
-export type TtlLedgerKey = TypedLedgerKey<TtlLedgerEntry>;
+export type TtlLedgerKey = TypedLedgerKey<TtlLedgerEntry, "ttl">;
 
 /**
  * Any branded ledger key emitted by the public builder helpers.
@@ -602,5 +684,5 @@ export type AnyTypedLedgerKey =
 /**
  * Infers the decoded entry type for a ledger key produced by a builder helper.
  */
-export type EntryFromLedgerKey<TKey extends LedgerKeyLike> =
-  TKey extends TypedLedgerKey<infer TEntry> ? TEntry : AnyLedgerEntry;
+export type EntryFromLedgerKey<TKey extends LedgerKeyLike> = TKey extends
+  TypedLedgerKey<infer TEntry> ? TEntry : AnyLedgerEntry;

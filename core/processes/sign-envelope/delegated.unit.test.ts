@@ -8,7 +8,7 @@ import {
   Operation,
   TransactionBuilder,
 } from "stellar-sdk";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { signEnvelope } from "@/processes/sign-envelope/index.ts";
 import { SIGNER_NOT_FOUND } from "@/processes/sign-envelope/error.ts";
 import { DelegatedSigner } from "@/signer/delegated/index.ts";

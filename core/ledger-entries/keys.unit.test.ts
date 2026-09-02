@@ -1,6 +1,6 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { Keypair, xdr } from "stellar-sdk";
 import type { LedgerKeyLike } from "@/common/types/index.ts";
 import * as E from "@/ledger-entries/error.ts";
@@ -46,30 +46,21 @@ type _UnbrandedLedgerKeyFallsBackToUnion = Assert<
 
 describe("LedgerEntries key builders", () => {
   it("covers non-default builder branches", () => {
-    const rawBytes = xdr.ScVal.scvU32(7).toXDR("raw");
-    const base64String = xdr.ScVal.scvU32(7).toXDR("base64");
-    const base64Bytes = new TextEncoder().encode(String(base64String));
+    const rawBytes = xdr.ScVal.scvU32(7).toXdr("raw");
+    const base64String = xdr.ScVal.scvU32(7).toXdr("base64");
 
     const temporaryKey = buildContractDataLedgerKey({
       contractId: CONTRACT_ID,
       durability: "temporary",
-      key: {
-        toXDR: (format?: "raw" | "hex" | "base64") =>
-          format === "base64" ? String(base64String) : rawBytes,
-      },
+      key: xdr.ScVal.fromXdr(base64String, "base64"),
     });
     const bytesKey = buildContractDataLedgerKey({
       contractId: CONTRACT_ID,
-      key: {
-        toXDR: (format?: "raw" | "hex" | "base64") =>
-          format === "base64" ? base64Bytes : rawBytes,
-      },
+      key: xdr.ScVal.fromXdr(rawBytes),
     });
     const rawFallbackKey = buildContractDataLedgerKey({
       contractId: CONTRACT_ID,
-      key: {
-        toXDR: () => rawBytes,
-      },
+      key: xdr.ScVal.scvU32(7),
     });
     const dataKey = buildDataLedgerKey({
       accountId: ACCOUNT_ID,
@@ -85,62 +76,69 @@ describe("LedgerEntries key builders", () => {
     const ttlKey = buildTtlLedgerKey({
       keyHash: new DataView(new Uint8Array(34).fill(6).buffer, 1, 32),
     });
+    const temporaryContractData = (
+      temporaryKey as unknown as xdr.LedgerKeyContractDataArm
+    ).contractData;
+    const bytesContractData = (
+      bytesKey as unknown as xdr.LedgerKeyContractDataArm
+    ).contractData;
+    const fallbackContractData = (
+      rawFallbackKey as unknown as xdr.LedgerKeyContractDataArm
+    ).contractData;
 
     assertEquals(
-      (temporaryKey as unknown as xdr.LedgerKey).contractData().durability()
-        .name,
+      temporaryContractData.durability.name,
       "temporary",
     );
     assertEquals(
-      (temporaryKey as unknown as xdr.LedgerKey).contractData().key().u32(),
+      temporaryContractData.key.type === "scvU32"
+        ? temporaryContractData.key.u32
+        : undefined,
       7,
     );
     assertEquals(
-      (bytesKey as unknown as xdr.LedgerKey).contractData().key().u32(),
+      bytesContractData.key.type === "scvU32"
+        ? bytesContractData.key.u32
+        : undefined,
       7,
     );
     assertEquals(
-      (rawFallbackKey as unknown as xdr.LedgerKey).contractData().key().u32(),
+      fallbackContractData.key.type === "scvU32"
+        ? fallbackContractData.key.u32
+        : undefined,
       7,
     );
     assertEquals(
-      Buffer.from((dataKey as unknown as xdr.LedgerKey).data().dataName()),
+      Buffer.from(
+        (dataKey as unknown as xdr.LedgerKeyDataArm).data.dataName.bytes,
+      ),
       Buffer.from([1, 2, 3]),
     );
     assertEquals(
       Buffer.from(
-        (dataViewKey as unknown as xdr.LedgerKey).data().dataName(),
+        (dataViewKey as unknown as xdr.LedgerKeyDataArm).data.dataName.bytes,
       ),
       Buffer.from([4, 5, 6]),
     );
     assertEquals(
-      (codeKey as unknown as xdr.LedgerKey).contractCode().hash().length,
+      (codeKey as unknown as xdr.LedgerKeyContractCodeArm).contractCode.hash
+        .toBytes().length,
       32,
     );
     assertEquals(
-      (ttlKey as unknown as xdr.LedgerKey).ttl().keyHash().length,
+      (ttlKey as unknown as xdr.LedgerKeyTtlArm).ttl.keyHash.toBytes().length,
       32,
     );
   });
 
   it("validates claimable balance, config setting, and hash inputs", () => {
-    const originalDecodeClaimableBalance = StrKey.decodeClaimableBalance;
-    try {
-      StrKey.decodeClaimableBalance = () =>
-        new Uint8Array([0]) as ReturnType<
-          typeof StrKey.decodeClaimableBalance
-        >;
-
-      assertThrows(
-        () =>
-          buildClaimableBalanceLedgerKey({
-            balanceId: KNOWN_ISSUE_INVALID_CLAIMABLE_BALANCE_ID,
-          }),
-        E.INVALID_CLAIMABLE_BALANCE_ID,
-      );
-    } finally {
-      StrKey.decodeClaimableBalance = originalDecodeClaimableBalance;
-    }
+    assertThrows(
+      () =>
+        buildClaimableBalanceLedgerKey({
+          balanceId: KNOWN_ISSUE_INVALID_CLAIMABLE_BALANCE_ID,
+        }),
+      E.INVALID_CLAIMABLE_BALANCE_ID,
+    );
 
     assertThrows(
       () =>
@@ -211,17 +209,14 @@ describe("LedgerEntries key builders", () => {
     });
 
     assertEquals(
-      (key as unknown as xdr.LedgerKey).offer().offerId().toBigInt(),
+      (key as unknown as xdr.LedgerKeyOfferArm).offer.offerId,
       17n,
     );
   });
 
-  it("hashes ledger keys that serialize to raw bytes", () => {
+  it("hashes canonical SDK ledger keys", () => {
     const key = buildAccountLedgerKey({
       accountId: ACCOUNT_ID,
-    }) as unknown as xdr.LedgerKey & LedgerKeyLike;
-    Object.defineProperty(key, "toXDR", {
-      value: () => new Uint8Array([1, 2, 3, 4]),
     });
 
     const hash = hashLedgerKey(key);
@@ -229,21 +224,14 @@ describe("LedgerEntries key builders", () => {
     assertEquals(StrKey.isSha256Hash(hash), true);
   });
 
-  it("hashes ledger keys whose base64 serialization returns bytes", () => {
-    const key = buildAccountLedgerKey({
+  it("hashes a canonical ledger key decoded from base64 XDR", () => {
+    const original = buildAccountLedgerKey({
       accountId: ACCOUNT_ID,
-    }) as unknown as xdr.LedgerKey & LedgerKeyLike;
-    const originalToXdr = key.toXDR.bind(key);
-
-    Object.defineProperty(key, "toXDR", {
-      value: (format?: "raw" | "hex" | "base64") => {
-        if (format === "base64") {
-          return new TextEncoder().encode(String(originalToXdr("base64")));
-        }
-
-        return originalToXdr(format ?? "raw");
-      },
     });
+    const key = xdr.LedgerKey.fromXdr(
+      original.toXdr("base64"),
+      "base64",
+    ) as LedgerKeyLike;
 
     const hash = hashLedgerKey(key);
 

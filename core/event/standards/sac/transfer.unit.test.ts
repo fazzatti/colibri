@@ -395,7 +395,7 @@ describe("TransferEvent", () => {
       const filter = TransferEvent.toTopicFilter({});
 
       assertEquals(filter.length, 4);
-      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals(filter[1], "*");
       assertEquals(filter[2], "*");
       assertEquals(filter[3], "*");
@@ -406,8 +406,8 @@ describe("TransferEvent", () => {
       const filter = TransferEvent.toTopicFilter({ from });
 
       assertEquals(filter.length, 4);
-      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
-      assertEquals((filter[1] as xdr.ScVal).switch().name, "scvAddress");
+      assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
+      assertEquals((filter[1] as xdr.ScVal).type, "scvAddress");
       assertEquals(filter[2], "*");
       assertEquals(filter[3], "*");
     });
@@ -417,9 +417,9 @@ describe("TransferEvent", () => {
       const filter = TransferEvent.toTopicFilter({ to });
 
       assertEquals(filter.length, 4);
-      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals(filter[1], "*");
-      assertEquals((filter[2] as xdr.ScVal).switch().name, "scvAddress");
+      assertEquals((filter[2] as xdr.ScVal).type, "scvAddress");
       assertEquals(filter[3], "*");
     });
   });

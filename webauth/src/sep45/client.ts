@@ -37,8 +37,25 @@ function setExpiration(
   expiration: number,
 ): xdr.SorobanAuthorizationEntry {
   const clone = cloneSep45AuthorizationEntry(entry);
-  clone.credentials().address().signatureExpirationLedger(expiration);
-  return clone;
+  const credentials = clone.credentials;
+  if (credentials.type !== "sorobanCredentialsAddress") {
+    throw new Sep45Error({
+      code: Sep45Code.UNSUPPORTED_CREDENTIAL_TYPE,
+      message: "SEP-45 v0.1.1 supports only legacy address credentials",
+      data: { credentialType: credentials.type },
+    });
+  }
+  return new xdr.SorobanAuthorizationEntry({
+    credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
+      new xdr.SorobanAddressCredentials({
+        address: credentials.address.address,
+        nonce: credentials.address.nonce,
+        signatureExpirationLedger: expiration,
+        signature: credentials.address.signature,
+      }),
+    ),
+    rootInvocation: clone.rootInvocation,
+  });
 }
 
 async function signClientDomainEntry(
@@ -68,8 +85,8 @@ async function signClientDomainEntry(
       expiration,
       networkPassphrase,
     );
-    return xdr.SorobanAuthorizationEntry.fromXDR(
-      (result as xdr.SorobanAuthorizationEntry).toXDR(),
+    return xdr.SorobanAuthorizationEntry.fromXdr(
+      (result as xdr.SorobanAuthorizationEntry).toXdr(),
     );
   }
   return await authorizeEntry(
@@ -285,8 +302,8 @@ export class Sep45Client {
     }
     let authorizedClient: xdr.SorobanAuthorizationEntry;
     try {
-      authorizedClient = xdr.SorobanAuthorizationEntry.fromXDR(
-        returnedClient.toXDR(),
+      authorizedClient = xdr.SorobanAuthorizationEntry.fromXdr(
+        returnedClient.toXdr(),
       );
     } catch (cause) {
       throw new Sep45Error({
@@ -362,7 +379,7 @@ export class Sep45Client {
     const response = await this.#config.transport.post(
       this.#config.endpoint,
       "authorization_entries",
-      challenge.toXDR(),
+      challenge.toXdr(),
       this.#config.submissionFormat,
       "sep45",
     );

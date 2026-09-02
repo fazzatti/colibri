@@ -22,6 +22,9 @@ jobs:
         with:
           deno-version: 2.7.11
 
+      - name: Check package version invariants
+        run: deno task check:package-versions
+
       - name: Detect package version bumps
         id: detect-versions
         run: |

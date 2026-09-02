@@ -207,7 +207,9 @@ const getContainerStoppedReadinessDetails = (
     return "The quickstart container stopped before the configured readiness flow could complete.";
   }
 
-  return `The quickstart container stopped before the requested services became ready: ${targets.join(", ")}.`;
+  return `The quickstart container stopped before the requested services became ready: ${
+    targets.join(", ")
+  }.`;
 };
 
 const createDockerLogDecoder = () => {
@@ -694,6 +696,140 @@ export const streamContainerLogs = async (options: {
   }
 };
 
+type ResolvedReadinessChecks = Required<ReadinessChecks>;
+
+const resolveReadinessChecks = (
+  readiness?: ReadinessChecks,
+): ResolvedReadinessChecks => ({
+  horizon: readiness?.horizon ?? true,
+  rpc: readiness?.rpc ?? true,
+  friendbot: readiness?.friendbot ?? true,
+  lab: readiness?.lab ?? false,
+  ledgerMeta: readiness?.ledgerMeta ?? false,
+});
+
+const hasReadinessChecks = (readiness: ResolvedReadinessChecks): boolean =>
+  Object.values(readiness).some(Boolean);
+
+const assertQuickstartContainerRunning = (
+  info: ContainerInspectInfo,
+  containerId: string,
+  readiness: ResolvedReadinessChecks,
+): void => {
+  if (info.State.Running) return;
+  throw new READINESS_ERROR({
+    message: `Container is not running (status: ${info.State.Status}).`,
+    details: getContainerStoppedReadinessDetails(readiness),
+    data: {
+      containerId,
+      status: info.State.Status,
+      exitCode: info.State.ExitCode,
+      terminal: true,
+    },
+  });
+};
+
+const checkHorizonReadiness = async (
+  baseUrl: string,
+  containerId: string,
+  fetchFn: typeof fetch,
+): Promise<void> => {
+  const response = await fetchFn(baseUrl);
+  const body = await response.text();
+  if (response.status === 200) return;
+  throw new READINESS_ERROR({
+    message:
+      `Horizon is not ready yet (status: ${response.status}, body: ${body}).`,
+    details:
+      "The Horizon endpoint is responding, but it has not reached a ready state yet.",
+    data: { containerId, url: baseUrl, status: response.status, body },
+  });
+};
+
+const parseRpcHealthStatus = (body: string): string | undefined => {
+  try {
+    const parsed = JSON.parse(body) as { result?: { status?: unknown } };
+    return typeof parsed?.result?.status === "string"
+      ? parsed.result.status
+      : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const checkRpcReadiness = async (
+  baseUrl: string,
+  containerId: string,
+  fetchFn: typeof fetch,
+): Promise<void> => {
+  const url = `${baseUrl}/rpc`;
+  const response = await fetchFn(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 8675309, method: "getHealth" }),
+  });
+  const body = await response.text();
+  if (response.ok && parseRpcHealthStatus(body) === "healthy") return;
+  throw new READINESS_ERROR({
+    message:
+      `RPC is not ready yet (status: ${response.status}, body: ${body}).`,
+    details:
+      "Soroban RPC responded, but the health endpoint did not report a healthy state.",
+    data: { containerId, url, status: response.status, body },
+  });
+};
+
+const checkGetEndpointReadiness = async (
+  name: "Lab" | "Ledger meta",
+  url: string,
+  containerId: string,
+  fetchFn: typeof fetch,
+): Promise<void> => {
+  const response = await fetchFn(url);
+  const body = await response.text();
+  if (response.status === 200) return;
+  throw new READINESS_ERROR({
+    message:
+      `${name} is not ready yet (status: ${response.status}, body: ${body}).`,
+    details: name === "Lab"
+      ? "The Lab endpoint did not return a ready response yet."
+      : "The ledger meta endpoint did not expose its config file yet.",
+    data: { containerId, url, status: response.status, body },
+  });
+};
+
+const checkQuickstartServices = async (
+  baseUrl: string,
+  containerId: string,
+  readiness: ResolvedReadinessChecks,
+  fetchFn: typeof fetch,
+  friendbotReadyFn: (probe: FriendbotReadinessProbe) => Promise<void>,
+): Promise<void> => {
+  if (readiness.horizon) {
+    await checkHorizonReadiness(baseUrl, containerId, fetchFn);
+  }
+  if (readiness.rpc) await checkRpcReadiness(baseUrl, containerId, fetchFn);
+  if (readiness.friendbot) {
+    await friendbotReadyFn({ friendbotUrl: `${baseUrl}/friendbot` });
+  }
+  if (readiness.lab) {
+    await checkGetEndpointReadiness(
+      "Lab",
+      `${baseUrl}/lab`,
+      containerId,
+      fetchFn,
+    );
+  }
+  if (readiness.ledgerMeta) {
+    await checkGetEndpointReadiness(
+      "Ledger meta",
+      `${baseUrl}/ledger-meta/.config.json`,
+      containerId,
+      fetchFn,
+    );
+  }
+};
+
 /**
  * Polls the requested Quickstart services until the ledger is ready.
  */
@@ -708,13 +844,7 @@ export const waitForLedgerReady = async (
   const host = options.host || resolvePublishedPortHost(options);
   const friendbotReadyFn = options.friendbotReadyFn ||
     ((probe: FriendbotReadinessProbe) => waitForFriendbotReady(probe, fetchFn));
-  const readiness = {
-    horizon: options.readiness?.horizon ?? true,
-    rpc: options.readiness?.rpc ?? true,
-    friendbot: options.readiness?.friendbot ?? true,
-    lab: options.readiness?.lab ?? false,
-    ledgerMeta: options.readiness?.ledgerMeta ?? false,
-  } satisfies Required<ReadinessChecks>;
+  const readiness = resolveReadinessChecks(options.readiness);
   const deadline = nowFn() + timeoutMs;
 
   let lastError: unknown;
@@ -723,144 +853,22 @@ export const waitForLedgerReady = async (
     try {
       const container = docker.getContainer(options.containerId);
       const inspectInfo = (await container.inspect()) as ContainerInspectInfo;
-
-      if (!inspectInfo.State.Running) {
-        throw new READINESS_ERROR({
-          message:
-            `Container is not running (status: ${inspectInfo.State.Status}).`,
-          details: getContainerStoppedReadinessDetails(readiness),
-          data: {
-            containerId: options.containerId,
-            status: inspectInfo.State.Status,
-            exitCode: inspectInfo.State.ExitCode,
-            terminal: true,
-          },
-        });
-      }
-
-      if (
-        !readiness.horizon &&
-        !readiness.rpc &&
-        !readiness.friendbot &&
-        !readiness.lab &&
-        !readiness.ledgerMeta
-      ) {
-        return;
-      }
+      assertQuickstartContainerRunning(
+        inspectInfo,
+        options.containerId,
+        readiness,
+      );
+      if (!hasReadinessChecks(readiness)) return;
 
       const publicPort = getPublicPort(QUICKSTART_PORT, inspectInfo);
       const baseUrl = `http://${host}:${publicPort}`;
-
-      if (readiness.horizon) {
-        const horizonResponse = await fetchFn(baseUrl);
-        const horizonBody = await horizonResponse.text();
-
-        if (horizonResponse.status !== 200) {
-          throw new READINESS_ERROR({
-            message:
-              `Horizon is not ready yet (status: ${horizonResponse.status}, body: ${horizonBody}).`,
-            details:
-              "The Horizon endpoint is responding, but it has not reached a ready state yet.",
-            data: {
-              containerId: options.containerId,
-              url: baseUrl,
-              status: horizonResponse.status,
-              body: horizonBody,
-            },
-          });
-        }
-      }
-
-      if (readiness.rpc) {
-        const rpcResponse = await fetchFn(`${baseUrl}/rpc`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            jsonrpc: "2.0",
-            id: 8675309,
-            method: "getHealth",
-          }),
-        });
-        const rpcBody = await rpcResponse.text();
-        let healthStatus: string | undefined;
-        try {
-          const parsed = JSON.parse(rpcBody) as {
-            result?: { status?: unknown };
-          };
-          if (
-            parsed &&
-            parsed.result &&
-            typeof parsed.result.status === "string"
-          ) {
-            healthStatus = parsed.result.status;
-          }
-        } catch {
-          // If the body is not valid JSON, treat it as not healthy below.
-        }
-
-        if (!rpcResponse.ok || healthStatus !== "healthy") {
-          throw new READINESS_ERROR({
-            message:
-              `RPC is not ready yet (status: ${rpcResponse.status}, body: ${rpcBody}).`,
-            details:
-              "Soroban RPC responded, but the health endpoint did not report a healthy state.",
-            data: {
-              containerId: options.containerId,
-              url: `${baseUrl}/rpc`,
-              status: rpcResponse.status,
-              body: rpcBody,
-            },
-          });
-        }
-      }
-
-      if (readiness.friendbot) {
-        await friendbotReadyFn({
-          friendbotUrl: `${baseUrl}/friendbot`,
-        });
-      }
-
-      if (readiness.lab) {
-        const labResponse = await fetchFn(`${baseUrl}/lab`);
-        const labBody = await labResponse.text();
-
-        if (labResponse.status !== 200) {
-          throw new READINESS_ERROR({
-            message:
-              `Lab is not ready yet (status: ${labResponse.status}, body: ${labBody}).`,
-            details: "The Lab endpoint did not return a ready response yet.",
-            data: {
-              containerId: options.containerId,
-              url: `${baseUrl}/lab`,
-              status: labResponse.status,
-              body: labBody,
-            },
-          });
-        }
-      }
-
-      if (readiness.ledgerMeta) {
-        const ledgerMetaResponse = await fetchFn(
-          `${baseUrl}/ledger-meta/.config.json`,
-        );
-        const ledgerMetaBody = await ledgerMetaResponse.text();
-
-        if (ledgerMetaResponse.status !== 200) {
-          throw new READINESS_ERROR({
-            message:
-              `Ledger meta is not ready yet (status: ${ledgerMetaResponse.status}, body: ${ledgerMetaBody}).`,
-            details:
-              "The ledger meta endpoint did not expose its config file yet.",
-            data: {
-              containerId: options.containerId,
-              url: `${baseUrl}/ledger-meta/.config.json`,
-              status: ledgerMetaResponse.status,
-              body: ledgerMetaBody,
-            },
-          });
-        }
-      }
-
+      await checkQuickstartServices(
+        baseUrl,
+        options.containerId,
+        readiness,
+        fetchFn,
+        friendbotReadyFn,
+      );
       return;
     } catch (error) {
       lastError = error;

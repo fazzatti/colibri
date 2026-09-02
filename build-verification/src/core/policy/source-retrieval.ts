@@ -17,20 +17,27 @@ export const DEFAULT_SOURCE_RETRIEVAL_POLICY_ID = "colibri.https-public-source";
 
 const isPrivateIpv4 = (address: string): boolean => {
   const values = address.split(".").map(Number);
-  if (
-    values.length !== 4 ||
-    values.some((value) => !Number.isInteger(value) || value < 0 || value > 255)
-  ) return true;
+  if (!isValidIpv4(values)) return true;
   const [first, second] = values;
-  return first === 0 || first === 10 || first === 127 ||
-    (first === 100 && second >= 64 && second <= 127) ||
-    (first === 169 && second === 254) ||
-    (first === 172 && second >= 16 && second <= 31) ||
-    (first === 192 && second === 0) ||
-    (first === 192 && second === 168) ||
-    (first === 198 && (second === 18 || second === 19)) ||
-    first >= 224;
+  return isPrivateIpv4FirstOctet(first) ||
+    isPrivateIpv4Pair(first, second);
 };
+
+const isValidIpv4 = (values: readonly number[]): boolean =>
+  values.length === 4 && values.every(isValidIpv4Octet);
+
+const isValidIpv4Octet = (value: number): boolean =>
+  Number.isInteger(value) && value >= 0 && value <= 255;
+
+const isPrivateIpv4FirstOctet = (first: number): boolean =>
+  first === 0 || first === 10 || first === 127 || first >= 224;
+
+const isPrivateIpv4Pair = (first: number, second: number): boolean =>
+  (first === 100 && second >= 64 && second <= 127) ||
+  (first === 169 && second === 254) ||
+  (first === 172 && second >= 16 && second <= 31) ||
+  (first === 192 && (second === 0 || second === 168)) ||
+  (first === 198 && (second === 18 || second === 19));
 
 const isPrivateAddress = (address: string): boolean => {
   if (address.includes(".")) {

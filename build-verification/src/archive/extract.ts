@@ -63,6 +63,66 @@ const parsePaxPath = (bytes: Uint8Array): string | undefined => {
   return path;
 };
 
+type ParsedTarEntry = {
+  path: string;
+  type: string;
+  data: Uint8Array;
+  nextOffset: number;
+};
+
+const readTarEntry = (bytes: Uint8Array, offset: number): ParsedTarEntry => {
+  const header = bytes.subarray(offset, offset + 512);
+  const size = tarNumber(header.subarray(124, 136));
+  const type = String.fromCharCode(header[156] || 0x30);
+  const prefix = decodeText(header.subarray(345, 500));
+  const name = decodeText(header.subarray(0, 100));
+  const path = prefix ? `${prefix}/${name}` : name;
+  const dataStart = offset + 512;
+  const dataEnd = dataStart + size;
+  if (!Number.isSafeInteger(size) || size < 0 || dataEnd > bytes.length) {
+    throw new UnsafeArchiveEntryError(
+      path,
+      "A tar entry declares an invalid or truncated size.",
+    );
+  }
+  return {
+    path,
+    type,
+    data: bytes.subarray(dataStart, dataEnd),
+    nextOffset: dataStart + Math.ceil(size / 512) * 512,
+  };
+};
+
+const applyTarEntry = (
+  entries: VerificationArchiveEntry[],
+  entry: ParsedTarEntry,
+  pendingPath?: string,
+): string | undefined => {
+  if (entry.type === "L") return decodeText(entry.data);
+  if (entry.type === "x") return parsePaxPath(entry.data) ?? pendingPath;
+  if (entry.type === "g") {
+    if (parsePaxPath(entry.data)) {
+      throw new UnsafeArchiveEntryError(
+        entry.path,
+        "A global PAX header cannot redefine paths for subsequent entries.",
+      );
+    }
+    return pendingPath;
+  }
+  if (entry.type === "0" || entry.type === "\0" || entry.type === "5") {
+    entries.push({
+      path: pendingPath ?? entry.path,
+      bytes: Uint8Array.from(entry.data),
+      directory: entry.type === "5",
+    });
+    return undefined;
+  }
+  throw new UnsafeArchiveEntryError(
+    pendingPath ?? entry.path,
+    `Tar entry type "${entry.type}" is not a regular file or directory.`,
+  );
+};
+
 const parseTar = (bytes: Uint8Array): VerificationArchiveEntry[] => {
   const entries: VerificationArchiveEntry[] = [];
   let offset = 0;
@@ -70,45 +130,9 @@ const parseTar = (bytes: Uint8Array): VerificationArchiveEntry[] => {
   while (offset + 512 <= bytes.length) {
     const header = bytes.subarray(offset, offset + 512);
     if (header.every((byte) => byte === 0)) break;
-    const size = tarNumber(header.subarray(124, 136));
-    const type = String.fromCharCode(header[156] || 0x30);
-    const prefix = decodeText(header.subarray(345, 500));
-    const name = decodeText(header.subarray(0, 100));
-    const headerPath = prefix ? `${prefix}/${name}` : name;
-    const dataStart = offset + 512;
-    const dataEnd = dataStart + size;
-    if (!Number.isSafeInteger(size) || size < 0 || dataEnd > bytes.length) {
-      throw new UnsafeArchiveEntryError(
-        headerPath,
-        "A tar entry declares an invalid or truncated size.",
-      );
-    }
-    const data = bytes.subarray(dataStart, dataEnd);
-    if (type === "L") {
-      pendingPath = decodeText(data);
-    } else if (type === "x") {
-      pendingPath = parsePaxPath(data) ?? pendingPath;
-    } else if (type === "g") {
-      if (parsePaxPath(data)) {
-        throw new UnsafeArchiveEntryError(
-          headerPath,
-          "A global PAX header cannot redefine paths for subsequent entries.",
-        );
-      }
-    } else if (type === "0" || type === "\0" || type === "5") {
-      entries.push({
-        path: pendingPath ?? headerPath,
-        bytes: Uint8Array.from(data),
-        directory: type === "5",
-      });
-      pendingPath = undefined;
-    } else {
-      throw new UnsafeArchiveEntryError(
-        pendingPath ?? headerPath,
-        `Tar entry type "${type}" is not a regular file or directory.`,
-      );
-    }
-    offset = dataStart + Math.ceil(size / 512) * 512;
+    const entry = readTarEntry(bytes, offset);
+    pendingPath = applyTarEntry(entries, entry, pendingPath);
+    offset = entry.nextOffset;
   }
   return entries;
 };
@@ -184,10 +208,17 @@ const findEndOfCentralDirectory = (bytes: Uint8Array): number => {
   throw new RangeError("ZIP end-of-central-directory record was not found");
 };
 
-const parseZip = async (
+type ZipDirectory = {
+  view: DataView;
+  entryCount: number;
+  centralOffset: number;
+  centralEnd: number;
+};
+
+const readZipDirectory = (
   bytes: Uint8Array,
   limits: BuildVerificationLimits,
-): Promise<VerificationArchiveEntry[]> => {
+): ZipDirectory => {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const end = findEndOfCentralDirectory(bytes);
   const disk = u16(view, end + 4);
@@ -209,78 +240,146 @@ const parseZip = async (
     );
   }
   assertArchiveLimit("file count", entryCount, limits.maxFiles);
+  return {
+    view,
+    entryCount,
+    centralOffset,
+    centralEnd: centralOffset + centralSize,
+  };
+};
 
-  const entries: VerificationArchiveEntry[] = [];
-  let offset = centralOffset;
-  for (let index = 0; index < entryCount; index += 1) {
-    if (u32(view, offset) !== 0x02014b50) {
-      throw new RangeError("ZIP central-directory entry signature is invalid");
-    }
-    const madeBy = u16(view, offset + 4);
-    const flags = u16(view, offset + 8);
-    const method = u16(view, offset + 10);
-    const expectedCrc = u32(view, offset + 16);
-    const compressedSize = u32(view, offset + 20);
-    const size = u32(view, offset + 24);
-    const nameLength = u16(view, offset + 28);
-    const extraLength = u16(view, offset + 30);
-    const commentLength = u16(view, offset + 32);
-    const externalAttributes = u32(view, offset + 38);
-    const localOffset = u32(view, offset + 42);
-    const recordEnd = offset + 46 + nameLength + extraLength + commentLength;
-    if (recordEnd > centralOffset + centralSize) {
-      throw new RangeError("ZIP central-directory entry is truncated");
-    }
-    const name = decodeZipName(
-      bytes.subarray(offset + 46, offset + 46 + nameLength),
-      (flags & 0x800) !== 0,
-    );
-    if ((flags & 1) !== 0) {
-      throw new UnsupportedZipFeatureError(name, "encryption");
-    }
-    if (method !== 0 && method !== 8) {
-      throw new UnsupportedZipFeatureError(
-        name,
-        `compression method ${method}`,
+type ZipEntryRecord = {
+  name: string;
+  method: number;
+  expectedCrc: number;
+  compressedSize: number;
+  size: number;
+  localOffset: number;
+  directory: boolean;
+  recordEnd: number;
+};
+
+const readZipEntryRecord = (
+  bytes: Uint8Array,
+  view: DataView,
+  offset: number,
+  centralEnd: number,
+): ZipEntryRecord => {
+  if (u32(view, offset) !== 0x02014b50) {
+    throw new RangeError("ZIP central-directory entry signature is invalid");
+  }
+  const madeBy = u16(view, offset + 4);
+  const flags = u16(view, offset + 8);
+  const method = u16(view, offset + 10);
+  const expectedCrc = u32(view, offset + 16);
+  const compressedSize = u32(view, offset + 20);
+  const size = u32(view, offset + 24);
+  const nameLength = u16(view, offset + 28);
+  const extraLength = u16(view, offset + 30);
+  const commentLength = u16(view, offset + 32);
+  const externalAttributes = u32(view, offset + 38);
+  const localOffset = u32(view, offset + 42);
+  const recordEnd = offset + 46 + nameLength + extraLength + commentLength;
+  if (recordEnd > centralEnd) {
+    throw new RangeError("ZIP central-directory entry is truncated");
+  }
+  const name = decodeZipName(
+    bytes.subarray(offset + 46, offset + 46 + nameLength),
+    (flags & 0x800) !== 0,
+  );
+  if ((flags & 1) !== 0) {
+    throw new UnsupportedZipFeatureError(name, "encryption");
+  }
+  if (method !== 0 && method !== 8) {
+    throw new UnsupportedZipFeatureError(name, `compression method ${method}`);
+  }
+  const unixMode = madeBy >>> 8 === 3
+    ? (externalAttributes >>> 16) & 0xffff
+    : 0;
+  const unixType = unixMode & 0o170000;
+  if (unixType !== 0 && unixType !== 0o100000 && unixType !== 0o040000) {
+    throw new UnsupportedZipFeatureError(name, `Unix file type ${unixType}`);
+  }
+  const directory = name.endsWith("/") || unixType === 0o040000 ||
+    ((externalAttributes & 0x10) !== 0 && unixType === 0);
+  return {
+    name,
+    method,
+    expectedCrc,
+    compressedSize,
+    size,
+    localOffset,
+    directory,
+    recordEnd,
+  };
+};
+
+const readZipEntryContent = async (
+  bytes: Uint8Array,
+  view: DataView,
+  record: ZipEntryRecord,
+  limits: BuildVerificationLimits,
+): Promise<Uint8Array> => {
+  assertArchiveLimit("individual file byte", record.size, limits.maxFileBytes);
+  if (u32(view, record.localOffset) !== 0x04034b50) {
+    throw new RangeError("ZIP local-file entry signature is invalid");
+  }
+  const localNameLength = u16(view, record.localOffset + 26);
+  const localExtraLength = u16(view, record.localOffset + 28);
+  const dataStart = record.localOffset + 30 + localNameLength +
+    localExtraLength;
+  const dataEnd = dataStart + record.compressedSize;
+  if (dataEnd > bytes.length) {
+    throw new RangeError("ZIP file data is truncated");
+  }
+  const compressed = bytes.subarray(dataStart, dataEnd);
+  const content = record.directory
+    ? new Uint8Array()
+    : record.method === 0
+    ? Uint8Array.from(compressed)
+    : await decompressBounded(compressed, "deflate-raw", record.size);
+  if (content.length !== record.size) {
+    throw new RangeError("ZIP decompressed size differs from its descriptor");
+  }
+  if (!record.directory) {
+    const actualCrc = crc32(content);
+    if (actualCrc !== record.expectedCrc) {
+      throw new ArchiveCrcMismatchError(
+        record.name,
+        record.expectedCrc,
+        actualCrc,
       );
     }
-    const unixMode = madeBy >>> 8 === 3
-      ? (externalAttributes >>> 16) & 0xffff
-      : 0;
-    const unixType = unixMode & 0o170000;
-    if (unixType !== 0 && unixType !== 0o100000 && unixType !== 0o040000) {
-      throw new UnsupportedZipFeatureError(name, `Unix file type ${unixType}`);
-    }
-    const directory = name.endsWith("/") || unixType === 0o040000 ||
-      ((externalAttributes & 0x10) !== 0 && unixType === 0);
-    assertArchiveLimit("individual file byte", size, limits.maxFileBytes);
-    if (u32(view, localOffset) !== 0x04034b50) {
-      throw new RangeError("ZIP local-file entry signature is invalid");
-    }
-    const localNameLength = u16(view, localOffset + 26);
-    const localExtraLength = u16(view, localOffset + 28);
-    const dataStart = localOffset + 30 + localNameLength + localExtraLength;
-    const dataEnd = dataStart + compressedSize;
-    if (dataEnd > bytes.length) {
-      throw new RangeError("ZIP file data is truncated");
-    }
-    const compressed = bytes.subarray(dataStart, dataEnd);
-    const content = directory
-      ? new Uint8Array()
-      : method === 0
-      ? Uint8Array.from(compressed)
-      : await decompressBounded(compressed, "deflate-raw", size);
-    if (content.length !== size) {
-      throw new RangeError("ZIP decompressed size differs from its descriptor");
-    }
-    if (!directory) {
-      const actualCrc = crc32(content);
-      if (actualCrc !== expectedCrc) {
-        throw new ArchiveCrcMismatchError(name, expectedCrc, actualCrc);
-      }
-    }
-    entries.push({ path: name, bytes: content, directory });
-    offset = recordEnd;
+  }
+  return content;
+};
+
+const parseZip = async (
+  bytes: Uint8Array,
+  limits: BuildVerificationLimits,
+): Promise<VerificationArchiveEntry[]> => {
+  const directory = readZipDirectory(bytes, limits);
+  const entries: VerificationArchiveEntry[] = [];
+  let offset = directory.centralOffset;
+  for (let index = 0; index < directory.entryCount; index += 1) {
+    const record = readZipEntryRecord(
+      bytes,
+      directory.view,
+      offset,
+      directory.centralEnd,
+    );
+    const content = await readZipEntryContent(
+      bytes,
+      directory.view,
+      record,
+      limits,
+    );
+    entries.push({
+      path: record.name,
+      bytes: content,
+      directory: record.directory,
+    });
+    offset = record.recordEnd;
   }
   return entries;
 };

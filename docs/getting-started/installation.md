@@ -6,6 +6,8 @@ Deno-first TypeScript projects.
 ## Prerequisites
 
 - [Deno](https://deno.land/) `v2.0` or later
+- Node.js `v22.12` or later when consuming Colibri through npm or a Node-based
+  bundler
 - A reachable Docker daemon such as Docker Desktop or OrbStack if you plan to
   use `@colibri/test-tooling` or the built-in `@colibri/build-verification`
   runner
@@ -32,13 +34,13 @@ This will add imports similar to:
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^0.26.0",
-    "@colibri/webauth": "jsr:@colibri/webauth@^0.1.3",
-    "@colibri/build-verification": "jsr:@colibri/build-verification@^0.3.0",
-    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.2.14",
+    "@colibri/core": "jsr:@colibri/core@^0.27.0",
+    "@colibri/webauth": "jsr:@colibri/webauth@^0.2.0",
+    "@colibri/build-verification": "jsr:@colibri/build-verification@^0.4.0",
+    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.2.15",
     "@colibri/test-tooling": "jsr:@colibri/test-tooling@^0.3.1",
-    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.10.1",
-    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^0.2.10"
+    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.10.2",
+    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^0.2.11"
   }
 }
 ```
@@ -92,7 +94,9 @@ Plugins extend pipeline step behavior for specific use cases:
 ## Stellar SDK Dependency
 
 Colibri stays close to `@stellar/stellar-sdk`, and many advanced flows still use
-SDK values directly:
+SDK values directly. The current Colibri releases target Stellar SDK 17 and use
+its canonical class-based XDR API. Binary SDK values are `Uint8Array` instances;
+Node `Buffer` is not required for normal Colibri usage.
 
 ```ts
 import { Operation, xdr } from "npm:@stellar/stellar-sdk";

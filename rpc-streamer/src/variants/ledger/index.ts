@@ -12,7 +12,7 @@ import type {
   DataHandler,
   LiveIngestionResult,
 } from "@/types.ts";
-import type { LedgerStreamerConfig } from "./types.ts";
+import type { LedgerStreamerConfig } from "@/variants/ledger/types.ts";
 
 /**
  * Creates the live ingestion function for ledgers.

@@ -6,15 +6,19 @@ import { DOCKER_CONFIGURATION_ERROR } from "@/quickstart/error.ts";
 
 /**
  * Docker client implementation used by quickstart helpers.
+ * @internal
  */
 export type DockerClient = Dockerode;
+
+/** @internal */
+type DockerOptions = Dockerode.DockerOptions;
 
 /**
  * Docker connection settings accepted by quickstart helpers.
  */
 export type DockerConnectionConfig = {
   /** Explicit Dockerode options such as `socketPath`, `host`, or `port`. */
-  readonly dockerOptions?: Dockerode.DockerOptions;
+  readonly dockerOptions?: DockerOptions;
   /** Explicit Unix socket path to the Docker daemon. */
   readonly dockerSocketPath?: string;
 };

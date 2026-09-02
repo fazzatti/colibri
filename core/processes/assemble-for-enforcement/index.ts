@@ -1,4 +1,3 @@
-import type { xdr } from "stellar-sdk";
 import type {
   AssembleForEnforcementInput,
   AssembleForEnforcementOutput,
@@ -40,9 +39,7 @@ export const assembleForEnforcement = async (
       return transaction;
     }
 
-    const authEntries = authorizedOperation.body()
-      .invokeHostFunctionOp()
-      .auth() as xdr.SorobanAuthorizationEntry[];
+    const authEntries = authorizedOperation.body.invokeHostFunctionOp.auth;
 
     return await assembleTransaction({
       transaction,

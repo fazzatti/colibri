@@ -18,8 +18,8 @@ function cloneVerified(
   return {
     ...verified,
     entries,
-    invocationArgument: xdr.ScVal.fromXDR(
-      verified.invocationArgument.toXDR(),
+    invocationArgument: xdr.ScVal.fromXdr(
+      verified.invocationArgument.toXdr(),
     ),
     arguments: Object.freeze({ ...verified.arguments }),
     extensionArguments: Object.freeze({ ...verified.extensionArguments }),
@@ -56,13 +56,13 @@ export class Sep45Challenge {
   }
 
   /** Verified authorization-entry array XDR. */
-  toXDR(): string {
+  toXdr(): string {
     return this.#verified.authorizationEntriesXdr;
   }
 
   /** Defensive clones of the verified entries. */
   get entries(): SorobanAuthorizationEntry[] {
-    return decodeSep45AuthorizationEntries(this.toXDR());
+    return decodeSep45AuthorizationEntries(this.toXdr());
   }
 
   /** @internal Verified context retained for lifecycle transitions. */
@@ -94,13 +94,13 @@ export class Sep45AuthorizedChallenge {
   }
 
   /** Authorized entry array XDR. */
-  toXDR(): string {
+  toXdr(): string {
     return this.#authorizationEntriesXdr;
   }
 
   /** Defensive clones of every authorized and preserved entry. */
   get entries(): SorobanAuthorizationEntry[] {
-    return decodeSep45AuthorizationEntries(this.toXDR());
+    return decodeSep45AuthorizationEntries(this.toXdr());
   }
 
   /** @internal Verified pre-authorization context. */
@@ -128,8 +128,8 @@ export class Sep45PreparedChallenge {
   }
 
   /** Authorized entry array XDR accepted by enforcing simulation. */
-  toXDR(): string {
-    return this.#authorized.toXDR();
+  toXdr(): string {
+    return this.#authorized.toXdr();
   }
 
   /** Defensive simulation receipt. */

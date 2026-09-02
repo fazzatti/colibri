@@ -29,5 +29,5 @@ export const isSmartContractTransaction = (
 
   const firstOp = ops[0];
 
-  return SMART_CONTRACT_OPERATIONS.includes(firstOp.body().switch().name);
+  return SMART_CONTRACT_OPERATIONS.includes(firstOp.body.type);
 };

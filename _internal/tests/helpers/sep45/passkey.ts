@@ -1,6 +1,6 @@
 // deno-coverage-ignore-file
 
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { buildAuthorizationEntryPreimage, hash, xdr } from "stellar-sdk";
 import type { ContractAuthContext } from "@colibri/webauth";
 import type { ContractAuthHandler } from "@colibri/webauth/sep45";
@@ -142,14 +142,35 @@ function assertionScVal(assertion: TestPasskeyAssertion): xdr.ScVal {
   ]);
 }
 
+function encodeBase64Url(value: Uint8Array): string {
+  return xdr.encodeBytes(value, "base64")
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(/=+$/u, "");
+}
+
 /** Encodes an assertion into a complete cloned authorization entry. */
 export function setPasskeyAssertion(
   entry: xdr.SorobanAuthorizationEntry,
   assertion: TestPasskeyAssertion,
 ): xdr.SorobanAuthorizationEntry {
   const clone = cloneSep45AuthorizationEntry(entry);
-  clone.credentials().address().signature(assertionScVal(assertion));
-  return clone;
+  const credentials = clone.credentials;
+  if (credentials.type !== "sorobanCredentialsAddress") {
+    throw new TypeError("Expected legacy address credentials");
+  }
+  return new xdr.SorobanAuthorizationEntry({
+    credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
+      new xdr.SorobanAddressCredentials({
+        address: credentials.address.address,
+        nonce: credentials.address.nonce,
+        signatureExpirationLedger:
+          credentials.address.signatureExpirationLedger,
+        signature: assertionScVal(assertion),
+      }),
+    ),
+    rootInvocation: clone.rootInvocation,
+  });
 }
 
 /** Generates a fresh synthetic P-256 credential for local tests. */
@@ -174,7 +195,7 @@ export async function createTestPasskeyCredential(): Promise<
       context.validUntilLedgerSeq,
       context.networkPassphrase,
     );
-    const challenge = hash(preimage.toXDR()).toString("base64url");
+    const challenge = encodeBase64Url(hash(preimage.toXdr()));
     const clientDataJSON = new TextEncoder().encode(JSON.stringify({
       type: "webauthn.get",
       challenge,

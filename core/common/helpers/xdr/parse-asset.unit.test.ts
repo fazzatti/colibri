@@ -7,7 +7,7 @@ import { UNKNOWN_ASSET_TYPE } from "@/common/helpers/xdr/error.ts";
 describe("parseAsset", () => {
   it("should parse native asset", () => {
     const asset = Asset.native();
-    const result = parseAsset(asset.toXDRObject());
+    const result = parseAsset(asset.toXdrObject());
     assertEquals(result, "native");
   });
 
@@ -15,7 +15,7 @@ describe("parseAsset", () => {
     const issuer = Keypair.random();
     const asset = new Asset("USDC", issuer.publicKey());
 
-    const result = parseAsset(asset.toXDRObject());
+    const result = parseAsset(asset.toXdrObject());
     assertEquals(result, `USDC:${issuer.publicKey()}`);
   });
 
@@ -23,7 +23,7 @@ describe("parseAsset", () => {
     const issuer = Keypair.random();
     const asset = new Asset("LONGASSETNAM", issuer.publicKey());
 
-    const result = parseAsset(asset.toXDRObject());
+    const result = parseAsset(asset.toXdrObject());
     assertEquals(result, `LONGASSETNAM:${issuer.publicKey()}`);
   });
 
@@ -32,7 +32,7 @@ describe("parseAsset", () => {
     // Short asset code that gets padded with nulls
     const asset = new Asset("USD", issuer.publicKey());
 
-    const result = parseAsset(asset.toXDRObject());
+    const result = parseAsset(asset.toXdrObject());
     assertEquals(result, `USD:${issuer.publicKey()}`);
   });
 

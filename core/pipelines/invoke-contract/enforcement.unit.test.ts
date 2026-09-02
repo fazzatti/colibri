@@ -1,4 +1,4 @@
-import { assertEquals, assertStrictEquals } from "@std/assert";
+import { assertEquals, assertRejects, assertStrictEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { createRunContext, step } from "convee";
 import {
@@ -12,7 +12,7 @@ import {
   xdr,
 } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import {
   assembleForEnforcementToEnforceSimulation,
   enforceSimulationToAssemble,
@@ -28,6 +28,7 @@ import {
 } from "@/steps/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { operationHasDelegatedAuthorization } from "@/common/helpers/xdr/operation-has-delegated-authorization.ts";
+import { EXPECTED_INVOKE_HOST_FUNCTION_OPERATION } from "@/pipelines/invoke-contract/error.ts";
 
 const source = "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P";
 const rootAddress = Address.contract(Buffer.alloc(32, 1));
@@ -49,7 +50,7 @@ const entry = buildWithDelegatesEntry({
     credentials: xdr.SorobanCredentials.sorobanCredentialsAddressV2(
       new xdr.SorobanAddressCredentials({
         address: rootAddress.toScAddress(),
-        nonce: new xdr.Int64(1),
+        nonce: xdr.Int64(1),
         signatureExpirationLedger: 0,
         signature: xdr.ScVal.scvVoid(),
       }),
@@ -149,6 +150,40 @@ describe("invoke-contract enforcement connectors", () => {
     );
 
     assertEquals(result.transactionFee, undefined);
+  });
+
+  it("rejects a non-invoke operation with a typed pipeline error", async () => {
+    const context = createRunContext();
+    const classicTransaction = new TransactionBuilder(
+      new Account(source, "100"),
+      {
+        fee: "100",
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
+      },
+    )
+      .addOperation(Operation.setOptions({}))
+      .setTimeout(0)
+      .build();
+    await seedStepOutput(
+      context,
+      BUILD_TRANSACTION_STEP_ID,
+      classicTransaction,
+    );
+    await seedStepOutput(
+      context,
+      SIMULATE_TRANSACTION_STEP_ID,
+      simulation("recording"),
+    );
+    await seedStepOutput(context, INVOKE_CONTRACT_INPUT_STEP_ID, invokeInput);
+
+    await assertRejects(
+      () =>
+        signAuthEntriesToAssembleForEnforcement().runWith(
+          { context: { parent: context } },
+          entry,
+        ),
+      EXPECTED_INVOKE_HOST_FUNCTION_OPERATION,
+    );
   });
 
   it("connects the prepared transaction to enforcing simulation", async () => {

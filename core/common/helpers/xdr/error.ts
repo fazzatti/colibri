@@ -31,6 +31,8 @@ export enum Code {
   MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER = "HLP_XDR_14",
   FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE = "HLP_XDR_15",
   MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE = "HLP_XDR_16",
+  UNSUPPORTED_AUTHORIZED_FUNCTION = "HLP_XDR_17",
+  MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_PARAMS = "HLP_XDR_18",
 }
 
 export type MetaData = {
@@ -265,6 +267,39 @@ export class MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE
       details:
         "The authorization entry does not contain address credentials from which an address type can be extracted",
       data: { value: { authEntryXDR } },
+    });
+  }
+}
+
+/**
+ * Thrown when authorization-entry parameter conversion receives a function
+ * variant that its contract-invocation shape cannot represent.
+ */
+export class UNSUPPORTED_AUTHORIZED_FUNCTION extends XdrHelperError {
+  constructor(functionType: string) {
+    super({
+      code: Code.UNSUPPORTED_AUTHORIZED_FUNCTION,
+      message: `Unsupported Soroban authorized function: ${functionType}`,
+      details:
+        "Authorization-entry parameters currently represent contract-function invocations only",
+      data: { value: { functionType } },
+    });
+  }
+}
+
+/**
+ * Thrown when authorization-entry parameter conversion receives credentials
+ * without an address.
+ */
+export class MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_PARAMS
+  extends XdrHelperError {
+  constructor() {
+    super({
+      code: Code.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_PARAMS,
+      message:
+        "Missing address credentials for SorobanAuthorizationEntry parameters",
+      details:
+        "Source-account credentials cannot be represented by the address-based authorization-entry parameter shape",
     });
   }
 }

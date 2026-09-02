@@ -66,7 +66,7 @@ export const contractMetadataSection = (
     new Uint8Array([...unsignedLeb128(name.length), ...name]),
     ...entries.map(({ key, value }) =>
       new Uint8Array(
-        xdr.ScMetaEntry.scMetaV0(new xdr.ScMetaV0({ key, val: value })).toXDR(),
+        xdr.ScMetaEntry.scMetaV0(new xdr.ScMetaV0({ key, val: value })).toXdr(),
       )
     ),
   );

@@ -265,8 +265,7 @@ export type PinnedHttpResource = {
   readonly policy: import("@/core/policy/types.ts").PolicyDecision;
 };
 
-/** Retrieves bytes while revalidating policy and DNS pinning per redirect. */
-export const retrievePinnedHttpResource = async (args: {
+type RetrievePinnedHttpResourceArgs = {
   readonly url: string;
   readonly limits: VerificationSourceProviderInput["limits"];
   readonly policy: HttpVerificationSourceProviderOptions["policy"];
@@ -277,19 +276,117 @@ export const retrievePinnedHttpResource = async (args: {
     | ((url: URL) => Readonly<Record<string, string>>);
   readonly maxBytes?: number;
   readonly acceptStatus?: (status: number) => boolean;
-}): Promise<PinnedHttpResource> => {
+};
+
+const parseSourceUrl = (current: string, requested: string): URL => {
+  try {
+    return new URL(current);
+  } catch (cause) {
+    throw new SourceDownloadFailedError(requested, cause);
+  }
+};
+
+const sourceRequestHeaders = (
+  args: RetrievePinnedHttpResourceArgs,
+  parsed: URL,
+  allowStaticCredentials: boolean,
+): Readonly<Record<string, string>> => {
+  if (typeof args.headers === "function") return args.headers(parsed);
+  if (allowStaticCredentials && parsed.protocol === "https:") {
+    return args.headers ?? {};
+  }
+  return withoutCredentialHeaders(args.headers ?? {});
+};
+
+const requestApprovedSource = async (
+  args: RetrievePinnedHttpResourceArgs,
+  current: string,
+  parsed: URL,
+  addresses: readonly string[],
+  allowStaticCredentials: boolean,
+): Promise<SourceHttpResponse> => {
+  try {
+    return await args.transport.request({
+      url: current,
+      headers: sourceRequestHeaders(args, parsed, allowStaticCredentials),
+      approvedAddresses: addresses,
+      timeoutMs: args.limits.downloadTimeoutMs,
+      maxBytes: args.maxBytes ?? args.limits.maxArchiveBytes,
+    });
+  } catch (cause) {
+    if (cause instanceof BuildVerificationError) throw cause;
+    throw new SourceDownloadFailedError(redactSourceUrl(current), cause);
+  }
+};
+
+const sourceRedirect = (
+  args: RetrievePinnedHttpResourceArgs,
+  response: SourceHttpResponse,
+  current: string,
+  redirect: number,
+): URL | undefined => {
+  if (!REDIRECT_STATUSES.has(response.status)) return;
+  if (redirect === args.limits.maxRedirects) {
+    throw new SourceRedirectLimitExceededError(
+      redactSourceUrl(current),
+      args.limits.maxRedirects,
+    );
+  }
+  const location = response.headers.location;
+  if (!location) {
+    throw new SourceRedirectLocationMissingError(
+      redactSourceUrl(current),
+      response.status,
+    );
+  }
+  return new URL(location, current);
+};
+
+const assertSourceResponseAccepted = (
+  args: RetrievePinnedHttpResourceArgs,
+  response: SourceHttpResponse,
+  current: string,
+): void => {
+  const successful = response.status >= 200 && response.status < 300;
+  if (successful || args.acceptStatus?.(response.status)) return;
+  throw new SourceDownloadFailedError(
+    redactSourceUrl(current),
+    undefined,
+    response.status,
+  );
+};
+
+const resolveHttpArchiveFormat = (
+  response: Pick<PinnedHttpResource, "finalUrl" | "requestedUrl">,
+): ReturnType<typeof detectArchiveFormat> => {
+  try {
+    return detectArchiveFormat(new URL(response.finalUrl).pathname);
+  } catch (finalUrlCause) {
+    try {
+      return detectArchiveFormat(new URL(response.requestedUrl).pathname);
+    } catch (requestedUrlCause) {
+      throw new SourceResponseReadFailedError(
+        response.finalUrl,
+        new AggregateError(
+          [finalUrlCause, requestedUrlCause],
+          "Neither the resolved nor requested source URL identifies a supported archive format.",
+        ),
+      );
+    }
+  }
+};
+
+/** Retrieves bytes while revalidating policy and DNS pinning per redirect. */
+export const retrievePinnedHttpResource = async (
+  args: RetrievePinnedHttpResourceArgs,
+): Promise<PinnedHttpResource> => {
   const requested = redactSourceUrl(args.url);
   const retrieve = async (
     current: string,
     redirect: number,
     allowStaticCredentials: boolean,
   ): Promise<PinnedHttpResource> => {
-    let parsed: URL;
-    try {
-      parsed = new URL(current);
-    } catch (cause) {
-      throw new SourceDownloadFailedError(requested, cause);
-    }
+    const parsed = parseSourceUrl(current, requested);
     const addresses = await args.addressResolver.resolve(parsed.hostname);
     const policyDecision = await args.policy.evaluate({
       url: current,
@@ -302,54 +399,22 @@ export const retrievePinnedHttpResource = async (args: {
         policyDecision.reasons,
       );
     }
-    let response: SourceHttpResponse;
-    try {
-      response = await args.transport.request({
-        url: current,
-        headers: typeof args.headers === "function"
-          ? args.headers(parsed)
-          : allowStaticCredentials && parsed.protocol === "https:"
-          ? args.headers ?? {}
-          : withoutCredentialHeaders(args.headers ?? {}),
-        approvedAddresses: addresses,
-        timeoutMs: args.limits.downloadTimeoutMs,
-        maxBytes: args.maxBytes ?? args.limits.maxArchiveBytes,
-      });
-    } catch (cause) {
-      if (cause instanceof BuildVerificationError) throw cause;
-      throw new SourceDownloadFailedError(redactSourceUrl(current), cause);
-    }
-    if (REDIRECT_STATUSES.has(response.status)) {
-      if (redirect === args.limits.maxRedirects) {
-        throw new SourceRedirectLimitExceededError(
-          redactSourceUrl(current),
-          args.limits.maxRedirects,
-        );
-      }
-      const location = response.headers.location;
-      if (!location) {
-        throw new SourceRedirectLocationMissingError(
-          redactSourceUrl(current),
-          response.status,
-        );
-      }
-      const redirected = new URL(location, current);
+    const response = await requestApprovedSource(
+      args,
+      current,
+      parsed,
+      addresses,
+      allowStaticCredentials,
+    );
+    const redirected = sourceRedirect(args, response, current, redirect);
+    if (redirected) {
       return await retrieve(
         redirected.toString(),
         redirect + 1,
         allowStaticCredentials && redirected.origin === parsed.origin,
       );
     }
-    if (
-      (response.status < 200 || response.status >= 300) &&
-      !args.acceptStatus?.(response.status)
-    ) {
-      throw new SourceDownloadFailedError(
-        redactSourceUrl(current),
-        undefined,
-        response.status,
-      );
-    }
+    assertSourceResponseAccepted(args, response, current);
     return {
       requestedUrl: requested,
       finalUrl: redactSourceUrl(current),
@@ -394,22 +459,7 @@ export class HttpVerificationSourceProvider
       addressResolver: this.#addressResolver,
       headers: this.#headers,
     });
-    let format;
-    try {
-      format = detectArchiveFormat(new URL(response.finalUrl).pathname);
-    } catch (finalUrlCause) {
-      try {
-        format = detectArchiveFormat(new URL(response.requestedUrl).pathname);
-      } catch (requestedUrlCause) {
-        throw new SourceResponseReadFailedError(
-          response.finalUrl,
-          new AggregateError(
-            [finalUrlCause, requestedUrlCause],
-            "Neither the resolved nor requested source URL identifies a supported archive format.",
-          ),
-        );
-      }
-    }
+    const format = resolveHttpArchiveFormat(response);
     return {
       content: "archive" as const,
       kind: input.provenanceKind ?? ("url" as const),

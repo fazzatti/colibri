@@ -1,6 +1,6 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { Event } from "@/event/event.ts";
@@ -306,7 +306,7 @@ describe("EventTemplate", () => {
       const event = createMockEvent(
         [
           xdr.ScVal.scvSymbol("bigint_event"),
-          xdr.ScVal.scvTimepoint(new xdr.Uint64(BigInt(1700000000))),
+          xdr.ScVal.scvTimepoint(xdr.Uint64(BigInt(1700000000))),
         ],
         nativeToScVal(BigInt("12345678901234567890"), { type: "u256" })
       );
@@ -886,7 +886,7 @@ describe("EventTemplate", () => {
 
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("duration_event")],
-        xdr.ScVal.scvDuration(new xdr.Uint64(BigInt(3600)))
+        xdr.ScVal.scvDuration(xdr.Uint64(BigInt(3600)))
       );
 
       assertEquals(DurationEvent.is(event), true);

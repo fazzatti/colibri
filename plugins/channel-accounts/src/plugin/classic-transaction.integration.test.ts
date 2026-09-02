@@ -19,7 +19,7 @@ import {
   type xdr,
 } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
-import { createFeeBumpPlugin } from "../../../fee-bump/mod.ts";
+import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
 import {
   type ChannelAccount,
   ChannelAccounts,
@@ -29,13 +29,13 @@ import {
 const asEnvelopeXdr = (
   envelopeXdr: string | xdr.TransactionEnvelope,
 ): string =>
-  typeof envelopeXdr === "string" ? envelopeXdr : envelopeXdr.toXDR("base64");
+  typeof envelopeXdr === "string" ? envelopeXdr : envelopeXdr.toXdr("base64");
 
 const parseSubmittedTransaction = (
   envelopeXdr: string | xdr.TransactionEnvelope,
   networkPassphrase: string,
 ): Transaction | FeeBumpTransaction =>
-  TransactionBuilder.fromXDR(
+  TransactionBuilder.fromXdr(
     asEnvelopeXdr(envelopeXdr),
     networkPassphrase,
   ) as Transaction | FeeBumpTransaction;

@@ -1,16 +1,9 @@
-import {
-  Address,
-  Contract as StellarContract,
-  hash,
-  Keypair,
-  xdr,
-} from "stellar-sdk";
-import { Buffer } from "buffer";
+import { Address, hash, Keypair, xdr } from "stellar-sdk";
 import type { BinaryData, LedgerKeyLike } from "@/common/types/index.ts";
-import { toBuffer } from "@/common/helpers/internal-buffer.ts";
+import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import * as E from "@/ledger-entries/error.ts";
-import { decodeByteFormBase64, toRawXdrBuffer } from "@/ledger-entries/xdr.ts";
+import { toRawXdrBytes } from "@/ledger-entries/xdr.ts";
 import type {
   AccountLedgerEntry,
   AccountLedgerKey,
@@ -55,9 +48,9 @@ import type { Sha256Hash } from "@/strkeys/types.ts";
 const HEX_32_BYTE_REGEX = /^[0-9a-f]{64}$/i;
 const MAX_SIGNED_INT64 = 9_223_372_036_854_775_807n;
 
-const CONFIG_SETTING_ID_BUILDERS: Record<
+const CONFIG_SETTING_IDS: Record<
   ConfigSettingIdName,
-  () => xdr.ConfigSettingId
+  xdr.ConfigSettingId
 > = {
   configSettingContractMaxSizeBytes:
     xdr.ConfigSettingId.configSettingContractMaxSizeBytes,
@@ -93,28 +86,13 @@ const CONFIG_SETTING_ID_BUILDERS: Record<
   configSettingScpTiming: xdr.ConfigSettingId.configSettingScpTiming,
 };
 
-function brandLedgerKey<TEntry extends AnyLedgerEntry>(
-  key: xdr.LedgerKey,
-): TypedLedgerKey<TEntry> {
-  return key as unknown as TypedLedgerKey<TEntry>;
-}
-
-function normalizeScVal(
-  value: { toXDR(format?: "raw" | "hex" | "base64"): string | Uint8Array },
-): xdr.ScVal {
-  if (value instanceof xdr.ScVal) {
-    return value;
-  }
-
-  const encoded = value.toXDR("base64");
-  if (typeof encoded === "string") {
-    return xdr.ScVal.fromXDR(encoded, "base64");
-  }
-
-  const byteFormBase64 = decodeByteFormBase64(encoded);
-  return byteFormBase64
-    ? xdr.ScVal.fromXDR(byteFormBase64, "base64")
-    : xdr.ScVal.fromXDR(Buffer.from(encoded));
+function brandLedgerKey<
+  TEntry extends AnyLedgerEntry,
+  TVariant extends xdr.LedgerKey["type"],
+>(
+  key: Extract<xdr.LedgerKey, { readonly type: TVariant }>,
+): TypedLedgerKey<TEntry, TVariant> {
+  return key as TypedLedgerKey<TEntry, TVariant>;
 }
 
 function requireAccountId(accountId: string): void {
@@ -167,17 +145,17 @@ function requireLiquidityPoolId(liquidityPoolId: string): void {
   }
 }
 
-function normalizeHashBytes(hashValue: string | BinaryData): Buffer {
+function normalizeHashBytes(hashValue: string | BinaryData): Uint8Array {
   if (typeof hashValue === "string") {
     if (!HEX_32_BYTE_REGEX.test(hashValue)) {
       throw new E.INVALID_HEX_HASH(hashValue);
     }
-    return Buffer.from(hashValue, "hex");
+    return xdr.decodeBytes(hashValue, "hex");
   }
 
-  const hashBytes = toBuffer(hashValue);
+  const hashBytes = toUint8Array(hashValue);
   if (hashBytes.length !== 32) {
-    throw new E.INVALID_HEX_HASH(hashBytes.toString("hex"));
+    throw new E.INVALID_HEX_HASH(xdr.encodeBytes(hashBytes, "hex"));
   }
 
   return hashBytes;
@@ -187,51 +165,46 @@ function normalizeContractDataDurability(
   durability?: ContractDataDurabilityName,
 ): xdr.ContractDataDurability {
   if (!durability || durability === "persistent") {
-    return xdr.ContractDataDurability.persistent();
+    return xdr.ContractDataDurability.persistent;
   }
 
-  return xdr.ContractDataDurability.temporary();
+  return xdr.ContractDataDurability.temporary;
 }
 
 function normalizeConfigSettingId(
   configSettingId: ConfigSettingIdName,
 ): xdr.ConfigSettingId {
-  const builder = CONFIG_SETTING_ID_BUILDERS[configSettingId];
-  if (!builder) {
+  const value = CONFIG_SETTING_IDS[configSettingId];
+  if (!value) {
     throw new E.INVALID_CONFIG_SETTING_ID(configSettingId);
   }
 
-  return builder();
+  return value;
 }
 
 function normalizeClaimableBalanceId(
   balanceId: string,
 ): xdr.ClaimableBalanceId {
-  const decoded = Buffer.from(StrKey.decodeClaimableBalance(balanceId));
-
-  if (decoded.length !== 33 || decoded[0] !== 0) {
-    throw new E.INVALID_CLAIMABLE_BALANCE_ID(balanceId);
-  }
-
+  const decoded = StrKey.decodeClaimableBalance(balanceId);
   return xdr.ClaimableBalanceId.claimableBalanceIdTypeV0(decoded.subarray(1));
 }
 
 function normalizeLedgerKeyHash(
   args: BuildTtlLedgerKeyArgs,
-): Buffer {
+): Uint8Array {
   if ("key" in args && args.key) {
-    return hash(toRawXdrBuffer(args.key));
+    return hash(toRawXdrBytes(args.key));
   }
 
   if (typeof args.keyHash === "string") {
     try {
-      return Buffer.from(StrKey.decodeSha256Hash(args.keyHash));
+      return StrKey.decodeSha256Hash(args.keyHash);
     } catch (_) {
       throw new E.INVALID_LEDGER_KEY_HASH();
     }
   }
 
-  const keyHash = toBuffer(args.keyHash);
+  const keyHash = toUint8Array(args.keyHash);
   if (keyHash.length !== 32) {
     throw new E.INVALID_LEDGER_KEY_HASH();
   }
@@ -243,7 +216,7 @@ function normalizeLedgerKeyHash(
  * Computes the hash used by TTL ledger keys for an existing ledger key.
  */
 export function hashLedgerKey(key: LedgerKeyLike): Sha256Hash {
-  return StrKey.encodeSha256Hash(hash(toRawXdrBuffer(key)));
+  return StrKey.encodeSha256Hash(hash(toRawXdrBytes(key)));
 }
 
 /**
@@ -254,7 +227,7 @@ export function buildAccountLedgerKey({
 }: BuildAccountLedgerKeyArgs): AccountLedgerKey {
   requireAccountId(accountId);
 
-  return brandLedgerKey<AccountLedgerEntry>(
+  return brandLedgerKey<AccountLedgerEntry, "account">(
     xdr.LedgerKey.account(
       new xdr.LedgerKeyAccount({
         accountId: Keypair.fromPublicKey(accountId).xdrAccountId(),
@@ -272,11 +245,11 @@ export function buildTrustlineLedgerKey({
 }: BuildTrustlineLedgerKeyArgs): TrustlineLedgerKey {
   requireAccountId(accountId);
 
-  return brandLedgerKey<TrustlineLedgerEntry>(
+  return brandLedgerKey<TrustlineLedgerEntry, "trustline">(
     xdr.LedgerKey.trustline(
       new xdr.LedgerKeyTrustLine({
         accountId: Keypair.fromPublicKey(accountId).xdrAccountId(),
-        asset: asset.toTrustLineXDRObject() as xdr.TrustLineAsset,
+        asset: asset.toTrustLineXdrObject() as xdr.TrustLineAsset,
       }),
     ),
   );
@@ -291,7 +264,7 @@ export function buildOfferLedgerKey({
 }: BuildOfferLedgerKeyArgs): OfferLedgerKey {
   requireAccountId(sellerId);
 
-  return brandLedgerKey<OfferLedgerEntry>(
+  return brandLedgerKey<OfferLedgerEntry, "offer">(
     xdr.LedgerKey.offer(
       new xdr.LedgerKeyOffer({
         sellerId: Keypair.fromPublicKey(sellerId).xdrAccountId(),
@@ -310,11 +283,13 @@ export function buildDataLedgerKey({
 }: BuildDataLedgerKeyArgs): DataLedgerKey {
   requireAccountId(accountId);
 
-  return brandLedgerKey<DataLedgerEntry>(
+  return brandLedgerKey<DataLedgerEntry, "data">(
     xdr.LedgerKey.data(
       new xdr.LedgerKeyData({
         accountId: Keypair.fromPublicKey(accountId).xdrAccountId(),
-        dataName: typeof dataName === "string" ? dataName : toBuffer(dataName),
+        dataName: typeof dataName === "string"
+          ? dataName
+          : toUint8Array(dataName),
       }),
     ),
   );
@@ -328,7 +303,7 @@ export function buildClaimableBalanceLedgerKey({
 }: BuildClaimableBalanceLedgerKeyArgs): ClaimableBalanceLedgerKey {
   requireClaimableBalanceId(balanceId);
 
-  return brandLedgerKey<ClaimableBalanceLedgerEntry>(
+  return brandLedgerKey<ClaimableBalanceLedgerEntry, "claimableBalance">(
     xdr.LedgerKey.claimableBalance(
       new xdr.LedgerKeyClaimableBalance({
         balanceId: normalizeClaimableBalanceId(balanceId),
@@ -345,12 +320,12 @@ export function buildLiquidityPoolLedgerKey({
 }: BuildLiquidityPoolLedgerKeyArgs): LiquidityPoolLedgerKey {
   requireLiquidityPoolId(liquidityPoolId);
 
-  return brandLedgerKey<LiquidityPoolLedgerEntry>(
+  return brandLedgerKey<LiquidityPoolLedgerEntry, "liquidityPool">(
     xdr.LedgerKey.liquidityPool(
       new xdr.LedgerKeyLiquidityPool({
-        liquidityPoolId: Buffer.from(
+        liquidityPoolId: new xdr.PoolId(
           StrKey.decodeLiquidityPool(liquidityPoolId),
-        ) as unknown as xdr.PoolId,
+        ),
       }),
     ),
   );
@@ -366,11 +341,11 @@ export function buildContractDataLedgerKey({
 }: BuildContractDataLedgerKeyArgs): ContractDataLedgerKey {
   requireContractId(contractId);
 
-  return brandLedgerKey<ContractDataLedgerEntry>(
+  return brandLedgerKey<ContractDataLedgerEntry, "contractData">(
     xdr.LedgerKey.contractData(
       new xdr.LedgerKeyContractData({
         contract: Address.fromString(contractId).toScAddress(),
-        key: normalizeScVal(key),
+        key,
         durability: normalizeContractDataDurability(durability),
       }),
     ),
@@ -385,8 +360,14 @@ export function buildContractInstanceLedgerKey({
 }: BuildContractInstanceLedgerKeyArgs): ContractInstanceLedgerKey {
   requireContractId(contractId);
 
-  return brandLedgerKey<ContractInstanceLedgerEntry>(
-    new StellarContract(contractId).getFootprint(),
+  return brandLedgerKey<ContractInstanceLedgerEntry, "contractData">(
+    xdr.LedgerKey.contractData(
+      new xdr.LedgerKeyContractData({
+        contract: new Address(contractId).toScAddress(),
+        key: xdr.ScVal.scvLedgerKeyContractInstance(),
+        durability: xdr.ContractDataDurability.persistent,
+      }),
+    ),
   );
 }
 
@@ -398,7 +379,7 @@ export function buildContractCodeLedgerKey({
 }: BuildContractCodeLedgerKeyArgs): ContractCodeLedgerKey {
   const hashBytes = normalizeHashBytes(hash);
 
-  return brandLedgerKey<ContractCodeLedgerEntry>(
+  return brandLedgerKey<ContractCodeLedgerEntry, "contractCode">(
     xdr.LedgerKey.contractCode(
       new xdr.LedgerKeyContractCode({
         hash: hashBytes,
@@ -413,7 +394,7 @@ export function buildContractCodeLedgerKey({
 export function buildConfigSettingLedgerKey({
   configSettingId,
 }: BuildConfigSettingLedgerKeyArgs): ConfigSettingLedgerKey {
-  return brandLedgerKey<ConfigSettingLedgerEntry>(
+  return brandLedgerKey<ConfigSettingLedgerEntry, "configSetting">(
     xdr.LedgerKey.configSetting(
       new xdr.LedgerKeyConfigSetting({
         configSettingId: normalizeConfigSettingId(configSettingId),
@@ -426,7 +407,7 @@ export function buildConfigSettingLedgerKey({
  * Builds a TTL ledger key branded with the decoded entry type.
  */
 export function buildTtlLedgerKey(args: BuildTtlLedgerKeyArgs): TtlLedgerKey {
-  return brandLedgerKey<TtlLedgerEntry>(
+  return brandLedgerKey<TtlLedgerEntry, "ttl">(
     xdr.LedgerKey.ttl(
       new xdr.LedgerKeyTtl({
         keyHash: normalizeLedgerKeyHash(args),

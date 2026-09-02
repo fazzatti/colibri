@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Buffer } from "buffer";
-import { xdr, Address } from "stellar-sdk";
+import { Buffer } from "node:buffer";
+import { Address, xdr } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
 import { signAuthEntries } from "@/processes/sign-auth-entries/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
@@ -17,13 +17,13 @@ type MockSigner = KeypairSigner & {
 
 const makeInvocation = () =>
   new xdr.SorobanAuthorizedInvocation({
-    function:
-      xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
+    function: xdr.SorobanAuthorizedFunction
+      .sorobanAuthorizedFunctionTypeContractFn(
         new xdr.InvokeContractArgs({
           contractAddress: Address.contract(Buffer.alloc(32)).toScAddress(),
           functionName: "noop",
           args: [],
-        })
+        }),
       ),
     subInvocations: [],
   });
@@ -33,10 +33,23 @@ const makeAccountAuthEntry = (account: Address) =>
     credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
       new xdr.SorobanAddressCredentials({
         address: account.toScAddress(),
-        nonce: new xdr.Int64(0),
+        nonce: xdr.Int64(0),
         signatureExpirationLedger: 0,
         signature: xdr.ScVal.scvVec([]),
-      })
+      }),
+    ),
+    rootInvocation: makeInvocation(),
+  });
+
+const makeAccountV2AuthEntry = (account: Address) =>
+  new xdr.SorobanAuthorizationEntry({
+    credentials: xdr.SorobanCredentials.sorobanCredentialsAddressV2(
+      new xdr.SorobanAddressCredentials({
+        address: account.toScAddress(),
+        nonce: xdr.Int64(0),
+        signatureExpirationLedger: 0,
+        signature: xdr.ScVal.scvVec([]),
+      }),
     ),
     rootInvocation: makeInvocation(),
   });
@@ -46,10 +59,10 @@ const makeSignedAccountAuthEntry = (account: Address) =>
     credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
       new xdr.SorobanAddressCredentials({
         address: account.toScAddress(),
-        nonce: new xdr.Int64(0),
+        nonce: xdr.Int64(0),
         signatureExpirationLedger: 0,
         signature: xdr.ScVal.scvU32(7),
-      })
+      }),
     ),
     rootInvocation: makeInvocation(),
   });
@@ -59,10 +72,10 @@ const makeScAddressAuthEntry = (address: xdr.ScAddress) =>
     credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
       new xdr.SorobanAddressCredentials({
         address,
-        nonce: new xdr.Int64(0),
+        nonce: xdr.Int64(0),
         signatureExpirationLedger: 0,
         signature: xdr.ScVal.scvVec([]),
-      })
+      }),
     ),
     rootInvocation: makeInvocation(),
   });
@@ -78,8 +91,8 @@ const makeSigner = (
   behavior?: (
     entry: SorobanAuthorizationEntryLike,
     validUntil: number,
-    passphrase: string
-  ) => Promise<SorobanAuthorizationEntryLike>
+    passphrase: string,
+  ) => Promise<SorobanAuthorizationEntryLike>,
 ): MockSigner => {
   const pub = publicKey as Ed25519PublicKey;
   const sign: KeypairSigner["sign"] = (b: Buffer): Buffer => {
@@ -91,7 +104,7 @@ const makeSigner = (
     return await Promise.resolve(
       undefined as unknown as Awaited<
         ReturnType<KeypairSigner["signTransaction"]>
-      >
+      >,
     );
   };
 
@@ -113,12 +126,11 @@ const makeSigner = (
   return signer;
 };
 
-const makeRpc = (sequence = 1000): Server =>
-  ({
-    async getLatestLedger() {
-      return await { sequence, id: "mock", protocolVersion: 20 };
-    },
-  } as unknown as Server);
+const makeRpc = (sequence = 1000): Server => ({
+  async getLatestLedger() {
+    return await { sequence, id: "mock", protocolVersion: 20 };
+  },
+} as unknown as Server);
 
 describe("SignAuthEntries", () => {
   const { networkPassphrase } = NetworkConfig.TestNet();
@@ -139,6 +151,23 @@ describe("SignAuthEntries", () => {
     assertEquals(out.length, 1);
     assertEquals(signer.calls, 1);
     assertEquals(signer.lastValidUntil, 1120);
+  });
+
+  it("signs an AddressV2 account entry through the existing signer path", async () => {
+    const account = Address.account(Buffer.alloc(32, 34));
+    const entry = makeAccountV2AuthEntry(account);
+    const signer = makeSigner(account.toString());
+
+    const out = await signAuthEntries({
+      auth: [entry],
+      signers: [signer],
+      rpc: makeRpc(),
+      networkPassphrase,
+    });
+
+    assertEquals(out.length, 1);
+    assertEquals(signer.calls, 1);
+    assertEquals(signer.lastEntry?.toXdr("base64"), entry.toXdr("base64"));
   });
 
   it("returns an empty array when there are no auth entries to process", async () => {
@@ -265,10 +294,10 @@ describe("SignAuthEntries", () => {
     const unsupportedEntry = makeScAddressAuthEntry(
       xdr.ScAddress.scAddressTypeMuxedAccount(
         new xdr.MuxedEd25519Account({
-          id: new xdr.Uint64(123),
+          id: xdr.Uint64(123),
           ed25519: Buffer.alloc(32, 9),
-        })
-      )
+        }),
+      ),
     );
     const accountEntry = makeAccountAuthEntry(account);
     const signer = makeSigner(account.toString());
@@ -288,21 +317,21 @@ describe("SignAuthEntries", () => {
   it("passes through special address types when includeUnsigned is true", async () => {
     const claimable = makeScAddressAuthEntry(
       xdr.ScAddress.scAddressTypeClaimableBalance(
-        xdr.ClaimableBalanceId.claimableBalanceIdTypeV0(Buffer.alloc(32, 21))
-      )
+        xdr.ClaimableBalanceId.claimableBalanceIdTypeV0(Buffer.alloc(32, 21)),
+      ),
     );
     const liquidity = makeScAddressAuthEntry(
       xdr.ScAddress.scAddressTypeLiquidityPool(
-        Buffer.alloc(32, 22) as unknown as xdr.PoolId
-      )
+        Buffer.alloc(32, 22) as unknown as xdr.PoolId,
+      ),
     );
     const muxed = makeScAddressAuthEntry(
       xdr.ScAddress.scAddressTypeMuxedAccount(
         new xdr.MuxedEd25519Account({
-          id: new xdr.Uint64(123),
+          id: xdr.Uint64(123),
           ed25519: Buffer.alloc(32, 23),
-        })
-      )
+        }),
+      ),
     );
     const signer = makeSigner(Address.account(Buffer.alloc(32, 24)).toString());
 
@@ -321,21 +350,21 @@ describe("SignAuthEntries", () => {
   it("omits special address types when includeUnsigned is false", async () => {
     const claimable = makeScAddressAuthEntry(
       xdr.ScAddress.scAddressTypeClaimableBalance(
-        xdr.ClaimableBalanceId.claimableBalanceIdTypeV0(Buffer.alloc(32, 25))
-      )
+        xdr.ClaimableBalanceId.claimableBalanceIdTypeV0(Buffer.alloc(32, 25)),
+      ),
     );
     const liquidity = makeScAddressAuthEntry(
       xdr.ScAddress.scAddressTypeLiquidityPool(
-        Buffer.alloc(32, 26) as unknown as xdr.PoolId
-      )
+        Buffer.alloc(32, 26) as unknown as xdr.PoolId,
+      ),
     );
     const muxed = makeScAddressAuthEntry(
       xdr.ScAddress.scAddressTypeMuxedAccount(
         new xdr.MuxedEd25519Account({
-          id: new xdr.Uint64(123),
+          id: xdr.Uint64(123),
           ed25519: Buffer.alloc(32, 23),
-        })
-      )
+        }),
+      ),
     );
     const signer = makeSigner(Address.account(Buffer.alloc(32, 28)).toString());
 
@@ -366,7 +395,7 @@ describe("SignAuthEntries", () => {
 
     assertEquals(out.length, 1);
     assertEquals(signer.calls, 1);
-    assertEquals(out[0].toXDR("base64"), entry.toXDR("base64"));
+    assertEquals(out[0].toXdr("base64"), entry.toXdr("base64"));
   });
 
   it("preserves already-signed auth entries while signing the remaining unsigned ones", async () => {
@@ -384,7 +413,7 @@ describe("SignAuthEntries", () => {
     });
 
     assertEquals(out.length, 2);
-    assertEquals(out[0].toXDR("base64"), signedEntry.toXDR("base64"));
+    assertEquals(out[0].toXdr("base64"), signedEntry.toXdr("base64"));
     assertEquals(signer.calls, 1);
   });
 });

@@ -86,19 +86,19 @@ describe("Verifiers", () => {
     const { networkPassphrase } = NetworkConfig.TestNet();
     it("should verify valid Transaction objects as true", () => {
       const mockTransactions = [
-        TransactionBuilder.fromXDR(
+        TransactionBuilder.fromXdr(
           "AAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAGQAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
           networkPassphrase
         ),
-        TransactionBuilder.fromXDR(
+        TransactionBuilder.fromXdr(
           "AAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAASwAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
           networkPassphrase
         ),
-        TransactionBuilder.fromXDR(
+        TransactionBuilder.fromXdr(
           "AAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAwBgAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAGAAAAAAAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAIZGVjaW1hbHMAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAAYAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAUAAAAAQAAAAAAAfIlAAAAAAAAAAAAAAAAAAC/UAAAAAA=",
           networkPassphrase
         ),
-        TransactionBuilder.fromXDR(
+        TransactionBuilder.fromXdr(
           "AAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAGQAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAABy6rRnxRIjFIzSAmV8BbmxVVc8gijT2oAluc+FcWUDFAAAAAAAAAAAAJiWgAAAAAAAAAAA",
           networkPassphrase
         ),
@@ -116,19 +116,19 @@ describe("Verifiers", () => {
         undefined as unknown as string,
         {} as unknown as string,
         [] as unknown as string,
-        TransactionBuilder.fromXDR(
+        TransactionBuilder.fromXdr(
           "AAAABQAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAAAAAAfQAAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAGQAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
           networkPassphrase
         ),
-        TransactionBuilder.fromXDR(
+        TransactionBuilder.fromXdr(
           "AAAABQAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAAAAAA+gAAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAASwAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
           networkPassphrase
         ),
-        TransactionBuilder.fromXDR(
+        TransactionBuilder.fromXdr(
           "AAAABQAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAAAAAw1AAAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAwBgAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAGAAAAAAAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAIZGVjaW1hbHMAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAAYAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAUAAAAAQAAAAAAAfIlAAAAAAAAAAAAAAAAAAC/UAAAAAAAAAAAAAAAAA==",
           networkPassphrase
         ),
-        TransactionBuilder.fromXDR(
+        TransactionBuilder.fromXdr(
           "AAAABQAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAAAAAw1AAAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAGQAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAABy6rRnxRIjFIzSAmV8BbmxVVc8gijT2oAluc+FcWUDFAAAAAAAAAAAAJiWgAAAAAAAAAAAAAAAAAAAAAA=",
           networkPassphrase
         ),
@@ -144,19 +144,19 @@ describe("Verifiers", () => {
     const { networkPassphrase } = NetworkConfig.TestNet();
     it("should verify valid isFeeBumpTransaction objects as true", () => {
       const mockFeeBumpTransactions = [
-        TransactionBuilder.fromXDR(
+        TransactionBuilder.fromXdr(
           "AAAABQAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAAAAAAfQAAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAGQAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
           networkPassphrase
         ),
-        TransactionBuilder.fromXDR(
+        TransactionBuilder.fromXdr(
           "AAAABQAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAAAAAA+gAAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAASwAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
           networkPassphrase
         ),
-        TransactionBuilder.fromXDR(
+        TransactionBuilder.fromXdr(
           "AAAABQAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAAAAAw1AAAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAwBgAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAGAAAAAAAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAIZGVjaW1hbHMAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAAYAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAUAAAAAQAAAAAAAfIlAAAAAAAAAAAAAAAAAAC/UAAAAAAAAAAAAAAAAA==",
           networkPassphrase
         ),
-        TransactionBuilder.fromXDR(
+        TransactionBuilder.fromXdr(
           "AAAABQAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAAAAAw1AAAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAGQAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAABy6rRnxRIjFIzSAmV8BbmxVVc8gijT2oAluc+FcWUDFAAAAAAAAAAAAJiWgAAAAAAAAAAAAAAAAAAAAAA=",
           networkPassphrase
         ),
@@ -175,19 +175,19 @@ describe("Verifiers", () => {
         {} as unknown as string,
         [] as unknown as string,
 
-        TransactionBuilder.fromXDR(
+        TransactionBuilder.fromXdr(
           "AAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAGQAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
           networkPassphrase
         ),
-        TransactionBuilder.fromXDR(
+        TransactionBuilder.fromXdr(
           "AAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAASwAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
           networkPassphrase
         ),
-        TransactionBuilder.fromXDR(
+        TransactionBuilder.fromXdr(
           "AAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAwBgAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAGAAAAAAAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAIZGVjaW1hbHMAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAAYAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAUAAAAAQAAAAAAAfIlAAAAAAAAAAAAAAAAAAC/UAAAAAA=",
           networkPassphrase
         ),
-        TransactionBuilder.fromXDR(
+        TransactionBuilder.fromXdr(
           "AAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAGQAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAABy6rRnxRIjFIzSAmV8BbmxVVc8gijT2oAluc+FcWUDFAAAAAAAAAAAAJiWgAAAAAAAAAAA",
           networkPassphrase
         ),
@@ -237,7 +237,7 @@ describe("Verifiers", () => {
     const { networkPassphrase } = NetworkConfig.TestNet();
 
     it("should verify valid smart contract transactions (invokeHostFunction)", () => {
-      const invokeHostFunctionTx = TransactionBuilder.fromXDR(
+      const invokeHostFunctionTx = TransactionBuilder.fromXdr(
         "AAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAwBgAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAGAAAAAAAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAIZGVjaW1hbHMAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAAYAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAUAAAAAQAAAAAAAfIlAAAAAAAAAAAAAAAAAAC/UAAAAAA=",
         networkPassphrase
       );
@@ -246,7 +246,7 @@ describe("Verifiers", () => {
     });
 
     it("should return false for non-smart contract transactions", () => {
-      const regularTx = TransactionBuilder.fromXDR(
+      const regularTx = TransactionBuilder.fromXdr(
         "AAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAGQAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAABy6rRnxRIjFIzSAmV8BbmxVVc8gijT2oAluc+FcWUDFAAAAAAAAAAAAJiWgAAAAAAAAAAA",
         networkPassphrase
       );
@@ -255,7 +255,7 @@ describe("Verifiers", () => {
     });
 
     it("should return false for transactions with multiple operations", () => {
-      const multiOpTx = TransactionBuilder.fromXDR(
+      const multiOpTx = TransactionBuilder.fromXdr(
         "AAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAASwAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
         networkPassphrase
       );
@@ -264,7 +264,7 @@ describe("Verifiers", () => {
     });
 
     it("should return false for transactions with zero operations", () => {
-      const emptyOpTx = TransactionBuilder.fromXDR(
+      const emptyOpTx = TransactionBuilder.fromXdr(
         "AAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAGQAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
         networkPassphrase
       );
@@ -273,7 +273,7 @@ describe("Verifiers", () => {
     });
 
     it("should return false for fee bump transactions by default", () => {
-      const feeBumpTx = TransactionBuilder.fromXDR(
+      const feeBumpTx = TransactionBuilder.fromXdr(
         "AAAABQAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAAAAAw1AAAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAwBgAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAGAAAAAAAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAIZGVjaW1hbHMAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAAYAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAUAAAAAQAAAAAAAfIlAAAAAAAAAAAAAAAAAAC/UAAAAAAAAAAAAAAAAA==",
         networkPassphrase
       );
@@ -282,7 +282,7 @@ describe("Verifiers", () => {
     });
 
     it("should check inner transaction when softCheckFeebump is true", () => {
-      const feeBumpTx = TransactionBuilder.fromXDR(
+      const feeBumpTx = TransactionBuilder.fromXdr(
         "AAAABQAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAAAAAAw1AAAAAAgAAAAA89bObm+aVvEK3cX3U/qc2lQizGSbx5qcTHHdOutkcggAAwBgAAdSHAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAGAAAAAAAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAIZGVjaW1hbHMAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAAYAAAAB15KLcsJwPM/q9+uf9O9NUEpVqLl5/JtFDqLIQrTRzmEAAAAUAAAAAQAAAAAAAfIlAAAAAAAAAAAAAAAAAAC/UAAAAAAAAAAAAAAAAA==",
         networkPassphrase
       );

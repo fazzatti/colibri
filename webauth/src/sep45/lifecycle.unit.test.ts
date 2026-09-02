@@ -1,4 +1,4 @@
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import {
   assertEquals,
   assertNotStrictEquals,
@@ -30,6 +30,7 @@ import { Sep45Client } from "@/sep45/client.ts";
 import {
   cloneSep45AuthorizationEntry,
   decodeSep45AuthorizationEntries,
+  encodeSep45AuthorizationEntries,
 } from "@/sep45/codec.ts";
 import {
   ContractAuth,
@@ -45,6 +46,25 @@ import { Sep45Code, Sep45Error, WebAuthCode, WebAuthError } from "@/error.ts";
 
 type Fixture = ReturnType<typeof createWebAuthFixture>;
 
+function updateAddressCredentials(
+  entry: xdr.SorobanAuthorizationEntry,
+  update: (
+    credentials: xdr.SorobanAddressCredentials,
+  ) => xdr.SorobanAddressCredentials,
+): xdr.SorobanAuthorizationEntry {
+  const clone = cloneSep45AuthorizationEntry(entry);
+  const credentials = clone.credentials;
+  if (credentials.type !== "sorobanCredentialsAddress") {
+    throw new Error("Expected legacy address credentials");
+  }
+  return new xdr.SorobanAuthorizationEntry({
+    credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
+      update(credentials.address),
+    ),
+    rootInvocation: clone.rootInvocation,
+  });
+}
+
 function contractDataKey(
   address: string,
   key: xdr.ScVal,
@@ -53,7 +73,7 @@ function contractDataKey(
     new xdr.LedgerKeyContractData({
       contract: Address.fromString(address).toScAddress(),
       key,
-      durability: xdr.ContractDataDurability.temporary(),
+      durability: xdr.ContractDataDurability.temporary,
     }),
   );
 }
@@ -210,7 +230,7 @@ describe("SEP-45 lifecycle", () => {
     (firstReceipt.readOnlyFootprint as string[])[0] = "changed";
     assertEquals(prepared.simulation.readOnlyFootprint[0], "one");
     assertEquals(prepared.authorized, authorized);
-    assertEquals(prepared.toXDR(), authorized.toXDR());
+    assertEquals(prepared.toXdr(), authorized.toXdr());
   });
 
   it("ContractAuth adapters preserve the full-entry callback boundary", async () => {
@@ -223,11 +243,14 @@ describe("SEP-45 lifecycle", () => {
 
     const none = await ContractAuth.none()(entry, context);
     assertNotStrictEquals(none, entry);
-    assertEquals(none.toXDR(), entry.toXDR());
+    assertEquals(none.toXdr(), entry.toXdr());
 
     const ed25519 = await ContractAuth.ed25519(fixture.server)(entry, context);
+    if (ed25519.credentials.type !== "sorobanCredentialsAddress") {
+      throw new Error("Expected legacy address credentials");
+    }
     assertEquals(
-      ed25519.credentials().address().signatureExpirationLedger(),
+      ed25519.credentials.address.signatureExpirationLedger,
       106,
     );
 
@@ -249,7 +272,7 @@ describe("SEP-45 lifecycle", () => {
     } as unknown as AuthEntrySigner;
     const adapted = await ContractAuth.fromSigner(signer)(entry, context);
     assertEquals(called, true);
-    assertEquals(adapted.toXDR(), entry.toXDR());
+    assertEquals(adapted.toXdr(), entry.toXdr());
   });
 
   it("Sep45Client authorizes the whole returned entry without comparison", async () => {
@@ -272,20 +295,31 @@ describe("SEP-45 lifecycle", () => {
       challenge,
       (entry, context) => {
         receivedExpiration = context.validUntilLedgerSeq;
-        const changed = cloneSep45AuthorizationEntry(entry);
-        changed.credentials().address().nonce(xdr.Int64.fromString("999"));
-        return changed;
+        return updateAddressCredentials(
+          entry,
+          (credentials) =>
+            new xdr.SorobanAddressCredentials({
+              address: credentials.address,
+              nonce: xdr.Int64.fromString("999"),
+              signatureExpirationLedger: credentials.signatureExpirationLedger,
+              signature: credentials.signature,
+            }),
+        );
       },
     );
     assertEquals(receivedExpiration, 106);
     assertEquals(authorized.validUntilLedgerSeq, 106);
     assertEquals(
-      authorized.entries[0].credentials().address().nonce().toString(),
+      authorized.entries[0].credentials.type === "sorobanCredentialsAddress"
+        ? authorized.entries[0].credentials.address.nonce.toString()
+        : undefined,
       "999",
     );
     assertEquals(authorized.entries.length, 3);
     assertEquals(
-      challenge.entries[0].credentials().address().nonce().toString(),
+      challenge.entries[0].credentials.type === "sorobanCredentialsAddress"
+        ? challenge.entries[0].credentials.address.nonce.toString()
+        : undefined,
       "42",
     );
   });
@@ -384,7 +418,7 @@ describe("SEP-45 lifecycle", () => {
         [
           () =>
             ({
-              toXDR() {
+              toXdr() {
                 throw new TypeError("invalid return");
               },
             }) as unknown as xdr.SorobanAuthorizationEntry,
@@ -402,6 +436,48 @@ describe("SEP-45 lifecycle", () => {
         code,
       );
     }
+  });
+
+  it("rejects a non-legacy client-domain credential with the protocol error", async () => {
+    const fixture = createWebAuthFixture();
+    const client = clientFor(
+      fixture,
+      rpcFixture({ sequence: 100 }),
+      async () => await new Response("{}"),
+    );
+    const challenge = await challengeState(fixture, { clientDomain: true });
+    const verified = challenge.verified;
+    const entries = verified.entries;
+    const clientDomainIndex = verified.clientDomainEntryIndex!;
+    const clientDomainEntry = entries[clientDomainIndex];
+    if (
+      clientDomainEntry.credentials.type !== "sorobanCredentialsAddress"
+    ) {
+      throw new Error("Expected legacy address credentials");
+    }
+    entries[clientDomainIndex] = new xdr.SorobanAuthorizationEntry({
+      credentials: xdr.SorobanCredentials.sorobanCredentialsAddressV2(
+        clientDomainEntry.credentials.address,
+      ),
+      rootInvocation: clientDomainEntry.rootInvocation,
+    });
+    const invalidChallenge = new Sep45Challenge({
+      ...verified,
+      entries,
+      authorizationEntriesXdr: encodeSep45AuthorizationEntries(entries),
+    });
+
+    const error = await assertRejects(
+      () =>
+        client.authorizeChallenge(
+          invalidChallenge,
+          ContractAuth.none(),
+          { clientDomainSigner: fixture.clientDomain },
+        ),
+      Sep45Error,
+    );
+
+    assertEquals(error.code, Sep45Code.UNSUPPORTED_CREDENTIAL_TYPE);
   });
 
   it("Sep45Client signs accepted client-domain entries", async () => {
@@ -440,8 +516,9 @@ describe("SEP-45 lifecycle", () => {
       { clientDomainSigner: fixture.clientDomain },
     );
     assertEquals(
-      authorized.entries[2].credentials().address()
-        .signatureExpirationLedger(),
+      authorized.entries[2].credentials.type === "sorobanCredentialsAddress"
+        ? authorized.entries[2].credentials.address.signatureExpirationLedger
+        : undefined,
       106,
     );
 
@@ -455,9 +532,16 @@ describe("SEP-45 lifecycle", () => {
         value: xdr.SorobanAuthorizationEntry,
         expiration: number,
       ) {
-        const clone = cloneSep45AuthorizationEntry(value);
-        clone.credentials().address().signatureExpirationLedger(expiration);
-        return await clone;
+        return await updateAddressCredentials(
+          value,
+          (credentials) =>
+            new xdr.SorobanAddressCredentials({
+              address: credentials.address,
+              nonce: credentials.nonce,
+              signatureExpirationLedger: expiration,
+              signature: credentials.signature,
+            }),
+        );
       },
     } as unknown as KeypairSigner;
     const withColibriSigner = await client.authorizeChallenge(
@@ -903,7 +987,7 @@ describe("SEP-45 lifecycle", () => {
       Sep45Code.CLIENT_REQUEST_FAILED,
     );
     assertEquals(
-      decodeSep45AuthorizationEntries(prepared.toXDR()).length,
+      decodeSep45AuthorizationEntries(prepared.toXdr()).length,
       2,
     );
   });

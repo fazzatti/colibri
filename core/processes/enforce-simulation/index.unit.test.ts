@@ -11,7 +11,7 @@ import {
   xdr,
 } from "stellar-sdk";
 import type { Api, Server } from "stellar-sdk/rpc";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { enforceSimulation } from "@/processes/enforce-simulation/index.ts";
 import type { EnforceSimulationInput } from "@/processes/enforce-simulation/types.ts";
 import type { SimulateTransactionOutput } from "@/processes/simulate-transaction/types.ts";
@@ -38,7 +38,7 @@ const entry = new xdr.SorobanAuthorizationEntry({
   credentials: xdr.SorobanCredentials.sorobanCredentialsAddressV2(
     new xdr.SorobanAddressCredentials({
       address: rootAddress.toScAddress(),
-      nonce: new xdr.Int64(1),
+      nonce: xdr.Int64(1),
       signatureExpirationLedger: 0,
       signature: xdr.ScVal.scvVoid(),
     }),

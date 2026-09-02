@@ -5,24 +5,24 @@ import {
   assertThrows,
 } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Buffer } from "buffer";
-import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
+import { Buffer } from "node:buffer";
+import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
 import {
+  asUnion,
+  getScValTypeName,
+  isScValMap,
+  isScValRecord,
   parseScVal,
   parseScVals,
-  getScValTypeName,
-  isScValRecord,
-  isScValMap,
-  asUnion,
 } from "@/common/helpers/xdr/scval.ts";
 import {
-  UNSUPPORTED_SCVAL_TYPE,
   UNKNOWN_SCVAL_TYPE,
+  UNSUPPORTED_SCVAL_TYPE,
 } from "@/common/helpers/xdr/error.ts";
 import type {
+  ScValMap,
   ScValParsed,
   ScValRecord,
-  ScValMap,
 } from "@/common/helpers/xdr/types.ts";
 
 describe("ScVal Parser", () => {
@@ -125,7 +125,7 @@ describe("ScVal Parser", () => {
           BigInt("340282366920938463463374607431768211455"),
           {
             type: "u128",
-          }
+          },
         );
         const result = parseScVal(scv);
 
@@ -137,7 +137,7 @@ describe("ScVal Parser", () => {
           BigInt("-170141183460469231731687303715884105728"),
           {
             type: "i128",
-          }
+          },
         );
         const result = parseScVal(scv);
 
@@ -166,7 +166,7 @@ describe("ScVal Parser", () => {
     describe("timepoint and duration", () => {
       it("should parse scvTimepoint to bigint", () => {
         const timestamp = BigInt(1700000000);
-        const scv = xdr.ScVal.scvTimepoint(new xdr.Uint64(timestamp));
+        const scv = xdr.ScVal.scvTimepoint(xdr.Uint64(timestamp));
         const result = parseScVal(scv);
 
         assertEquals(result, timestamp);
@@ -175,7 +175,7 @@ describe("ScVal Parser", () => {
 
       it("should parse scvDuration to bigint", () => {
         const duration = BigInt(3600);
-        const scv = xdr.ScVal.scvDuration(new xdr.Uint64(duration));
+        const scv = xdr.ScVal.scvDuration(xdr.Uint64(duration));
         const result = parseScVal(scv);
 
         assertEquals(result, duration);
@@ -211,6 +211,14 @@ describe("ScVal Parser", () => {
         const result = parseScVal(scv);
 
         assertEquals(result, "");
+      });
+
+      it("preserves invalid UTF-8 string, symbol, and executable-tag bytes", () => {
+        const bytes = new Uint8Array([0x66, 0x80, 0xff]);
+
+        assertEquals(parseScVal(xdr.ScVal.scvString(bytes)), bytes);
+        assertEquals(parseScVal(xdr.ScVal.scvSymbol(bytes)), bytes);
+        assertEquals(parseScVal(xdr.ScVal.scvExecutableTag(bytes)), bytes);
       });
     });
 
@@ -311,10 +319,9 @@ describe("ScVal Parser", () => {
       });
 
       it("should handle scvVec with null internal value", () => {
-        // Create a fake ScVal that returns null for vec()
         const fakeScVal = {
-          switch: () => xdr.ScValType.scvVec(),
-          vec: () => null,
+          type: "scvVec",
+          vec: null,
         } as unknown as xdr.ScVal;
 
         const result = parseScVal(fakeScVal);
@@ -368,10 +375,9 @@ describe("ScVal Parser", () => {
       });
 
       it("should handle scvMap with null internal value", () => {
-        // Create a fake ScVal that returns null for map()
         const fakeScVal = {
-          switch: () => xdr.ScValType.scvMap(),
-          map: () => null,
+          type: "scvMap",
+          map: null,
         } as unknown as xdr.ScVal;
 
         const result = parseScVal(fakeScVal);
@@ -381,6 +387,21 @@ describe("ScVal Parser", () => {
     });
 
     describe("map with non-string keys", () => {
+      it("preserves an invalid UTF-8 string key in a Map", () => {
+        const key = new Uint8Array([0x66, 0x80, 0xff]);
+        const result = parseScVal(xdr.ScVal.scvMap([
+          new xdr.ScMapEntry({
+            key: xdr.ScVal.scvString(key),
+            val: xdr.ScVal.scvU32(7),
+          }),
+        ]));
+
+        assertEquals(isScValMap(result), true);
+        const [[parsedKey, value]] = [...(result as ScValMap).entries()];
+        assertEquals(parsedKey, key);
+        assertEquals(value, 7);
+      });
+
       it("should parse scvMap with integer keys to Map", () => {
         const scv = xdr.ScVal.scvMap([
           new xdr.ScMapEntry({
@@ -428,7 +449,7 @@ describe("ScVal Parser", () => {
 
       it("should parse scvError system error", () => {
         const scv = xdr.ScVal.scvError(
-          xdr.ScError.sceWasmVm(xdr.ScErrorCode.scecInvalidInput())
+          xdr.ScError.sceWasmVm(xdr.ScErrorCode.scecInvalidInput),
         );
         const result = parseScVal(scv);
 
@@ -442,7 +463,7 @@ describe("ScVal Parser", () => {
           new xdr.ScContractInstance({
             executable: xdr.ContractExecutable.contractExecutableStellarAsset(),
             storage: null,
-          })
+          }),
         );
         const result = parseScVal(scv);
 
@@ -459,13 +480,13 @@ describe("ScVal Parser", () => {
         assertEquals(isScValRecord(result), true);
         assertEquals(
           (result as ScValRecord)["ledgerKeyType"],
-          "contractInstance"
+          "contractInstance",
         );
       });
 
       it("should parse scvLedgerKeyNonce", () => {
         const scv = xdr.ScVal.scvLedgerKeyNonce(
-          new xdr.ScNonceKey({ nonce: new xdr.Int64(12345) })
+          new xdr.ScNonceKey({ nonce: xdr.Int64(12345) }),
         );
         const result = parseScVal(scv);
 
@@ -476,15 +497,14 @@ describe("ScVal Parser", () => {
 
     describe("unsupported types", () => {
       it("should throw error for unsupported ScVal type", () => {
-        // Create a fake ScVal-like object with an unknown type
         const fakeScVal = {
-          switch: () => ({ value: 9999, name: "scvUnknown" }),
+          type: "scvUnknown",
         } as unknown as xdr.ScVal;
 
         assertThrows(
           () => parseScVal(fakeScVal),
           UNSUPPORTED_SCVAL_TYPE,
-          "Unsupported ScVal type: scvUnknown"
+          "Unsupported ScVal type: scvUnknown",
         );
       });
     });
@@ -539,49 +559,49 @@ describe("ScVal Parser", () => {
     it("should return 'i64' for scvI64", () => {
       assertEquals(
         getScValTypeName(nativeToScVal(-1n, { type: "i64" })),
-        "i64"
+        "i64",
       );
     });
 
     it("should return 'u128' for scvU128", () => {
       assertEquals(
         getScValTypeName(nativeToScVal(1n, { type: "u128" })),
-        "u128"
+        "u128",
       );
     });
 
     it("should return 'i128' for scvI128", () => {
       assertEquals(
         getScValTypeName(nativeToScVal(-1n, { type: "i128" })),
-        "i128"
+        "i128",
       );
     });
 
     it("should return 'u256' for scvU256", () => {
       assertEquals(
         getScValTypeName(nativeToScVal(1n, { type: "u256" })),
-        "u256"
+        "u256",
       );
     });
 
     it("should return 'i256' for scvI256", () => {
       assertEquals(
         getScValTypeName(nativeToScVal(-1n, { type: "i256" })),
-        "i256"
+        "i256",
       );
     });
 
     it("should return 'timepoint' for scvTimepoint", () => {
       assertEquals(
-        getScValTypeName(xdr.ScVal.scvTimepoint(new xdr.Uint64(1n))),
-        "timepoint"
+        getScValTypeName(xdr.ScVal.scvTimepoint(xdr.Uint64(1n))),
+        "timepoint",
       );
     });
 
     it("should return 'duration' for scvDuration", () => {
       assertEquals(
-        getScValTypeName(xdr.ScVal.scvDuration(new xdr.Uint64(1n))),
-        "duration"
+        getScValTypeName(xdr.ScVal.scvDuration(xdr.Uint64(1n))),
+        "duration",
       );
     });
 
@@ -593,10 +613,17 @@ describe("ScVal Parser", () => {
       assertEquals(getScValTypeName(xdr.ScVal.scvString("test")), "string");
     });
 
+    it("should return 'executableTag' for scvExecutableTag", () => {
+      assertEquals(
+        getScValTypeName(xdr.ScVal.scvExecutableTag("fleet")),
+        "executableTag",
+      );
+    });
+
     it("should return 'bytes' for scvBytes", () => {
       assertEquals(
         getScValTypeName(xdr.ScVal.scvBytes(Buffer.from([1, 2, 3]))),
-        "bytes"
+        "bytes",
       );
     });
 
@@ -616,7 +643,7 @@ describe("ScVal Parser", () => {
     it("should return 'error' for scvError", () => {
       assertEquals(
         getScValTypeName(xdr.ScVal.scvError(xdr.ScError.sceContract(1))),
-        "error"
+        "error",
       );
     });
 
@@ -625,7 +652,7 @@ describe("ScVal Parser", () => {
         new xdr.ScContractInstance({
           executable: xdr.ContractExecutable.contractExecutableStellarAsset(),
           storage: null,
-        })
+        }),
       );
       assertEquals(getScValTypeName(scv), "contractInstance");
     });
@@ -633,27 +660,26 @@ describe("ScVal Parser", () => {
     it("should return 'ledgerKeyContractInstance' for scvLedgerKeyContractInstance", () => {
       assertEquals(
         getScValTypeName(xdr.ScVal.scvLedgerKeyContractInstance()),
-        "ledgerKeyContractInstance"
+        "ledgerKeyContractInstance",
       );
     });
 
     it("should return 'ledgerKeyNonce' for scvLedgerKeyNonce", () => {
       const scv = xdr.ScVal.scvLedgerKeyNonce(
-        new xdr.ScNonceKey({ nonce: new xdr.Int64(1) })
+        new xdr.ScNonceKey({ nonce: xdr.Int64(1) }),
       );
       assertEquals(getScValTypeName(scv), "ledgerKeyNonce");
     });
 
     it("should throw error for unknown ScVal type", () => {
-      // Create a fake ScVal-like object with an unknown type
       const fakeScVal = {
-        switch: () => ({ value: 9999, name: "scvUnknown" }),
+        type: "scvUnknown",
       } as unknown as xdr.ScVal;
 
       assertThrows(
         () => getScValTypeName(fakeScVal),
         UNKNOWN_SCVAL_TYPE,
-        "Unknown ScVal type: scvUnknown"
+        "Unknown ScVal type: scvUnknown",
       );
     });
   });
@@ -795,7 +821,7 @@ describe("ScVal Parser", () => {
         new xdr.ScMapEntry({
           key: xdr.ScVal.scvSymbol("token"),
           val: new Address(
-            "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+            "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
           ).toScVal(),
         }),
       ]);
@@ -806,7 +832,7 @@ describe("ScVal Parser", () => {
       assertEquals((result as ScValRecord)["amount"], 1000000n);
       assertEquals(
         (result as ScValRecord)["token"],
-        "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+        "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
       );
     });
 

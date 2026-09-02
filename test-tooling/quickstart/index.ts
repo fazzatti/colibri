@@ -713,7 +713,8 @@ export class StellarTestLedger<
     }
 
     const rawOptions = options as Record<string, unknown> | undefined;
-    const typedOptions = options as TestLedgerOptions<Network, Services>
+    const typedOptions = options as
+      | TestLedgerOptions<Network, Services>
       | undefined;
 
     const network = normalizeNetwork(rawOptions?.network) as Network;
@@ -1047,6 +1048,105 @@ export class StellarTestLedger<
     return await this.getNetworkDetails();
   }
 
+  /** Attaches this instance to its configured, already-running container. */
+  private async attachToRunningLedger(): Promise<Container> {
+    const containerInfo = await this.findNamedContainer();
+    if (!containerInfo) {
+      throw new CONTAINER_ERROR({
+        message:
+          `StellarTestLedger could not find a container named "${this.containerName}".`,
+        details:
+          "A running container was requested via useRunningLedger, but Docker could not find one with the configured name.",
+        data: { containerName: this.containerName },
+      });
+    }
+    this.ensureExpectedNamedContainer(containerInfo);
+    if (containerInfo.State !== "running") {
+      throw new CONTAINER_ERROR({
+        message:
+          `StellarTestLedger found "${this.containerName}" but it is not running.`,
+        details:
+          "A named container exists, but Docker reports that it is not in the running state.",
+        data: {
+          containerName: this.containerName,
+          containerId: containerInfo.Id,
+          state: containerInfo.State,
+        },
+      });
+    }
+
+    const container = this.getDockerClient().getContainer(containerInfo.Id);
+    const inspectInfo = await container.inspect() as ContainerInspectInfo;
+    this.ensureExpectedNamedContainerConfig(inspectInfo);
+    const publishedPorts = inspectInfo.NetworkSettings.Ports?.["8000/tcp"];
+    this.containerId = containerInfo.Id;
+    this.container = container;
+    if (publishedPorts && publishedPorts.length > 0) {
+      await this.waitUntilReady(containerInfo.Id);
+    }
+    return container;
+  }
+
+  /** Removes the container currently tracked by this instance, when present. */
+  private async discardTrackedContainer(): Promise<void> {
+    if (!this.container) return;
+    const containerId = this.containerId ||
+      (this.container as { id?: string }).id;
+    if (containerId) {
+      await this.removeContainerById(containerId);
+    } else {
+      await stopContainer(this.container);
+      await this.container.remove({ v: true, force: true });
+    }
+    this.container = undefined;
+    this.containerId = undefined;
+  }
+
+  /** Removes an existing managed container with the configured name. */
+  private async discardExistingNamedContainer(): Promise<void> {
+    const existing = await this.findNamedContainer();
+    if (!existing) return;
+    this.ensureExpectedNamedContainer(existing);
+    await this.removeContainerById(existing.Id);
+  }
+
+  /** Best-effort cleanup for a container whose startup did not complete. */
+  private async cleanupFailedStart(container?: Container): Promise<void> {
+    if (!container) return;
+    try {
+      if (container.id) {
+        await this.removeContainerById(container.id);
+      } else {
+        await container.remove({ v: true, force: true });
+      }
+    } catch {
+      // Startup cleanup is best-effort; preserve the original startup error.
+    } finally {
+      if (this.container === container) this.container = undefined;
+      if (this.containerId === container.id) this.containerId = undefined;
+    }
+  }
+
+  /** Maps an unexpected startup failure to the public Quickstart error type. */
+  private startError(error: unknown, omitPull: boolean): QuickstartError {
+    return ensureQuickstartError(
+      error,
+      new CONTAINER_ERROR({
+        message: "Failed to start the Stellar test ledger.",
+        details:
+          "Quickstart could not finish creating, starting, or preparing the requested test ledger container.",
+        data: {
+          containerName: this.containerName,
+          imageName: this.fullContainerImageName,
+          network: this.network,
+          enabledServices: this.enabledServices,
+          omitPull,
+        },
+        cause: error,
+      }),
+    );
+  }
+
   /**
    * Starts the quickstart ledger or attaches to an existing named container.
    *
@@ -1059,79 +1159,10 @@ export class StellarTestLedger<
     let createdContainer: Container | undefined;
 
     try {
-      if (this.useRunningLedger) {
-        const containerInfo = await this.findNamedContainer();
-
-        if (!containerInfo) {
-          throw new CONTAINER_ERROR({
-            message:
-              `StellarTestLedger could not find a container named "${this.containerName}".`,
-            details:
-              "A running container was requested via useRunningLedger, but Docker could not find one with the configured name.",
-            data: { containerName: this.containerName },
-          });
-        }
-
-        this.ensureExpectedNamedContainer(containerInfo);
-
-        if (containerInfo.State !== "running") {
-          throw new CONTAINER_ERROR({
-            message:
-              `StellarTestLedger found "${this.containerName}" but it is not running.`,
-            details:
-              "A named container exists, but Docker reports that it is not in the running state.",
-            data: {
-              containerName: this.containerName,
-              containerId: containerInfo.Id,
-              state: containerInfo.State,
-            },
-          });
-        }
-
-        const reusedContainer = this.getDockerClient().getContainer(
-          containerInfo.Id,
-        );
-        const inspectInfo = await reusedContainer.inspect() as ContainerInspectInfo;
-        this.ensureExpectedNamedContainerConfig(inspectInfo);
-        const publishedPorts = inspectInfo.NetworkSettings.Ports?.["8000/tcp"];
-
-        this.containerId = containerInfo.Id;
-        this.container = reusedContainer;
-
-        // Reused ledgers may be reachable only through Docker/container
-        // networking. Only run HTTP readiness checks when Docker published the
-        // quickstart port for the named container.
-        if (publishedPorts && publishedPorts.length > 0) {
-          await this.waitUntilReady(containerInfo.Id);
-        }
-
-        return this.container;
-      }
-
-      if (this.container) {
-        const trackedContainerId = this.containerId ||
-          (this.container as { id?: string }).id;
-
-        if (trackedContainerId) {
-          await this.removeContainerById(trackedContainerId);
-        } else {
-          await stopContainer(this.container);
-          await this.container.remove({ v: true, force: true });
-        }
-
-        this.container = undefined;
-        this.containerId = undefined;
-      }
-
-      const existingNamedContainer = await this.findNamedContainer();
-      if (existingNamedContainer) {
-        this.ensureExpectedNamedContainer(existingNamedContainer);
-        await this.removeContainerById(existingNamedContainer.Id);
-      }
-
-      if (!omitPull) {
-        await this.pullContainerImage();
-      }
+      if (this.useRunningLedger) return await this.attachToRunningLedger();
+      await this.discardTrackedContainer();
+      await this.discardExistingNamedContainer();
+      if (!omitPull) await this.pullContainerImage();
 
       const container = await this.createContainer();
       createdContainer = container;
@@ -1147,41 +1178,8 @@ export class StellarTestLedger<
       await this.waitUntilReady(container.id);
       return container;
     } catch (error) {
-      if (createdContainer) {
-        try {
-          if (createdContainer.id) {
-            await this.removeContainerById(createdContainer.id);
-          } else {
-            await createdContainer.remove({ v: true, force: true });
-          }
-        } catch {
-          // Startup cleanup is best-effort; preserve the original startup error.
-        } finally {
-          if (this.container === createdContainer) {
-            this.container = undefined;
-          }
-          if (this.containerId === createdContainer.id) {
-            this.containerId = undefined;
-          }
-        }
-      }
-
-      throw ensureQuickstartError(
-        error,
-        new CONTAINER_ERROR({
-          message: "Failed to start the Stellar test ledger.",
-          details:
-            "Quickstart could not finish creating, starting, or preparing the requested test ledger container.",
-          data: {
-            containerName: this.containerName,
-            imageName: this.fullContainerImageName,
-            network: this.network,
-            enabledServices: this.enabledServices,
-            omitPull,
-          },
-          cause: error,
-        }),
-      );
+      await this.cleanupFailedStart(createdContainer);
+      throw this.startError(error, omitPull);
     }
   }
 

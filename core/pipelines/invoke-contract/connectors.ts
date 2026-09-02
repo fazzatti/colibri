@@ -29,6 +29,7 @@ import {
   getRequiredStepOutput,
   signEnvelopeToSendTransaction,
 } from "@/pipelines/shared/connectors/index.ts";
+import { EXPECTED_INVOKE_HOST_FUNCTION_OPERATION } from "@/pipelines/invoke-contract/error.ts";
 
 export const INVOKE_CONTRACT_INPUT_STEP_ID = "invoke-contract-input" as const;
 
@@ -116,8 +117,12 @@ export const signAuthEntriesToAssembleForEnforcement = () =>
     const transactionFee = typeof inputStep.config.fee === "string"
       ? {}
       : { transactionFee: inputStep.config.fee };
+    const body = operation.body;
+    if (body.type !== "invokeHostFunction") {
+      throw new EXPECTED_INVOKE_HOST_FUNCTION_OPERATION();
+    }
     const authorizedOperation = Operation.invokeHostFunction({
-      func: operation.body().invokeHostFunctionOp().hostFunction(),
+      func: body.invokeHostFunctionOp.hostFunction,
       auth: signAuthEntriesOutput,
     });
 

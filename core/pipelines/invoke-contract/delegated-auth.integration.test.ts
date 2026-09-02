@@ -11,7 +11,7 @@ import {
   type TransactionConfig,
 } from "@/mod.ts";
 import { SimulateTransactionError } from "@/processes/simulate-transaction/error.ts";
-import { StellarTestLedger } from "../../../test-tooling/mod.ts";
+import { StellarTestLedger } from "@colibri/test-tooling";
 import { rpc } from "stellar-sdk";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";

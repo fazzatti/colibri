@@ -7,17 +7,16 @@ import {
   TransactionBuilder,
   xdr,
 } from "stellar-sdk";
-import { Buffer } from "buffer";
 import { Api } from "stellar-sdk/rpc";
 import { Sep45Code, Sep45Error } from "@/error.ts";
 import type { Sep45Rpc, Sep45SimulationReceipt } from "@/sep45/types.ts";
 import type { Sep45AuthorizedChallenge } from "@/sep45/challenge.ts";
 import type { LedgerKey } from "@/stellar-sdk-types.ts";
 
-const DUMMY_SOURCE = StrKey.encodeEd25519PublicKey(Buffer.alloc(32));
+const DUMMY_SOURCE = StrKey.encodeEd25519PublicKey(new Uint8Array(32));
 
 function footprintStrings(keys: xdr.LedgerKey[]): string[] {
-  return keys.map((key) => key.toXDR("base64"));
+  return keys.map((key) => key.toXdr("base64"));
 }
 
 function validateReadWriteKey(
@@ -25,16 +24,16 @@ function validateReadWriteKey(
   allowedNonceAddresses: ReadonlySet<string>,
   webAuthContractId: string,
 ): void {
-  if (key.switch().name !== "contractData") {
+  if (key.type !== "contractData") {
     throw new Sep45Error({
       code: Sep45Code.UNSAFE_FOOTPRINT,
       message: "SEP-45 simulation attempted a non-contract-data write",
-      data: { ledgerKeyType: key.switch().name },
+      data: { ledgerKeyType: key.type },
     });
   }
-  const contractData = key.contractData();
-  const address = Address.fromScAddress(contractData.contract()).toString();
-  const keyType = contractData.key().switch().name;
+  const contractData = key.contractData;
+  const address = Address.fromScAddress(contractData.contract).toString();
+  const keyType = contractData.key.type;
   if (
     keyType === "scvLedgerKeyNonce" &&
     allowedNonceAddresses.has(address)
@@ -106,7 +105,7 @@ export async function simulateSep45Challenge(
       Operation.invokeContractFunction({
         contract: options.webAuthContractId,
         function: "web_auth_verify",
-        args: [xdr.ScVal.fromXDR(verified.invocationArgument.toXDR())],
+        args: [xdr.ScVal.fromXdr(verified.invocationArgument.toXdr())],
         auth: challenge.entries,
       }),
     )
@@ -162,7 +161,7 @@ export async function simulateSep45Challenge(
   }
   return {
     latestLedger: response.latestLedger,
-    transactionXdr: transaction.toXDR(),
+    transactionXdr: transaction.toXdr(),
     readOnlyFootprint: footprintStrings(readOnly),
     readWriteFootprint: footprintStrings(readWrite),
   };

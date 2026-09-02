@@ -1,4 +1,4 @@
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import {
   assertEquals,
   assertNotStrictEquals,
@@ -33,6 +33,62 @@ import { Sep10Code, Sep10Error, WebAuthCode, WebAuthError } from "@/error.ts";
 
 function expectCode(fn: () => unknown, code: string): void {
   assertEquals(assertThrows(fn, Sep10Error).code, code);
+}
+
+function updateTransactionEnvelope(
+  envelope: xdr.TransactionEnvelope,
+  update: (transaction: xdr.Transaction) => xdr.Transaction,
+): xdr.TransactionEnvelope {
+  if (envelope.type !== "envelopeTypeTx") {
+    throw new Error("Expected a v1 transaction envelope");
+  }
+  return xdr.TransactionEnvelope.envelopeTypeTx(
+    new xdr.TransactionV1Envelope({
+      tx: update(envelope.v1.tx),
+      signatures: envelope.v1.signatures,
+    }),
+  );
+}
+
+function copyTransaction(
+  transaction: xdr.Transaction,
+  changes: Partial<{
+    cond: xdr.Preconditions;
+    operations: xdr.Operation[];
+  }>,
+): xdr.Transaction {
+  return new xdr.Transaction({
+    sourceAccount: transaction.sourceAccount,
+    fee: transaction.fee,
+    seqNum: transaction.seqNum,
+    cond: changes.cond ?? transaction.cond,
+    memo: transaction.memo,
+    operations: changes.operations ?? transaction.operations,
+    ext: transaction.ext,
+  });
+}
+
+function updateFirstManageData(
+  envelope: xdr.TransactionEnvelope,
+  update: (operation: xdr.ManageDataOp) => xdr.ManageDataOp,
+): xdr.TransactionEnvelope {
+  return updateTransactionEnvelope(envelope, (transaction) => {
+    const [first, ...rest] = transaction.operations;
+    if (first.body.type !== "manageData") {
+      throw new Error("Expected a manage-data operation");
+    }
+    return copyTransaction(transaction, {
+      operations: [
+        new xdr.Operation({
+          sourceAccount: first.sourceAccount,
+          body: xdr.OperationBody.manageData(
+            update(first.body.manageDataOp),
+          ),
+        }),
+        ...rest,
+      ],
+    });
+  });
 }
 
 describe("SEP-10 WebAuth", () => {
@@ -142,15 +198,20 @@ describe("SEP-10 WebAuth", () => {
       Sep10Code.INVALID_SERVER_ACCOUNT,
     );
 
-    const noBounds = xdr.TransactionEnvelope.fromXDR(
-      buildSep10Challenge(fixture),
-      "base64",
+    const noBounds = updateTransactionEnvelope(
+      xdr.TransactionEnvelope.fromXdr(
+        buildSep10Challenge(fixture),
+        "base64",
+      ),
+      (transaction) =>
+        copyTransaction(transaction, {
+          cond: xdr.Preconditions.precondNone(),
+        }),
     );
-    noBounds.v1().tx().cond(xdr.Preconditions.precondNone());
     expectCode(
       () =>
         verifySep10Challenge({
-          transactionXdr: noBounds.toXDR("base64"),
+          transactionXdr: noBounds.toXdr("base64"),
           networkPassphrase: fixture.networkPassphrase,
           serverAccount: fixture.server.publicKey(),
           account: fixture.client.publicKey(),
@@ -189,15 +250,17 @@ describe("SEP-10 WebAuth", () => {
 
   it("verifySep10Challenge rejects malformed first operations", () => {
     const fixture = createWebAuthFixture();
-    const empty = xdr.TransactionEnvelope.fromXDR(
-      buildSep10Challenge(fixture),
-      "base64",
+    const empty = updateTransactionEnvelope(
+      xdr.TransactionEnvelope.fromXdr(
+        buildSep10Challenge(fixture),
+        "base64",
+      ),
+      (transaction) => copyTransaction(transaction, { operations: [] }),
     );
-    empty.v1().tx().operations([]);
     expectCode(
       () =>
         verifySep10Challenge({
-          transactionXdr: empty.toXDR("base64"),
+          transactionXdr: empty.toXdr("base64"),
           networkPassphrase: fixture.networkPassphrase,
           serverAccount: fixture.server.publicKey(),
           account: fixture.client.publicKey(),
@@ -231,7 +294,7 @@ describe("SEP-10 WebAuth", () => {
     expectCode(
       () =>
         verifySep10Challenge({
-          transactionXdr: payment.toXDR(),
+          transactionXdr: payment.toXdr(),
           networkPassphrase: fixture.networkPassphrase,
           serverAccount: fixture.server.publicKey(),
           account: fixture.client.publicKey(),
@@ -263,7 +326,7 @@ describe("SEP-10 WebAuth", () => {
     expectCode(
       () =>
         verifySep10Challenge({
-          transactionXdr: missingSource.toXDR(),
+          transactionXdr: missingSource.toXdr(),
           networkPassphrase: fixture.networkPassphrase,
           serverAccount: fixture.server.publicKey(),
           account: fixture.client.publicKey(),
@@ -293,17 +356,21 @@ describe("SEP-10 WebAuth", () => {
       );
     }
 
-    const wrongName = xdr.TransactionEnvelope.fromXDR(
-      buildSep10Challenge(fixture),
-      "base64",
-    );
-    wrongName.v1().tx().operations()[0].body().manageDataOp().dataName(
-      "wrong-name",
+    const wrongName = updateFirstManageData(
+      xdr.TransactionEnvelope.fromXdr(
+        buildSep10Challenge(fixture),
+        "base64",
+      ),
+      (operation) =>
+        new xdr.ManageDataOp({
+          dataName: "wrong-name",
+          dataValue: operation.dataValue,
+        }),
     );
     expectCode(
       () =>
         verifySep10Challenge({
-          transactionXdr: wrongName.toXDR("base64"),
+          transactionXdr: wrongName.toXdr("base64"),
           networkPassphrase: fixture.networkPassphrase,
           serverAccount: fixture.server.publicKey(),
           account: fixture.client.publicKey(),
@@ -336,7 +403,7 @@ describe("SEP-10 WebAuth", () => {
     expectCode(
       () =>
         verifySep10Challenge({
-          transactionXdr: wrongNonce.toXDR(),
+          transactionXdr: wrongNonce.toXdr(),
           networkPassphrase: fixture.networkPassphrase,
           serverAccount: fixture.server.publicKey(),
           account: fixture.client.publicKey(),
@@ -346,17 +413,21 @@ describe("SEP-10 WebAuth", () => {
       Sep10Code.INVALID_NONCE,
     );
 
-    const missingNonce = xdr.TransactionEnvelope.fromXDR(
-      buildSep10Challenge(fixture),
-      "base64",
-    );
-    missingNonce.v1().tx().operations()[0].body().manageDataOp().dataValue(
-      null,
+    const missingNonce = updateFirstManageData(
+      xdr.TransactionEnvelope.fromXdr(
+        buildSep10Challenge(fixture),
+        "base64",
+      ),
+      (operation) =>
+        new xdr.ManageDataOp({
+          dataName: operation.dataName,
+          dataValue: null,
+        }),
     );
     expectCode(
       () =>
         verifySep10Challenge({
-          transactionXdr: missingNonce.toXDR("base64"),
+          transactionXdr: missingNonce.toXdr("base64"),
           networkPassphrase: fixture.networkPassphrase,
           serverAccount: fixture.server.publicKey(),
           account: fixture.client.publicKey(),
@@ -571,7 +642,7 @@ describe("SEP-10 WebAuth", () => {
     assertEquals(challenge.memo, undefined);
     assertEquals(challenge.clientDomain, undefined);
     assertEquals(challenge.clientDomainAccount, undefined);
-    assertEquals(challenge.toXDR(), challengeXdr);
+    assertEquals(challenge.toXdr(), challengeXdr);
     assertEquals(challenge.transaction.signatures.length, 1);
     assertNotStrictEquals(challenge.transaction, challenge.transaction);
     assertNotStrictEquals(
@@ -598,7 +669,7 @@ describe("SEP-10 WebAuth", () => {
     );
     assertEquals(
       JSON.parse(await requests[1].text()).transaction,
-      signed.toXDR(),
+      signed.toXdr(),
     );
     signer.destroy();
   });

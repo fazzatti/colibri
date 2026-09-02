@@ -1,7 +1,7 @@
 // deno-lint-ignore-file require-await
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import { describe, it, beforeEach } from "@std/testing/bdd";
-import type { Buffer } from "buffer";
+import type { Buffer } from "node:buffer";
 import {
   Account,
   FeeBumpTransaction,
@@ -81,11 +81,11 @@ describe("SignEnvelope", () => {
         if (tx instanceof FeeBumpTransaction) {
           this.lastType = "feeBump";
           tx.sign(kp);
-          return tx.toXDR();
+          return tx.toXdr();
         } else {
           this.lastType = "tx";
           tx.sign(kp);
-          return tx.toXDR();
+          return tx.toXdr();
         }
       },
     };

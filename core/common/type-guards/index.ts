@@ -4,4 +4,4 @@ export * from "@/common/type-guards/is-muxed-id.ts";
 export * from "@/common/type-guards/is-signing-threshold.ts";
 export * from "@/common/type-guards/is-smart-contract-transaction.ts";
 export * from "@/common/type-guards/is-transaction.ts";
-export * from "./is-signer.ts";
+export * from "@/common/type-guards/is-signer.ts";

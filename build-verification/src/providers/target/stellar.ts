@@ -1,12 +1,16 @@
 import {
+  ERRORS_LDE,
   LedgerEntries,
   type NetworkConfig,
+  type ResolvedContractExecutable,
   type RpcLedgerEntriesClient,
 } from "@colibri/core";
 import { Server } from "stellar-sdk/rpc";
+import { xdr } from "stellar-sdk";
 import type { ContractId } from "@colibri/core";
 import type {
   ResolvedVerificationTarget,
+  VerificationExternalReferenceEvidence,
   VerificationNetwork,
 } from "@/core/types/index.ts";
 import { InvalidVerifierOptionsError } from "@/error/core.ts";
@@ -18,6 +22,7 @@ import type {
 import {
   MissingTargetNetworkError,
   TargetCodeLookupFailedError,
+  TargetExternalReferenceLookupFailedError,
   TargetHashMismatchError,
   TargetInstanceLookupFailedError,
   TargetProviderUnexpectedError,
@@ -26,6 +31,26 @@ import {
 import { BuildVerificationError } from "@/error/base.ts";
 
 const nowIso = (): string => new Date().toISOString();
+
+const isExternalReferenceResolutionFailure = (cause: unknown): boolean =>
+  cause instanceof ERRORS_LDE.INVALID_EXTERNAL_REFERENCE ||
+  cause instanceof ERRORS_LDE.EXTERNAL_REFERENCE_OWNER_NOT_CONTRACT ||
+  cause instanceof ERRORS_LDE.EXTERNAL_REFERENCE_ENTRY_NOT_FOUND ||
+  cause instanceof ERRORS_LDE.EXTERNAL_REFERENCE_VALUE_INVALID;
+
+const isStellarAssetResolution = (
+  resolved: ResolvedContractExecutable,
+): resolved is Extract<
+  ResolvedContractExecutable,
+  { executable: { type: "stellarAsset" } }
+> => resolved.executable.type === "stellarAsset";
+
+const isExternalReferenceResolution = (
+  resolved: ResolvedContractExecutable,
+): resolved is Extract<
+  ResolvedContractExecutable,
+  { executable: { type: "externalRef" } }
+> => resolved.executable.type === "externalRef";
 
 /** Creates the Colibri ledger reader for one already validated network shape. */
 export const createVerificationLedgerEntries = (
@@ -146,43 +171,79 @@ export class StellarVerificationTargetResolver
       };
     }
 
-    let instance;
+    let resolved;
     try {
-      instance = await ledger.contractInstance({
-        contractId: target.contractId as ContractId,
-      });
+      resolved = "contractId" in target
+        ? await ledger.resolveContractExecutable({
+          contractId: target.contractId as ContractId,
+        })
+        : await ledger.resolveContractExecutable({
+          externalRef: target.externalRef,
+        });
     } catch (cause) {
+      if (
+        "externalRef" in target || isExternalReferenceResolutionFailure(cause)
+      ) {
+        throw new TargetExternalReferenceLookupFailedError(
+          "contractId" in target ? target.contractId : "externalRef",
+          cause,
+        );
+      }
       throw new TargetInstanceLookupFailedError(target.contractId, cause);
     }
-    if (instance.executable.type !== "wasm") {
+    if (isStellarAssetResolution(resolved)) {
+      if (!("contractId" in target)) {
+        throw new TargetProviderUnexpectedError(
+          new TypeError(
+            "A Stellar Asset Contract resolution requires a contract instance",
+          ),
+        );
+      }
       return {
         applicability: "stellarAssetContract",
         kind: "contractId",
         label: target.label,
         contractId: target.contractId,
-        lastModifiedLedgerSeq: instance.lastModifiedLedgerSeq,
+        lastModifiedLedgerSeq: resolved.instance.lastModifiedLedgerSeq,
         observedAt: this.#now(),
       };
     }
+    const resolvedWasmHash = resolved.resolvedWasmHash;
     let code;
     try {
-      code = await ledger.contractCode({ hash: instance.executable.wasmHash });
+      code = await ledger.contractCode({ hash: resolvedWasmHash });
     } catch (cause) {
-      throw new TargetCodeLookupFailedError(target.contractId, cause);
+      throw new TargetCodeLookupFailedError(
+        "contractId" in target ? target.contractId : resolvedWasmHash,
+        cause,
+      );
     }
-    if (code.hash !== instance.executable.wasmHash) {
+    if (code.hash !== resolvedWasmHash) {
       throw new TargetHashMismatchError(
-        instance.executable.wasmHash,
+        resolvedWasmHash,
         code.hash,
       );
     }
+    let externalReference: VerificationExternalReferenceEvidence | undefined;
+    if (isExternalReferenceResolution(resolved)) {
+      externalReference = {
+        executableOwner: resolved.executable.executableOwner,
+        tag: {
+          encoding: "base64",
+          value: xdr.encodeBytes(resolved.executable.tag, "base64"),
+        },
+        instance: resolved.instance,
+        reference: resolved.reference,
+      };
+    }
     return {
       applicability: "wasm",
-      kind: "contractId",
+      kind: "contractId" in target ? "contractId" : "externalRef",
       label: target.label,
-      contractId: target.contractId,
+      contractId: "contractId" in target ? target.contractId : undefined,
       wasm: code.code,
       wasmHash: code.hash,
+      externalReference,
       lastModifiedLedgerSeq: code.lastModifiedLedgerSeq,
       observedAt: this.#now(),
     };

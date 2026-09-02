@@ -20,6 +20,14 @@ export type EventFilterErrorShape<Code extends string> = {
   data: unknown;
 };
 
+const describeSegment = (segment: Segment | ScValLike): string => {
+  try {
+    return segment.toString();
+  } catch {
+    return "<unencodable segment>";
+  }
+};
+
 /** Base error type for event-filter failures. */
 export abstract class EventFilterError extends ColibriError<Code, Meta> {
   /** Stable source identifier for event-filter errors. */
@@ -85,7 +93,9 @@ export class FAILED_TO_CHECK_FILTER_SEGMENT extends EventFilterError {
     super({
       code: Code.FAILED_TO_CHECK_FILTER_SEGMENT,
       message: "Failed to check filter segment against event segment",
-      details: `An error occurred while checking the filter segment ${filterSegment.toString()} against the event segment ${eventSegment.toString()}.`,
+      details: `An error occurred while checking the filter segment ${
+        describeSegment(filterSegment)
+      } against the event segment ${describeSegment(eventSegment)}.`,
       cause,
       data: {
         filterSegment: filterSegment,

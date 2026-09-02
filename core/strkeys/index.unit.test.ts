@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { Keypair, xdr } from "stellar-sdk";
 import { StrKey } from "@/strkeys/index.ts";
 import { StrkeyName, StrkeyPrefix } from "@/strkeys/types.ts";
@@ -609,50 +609,40 @@ describe("StrKey", () => {
     });
   });
 
-  describe("Known issues", () => {
-    // ⚠️ The following tests document known limitations in the Stellar SDK's validation.
-    // Tests prefixed with [KNOWN-ISSUE] expect the buggy behavior (returns true when it should return false).
-    // The correct expected behavior is commented above each assertion.
-    // TODO: Update these tests when Stellar SDK fixes these validation gaps.
-    // Refer to : https://github.com/stellar/js-stellar-base/blob/5bac0b60bcd01794bb0b11fd8b6a45e486c28626/test/unit/strkey_test.js#L471
-
-    it("[KNOWN-ISSUE] reject signed payload with length prefix shorter than payload", () => {
-      // Expected: false (length prefix declares fewer bytes than actual payload)
+  describe("canonical malformed-value validation", () => {
+    it("rejects signed payload with length prefix shorter than payload", () => {
       assertEquals(
         StrKey.isValidSignedPayload(
           "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAQACAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUPB6IAAAAAAAAPM",
         ),
-        true, // <- KNOWN-ISSUE
+        false,
       );
     });
 
-    it("[KNOWN-ISSUE] reject signed payload with length prefix longer than payload", () => {
-      // Expected: false (length prefix declares more bytes than actual payload)
+    it("rejects signed payload with length prefix longer than payload", () => {
       assertEquals(
         StrKey.isValidSignedPayload(
           "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAOQCAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4Z2PQ",
         ),
-        true, // <- KNOWN-ISSUE
+        false,
       );
     });
 
-    it("[KNOWN-ISSUE] reject signed payload without zero padding", () => {
-      // Expected: false (payloads < 64 bytes must be zero-padded to 64 bytes)
+    it("rejects signed payload without zero padding", () => {
       assertEquals(
         StrKey.isValidSignedPayload(
           "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAOQCAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DXFH6",
         ),
-        true, // <- KNOWN-ISSUE
+        false,
       );
     });
 
-    it("[KNOWN-ISSUE]  reject claimable balance with invalid type byte (not 0)", () => {
-      // Expected: false (first byte should be 0x00 for CLAIMABLE_BALANCE_ID_TYPE_V0)
+    it("rejects claimable balance with invalid type byte", () => {
       assertEquals(
         StrKey.isValidClaimableBalanceId(
           "BAAT6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGXACA",
         ),
-        true, // <- KNOWN-ISSUE
+        false,
       );
     });
   });
@@ -669,7 +659,7 @@ describe("StrKey", () => {
         payload: Buffer.from([1, 2, 3]),
       });
 
-      const encoded = StrKey.encodeSignedPayload(signerPayload.toXDR());
+      const encoded = StrKey.encodeSignedPayload(signerPayload.toXdr());
       assertEquals(StrKey.isValidSignedPayload(encoded), true);
     });
 

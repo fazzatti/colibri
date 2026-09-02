@@ -9,7 +9,7 @@ import {
   TransactionBuilder,
 } from "stellar-sdk";
 import type { Api, Server } from "stellar-sdk/rpc";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { NetworkConfig } from "@/network/index.ts";
 import type { SimulateTransactionInput } from "@/processes/simulate-transaction/types.ts";
 import type { SimulateTransactionOutput } from "@/processes/simulate-transaction/types.ts";

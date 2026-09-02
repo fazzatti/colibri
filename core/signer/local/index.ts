@@ -14,7 +14,7 @@ import type { LocalSigner as LocalSignerType } from "@/signer/local/types.ts";
 import * as E from "@/signer/local/error.ts";
 import { assert } from "@/common/assert/assert.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
-import { toBuffer } from "@/common/helpers/internal-buffer.ts";
+import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 
 /**
  * LocalSigner
@@ -131,7 +131,7 @@ export class LocalSigner implements LocalSignerType {
 
     this.sign = (data: BinaryData): BinaryData => {
       assert(isDefined(kp), new E.SIGNER_DESTROYED());
-      return kp.sign(toBuffer(data));
+      return kp.sign(toUint8Array(data));
     };
 
     this.verifySignature = (
@@ -139,7 +139,7 @@ export class LocalSigner implements LocalSignerType {
       signature: BinaryData,
     ): boolean => {
       const keypair = Keypair.fromPublicKey(this.publicKey());
-      return keypair.verify(toBuffer(data), toBuffer(signature));
+      return keypair.verify(toUint8Array(data), toUint8Array(signature));
     };
 
     this.signTransaction = (
@@ -147,7 +147,7 @@ export class LocalSigner implements LocalSignerType {
     ): TransactionXDRBase64 => {
       assert(isDefined(kp), new E.SIGNER_DESTROYED());
       tx.sign(kp);
-      return tx.toXDR() as TransactionXDRBase64;
+      return tx.toXdr() as TransactionXDRBase64;
     };
 
     this.signSorobanAuthEntry = (

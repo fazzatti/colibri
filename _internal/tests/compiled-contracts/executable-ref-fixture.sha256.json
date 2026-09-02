@@ -1,0 +1,7 @@
+{
+  "stellarCli": "26.1.0",
+  "sorobanSdk": "28.0.0-rc.1",
+  "artifacts": {
+    "executable_ref_manager_contract.wasm": "4ff2417229fcef1fc0b69ddbbd75e4c5f498fad6bc44c15d82a23774ea72e529"
+  }
+}

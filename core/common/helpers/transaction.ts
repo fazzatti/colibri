@@ -22,7 +22,7 @@ export const getTransactionTimeout = (
     code: ErrorCode.FAILED_TO_GET_TRANSACTION_TIMEOUT,
     meta: {
       data: {
-        txXDR: softTryToXDR(() => tx.toXDR()),
+        txXDR: softTryToXDR(() => tx.toXdr()),
       },
     },
   };
@@ -55,7 +55,7 @@ export const getOperationsFromTransaction = (
   transaction: Transaction
 ): xdr.Operation[] => {
   try {
-    return transaction.toEnvelope().v1().tx().operations();
+    return transaction.tx.operations;
   } catch (e) {
     throw ColibriError.fromUnknown(e, {
       domain: "helpers",
@@ -64,7 +64,7 @@ export const getOperationsFromTransaction = (
       code: ErrorCode.FAILED_TO_GET_OPERATIONS_FROM_TRANSACTION,
       meta: {
         data: {
-          txXDR: softTryToXDR(() => transaction.toXDR()),
+          txXDR: softTryToXDR(() => transaction.toXdr()),
         },
       },
     });
@@ -73,7 +73,7 @@ export const getOperationsFromTransaction = (
 
 /** Returns the Stellar operation type name for a raw operation. */
 export const getOperationType = (op: xdr.Operation): string => {
-  return op.body().switch().name;
+  return op.body.type;
 };
 
 /** Returns the ordered list of operation type names contained in a transaction. */

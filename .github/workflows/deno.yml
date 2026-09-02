@@ -42,6 +42,12 @@ jobs:
       - name: Run linter
         run: deno lint
 
+      - name: Test custom lint rules
+        run: deno task test:lint-rules
+
+      - name: Check package version invariants
+        run: deno task check:package-versions
+
       - name: Run type checks
         run: deno task check
 
@@ -130,6 +136,9 @@ jobs:
 
       - name: Generate aggregate coverage report
         run: deno coverage --lcov --output=coverage.lcov coverage/coverage-*
+
+      - name: Enforce CRAP threshold
+        run: deno task check:crap
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
