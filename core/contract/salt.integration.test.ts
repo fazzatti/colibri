@@ -7,7 +7,7 @@ import {
   assertNotEquals,
 } from "@std/assert";
 import { beforeAll, describe, it } from "@std/testing/bdd";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { Contract } from "@/contract/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { NativeAccount } from "@/account/native/index.ts";

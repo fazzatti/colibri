@@ -845,6 +845,13 @@ describe("Quickstart runtime helpers", () => {
       containerId: "container-id",
       dockerClient,
       friendbotReadyFn: () => Promise.resolve(),
+      readiness: {
+        horizon: true,
+        rpc: true,
+        friendbot: true,
+        lab: true,
+        ledgerMeta: true,
+      },
       sleepFn: () => {
         sleepCalls += 1;
         return Promise.resolve();
@@ -867,7 +874,7 @@ describe("Quickstart runtime helpers", () => {
       },
     });
 
-    assertEquals(fetchCalls >= 3, true);
+    assertEquals(fetchCalls >= 5, true);
     assertEquals(sleepCalls, 1);
   });
 

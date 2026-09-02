@@ -1,6 +1,6 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { Address, Asset, Keypair, xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { parseTrustLineAsset } from "@/common/helpers/xdr/parse-trustline-asset.ts";
@@ -16,8 +16,8 @@ import {
   buildConfigSettingLedgerKey,
   buildContractCodeLedgerKey,
   buildContractInstanceLedgerKey,
-  buildTtlLedgerKey,
   buildTrustlineLedgerKey,
+  buildTtlLedgerKey,
 } from "@/ledger-entries/index.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import type {
@@ -55,8 +55,8 @@ function makeMockEntry(
   return {
     key,
     val: {
-      switch: () => ({ name: entryType, value: 0 }),
-      [arm]: () => payload,
+      type: entryType,
+      [arm]: payload,
     } as unknown as xdr.LedgerEntryData,
   };
 }
@@ -70,35 +70,31 @@ describe("LedgerEntries decode helpers", () => {
     });
 
     const entry = makeMockEntry("account", "account", {
-      accountId: () => Keypair.fromPublicKey(ACCOUNT_ID).xdrAccountId(),
-      balance: () => xdr.Int64.fromString("50"),
-      seqNum: () => xdr.Int64.fromString("9"),
-      numSubEntries: () => 4,
-      inflationDest: () => undefined,
-      flags: () => 0,
-      homeDomain: () => Buffer.from(""),
-      thresholds: () => Buffer.from([]),
-      signers: () => [
-        {
-          key: () => xdr.SignerKey.signerKeyTypeEd25519(rawPublicKey),
-          weight: () => 1,
-        },
-        {
-          key: () =>
-            xdr.SignerKey.signerKeyTypePreAuthTx(
-              Buffer.alloc(32, 4),
-            ),
-          weight: () => 2,
-        },
-        {
-          key: () => xdr.SignerKey.signerKeyTypeHashX(Buffer.alloc(32, 5)),
-          weight: () => 3,
-        },
-        {
-          key: () =>
-            xdr.SignerKey.signerKeyTypeEd25519SignedPayload(signedPayload),
-          weight: () => 4,
-        },
+      accountId: Keypair.fromPublicKey(ACCOUNT_ID).xdrAccountId(),
+      balance: xdr.Int64.fromString("50"),
+      seqNum: xdr.Int64.fromString("9"),
+      numSubEntries: 4,
+      inflationDest: null,
+      flags: 0,
+      homeDomain: "",
+      thresholds: new xdr.Thresholds(new Uint8Array(4)),
+      signers: [
+        new xdr.Signer({
+          key: xdr.SignerKey.signerKeyTypeEd25519(rawPublicKey),
+          weight: 1,
+        }),
+        new xdr.Signer({
+          key: xdr.SignerKey.signerKeyTypePreAuthTx(Buffer.alloc(32, 4)),
+          weight: 2,
+        }),
+        new xdr.Signer({
+          key: xdr.SignerKey.signerKeyTypeHashX(Buffer.alloc(32, 5)),
+          weight: 3,
+        }),
+        new xdr.Signer({
+          key: xdr.SignerKey.signerKeyTypeEd25519SignedPayload(signedPayload),
+          weight: 4,
+        }),
       ],
     });
 
@@ -112,6 +108,12 @@ describe("LedgerEntries decode helpers", () => {
     assertEquals(decoded.thresholds.high, 0);
     assertEquals(decoded.signers[1].key.type, "preAuthTx");
     assertEquals(decoded.signers[2].key.type, "hashX");
+    assertEquals(decoded.signers[3].key.type, "ed25519SignedPayload");
+    if (decoded.signers[3].key.type !== "ed25519SignedPayload") {
+      throw new Error("expected signed-payload signer key");
+    }
+    signedPayload.payload[0] = 9;
+    assertEquals(decoded.signers[3].key.payload, new Uint8Array([1, 2, 3]));
     assertEquals(decoded.signers[3].key.type, "ed25519SignedPayload");
   });
 
@@ -179,9 +181,9 @@ describe("LedgerEntries decode helpers", () => {
         new xdr.ClaimableBalanceEntry({
           balanceId,
           claimants,
-          asset: Asset.native().toXDRObject(),
+          asset: Asset.native().toXdrObject(),
           amount: xdr.Int64.fromString("99"),
-          ext: new xdr.ClaimableBalanceEntryExt(0),
+          ext: xdr.ClaimableBalanceEntryExt.v0(),
         }),
       ),
     );
@@ -203,22 +205,23 @@ describe("LedgerEntries decode helpers", () => {
   it("covers nullable claim predicates", () => {
     const decoded = decodeLedgerEntry(
       makeMockEntry("claimableBalance", "claimableBalance", {
-        balanceId: () => ({
-          v0: () => new Uint8Array(32).fill(1),
-        }),
-        claimants: () => [{
-          v0: () => ({
-            destination: () =>
-              Keypair.fromPublicKey(ACCOUNT_ID).xdrAccountId(),
-            predicate: () => ({
-              switch: () => ({ name: "claimPredicateNot" }),
-              notPredicate: () => null,
-            }),
-          }),
+        balanceId: {
+          type: "claimableBalanceIdTypeV0",
+          v0: new xdr.Hash(new Uint8Array(32).fill(1)),
+        },
+        claimants: [{
+          type: "claimantTypeV0",
+          v0: {
+            destination: Keypair.fromPublicKey(ACCOUNT_ID).xdrAccountId(),
+            predicate: {
+              type: "claimPredicateNot",
+              notPredicate: null,
+            },
+          },
         }],
-        asset: () => Asset.native().toXDRObject(),
-        amount: () => xdr.Int64.fromString("1"),
-        ext: () => ({ switch: () => 0 }),
+        asset: Asset.native().toXdrObject(),
+        amount: xdr.Int64.fromString("1"),
+        ext: { type: "v0" },
       }),
     );
 
@@ -247,10 +250,11 @@ describe("LedgerEntries decode helpers", () => {
           balance: xdr.Int64.fromString("5"),
           limit: xdr.Int64.fromString("10"),
           flags: 0,
-          ext: new xdr.TrustLineEntryExt(0),
+          ext: xdr.TrustLineEntryExt.v0(),
         }),
       ),
     );
+    const codeBytes = Buffer.from([9, 8, 7]);
     const codeEntry = makeResult(
       buildContractCodeLedgerKey({
         hash: "cd".repeat(32),
@@ -258,8 +262,8 @@ describe("LedgerEntries decode helpers", () => {
       xdr.LedgerEntryData.contractCode(
         new xdr.ContractCodeEntry({
           hash: Buffer.from("cd".repeat(32), "hex"),
-          code: Buffer.from([9, 8, 7]),
-          ext: new xdr.ContractCodeEntryExt(0),
+          code: codeBytes,
+          ext: xdr.ContractCodeEntryExt.v0(),
         }),
       ),
     );
@@ -267,16 +271,17 @@ describe("LedgerEntries decode helpers", () => {
       "contractData",
       "contractData",
       {
-        contract: () => Address.fromString(CONTRACT_ID).toScAddress(),
-        durability: () => xdr.ContractDataDurability.persistent(),
-        key: () => xdr.ScVal.scvLedgerKeyContractInstance(),
-        val: () => ({
-          instance: () => ({
-            executable: () =>
-              xdr.ContractExecutable.contractExecutableStellarAsset(),
-            storage: () => undefined,
-          }),
-        }),
+        contract: Address.fromString(CONTRACT_ID).toScAddress(),
+        durability: xdr.ContractDataDurability.persistent,
+        key: xdr.ScVal.scvLedgerKeyContractInstance(),
+        val: {
+          type: "scvContractInstance",
+          instance: {
+            executable: xdr.ContractExecutable
+              .contractExecutableStellarAsset(),
+            storage: null,
+          },
+        },
       },
       buildContractInstanceLedgerKey({
         contractId: CONTRACT_ID,
@@ -286,11 +291,8 @@ describe("LedgerEntries decode helpers", () => {
       "configSetting",
       "configSetting",
       {
-        switch: () => ({ name: "configSettingStateArchival", value: 0 }),
-        value: () => [
-          { toBigInt: () => 1n },
-          { toBigInt: () => 2n },
-        ],
+        type: "configSettingStateArchival",
+        value: [1n, 2n],
       },
       buildConfigSettingLedgerKey({
         configSettingId: "configSettingStateArchival",
@@ -318,6 +320,8 @@ describe("LedgerEntries decode helpers", () => {
       throw new Error("expected contract code entry");
     }
     assertEquals(decodedCode.costInputs, undefined);
+    codeBytes[0] = 1;
+    assertEquals(decodedCode.code, new Uint8Array([9, 8, 7]));
     assertEquals(decodedInstance.type, "contractInstance");
     if (decodedInstance.type !== "contractInstance") {
       throw new Error("expected contract instance entry");
@@ -338,25 +342,63 @@ describe("LedgerEntries decode helpers", () => {
     assertEquals(detectLedgerEntryKindFromKey(ttlKey), "ttl");
   });
 
+  it("preserves CAP-85 external-reference owner and exact tag bytes", () => {
+    const tag = new Uint8Array([0x66, 0x6c, 0x65, 0x65, 0x74, 0xff]);
+    const entry = makeMockEntry(
+      "contractData",
+      "contractData",
+      {
+        contract: Address.fromString(CONTRACT_ID).toScAddress(),
+        durability: xdr.ContractDataDurability.persistent,
+        key: xdr.ScVal.scvLedgerKeyContractInstance(),
+        val: {
+          type: "scvContractInstance",
+          instance: {
+            executable: xdr.ContractExecutable.contractExecutableExternalRef(
+              new xdr.ContractExecutableExternalRef({
+                executableOwner: Address.fromString(CONTRACT_ID).toScAddress(),
+                tag,
+              }),
+            ),
+            storage: [],
+          },
+        },
+      },
+      buildContractInstanceLedgerKey({
+        contractId: CONTRACT_ID,
+      }) as unknown as xdr.LedgerKey,
+    );
+
+    const decoded = decodeLedgerEntry(entry);
+
+    assertEquals(decoded.type, "contractInstance");
+    if (decoded.type !== "contractInstance") {
+      throw new Error("expected contract instance entry");
+    }
+    assertEquals(decoded.executable, {
+      type: "externalRef",
+      executableOwner: CONTRACT_ID,
+      tag,
+    });
+  });
+
   it("covers unsupported decode branches", () => {
     assertThrows(
       () =>
         decodeLedgerEntry(
           makeMockEntry("account", "account", {
-            accountId: () => Keypair.fromPublicKey(ACCOUNT_ID).xdrAccountId(),
-            balance: () => xdr.Int64.fromString("1"),
-            seqNum: () => xdr.Int64.fromString("1"),
-            numSubEntries: () => 1,
-            inflationDest: () => undefined,
-            flags: () => 0,
-            homeDomain: () => "",
-            thresholds: () => Buffer.from([0, 0, 0, 0]),
-            signers: () => [
+            accountId: Keypair.fromPublicKey(ACCOUNT_ID).xdrAccountId(),
+            balance: xdr.Int64.fromString("1"),
+            seqNum: xdr.Int64.fromString("1"),
+            numSubEntries: 1,
+            inflationDest: null,
+            flags: 0,
+            homeDomain: "",
+            thresholds: new xdr.Thresholds(new Uint8Array(4)),
+            signers: [
               {
-                key: () => ({
-                  switch: () => ({ name: "unsupportedSignerKey" }),
-                }),
-                weight: () => 1,
+                key: { type: "unsupportedSignerKey" },
+                weight: 1,
               },
             ],
           }),
@@ -368,21 +410,20 @@ describe("LedgerEntries decode helpers", () => {
       () =>
         decodeLedgerEntry(
           makeMockEntry("claimableBalance", "claimableBalance", {
-            balanceId: () => ({
-              v0: () => new Uint8Array(32).fill(1),
-            }),
-            claimants: () => [{
-              v0: () => ({
-                destination: () =>
-                  Keypair.fromPublicKey(ACCOUNT_ID).xdrAccountId(),
-                predicate: () => ({
-                  switch: () => ({ name: "unsupportedPredicate" }),
-                }),
-              }),
+            balanceId: {
+              type: "claimableBalanceIdTypeV0",
+              v0: new xdr.Hash(new Uint8Array(32).fill(1)),
+            },
+            claimants: [{
+              type: "claimantTypeV0",
+              v0: {
+                destination: Keypair.fromPublicKey(ACCOUNT_ID).xdrAccountId(),
+                predicate: { type: "unsupportedPredicate" },
+              },
             }],
-            asset: () => Asset.native().toXDRObject(),
-            amount: () => xdr.Int64.fromString("1"),
-            ext: () => ({ switch: () => 0 }),
+            asset: Asset.native().toXdrObject(),
+            amount: xdr.Int64.fromString("1"),
+            ext: { type: "v0" },
           }),
         ),
       Error,
@@ -392,17 +433,16 @@ describe("LedgerEntries decode helpers", () => {
       () =>
         decodeLedgerEntry(
           makeMockEntry("contractData", "contractData", {
-            contract: () => Address.fromString(CONTRACT_ID).toScAddress(),
-            durability: () => xdr.ContractDataDurability.persistent(),
-            key: () => xdr.ScVal.scvLedgerKeyContractInstance(),
-            val: () => ({
-              instance: () => ({
-                executable: () => ({
-                  switch: () => ({ name: "unsupportedExecutable" }),
-                }),
-                storage: () => [],
-              }),
-            }),
+            contract: Address.fromString(CONTRACT_ID).toScAddress(),
+            durability: xdr.ContractDataDurability.persistent,
+            key: xdr.ScVal.scvLedgerKeyContractInstance(),
+            val: {
+              type: "scvContractInstance",
+              instance: {
+                executable: { type: "unsupportedExecutable" },
+                storage: [],
+              },
+            },
           }),
         ),
       Error,
@@ -411,7 +451,7 @@ describe("LedgerEntries decode helpers", () => {
     assertThrows(
       () =>
         detectLedgerEntryKindFromKey({
-          switch: () => ({ name: "unsupportedKeyType" }),
+          type: "unsupportedKeyType",
         } as unknown as xdr.LedgerKey),
       Error,
       "Unsupported ledger key type",
@@ -420,7 +460,7 @@ describe("LedgerEntries decode helpers", () => {
       () =>
         decodeLedgerEntry({
           val: {
-            switch: () => ({ name: "unsupportedEntryType" }),
+            type: "unsupportedEntryType",
           },
         } as unknown as Api.LedgerEntryResult),
       Error,
@@ -433,9 +473,9 @@ describe("LedgerEntries decode helpers", () => {
             accountId: ACCOUNT_ID,
           }) as unknown as xdr.LedgerKey,
           makeMockEntry("data", "data", {
-            accountId: () => Keypair.fromPublicKey(ACCOUNT_ID).xdrAccountId(),
-            dataName: () => "profile",
-            dataValue: () => new Uint8Array([1]),
+            accountId: Keypair.fromPublicKey(ACCOUNT_ID).xdrAccountId(),
+            dataName: "profile",
+            dataValue: new xdr.DataValue(new Uint8Array([1])),
           }),
         ),
       E.UNEXPECTED_LEDGER_ENTRY_TYPE,

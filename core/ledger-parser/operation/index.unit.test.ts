@@ -8,7 +8,7 @@
 
 // deno-lint-ignore-file no-explicit-any
 
-import { describe, it, beforeAll } from "@std/testing/bdd";
+import { beforeAll, describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { Ledger } from "@/ledger-parser/ledger/index.ts";
 import { Operation } from "@/ledger-parser/operation/index.ts";
@@ -17,7 +17,7 @@ import {
   INVALID_OPERATION_INDEX,
   UNSUPPORTED_OPERATION_TYPE,
 } from "@/ledger-parser/error.ts";
-import type { rpc } from "stellar-sdk";
+import { Keypair, type rpc, xdr } from "stellar-sdk";
 
 describe("Operation", () => {
   let v2Fixtures: rpc.Api.RawLedgerResponse[];
@@ -63,7 +63,7 @@ describe("Operation", () => {
       const sourceAccount = operation.sourceAccount;
       expect(sourceAccount).toBeDefined();
       expect(
-        sourceAccount.startsWith("G") || sourceAccount.startsWith("M")
+        sourceAccount.startsWith("G") || sourceAccount.startsWith("M"),
       ).toBe(true);
     });
 
@@ -75,39 +75,108 @@ describe("Operation", () => {
   });
 
   describe("Manual Tests for All Operation Types", () => {
-    // Helper to create mock operation with specific type
+    const operationNames = [
+      "createAccount",
+      "payment",
+      "pathPaymentStrictReceive",
+      "manageSellOffer",
+      "createPassiveSellOffer",
+      "setOptions",
+      "changeTrust",
+      "allowTrust",
+      "accountMerge",
+      "inflation",
+      "manageData",
+      "bumpSequence",
+      "manageBuyOffer",
+      "pathPaymentStrictSend",
+      "createClaimableBalance",
+      "claimClaimableBalance",
+      "beginSponsoringFutureReserves",
+      "endSponsoringFutureReserves",
+      "revokeSponsorship",
+      "clawback",
+      "clawbackClaimableBalance",
+      "setTrustLineFlags",
+      "liquidityPoolDeposit",
+      "liquidityPoolWithdraw",
+      "invokeHostFunction",
+      "extendFootprintTtl",
+      "restoreFootprint",
+    ] as const;
+
+    const operationArms: Record<string, string> = {
+      createAccount: "createAccountOp",
+      payment: "paymentOp",
+      pathPaymentStrictReceive: "pathPaymentStrictReceiveOp",
+      manageSellOffer: "manageSellOfferOp",
+      createPassiveSellOffer: "createPassiveSellOfferOp",
+      setOptions: "setOptionsOp",
+      changeTrust: "changeTrustOp",
+      allowTrust: "allowTrustOp",
+      accountMerge: "destination",
+      manageData: "manageDataOp",
+      bumpSequence: "bumpSequenceOp",
+      manageBuyOffer: "manageBuyOfferOp",
+      pathPaymentStrictSend: "pathPaymentStrictSendOp",
+      createClaimableBalance: "createClaimableBalanceOp",
+      claimClaimableBalance: "claimClaimableBalanceOp",
+      beginSponsoringFutureReserves: "beginSponsoringFutureReservesOp",
+      revokeSponsorship: "revokeSponsorshipOp",
+      clawback: "clawbackOp",
+      clawbackClaimableBalance: "clawbackClaimableBalanceOp",
+      setTrustLineFlags: "setTrustLineFlagsOp",
+      liquidityPoolDeposit: "liquidityPoolDepositOp",
+      liquidityPoolWithdraw: "liquidityPoolWithdrawOp",
+      invokeHostFunction: "invokeHostFunctionOp",
+      extendFootprintTtl: "extendFootprintTtlOp",
+      restoreFootprint: "restoreFootprintOp",
+    };
+
+    function canonicalizeMock(value: any): any {
+      if (Array.isArray(value)) return value.map(canonicalizeMock);
+      if (value === null || typeof value !== "object") return value;
+      if (value instanceof Uint8Array) return value;
+      if (
+        Object.getPrototypeOf(value) !== Object.prototype &&
+        Object.getPrototypeOf(value) !== null
+      ) {
+        return value;
+      }
+
+      const result: Record<string, unknown> = {};
+      if (typeof value.switch === "function") {
+        const discriminator = value.switch();
+        result.type = typeof discriminator === "string"
+          ? discriminator
+          : discriminator?.name;
+      }
+
+      for (const [key, member] of Object.entries(value)) {
+        if (key === "switch") continue;
+        if (
+          typeof member === "function" &&
+          ["toString", "toBytes", "toXdr", "toXdrObject"].includes(key)
+        ) {
+          result[key] = member.bind(value);
+        } else {
+          result[key] = canonicalizeMock(
+            typeof member === "function" ? member() : member,
+          );
+        }
+      }
+      return result;
+    }
+
     function createMockOperation(typeCode: number, bodyFn: () => unknown) {
+      const type = operationNames[typeCode] ?? `unknown_${typeCode}`;
+      const arm = operationArms[type];
       return {
-        sourceAccount: () => null, // Falls back to transaction source
-        body: () => ({
-          switch: () => ({ value: typeCode }),
-          // Operation-specific body methods
-          createAccountOp: bodyFn,
-          paymentOp: bodyFn,
-          pathPaymentStrictReceiveOp: bodyFn,
-          pathPaymentStrictSendOp: bodyFn,
-          manageSellOfferOp: bodyFn,
-          manageBuyOfferOp: bodyFn,
-          createPassiveSellOfferOp: bodyFn,
-          setOptionsOp: bodyFn,
-          changeTrustOp: bodyFn,
-          allowTrustOp: bodyFn,
-          destination: bodyFn, // accountMerge uses destination()
-          manageDataOp: bodyFn,
-          bumpSequenceOp: bodyFn,
-          createClaimableBalanceOp: bodyFn,
-          claimClaimableBalanceOp: bodyFn,
-          beginSponsoringFutureReservesOp: bodyFn,
-          revokeSponsorshipOp: bodyFn,
-          clawbackOp: bodyFn,
-          clawbackClaimableBalanceOp: bodyFn,
-          setTrustLineFlagsOp: bodyFn,
-          liquidityPoolDepositOp: bodyFn,
-          liquidityPoolWithdrawOp: bodyFn,
-          invokeHostFunctionOp: bodyFn,
-          extendFootprintTtlOp: bodyFn,
-          restoreFootprintOp: bodyFn,
-        }),
+        sourceAccount: null,
+        body: {
+          type,
+          ...(arm ? { [arm]: canonicalizeMock(bodyFn()) } : {}),
+        },
       };
     }
 
@@ -133,7 +202,7 @@ describe("Operation", () => {
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(4, mockBody) as any,
-        0
+        0,
       );
       expect(op.type).toBe("createPassiveSellOffer");
 
@@ -157,7 +226,7 @@ describe("Operation", () => {
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(5, mockBody) as any,
-        0
+        0,
       );
       expect(op.type).toBe("setOptions");
 
@@ -168,10 +237,7 @@ describe("Operation", () => {
 
     it("should handle setOptions with inflationDest and signer", () => {
       const mockBody = () => ({
-        inflationDest: () => ({
-          switch: () => ({ value: 0 }),
-          ed25519: () => new Uint8Array(32).fill(1),
-        }),
+        inflationDest: () => Keypair.random().xdrAccountId(),
         clearFlags: () => 0,
         setFlags: () => 0,
         masterWeight: () => null,
@@ -179,19 +245,19 @@ describe("Operation", () => {
         medThreshold: () => null,
         highThreshold: () => null,
         homeDomain: () => ({ toString: () => "example.com" }),
-        signer: () => ({
-          key: () => ({
-            value: () =>
-              new Uint8Array([115, 105, 103, 110, 101, 114, 107, 101, 121]),
+        signer: () =>
+          new xdr.Signer({
+            key: xdr.SignerKey.signerKeyTypeEd25519(
+              new Uint8Array(32).fill(2),
+            ),
+            weight: 1,
           }),
-          weight: () => 1,
-        }),
       });
 
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(5, mockBody) as any,
-        0
+        0,
       );
       const body = op.body as any;
       expect(body.homeDomain).toBe("example.com");
@@ -199,12 +265,40 @@ describe("Operation", () => {
       expect(body.signer.weight).toBe(1);
     });
 
+    it("should serialize a signed-payload setOptions signer key", () => {
+      const signedPayload = new xdr.SignerKeyEd25519SignedPayload({
+        ed25519: Keypair.random().rawPublicKey(),
+        payload: new Uint8Array([1, 2, 3]),
+      });
+      const signer = new xdr.Signer({
+        key: xdr.SignerKey.signerKeyTypeEd25519SignedPayload(signedPayload),
+        weight: 1,
+      });
+      const mockBody = () => ({
+        inflationDest: () => null,
+        clearFlags: () => 0,
+        setFlags: () => 0,
+        masterWeight: () => null,
+        lowThreshold: () => null,
+        medThreshold: () => null,
+        highThreshold: () => null,
+        homeDomain: () => null,
+        signer: () => signer,
+      });
+
+      const op = Operation.fromXdr(
+        mockTransaction,
+        createMockOperation(5, mockBody) as any,
+        0,
+      );
+      const body = op.body as any;
+
+      expect(body.signer.key).toBe(signedPayload.toXdr("hex"));
+    });
+
     it("should handle allowTrust (type 7)", () => {
       const mockBody = () => ({
-        trustor: () => ({
-          switch: () => ({ value: 0 }),
-          ed25519: () => new Uint8Array(32).fill(1),
-        }),
+        trustor: () => Keypair.random().xdrAccountId(),
         asset: () => ({ switch: () => ({ name: "assetTypeCreditAlphanum4" }) }),
         authorize: () => 1,
       });
@@ -212,7 +306,7 @@ describe("Operation", () => {
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(7, mockBody) as any,
-        0
+        0,
       );
       expect(op.type).toBe("allowTrust");
 
@@ -221,17 +315,14 @@ describe("Operation", () => {
     });
 
     it("should handle accountMerge (type 8)", () => {
-      const mockDestination = () => ({
-        switch: () => ({ value: 0, name: "keyTypeEd25519" }),
-        ed25519: () => new Uint8Array(32).fill(2),
-      });
+      const mockDestination = Keypair.random().xdrMuxedAccount();
 
       const mockOp = {
-        sourceAccount: () => null,
-        body: () => ({
-          switch: () => ({ value: 8 }),
+        sourceAccount: null,
+        body: {
+          type: "accountMerge",
           destination: mockDestination,
-        }),
+        },
       };
 
       const op = Operation.fromXdr(mockTransaction, mockOp as any, 0);
@@ -245,7 +336,7 @@ describe("Operation", () => {
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(9, () => ({})) as any,
-        0
+        0,
       );
       expect(op.type).toBe("inflation");
 
@@ -256,13 +347,14 @@ describe("Operation", () => {
     it("should handle manageData (type 10)", () => {
       const mockBody = () => ({
         dataName: () => ({ toString: () => "myDataEntry" }),
-        dataValue: () => new Uint8Array([118, 97, 108, 117, 101]),
+        dataValue: () =>
+          new xdr.DataValue(new Uint8Array([118, 97, 108, 117, 101])),
       });
 
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(10, mockBody) as any,
-        0
+        0,
       );
       expect(op.type).toBe("manageData");
 
@@ -279,7 +371,7 @@ describe("Operation", () => {
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(10, mockBody) as any,
-        0
+        0,
       );
       const body = op.body as any;
       expect(body.dataValue).toBeNull();
@@ -293,7 +385,7 @@ describe("Operation", () => {
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(11, mockBody) as any,
-        0
+        0,
       );
       expect(op.type).toBe("bumpSequence");
 
@@ -308,24 +400,19 @@ describe("Operation", () => {
         }),
         amount: () => ({ toString: () => "5000000000" }),
         claimants: () => [
-          {
-            v0: () => ({
-              destination: () => ({
-                switch: () => ({ value: 0 }),
-                ed25519: () => new Uint8Array(32).fill(3),
-              }),
-              predicate: () => ({
-                switch: () => ({ name: "claimPredicateUnconditional" }),
-              }),
+          xdr.Claimant.claimantTypeV0(
+            new xdr.ClaimantV0({
+              destination: Keypair.random().xdrAccountId(),
+              predicate: xdr.ClaimPredicate.claimPredicateUnconditional(),
             }),
-          },
+          ),
         ],
       });
 
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(14, mockBody) as any,
-        0
+        0,
       );
       expect(op.type).toBe("createClaimableBalance");
 
@@ -335,32 +422,32 @@ describe("Operation", () => {
 
     it("should handle claimClaimableBalance (type 15)", () => {
       const mockBody = () => ({
-        balanceId: () => ({ value: () => ({ toString: () => "abc123" }) }),
+        balanceId: () =>
+          xdr.ClaimableBalanceId.claimableBalanceIdTypeV0(
+            new Uint8Array(32).fill(6),
+          ),
       });
 
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(15, mockBody) as any,
-        0
+        0,
       );
       expect(op.type).toBe("claimClaimableBalance");
 
       const body = op.body as any;
-      expect(body.balanceId).toBe("abc123");
+      expect(body.balanceId).toBe("06".repeat(32));
     });
 
     it("should handle beginSponsoringFutureReserves (type 16)", () => {
       const mockBody = () => ({
-        sponsoredId: () => ({
-          switch: () => ({ value: 0 }),
-          ed25519: () => new Uint8Array(32).fill(4),
-        }),
+        sponsoredId: () => Keypair.random().xdrAccountId(),
       });
 
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(16, mockBody) as any,
-        0
+        0,
       );
       expect(op.type).toBe("beginSponsoringFutureReserves");
 
@@ -372,7 +459,7 @@ describe("Operation", () => {
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(17, () => ({})) as any,
-        0
+        0,
       );
       expect(op.type).toBe("endSponsoringFutureReserves");
 
@@ -382,14 +469,14 @@ describe("Operation", () => {
 
     it("should handle revokeSponsorship ledgerEntry (type 18)", () => {
       const mockBody = () => ({
-        switch: () => ({ name: "revokeSponsorshipLedgerEntry" }),
+        type: "revokeSponsorshipLedgerEntry",
         ledgerKey: () => ({ type: "account" }),
       });
 
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(18, mockBody) as any,
-        0
+        0,
       );
       expect(op.type).toBe("revokeSponsorship");
 
@@ -399,14 +486,14 @@ describe("Operation", () => {
 
     it("should handle revokeSponsorship signer (type 18)", () => {
       const mockBody = () => ({
-        switch: () => ({ name: "revokeSponsorshipSigner" }),
+        type: "revokeSponsorshipSigner",
         signer: () => ({ accountId: "GA..." }),
       });
 
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(18, mockBody) as any,
-        0
+        0,
       );
       const body = op.body as any;
       expect(body.type).toBe("signer");
@@ -417,17 +504,14 @@ describe("Operation", () => {
         asset: () => ({
           switch: () => ({ value: 0, name: "assetTypeNative" }),
         }),
-        from: () => ({
-          switch: () => ({ value: 0, name: "keyTypeEd25519" }),
-          ed25519: () => new Uint8Array(32).fill(5),
-        }),
+        from: () => Keypair.random().xdrMuxedAccount(),
         amount: () => ({ toString: () => "1000000" }),
       });
 
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(19, mockBody) as any,
-        0
+        0,
       );
       expect(op.type).toBe("clawback");
 
@@ -437,28 +521,26 @@ describe("Operation", () => {
 
     it("should handle clawbackClaimableBalance (type 20)", () => {
       const mockBody = () => ({
-        balanceId: () => ({
-          value: () => ({ toString: () => "claimbalanceid" }),
-        }),
+        balanceId: () =>
+          xdr.ClaimableBalanceId.claimableBalanceIdTypeV0(
+            new Uint8Array(32).fill(7),
+          ),
       });
 
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(20, mockBody) as any,
-        0
+        0,
       );
       expect(op.type).toBe("clawbackClaimableBalance");
 
       const body = op.body as any;
-      expect(body.balanceId).toBe("claimbalanceid");
+      expect(body.balanceId).toBe("07".repeat(32));
     });
 
     it("should handle setTrustLineFlags (type 21)", () => {
       const mockBody = () => ({
-        trustor: () => ({
-          switch: () => ({ value: 0, name: "keyTypeEd25519" }),
-          ed25519: () => new Uint8Array(32),
-        }),
+        trustor: () => Keypair.random().xdrAccountId(),
         asset: () => ({
           switch: () => ({ value: 0, name: "assetTypeNative" }),
         }),
@@ -469,7 +551,7 @@ describe("Operation", () => {
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(21, mockBody) as any,
-        0
+        0,
       );
       expect(op.type).toBe("setTrustLineFlags");
 
@@ -480,7 +562,7 @@ describe("Operation", () => {
 
     it("should handle liquidityPoolDeposit (type 22)", () => {
       const mockBody = () => ({
-        liquidityPoolId: () => new Uint8Array(32).fill(7),
+        liquidityPoolId: () => new xdr.PoolId(new Uint8Array(32).fill(7)),
         maxAmountA: () => ({ toString: () => "1000" }),
         maxAmountB: () => ({ toString: () => "2000" }),
         minPrice: () => ({ n: () => 1, d: () => 2 }),
@@ -490,7 +572,7 @@ describe("Operation", () => {
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(22, mockBody) as any,
-        0
+        0,
       );
       expect(op.type).toBe("liquidityPoolDeposit");
 
@@ -501,7 +583,7 @@ describe("Operation", () => {
 
     it("should handle liquidityPoolWithdraw (type 23)", () => {
       const mockBody = () => ({
-        liquidityPoolId: () => new Uint8Array(32).fill(8),
+        liquidityPoolId: () => new xdr.PoolId(new Uint8Array(32).fill(8)),
         amount: () => ({ toString: () => "500" }),
         minAmountA: () => ({ toString: () => "100" }),
         minAmountB: () => ({ toString: () => "200" }),
@@ -510,7 +592,7 @@ describe("Operation", () => {
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(23, mockBody) as any,
-        0
+        0,
       );
       expect(op.type).toBe("liquidityPoolWithdraw");
 
@@ -526,7 +608,7 @@ describe("Operation", () => {
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(25, mockBody) as any,
-        0
+        0,
       );
       expect(op.type).toBe("extendFootprintTtl");
 
@@ -540,7 +622,7 @@ describe("Operation", () => {
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(26, mockBody) as any,
-        0
+        0,
       );
       expect(op.type).toBe("restoreFootprint");
 
@@ -550,10 +632,8 @@ describe("Operation", () => {
 
     it("should handle unknown operation type (default case)", () => {
       const mockOp = {
-        sourceAccount: () => null,
-        body: () => ({
-          switch: () => ({ value: 999 }),
-        }),
+        sourceAccount: null,
+        body: { type: "unknown_999" },
       };
 
       const op = Operation.fromXdr(mockTransaction, mockOp as any, 0);
@@ -564,13 +644,8 @@ describe("Operation", () => {
 
     it("should use operation source account when available", () => {
       const mockOp = {
-        sourceAccount: () => ({
-          switch: () => ({ value: 0, name: "keyTypeEd25519" }),
-          ed25519: () => new Uint8Array(32).fill(9),
-        }),
-        body: () => ({
-          switch: () => ({ value: 9 }), // inflation
-        }),
+        sourceAccount: Keypair.random().xdrMuxedAccount(),
+        body: { type: "inflation" },
       };
 
       const op = Operation.fromXdr(mockTransaction, mockOp as any, 0);
@@ -583,7 +658,7 @@ describe("Operation", () => {
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(9, () => ({})) as any,
-        0
+        0,
       );
       expect(op.parentTransaction).toBe(mockTransaction);
     });
@@ -596,7 +671,7 @@ describe("Operation", () => {
       const op = Operation.fromXdr(
         mockTransaction,
         createMockOperation(25, mockBody) as any,
-        5
+        5,
       );
       const json = op.toJSON();
 
@@ -611,7 +686,7 @@ describe("Operation", () => {
         Operation.fromXdr(
           mockTransaction,
           createMockOperation(0, () => ({})) as any,
-          -1
+          -1,
         )
       ).toThrow(INVALID_OPERATION_INDEX);
     });

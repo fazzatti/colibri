@@ -10,6 +10,7 @@ import { Address, xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import {
   buildContractCodeLedgerKey,
+  buildContractDataLedgerKey,
   buildContractInstanceLedgerKey,
   NetworkConfig,
   StrKey,
@@ -28,6 +29,7 @@ import {
 import {
   MissingTargetNetworkError,
   TargetCodeLookupFailedError,
+  TargetExternalReferenceLookupFailedError,
   TargetHashMismatchError,
   TargetInstanceLookupFailedError,
   TargetProviderUnexpectedError,
@@ -46,10 +48,10 @@ const instanceEntry = (
   }) as unknown as xdr.LedgerKey,
   val: xdr.LedgerEntryData.contractData(
     new xdr.ContractDataEntry({
-      ext: new xdr.ExtensionPoint(0),
+      ext: xdr.ExtensionPoint.v0(),
       contract: Address.fromString(id).toScAddress(),
       key: xdr.ScVal.scvLedgerKeyContractInstance(),
-      durability: xdr.ContractDataDurability.persistent(),
+      durability: xdr.ContractDataDurability.persistent,
       val: xdr.ScVal.scvContractInstance(
         new xdr.ScContractInstance({ executable, storage: [] }),
       ),
@@ -64,25 +66,48 @@ const codeEntry = (
   key: buildContractCodeLedgerKey({ hash }) as unknown as xdr.LedgerKey,
   val: xdr.LedgerEntryData.contractCode(
     new xdr.ContractCodeEntry({
-      ext: new xdr.ContractCodeEntryExt(0),
+      ext: xdr.ContractCodeEntryExt.v0(),
       hash: Buffer.from(hash, "hex"),
       code: Buffer.from(wasm),
     }),
   ),
 });
 
+const externalReferenceEntry = (
+  owner: string,
+  tag: Uint8Array,
+  hash: string,
+): { key: xdr.LedgerKey; val: xdr.LedgerEntryData } => {
+  const tagValue = xdr.ScVal.scvExecutableTag(new xdr.XdrString(tag));
+  return {
+    key: buildContractDataLedgerKey({
+      contractId: owner as ContractId,
+      key: tagValue,
+    }) as unknown as xdr.LedgerKey,
+    val: xdr.LedgerEntryData.contractData(
+      new xdr.ContractDataEntry({
+        ext: xdr.ExtensionPoint.v0(),
+        contract: Address.fromString(owner).toScAddress(),
+        key: tagValue,
+        durability: xdr.ContractDataDurability.persistent,
+        val: xdr.ScVal.scvBytes(Buffer.from(hash, "hex")),
+      }),
+    ),
+  };
+};
+
 const rpcFromEntries = (
   entries: readonly { key: xdr.LedgerKey; val: xdr.LedgerEntryData }[],
 ): RpcLedgerEntriesClient => {
   const byKey = new Map(entries.map((entry, index) => [
-    entry.key.toXDR("base64") as string,
+    entry.key.toXdr("base64") as string,
     { ...entry, lastModifiedLedgerSeq: index + 2 },
   ]));
   return {
     getLedgerEntries: (...keys) =>
       Promise.resolve({
         entries: keys.flatMap((key) => {
-          const entry = byKey.get(key.toXDR("base64") as string);
+          const entry = byKey.get(key.toXdr("base64") as string);
           return entry ? [entry as unknown as Api.LedgerEntryResult] : [];
         }),
         latestLedger: 10,
@@ -307,6 +332,143 @@ describe("verification target providers", () => {
     });
   });
 
+  it("resolves contract-id and direct CAP-85 references with observation evidence", async () => {
+    const id = contractId(20);
+    const owner = contractId(21);
+    const tag = new Uint8Array([0x66, 0x6c, 0x65, 0x65, 0xff]);
+    const wasm = testWasm();
+    const hash = await sha256Hex(wasm);
+    const resolver = new StellarVerificationTargetResolver(
+      normalizeVerificationNetwork({
+        rpc: rpcFromEntries([
+          instanceEntry(
+            id,
+            xdr.ContractExecutable.contractExecutableExternalRef(
+              new xdr.ContractExecutableExternalRef({
+                executableOwner: Address.fromString(owner).toScAddress(),
+                tag,
+              }),
+            ),
+          ),
+          externalReferenceEntry(owner, tag, hash),
+          codeEntry(hash, wasm),
+        ]),
+        networkPassphrase: "network",
+      }),
+      () => TEST_NOW,
+    );
+
+    const byContract = await resolver.resolve({ target: { contractId: id } });
+    assertEquals(byContract.applicability, "wasm");
+    if (byContract.applicability !== "wasm") throw new Error("unreachable");
+    assertEquals(byContract.kind, "contractId");
+    assertEquals(byContract.wasmHash, hash);
+    assertEquals(byContract.externalReference, {
+      executableOwner: owner,
+      tag: { encoding: "base64", value: xdr.encodeBytes(tag, "base64") },
+      instance: { observedAtLedger: 10, lastModifiedLedgerSeq: 2 },
+      reference: { observedAtLedger: 10, lastModifiedLedgerSeq: 3 },
+    });
+
+    const direct = await resolver.resolve({
+      target: { externalRef: { owner, tag }, label: "release slot" },
+    });
+    assertEquals(direct.applicability, "wasm");
+    if (direct.applicability !== "wasm") throw new Error("unreachable");
+    assertEquals(direct.kind, "externalRef");
+    assertEquals(direct.contractId, undefined);
+    assertEquals(direct.label, "release slot");
+    assertEquals(direct.externalReference?.instance, undefined);
+    assertEquals(direct.externalReference?.reference, {
+      observedAtLedger: 10,
+      lastModifiedLedgerSeq: 3,
+    });
+  });
+
+  it("keeps external-reference lookup failures distinct", async () => {
+    const owner = contractId(22);
+    const resolver = new StellarVerificationTargetResolver(
+      normalizeVerificationNetwork({
+        rpc: rpcFromEntries([]),
+        networkPassphrase: "network",
+      }),
+    );
+
+    await assertRejects(
+      () =>
+        resolver.resolve({
+          target: { externalRef: { owner, tag: "missing" } },
+        }),
+      TargetExternalReferenceLookupFailedError,
+    );
+
+    const id = contractId(23);
+    const tag = new Uint8Array([1, 2, 3]);
+    const byContract = new StellarVerificationTargetResolver(
+      normalizeVerificationNetwork({
+        rpc: rpcFromEntries([
+          instanceEntry(
+            id,
+            xdr.ContractExecutable.contractExecutableExternalRef(
+              new xdr.ContractExecutableExternalRef({
+                executableOwner: Address.fromString(owner).toScAddress(),
+                tag,
+              }),
+            ),
+          ),
+        ]),
+        networkPassphrase: "network",
+      }),
+    );
+    await assertRejects(
+      () => byContract.resolve({ target: { contractId: id } }),
+      TargetExternalReferenceLookupFailedError,
+    );
+
+    const missingCode = new StellarVerificationTargetResolver(
+      normalizeVerificationNetwork({
+        rpc: rpcFromEntries([
+          externalReferenceEntry(owner, tag, "a".repeat(64)),
+        ]),
+        networkPassphrase: "network",
+      }),
+    );
+    await assertRejects(
+      () =>
+        missingCode.resolve({
+          target: { externalRef: { owner, tag } },
+        }),
+      TargetCodeLookupFailedError,
+    );
+  });
+
+  it("rejects an impossible SAC result for a direct external reference", async () => {
+    const owner = contractId(24);
+    const resolver = new StellarVerificationTargetResolver({
+      ledgerEntries: {
+        resolveContractExecutable: () =>
+          Promise.resolve({
+            contractId: owner,
+            executable: { type: "stellarAsset" },
+            instance: { observedAtLedger: 1 },
+          }),
+      } as never,
+      evidence: {
+        networkPassphrase: "network",
+        input: "rpc",
+        allowHttp: false,
+      },
+    });
+
+    await assertRejects(
+      () =>
+        resolver.resolve({
+          target: { externalRef: { owner, tag: "stable" } },
+        }),
+      TargetProviderUnexpectedError,
+    );
+  });
+
   it("keeps instance and code lookup failures unique", async () => {
     const offline: RpcLedgerEntriesClient = {
       getLedgerEntries: () => Promise.reject(new Error("offline")),
@@ -385,10 +547,14 @@ describe("verification target providers", () => {
     const id = contractId(5);
     const contractResolver = new StellarVerificationTargetResolver({
       ledgerEntries: {
-        contractInstance: () =>
+        resolveContractExecutable: () =>
           Promise.resolve({
             executable: { type: "wasm", wasmHash: requested },
-            lastModifiedLedgerSeq: 1,
+            resolvedWasmHash: requested,
+            instance: {
+              observedAtLedger: 1,
+              lastModifiedLedgerSeq: 1,
+            },
           }),
         contractCode: () =>
           Promise.resolve({

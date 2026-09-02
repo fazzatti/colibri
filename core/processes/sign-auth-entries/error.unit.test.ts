@@ -1,6 +1,6 @@
 import { assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { Address, xdr } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
 import { signAuthEntries } from "@/processes/sign-auth-entries/index.ts";
@@ -38,7 +38,7 @@ describe("SignAuthEntries", () => {
       credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
         new xdr.SorobanAddressCredentials({
           address: account.toScAddress(),
-          nonce: new xdr.Int64(0),
+          nonce: xdr.Int64(0),
           signatureExpirationLedger: 0,
           signature: xdr.ScVal.scvVec([]),
         })

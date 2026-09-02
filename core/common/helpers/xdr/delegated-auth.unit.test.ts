@@ -1,7 +1,7 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Address, buildWithDelegatesEntry, Operation, xdr } from "stellar-sdk";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { getAddressCredentialsFromAuthEntry } from "@/common/helpers/xdr/get-address-credentials-from-auth-entry.ts";
 import { getAddressSignerFromAuthEntry } from "@/common/helpers/xdr/get-address-signer-from-auth-entry.ts";
 import { getAddressTypeFromAuthEntry } from "@/common/helpers/xdr/get-address-type-from-auth-entry.ts";
@@ -29,7 +29,7 @@ const makeAddressEntry = (
 ) => {
   const credentials = new xdr.SorobanAddressCredentials({
     address: rootAddress.toScAddress(),
-    nonce: new xdr.Int64(1),
+    nonce: xdr.Int64(1),
     signatureExpirationLedger: 0,
     signature: xdr.ScVal.scvVoid(),
   });
@@ -61,22 +61,22 @@ describe("delegated authorization XDR helpers", () => {
   describe("getAddressCredentialsFromAuthEntry", () => {
     it("extracts legacy and V2 address credentials", () => {
       assertEquals(
-        getAddressCredentialsFromAuthEntry(makeAddressEntry())?.address()
-          .toXDR("base64"),
-        rootAddress.toScAddress().toXDR("base64"),
+        getAddressCredentialsFromAuthEntry(makeAddressEntry())?.address
+          .toXdr("base64"),
+        rootAddress.toScAddress().toXdr("base64"),
       );
       assertEquals(
         getAddressCredentialsFromAuthEntry(makeAddressEntry("addressV2"))
-          ?.address().toXDR("base64"),
-        rootAddress.toScAddress().toXDR("base64"),
+          ?.address.toXdr("base64"),
+        rootAddress.toScAddress().toXdr("base64"),
       );
     });
 
     it("extracts the shared address credentials from delegated credentials", () => {
       assertEquals(
-        getAddressCredentialsFromAuthEntry(makeDelegatedEntry())?.address()
-          .toXDR("base64"),
-        rootAddress.toScAddress().toXDR("base64"),
+        getAddressCredentialsFromAuthEntry(makeDelegatedEntry())?.address
+          .toXdr("base64"),
+        rootAddress.toScAddress().toXdr("base64"),
       );
     });
 
@@ -92,9 +92,13 @@ describe("delegated authorization XDR helpers", () => {
     });
 
     it("supports structural legacy credential implementations", () => {
-      const expected = makeAddressEntry().credentials().address();
+      const entry = makeAddressEntry();
+      const expected = getAddressCredentialsFromAuthEntry(entry)!;
       const structuralEntry = {
-        credentials: () => ({ address: () => expected }),
+        credentials: {
+          type: "sorobanCredentialsAddress",
+          address: expected,
+        },
       } as unknown as xdr.SorobanAuthorizationEntry;
 
       assertEquals(
@@ -117,7 +121,7 @@ describe("delegated authorization XDR helpers", () => {
     it("returns the single address signature", () => {
       assertEquals(
         getAuthEntrySignatures(makeAddressEntry()).map((signature) =>
-          signature.switch().name
+          signature.type
         ),
         ["scvVoid"],
       );
@@ -126,7 +130,7 @@ describe("delegated authorization XDR helpers", () => {
     it("walks delegated signatures in top-level-first order", () => {
       assertEquals(
         getAuthEntrySignatures(makeDelegatedEntry()).map((signature) =>
-          signature.u32()
+          signature.type === "scvU32" ? signature.u32 : undefined
         ),
         [1, 2, 3],
       );
@@ -137,7 +141,10 @@ describe("delegated authorization XDR helpers", () => {
     it("detects delegated credentials in invoke-host-function operations", () => {
       const operation = Operation.invokeHostFunction({
         func: xdr.HostFunction.hostFunctionTypeInvokeContract(
-          invocation.function().contractFn(),
+          invocation.function.type ===
+              "sorobanAuthorizedFunctionTypeContractFn"
+            ? invocation.function.contractFn
+            : neverContractFunction(),
         ),
         auth: [makeDelegatedEntry()],
       });
@@ -148,7 +155,10 @@ describe("delegated authorization XDR helpers", () => {
     it("returns false for ordinary auth and non-contract operations", () => {
       const ordinary = Operation.invokeHostFunction({
         func: xdr.HostFunction.hostFunctionTypeInvokeContract(
-          invocation.function().contractFn(),
+          invocation.function.type ===
+              "sorobanAuthorizedFunctionTypeContractFn"
+            ? invocation.function.contractFn
+            : neverContractFunction(),
         ),
         auth: [makeAddressEntry()],
       });
@@ -161,3 +171,7 @@ describe("delegated authorization XDR helpers", () => {
     });
   });
 });
+
+function neverContractFunction(): never {
+  throw new Error("Expected a contract-function invocation");
+}

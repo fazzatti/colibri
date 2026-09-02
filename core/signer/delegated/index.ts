@@ -2,9 +2,8 @@ import {
   Address,
   buildWithDelegatesEntry,
   type DelegateSignature,
-  xdr,
+  type xdr,
 } from "stellar-sdk";
-import { Buffer } from "buffer";
 import type { SorobanAuthorizationEntryLike } from "@/common/types/index.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 import type { AuthEntrySigner } from "@/signer/types.ts";
@@ -150,11 +149,17 @@ export class DelegatedSigner implements AuthEntrySigner {
 const compareDelegateAddresses = (
   left: DelegatedSigner,
   right: DelegatedSigner,
-): number =>
-  Buffer.compare(
-    new Address(left.getAddress()).toScAddress().toXDR(),
-    new Address(right.getAddress()).toScAddress().toXDR(),
-  );
+): number => {
+  const leftBytes = new Address(left.getAddress()).toScAddress().toXdr();
+  const rightBytes = new Address(right.getAddress()).toScAddress().toXdr();
+  const length = Math.min(leftBytes.length, rightBytes.length);
+  for (let index = 0; index < length; index += 1) {
+    if (leftBytes[index] !== rightBytes[index]) {
+      return leftBytes[index] - rightBytes[index];
+    }
+  }
+  return leftBytes.length - rightBytes.length;
+};
 
 const toDelegateSignature = (
   delegate: DelegatedSigner,
@@ -166,8 +171,7 @@ const toDelegateSignature = (
 const isDelegatedEntry = (
   entry: xdr.SorobanAuthorizationEntry,
 ): boolean =>
-  entry.credentials().switch().value ===
-    xdr.SorobanCredentialsType.sorobanCredentialsAddressWithDelegates().value;
+  entry.credentials.type === "sorobanCredentialsAddressWithDelegates";
 
 /** Error constructors emitted by {@link DelegatedSigner}. */
 export const DelegatedSignerErrors: typeof E = E;

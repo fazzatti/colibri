@@ -22,7 +22,7 @@ export interface FeeBumpSignableTransaction {
   /** Inner envelope fee, in stroops. */
   fee: string;
   /** Serializes the transaction into XDR. */
-  toXDR(format?: "raw" | "hex" | "base64"): string | Uint8Array;
+  toXdr(format?: "raw" | "hex" | "base64"): string | Uint8Array;
   /** Applies one or more signatures to the envelope. */
   sign(...signers: unknown[]): unknown;
   /** Returns the network-bound transaction hash. */

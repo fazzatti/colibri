@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Address, Keypair, Networks, xdr } from "stellar-sdk";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { DelegatedSigner } from "@/signer/delegated/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import type { AuthEntrySigner } from "@/signer/types.ts";
@@ -34,7 +34,7 @@ const makeEntry = (
 ) => {
   const addressCredentials = new xdr.SorobanAddressCredentials({
     address: address.toScAddress(),
-    nonce: new xdr.Int64(7),
+    nonce: xdr.Int64(7),
     signatureExpirationLedger: 0,
     signature: xdr.ScVal.scvVoid(),
   });
@@ -87,23 +87,27 @@ describe("DelegatedSigner", () => {
       1234,
       Networks.TESTNET,
     ) as xdr.SorobanAuthorizationEntry;
-    const credentials = signed.credentials().addressWithDelegates();
-    const middleNode = credentials.delegates()[0];
-    const leafNode = middleNode.nestedDelegates()[0];
-
+    const signedCredentials = signed.credentials;
     assertEquals(
-      signed.credentials().switch().value,
-      xdr.SorobanCredentialsType.sorobanCredentialsAddressWithDelegates()
-        .value,
+      signedCredentials.type,
+      "sorobanCredentialsAddressWithDelegates",
     );
+    if (signedCredentials.type !== "sorobanCredentialsAddressWithDelegates") {
+      throw new Error("Expected delegated credentials");
+    }
+    const credentials = signedCredentials.addressWithDelegates;
+    const middleNode = credentials.delegates[0];
+    const leafNode = middleNode.nestedDelegates[0];
+
+    assertEquals(signedCredentials.type, "sorobanCredentialsAddressWithDelegates");
     assertEquals(
-      credentials.addressCredentials().signature().switch().name,
+      credentials.addressCredentials.signature.type,
       "scvVec",
     );
-    assertEquals(middleNode.signature().switch().name, "scvVoid");
-    assertEquals(leafNode.signature().switch().name, "scvVec");
+    assertEquals(middleNode.signature.type, "scvVoid");
+    assertEquals(leafNode.signature.type, "scvVec");
     assertEquals(
-      credentials.addressCredentials().signatureExpirationLedger(),
+      credentials.addressCredentials.signatureExpirationLedger,
       1234,
     );
   });
@@ -126,14 +130,17 @@ describe("DelegatedSigner", () => {
       Networks.TESTNET,
     ) as xdr.SorobanAuthorizationEntry;
 
+    const credentials = signed.credentials;
+    assertEquals(credentials.type, "sorobanCredentialsAddressWithDelegates");
+    if (credentials.type !== "sorobanCredentialsAddressWithDelegates") {
+      throw new Error("Expected delegated credentials");
+    }
     assertEquals(
-      signed.credentials().addressWithDelegates().addressCredentials()
-        .signature().switch().name,
+      credentials.addressWithDelegates.addressCredentials.signature.type,
       "scvVoid",
     );
     assertEquals(
-      signed.credentials().addressWithDelegates().delegates()[0].signature()
-        .switch().name,
+      credentials.addressWithDelegates.delegates[0].signature.type,
       "scvVec",
     );
   });
@@ -201,8 +208,8 @@ describe("DelegatedSigner", () => {
     );
 
     assertEquals(
-      sameEntry.toXDR("base64"),
-      delegated.toXDR("base64"),
+      sameEntry.toXdr("base64"),
+      delegated.toXdr("base64"),
     );
     assert(sameEntry === delegated);
   });

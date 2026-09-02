@@ -58,6 +58,9 @@ export const resolveVerificationTarget = async (
         wasmLength: target.applicability === "wasm"
           ? target.wasm.length
           : undefined,
+        externalReference: target.applicability === "wasm"
+          ? target.externalReference
+          : undefined,
         lastModifiedLedgerSeq: target.lastModifiedLedgerSeq,
         observedAt: target.observedAt,
       },

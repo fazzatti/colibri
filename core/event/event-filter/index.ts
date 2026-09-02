@@ -37,7 +37,7 @@ export class EventFilter {
       } else if (segment === "**") {
         return "**";
       } else {
-        return segment.toXDR("base64");
+        return segment.toXdr("base64");
       }
     }) as BoundedArray<string, 0, 4>;
   }
@@ -120,7 +120,7 @@ const eventTopicsMatchFilterTopic = (
 
     try {
       // Checks for the exact segment value
-      if (filterSegment.toXDR("base64") === eventSegment.toXDR("base64"))
+      if (filterSegment.toXdr("base64") === eventSegment.toXdr("base64"))
         continue; // Matched this segment, continue to next
     } catch (e) {
       throw new E.FAILED_TO_CHECK_FILTER_SEGMENT(

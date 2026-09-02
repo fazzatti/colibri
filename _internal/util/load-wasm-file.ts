@@ -1,9 +1,10 @@
 // deno-coverage-ignore-file
 
 import { readFile } from "node:fs/promises";
-import type { Buffer } from "buffer";
 
-export const loadWasmFile = async (wasmFilePath: string): Promise<Buffer> => {
+export const loadWasmFile = async (
+  wasmFilePath: string,
+): Promise<Uint8Array> => {
   try {
     const buffer = await readFile(wasmFilePath);
     return buffer;

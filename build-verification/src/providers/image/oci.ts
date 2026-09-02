@@ -204,56 +204,24 @@ class RegistryClient {
     throw lastCause;
   }
 
-  async request(
-    path: string,
-    accept: string,
+  async #fetchManifestResource(
+    input: string | URL,
+    headers: Readonly<Record<string, string>>,
     maximum: number,
   ): Promise<Awaited<ReturnType<typeof retrievePinnedHttpResource>>> {
-    const url = `${
-      registryOrigin(this.#parsed.registry)
-    }/v2/${this.#parsed.repository}/${path}`;
-    let response: Awaited<ReturnType<typeof retrievePinnedHttpResource>>;
     try {
-      response = await this.#fetch(url, {
-        accept,
-        ...(this.#token ? { authorization: `Bearer ${this.#token}` } : {}),
-      }, maximum);
+      return await this.#fetch(input, headers, maximum);
     } catch (cause) {
       if (cause instanceof ImageRegistryRequestRejectedError) throw cause;
       throw new ImageManifestResolutionFailedError(this.#reference, cause);
     }
-    if (response.status !== 401 || this.#token) return response;
-    const tokenUrl = parseBearerChallenge(
-      this.#reference,
-      response.headers["www-authenticate"] ?? null,
-    );
-    if (!tokenUrl) {
-      throw new ImageAuthenticationChallengeInvalidError(this.#reference);
-    }
-    let tokenResponse: Awaited<
-      ReturnType<typeof retrievePinnedHttpResource>
-    >;
+  }
+
+  #storeToken(
+    response: Awaited<ReturnType<typeof retrievePinnedHttpResource>>,
+  ): void {
     try {
-      tokenResponse = await this.#fetch(
-        tokenUrl,
-        { accept: "application/json" },
-        Math.min(maximum, 1024 * 1024),
-      );
-    } catch (cause) {
-      if (cause instanceof ImageRegistryRequestRejectedError) throw cause;
-      throw new ImageManifestResolutionFailedError(this.#reference, cause);
-    }
-    if (tokenResponse.status < 200 || tokenResponse.status >= 300) {
-      throw new ImageManifestResolutionFailedError(
-        this.#reference,
-        undefined,
-        tokenResponse.status,
-      );
-    }
-    try {
-      const body = JSON.parse(
-        new TextDecoder().decode(tokenResponse.bytes),
-      ) as {
+      const body = JSON.parse(new TextDecoder().decode(response.bytes)) as {
         token?: string;
         access_token?: string;
       };
@@ -262,26 +230,67 @@ class RegistryClient {
       throw new ImageManifestResolutionFailedError(
         this.#reference,
         cause,
-        tokenResponse.status,
+        response.status,
       );
     }
     if (!this.#token) {
       throw new ImageManifestResolutionFailedError(
         this.#reference,
         undefined,
+        response.status,
+      );
+    }
+  }
+
+  async #authenticate(
+    response: Awaited<ReturnType<typeof retrievePinnedHttpResource>>,
+    maximum: number,
+  ): Promise<void> {
+    const tokenUrl = parseBearerChallenge(
+      this.#reference,
+      response.headers["www-authenticate"] ?? null,
+    );
+    if (!tokenUrl) {
+      throw new ImageAuthenticationChallengeInvalidError(this.#reference);
+    }
+    const tokenResponse = await this.#fetchManifestResource(
+      tokenUrl,
+      { accept: "application/json" },
+      Math.min(maximum, 1024 * 1024),
+    );
+    if (tokenResponse.status < 200 || tokenResponse.status >= 300) {
+      throw new ImageManifestResolutionFailedError(
+        this.#reference,
+        undefined,
         tokenResponse.status,
       );
     }
-    try {
-      return await this.#fetch(
-        url,
-        { accept, authorization: `Bearer ${this.#token}` },
-        maximum,
-      );
-    } catch (cause) {
-      if (cause instanceof ImageRegistryRequestRejectedError) throw cause;
-      throw new ImageManifestResolutionFailedError(this.#reference, cause);
-    }
+    this.#storeToken(tokenResponse);
+  }
+
+  async request(
+    path: string,
+    accept: string,
+    maximum: number,
+  ): Promise<Awaited<ReturnType<typeof retrievePinnedHttpResource>>> {
+    const url = `${
+      registryOrigin(this.#parsed.registry)
+    }/v2/${this.#parsed.repository}/${path}`;
+    const response = await this.#fetchManifestResource(
+      url,
+      {
+        accept,
+        ...(this.#token ? { authorization: `Bearer ${this.#token}` } : {}),
+      },
+      maximum,
+    );
+    if (response.status !== 401 || this.#token) return response;
+    await this.#authenticate(response, maximum);
+    return await this.#fetchManifestResource(
+      url,
+      { accept, authorization: `Bearer ${this.#token}` },
+      maximum,
+    );
   }
 }
 
@@ -399,6 +408,176 @@ const parseAttestation = (
   return { kind: "other", predicateType, subjects, sources: [...sources] };
 };
 
+type ReferrerState = {
+  referrers: ContainerImageReferrer[];
+  predicateTypes: Set<string>;
+  subjectDigests: Set<string>;
+  sourceRepositories: Set<string>;
+  sbomFormats: Set<string>;
+  provenancePresent: boolean;
+  provenanceParsed: boolean;
+};
+
+const emptyReferrerResult = (): {
+  referrers: ContainerImageReferrer[];
+  provenance: ContainerImageProvenance;
+  sbom: ContainerImageSbom;
+} => ({
+  referrers: [],
+  provenance: {
+    present: false,
+    parsed: false,
+    signatureVerified: false,
+    predicateTypes: [],
+    subjectDigests: [],
+    sourceRepositories: [],
+  },
+  sbom: { present: false, formats: [] },
+});
+
+const readReferrerDescriptors = (
+  reference: string,
+  response: Awaited<ReturnType<typeof retrievePinnedHttpResource>>,
+  maxReferrers: number,
+): OciDescriptor[] => {
+  if (response.status < 200 || response.status >= 300) {
+    throw new ImageReferrersResolutionFailedError(
+      reference,
+      undefined,
+      response.status,
+    );
+  }
+  let descriptors: OciDescriptor[];
+  try {
+    const index = JSON.parse(new TextDecoder().decode(response.bytes)) as {
+      manifests?: OciDescriptor[];
+    };
+    descriptors = index.manifests ?? [];
+  } catch (cause) {
+    throw new ImageReferrersResolutionFailedError(
+      reference,
+      cause,
+      response.status,
+    );
+  }
+  if (descriptors.length > maxReferrers) {
+    throw new ImageReferrersResolutionFailedError(
+      reference,
+      new RangeError("OCI referrer count exceeds its configured limit"),
+    );
+  }
+  return descriptors;
+};
+
+const recordAttestation = (
+  state: ReferrerState,
+  parsed: ReturnType<typeof parseAttestation>,
+): void => {
+  if (parsed.kind === "provenance") {
+    state.provenancePresent = true;
+    state.provenanceParsed = true;
+    if (parsed.predicateType) state.predicateTypes.add(parsed.predicateType);
+    for (const subject of parsed.subjects) state.subjectDigests.add(subject);
+    for (const source of parsed.sources) state.sourceRepositories.add(source);
+  } else if (parsed.kind === "sbom" && parsed.format) {
+    state.sbomFormats.add(parsed.format);
+  }
+};
+
+const resolveAttestationLayer = async (
+  client: RegistryClient,
+  reference: string,
+  descriptor: OciDescriptor,
+  layer: OciDescriptor,
+  maximum: number,
+  state: ReferrerState,
+): Promise<void> => {
+  const predicateHint = layer.annotations?.["in-toto.io/predicate-type"] ??
+    descriptor.annotations?.["in-toto.io/predicate-type"] ?? "";
+  const isAttestation = layer.mediaType?.includes("in-toto") ||
+    predicateHint.length > 0;
+  if (!isAttestation) return;
+  const bytes = await fetchDescriptorBytes(
+    client,
+    reference,
+    layer,
+    maximum,
+    "referrer",
+  );
+  recordAttestation(
+    state,
+    parseAttestation(layer.digest!, bytes, predicateHint),
+  );
+};
+
+const resolveReferrerDescriptor = async (
+  client: RegistryClient,
+  reference: string,
+  descriptor: OciDescriptor,
+  maximum: number,
+  state: ReferrerState,
+): Promise<void> => {
+  if (!descriptor.digest || !descriptor.mediaType) return;
+  state.referrers.push({
+    digest: descriptor.digest,
+    mediaType: descriptor.mediaType,
+    artifactType: descriptor.artifactType,
+    annotations: descriptor.annotations ?? {},
+  });
+  const response = await client.request(
+    `manifests/${descriptor.digest}`,
+    MANIFEST_ACCEPT,
+    maximum,
+  );
+  if (response.status < 200 || response.status >= 300) {
+    throw new ImageReferrersResolutionFailedError(
+      reference,
+      undefined,
+      response.status,
+    );
+  }
+  const actualDigest = `sha256:${await sha256Hex(response.bytes)}`;
+  if (actualDigest !== descriptor.digest) {
+    throw new ImageReferrerDigestMismatchError(descriptor.digest, actualDigest);
+  }
+  let manifest: { layers?: OciDescriptor[] };
+  try {
+    manifest = JSON.parse(new TextDecoder().decode(response.bytes));
+  } catch (cause) {
+    throw new ImageAttestationDecodingFailedError(descriptor.digest, cause);
+  }
+  for (const layer of manifest.layers ?? []) {
+    await resolveAttestationLayer(
+      client,
+      reference,
+      descriptor,
+      layer,
+      maximum,
+      state,
+    );
+  }
+};
+
+const referrerResult = (state: ReferrerState): {
+  referrers: ContainerImageReferrer[];
+  provenance: ContainerImageProvenance;
+  sbom: ContainerImageSbom;
+} => ({
+  referrers: state.referrers,
+  provenance: {
+    present: state.provenancePresent,
+    parsed: state.provenanceParsed,
+    signatureVerified: false,
+    predicateTypes: [...state.predicateTypes],
+    subjectDigests: [...state.subjectDigests],
+    sourceRepositories: [...state.sourceRepositories],
+  },
+  sbom: {
+    present: state.sbomFormats.size > 0,
+    formats: [...state.sbomFormats],
+  },
+});
+
 const resolveReferrers = async (
   client: RegistryClient,
   reference: string,
@@ -422,126 +601,32 @@ const resolveReferrers = async (
     throw new ImageReferrersResolutionFailedError(reference, cause);
   }
   if (response.status === 404) {
-    return {
-      referrers: [],
-      provenance: {
-        present: false,
-        parsed: false,
-        signatureVerified: false,
-        predicateTypes: [],
-        subjectDigests: [],
-        sourceRepositories: [],
-      },
-      sbom: { present: false, formats: [] },
-    };
+    return emptyReferrerResult();
   }
-  if (response.status < 200 || response.status >= 300) {
-    throw new ImageReferrersResolutionFailedError(
-      reference,
-      undefined,
-      response.status,
-    );
-  }
-  let descriptors: OciDescriptor[];
-  try {
-    const index = JSON.parse(
-      new TextDecoder().decode(response.bytes),
-    ) as { manifests?: OciDescriptor[] };
-    descriptors = index.manifests ?? [];
-  } catch (cause) {
-    throw new ImageReferrersResolutionFailedError(
-      reference,
-      cause,
-      response.status,
-    );
-  }
-  if (descriptors.length > maxReferrers) {
-    throw new ImageReferrersResolutionFailedError(
-      reference,
-      new RangeError("OCI referrer count exceeds its configured limit"),
-    );
-  }
-
-  const referrers: ContainerImageReferrer[] = [];
-  const predicateTypes = new Set<string>();
-  const subjectDigests = new Set<string>();
-  const sourceRepositories = new Set<string>();
-  const sbomFormats = new Set<string>();
-  let provenancePresent = false;
-  let provenanceParsed = false;
-  for (const descriptor of descriptors) {
-    if (!descriptor.digest || !descriptor.mediaType) continue;
-    referrers.push({
-      digest: descriptor.digest,
-      mediaType: descriptor.mediaType,
-      artifactType: descriptor.artifactType,
-      annotations: descriptor.annotations ?? {},
-    });
-    const manifestResponse = await client.request(
-      `manifests/${descriptor.digest}`,
-      MANIFEST_ACCEPT,
-      maximum,
-    );
-    if (
-      manifestResponse.status < 200 || manifestResponse.status >= 300
-    ) {
-      throw new ImageReferrersResolutionFailedError(
-        reference,
-        undefined,
-        manifestResponse.status,
-      );
-    }
-    const manifestBytes = manifestResponse.bytes;
-    const manifestActual = `sha256:${await sha256Hex(manifestBytes)}`;
-    if (manifestActual !== descriptor.digest) {
-      throw new ImageReferrerDigestMismatchError(
-        descriptor.digest,
-        manifestActual,
-      );
-    }
-    let manifest: { layers?: OciDescriptor[] };
-    try {
-      manifest = JSON.parse(new TextDecoder().decode(manifestBytes));
-    } catch (cause) {
-      throw new ImageAttestationDecodingFailedError(descriptor.digest, cause);
-    }
-    for (const layer of manifest.layers ?? []) {
-      const predicateHint = layer.annotations?.["in-toto.io/predicate-type"] ??
-        descriptor.annotations?.["in-toto.io/predicate-type"] ?? "";
-      const isAttestation = layer.mediaType?.includes("in-toto") ||
-        predicateHint.length > 0;
-      if (!isAttestation) continue;
-      const bytes = await fetchDescriptorBytes(
-        client,
-        reference,
-        layer,
-        maximum,
-        "referrer",
-      );
-      const parsed = parseAttestation(layer.digest!, bytes, predicateHint);
-      if (parsed.kind === "provenance") {
-        provenancePresent = true;
-        provenanceParsed = true;
-        if (parsed.predicateType) predicateTypes.add(parsed.predicateType);
-        for (const subject of parsed.subjects) subjectDigests.add(subject);
-        for (const source of parsed.sources) sourceRepositories.add(source);
-      } else if (parsed.kind === "sbom") {
-        if (parsed.format) sbomFormats.add(parsed.format);
-      }
-    }
-  }
-  return {
-    referrers,
-    provenance: {
-      present: provenancePresent,
-      parsed: provenanceParsed,
-      signatureVerified: false,
-      predicateTypes: [...predicateTypes],
-      subjectDigests: [...subjectDigests],
-      sourceRepositories: [...sourceRepositories],
-    },
-    sbom: { present: sbomFormats.size > 0, formats: [...sbomFormats] },
+  const descriptors = readReferrerDescriptors(
+    reference,
+    response,
+    maxReferrers,
+  );
+  const state: ReferrerState = {
+    referrers: [],
+    predicateTypes: new Set(),
+    subjectDigests: new Set(),
+    sourceRepositories: new Set(),
+    sbomFormats: new Set(),
+    provenancePresent: false,
+    provenanceParsed: false,
   };
+  for (const descriptor of descriptors) {
+    await resolveReferrerDescriptor(
+      client,
+      reference,
+      descriptor,
+      maximum,
+      state,
+    );
+  }
+  return referrerResult(state);
 };
 
 /** OCI resolver that separates registry facts from image trust decisions. */

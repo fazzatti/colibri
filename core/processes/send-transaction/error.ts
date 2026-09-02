@@ -348,11 +348,11 @@ export class TRANSACTION_FAILED extends SendTransactionError {
         input,
         diagnosticEvents: parsedDiagnosticEvents,
         transactionXDR: softTryToXDR(() =>
-          response.envelopeXdr.toXDR("base64")
+          response.envelopeXdr.toXdr("base64")
         ),
-        resultXDR: softTryToXDR(() => response.resultXdr.toXDR("base64")),
+        resultXDR: softTryToXDR(() => response.resultXdr.toXdr("base64")),
         resultMetaXDR: softTryToXDR(() =>
-          response.resultMetaXdr.toXDR("base64")
+          response.resultMetaXdr.toXdr("base64")
         ),
       },
       cause: null,

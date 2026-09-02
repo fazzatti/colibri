@@ -15,5 +15,5 @@ import type { xdr } from "stellar-sdk";
  * @internal
  */
 export function parseAccountId(accountXdr: xdr.AccountId): Ed25519PublicKey {
-  return StrKey.encodeEd25519PublicKey(accountXdr.ed25519());
+  return StrKey.encodeEd25519PublicKey(accountXdr.ed25519.toBytes());
 }

@@ -53,6 +53,7 @@ export abstract class EventParsingError extends ColibriError<Code, Meta> {
 export enum Code {
   INVALID_LEDGER_CLOSE_META_XDR = "EVP_001",
   UNSUPPORTED_LEDGER_CLOSE_META_VERSION = "EVP_002",
+  UNSUPPORTED_TRANSACTION_META_VERSION = "EVP_003",
 }
 
 /** Raised when ledger-close metadata cannot be decoded as XDR. */
@@ -86,9 +87,25 @@ export class UNSUPPORTED_LEDGER_CLOSE_META_VERSION extends EventParsingError {
   }
 }
 
+/** Raised when event parsing encounters transaction metadata other than v4. */
+export class UNSUPPORTED_TRANSACTION_META_VERSION extends EventParsingError {
+  /** Creates the error. */
+  constructor(version: string) {
+    super({
+      code: Code.UNSUPPORTED_TRANSACTION_META_VERSION,
+      message: "Unsupported TransactionMeta version",
+      details:
+        `The provided TransactionMeta version ${version} is not supported for event parsing.`,
+      data: { version },
+    });
+  }
+}
+
 /** Event-parsing error constructors indexed by stable code. */
 export const ERROR_EVP = {
   [Code.INVALID_LEDGER_CLOSE_META_XDR]: INVALID_LEDGER_CLOSE_META_XDR,
   [Code.UNSUPPORTED_LEDGER_CLOSE_META_VERSION]:
     UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
+  [Code.UNSUPPORTED_TRANSACTION_META_VERSION]:
+    UNSUPPORTED_TRANSACTION_META_VERSION,
 };

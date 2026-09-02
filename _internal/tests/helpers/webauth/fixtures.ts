@@ -1,6 +1,6 @@
 // deno-coverage-ignore-file
 
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import {
   Account,
   Address,
@@ -124,7 +124,7 @@ export function buildSep10Challenge(
   if (options.signServer ?? true) {
     transaction.sign(fixture.server);
   }
-  return transaction.toXDR();
+  return transaction.toXdr();
 }
 
 /** SEP-45 argument fixture. */

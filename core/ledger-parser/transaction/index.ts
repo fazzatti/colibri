@@ -8,9 +8,9 @@ import { memoize } from "@/common/decorators/memoize/index.ts";
 // deno-coverage-ignore-stop
 import type { xdr } from "stellar-sdk";
 import {
-  parseAccountId,
   parseMuxedAccount,
 } from "@/common/helpers/xdr/index.ts";
+import { StrKey } from "@/strkeys/index.ts";
 import { Operation } from "@/ledger-parser/operation/index.ts";
 import {
   INVALID_TRANSACTION_INDEX,
@@ -73,10 +73,10 @@ export class Transaction {
     }
 
     // Extract components from TransactionResultMeta
-    const txMeta = txResultMeta.txApplyProcessing();
-    const resultPair = txResultMeta.result(); // TransactionResultPair
-    const txResult = resultPair.result(); // TransactionResult
-    const txHash = resultPair.transactionHash(); // Buffer with the hash
+    const txMeta = txResultMeta.txApplyProcessing;
+    const resultPair = txResultMeta.result;
+    const txResult = resultPair.result;
+    const txHash = resultPair.transactionHash.toBytes();
 
     // TransactionMeta v4: envelope is not stored in meta
     // For LedgerCloseMeta v2, envelope comes from txSet (use fromMetaWithEnvelope)
@@ -99,10 +99,10 @@ export class Transaction {
       throw new INVALID_TRANSACTION_INDEX(index, ledger.sequence, -1);
     }
 
-    const txMeta = txResultMeta.txApplyProcessing();
-    const resultPair = txResultMeta.result();
-    const txResult = resultPair.result();
-    const txHash = resultPair.transactionHash();
+    const txMeta = txResultMeta.txApplyProcessing;
+    const resultPair = txResultMeta.result;
+    const txResult = resultPair.result;
+    const txHash = resultPair.transactionHash.toBytes();
 
     return new Transaction(ledger, envelope, txResult, txMeta, txHash, index);
   }
@@ -143,7 +143,7 @@ export class Transaction {
   @memoize()
   get successful(): boolean {
     // TransactionResultCode.txSuccess() returns 0
-    return this.txResult.result().switch().value === 0;
+    return this.txResult.result.toXdrObject().code === 0;
   }
 
   /**
@@ -151,7 +151,7 @@ export class Transaction {
    */
   @memoize()
   get resultCode(): string {
-    const resultSwitch = this.txResult.result().switch().value;
+    const resultSwitch = this.txResult.result.toXdrObject().code;
     // Map numeric codes to strings (0 = txSuccess, etc.)
     const codeMap: Record<number, string> = {
       0: "txSuccess",
@@ -188,29 +188,21 @@ export class Transaction {
     }
 
     const envelope = this.envelope;
-    const envType = envelope.switch().value; // Returns 0=TxV0, 2=Tx, 5=FeeBump
 
-    // Handle different envelope types (numeric codes)
-    if (envType === 2) {
-      // envelopeTypeTx
-      const tx = envelope.v1().tx();
-      return parseMuxedAccount(tx.sourceAccount());
-    } else if (envType === 0) {
-      // envelopeTypeTxV0
-      const tx = envelope.v0().tx();
-      const ed25519 = tx.sourceAccountEd25519();
-      // Create a minimal AccountId-compatible object
-      // parseAccountId only uses ed25519(), so switch is not needed
-      return parseAccountId({
-        ed25519: () => ed25519,
-      } as unknown as xdr.AccountId);
-    } else if (envType === 5) {
-      // envelopeTypeTxFeeBump
-      const feeBump = envelope.feeBump().tx();
-      return parseMuxedAccount(feeBump.feeSource());
+    switch (envelope.type) {
+      case "envelopeTypeTx":
+        return parseMuxedAccount(envelope.v1.tx.sourceAccount);
+      case "envelopeTypeTxV0":
+        return StrKey.encodeEd25519PublicKey(
+          envelope.v0.tx.sourceAccountEd25519.toBytes(),
+        );
+      case "envelopeTypeTxFeeBump":
+        return parseMuxedAccount(envelope.feeBump.tx.feeSource);
+      default:
+        throw new UNSUPPORTED_ENVELOPE_TYPE(
+          (envelope as { type: string }).type,
+        );
     }
-
-    throw new UNSUPPORTED_ENVELOPE_TYPE(envType);
   }
 
   /**
@@ -221,7 +213,7 @@ export class Transaction {
   @memoize()
   get fee(): bigint {
     // V4 and all versions: use feeCharged from result (actual fee paid)
-    return this.txResult.feeCharged().toBigInt();
+    return this.txResult.feeCharged;
   }
 
   /**
@@ -234,22 +226,17 @@ export class Transaction {
     }
 
     const envelope = this.envelope;
-    const envType = envelope.switch().value; // Returns 0=TxV0, 2=Tx, 5=FeeBump
 
-    if (envType === 2) {
-      // envelopeTypeTx
-      return envelope.v1().tx().seqNum().toBigInt();
-    } else if (envType === 0) {
-      // envelopeTypeTxV0
-      return envelope.v0().tx().seqNum().toBigInt();
-    } else if (envType === 5) {
-      // envelopeTypeTxFeeBump
-      // Fee bump wraps an inner transaction
-      const innerTx = envelope.feeBump().tx().innerTx().v1().tx();
-      return innerTx.seqNum().toBigInt();
+    switch (envelope.type) {
+      case "envelopeTypeTx":
+        return envelope.v1.tx.seqNum;
+      case "envelopeTypeTxV0":
+        return envelope.v0.tx.seqNum;
+      case "envelopeTypeTxFeeBump":
+        return envelope.feeBump.tx.innerTx.v1.tx.seqNum;
+      default:
+        return 0n;
     }
-
-    return 0n;
   }
 
   /**
@@ -264,21 +251,13 @@ export class Transaction {
     }
 
     const envelope = this.envelope;
-    const envType = envelope.switch().value;
-    let ops: xdr.Operation[];
-
-    if (envType === 2) {
-      // envelopeTypeTx
-      ops = envelope.v1().tx().operations();
-    } else if (envType === 0) {
-      // envelopeTypeTxV0
-      ops = envelope.v0().tx().operations();
-    } else if (envType === 5) {
-      // envelopeTypeTxFeeBump
-      ops = envelope.feeBump().tx().innerTx().v1().tx().operations();
-    } else {
-      ops = [];
-    }
+    const ops: xdr.Operation[] = envelope.type === "envelopeTypeTx"
+      ? envelope.v1.tx.operations
+      : envelope.type === "envelopeTypeTxV0"
+      ? envelope.v0.tx.operations
+      : envelope.type === "envelopeTypeTxFeeBump"
+      ? envelope.feeBump.tx.innerTx.v1.tx.operations
+      : [];
 
     return ops.map((op, index) => Operation.fromXdr(this, op, index));
   }

@@ -1,4 +1,4 @@
-import { xdr } from "stellar-sdk";
+import type { xdr } from "stellar-sdk";
 
 /**
  * Extracts address credentials from any address-based Soroban authorization
@@ -11,22 +11,15 @@ import { xdr } from "stellar-sdk";
 export const getAddressCredentialsFromAuthEntry = (
   authEntry: xdr.SorobanAuthorizationEntry,
 ): xdr.SorobanAddressCredentials | null => {
-  const credentials = authEntry.credentials();
+  const credentials = authEntry.credentials;
 
-  // Preserve compatibility with structural authorization-entry implementations
-  // that expose the legacy address accessor without an XDR union switch.
-  if (typeof credentials.switch !== "function") {
-    return credentials.address();
-  }
-
-  switch (credentials.switch().value) {
-    case xdr.SorobanCredentialsType.sorobanCredentialsAddress().value:
-      return credentials.address();
-    case xdr.SorobanCredentialsType.sorobanCredentialsAddressV2().value:
-      return credentials.addressV2();
-    case xdr.SorobanCredentialsType.sorobanCredentialsAddressWithDelegates()
-      .value:
-      return credentials.addressWithDelegates().addressCredentials();
+  switch (credentials.type) {
+    case "sorobanCredentialsAddress":
+      return credentials.address;
+    case "sorobanCredentialsAddressV2":
+      return credentials.addressV2;
+    case "sorobanCredentialsAddressWithDelegates":
+      return credentials.addressWithDelegates.addressCredentials;
     default:
       return null;
   }

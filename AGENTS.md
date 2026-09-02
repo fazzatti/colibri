@@ -44,6 +44,8 @@ Primary workspace commands live in `deno.json`:
 deno lint
 deno task check
 deno task check:jsr
+deno task check:package-versions
+deno task check:crap
 deno task test
 deno task test:unit
 deno task test:integration
@@ -57,6 +59,10 @@ What they mean:
   packages.
 - `deno task check:jsr`: run `deno doc --lint` against the JSR entrypoints.
   Public exports need valid docs.
+- `deno task check:package-versions`: verify that package-version constants used
+  at runtime match their package `deno.json` metadata.
+- `deno task check:crap`: enforce the maximum CRAP score of 15 against the
+  aggregate `coverage.lcov` report. Missing function coverage fails the check.
 - `deno task test`: run the full suite, including unit and integration tests.
 - `deno task test:unit`: run fast unit coverage without integration tests.
 - `deno task test:integration`: run integration tests only.
@@ -69,6 +75,8 @@ Good default validation:
 deno lint
 deno task check
 deno task check:jsr
+deno task check:package-versions
+deno task check:crap
 deno task test:unit
 ```
 
@@ -98,6 +106,8 @@ GitHub Actions behavior matters when changing structure or versions:
   recreates the instrumented source cache, merges the profiles into one
   workspace LCOV report, and uploads it to Codecov.
 - The publish workflow runs only on pushes to `main`.
+- Both CI and publishing reject package-version constants that do not match the
+  corresponding package `deno.json` metadata.
 - Publish detects package version bumps from each package `deno.json` and then
   creates tags if the tag does not already exist.
 
@@ -418,17 +428,23 @@ The repo largely follows Deno/TypeScript defaults plus a few local conventions:
 - public APIs are documented
 - comments should explain non-obvious behavior, not restate code
 
-There is also a custom lint rule in:
+There are also custom lint rules in:
 
 - `_tools/lint/enum-requires-own-file.ts`
+- `_tools/lint/no-relative-imports.ts`
 
-It is currently wired into:
+The enum rule is currently wired into:
 
 - `core/deno.json`
 - `test-tooling/deno.json`
 
-That rule requires enums with more than 50 members to live alone in their file.
-If you add or expand large enums in those packages, keep that rule in mind.
+It requires enums with more than 50 members to live alone in their file. If you
+add or expand large enums in those packages, keep that rule in mind.
+
+The no-relative-imports rule applies across every published package, including
+its tests. Use the package-local `@/` alias for imports within a package and a
+configured package alias for cross-package imports. Repository-only `_internal`
+and `_tools` files remain outside that package boundary.
 
 ## Change Checklist
 

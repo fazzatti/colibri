@@ -29,7 +29,7 @@ describe("[Testnet] ChannelAccounts integration", disableSanitizeConfig, () => {
         rpcUrl: networkConfig.rpcUrl!,
         allowHttp: networkConfig.allowHttp,
       },
-  );
+    );
 
   beforeAll(async () => {
     rpc = new Server(networkConfig.rpcUrl!, {
@@ -61,7 +61,7 @@ describe("[Testnet] ChannelAccounts integration", disableSanitizeConfig, () => {
         channels.map((channel) => rpc.getAccountEntry(channel.address())),
       );
       assertEquals(
-        accountEntries.map((entry) => entry.balance().toString()),
+        accountEntries.map((entry) => entry.balance.toString()),
         ["0", "0"],
       );
 
@@ -93,13 +93,15 @@ describe("[Testnet] ChannelAccounts integration", disableSanitizeConfig, () => {
 
       try {
         const accountEntry = await rpc.getAccountEntry(channel.address());
-        const [signer] = accountEntry.signers();
+        const [signer] = accountEntry.signers;
 
         assertExists(signer);
-        assertEquals(accountEntry.signers().length, 1);
-        assertEquals(signer.weight(), 1);
+        assertEquals(accountEntry.signers.length, 1);
+        assertEquals(signer.weight, 1);
         assertEquals(
-          StrKey.encodeEd25519PublicKey(signer.key().ed25519()),
+          signer.key.type === "signerKeyTypeEd25519"
+            ? StrKey.encodeEd25519PublicKey(signer.key.ed25519.toBytes())
+            : undefined,
           sponsor.address(),
         );
       } finally {

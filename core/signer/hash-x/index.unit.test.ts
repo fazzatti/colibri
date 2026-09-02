@@ -7,7 +7,7 @@ import {
 } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { stub } from "@std/testing/mock";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import {
   Account,
   hash,
@@ -42,12 +42,12 @@ describe("HashXSigner", () => {
       preimage.toString("hex"),
     );
     assertEquals(
-      Buffer.from(signer.hash() as Uint8Array).toString("hex"),
-      hash(preimage).toString("hex"),
+      signer.hash(),
+      hash(preimage),
     );
     assertEquals(
-      StrKey.decodeSha256Hash(signer.signerKey()).toString("hex"),
-      hash(preimage).toString("hex"),
+      StrKey.decodeSha256Hash(signer.signerKey()),
+      hash(preimage),
     );
   });
 
@@ -80,9 +80,12 @@ describe("HashXSigner", () => {
     const xdr = signer.signTransaction(transaction);
     const [signature] = transaction.signatures;
 
-    assertEquals(xdr, transaction.toXDR());
-    assertEquals(signature.signature(), preimage);
-    assertEquals(signature.hint(), hash(preimage).subarray(-4));
+    assertEquals(xdr, transaction.toXdr());
+    assertEquals(signature.signature.toBytes(), Uint8Array.from(preimage));
+    assertEquals(
+      signature.hint.toBytes(),
+      Uint8Array.from(hash(preimage).subarray(-4)),
+    );
   });
 
   it("creates a random 32-byte preimage and supports hiding it", () => {
@@ -168,7 +171,7 @@ describe("HashXSigner", () => {
       signHashX: () => {
         throw new Error("sign failed");
       },
-      toXDR: () => "",
+      toXdr: () => "",
     } as unknown as SignableTransaction;
 
     assertThrows(
@@ -182,7 +185,7 @@ describe("HashXSigner", () => {
     const transaction = {
       sign: () => {},
       signHashX: () => {},
-      toXDR: () => {
+      toXdr: () => {
         throw new Error("serialization failed");
       },
     } as unknown as SignableTransaction;

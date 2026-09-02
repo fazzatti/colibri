@@ -234,7 +234,7 @@ describe("ApproveEvent", () => {
       const filter = ApproveEvent.toTopicFilter({});
 
       assertEquals(filter.length, 3);
-      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals(filter[1], "*");
       assertEquals(filter[2], "*");
     });
@@ -244,8 +244,8 @@ describe("ApproveEvent", () => {
       const filter = ApproveEvent.toTopicFilter({ from });
 
       assertEquals(filter.length, 3);
-      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
-      assertEquals((filter[1] as xdr.ScVal).switch().name, "scvAddress");
+      assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
+      assertEquals((filter[1] as xdr.ScVal).type, "scvAddress");
       assertEquals(filter[2], "*");
     });
 
@@ -254,9 +254,9 @@ describe("ApproveEvent", () => {
       const filter = ApproveEvent.toTopicFilter({ spender });
 
       assertEquals(filter.length, 3);
-      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals(filter[1], "*");
-      assertEquals((filter[2] as xdr.ScVal).switch().name, "scvAddress");
+      assertEquals((filter[2] as xdr.ScVal).type, "scvAddress");
     });
 
     it("should create filter with both from and spender", () => {
@@ -265,9 +265,9 @@ describe("ApproveEvent", () => {
       const filter = ApproveEvent.toTopicFilter({ from, spender });
 
       assertEquals(filter.length, 3);
-      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
-      assertEquals((filter[1] as xdr.ScVal).switch().name, "scvAddress");
-      assertEquals((filter[2] as xdr.ScVal).switch().name, "scvAddress");
+      assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
+      assertEquals((filter[1] as xdr.ScVal).type, "scvAddress");
+      assertEquals((filter[2] as xdr.ScVal).type, "scvAddress");
     });
   });
 });

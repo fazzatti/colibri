@@ -19,25 +19,29 @@ import type { xdr } from "stellar-sdk";
  * @internal
  */
 export function parseAsset(assetXdr: xdr.Asset): StellarAssetCanonicalString {
-  switch (assetXdr.switch().name) {
+  switch (assetXdr.type) {
     case "assetTypeNative":
       return "native";
 
     case "assetTypeCreditAlphanum4": {
-      const asset = assetXdr.alphaNum4();
-      const code = asset.assetCode().toString("utf8").replace(/\0/g, "");
-      const issuer = StrKey.encodeEd25519PublicKey(asset.issuer().ed25519());
+      const asset = assetXdr.alphaNum4;
+      const code = asset.assetCode.toString().replace(/\0/g, "");
+      const issuer = StrKey.encodeEd25519PublicKey(
+        asset.issuer.ed25519.toBytes(),
+      );
       return toStellarAssetCanonicalString(code, issuer);
     }
 
     case "assetTypeCreditAlphanum12": {
-      const asset = assetXdr.alphaNum12();
-      const code = asset.assetCode().toString("utf8").replace(/\0/g, "");
-      const issuer = StrKey.encodeEd25519PublicKey(asset.issuer().ed25519());
+      const asset = assetXdr.alphaNum12;
+      const code = asset.assetCode.toString().replace(/\0/g, "");
+      const issuer = StrKey.encodeEd25519PublicKey(
+        asset.issuer.ed25519.toBytes(),
+      );
       return toStellarAssetCanonicalString(code, issuer);
     }
 
     default:
-      throw new UNKNOWN_ASSET_TYPE(assetXdr.switch().name);
+      throw new UNKNOWN_ASSET_TYPE((assetXdr as { type: string }).type);
   }
 }

@@ -10,7 +10,7 @@ export class MissingTargetNetworkError
       source: "@colibri/build-verification/providers/target",
       message: "Missing target network",
       details:
-        "A contract id or Wasm hash target requires networkConfig, rpc, or rpcUrl plus networkPassphrase.",
+        "A contract id, Wasm hash, or external-reference target requires networkConfig, rpc, or rpcUrl plus networkPassphrase.",
     });
   }
 }
@@ -109,6 +109,23 @@ export class TargetProviderUnexpectedError
       message: "Unexpected target provider failure",
       details:
         "The selected target resolver failed outside its typed contract.",
+      cause,
+    });
+  }
+}
+
+/** Raised when an owner/tag executable reference cannot be resolved. */
+export class TargetExternalReferenceLookupFailedError
+  extends BuildVerificationError<Code.TARGET_EXTERNAL_REFERENCE_LOOKUP_FAILED> {
+  /** Creates an external-reference lookup error. */
+  constructor(target: string, cause: unknown) {
+    super({
+      code: Code.TARGET_EXTERNAL_REFERENCE_LOOKUP_FAILED,
+      source: "@colibri/build-verification/providers/target/stellar",
+      message: "Failed to resolve external executable reference",
+      details:
+        "The owner-scoped executable tag could not be resolved to its currently selected Wasm hash through Stellar RPC.",
+      data: { target },
       cause,
     });
   }

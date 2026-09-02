@@ -1,4 +1,5 @@
 import { NetworkConfig } from "@colibri/core";
+import { xdr } from "stellar-sdk";
 import type {
   ContractBuildVerificationInput,
   OutOfBandBuildRecipe,
@@ -12,6 +13,8 @@ import {
   CliDuplicateFlagError,
   CliEnvironmentReadFailedError,
   CliEnvironmentValueMissingError,
+  CliExternalReferenceIncompleteError,
+  CliExternalReferenceTagInvalidError,
   CliFlagValueMissingError,
   CliGitHubFormatInvalidError,
   CliGitHubReleaseInvalidError,
@@ -51,6 +54,10 @@ Targets (choose one):
   --contract-id <id>       Resolve a deployed contract through Stellar RPC
   --wasm-hash <hex>        Resolve deployed contract code through Stellar RPC
   --wasm <path>            Verify local Wasm bytes
+  --external-ref-owner <contract-id> --external-ref-tag <text>
+                            Resolve an owner-scoped textual executable tag
+  --external-ref-owner <contract-id> --external-ref-tag-base64 <base64>
+                            Resolve arbitrary executable-tag bytes
 
 Network:
   --network <mainnet|testnet|futurenet>
@@ -88,6 +95,9 @@ const VALUE_FLAGS = new Set([
   "contract-id",
   "wasm-hash",
   "wasm",
+  "external-ref-owner",
+  "external-ref-tag",
+  "external-ref-tag-base64",
   "network",
   "rpc-url",
   "network-passphrase",
@@ -168,11 +178,55 @@ export const verificationTargetFromFlags = async (
   const contractId = getBuildVerificationStringFlag(flags, "contract-id");
   const wasmHash = getBuildVerificationStringFlag(flags, "wasm-hash");
   const wasmPath = getBuildVerificationStringFlag(flags, "wasm");
-  if ([contractId, wasmHash, wasmPath].filter(Boolean).length !== 1) {
+  const externalRefOwner = getBuildVerificationStringFlag(
+    flags,
+    "external-ref-owner",
+  );
+  const externalRefTag = getBuildVerificationStringFlag(
+    flags,
+    "external-ref-tag",
+  );
+  const externalRefTagBase64 = getBuildVerificationStringFlag(
+    flags,
+    "external-ref-tag-base64",
+  );
+  const hasExternalRef = !!(
+    externalRefOwner || externalRefTag || externalRefTagBase64
+  );
+  if (
+    [!!contractId, !!wasmHash, !!wasmPath, hasExternalRef].filter(Boolean)
+      .length !== 1
+  ) {
     throw new CliTargetSelectionInvalidError();
   }
   if (contractId) return { contractId };
   if (wasmHash) return { wasmHash };
+  if (hasExternalRef) {
+    if (
+      !externalRefOwner ||
+      [!!externalRefTag, !!externalRefTagBase64].filter(Boolean).length !== 1
+    ) {
+      throw new CliExternalReferenceIncompleteError();
+    }
+    if (externalRefTag !== undefined) {
+      return {
+        externalRef: { owner: externalRefOwner, tag: externalRefTag },
+      };
+    }
+    try {
+      return {
+        externalRef: {
+          owner: externalRefOwner,
+          tag: xdr.decodeBytes(externalRefTagBase64!, "base64"),
+        },
+      };
+    } catch (cause) {
+      throw new CliExternalReferenceTagInvalidError(
+        externalRefTagBase64!,
+        cause,
+      );
+    }
+  }
   try {
     return { wasm: await io.readFile(wasmPath!), label: wasmPath };
   } catch (cause) {
@@ -227,6 +281,28 @@ export const verificationSourceFromFlags = (
 ): VerificationSource | undefined => {
   const path = getBuildVerificationStringFlag(flags, "source");
   const url = getBuildVerificationStringFlag(flags, "source-url");
+  const github = githubSourceFlags(flags);
+  const groups = [!!path, !!url, github.present].filter(Boolean);
+  if (groups.length > 1) throw new CliSourceSelectionInvalidError();
+  if (github.present) return githubSourceFromFlags(github);
+  if (path) return { type: "path", path };
+  if (url) return { type: "url", url };
+  return undefined;
+};
+
+type GitHubSourceFlags = {
+  owner?: string;
+  repository?: string;
+  revision?: string;
+  tag?: string;
+  asset?: string;
+  format?: string;
+  present: boolean;
+};
+
+const githubSourceFlags = (
+  flags: ParsedBuildVerificationFlags,
+): GitHubSourceFlags => {
   const owner = getBuildVerificationStringFlag(flags, "github-owner");
   const repository = getBuildVerificationStringFlag(
     flags,
@@ -239,25 +315,24 @@ export const verificationSourceFromFlags = (
     "github-release-asset",
   );
   const format = getBuildVerificationStringFlag(flags, "github-format");
-  const hasGitHubFlag = [owner, repository, revision, tag, asset, format].some(
-    Boolean,
-  );
-  const groups = [!!path, !!url, hasGitHubFlag].filter(Boolean);
-  if (groups.length > 1) {
-    throw new CliSourceSelectionInvalidError();
-  }
-  if (!hasGitHubFlag) {
-    if (path) return { type: "path", path };
-    if (url) return { type: "url", url };
-    return undefined;
-  }
-  if (!owner || !repository) {
-    throw new CliGitHubSourceIncompleteError();
-  }
+  return {
+    owner,
+    repository,
+    revision,
+    tag,
+    asset,
+    format,
+    present: [owner, repository, revision, tag, asset, format].some(Boolean),
+  };
+};
+
+const githubSourceFromFlags = (
+  flags: GitHubSourceFlags,
+): VerificationSource => {
+  const { owner, repository, revision, tag, asset, format } = flags;
+  if (!owner || !repository) throw new CliGitHubSourceIncompleteError();
   if (revision) {
-    if (tag || asset) {
-      throw new CliGitHubRevisionConflictError();
-    }
+    if (tag || asset) throw new CliGitHubRevisionConflictError();
     if (format !== undefined && format !== "tar.gz" && format !== "zip") {
       throw new CliGitHubFormatInvalidError(format);
     }
@@ -269,9 +344,7 @@ export const verificationSourceFromFlags = (
       format: format === "zip" ? "zip" : "tarGzip",
     };
   }
-  if (!tag || !asset || format) {
-    throw new CliGitHubReleaseInvalidError();
-  }
+  if (!tag || !asset || format) throw new CliGitHubReleaseInvalidError();
   return { type: "githubReleaseAsset", owner, repository, tag, asset };
 };
 

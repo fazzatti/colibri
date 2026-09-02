@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { stub } from "@std/testing/mock";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import {
   Account,
   FeeBumpTransaction,
@@ -74,7 +74,7 @@ describe("signEnvelope signer mechanisms", () => {
 
       assertEquals(output.signatures.length, 1);
       assertEquals(
-        output.signatures[0].signature().toString("hex"),
+        Buffer.from(output.signatures[0].signature.toBytes()).toString("hex"),
         "010203",
       );
     });
@@ -148,7 +148,7 @@ describe("signEnvelope signer mechanisms", () => {
       });
 
       assertEquals(output.signatures.length, 0);
-      assertEquals(output.toXDR(), transaction.toXDR());
+      assertEquals(output.toXdr(), transaction.toXdr());
     });
 
     it("checks pre-authorization after another signer mutates the envelope", async () => {
@@ -201,7 +201,7 @@ describe("signEnvelope signer mechanisms", () => {
           throw new Error("identity failed");
         },
         signsFor: () => true,
-        signTransaction: () => transaction.toXDR(),
+        signTransaction: () => transaction.toXdr(),
       } as Signer;
 
       await assertRejects(
@@ -222,7 +222,7 @@ describe("signEnvelope signer mechanisms", () => {
         signsFor: () => {
           throw new Error("target failed");
         },
-        signTransaction: () => transaction.toXDR(),
+        signTransaction: () => transaction.toXdr(),
       } as Signer;
 
       await assertRejects(

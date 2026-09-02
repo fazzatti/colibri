@@ -12,10 +12,10 @@ describe("ensureXdrType", () => {
 
   it("should return already-parsed XDR object", () => {
     // Parse the header from fixture
-    const header = xdr.LedgerHeaderHistoryEntry.fromXDR(
+    const header = xdr.LedgerHeaderHistoryEntry.fromXdr(
       fixture.headerXdr,
       "base64"
-    ).header();
+    ).header;
 
     // Passing an already-parsed object should return the same object
     const result = ensureXdrType(header, xdr.LedgerHeader);
@@ -26,17 +26,17 @@ describe("ensureXdrType", () => {
     const result = ensureXdrType(fixture.metadataXdr, xdr.LedgerCloseMeta);
     assertExists(result);
     // Verify it's a valid LedgerCloseMeta
-    assertEquals(typeof result.switch(), "number");
+    assertEquals(xdr.LedgerCloseMeta.is(result), true);
   });
 
   it("should parse LedgerHeaderHistoryEntry from base64 string", () => {
-    const result = ensureXdrType(
+    const result = ensureXdrType<xdr.LedgerHeaderHistoryEntry>(
       fixture.headerXdr,
       xdr.LedgerHeaderHistoryEntry
     );
     assertExists(result);
     // Verify we can access the header
-    const header = result.header();
+    const header = result.header;
     assertExists(header);
   });
 
@@ -48,7 +48,7 @@ describe("ensureXdrType", () => {
 
     const result = ensureXdrType(binaryData, xdr.LedgerCloseMeta);
     assertExists(result);
-    assertEquals(typeof result.switch(), "number");
+    assertEquals(xdr.LedgerCloseMeta.is(result), true);
   });
 
   it("should throw for invalid base64 string", () => {
@@ -69,7 +69,7 @@ describe("ensureXdrType", () => {
   it("should handle XDR type without name property in error", () => {
     // Create a mock XDR type without a name property to test the fallback
     const mockXdrType = {
-      fromXDR: () => {
+      fromXdr: () => {
         throw new Error("Parse failed");
       },
       // Intentionally no 'name' property to test "unknown" fallback
@@ -86,7 +86,7 @@ describe("ensureXdrType", () => {
   it("should normalize non-Error parse failures", () => {
     const mockXdrType = {
       name: "MockXdr",
-      fromXDR: () => {
+      fromXdr: () => {
         throw "Parse failed";
       },
     };

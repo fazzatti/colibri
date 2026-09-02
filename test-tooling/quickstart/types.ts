@@ -2,6 +2,9 @@ import type Dockerode from "dockerode";
 import type { Container } from "dockerode";
 import type { LoggerLike, LogLevelDesc } from "@/quickstart/logging.ts";
 
+/** @internal */
+type DockerOptions = Dockerode.DockerOptions;
+
 export { LogLevel } from "@/quickstart/logging.ts";
 export type { LoggerLike, LogLevelDesc } from "@/quickstart/logging.ts";
 export type { Container };
@@ -287,7 +290,7 @@ export interface TestLedgerOptions<
    * - `socketPath`: Unix socket path such as `/var/run/docker.sock`
    * - `host` / `port` / `protocol`: TCP Docker endpoint settings
    */
-  readonly dockerOptions?: Dockerode.DockerOptions;
+  readonly dockerOptions?: DockerOptions;
 
   /**
    * Explicit Unix socket path to the Docker daemon.

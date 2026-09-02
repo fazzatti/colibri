@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Buffer } from "buffer";
-import { xdr, Address, Keypair } from "stellar-sdk";
+import { Buffer } from "node:buffer";
+import { Address, Keypair, xdr } from "stellar-sdk";
 import { getAddressSignerFromAuthEntry } from "@/common/helpers/xdr/get-address-signer-from-auth-entry.ts";
 import {
   Code,
@@ -20,19 +20,19 @@ describe("getAddressSignerFromAuthEntry", () => {
       credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
         new xdr.SorobanAddressCredentials({
           address: address.toScAddress(),
-          nonce: new xdr.Int64(0),
+          nonce: xdr.Int64(0),
           signatureExpirationLedger: 0,
           signature: xdr.ScVal.scvVoid(),
-        })
+        }),
       ),
       rootInvocation: new xdr.SorobanAuthorizedInvocation({
-        function:
-          xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
+        function: xdr.SorobanAuthorizedFunction
+          .sorobanAuthorizedFunctionTypeContractFn(
             new xdr.InvokeContractArgs({
               contractAddress: address.toScAddress(),
               functionName: "test",
               args: [],
-            })
+            }),
           ),
         subInvocations: [],
       }),
@@ -50,7 +50,7 @@ describe("getAddressSignerFromAuthEntry", () => {
 
     const error = assertThrows(
       () => getAddressSignerFromAuthEntry(invalidAuthEntry),
-      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER
+      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
     );
     assertEquals(
       error.code,
@@ -77,7 +77,7 @@ describe("getAddressSignerFromAuthEntry", () => {
 
     const error = assertThrows(
       () => getAddressSignerFromAuthEntry(authEntry),
-      MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER
+      MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
     );
 
     assertEquals(
@@ -89,15 +89,15 @@ describe("getAddressSignerFromAuthEntry", () => {
 
   it("should normalize non-Error credential extraction failures", () => {
     const authEntry = {
-      credentials: () => {
+      get credentials(): never {
         throw "boom";
       },
-      toXDR: () => "AAAA",
+      toXdr: () => "AAAA",
     } as unknown as xdr.SorobanAuthorizationEntry;
 
     const error = assertThrows(
       () => getAddressSignerFromAuthEntry(authEntry),
-      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER
+      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
     );
 
     assertEquals(error.meta.cause, null);
@@ -105,19 +105,20 @@ describe("getAddressSignerFromAuthEntry", () => {
 
   it("should preserve Error causes when signer extraction fails", () => {
     const authEntry = {
-      credentials: () => ({
-        address: () => ({
-          address: () => {
+      credentials: {
+        type: "sorobanCredentialsAddress",
+        address: {
+          get address(): never {
             throw new Error("boom");
           },
-        }),
-      }),
-      toXDR: () => "AAAA",
+        },
+      },
+      toXdr: () => "AAAA",
     } as unknown as xdr.SorobanAuthorizationEntry;
 
     const error = assertThrows(
       () => getAddressSignerFromAuthEntry(authEntry),
-      FAILED_TO_GET_AUTH_ENTRY_SIGNER
+      FAILED_TO_GET_AUTH_ENTRY_SIGNER,
     );
 
     assertEquals(error.meta?.cause?.message, "boom");
@@ -135,19 +136,19 @@ describe("getAddressSignerFromAuthEntry", () => {
       credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
         new xdr.SorobanAddressCredentials({
           address: address.toScAddress(),
-          nonce: new xdr.Int64(0),
+          nonce: xdr.Int64(0),
           signatureExpirationLedger: 0,
           signature: xdr.ScVal.scvVoid(),
-        })
+        }),
       ),
       rootInvocation: new xdr.SorobanAuthorizedInvocation({
-        function:
-          xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
+        function: xdr.SorobanAuthorizedFunction
+          .sorobanAuthorizedFunctionTypeContractFn(
             new xdr.InvokeContractArgs({
               contractAddress: address.toScAddress(),
               functionName: "test",
               args: [],
-            })
+            }),
           ),
         subInvocations: [],
       }),
@@ -175,19 +176,19 @@ describe("getAddressSignerFromAuthEntry", () => {
       credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
         new xdr.SorobanAddressCredentials({
           address: contractAddress.toScAddress(),
-          nonce: new xdr.Int64(0),
+          nonce: xdr.Int64(0),
           signatureExpirationLedger: 0,
           signature: xdr.ScVal.scvVoid(),
-        })
+        }),
       ),
       rootInvocation: new xdr.SorobanAuthorizedInvocation({
-        function:
-          xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
+        function: xdr.SorobanAuthorizedFunction
+          .sorobanAuthorizedFunctionTypeContractFn(
             new xdr.InvokeContractArgs({
               contractAddress: contractAddress.toScAddress(),
               functionName: "test",
               args: [],
-            })
+            }),
           ),
         subInvocations: [],
       }),
@@ -201,19 +202,20 @@ describe("getAddressSignerFromAuthEntry", () => {
 
   it("should normalize non-Error signer extraction failures", () => {
     const authEntry = {
-      credentials: () => ({
-        address: () => ({
-          address: () => {
+      credentials: {
+        type: "sorobanCredentialsAddress",
+        address: {
+          get address(): never {
             throw "boom";
           },
-        }),
-      }),
-      toXDR: () => "AAAA",
+        },
+      },
+      toXdr: () => "AAAA",
     } as unknown as xdr.SorobanAuthorizationEntry;
 
     const error = assertThrows(
       () => getAddressSignerFromAuthEntry(authEntry),
-      FAILED_TO_GET_AUTH_ENTRY_SIGNER
+      FAILED_TO_GET_AUTH_ENTRY_SIGNER,
     );
 
     assertEquals(error.meta?.cause, null);

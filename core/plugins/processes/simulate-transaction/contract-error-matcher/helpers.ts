@@ -1,6 +1,6 @@
 import { Spec } from "stellar-sdk/contract";
 import type { BinaryData } from "@/common/types/index.ts";
-import { toBuffer } from "@/common/helpers/internal-buffer.ts";
+import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 import * as E from "@/plugins/processes/simulate-transaction/contract-error-matcher/error.ts";
 import type { KnownContractErrorMap } from "@/plugins/processes/simulate-transaction/contract-error-matcher/types.ts";
 
@@ -27,16 +27,16 @@ export function extractContractErrorMapFromSpec(
   const errors: Record<number, { details?: string; message: string }> = {};
 
   for (const errorCase of spec.errorCases()) {
-    const code = errorCase.value();
+    const code = errorCase.value;
 
     if (errors[code]) {
       throw new E.DUPLICATE_CONTRACT_ERROR_CODE(code);
     }
 
-    const details = errorCase.doc().toString().trim();
+    const details = errorCase.doc.toString().trim();
 
     errors[code] = {
-      message: errorCase.name().toString(),
+      message: errorCase.name.toString(),
       ...(details ? { details } : {}),
     };
   }
@@ -65,5 +65,5 @@ export function extractContractErrorMapFromSpec(
 export function extractContractErrorMapFromWasm(
   wasm: BinaryData,
 ): KnownContractErrorMap {
-  return extractContractErrorMapFromSpec(Spec.fromWasm(toBuffer(wasm)));
+  return extractContractErrorMapFromSpec(Spec.fromWasm(toUint8Array(wasm)));
 }

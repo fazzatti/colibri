@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertFalse, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { stub } from "@std/testing/mock";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import {
   Account,
   Keypair,
@@ -44,15 +44,16 @@ describe("Ed25519SignedPayloadSigner", () => {
       payload.toString("hex"),
     );
     assertEquals(
-      decoded.subarray(0, 32).toString("hex"),
-      StellarStrKey.decodeEd25519PublicKey(localSigner.publicKey()).toString(
-        "hex",
-      ),
+      decoded.subarray(0, 32),
+      StellarStrKey.decodeEd25519PublicKey(localSigner.publicKey()),
     );
-    assertEquals(decoded.readUInt32BE(32), payload.length);
     assertEquals(
-      decoded.subarray(36, 36 + payload.length).toString("hex"),
-      payload.toString("hex"),
+      new DataView(decoded.buffer, decoded.byteOffset + 32, 4).getUint32(0),
+      payload.length,
+    );
+    assertEquals(
+      decoded.subarray(36, 36 + payload.length),
+      Uint8Array.from(payload),
     );
   });
 
@@ -64,8 +65,8 @@ describe("Ed25519SignedPayloadSigner", () => {
     });
 
     assertEquals(
-      Buffer.from(signer.payload() as Uint8Array).toString("hex"),
-      transaction.hash().toString("hex"),
+      signer.payload(),
+      transaction.hash(),
     );
   });
 
@@ -85,10 +86,12 @@ describe("Ed25519SignedPayloadSigner", () => {
       paddedPayloadHint.map((byte, index) => byte ^ publicKeyHint[index]),
     );
 
-    assertEquals(xdr, transaction.toXDR());
-    assertEquals(decorated.hint(), expectedHint);
-    assert(keypair.verify(payload, decorated.signature()));
-    assertFalse(keypair.verify(transaction.hash(), decorated.signature()));
+    assertEquals(xdr, transaction.toXdr());
+    assertEquals(decorated.hint.toBytes(), Uint8Array.from(expectedHint));
+    assert(keypair.verify(payload, decorated.signature.toBytes()));
+    assertFalse(
+      keypair.verify(transaction.hash(), decorated.signature.toBytes()),
+    );
   });
 
   it("uses the final four payload bytes when the payload is longer", () => {
@@ -104,7 +107,10 @@ describe("Ed25519SignedPayloadSigner", () => {
     const expectedHint = Buffer.from(
       payload.subarray(-4).map((byte, index) => byte ^ publicKeyHint[index]),
     );
-    assertEquals(transaction.signatures[0].hint(), expectedHint);
+    assertEquals(
+      transaction.signatures[0].hint.toBytes(),
+      Uint8Array.from(expectedHint),
+    );
   });
 
   it("returns defensive payload and target copies", () => {
@@ -112,10 +118,14 @@ describe("Ed25519SignedPayloadSigner", () => {
       signer: localSigner,
       payload: Buffer.from("payload"),
     });
-    const payload = signer.payload() as Buffer;
+    const payload = signer.payload() as Uint8Array;
     payload.fill(0);
 
-    assertFalse(Buffer.from(signer.payload() as Uint8Array).equals(payload));
+    assertFalse(
+      (signer.payload() as Uint8Array).every((byte, index) =>
+        byte === payload[index]
+      ),
+    );
     assertEquals(signer.getTargets(), []);
 
     signer.addTarget(account);
@@ -294,7 +304,7 @@ describe("Ed25519SignedPayloadSigner", () => {
       addDecoratedSignature: () => {
         throw new Error("add failed");
       },
-      toXDR: () => "",
+      toXdr: () => "",
     } as unknown as SignableTransaction;
 
     assertThrows(
@@ -311,7 +321,7 @@ describe("Ed25519SignedPayloadSigner", () => {
     const transaction = {
       sign: () => {},
       addDecoratedSignature: () => {},
-      toXDR: () => {
+      toXdr: () => {
         throw new Error("serialization failed");
       },
     } as unknown as SignableTransaction;

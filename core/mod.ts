@@ -1,21 +1,30 @@
+import * as NativeAccountErrors from "@/account/native/error.ts";
+import * as AddressHelpers from "@/address/index.ts";
+import * as AuthHelpers from "@/auth/index.ts";
+import * as ContractErrors from "@/contract/error.ts";
+import * as LedgerParserErrors from "@/ledger-parser/error.ts";
+import * as LedgerEntryErrors from "@/ledger-entries/error.ts";
+import * as StepFactories from "@/steps/index.ts";
+import * as Sep1Errors from "@/sep1/error.ts";
+
 export * from "@/account/native/index.ts";
 export type * from "@/account/types.ts";
 export type * from "@/account/native/types.ts";
 /** Error constructors for native account helpers. */
-export * as ERRORS_ACC_NAT from "@/account/native/error.ts";
+export const ERRORS_ACC_NAT: typeof NativeAccountErrors = NativeAccountErrors;
 
 export * from "@/asset/index.ts";
 /** Address helpers for parsing and normalization. */
-export * as address from "@/address/index.ts";
+export const address: typeof AddressHelpers = AddressHelpers;
 /** Authorization helpers and requirements. */
-export * as auth from "@/auth/index.ts";
+export const auth: typeof AuthHelpers = AuthHelpers;
 
 export * from "@/common/index.ts";
 
 export * from "@/contract/index.ts";
 export type * from "@/contract/types.ts";
 /** Error constructors for contract helpers. */
-export * as ERRORS_CONTR from "@/contract/error.ts";
+export const ERRORS_CONTR: typeof ContractErrors = ContractErrors;
 
 export * from "@/error/index.ts";
 export * from "@/error/types.ts";
@@ -25,18 +34,18 @@ export * from "@/event/types.ts";
 
 export * from "@/ledger-parser/index.ts";
 /** Error constructors for ledger parser helpers. */
-export * as ERRORS_LDP from "@/ledger-parser/error.ts";
+export const ERRORS_LDP: typeof LedgerParserErrors = LedgerParserErrors;
 
 export * from "@/ledger-entries/index.ts";
 /** Error constructors for ledger entry access helpers. */
-export * as ERRORS_LDE from "@/ledger-entries/error.ts";
+export const ERRORS_LDE: typeof LedgerEntryErrors = LedgerEntryErrors;
 
 export * from "@/network/index.ts";
 export * from "@/network/types.ts";
 
 export * from "@/processes/index.ts";
 /** Reusable pipeline step factories. */
-export * as steps from "@/steps/index.ts";
+export const steps: typeof StepFactories = StepFactories;
 
 export * from "@/pipelines/index.ts";
 
@@ -60,4 +69,4 @@ export * from "@/tools/index.ts";
 export * from "@/sep1/index.ts";
 export type * from "@/sep1/types.ts";
 /** Error constructors for SEP-1 helpers. */
-export * as ERRORS_SEP1 from "@/sep1/error.ts";
+export const ERRORS_SEP1: typeof Sep1Errors = Sep1Errors;

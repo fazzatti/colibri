@@ -1,6 +1,6 @@
 // deno-coverage-ignore-file
 
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import {
   Account,
   Address,
@@ -11,6 +11,7 @@ import {
   StrKey,
   type Transaction,
   TransactionBuilder,
+  xdr,
 } from "stellar-sdk";
 import { Api, type Server as RpcServer } from "stellar-sdk/rpc";
 import {
@@ -104,6 +105,21 @@ function token(
   });
 }
 
+function normalizeSep45Credential(
+  entry: xdr.SorobanAuthorizationEntry,
+): xdr.SorobanAuthorizationEntry {
+  if (entry.credentials.type !== "sorobanCredentialsAddressV2") {
+    return entry;
+  }
+
+  return new xdr.SorobanAuthorizationEntry({
+    credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
+      entry.credentials.addressV2,
+    ),
+    rootInvocation: entry.rootInvocation,
+  });
+}
+
 /** Starts a local in-memory SEP-10/SEP-45 server for Quickstart tests. */
 export function startTestWebAuthServer(
   config: TestWebAuthServerConfig,
@@ -160,7 +176,7 @@ export function startTestWebAuthServer(
     const transaction = builder.build();
     transaction.sign(config.server);
     return json({
-      transaction: transaction.toXDR(),
+      transaction: transaction.toXdr(),
       network_passphrase: config.networkPassphrase,
     });
   }
@@ -169,7 +185,7 @@ export function startTestWebAuthServer(
     const transactionXdr = await postedValue(request, "transaction");
     if (!transactionXdr) return json({ error: "transaction required" }, 400);
     try {
-      const transaction = TransactionBuilder.fromXDR(
+      const transaction = TransactionBuilder.fromXdr(
         transactionXdr,
         config.networkPassphrase,
       ) as Transaction;
@@ -209,7 +225,7 @@ export function startTestWebAuthServer(
       const clientKey = Keypair.fromPublicKey(first.source);
       if (
         !transaction.signatures.some((signature) =>
-          clientKey.verify(transaction.hash(), signature.signature())
+          clientKey.verify(transaction.hash(), signature.signature.toBytes())
         )
       ) {
         throw new TypeError("missing client signature");
@@ -219,7 +235,7 @@ export function startTestWebAuthServer(
         !transaction.signatures.some((signature) =>
           Keypair.fromPublicKey(config.clientDomain!.account).verify(
             transaction.hash(),
-            signature.signature(),
+            signature.signature.toBytes(),
           )
         )
       ) {
@@ -300,13 +316,16 @@ export function startTestWebAuthServer(
         }`,
       );
     }
-    const entries = recording.result.auth;
-    const serverIndex = entries.findIndex((entry) =>
-      entry.credentials().switch().name === "sorobanCredentialsAddress" &&
-      Address.fromScAddress(
-          entry.credentials().address().address(),
-        ).toString() === config.server.publicKey()
-    );
+    // Protocol 28 recording simulation emits AddressV2 credentials by
+    // default. SEP-45 v0.1.1 still defines the legacy address arm, so the
+    // reference server deliberately serves that exact challenge shape.
+    const entries = recording.result.auth.map(normalizeSep45Credential);
+    const serverIndex = entries.findIndex((entry) => {
+      const credentials = entry.credentials;
+      return credentials.type === "sorobanCredentialsAddress" &&
+        Address.fromScAddress(credentials.address.address).toString() ===
+          config.server.publicKey();
+    });
     if (serverIndex === -1) {
       throw new TypeError("Recording simulation omitted the server entry");
     }
@@ -334,16 +353,27 @@ export function startTestWebAuthServer(
       const entries = decodeSep45AuthorizationEntries(
         authorizationEntriesXdr,
       );
-      const firstMap = entries[0].rootInvocation()
-        .function()
-        .contractFn()
-        .args()[0]
-        .map();
+      const authorizedFunction = entries[0].rootInvocation.function;
+      if (
+        authorizedFunction.type !==
+          "sorobanAuthorizedFunctionTypeContractFn"
+      ) {
+        throw new TypeError("SEP-45 challenge is not a contract invocation");
+      }
+      const firstArgument = authorizedFunction.contractFn.args[0];
+      const firstMap = firstArgument.type === "scvMap"
+        ? firstArgument.map
+        : null;
       const nativeArguments = Object.fromEntries(
-        (firstMap ?? []).map((entry) => [
-          entry.key().sym().toString(),
-          entry.val().str().toString(),
-        ]),
+        (firstMap ?? []).map((entry) => {
+          if (
+            entry.key.type !== "scvSymbol" ||
+            entry.val.type !== "scvString"
+          ) {
+            throw new TypeError("SEP-45 challenge map has invalid entries");
+          }
+          return [entry.key.sym.toString(), entry.val.str.toString()];
+        }),
       );
       const latest = await config.rpc.getLatestLedger();
       const clientDomain = nativeArguments.client_domain;
@@ -364,10 +394,12 @@ export function startTestWebAuthServer(
       if (!nonceStore.consume(verified.arguments.nonce)) {
         return json({ error: "challenge already used" }, 409);
       }
-      const clientExpiration = entries[verified.clientEntryIndex]
-        .credentials()
-        .address()
-        .signatureExpirationLedger();
+      const clientCredentials = entries[verified.clientEntryIndex].credentials;
+      if (clientCredentials.type !== "sorobanCredentialsAddress") {
+        throw new TypeError("SEP-45 client entry is not a legacy address");
+      }
+      const clientExpiration =
+        clientCredentials.address.signatureExpirationLedger;
       const authorized = new Sep45AuthorizedChallenge(
         verified,
         entries,

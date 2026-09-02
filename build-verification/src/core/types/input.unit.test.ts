@@ -34,6 +34,22 @@ describe("contract build-verification input redaction", () => {
         source: undefined,
       },
     );
+    assertEquals(
+      redactContractBuildVerificationInput({
+        target: {
+          externalRef: {
+            owner: "COWNER",
+            tag: new Uint8Array([1, 2, 3]),
+          },
+          label: "external",
+        },
+      }),
+      {
+        mode: "strictSep58",
+        target: { kind: "externalRef", label: "external" },
+        source: undefined,
+      },
+    );
   });
 
   it("removes archive bytes and URL credentials without changing other sources", () => {

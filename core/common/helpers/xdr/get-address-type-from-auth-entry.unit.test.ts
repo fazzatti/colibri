@@ -1,6 +1,6 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { xdr, Address, Keypair } from "stellar-sdk";
+import { Address, Keypair, xdr } from "stellar-sdk";
 import { getAddressTypeFromAuthEntry } from "@/common/helpers/xdr/get-address-type-from-auth-entry.ts";
 import {
   Code,
@@ -18,19 +18,19 @@ describe("getAddressTypeFromAuthEntry", () => {
       credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
         new xdr.SorobanAddressCredentials({
           address: address.toScAddress(),
-          nonce: new xdr.Int64(0),
+          nonce: xdr.Int64(0),
           signatureExpirationLedger: 0,
           signature: xdr.ScVal.scvVoid(),
-        })
+        }),
       ),
       rootInvocation: new xdr.SorobanAuthorizedInvocation({
-        function:
-          xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
+        function: xdr.SorobanAuthorizedFunction
+          .sorobanAuthorizedFunctionTypeContractFn(
             new xdr.InvokeContractArgs({
               contractAddress: address.toScAddress(),
               functionName: "test",
               args: [],
-            })
+            }),
           ),
         subInvocations: [],
       }),
@@ -47,7 +47,7 @@ describe("getAddressTypeFromAuthEntry", () => {
 
     const error = assertThrows(
       () => getAddressTypeFromAuthEntry(invalidAuthEntry),
-      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE
+      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
     );
     assertEquals(
       error.code,
@@ -74,7 +74,7 @@ describe("getAddressTypeFromAuthEntry", () => {
 
     const error = assertThrows(
       () => getAddressTypeFromAuthEntry(authEntry),
-      MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE
+      MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
     );
 
     assertEquals(
@@ -86,15 +86,15 @@ describe("getAddressTypeFromAuthEntry", () => {
 
   it("should normalize non-Error credential extraction failures", () => {
     const authEntry = {
-      credentials: () => {
+      get credentials(): never {
         throw "boom";
       },
-      toXDR: () => "AAAA",
+      toXdr: () => "AAAA",
     } as unknown as xdr.SorobanAuthorizationEntry;
 
     const error = assertThrows(
       () => getAddressTypeFromAuthEntry(authEntry),
-      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE
+      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
     );
 
     assertEquals(error.meta.cause, null);
@@ -102,21 +102,22 @@ describe("getAddressTypeFromAuthEntry", () => {
 
   it("should preserve Error causes when address type extraction fails", () => {
     const authEntry = {
-      credentials: () => ({
-        address: () => ({
-          address: () => ({
-            switch: () => {
+      credentials: {
+        type: "sorobanCredentialsAddress",
+        address: {
+          address: {
+            get type(): never {
               throw new Error("boom");
             },
-          }),
-        }),
-      }),
-      toXDR: () => "AAAA",
+          },
+        },
+      },
+      toXdr: () => "AAAA",
     } as unknown as xdr.SorobanAuthorizationEntry;
 
     const error = assertThrows(
       () => getAddressTypeFromAuthEntry(authEntry),
-      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE
+      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE,
     );
 
     assertEquals(error.meta?.cause?.message, "boom");
@@ -124,21 +125,22 @@ describe("getAddressTypeFromAuthEntry", () => {
 
   it("should normalize non-Error address type failures", () => {
     const authEntry = {
-      credentials: () => ({
-        address: () => ({
-          address: () => ({
-            switch: () => {
+      credentials: {
+        type: "sorobanCredentialsAddress",
+        address: {
+          address: {
+            get type(): never {
               throw "boom";
             },
-          }),
-        }),
-      }),
-      toXDR: () => "AAAA",
+          },
+        },
+      },
+      toXdr: () => "AAAA",
     } as unknown as xdr.SorobanAuthorizationEntry;
 
     const error = assertThrows(
       () => getAddressTypeFromAuthEntry(authEntry),
-      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE
+      FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE,
     );
 
     assertEquals(error.meta?.cause, null);

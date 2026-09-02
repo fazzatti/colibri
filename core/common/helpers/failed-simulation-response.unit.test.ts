@@ -5,7 +5,7 @@ import {
   assertThrows,
 } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { getStellarAssetContractIdFromFailedSimulationResponse } from "@/common/helpers/failed-simulation-response.ts";
@@ -16,17 +16,22 @@ function makeSimulationErrorResponse(
 ): Api.SimulateTransactionErrorResponse {
   return {
     events: values
-      ? [{
-        event: () => ({
-          body: () => ({
-            v0: () => ({
-              data: () => ({
-                vec: () => values,
+      ? [
+        new xdr.DiagnosticEvent({
+          inSuccessfulContractCall: false,
+          event: new xdr.ContractEvent({
+            ext: xdr.ExtensionPoint.v0(),
+            contractId: null,
+            type: xdr.ContractEventType.diagnostic,
+            body: xdr.ContractEventBody.v0(
+              new xdr.ContractEventV0({
+                topics: [],
+                data: xdr.ScVal.scvVec(values),
               }),
-            }),
+            ),
           }),
         }),
-      }] as unknown as Api.SimulateTransactionErrorResponse["events"]
+      ]
       : undefined,
   } as Api.SimulateTransactionErrorResponse;
 }
@@ -62,7 +67,9 @@ describe("getStellarAssetContractIdFromFailedSimulationResponse", () => {
       "The simulation response does not indicate an already wrapped asset.",
     );
     assertEquals(
-      (error.meta?.data as { simulationResponse: Api.SimulateTransactionErrorResponse })
+      (error.meta?.data as {
+        simulationResponse: Api.SimulateTransactionErrorResponse;
+      })
         .simulationResponse,
       response,
     );

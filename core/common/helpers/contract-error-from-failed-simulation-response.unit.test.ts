@@ -2,7 +2,7 @@ import { assert, assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Address, xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import {
   getContractErrorFromFailedSimulationResponse,
   parseFailedSimulationResponse,
@@ -37,25 +37,29 @@ const createDiagnosticEvent = (args: {
   contractIdBytes?: Uint8Array | null;
   inSuccessfulContractCall?: boolean;
 }): xdr.DiagnosticEvent =>
-  ({
-    event: () => ({
-      body: () => ({
-        v0: () => ({
-          topics: () => args.topics,
-          data: () => args.data ?? xdr.ScVal.scvVoid(),
+  new xdr.DiagnosticEvent({
+    event: new xdr.ContractEvent({
+      ext: xdr.ExtensionPoint.v0(),
+      contractId: args.contractIdBytes
+        ? new xdr.ContractId(args.contractIdBytes)
+        : null,
+      type: xdr.ContractEventType.diagnostic,
+      body: xdr.ContractEventBody.v0(
+        new xdr.ContractEventV0({
+          topics: args.topics,
+          data: args.data ?? xdr.ScVal.scvVoid(),
         }),
-      }),
-      contractId: () => args.contractIdBytes ?? null,
+      ),
     }),
-    inSuccessfulContractCall: () => args.inSuccessfulContractCall ?? false,
-  }) as unknown as xdr.DiagnosticEvent;
+    inSuccessfulContractCall: args.inSuccessfulContractCall ?? false,
+  });
 
 const createMalformedDiagnosticEvent = (): xdr.DiagnosticEvent =>
   ({
-    event: () => {
+    get event(): never {
       throw new Error("malformed diagnostic event");
     },
-    inSuccessfulContractCall: () => false,
+    inSuccessfulContractCall: false,
   }) as unknown as xdr.DiagnosticEvent;
 
 const createFunctionCallEvent = (args: {
@@ -308,15 +312,18 @@ describe("contract error parsing from failed simulation responses", () => {
   });
 
   it("parses an event without contract id when the event contract id cannot be decoded", () => {
+    const diagnosticEvent = createDiagnosticEvent({
+      contractIdBytes: null,
+      topics: [xdr.ScVal.scvSymbol("not_fn_call")],
+    });
+    Object.defineProperty(diagnosticEvent.event, "contractId", {
+      value: { toBytes: () => Uint8Array.from([1]) },
+    });
+
     const result = parseFailedSimulationResponse(
       createResponse({
         error: "HostError: diagnostic-only failure",
-        events: [
-          createDiagnosticEvent({
-            contractIdBytes: Uint8Array.from([1]),
-            topics: [xdr.ScVal.scvSymbol("not_fn_call")],
-          }),
-        ],
+        events: [diagnosticEvent],
       }),
     );
 
@@ -337,7 +344,7 @@ describe("contract error parsing from failed simulation responses", () => {
               xdr.ScVal.scvSymbol("error"),
               xdr.ScVal.scvError(
                 xdr.ScError.sceWasmVm(
-                  xdr.ScErrorCode.scecInvalidAction(),
+                  xdr.ScErrorCode.scecInvalidAction,
                 ),
               ),
             ],
@@ -355,11 +362,11 @@ describe("contract error parsing from failed simulation responses", () => {
 
   it("treats contract error topics with non-finite codes as generic diagnostic events", () => {
     const nonFiniteContractErrorTopic = {
-      switch: () => xdr.ScValType.scvError(),
-      error: () => ({
-        switch: () => ({ name: "sceContract" }),
-        value: () => "not-a-number",
-      }),
+      type: "scvError",
+      error: {
+        type: "sceContract",
+        contractCode: "not-a-number",
+      },
     } as unknown as xdr.ScVal;
 
     const result = parseFailedSimulationResponse(
@@ -387,11 +394,11 @@ describe("contract error parsing from failed simulation responses", () => {
   it("ignores a malformed contract-error topic after the topic is parsed", () => {
     let errorReadCount = 0;
     const unstableErrorTopic = {
-      switch: () => xdr.ScValType.scvError(),
-      error: () => {
+      type: "scvError",
+      get error() {
         errorReadCount++;
         if (errorReadCount === 1) {
-          return xdr.ScError.sceWasmVm(xdr.ScErrorCode.scecInvalidAction());
+          return xdr.ScError.sceWasmVm(xdr.ScErrorCode.scecInvalidAction);
         }
 
         throw new Error("unstable error topic");

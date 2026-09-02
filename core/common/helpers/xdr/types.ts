@@ -78,6 +78,7 @@ export type ScValTypeName =
   | "duration"
   | "symbol"
   | "string"
+  | "executableTag"
   | "bytes"
   | "address"
   | "vec"

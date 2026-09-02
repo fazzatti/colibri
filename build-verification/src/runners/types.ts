@@ -3,9 +3,12 @@ import type { BuildVerificationLimits } from "@/core/types/limits.ts";
 import type { BuildRunnerCapabilities } from "@/core/types/result.ts";
 import type { ContainerImageDetails } from "@/core/policy/types.ts";
 
+/** @internal */
+type DockerOptions = Dockerode.DockerOptions;
+
 /** Connection settings used by the Docker-backed build runner. */
 export type DockerConnectionConfig = {
-  readonly dockerOptions?: Dockerode.DockerOptions;
+  readonly dockerOptions?: DockerOptions;
   readonly dockerSocketPath?: string;
 };
 

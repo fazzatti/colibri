@@ -1,5 +1,4 @@
 import { Address, type xdr } from "stellar-sdk";
-import { Buffer } from "buffer";
 import type { Api } from "stellar-sdk/rpc";
 import type { ContractId } from "@/strkeys/types.ts";
 import { parseScVal } from "@/common/helpers/xdr/scval.ts";
@@ -294,16 +293,16 @@ const parseDiagnosticEvents = (
 
   for (const [index, diagnosticEvent] of events.entries()) {
     try {
-      const event = diagnosticEvent.event();
-      const body = event.body().v0();
-      const topics = body.topics();
+      const event = diagnosticEvent.event;
+      const body = event.body.v0;
+      const topics = body.topics;
       const parsedTopics = topics.map(parseScVal);
-      const data = parseScVal(body.data());
+      const data = parseScVal(body.data);
       const contractError = getContractErrorFromTopics(topics);
       const functionCall = getFunctionCallFromTopics(topics);
       const baseEvent = {
         index,
-        inSuccessfulContractCall: diagnosticEvent.inSuccessfulContractCall(),
+        inSuccessfulContractCall: diagnosticEvent.inSuccessfulContractCall,
         contractId: getContractIdFromEvent(event),
         topics: parsedTopics,
         data,
@@ -369,7 +368,7 @@ const getFunctionCallFromTopics = (
     if (typeof functionName !== "string") return undefined;
 
     return {
-      contractId: Address.contract(Buffer.from(contractIdBytes))
+      contractId: Address.contract(contractIdBytes)
         .toString() as ContractId,
       functionName,
     };
@@ -380,12 +379,12 @@ const getFunctionCallFromTopics = (
 
 const getContractErrorCodeFromScVal = (value: xdr.ScVal): number | null => {
   try {
-    if (value.switch().name !== "scvError") return null;
+    if (value.type !== "scvError") return null;
 
-    const error = value.error();
-    if (error.switch().name !== "sceContract") return null;
+    const error = value.error;
+    if (error.type !== "sceContract") return null;
 
-    const code = Number(error.value());
+    const code = error.contractCode;
     return Number.isFinite(code) ? code : null;
   } catch {
     return null;
@@ -396,11 +395,9 @@ const getContractIdFromEvent = (
   event: xdr.ContractEvent,
 ): ContractId | undefined => {
   try {
-    const contractIdBytes = event.contractId();
+    const contractIdBytes = event.contractId?.toBytes();
     return contractIdBytes
-      ? Address.contract(
-        Buffer.from(contractIdBytes as unknown as Uint8Array),
-      ).toString() as ContractId
+      ? Address.contract(contractIdBytes).toString() as ContractId
       : undefined;
   } catch {
     return undefined;

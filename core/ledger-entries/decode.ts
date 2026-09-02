@@ -1,5 +1,4 @@
 import { Address, xdr } from "stellar-sdk";
-import { Buffer } from "buffer";
 import { StrKey } from "@/strkeys/index.ts";
 import { parseAccountId } from "@/common/helpers/xdr/parse-account-id.ts";
 import { parseAsset } from "@/common/helpers/xdr/parse-asset.ts";
@@ -16,8 +15,8 @@ import type {
   BaseLedgerEntryOf,
   ClaimableBalanceFlagsView,
   ClaimableBalanceLedgerEntry,
-  ClaimPredicateView,
   ClaimantView,
+  ClaimPredicateView,
   ConfigSettingIdName,
   ConfigSettingLedgerEntry,
   ConfigSettingValue,
@@ -53,38 +52,36 @@ function decodeBaseEntry<TKind extends LedgerEntryKind>(
   };
 }
 
-function cleanString(value: string | Buffer): string {
-  return (typeof value === "string" ? value : value.toString("utf8"))
-    .replace(/\0/g, "");
+function cleanString(value: string | { toString(): string }): string {
+  return value.toString().replace(/\0/g, "");
 }
 
 function decodeAccountFlags(flags: number): AccountFlagsView {
   return {
     value: flags,
-    authRequired: (flags & xdr.AccountFlags.authRequiredFlag().value) !== 0,
-    authRevocable: (flags & xdr.AccountFlags.authRevocableFlag().value) !== 0,
-    authImmutable: (flags & xdr.AccountFlags.authImmutableFlag().value) !== 0,
+    authRequired: (flags & xdr.AccountFlags.authRequiredFlag.value) !== 0,
+    authRevocable: (flags & xdr.AccountFlags.authRevocableFlag.value) !== 0,
+    authImmutable: (flags & xdr.AccountFlags.authImmutableFlag.value) !== 0,
     authClawbackEnabled:
-      (flags & xdr.AccountFlags.authClawbackEnabledFlag().value) !== 0,
+      (flags & xdr.AccountFlags.authClawbackEnabledFlag.value) !== 0,
   };
 }
 
 function decodeTrustlineFlags(flags: number): TrustlineFlagsView {
   return {
     value: flags,
-    authorized: (flags & xdr.TrustLineFlags.authorizedFlag().value) !== 0,
-    authorizedToMaintainLiabilities:
-      (flags &
-        xdr.TrustLineFlags.authorizedToMaintainLiabilitiesFlag().value) !== 0,
+    authorized: (flags & xdr.TrustLineFlags.authorizedFlag.value) !== 0,
+    authorizedToMaintainLiabilities: (flags &
+      xdr.TrustLineFlags.authorizedToMaintainLiabilitiesFlag.value) !== 0,
     clawbackEnabled:
-      (flags & xdr.TrustLineFlags.trustlineClawbackEnabledFlag().value) !== 0,
+      (flags & xdr.TrustLineFlags.trustlineClawbackEnabledFlag.value) !== 0,
   };
 }
 
 function decodeOfferFlags(flags: number): OfferFlagsView {
   return {
     value: flags,
-    passive: (flags & xdr.OfferEntryFlags.passiveFlag().value) !== 0,
+    passive: (flags & xdr.OfferEntryFlags.passiveFlag.value) !== 0,
   };
 }
 
@@ -92,56 +89,58 @@ function decodeClaimableBalanceFlags(flags: number): ClaimableBalanceFlagsView {
   return {
     value: flags,
     clawbackEnabled:
-      (flags & xdr.ClaimableBalanceFlags.claimableBalanceClawbackEnabledFlag()
+      (flags & xdr.ClaimableBalanceFlags.claimableBalanceClawbackEnabledFlag
         .value) !== 0,
   };
 }
 
 function decodeLiabilities(liabilities: xdr.Liabilities): LiabilitiesView {
   return {
-    buying: liabilities.buying().toBigInt(),
-    selling: liabilities.selling().toBigInt(),
+    buying: liabilities.buying,
+    selling: liabilities.selling,
   };
 }
 
-function decodeThresholds(thresholds: Buffer): AccountThresholds {
+function decodeThresholds(thresholds: Uint8Array): AccountThresholds {
   return {
-    masterWeight: thresholds[0] ?? 0,
-    low: thresholds[1] ?? 0,
-    medium: thresholds[2] ?? 0,
-    high: thresholds[3] ?? 0,
+    masterWeight: thresholds[0],
+    low: thresholds[1],
+    medium: thresholds[2],
+    high: thresholds[3],
   };
 }
 
 function decodeSignerKey(key: xdr.SignerKey): SignerKeyView {
-  const type = key.switch().name;
+  const type = key.type;
 
   switch (type) {
     case "signerKeyTypeEd25519":
       return {
         type: "ed25519",
-        value: StrKey.encodeEd25519PublicKey(key.ed25519()),
+        value: StrKey.encodeEd25519PublicKey(key.ed25519.toBytes()),
       };
 
     case "signerKeyTypePreAuthTx":
       return {
         type: "preAuthTx",
-        value: StrKey.encodePreAuthTx(key.preAuthTx()),
+        value: StrKey.encodePreAuthTx(key.preAuthTx.toBytes()),
       };
 
     case "signerKeyTypeHashX":
       return {
         type: "hashX",
-        value: StrKey.encodeSha256Hash(key.hashX()),
+        value: StrKey.encodeSha256Hash(key.hashX.toBytes()),
       };
 
     case "signerKeyTypeEd25519SignedPayload": {
-      const signedPayload = key.ed25519SignedPayload();
+      const signedPayload = key.ed25519SignedPayload;
       return {
         type: "ed25519SignedPayload",
-        value: StrKey.encodeSignedPayload(signedPayload.toXDR()),
-        ed25519PublicKey: StrKey.encodeEd25519PublicKey(signedPayload.ed25519()),
-        payload: Uint8Array.from(signedPayload.payload()),
+        value: StrKey.encodeSignedPayload(signedPayload.toXdr()),
+        ed25519PublicKey: StrKey.encodeEd25519PublicKey(
+          signedPayload.ed25519.toBytes(),
+        ),
+        payload: Uint8Array.from(signedPayload.payload),
       };
     }
 
@@ -152,309 +151,297 @@ function decodeSignerKey(key: xdr.SignerKey): SignerKeyView {
 
 function decodeSigner(signer: xdr.Signer): LedgerEntrySigner {
   return {
-    key: decodeSignerKey(signer.key()),
-    weight: signer.weight(),
+    key: decodeSignerKey(signer.key),
+    weight: signer.weight,
   };
 }
 
 function decodeClaimPredicate(
   predicate: xdr.ClaimPredicate,
 ): ClaimPredicateView {
-  switch (predicate.switch().name) {
+  switch (predicate.type) {
     case "claimPredicateUnconditional":
       return { type: "unconditional" };
     case "claimPredicateAnd":
       return {
         type: "and",
-        predicates: predicate.andPredicates().map(decodeClaimPredicate),
+        predicates: predicate.andPredicates.map(decodeClaimPredicate),
       };
     case "claimPredicateOr":
       return {
         type: "or",
-        predicates: predicate.orPredicates().map(decodeClaimPredicate),
+        predicates: predicate.orPredicates.map(decodeClaimPredicate),
       };
     case "claimPredicateNot":
       return {
         type: "not",
-        predicate: predicate.notPredicate()
-          ? decodeClaimPredicate(predicate.notPredicate()!)
+        predicate: predicate.notPredicate
+          ? decodeClaimPredicate(predicate.notPredicate)
           : null,
       };
     case "claimPredicateBeforeAbsoluteTime":
       return {
         type: "beforeAbsoluteTime",
-        unixSeconds: predicate.absBefore().toBigInt(),
+        unixSeconds: predicate.absBefore,
       };
     case "claimPredicateBeforeRelativeTime":
       return {
         type: "beforeRelativeTime",
-        seconds: predicate.relBefore().toBigInt(),
+        seconds: predicate.relBefore,
       };
     default:
       throw new E.UNSUPPORTED_XDR_VARIANT(
         "claim predicate",
-        predicate.switch().name,
+        (predicate as { type: string }).type,
       );
   }
 }
 
 function decodeClaimant(claimant: xdr.Claimant): ClaimantView {
-  const v0 = claimant.v0();
+  const v0 = claimant.v0;
   return {
-    destination: parseAccountId(v0.destination()),
-    predicate: decodeClaimPredicate(v0.predicate()),
+    destination: parseAccountId(v0.destination),
+    predicate: decodeClaimPredicate(v0.predicate),
   };
 }
 
 function decodeContractExecutable(
   executable: xdr.ContractExecutable,
 ): ContractExecutableView {
-  switch (executable.switch().name) {
+  switch (executable.type) {
     case "contractExecutableWasm":
       return {
         type: "wasm",
-        wasmHash: executable.wasmHash().toString("hex"),
+        wasmHash: executable.wasmHash.toString(),
       };
     case "contractExecutableStellarAsset":
       return {
         type: "stellarAsset",
       };
+    case "contractExecutableExternalRef":
+      return {
+        type: "externalRef",
+        executableOwner: Address.fromScAddress(
+          executable.externalRef.executableOwner,
+        ).toString(),
+        tag: Uint8Array.from(executable.externalRef.tag.bytes),
+      };
     default:
       throw new E.UNSUPPORTED_XDR_VARIANT(
         "contract executable",
-        executable.switch().name,
+        (executable as { type: string }).type,
       );
   }
-}
-
-function isBigIntLike(value: unknown): value is { toBigInt(): bigint } {
-  return typeof value === "object" &&
-    value !== null &&
-    "toBigInt" in value &&
-    typeof (value as { toBigInt?: unknown }).toBigInt === "function";
-}
-
-function isBigIntLikeArray(
-  value: ConfigSettingValue,
-): value is readonly { toBigInt(): bigint }[] {
-  return Array.isArray(value) && value.every(isBigIntLike);
-}
-
-function normalizeConfigSettingValue(value: ConfigSettingValue): ConfigSettingValue {
-  if (isBigIntLikeArray(value)) {
-    return value.map((item) => item.toBigInt());
-  }
-
-  return value;
 }
 
 function decodeContractCodeCostInputs(
   costInputs: xdr.ContractCodeCostInputs,
 ): ContractCodeCostInputsView {
   return {
-    nInstructions: costInputs.nInstructions(),
-    nFunctions: costInputs.nFunctions(),
-    nGlobals: costInputs.nGlobals(),
-    nTableEntries: costInputs.nTableEntries(),
-    nTypes: costInputs.nTypes(),
-    nDataSegments: costInputs.nDataSegments(),
-    nElemSegments: costInputs.nElemSegments(),
-    nImports: costInputs.nImports(),
-    nExports: costInputs.nExports(),
-    nDataSegmentBytes: costInputs.nDataSegmentBytes(),
+    nInstructions: costInputs.nInstructions,
+    nFunctions: costInputs.nFunctions,
+    nGlobals: costInputs.nGlobals,
+    nTableEntries: costInputs.nTableEntries,
+    nTypes: costInputs.nTypes,
+    nDataSegments: costInputs.nDataSegments,
+    nElemSegments: costInputs.nElemSegments,
+    nImports: costInputs.nImports,
+    nExports: costInputs.nExports,
+    nDataSegmentBytes: costInputs.nDataSegmentBytes,
   };
 }
 
-function decodeAccountEntry(entry: Api.LedgerEntryResult): AccountLedgerEntry {
-  const account = entry.val.account();
-
+function decodeAccountEntry(
+  entry: Api.LedgerEntryResult,
+  account: xdr.AccountEntry,
+): AccountLedgerEntry {
   return {
     ...decodeBaseEntry("account", entry),
-    accountId: parseAccountId(account.accountId()),
-    balance: account.balance().toBigInt(),
-    sequenceNumber: account.seqNum().toBigInt(),
-    numSubEntries: account.numSubEntries(),
-    inflationDestination: account.inflationDest()
-      ? parseAccountId(account.inflationDest()!)
+    accountId: parseAccountId(account.accountId),
+    balance: account.balance,
+    sequenceNumber: account.seqNum,
+    numSubEntries: account.numSubEntries,
+    inflationDestination: account.inflationDest
+      ? parseAccountId(account.inflationDest)
       : undefined,
-    flags: decodeAccountFlags(account.flags()),
-    homeDomain: cleanString(account.homeDomain()),
-    thresholds: decodeThresholds(Buffer.from(account.thresholds())),
-    signers: account.signers().map(decodeSigner),
+    flags: decodeAccountFlags(account.flags),
+    homeDomain: cleanString(account.homeDomain),
+    thresholds: decodeThresholds(account.thresholds.toBytes()),
+    signers: account.signers.map(decodeSigner),
   };
 }
 
 function decodeTrustlineEntry(
   entry: Api.LedgerEntryResult,
+  trustline: xdr.TrustLineEntry,
 ): TrustlineLedgerEntry {
-  const trustline = entry.val.trustLine();
-
   return {
     ...decodeBaseEntry("trustline", entry),
-    accountId: parseAccountId(trustline.accountId()),
-    asset: parseTrustLineAsset(trustline.asset()),
-    balance: trustline.balance().toBigInt(),
-    limit: trustline.limit().toBigInt(),
-    flags: decodeTrustlineFlags(trustline.flags()),
-    liabilities: trustline.ext().switch() === 1
-      ? decodeLiabilities(trustline.ext().v1().liabilities())
+    accountId: parseAccountId(trustline.accountId),
+    asset: parseTrustLineAsset(trustline.asset),
+    balance: trustline.balance,
+    limit: trustline.limit,
+    flags: decodeTrustlineFlags(trustline.flags),
+    liabilities: trustline.ext.type === "v1"
+      ? decodeLiabilities(trustline.ext.v1.liabilities)
       : undefined,
   };
 }
 
-function decodeOfferEntry(entry: Api.LedgerEntryResult): OfferLedgerEntry {
-  const offer = entry.val.offer();
+function decodeOfferEntry(
+  entry: Api.LedgerEntryResult,
+  offer: xdr.OfferEntry,
+): OfferLedgerEntry {
   const price: OfferPrice = {
-    n: offer.price().n(),
-    d: offer.price().d(),
+    n: offer.price.n,
+    d: offer.price.d,
   };
 
   return {
     ...decodeBaseEntry("offer", entry),
-    sellerId: parseAccountId(offer.sellerId()),
-    offerId: offer.offerId().toBigInt(),
-    selling: parseAsset(offer.selling()),
-    buying: parseAsset(offer.buying()),
-    amount: offer.amount().toBigInt(),
+    sellerId: parseAccountId(offer.sellerId),
+    offerId: offer.offerId,
+    selling: parseAsset(offer.selling),
+    buying: parseAsset(offer.buying),
+    amount: offer.amount,
     price,
-    flags: decodeOfferFlags(offer.flags()),
+    flags: decodeOfferFlags(offer.flags),
   };
 }
 
-function decodeDataEntry(entry: Api.LedgerEntryResult): DataLedgerEntry {
-  const data = entry.val.data();
-
+function decodeDataEntry(
+  entry: Api.LedgerEntryResult,
+  data: xdr.DataEntry,
+): DataLedgerEntry {
   return {
     ...decodeBaseEntry("data", entry),
-    accountId: parseAccountId(data.accountId()),
-    dataName: cleanString(data.dataName()),
-    dataValue: Uint8Array.from(data.dataValue()),
+    accountId: parseAccountId(data.accountId),
+    dataName: cleanString(data.dataName),
+    dataValue: data.dataValue.toBytes(),
   };
 }
 
 function decodeClaimableBalanceEntry(
   entry: Api.LedgerEntryResult,
+  claimableBalance: xdr.ClaimableBalanceEntry,
 ): ClaimableBalanceLedgerEntry {
-  const claimableBalance = entry.val.claimableBalance();
-  const flags = claimableBalance.ext().switch() === 1
-    ? claimableBalance.ext().v1().flags()
+  const flags = claimableBalance.ext.type === "v1"
+    ? claimableBalance.ext.v1.flags
     : 0;
+  const balanceId = new Uint8Array(33);
+  balanceId.set(claimableBalance.balanceId.v0.toBytes(), 1);
 
   return {
     ...decodeBaseEntry("claimableBalance", entry),
-    balanceId: StrKey.encodeClaimableBalance(
-      Buffer.concat([
-        Buffer.from([0]),
-        Buffer.from(claimableBalance.balanceId().v0()),
-      ]),
-    ),
-    claimants: claimableBalance.claimants().map(decodeClaimant),
-    asset: parseAsset(claimableBalance.asset()),
-    amount: claimableBalance.amount().toBigInt(),
+    balanceId: StrKey.encodeClaimableBalance(balanceId),
+    claimants: claimableBalance.claimants.map(decodeClaimant),
+    asset: parseAsset(claimableBalance.asset),
+    amount: claimableBalance.amount,
     flags: decodeClaimableBalanceFlags(flags),
   };
 }
 
 function decodeLiquidityPoolEntry(
   entry: Api.LedgerEntryResult,
+  liquidityPool: xdr.LiquidityPoolEntry,
 ): LiquidityPoolLedgerEntry {
-  const liquidityPool = entry.val.liquidityPool();
-  const constantProduct = liquidityPool.body().constantProduct();
-  const params = constantProduct.params();
+  const constantProduct = liquidityPool.body.constantProduct;
+  const params = constantProduct.params;
 
   return {
     ...decodeBaseEntry("liquidityPool", entry),
     liquidityPoolId: StrKey.encodeLiquidityPool(
-      Buffer.from(liquidityPool.liquidityPoolId() as unknown as Uint8Array),
+      liquidityPool.liquidityPoolId.toBytes(),
     ),
     poolType: "liquidityPoolConstantProduct",
-    assetA: parseAsset(params.assetA()),
-    assetB: parseAsset(params.assetB()),
-    fee: params.fee(),
-    reserveA: constantProduct.reserveA().toBigInt(),
-    reserveB: constantProduct.reserveB().toBigInt(),
-    totalPoolShares: constantProduct.totalPoolShares().toBigInt(),
-    poolSharesTrustLineCount: constantProduct.poolSharesTrustLineCount()
-      .toBigInt(),
+    assetA: parseAsset(params.assetA),
+    assetB: parseAsset(params.assetB),
+    fee: params.fee,
+    reserveA: constantProduct.reserveA,
+    reserveB: constantProduct.reserveB,
+    totalPoolShares: constantProduct.totalPoolShares,
+    poolSharesTrustLineCount: constantProduct.poolSharesTrustLineCount,
   };
 }
 
 function decodeContractDataEntry(
   entry: Api.LedgerEntryResult,
+  contractData: xdr.ContractDataEntry,
 ): ContractDataLedgerEntry {
-  const contractData = entry.val.contractData();
-
   return {
     ...decodeBaseEntry("contractData", entry),
-    contractId: Address.fromScAddress(contractData.contract()).toString() as ContractId,
-    durability: contractData.durability().name as ContractDataDurabilityName,
-    keyScVal: contractData.key(),
-    valueScVal: contractData.val(),
-    key: parseScVal(contractData.key()),
-    value: parseScVal(contractData.val()),
+    contractId: Address.fromScAddress(contractData.contract)
+      .toString() as ContractId,
+    durability: contractData.durability.name as ContractDataDurabilityName,
+    keyScVal: contractData.key,
+    valueScVal: contractData.val,
+    key: parseScVal(contractData.key),
+    value: parseScVal(contractData.val),
   };
 }
 
 function decodeContractInstanceEntry(
   entry: Api.LedgerEntryResult,
+  contractData: xdr.ContractDataEntry,
+  instance: xdr.ScContractInstance,
 ): ContractInstanceLedgerEntry {
-  const contractData = entry.val.contractData();
-  const instance = contractData.val().instance();
-  const storage = xdr.ScVal.scvMap(instance.storage() ?? []);
+  const storage = xdr.ScVal.scvMap(instance.storage ?? []);
 
   return {
     ...decodeBaseEntry("contractInstance", entry),
-    contractId: Address.fromScAddress(contractData.contract()).toString() as ContractId,
-    durability: contractData.durability().name as ContractDataDurabilityName,
-    keyScVal: contractData.key(),
-    valueScVal: contractData.val(),
-    executable: decodeContractExecutable(instance.executable()),
+    contractId: Address.fromScAddress(contractData.contract)
+      .toString() as ContractId,
+    durability: contractData.durability.name as ContractDataDurabilityName,
+    keyScVal: contractData.key,
+    valueScVal: contractData.val,
+    executable: decodeContractExecutable(instance.executable),
     storage: parseScVal(storage),
   };
 }
 
 function decodeContractCodeEntry(
   entry: Api.LedgerEntryResult,
+  contractCode: xdr.ContractCodeEntry,
 ): ContractCodeLedgerEntry {
-  const contractCode = entry.val.contractCode();
-
   return {
     ...decodeBaseEntry("contractCode", entry),
-    hash: contractCode.hash().toString("hex"),
-    code: Uint8Array.from(contractCode.code()),
-    costInputs: contractCode.ext().switch() === 1
-      ? decodeContractCodeCostInputs(contractCode.ext().v1().costInputs())
+    hash: contractCode.hash.toString(),
+    code: Uint8Array.from(contractCode.code),
+    costInputs: contractCode.ext.type === "v1"
+      ? decodeContractCodeCostInputs(contractCode.ext.v1.costInputs)
       : undefined,
   };
 }
 
 function decodeConfigSettingEntry(
   entry: Api.LedgerEntryResult,
+  configSetting: xdr.ConfigSettingEntry,
 ): ConfigSettingLedgerEntry {
-  const configSetting = entry.val.configSetting();
-
   return {
     ...decodeBaseEntry("configSetting", entry),
-    configSettingId: configSetting.switch().name as ConfigSettingIdName,
-    value: normalizeConfigSettingValue(configSetting.value()),
+    configSettingId: configSetting.type as ConfigSettingIdName,
+    value: configSetting.value as ConfigSettingValue,
   };
 }
 
-function decodeTtlEntry(entry: Api.LedgerEntryResult): TtlLedgerEntry {
-  const ttl = entry.val.ttl();
-
+function decodeTtlEntry(
+  entry: Api.LedgerEntryResult,
+  ttl: xdr.TtlEntry,
+): TtlLedgerEntry {
   return {
     ...decodeBaseEntry("ttl", entry),
-    keyHash: StrKey.encodeSha256Hash(ttl.keyHash()),
-    expiresAtLedger: ttl.liveUntilLedgerSeq(),
+    keyHash: StrKey.encodeSha256Hash(ttl.keyHash.toBytes()),
+    expiresAtLedger: ttl.liveUntilLedgerSeq,
   };
 }
 
 /**
  * Derives the logical entry type represented by a ledger key.
  */
-export function detectLedgerEntryKindFromKey(key: xdr.LedgerKey): LedgerEntryKind {
-  switch (key.switch().name) {
+export function detectLedgerEntryKindFromKey(
+  key: xdr.LedgerKey,
+): LedgerEntryKind {
+  switch (key.type) {
     case "account":
       return "account";
     case "trustline":
@@ -468,8 +455,7 @@ export function detectLedgerEntryKindFromKey(key: xdr.LedgerKey): LedgerEntryKin
     case "liquidityPool":
       return "liquidityPool";
     case "contractData":
-      return key.contractData().key().switch().name ===
-          "scvLedgerKeyContractInstance"
+      return key.contractData.key.type === "scvLedgerKeyContractInstance"
         ? "contractInstance"
         : "contractData";
     case "contractCode":
@@ -479,42 +465,53 @@ export function detectLedgerEntryKindFromKey(key: xdr.LedgerKey): LedgerEntryKin
     case "ttl":
       return "ttl";
     default:
-      throw new E.UNSUPPORTED_XDR_VARIANT("ledger key", key.switch().name);
+      throw new E.UNSUPPORTED_XDR_VARIANT(
+        "ledger key",
+        (key as { type: string }).type,
+      );
   }
 }
 
 /**
  * Decodes a parsed RPC ledger-entry result into the corresponding friendly shape.
  */
-export function decodeLedgerEntry(entry: Api.LedgerEntryResult): AnyLedgerEntry {
-  switch (entry.val.switch().name) {
+export function decodeLedgerEntry(
+  entry: Api.LedgerEntryResult,
+): AnyLedgerEntry {
+  switch (entry.val.type) {
     case "account":
-      return decodeAccountEntry(entry);
+      return decodeAccountEntry(entry, entry.val.account);
     case "trustline":
-      return decodeTrustlineEntry(entry);
+      return decodeTrustlineEntry(entry, entry.val.trustLine);
     case "offer":
-      return decodeOfferEntry(entry);
+      return decodeOfferEntry(entry, entry.val.offer);
     case "data":
-      return decodeDataEntry(entry);
+      return decodeDataEntry(entry, entry.val.data);
     case "claimableBalance":
-      return decodeClaimableBalanceEntry(entry);
+      return decodeClaimableBalanceEntry(entry, entry.val.claimableBalance);
     case "liquidityPool":
-      return decodeLiquidityPoolEntry(entry);
-    case "contractData":
-      return entry.val.contractData().key().switch().name ===
-          "scvLedgerKeyContractInstance"
-        ? decodeContractInstanceEntry(entry)
-        : decodeContractDataEntry(entry);
+      return decodeLiquidityPoolEntry(entry, entry.val.liquidityPool);
+    case "contractData": {
+      const contractData = entry.val.contractData;
+      return contractData.key.type === "scvLedgerKeyContractInstance" &&
+          contractData.val.type === "scvContractInstance"
+        ? decodeContractInstanceEntry(
+          entry,
+          contractData,
+          contractData.val.instance,
+        )
+        : decodeContractDataEntry(entry, contractData);
+    }
     case "contractCode":
-      return decodeContractCodeEntry(entry);
+      return decodeContractCodeEntry(entry, entry.val.contractCode);
     case "configSetting":
-      return decodeConfigSettingEntry(entry);
+      return decodeConfigSettingEntry(entry, entry.val.configSetting);
     case "ttl":
-      return decodeTtlEntry(entry);
+      return decodeTtlEntry(entry, entry.val.ttl);
     default:
       throw new E.UNSUPPORTED_XDR_VARIANT(
         "ledger entry",
-        entry.val.switch().name,
+        (entry.val as { type: string }).type,
       );
   }
 }

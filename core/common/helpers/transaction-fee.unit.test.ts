@@ -2,9 +2,12 @@ import { assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import {
   Account,
+  Keypair,
   Operation,
   SorobanDataBuilder,
+  Transaction,
   TransactionBuilder,
+  xdr,
 } from "stellar-sdk";
 import {
   getTransactionInclusionFee,
@@ -98,12 +101,57 @@ describe("transaction fee helpers", () => {
 
   it("sets the exact fee in transaction XDR without mutating the input", () => {
     const transaction = makeTransaction();
+    transaction.signatures.push(
+      new xdr.DecoratedSignature({
+        hint: new Uint8Array([1, 2, 3, 4]),
+        signature: new Uint8Array([5, 6, 7]),
+      }),
+    );
     const adjusted = setTransactionFee(transaction, 201n);
+    const restored = setTransactionFee(adjusted, 200n);
 
     assertEquals(transaction.fee, "200");
     assertEquals(adjusted.fee, "201");
     assertEquals(adjusted.operations.length, transaction.operations.length);
     assertEquals(adjusted.operations[0].type, transaction.operations[0].type);
     assertEquals(adjusted.sequence, transaction.sequence);
+    assertEquals(adjusted.signatures, transaction.signatures);
+    assertEquals(restored.toXdr(), transaction.toXdr());
+  });
+
+  it("reconstructs a v0 envelope while preserving every field and signature", () => {
+    const v1 = makeTransaction();
+    if (!(v1.tx instanceof xdr.Transaction)) {
+      throw new Error("Expected a v1 transaction fixture");
+    }
+    const signature = new xdr.DecoratedSignature({
+      hint: new Uint8Array([1, 2, 3, 4]),
+      signature: new Uint8Array([5, 6, 7]),
+    });
+    const v0 = new Transaction(
+      xdr.TransactionEnvelope.envelopeTypeTxV0(
+        new xdr.TransactionV0Envelope({
+          tx: new xdr.TransactionV0({
+            sourceAccountEd25519: Keypair.fromPublicKey(source).rawPublicKey(),
+            fee: 200,
+            seqNum: v1.tx.seqNum,
+            timeBounds: null,
+            memo: v1.tx.memo,
+            operations: v1.tx.operations,
+            ext: xdr.TransactionV0Ext.v0(),
+          }),
+          signatures: [signature],
+        }),
+      ),
+      NetworkConfig.TestNet().networkPassphrase,
+    );
+
+    const adjusted = setTransactionFee(v0, 301n);
+    const restored = setTransactionFee(adjusted, 200n);
+
+    assertEquals(v0.fee, "200");
+    assertEquals(adjusted.fee, "301");
+    assertEquals(adjusted.signatures, [signature]);
+    assertEquals(restored.toXdr(), v0.toXdr());
   });
 });

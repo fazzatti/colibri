@@ -44,6 +44,98 @@ const HTTPS_URL_FIELDS = [
 /** Fields containing Stellar public keys (G...) */
 const SIGNING_KEY_FIELDS = ["SIGNING_KEY", "URI_REQUEST_SIGNING_KEY"] as const;
 
+const validateSigningKeys = (
+  data: StellarTomlData,
+  domain?: string,
+): void => {
+  for (const field of SIGNING_KEY_FIELDS) {
+    const value = data[field];
+    if (value && !StrKey.isValidEd25519PublicKey(value)) {
+      throw new E.INVALID_SIGNING_KEY(field, value, domain);
+    }
+  }
+};
+
+const validateUrl = (
+  field: string,
+  value: string,
+  domain: string | undefined,
+  requireHttps: boolean,
+): void => {
+  try {
+    const url = new URL(value);
+    if (requireHttps && url.protocol !== "https:") {
+      throw new E.INVALID_URL(field, value, domain, requireHttps);
+    }
+  } catch (error) {
+    if (error instanceof E.INVALID_URL) throw error;
+    throw new E.INVALID_URL(field, value, domain, requireHttps);
+  }
+};
+
+const validateUrls = (
+  data: StellarTomlData,
+  domain: string | undefined,
+  requireHttps: boolean,
+): void => {
+  for (const field of HTTPS_URL_FIELDS) {
+    const value = data[field as keyof StellarTomlData] as string | undefined;
+    if (value) validateUrl(field, value, domain, requireHttps);
+  }
+
+  const organizationUrl = data.DOCUMENTATION?.ORG_URL;
+  if (organizationUrl) {
+    validateUrl(
+      "DOCUMENTATION.ORG_URL",
+      organizationUrl,
+      domain,
+      requireHttps,
+    );
+  }
+};
+
+const validateAccounts = (data: StellarTomlData, domain?: string): void => {
+  for (const [index, account] of (data.ACCOUNTS ?? []).entries()) {
+    if (!StrKey.isValidEd25519PublicKey(account)) {
+      throw new E.INVALID_ACCOUNT("ACCOUNTS", account, domain, index);
+    }
+  }
+};
+
+const validateValidators = (data: StellarTomlData, domain?: string): void => {
+  for (const [index, validator] of (data.VALIDATORS ?? []).entries()) {
+    if (
+      validator.PUBLIC_KEY &&
+      !StrKey.isValidEd25519PublicKey(validator.PUBLIC_KEY)
+    ) {
+      throw new E.INVALID_SIGNING_KEY(
+        `VALIDATORS[${index}].PUBLIC_KEY`,
+        validator.PUBLIC_KEY,
+        domain,
+      );
+    }
+  }
+};
+
+const validateCurrencies = (data: StellarTomlData, domain?: string): void => {
+  for (const [index, currency] of (data.CURRENCIES ?? []).entries()) {
+    if (currency.issuer && !StrKey.isValidEd25519PublicKey(currency.issuer)) {
+      throw new E.INVALID_ACCOUNT(
+        `CURRENCIES[${index}].issuer`,
+        currency.issuer,
+        domain,
+      );
+    }
+    if (currency.contract && !StrKey.isValidContractId(currency.contract)) {
+      throw new E.INVALID_ACCOUNT(
+        `CURRENCIES[${index}].contract`,
+        currency.contract,
+        domain,
+      );
+    }
+  }
+};
+
 /**
  * StellarToml - Parser and fetcher for SEP-1 stellar.toml files
  *
@@ -250,104 +342,12 @@ export class StellarToml {
     domain?: string,
     allowHttp = false,
   ): void {
-    // Validate signing key fields
-    for (const field of SIGNING_KEY_FIELDS) {
-      const value = data[field];
-      if (value && !StrKey.isValidEd25519PublicKey(value)) {
-        throw new E.INVALID_SIGNING_KEY(field, value, domain);
-      }
-    }
-
-    // Validate URL fields
     const requireHttps = !allowHttp;
-    for (const field of HTTPS_URL_FIELDS) {
-      const value = data[field as keyof StellarTomlData] as string | undefined;
-      if (value) {
-        try {
-          const url = new URL(value);
-          if (requireHttps && url.protocol !== "https:") {
-            throw new E.INVALID_URL(field, value, domain, requireHttps);
-          }
-        } catch (error) {
-          if (error instanceof E.INVALID_URL) throw error;
-          throw new E.INVALID_URL(field, value, domain, requireHttps);
-        }
-      }
-    }
-
-    // Validate DOCUMENTATION.ORG_URL if present
-    if (data.DOCUMENTATION?.ORG_URL) {
-      try {
-        const url = new URL(data.DOCUMENTATION.ORG_URL);
-        if (requireHttps && url.protocol !== "https:") {
-          throw new E.INVALID_URL(
-            "DOCUMENTATION.ORG_URL",
-            data.DOCUMENTATION.ORG_URL,
-            domain,
-            requireHttps,
-          );
-        }
-      } catch (error) {
-        if (error instanceof E.INVALID_URL) throw error;
-        throw new E.INVALID_URL(
-          "DOCUMENTATION.ORG_URL",
-          data.DOCUMENTATION.ORG_URL,
-          domain,
-          requireHttps,
-        );
-      }
-    }
-
-    // Validate ACCOUNTS array
-    if (data.ACCOUNTS) {
-      for (let i = 0; i < data.ACCOUNTS.length; i++) {
-        const account = data.ACCOUNTS[i];
-        if (!StrKey.isValidEd25519PublicKey(account)) {
-          throw new E.INVALID_ACCOUNT("ACCOUNTS", account, domain, i);
-        }
-      }
-    }
-
-    // Validate validator PUBLIC_KEYs
-    if (data.VALIDATORS) {
-      for (let i = 0; i < data.VALIDATORS.length; i++) {
-        const validator = data.VALIDATORS[i];
-        if (
-          validator.PUBLIC_KEY &&
-          !StrKey.isValidEd25519PublicKey(validator.PUBLIC_KEY)
-        ) {
-          throw new E.INVALID_SIGNING_KEY(
-            `VALIDATORS[${i}].PUBLIC_KEY`,
-            validator.PUBLIC_KEY,
-            domain,
-          );
-        }
-      }
-    }
-
-    // Validate currency issuers
-    if (data.CURRENCIES) {
-      for (let i = 0; i < data.CURRENCIES.length; i++) {
-        const currency = data.CURRENCIES[i];
-        if (
-          currency.issuer &&
-          !StrKey.isValidEd25519PublicKey(currency.issuer)
-        ) {
-          throw new E.INVALID_ACCOUNT(
-            `CURRENCIES[${i}].issuer`,
-            currency.issuer,
-            domain,
-          );
-        }
-        if (currency.contract && !StrKey.isValidContractId(currency.contract)) {
-          throw new E.INVALID_ACCOUNT(
-            `CURRENCIES[${i}].contract`,
-            currency.contract,
-            domain,
-          );
-        }
-      }
-    }
+    validateSigningKeys(data, domain);
+    validateUrls(data, domain, requireHttps);
+    validateAccounts(data, domain);
+    validateValidators(data, domain);
+    validateCurrencies(data, domain);
   }
 
   // ===========================================================================

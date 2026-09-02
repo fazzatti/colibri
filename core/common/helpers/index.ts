@@ -22,4 +22,5 @@ export {
   parseFailedSimulationResponse,
 } from "@/common/helpers/contract-error-from-failed-simulation-response.ts";
 /** Error constructors for decimal unit formatting helpers. */
-export * as ERRORS_HLP_UNT from "@/common/helpers/format-units.error.ts";
+export const ERRORS_HLP_UNT: typeof FormatUnitsErrors = FormatUnitsErrors;
+import * as FormatUnitsErrors from "@/common/helpers/format-units.error.ts";

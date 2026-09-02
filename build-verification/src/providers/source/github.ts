@@ -1,6 +1,9 @@
 import { detectArchiveFormat } from "@/archive/detect.ts";
 import { sha256Hex } from "@/core/comparison/compare-wasm.ts";
-import type { ResolvedVerificationSource } from "@/core/types/index.ts";
+import type {
+  ResolvedVerificationSource,
+  VerificationSource,
+} from "@/core/types/index.ts";
 import type {
   GitHubSourceCredentials,
   HttpVerificationSourceProviderOptions,
@@ -46,6 +49,15 @@ const validateRepository = (owner: string, repository: string): string => {
 const decodeJson = <Value>(bytes: Uint8Array): Value =>
   JSON.parse(new TextDecoder().decode(bytes)) as Value;
 
+type GitHubArchiveSource = Extract<
+  VerificationSource,
+  { type: "githubArchive" }
+>;
+type GitHubReleaseSource = Extract<
+  VerificationSource,
+  { type: "githubReleaseAsset" }
+>;
+
 /** Provider for immutable GitHub revision archives and release assets. */
 export class GitHubVerificationSourceProvider
   implements VerificationSourceProvider {
@@ -78,6 +90,163 @@ export class GitHubVerificationSourceProvider
       : this.#downloadHeaders;
   }
 
+  async #resolveRevision(
+    repository: string,
+    revision: string,
+    limits: VerificationSourceProviderInput["limits"],
+  ): Promise<string> {
+    try {
+      const api = await retrievePinnedHttpResource({
+        url: `https://api.github.com/repos/${repository}/commits/${
+          encodeURIComponent(revision)
+        }`,
+        limits,
+        policy: this.#policy,
+        transport: this.#transport,
+        addressResolver: this.#addressResolver,
+        headers: (url) => this.#headersForUrl(url),
+        maxBytes: Math.min(limits.maxArchiveBytes, 2 * 1024 * 1024),
+      });
+      const resolved = decodeJson<{ sha?: string }>(api.bytes).sha ?? "";
+      if (!/^[0-9a-f]{40}$/.test(resolved)) {
+        throw new Error("GitHub response omitted an exact commit SHA");
+      }
+      return resolved;
+    } catch (cause) {
+      if (cause instanceof BuildVerificationError) throw cause;
+      throw new GitHubRevisionResolutionFailedError(
+        repository,
+        revision,
+        cause,
+      );
+    }
+  }
+
+  async #resolveArchive(
+    source: GitHubArchiveSource,
+    limits: VerificationSourceProviderInput["limits"],
+    repository: string,
+  ): Promise<ResolvedVerificationSource> {
+    if (!source.revision) {
+      throw new UnsupportedSourceError("GitHub revision cannot be empty.");
+    }
+    const resolvedRevision = await this.#resolveRevision(
+      repository,
+      source.revision,
+      limits,
+    );
+    const zip = source.format === "zip";
+    const extension = zip ? "zip" : "tar.gz";
+    const archive = await retrievePinnedHttpResource({
+      url: `https://api.github.com/repos/${repository}/${
+        zip ? "zipball" : "tarball"
+      }/${resolvedRevision}`,
+      limits,
+      policy: this.#policy,
+      transport: this.#transport,
+      addressResolver: this.#addressResolver,
+      headers: (url) => this.#headersForUrl(url),
+    });
+    return {
+      content: "archive",
+      kind: "githubArchive",
+      bytes: archive.bytes,
+      name: `${resolvedRevision}.${extension}`,
+      format: detectArchiveFormat(`${resolvedRevision}.${extension}`),
+      requestedLocator: `https://github.com/${repository}/tree/${
+        encodeURIComponent(source.revision)
+      }`,
+      resolvedLocator: archive.finalUrl,
+      requestedRevision: source.revision,
+      resolvedRevision,
+      contentType: archive.headers["content-type"],
+      retrievalPolicy: archive.policy,
+      size: archive.bytes.length,
+      sha256: await sha256Hex(archive.bytes),
+    };
+  }
+
+  async #resolveReleaseAssetUrl(
+    source: GitHubReleaseSource,
+    limits: VerificationSourceProviderInput["limits"],
+    repository: string,
+  ): Promise<string> {
+    try {
+      const api = await retrievePinnedHttpResource({
+        url: `https://api.github.com/repos/${repository}/releases/tags/${
+          encodeURIComponent(source.tag)
+        }`,
+        limits,
+        policy: this.#policy,
+        transport: this.#transport,
+        addressResolver: this.#addressResolver,
+        headers: (url) => this.#headersForUrl(url),
+        maxBytes: Math.min(limits.maxArchiveBytes, 4 * 1024 * 1024),
+      });
+      const release = decodeJson<{
+        assets?: Array<{ name?: string; url?: string }>;
+      }>(api.bytes);
+      const asset = release.assets?.find(({ name }) => name === source.asset);
+      if (!asset?.url) {
+        throw new Error("GitHub release omitted the named asset");
+      }
+      return asset.url;
+    } catch (cause) {
+      if (cause instanceof BuildVerificationError) throw cause;
+      throw new GitHubReleaseAssetResolutionFailedError(
+        repository,
+        source.tag,
+        source.asset,
+        cause,
+      );
+    }
+  }
+
+  async #resolveRelease(
+    source: GitHubReleaseSource,
+    limits: VerificationSourceProviderInput["limits"],
+    repository: string,
+  ): Promise<ResolvedVerificationSource> {
+    if (!source.tag || !source.asset || source.asset.includes("/")) {
+      throw new UnsupportedSourceError(
+        "GitHub release tags and exact asset names must be non-empty and portable.",
+      );
+    }
+    const assetUrl = await this.#resolveReleaseAssetUrl(
+      source,
+      limits,
+      repository,
+    );
+    const archive = await retrievePinnedHttpResource({
+      url: assetUrl,
+      limits,
+      policy: this.#policy,
+      transport: this.#transport,
+      addressResolver: this.#addressResolver,
+      headers: (url) => ({
+        ...this.#headersForUrl(url),
+        ...(url.hostname.toLowerCase() === "api.github.com"
+          ? { accept: "application/octet-stream" }
+          : {}),
+      }),
+    });
+    return {
+      content: "archive",
+      kind: "githubReleaseAsset",
+      bytes: archive.bytes,
+      name: source.asset,
+      format: detectArchiveFormat(source.asset),
+      requestedLocator: `https://github.com/${repository}/releases/tag/${
+        encodeURIComponent(source.tag)
+      }`,
+      resolvedLocator: archive.finalUrl,
+      contentType: archive.headers["content-type"],
+      retrievalPolicy: archive.policy,
+      size: archive.bytes.length,
+      sha256: await sha256Hex(archive.bytes),
+    };
+  }
+
   /** Resolves a revision to a commit SHA or selects one exact release asset. */
   async resolve(
     input: VerificationSourceProviderInput,
@@ -93,131 +262,8 @@ export class GitHubVerificationSourceProvider
       input.source.repository,
     );
     if (input.source.type === "githubArchive") {
-      if (!input.source.revision) {
-        throw new UnsupportedSourceError("GitHub revision cannot be empty.");
-      }
-      let resolvedRevision: string;
-      try {
-        const api = await retrievePinnedHttpResource({
-          url: `https://api.github.com/repos/${repository}/commits/${
-            encodeURIComponent(input.source.revision)
-          }`,
-          limits: input.limits,
-          policy: this.#policy,
-          transport: this.#transport,
-          addressResolver: this.#addressResolver,
-          headers: (url) => this.#headersForUrl(url),
-          maxBytes: Math.min(input.limits.maxArchiveBytes, 2 * 1024 * 1024),
-        });
-        resolvedRevision = decodeJson<{ sha?: string }>(api.bytes).sha ?? "";
-        if (!/^[0-9a-f]{40}$/.test(resolvedRevision)) {
-          throw new Error("GitHub response omitted an exact commit SHA");
-        }
-      } catch (cause) {
-        if (cause instanceof BuildVerificationError) throw cause;
-        throw new GitHubRevisionResolutionFailedError(
-          repository,
-          input.source.revision,
-          cause,
-        );
-      }
-      const zip = input.source.format === "zip";
-      const extension = zip ? "zip" : "tar.gz";
-      const archive = await retrievePinnedHttpResource({
-        url: `https://api.github.com/repos/${repository}/${
-          zip ? "zipball" : "tarball"
-        }/${resolvedRevision}`,
-        limits: input.limits,
-        policy: this.#policy,
-        transport: this.#transport,
-        addressResolver: this.#addressResolver,
-        headers: (url) => this.#headersForUrl(url),
-      });
-      return {
-        content: "archive" as const,
-        kind: "githubArchive" as const,
-        bytes: archive.bytes,
-        name: `${resolvedRevision}.${extension}`,
-        format: detectArchiveFormat(`${resolvedRevision}.${extension}`),
-        requestedLocator: `https://github.com/${repository}/tree/${
-          encodeURIComponent(input.source.revision)
-        }`,
-        resolvedLocator: archive.finalUrl,
-        requestedRevision: input.source.revision,
-        resolvedRevision,
-        contentType: archive.headers["content-type"],
-        retrievalPolicy: archive.policy,
-        size: archive.bytes.length,
-        sha256: await sha256Hex(archive.bytes),
-      };
+      return await this.#resolveArchive(input.source, input.limits, repository);
     }
-
-    const releaseSource = input.source;
-    if (
-      !releaseSource.tag || !releaseSource.asset ||
-      releaseSource.asset.includes("/")
-    ) {
-      throw new UnsupportedSourceError(
-        "GitHub release tags and exact asset names must be non-empty and portable.",
-      );
-    }
-    let assetUrl: string;
-    try {
-      const api = await retrievePinnedHttpResource({
-        url: `https://api.github.com/repos/${repository}/releases/tags/${
-          encodeURIComponent(releaseSource.tag)
-        }`,
-        limits: input.limits,
-        policy: this.#policy,
-        transport: this.#transport,
-        addressResolver: this.#addressResolver,
-        headers: (url) => this.#headersForUrl(url),
-        maxBytes: Math.min(input.limits.maxArchiveBytes, 4 * 1024 * 1024),
-      });
-      const release = decodeJson<{
-        assets?: Array<{ name?: string; url?: string }>;
-      }>(api.bytes);
-      const asset = release.assets?.find(({ name }) =>
-        name === releaseSource.asset
-      );
-      assetUrl = asset?.url ?? "";
-      if (!assetUrl) throw new Error("GitHub release omitted the named asset");
-    } catch (cause) {
-      if (cause instanceof BuildVerificationError) throw cause;
-      throw new GitHubReleaseAssetResolutionFailedError(
-        repository,
-        releaseSource.tag,
-        releaseSource.asset,
-        cause,
-      );
-    }
-    const archive = await retrievePinnedHttpResource({
-      url: assetUrl,
-      limits: input.limits,
-      policy: this.#policy,
-      transport: this.#transport,
-      addressResolver: this.#addressResolver,
-      headers: (url) => ({
-        ...this.#headersForUrl(url),
-        ...(url.hostname.toLowerCase() === "api.github.com"
-          ? { accept: "application/octet-stream" }
-          : {}),
-      }),
-    });
-    return {
-      content: "archive" as const,
-      kind: "githubReleaseAsset" as const,
-      bytes: archive.bytes,
-      name: releaseSource.asset,
-      format: detectArchiveFormat(releaseSource.asset),
-      requestedLocator: `https://github.com/${repository}/releases/tag/${
-        encodeURIComponent(releaseSource.tag)
-      }`,
-      resolvedLocator: archive.finalUrl,
-      contentType: archive.headers["content-type"],
-      retrievalPolicy: archive.policy,
-      size: archive.bytes.length,
-      sha256: await sha256Hex(archive.bytes),
-    };
+    return await this.#resolveRelease(input.source, input.limits, repository);
   }
 }

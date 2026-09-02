@@ -20,12 +20,18 @@ const assertConfirmedSorobanFee = (
   result: InvokeContractOutput,
   expected: { inclusion?: bigint; max?: bigint },
 ) => {
-  const transaction = result.response.envelopeXdr.v1().tx();
-  const totalFee = BigInt(transaction.fee());
-  const resourceFee = transaction.ext().value()?.resourceFee().toBigInt() ??
-    0n;
+  const envelope = result.response.envelopeXdr;
+  assertEquals(envelope.type, "envelopeTypeTx");
+  if (envelope.type !== "envelopeTypeTx") {
+    throw new Error("Expected a v1 transaction envelope");
+  }
+  const transaction = envelope.v1.tx;
+  const totalFee = BigInt(transaction.fee);
+  const resourceFee = transaction.ext.type === "sorobanData"
+    ? transaction.ext.sorobanData.resourceFee
+    : 0n;
   const inclusionFee = totalFee - resourceFee;
-  const chargedFee = result.response.resultXdr.feeCharged().toBigInt();
+  const chargedFee = result.response.resultXdr.feeCharged;
 
   if (expected.inclusion !== undefined) {
     assertEquals(inclusionFee, expected.inclusion);

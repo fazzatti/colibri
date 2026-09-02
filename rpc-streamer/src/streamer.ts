@@ -258,6 +258,113 @@ export class RPCStreamer<T> {
     return false; // No handler, rethrow
   }
 
+  private assertNotRunning(): void {
+    if (this._isRunning) {
+      throw new RPCStreamerError(
+        RPCStreamerErrorCode.ALREADY_RUNNING,
+        "Streamer is already running",
+      );
+    }
+  }
+
+  private requireLiveIngestor(): LiveIngestFunc<T> {
+    if (!this._ingestLive) {
+      throw new RPCStreamerError(
+        RPCStreamerErrorCode.MISSING_LIVE_INGESTOR,
+        "Live ingestor is required for live streaming",
+      );
+    }
+    return this._ingestLive;
+  }
+
+  private assertHealthy(status: string): void {
+    if (status !== "healthy") {
+      throw new RPCStreamerError(
+        RPCStreamerErrorCode.RPC_NOT_HEALTHY,
+        "Live RPC is not healthy",
+      );
+    }
+  }
+
+  private assertLedgerAvailable(
+    currentLedger: number,
+    oldestAvailable: number,
+    latestLedger: number,
+  ): void {
+    if (currentLedger < oldestAvailable) {
+      throw new RPCStreamerError(
+        RPCStreamerErrorCode.LEDGER_TOO_OLD,
+        `Ledger ${currentLedger} is older than oldest available (${oldestAvailable})`,
+      );
+    }
+    this.assertLedgerNotAhead(currentLedger, latestLedger);
+  }
+
+  private assertLedgerNotAhead(
+    currentLedger: number,
+    latestLedger: number,
+  ): void {
+    if (currentLedger > latestLedger) {
+      throw new RPCStreamerError(
+        RPCStreamerErrorCode.LEDGER_TOO_HIGH,
+        `Ledger ${currentLedger} is higher than latest available (${latestLedger})`,
+      );
+    }
+  }
+
+  private beyondStopLedger(
+    ledger: number,
+    stopLedger?: number,
+  ): boolean {
+    return isDefined(stopLedger) && ledger > stopLedger;
+  }
+
+  private recoverFromIngestionError(
+    error: unknown,
+    currentLedger: number,
+    onError?: ErrorHandler,
+  ): number {
+    if (!this.handleError(error as Error, currentLedger, onError)) throw error;
+    return currentLedger + 1;
+  }
+
+  private async ingestLiveLedger(
+    currentLedger: number,
+    onData: DataHandler<T>,
+    options: LiveStartOptions,
+  ): Promise<number> {
+    try {
+      const { nextLedger, shouldWait, hitStopLedger } = await this
+        .requireLiveIngestor()(
+          this._rpc,
+          currentLedger,
+          onData,
+          options.stopLedger,
+        );
+      if (hitStopLedger) {
+        this.stop();
+        return nextLedger;
+      }
+      this.maybeCheckpoint(
+        currentLedger,
+        options.onCheckpoint,
+        options.checkpointInterval,
+      );
+      if (
+        shouldWait && !this.beyondStopLedger(nextLedger, options.stopLedger)
+      ) {
+        await this.waitFor("ledger");
+      }
+      return nextLedger;
+    } catch (error) {
+      return this.recoverFromIngestionError(
+        error,
+        currentLedger,
+        options.onError,
+      );
+    }
+  }
+
   /**
    * Starts live-only ingestion using the standard RPC.
    *
@@ -283,99 +390,31 @@ export class RPCStreamer<T> {
     onData: DataHandler<T>,
     options: LiveStartOptions = {},
   ): Promise<void> {
-    if (this._isRunning) {
-      throw new RPCStreamerError(
-        RPCStreamerErrorCode.ALREADY_RUNNING,
-        "Streamer is already running",
-      );
-    }
-
-    if (!this._ingestLive) {
-      throw new RPCStreamerError(
-        RPCStreamerErrorCode.MISSING_LIVE_INGESTOR,
-        "Live ingestor is required for live streaming",
-      );
-    }
-
+    this.assertNotRunning();
+    this.requireLiveIngestor();
     this._isRunning = true;
 
     try {
       const rpcDetails = await this._rpc.getHealth();
-
-      if (rpcDetails.status !== "healthy") {
-        throw new RPCStreamerError(
-          RPCStreamerErrorCode.RPC_NOT_HEALTHY,
-          "Live RPC is not healthy",
-        );
-      }
-
+      this.assertHealthy(rpcDetails.status);
       let currentLedger = options.startLedger ?? rpcDetails.latestLedger;
       const oldestAvailable = rpcDetails.oldestLedger + 2; // +2 safety buffer
-
-      if (currentLedger < oldestAvailable) {
-        throw new RPCStreamerError(
-          RPCStreamerErrorCode.LEDGER_TOO_OLD,
-          `Ledger ${currentLedger} is older than oldest available (${oldestAvailable})`,
-        );
-      }
-
-      if (currentLedger > rpcDetails.latestLedger) {
-        throw new RPCStreamerError(
-          RPCStreamerErrorCode.LEDGER_TOO_HIGH,
-          `Ledger ${currentLedger} is higher than latest available (${rpcDetails.latestLedger})`,
-        );
-      }
+      this.assertLedgerAvailable(
+        currentLedger,
+        oldestAvailable,
+        rpcDetails.latestLedger,
+      );
 
       while (this._isRunning) {
-        // Check if we have passed the stop ledger
-        if (
-          isDefined(options.stopLedger) &&
-          currentLedger > options.stopLedger
-        ) {
+        if (this.beyondStopLedger(currentLedger, options.stopLedger)) {
           this.stop();
           break;
         }
-
-        try {
-          const { nextLedger, shouldWait, hitStopLedger } = await this
-            ._ingestLive(
-              this._rpc,
-              currentLedger,
-              onData,
-              options.stopLedger,
-            );
-
-          if (hitStopLedger) {
-            this.stop();
-            break;
-          }
-
-          // Checkpoint after successful ingestion
-          this.maybeCheckpoint(
-            currentLedger,
-            options.onCheckpoint,
-            options.checkpointInterval,
-          );
-
-          currentLedger = nextLedger;
-
-          // Don't wait if we're about to stop
-          if (
-            shouldWait &&
-            (!isDefined(options.stopLedger) ||
-              currentLedger <= options.stopLedger)
-          ) {
-            await this.waitFor("ledger");
-          }
-        } catch (error) {
-          if (
-            !this.handleError(error as Error, currentLedger, options.onError)
-          ) {
-            throw error;
-          }
-          // Error was handled, move to next ledger
-          currentLedger++;
-        }
+        currentLedger = await this.ingestLiveLedger(
+          currentLedger,
+          onData,
+          options,
+        );
       }
     } finally {
       this._isRunning = false;
@@ -455,6 +494,99 @@ export class RPCStreamer<T> {
     }
   }
 
+  private requireAutoArchiveIngestor(
+    currentLedger: number,
+    oldestAvailable: number,
+  ): { rpc: Server; ingest: ArchiveIngestFunc<T> } {
+    if (!isDefined(this._archiveRpc)) {
+      throw new RPCStreamerError(
+        RPCStreamerErrorCode.LEDGER_TOO_OLD,
+        `Ledger ${currentLedger} is older than oldest available (${oldestAvailable}). Configure an archive RPC to access historical data.`,
+      );
+    }
+    if (!this._ingestArchive) {
+      throw new RPCStreamerError(
+        RPCStreamerErrorCode.MISSING_ARCHIVE_INGESTOR,
+        `Ledger ${currentLedger} is older than oldest available (${oldestAvailable}). Archive ingestor is required to access historical data.`,
+      );
+    }
+    return { rpc: this._archiveRpc, ingest: this._ingestArchive };
+  }
+
+  private async ingestAutoArchive(
+    currentLedger: number,
+    oldestAvailable: number,
+    onData: DataHandler<T>,
+    options: AutoStartOptions,
+  ): Promise<number> {
+    const { rpc, ingest } = this.requireAutoArchiveIngestor(
+      currentLedger,
+      oldestAvailable,
+    );
+    const targetLedger = isDefined(options.stopLedger)
+      ? Math.min(oldestAvailable - 1, options.stopLedger)
+      : oldestAvailable - 1;
+    try {
+      return await ingest(rpc, currentLedger, targetLedger, onData, {
+        isRunning: () => this._isRunning,
+        onCheckpoint: options.onCheckpoint,
+        checkpointInterval: options.checkpointInterval,
+        onError: options.onError,
+      });
+    } catch (error) {
+      return this.recoverFromIngestionError(
+        error,
+        currentLedger,
+        options.onError,
+      );
+    }
+  }
+
+  private async shouldSkipLiveWait(currentLedger: number): Promise<boolean> {
+    if (!this._skipLedgerWaitIfBehind) return false;
+    const latestLedger = (await this._rpc.getHealth()).latestLedger;
+    return currentLedger < latestLedger - 1;
+  }
+
+  private async ingestAutoLive(
+    currentLedger: number,
+    onData: DataHandler<T>,
+    options: AutoStartOptions,
+  ): Promise<number> {
+    try {
+      const { nextLedger, shouldWait, hitStopLedger } = await this
+        .requireLiveIngestor()(
+          this._rpc,
+          currentLedger,
+          onData,
+          options.stopLedger,
+        );
+      if (hitStopLedger) {
+        this.stop();
+        return nextLedger;
+      }
+      this.maybeCheckpoint(
+        currentLedger,
+        options.onCheckpoint,
+        options.checkpointInterval,
+      );
+      if (this.beyondStopLedger(nextLedger, options.stopLedger)) {
+        this.stop();
+        return nextLedger;
+      }
+      if (shouldWait && !await this.shouldSkipLiveWait(nextLedger)) {
+        await this.waitFor("ledger");
+      }
+      return nextLedger;
+    } catch (error) {
+      return this.recoverFromIngestionError(
+        error,
+        currentLedger,
+        options.onError,
+      );
+    }
+  }
+
   /**
    * Starts the ingestion process in auto mode.
    *
@@ -480,157 +612,30 @@ export class RPCStreamer<T> {
     onData: DataHandler<T>,
     options: AutoStartOptions = {},
   ): Promise<void> {
-    if (this._isRunning) {
-      throw new RPCStreamerError(
-        RPCStreamerErrorCode.ALREADY_RUNNING,
-        "Streamer is already running",
-      );
-    }
-
+    this.assertNotRunning();
     this._isRunning = true;
 
     try {
       const rpcDetails = await this._rpc.getHealth();
-
-      if (rpcDetails.status !== "healthy") {
-        throw new RPCStreamerError(
-          RPCStreamerErrorCode.RPC_NOT_HEALTHY,
-          "Live RPC is not healthy",
-        );
-      }
-
+      this.assertHealthy(rpcDetails.status);
       let currentLedger = options.startLedger ?? rpcDetails.latestLedger;
 
       while (this._isRunning) {
-        // Check if we have passed the stop ledger
-        if (
-          isDefined(options.stopLedger) &&
-          currentLedger > options.stopLedger
-        ) {
+        if (this.beyondStopLedger(currentLedger, options.stopLedger)) {
           this.stop();
           break;
         }
-
-        // Refresh RPC health to get current oldest available ledger
         const health = await this._rpc.getHealth();
         const oldestAvailable = health.oldestLedger + 2; // +2 safety buffer
-
-        if (currentLedger > health.latestLedger) {
-          throw new RPCStreamerError(
-            RPCStreamerErrorCode.LEDGER_TOO_HIGH,
-            `Ledger ${currentLedger} is higher than latest available (${health.latestLedger})`,
-          );
-        }
-
-        if (currentLedger < oldestAvailable) {
-          // Historical mode: requires an archive RPC and archive ingestor
-          if (!isDefined(this._archiveRpc)) {
-            throw new RPCStreamerError(
-              RPCStreamerErrorCode.LEDGER_TOO_OLD,
-              `Ledger ${currentLedger} is older than oldest available (${oldestAvailable}). Configure an archive RPC to access historical data.`,
-            );
-          }
-
-          if (!this._ingestArchive) {
-            throw new RPCStreamerError(
-              RPCStreamerErrorCode.MISSING_ARCHIVE_INGESTOR,
-              `Ledger ${currentLedger} is older than oldest available (${oldestAvailable}). Archive ingestor is required to access historical data.`,
-            );
-          }
-
-          // Determine target: either stopLedger or oldestAvailable-1 (whichever is smaller)
-          const targetLedger = isDefined(options.stopLedger)
-            ? Math.min(oldestAvailable - 1, options.stopLedger)
-            : oldestAvailable - 1;
-
-          try {
-            // Ingest historical ledgers until we reach the target
-            currentLedger = await this._ingestArchive(
-              this._archiveRpc,
-              currentLedger,
-              targetLedger,
-              onData,
-              {
-                isRunning: () => this._isRunning,
-                onCheckpoint: options.onCheckpoint,
-                checkpointInterval: options.checkpointInterval,
-                onError: options.onError,
-              },
-            );
-          } catch (error) {
-            if (
-              !this.handleError(error as Error, currentLedger, options.onError)
-            ) {
-              throw error;
-            }
-            // Error was handled, move to next ledger
-            currentLedger++;
-          }
-
-          // Loop back to re-check (oldestAvailable may have shifted)
-          continue;
-        }
-
-        // Live mode: use standard RPC
-        if (!this._ingestLive) {
-          throw new RPCStreamerError(
-            RPCStreamerErrorCode.MISSING_LIVE_INGESTOR,
-            "Live ingestor is required for live streaming",
-          );
-        }
-
-        try {
-          const { nextLedger, shouldWait, hitStopLedger } = await this
-            ._ingestLive(
-              this._rpc,
-              currentLedger,
-              onData,
-              options.stopLedger,
-            );
-
-          if (hitStopLedger) {
-            this.stop();
-            break;
-          }
-
-          // Checkpoint after successful ingestion
-          this.maybeCheckpoint(
+        this.assertLedgerNotAhead(currentLedger, health.latestLedger);
+        currentLedger = currentLedger < oldestAvailable
+          ? await this.ingestAutoArchive(
             currentLedger,
-            options.onCheckpoint,
-            options.checkpointInterval,
-          );
-
-          currentLedger = nextLedger;
-
-          // Don't wait if we're about to stop
-          if (
-            isDefined(options.stopLedger) &&
-            currentLedger > options.stopLedger
-          ) {
-            this.stop();
-            break;
-          }
-
-          // Wait only if we're caught up to the latest ledger
-          if (shouldWait) {
-            // Check if we should skip wait when behind
-            if (this._skipLedgerWaitIfBehind) {
-              const latestLedger = (await this._rpc.getHealth()).latestLedger;
-              if (currentLedger < latestLedger - 1) {
-                continue;
-              }
-            }
-            await this.waitFor("ledger");
-          }
-        } catch (error) {
-          if (
-            !this.handleError(error as Error, currentLedger, options.onError)
-          ) {
-            throw error;
-          }
-          // Error was handled, move to next ledger
-          currentLedger++;
-        }
+            oldestAvailable,
+            onData,
+            options,
+          )
+          : await this.ingestAutoLive(currentLedger, onData, options);
       }
     } finally {
       this._isRunning = false;

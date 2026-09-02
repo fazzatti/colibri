@@ -190,7 +190,7 @@ describe("BurnEvent", () => {
       const filter = BurnEvent.toTopicFilter({});
 
       assertEquals(filter.length, 2);
-      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
+      assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals(filter[1], "*");
     });
 
@@ -199,8 +199,8 @@ describe("BurnEvent", () => {
       const filter = BurnEvent.toTopicFilter({ from });
 
       assertEquals(filter.length, 2);
-      assertEquals((filter[0] as xdr.ScVal).switch().name, "scvSymbol");
-      assertEquals((filter[1] as xdr.ScVal).switch().name, "scvAddress");
+      assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
+      assertEquals((filter[1] as xdr.ScVal).type, "scvAddress");
     });
   });
 });

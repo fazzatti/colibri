@@ -1,18 +1,29 @@
 // ...existing code...
-import { assert, assertEquals, assertExists } from "@std/assert";
+import { assert, assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
 import {
-  paramsToInvocation,
+  Address,
+  buildWithDelegatesEntry,
+  Keypair,
+  nativeToScVal,
+  xdr,
+} from "stellar-sdk";
+import {
   authEntryToParams,
-  paramsToAuthEntry,
   paramsToAuthEntries,
+  paramsToAuthEntry,
+  paramsToInvocation,
 } from "@/common/helpers/xdr/auth-entries.ts";
 import type {
   AuthEntryParams,
   FnArg,
   InvocationParams,
 } from "@/common/helpers/xdr/types.ts";
+import {
+  MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_PARAMS,
+  UNSUPPORTED_AUTH_ENTRY_CREDENTIALS_FOR_PARAMS,
+  UNSUPPORTED_AUTHORIZED_FUNCTION,
+} from "@/common/helpers/xdr/error.ts";
 
 describe("Auth entry helpers", () => {
   describe("paramsToInvocation", () => {
@@ -31,15 +42,25 @@ describe("Auth entry helpers", () => {
 
       const invocation = paramsToInvocation(params);
 
-      const contractFn = invocation.function().contractFn();
-      assertEquals(contractFn.functionName(), "echo");
+      const authorizedFunction = invocation.function;
       assertEquals(
-        contractFn.args()[0].toXDR("base64"),
-        nativeToScVal("hello", { type: "string" }).toXDR("base64")
+        authorizedFunction.type,
+        "sorobanAuthorizedFunctionTypeContractFn",
+      );
+      if (
+        authorizedFunction.type !== "sorobanAuthorizedFunctionTypeContractFn"
+      ) {
+        throw new Error("Expected a contract-function invocation");
+      }
+      const contractFn = authorizedFunction.contractFn;
+      assertEquals(contractFn.functionName.toString(), "echo");
+      assertEquals(
+        contractFn.args[0].toXdr("base64"),
+        nativeToScVal("hello", { type: "string" }).toXdr("base64"),
       );
       assertEquals(
-        contractFn.args()[1].toXDR("base64"),
-        nativeToScVal("42", { type: "string" }).toXDR("base64")
+        contractFn.args[1].toXdr("base64"),
+        nativeToScVal("42", { type: "string" }).toXdr("base64"),
       );
     });
 
@@ -57,22 +78,130 @@ describe("Auth entry helpers", () => {
       };
 
       const invocation = paramsToInvocation(params);
-      const contractFn = invocation.function().contractFn();
-
-      assertEquals(contractFn.args().length, 1);
+      const authorizedFunction = invocation.function;
       assertEquals(
-        contractFn.args()[0].toXDR("base64"),
-        boolArg.toXDR("base64")
+        authorizedFunction.type,
+        "sorobanAuthorizedFunctionTypeContractFn",
       );
-      assertEquals(invocation.subInvocations().length, 0);
+      if (
+        authorizedFunction.type !== "sorobanAuthorizedFunctionTypeContractFn"
+      ) {
+        throw new Error("Expected a contract-function invocation");
+      }
+      const contractFn = authorizedFunction.contractFn;
+
+      assertEquals(contractFn.args.length, 1);
+      assertEquals(
+        contractFn.args[0].toXdr("base64"),
+        boolArg.toXdr("base64"),
+      );
+      assertEquals(invocation.subInvocations.length, 0);
     });
   });
 
   describe("Auth entry param conversion", () => {
+    it("rejects source-account credentials with a specific helper error", () => {
+      const signer = Address.fromString(Keypair.random().publicKey());
+      const entry = new xdr.SorobanAuthorizationEntry({
+        credentials: xdr.SorobanCredentials.sorobanCredentialsSourceAccount(),
+        rootInvocation: paramsToInvocation({
+          function: {
+            contractAddress: signer.toString(),
+            functionName: "noop",
+            args: [],
+          },
+        }),
+      });
+
+      assertThrows(
+        () => authEntryToParams(entry),
+        MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_PARAMS,
+      );
+    });
+
+    it("rejects address credential variants the parameter shape cannot preserve", () => {
+      const signer = Address.fromString(Keypair.random().publicKey());
+      const addressCredentials = new xdr.SorobanAddressCredentials({
+        address: signer.toScAddress(),
+        nonce: xdr.Int64(1),
+        signatureExpirationLedger: 100,
+        signature: xdr.ScVal.scvVoid(),
+      });
+      const addressV2 = new xdr.SorobanAuthorizationEntry({
+        credentials: xdr.SorobanCredentials.sorobanCredentialsAddressV2(
+          addressCredentials,
+        ),
+        rootInvocation: paramsToInvocation({
+          function: {
+            contractAddress: signer.toString(),
+            functionName: "noop",
+            args: [],
+          },
+        }),
+      });
+      const delegated = buildWithDelegatesEntry({
+        entry: addressV2,
+        validUntilLedgerSeq: 100,
+        signature: xdr.ScVal.scvVoid(),
+        delegates: [{
+          address: Address.fromString(Keypair.random().publicKey()).toString(),
+          signature: xdr.ScVal.scvVoid(),
+          nestedDelegates: [],
+        }],
+      });
+
+      for (const entry of [addressV2, delegated]) {
+        const error = assertThrows(
+          () => authEntryToParams(entry),
+          UNSUPPORTED_AUTH_ENTRY_CREDENTIALS_FOR_PARAMS,
+        );
+        assertEquals(error.meta.data.value, {
+          credentialsType: entry.credentials.type,
+        });
+      }
+    });
+
+    it("rejects non-contract-function invocations with a specific helper error", () => {
+      const signer = Address.fromString(Keypair.random().publicKey());
+      const credentials = new xdr.SorobanAddressCredentials({
+        address: signer.toScAddress(),
+        nonce: xdr.Int64(0),
+        signatureExpirationLedger: 0,
+        signature: xdr.ScVal.scvVoid(),
+      });
+      const createContract = new xdr.CreateContractArgs({
+        contractIdPreimage: xdr.ContractIdPreimage
+          .contractIdPreimageFromAddress(
+            new xdr.ContractIdPreimageFromAddress({
+              address: signer.toScAddress(),
+              salt: new Uint8Array(32),
+            }),
+          ),
+        executable: xdr.ContractExecutable.contractExecutableWasm(
+          new Uint8Array(32),
+        ),
+      });
+      const entry = new xdr.SorobanAuthorizationEntry({
+        credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
+          credentials,
+        ),
+        rootInvocation: new xdr.SorobanAuthorizedInvocation({
+          function: xdr.SorobanAuthorizedFunction
+            .sorobanAuthorizedFunctionTypeCreateContractHostFn(createContract),
+          subInvocations: [],
+        }),
+      });
+
+      assertThrows(
+        () => authEntryToParams(entry),
+        UNSUPPORTED_AUTHORIZED_FUNCTION,
+      );
+    });
+
     it("round-trips AuthEntryParams through paramsToAuthEntry and back", () => {
       const kp = Keypair.random();
       const contractAddress = Address.fromString(kp.publicKey()).toString();
-      const signature = xdr.ScVal.scvU32(7).toXDR("base64");
+      const signature = xdr.ScVal.scvU32(7).toXdr("base64");
 
       const params: AuthEntryParams = {
         credentials: {
@@ -118,15 +247,15 @@ describe("Auth entry helpers", () => {
 
       const rebuiltEntry = paramsToAuthEntry(roundTrip);
       assertEquals(
-        rebuiltEntry.toXDR("base64"),
-        entry.toXDR("base64")
+        rebuiltEntry.toXdr("base64"),
+        entry.toXdr("base64"),
       );
 
       assertExists(roundTrip.rootInvocation.subInvocations);
       assertEquals(roundTrip.rootInvocation.subInvocations.length, 1);
       assertEquals(
         roundTrip.rootInvocation.subInvocations[0].function.functionName,
-        "noop"
+        "noop",
       );
     });
 
@@ -187,19 +316,19 @@ describe("Auth entry helpers", () => {
         credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
           new xdr.SorobanAddressCredentials({
             address: addr.toScAddress(),
-            nonce: new xdr.Int64(0),
+            nonce: xdr.Int64(0),
             signatureExpirationLedger: 0,
             signature: xdr.ScVal.scvVoid(),
-          })
+          }),
         ),
         rootInvocation: new xdr.SorobanAuthorizedInvocation({
-          function:
-            xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
+          function: xdr.SorobanAuthorizedFunction
+            .sorobanAuthorizedFunctionTypeContractFn(
               new xdr.InvokeContractArgs({
                 contractAddress: contractAddr.toScAddress(),
                 functionName: "inspect",
                 args: [addressArg, i128Arg],
-              })
+              }),
             ),
           subInvocations: [],
         }),
@@ -239,14 +368,14 @@ describe("Auth entry helpers", () => {
         credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
           new xdr.SorobanAddressCredentials({
             address: signer.toScAddress(),
-            nonce: new xdr.Int64(0),
+            nonce: xdr.Int64(0),
             signatureExpirationLedger: 0,
             signature: xdr.ScVal.scvVoid(),
           }),
         ),
         rootInvocation: new xdr.SorobanAuthorizedInvocation({
-          function:
-            xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
+          function: xdr.SorobanAuthorizedFunction
+            .sorobanAuthorizedFunctionTypeContractFn(
               new xdr.InvokeContractArgs({
                 contractAddress: contract.toScAddress(),
                 functionName: "inspect",
@@ -282,8 +411,8 @@ describe("Auth entry helpers", () => {
         ],
       );
       assertEquals(
-        paramsToAuthEntry(params).toXDR("base64"),
-        authEntry.toXDR("base64"),
+        paramsToAuthEntry(params).toXdr("base64"),
+        authEntry.toXdr("base64"),
       );
     });
 
@@ -292,26 +421,26 @@ describe("Auth entry helpers", () => {
       const contract = Address.fromString(Keypair.random().publicKey());
       const vectorArg = nativeToScVal(
         ["token", "1"],
-        { type: ["string", "i128"] }
+        { type: ["string", "i128"] },
       );
 
       const authEntry = new xdr.SorobanAuthorizationEntry({
         credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
           new xdr.SorobanAddressCredentials({
             address: signer.toScAddress(),
-            nonce: new xdr.Int64(0),
+            nonce: xdr.Int64(0),
             signatureExpirationLedger: 0,
             signature: xdr.ScVal.scvVoid(),
-          })
+          }),
         ),
         rootInvocation: new xdr.SorobanAuthorizedInvocation({
-          function:
-            xdr.SorobanAuthorizedFunction.sorobanAuthorizedFunctionTypeContractFn(
+          function: xdr.SorobanAuthorizedFunction
+            .sorobanAuthorizedFunctionTypeContractFn(
               new xdr.InvokeContractArgs({
                 contractAddress: contract.toScAddress(),
                 functionName: "inspect",
                 args: [vectorArg],
-              })
+              }),
             ),
           subInvocations: [],
         }),
@@ -322,8 +451,8 @@ describe("Auth entry helpers", () => {
 
       assert(args[0] instanceof xdr.ScVal);
       assertEquals(
-        paramsToAuthEntry(params).toXDR("base64"),
-        authEntry.toXDR("base64")
+        paramsToAuthEntry(params).toXdr("base64"),
+        authEntry.toXdr("base64"),
       );
     });
   });

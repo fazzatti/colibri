@@ -11,8 +11,8 @@ import type { LedgerEntry } from "@/ledger-parser/types.ts";
 import { ensureXdrType } from "@/common/helpers/xdr/ensure-xdr-type.ts";
 import { Transaction } from "@/ledger-parser/transaction/index.ts";
 import {
-  INVALID_LEDGER_ENTRY,
   INVALID_HEADER_XDR,
+  INVALID_LEDGER_ENTRY,
   INVALID_METADATA_XDR,
   UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
 } from "@/ledger-parser/error.ts";
@@ -93,11 +93,11 @@ export class Ledger {
   get header(): xdr.LedgerHeader {
     try {
       // RPC returns base64-encoded LedgerHeaderHistoryEntry
-      const historyEntry = ensureXdrType(
+      const historyEntry = ensureXdrType<xdr.LedgerHeaderHistoryEntry>(
         this.headerXdr,
         xdr.LedgerHeaderHistoryEntry,
       );
-      return historyEntry.header();
+      return historyEntry.header;
     } catch (error) {
       // ensureXdrType always throws Error instances
       throw new INVALID_HEADER_XDR(error as Error);
@@ -113,7 +113,10 @@ export class Ledger {
   @memoize()
   get meta(): xdr.LedgerCloseMeta {
     try {
-      return ensureXdrType(this.metadataXdr, xdr.LedgerCloseMeta);
+      return ensureXdrType<xdr.LedgerCloseMeta>(
+        this.metadataXdr,
+        xdr.LedgerCloseMeta,
+      );
     } catch (error) {
       // ensureXdrType always throws Error instances
       throw new INVALID_METADATA_XDR(error as Error);
@@ -124,17 +127,14 @@ export class Ledger {
    * Get the LedgerCloseMeta version (v0, v1, or v2)
    */
   get version(): "v0" | "v1" | "v2" {
-    const versionNumber = this.meta.switch();
-    switch (versionNumber) {
-      case 0:
-        return "v0";
-      case 1:
-        return "v1";
-      case 2:
-        return "v2";
-      default:
-        throw new UNSUPPORTED_LEDGER_CLOSE_META_VERSION(`v${versionNumber}`);
+    const type = this.meta.type;
+    switch (type) {
+      case "v0":
+      case "v1":
+      case "v2":
+        return type;
     }
+    throw new UNSUPPORTED_LEDGER_CLOSE_META_VERSION(type as string);
   }
 
   /**
@@ -149,7 +149,7 @@ export class Ledger {
    */
   @memoize()
   get previousLedgerHash(): string {
-    return this.header.previousLedgerHash().toString("hex");
+    return this.header.previousLedgerHash.toString();
   }
 
   /**
@@ -157,7 +157,7 @@ export class Ledger {
    */
   @memoize()
   get totalCoins(): bigint {
-    return this.header.totalCoins().toBigInt();
+    return this.header.totalCoins;
   }
 
   /**
@@ -165,7 +165,7 @@ export class Ledger {
    */
   @memoize()
   get feePool(): bigint {
-    return this.header.feePool().toBigInt();
+    return this.header.feePool;
   }
 
   /**
@@ -173,7 +173,7 @@ export class Ledger {
    */
   @memoize()
   get protocolVersion(): number {
-    return this.header.ledgerVersion();
+    return this.header.ledgerVersion;
   }
 
   /**
@@ -186,15 +186,14 @@ export class Ledger {
   @memoize()
   get transactions(): Transaction[] {
     const meta = this.meta;
-    const version = this.version;
 
-    switch (version) {
+    switch (meta.type) {
       case "v0": {
-        const v0 = meta.v0();
-        const txProcessing = v0.txProcessing();
+        const v0 = meta.v0;
+        const txProcessing = v0.txProcessing;
 
         // v0 has simple TransactionSet with txes()
-        const envelopes = v0.txSet().txes();
+        const envelopes = v0.txSet.txs;
 
         return txProcessing.map((resultMeta, index) => {
           const envelope = envelopes[index];
@@ -211,11 +210,11 @@ export class Ledger {
         });
       }
       case "v1": {
-        const v1 = meta.v1();
-        const txProcessing = v1.txProcessing();
+        const v1 = meta.v1;
+        const txProcessing = v1.txProcessing;
 
         // v1 has GeneralizedTransactionSet with v1TxSet().phases()
-        const envelopes = this.extractEnvelopesFromGeneralizedTxSet(v1.txSet());
+        const envelopes = this.extractEnvelopesFromGeneralizedTxSet(v1.txSet);
 
         return txProcessing.map((resultMeta, index) => {
           const envelope = envelopes[index];
@@ -232,11 +231,11 @@ export class Ledger {
         });
       }
       case "v2": {
-        const v2 = meta.v2();
-        const txProcessing = v2.txProcessing();
+        const v2 = meta.v2;
+        const txProcessing = v2.txProcessing;
 
         // Extract envelopes from txSet
-        const envelopes = this.extractEnvelopesFromGeneralizedTxSet(v2.txSet());
+        const envelopes = this.extractEnvelopesFromGeneralizedTxSet(v2.txSet);
 
         // Match envelopes with transaction results by index
         return txProcessing.map((resultMeta, index) => {
@@ -255,7 +254,9 @@ export class Ledger {
         });
       }
       default:
-        throw new UNSUPPORTED_LEDGER_CLOSE_META_VERSION(`${version}`);
+        throw new UNSUPPORTED_LEDGER_CLOSE_META_VERSION(
+          (meta as { type: string }).type,
+        );
     }
   }
 
@@ -271,29 +272,23 @@ export class Ledger {
   private extractEnvelopesFromGeneralizedTxSet(
     txSet: xdr.GeneralizedTransactionSet,
   ): xdr.TransactionEnvelope[] {
-    const txSetV1 = txSet.v1TxSet();
-    const phases = txSetV1.phases();
+    const phases = txSet.v1TxSet.phases;
 
     const allEnvelopes: xdr.TransactionEnvelope[] = [];
 
     for (const phase of phases) {
-      // Use arm() method if available, otherwise fall back to switch().name
-      // deno-lint-ignore no-explicit-any
-      const arm = (phase as any).arm?.() ?? (phase as any).switch?.().name;
-
-      if (arm === "v0Components") {
+      if (phase.type === "v0Components") {
         // Classic transactions: phase contains TxSetComponent[]
-        const components = phase.v0Components();
+        const components = phase.v0Components;
         for (const component of components) {
-          const txsMaybeDiscounted = component.txsMaybeDiscountedFee();
-          const txes = txsMaybeDiscounted.txes();
+          const txsMaybeDiscounted = component.txsMaybeDiscountedFee;
+          const txes = txsMaybeDiscounted.txs;
           allEnvelopes.push(...txes);
         }
-      } else if (arm === "parallelTxsComponent") {
+      } else if (phase.type === "parallelTxsComponent") {
         // Soroban transactions: phase contains ParallelTxsComponent
         // Structure: executionStages -> stages -> clusters -> txs
-        const parallel = phase.parallelTxsComponent();
-        const stages = parallel.executionStages();
+        const stages = phase.parallelTxsComponent.executionStages;
 
         for (const stage of stages) {
           // Each stage is an array of clusters

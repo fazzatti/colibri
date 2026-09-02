@@ -6,7 +6,7 @@ import type {
 import type { VerificationEvidencePatch } from "@/core/evidence/types.ts";
 
 /** Version recorded in evidence produced by this package release. */
-export const BUILD_VERIFICATION_PACKAGE_VERSION = "0.3.0";
+export const BUILD_VERIFICATION_PACKAGE_VERSION = "0.4.0";
 
 /** Creates the immutable evidence seed for one pipeline execution. */
 export const createVerificationEvidence = (

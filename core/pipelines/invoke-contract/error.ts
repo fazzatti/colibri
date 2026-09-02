@@ -6,6 +6,7 @@ export enum Code {
   MISSING_ARG = "PIPE_INVC_001",
 
   MISSING_RPC_URL = "PIPE_INVC_002",
+  EXPECTED_INVOKE_HOST_FUNCTION_OPERATION = "PIPE_INVC_003",
 }
 
 export abstract class InvokeContractError extends PipelineError<Code> {
@@ -29,7 +30,8 @@ export class MISSING_ARG extends InvokeContractError {
     super({
       code: Code.MISSING_ARG,
       message: `Missing required argument: ${argName}`,
-      details: `The argument '${argName}' is required but was not provided in the pipeline creation.`,
+      details:
+        `The argument '${argName}' is required but was not provided in the pipeline creation.`,
       cause: undefined,
     });
   }
@@ -40,7 +42,8 @@ export class MISSING_RPC_URL extends InvokeContractError {
     super({
       code: Code.MISSING_RPC_URL,
       message: "Missing RPC URL in network configuration",
-      details: `The argument 'rpcUrl' is required in the provided 'networkConfig'.`,
+      details:
+        `The argument 'rpcUrl' is required in the provided 'networkConfig'.`,
       diagnostic: {
         suggestion:
           "Either provide a 'rpc' instance or a valid 'rpcUrl' in the 'networkConfig'.",
@@ -52,9 +55,25 @@ export class MISSING_RPC_URL extends InvokeContractError {
   }
 }
 
+/** Raised when enforcement assembly receives a non-contract operation. */
+export class EXPECTED_INVOKE_HOST_FUNCTION_OPERATION
+  extends InvokeContractError {
+  constructor() {
+    super({
+      code: Code.EXPECTED_INVOKE_HOST_FUNCTION_OPERATION,
+      message: "Expected an invoke-host-function operation",
+      details:
+        "Delegated authorization enforcement can only assemble invoke-host-function operations.",
+      cause: undefined,
+    });
+  }
+}
+
 /** Invoke-contract pipeline error constructors indexed by stable code. */
 export const ERROR_PIPE_INVC = {
   [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   [Code.MISSING_ARG]: MISSING_ARG,
   [Code.MISSING_RPC_URL]: MISSING_RPC_URL,
+  [Code.EXPECTED_INVOKE_HOST_FUNCTION_OPERATION]:
+    EXPECTED_INVOKE_HOST_FUNCTION_OPERATION,
 };

@@ -87,8 +87,8 @@ import { xdr } from "npm:@stellar/stellar-sdk";
 const authorize: ContractAuthHandler = async (entry, context) => {
   // Apply the contract-specific authorization. The handler receives the
   // complete entry after Colibri sets its expiration.
-  return xdr.SorobanAuthorizationEntry.fromXDR(
-    await authorizeForMyContract(entry.toXDR(), context),
+  return xdr.SorobanAuthorizationEntry.fromXdr(
+    await authorizeForMyContract(entry.toXdr(), context),
   );
 };
 

@@ -2,7 +2,7 @@ import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-c
 import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";
 import { assert, assertEquals, assertExists, assertRejects } from "@std/assert";
 import { beforeAll, describe, it } from "@std/testing/bdd";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { nativeToScVal, xdr } from "stellar-sdk";
 import { Contract } from "@/contract/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
@@ -11,8 +11,8 @@ import { LocalSigner } from "@/signer/local/index.ts";
 import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
 import { FT_SPEC } from "colibri-internal/tests/specs/fungible-token.ts";
 import {
-  TYPES_HARNESS_SPEC,
   TYPES_HARNESS_METHOD,
+  TYPES_HARNESS_SPEC,
 } from "colibri-internal/tests/specs/types-harness.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import * as E from "@/contract/error.ts";
@@ -38,18 +38,18 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
   });
 
   describe("Core features and initialization", () => {
-    let wasm: Buffer;
-    let wasmFt: Buffer;
+    let wasm: Uint8Array;
+    let wasmFt: Uint8Array;
     let wasmHash: string;
     let typesHarnessContractId: string;
 
     beforeAll(async () => {
       wasm = await loadWasmFile(
-        "./_internal/tests/compiled-contracts/types_harness.wasm"
+        "./_internal/tests/compiled-contracts/types_harness.wasm",
       );
 
       wasmFt = await loadWasmFile(
-        "./_internal/tests/compiled-contracts/fungible_token_contract.wasm"
+        "./_internal/tests/compiled-contracts/fungible_token_contract.wasm",
       );
     });
     it("Initializes with WASM and upload binaries", async () => {
@@ -155,8 +155,8 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       assertExists(result.hash);
       assertExists(result.response);
       assertEquals(
-        result.returnValue?.toXDR("base64"),
-        nativeToScVal("test", { type: "string" }).toXDR("base64")
+        result.returnValue?.toXdr("base64"),
+        nativeToScVal("test", { type: "string" }).toXdr("base64"),
       );
     });
 
@@ -181,8 +181,8 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       assertExists(result.hash);
       assertExists(result.response);
       assertEquals(
-        result.returnValue?.toXDR("base64"),
-        xdr.ScVal.scvVoid().toXDR("base64")
+        result.returnValue?.toXdr("base64"),
+        xdr.ScVal.scvVoid().toXdr("base64"),
       );
     });
 
@@ -197,7 +197,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       assertExists(contract);
       assertExists(contract.getWasmHash());
 
-      await contract.loadSpecFromDeployedContract();
+      await contract.loadSpecFromNetwork();
 
       assertExists(contract.getSpec());
     });
@@ -215,15 +215,15 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
 
       await assertRejects(
         async () => await contract.getWasmHash(),
-        E.MISSING_REQUIRED_PROPERTY
+        E.MISSING_REQUIRED_PROPERTY,
       );
 
       await assertRejects(
         async () => await contract.getSpec(),
-        E.MISSING_REQUIRED_PROPERTY
+        E.MISSING_REQUIRED_PROPERTY,
       );
 
-      await contract.loadSpecFromDeployedContract();
+      await contract.loadSpecFromNetwork();
 
       assertExists(contract.getWasmHash());
       assertExists(contract.getSpec());
@@ -249,7 +249,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
               source: admin.address(),
               signers: [admin.signer()],
             }),
-          E.FAILED_TO_UPLOAD_WASM
+          E.FAILED_TO_UPLOAD_WASM,
         );
       });
 
@@ -274,7 +274,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
                 signers: [admin.signer()],
               },
             }),
-          E.FAILED_TO_DEPLOY_CONTRACT
+          E.FAILED_TO_DEPLOY_CONTRACT,
         );
       });
     });

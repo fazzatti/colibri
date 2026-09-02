@@ -193,9 +193,72 @@ describe("build-verification CLI flags", () => {
       ),
       { wasm: testWasm(), label: "target.wasm" },
     );
+    assertEquals(
+      await verificationTargetFromFlags(
+        parseBuildVerificationFlags([
+          "--external-ref-owner",
+          "COWNER",
+          "--external-ref-tag",
+          "release",
+        ]),
+        io,
+      ),
+      { externalRef: { owner: "COWNER", tag: "release" } },
+    );
+    assertEquals(
+      await verificationTargetFromFlags(
+        parseBuildVerificationFlags([
+          "--external-ref-owner",
+          "COWNER",
+          "--external-ref-tag-base64",
+          "Af8=",
+        ]),
+        io,
+      ),
+      { externalRef: { owner: "COWNER", tag: new Uint8Array([1, 255]) } },
+    );
     await assertRejectsCode(
       () => verificationTargetFromFlags(new Map(), io),
       Code.CLI_TARGET_SELECTION_INVALID,
+    );
+    await assertRejectsCode(
+      () =>
+        verificationTargetFromFlags(
+          parseBuildVerificationFlags([
+            "--external-ref-owner",
+            "COWNER",
+          ]),
+          io,
+        ),
+      Code.CLI_EXTERNAL_REFERENCE_INCOMPLETE,
+    );
+    await assertRejectsCode(
+      () =>
+        verificationTargetFromFlags(
+          parseBuildVerificationFlags([
+            "--external-ref-owner",
+            "COWNER",
+            "--external-ref-tag",
+            "release",
+            "--external-ref-tag-base64",
+            "AQ==",
+          ]),
+          io,
+        ),
+      Code.CLI_EXTERNAL_REFERENCE_INCOMPLETE,
+    );
+    await assertRejectsCode(
+      () =>
+        verificationTargetFromFlags(
+          parseBuildVerificationFlags([
+            "--external-ref-owner",
+            "COWNER",
+            "--external-ref-tag-base64",
+            "not-base64!",
+          ]),
+          io,
+        ),
+      Code.CLI_EXTERNAL_REFERENCE_TAG_INVALID,
     );
     await assertRejectsCode(
       () =>
@@ -632,7 +695,8 @@ describe("runBuildVerificationCli", () => {
     }
     assertStringIncludes(BUILD_VERIFICATION_CLI_HELP, "-h, --help");
     assertStringIncludes(BUILD_VERIFICATION_CLI_HELP, "--github-format");
-    assertStringIncludes(BUILD_VERIFICATION_CLI_HELP, "@0.3.0/cli");
+    assertStringIncludes(BUILD_VERIFICATION_CLI_HELP, "--external-ref-owner");
+    assertStringIncludes(BUILD_VERIFICATION_CLI_HELP, "@0.4.0/cli");
     const invalid = harness();
     assertEquals(
       await runBuildVerificationCli(["--help", "--allow-http"], invalid.io),
@@ -943,6 +1007,43 @@ describe("runBuildVerificationCli", () => {
       );
       assertStringIncludes(test.stderr[0], `ERROR ${code}`);
     }
+  });
+
+  it("writes requested failure evidence when log option validation fails", async () => {
+    const test = harness();
+    const writes: unknown[] = [];
+
+    assertEquals(
+      await runBuildVerificationCli(
+        [
+          "--wasm",
+          "target.wasm",
+          "--evidence",
+          "failure.json",
+          "--log-format",
+          "text",
+        ],
+        test.io,
+        {
+          writeEvidence: (path, value) => {
+            writes.push([path, value]);
+            return Promise.resolve();
+          },
+        },
+      ),
+      BuildVerificationCliExitCode.Failed,
+    );
+    assertEquals(writes.length, 1);
+    const [path, report] = writes[0] as [
+      string,
+      { status: string; error: { code: string } },
+    ];
+    assertEquals(path, "failure.json");
+    assertEquals(report.status, "failed");
+    assertEquals(
+      report.error.code,
+      Code.CLI_LOG_FORMAT_REQUIRES_LOGS,
+    );
   });
 
   it("preserves typed failures and normalizes unexpected failures for stderr", async () => {

@@ -47,11 +47,12 @@ export const sponsorCanSignChannel = async (
 ): Promise<boolean> => {
   const accountEntry = await rpc.getAccountEntry(channel.address());
 
-  return accountEntry.signers().some((signer) => {
+  return accountEntry.signers.some((signer) => {
     try {
       return (
-        signer.weight() > 0 &&
-        StrKey.encodeEd25519PublicKey(signer.key().ed25519()) ===
+        signer.weight > 0 &&
+        signer.key.type === "signerKeyTypeEd25519" &&
+        StrKey.encodeEd25519PublicKey(signer.key.ed25519.toBytes()) ===
           sponsor.address()
       );
     } catch {
@@ -62,7 +63,7 @@ export const sponsorCanSignChannel = async (
 
 type SignableTransactionWithSignatures = SignableTransaction & {
   signatures: xdr.DecoratedSignature[];
-  toXDR(format: "base64"): string;
+  toXdr(format: "base64"): string;
 };
 
 export const createChannelProxySigner = (
@@ -80,11 +81,13 @@ export const createChannelProxySigner = (
     signTransaction: (transaction) => {
       const signableTransaction = transaction as SignableTransactionWithSignatures;
       const alreadySigned = signableTransaction.signatures.some((signature) =>
-        signature.hint().every((byte, index) => byte === signerHint[index])
+        signature.hint.toBytes().every((byte, index) =>
+          byte === signerHint[index]
+        )
       );
 
       return alreadySigned
-        ? signableTransaction.toXDR("base64")
+        ? signableTransaction.toXdr("base64")
         : signer.signTransaction(transaction);
     },
     signSorobanAuthEntry: signer.signSorobanAuthEntry.bind(signer),

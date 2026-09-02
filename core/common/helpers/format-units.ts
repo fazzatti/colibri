@@ -28,53 +28,64 @@ export type ToDecimalsOptions = {
 export function fromDecimals(
   value: DecimalInput,
   decimals: number,
-  opts: FromDecimalsOptions = {}
+  opts: FromDecimalsOptions = {},
 ): bigint {
   if (!Number.isInteger(decimals) || decimals < 0) {
     throw new E.INVALID_DECIMALS(decimals);
   }
   if (typeof value === "bigint") return value;
 
-  const excessFraction = opts.excessFraction ?? "error";
-
-  const raw =
-    typeof value === "number" ? numberToPlainString(value) : String(value);
-  const s = raw.trim();
-  if (s.length === 0) {
-    throw new E.EMPTY_VALUE(raw);
-  }
-
-  const sign = s.startsWith("-") ? -1n : 1n;
-  const unsigned = s.startsWith("-") || s.startsWith("+") ? s.slice(1) : s;
-
-  const plain = expandScientific(unsigned);
-  // Allow common user inputs like ".5" and "5.".
-  const m = /^(\d*)(?:\.(\d*))?$/.exec(plain);
-  const wholePart = m?.[1] ?? "";
-  const fracPart = m?.[2] ?? "";
-  if (wholePart === "" && fracPart === "") {
-    throw new E.INVALID_DECIMAL_INPUT(raw);
-  }
-
-  let whole = wholePart || "0";
-  let frac = fracPart;
-
-  // normalize leading zeros in whole (keep at least one digit)
-  whole = whole.replace(/^0+(?=\d)/, "");
-
-  if (frac.length > decimals) {
-    if (excessFraction === "truncate") {
-      frac = frac.slice(0, decimals);
-    } else {
-      throw new E.TOO_MANY_FRACTION_DIGITS(raw, decimals, frac.length);
-    }
-  }
+  const raw = typeof value === "number"
+    ? numberToPlainString(value)
+    : String(value);
+  const { sign, whole, fraction } = parseDecimalParts(raw);
+  const frac = normalizeFraction(
+    fraction,
+    decimals,
+    opts.excessFraction ?? "error",
+    raw,
+  );
 
   const fracPadded = frac.padEnd(decimals, "0");
   const digits = (whole + fracPadded).replace(/^0+(?=\d)/, "");
   const bi = BigInt(digits);
   return sign < 0n ? -bi : bi;
 }
+
+const parseDecimalParts = (
+  raw: string,
+): { sign: bigint; whole: string; fraction: string } => {
+  const value = raw.trim();
+  if (value.length === 0) throw new E.EMPTY_VALUE(raw);
+
+  const sign = value.startsWith("-") ? -1n : 1n;
+  const unsigned = value.startsWith("-") || value.startsWith("+")
+    ? value.slice(1)
+    : value;
+  const match = /^(\d*)(?:\.(\d*))?$/.exec(expandScientific(unsigned));
+  const whole = match?.[1] ?? "";
+  const fraction = match?.[2] ?? "";
+  if (whole === "" && fraction === "") {
+    throw new E.INVALID_DECIMAL_INPUT(raw);
+  }
+
+  return {
+    sign,
+    whole: (whole || "0").replace(/^0+(?=\d)/, ""),
+    fraction,
+  };
+};
+
+const normalizeFraction = (
+  fraction: string,
+  decimals: number,
+  excessFraction: NonNullable<FromDecimalsOptions["excessFraction"]>,
+  raw: string,
+): string => {
+  if (fraction.length <= decimals) return fraction;
+  if (excessFraction === "truncate") return fraction.slice(0, decimals);
+  throw new E.TOO_MANY_FRACTION_DIGITS(raw, decimals, fraction.length);
+};
 
 /**
  * Convert base units bigint into a human decimal string given `decimals`.
@@ -83,7 +94,7 @@ export function fromDecimals(
 export function toDecimals(
   amount: bigint,
   decimals: number,
-  opts: ToDecimalsOptions = {}
+  opts: ToDecimalsOptions = {},
 ): string {
   if (!Number.isInteger(decimals) || decimals < 0) {
     throw new E.INVALID_DECIMALS(decimals);

@@ -24,8 +24,28 @@ Other construction shapes are also supported:
 - `contractId` for an already-deployed contract
 - `wasm` when you have local contract bytes
 - `wasmHash` when the wasm is already uploaded
+- `externalRef` for a CAP-85 owner/tag mapping that selects the current wasm
 - `plugins` when you intentionally want to attach plugins to the owned read or
   invoke pipelines during construction
+
+These executable sources are mutually exclusive. Use an external reference when
+the contract should follow a mapping controlled by another contract:
+
+```ts
+const contract = new Contract({
+  networkConfig: network,
+  contractConfig: {
+    externalRef: {
+      owner: "COWNER...",
+      tag: "stable",
+    },
+  },
+});
+```
+
+The owner and tag identify a protocol-defined persistent ledger entry. Colibri
+does not prescribe how the owner contract manages that entry; applications can
+invoke their own manager contract through the normal `Contract` API.
 
 ## Known Contract Errors
 
@@ -59,9 +79,9 @@ try {
 ```
 
 `loadContractErrorsFromWasm(...)` uses the already loaded spec when available.
-Otherwise it loads the spec from local WASM or from the deployed contract WASM
-through RPC. It throws if the built-in matcher plugin is already attached to
-either owned pipeline, so plugin ordering stays explicit.
+Otherwise it loads the spec from local WASM or resolves the currently selected
+network WASM through RPC. It throws if the built-in matcher plugin is already
+attached to either owned pipeline, so plugin ordering stays explicit.
 
 For advanced flows, attach `createContractErrorMatcherPlugin(...)` directly to a
 pipeline or pass plugins intentionally through `contractConfig.plugins`:
@@ -137,7 +157,7 @@ Uploads local wasm and stores the resulting hash on the instance.
 
 ### `deploy()`
 
-Deploys a contract using the current wasm hash:
+Deploys a contract using the configured wasm hash or external reference:
 
 ```ts
 await contract.deploy({
@@ -152,6 +172,26 @@ await contract.deploy({
   },
 });
 ```
+
+### `loadSpecFromNetwork()`
+
+Resolves the current network executable, downloads its Wasm, and loads its
+contract spec. It accepts clients configured with a Wasm hash, contract ID, or
+external reference. For a contract ID whose executable is an external reference,
+Colibri follows the owner/tag mapping automatically.
+
+```ts
+const contract = new Contract({
+  networkConfig,
+  contractConfig: { contractId: "CINSTANCE..." },
+});
+
+await contract.loadSpecFromNetwork();
+```
+
+External-reference mappings are mutable. Calling `loadSpecFromNetwork()` again
+performs a fresh ledger read and replaces the local Wasm and spec. Colibri does
+not cache the resolved hash as if it were the contract's permanent executable.
 
 ## Owned Pipelines
 

@@ -19,7 +19,7 @@ import { softTryToXDR } from "@/common/helpers/xdr/soft-try-to-xdr.ts";
 export const getAddressTypeFromAuthEntry = (
   authEntry: xdr.SorobanAuthorizationEntry,
 ): typeof xdr.ScAddressType.prototype.name => {
-  const authEntryXDR = () => softTryToXDR(() => authEntry.toXDR("base64"));
+  const authEntryXDR = () => softTryToXDR(() => authEntry.toXdr("base64"));
 
   let addressCredentials: xdr.SorobanAddressCredentials | null;
   try {
@@ -37,7 +37,7 @@ export const getAddressTypeFromAuthEntry = (
   }
 
   try {
-    return addressCredentials.address().switch().name;
+    return addressCredentials.address.type;
   } catch (cause) {
     throw new FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE(
       authEntryXDR(),
