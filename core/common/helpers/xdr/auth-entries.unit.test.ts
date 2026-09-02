@@ -1,7 +1,13 @@
 // ...existing code...
 import { assert, assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
+import {
+  Address,
+  buildWithDelegatesEntry,
+  Keypair,
+  nativeToScVal,
+  xdr,
+} from "stellar-sdk";
 import {
   authEntryToParams,
   paramsToAuthEntries,
@@ -15,6 +21,7 @@ import type {
 } from "@/common/helpers/xdr/types.ts";
 import {
   MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_PARAMS,
+  UNSUPPORTED_AUTH_ENTRY_CREDENTIALS_FOR_PARAMS,
   UNSUPPORTED_AUTHORIZED_FUNCTION,
 } from "@/common/helpers/xdr/error.ts";
 
@@ -110,6 +117,48 @@ describe("Auth entry helpers", () => {
         () => authEntryToParams(entry),
         MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_PARAMS,
       );
+    });
+
+    it("rejects address credential variants the parameter shape cannot preserve", () => {
+      const signer = Address.fromString(Keypair.random().publicKey());
+      const addressCredentials = new xdr.SorobanAddressCredentials({
+        address: signer.toScAddress(),
+        nonce: xdr.Int64(1),
+        signatureExpirationLedger: 100,
+        signature: xdr.ScVal.scvVoid(),
+      });
+      const addressV2 = new xdr.SorobanAuthorizationEntry({
+        credentials: xdr.SorobanCredentials.sorobanCredentialsAddressV2(
+          addressCredentials,
+        ),
+        rootInvocation: paramsToInvocation({
+          function: {
+            contractAddress: signer.toString(),
+            functionName: "noop",
+            args: [],
+          },
+        }),
+      });
+      const delegated = buildWithDelegatesEntry({
+        entry: addressV2,
+        validUntilLedgerSeq: 100,
+        signature: xdr.ScVal.scvVoid(),
+        delegates: [{
+          address: Address.fromString(Keypair.random().publicKey()).toString(),
+          signature: xdr.ScVal.scvVoid(),
+          nestedDelegates: [],
+        }],
+      });
+
+      for (const entry of [addressV2, delegated]) {
+        const error = assertThrows(
+          () => authEntryToParams(entry),
+          UNSUPPORTED_AUTH_ENTRY_CREDENTIALS_FOR_PARAMS,
+        );
+        assertEquals(error.meta.data.value, {
+          credentialsType: entry.credentials.type,
+        });
+      }
     });
 
     it("rejects non-contract-function invocations with a specific helper error", () => {

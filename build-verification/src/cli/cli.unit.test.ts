@@ -1009,6 +1009,43 @@ describe("runBuildVerificationCli", () => {
     }
   });
 
+  it("writes requested failure evidence when log option validation fails", async () => {
+    const test = harness();
+    const writes: unknown[] = [];
+
+    assertEquals(
+      await runBuildVerificationCli(
+        [
+          "--wasm",
+          "target.wasm",
+          "--evidence",
+          "failure.json",
+          "--log-format",
+          "text",
+        ],
+        test.io,
+        {
+          writeEvidence: (path, value) => {
+            writes.push([path, value]);
+            return Promise.resolve();
+          },
+        },
+      ),
+      BuildVerificationCliExitCode.Failed,
+    );
+    assertEquals(writes.length, 1);
+    const [path, report] = writes[0] as [
+      string,
+      { status: string; error: { code: string } },
+    ];
+    assertEquals(path, "failure.json");
+    assertEquals(report.status, "failed");
+    assertEquals(
+      report.error.code,
+      Code.CLI_LOG_FORMAT_REQUIRES_LOGS,
+    );
+  });
+
   it("preserves typed failures and normalizes unexpected failures for stderr", async () => {
     const typed = harness();
     assertEquals(

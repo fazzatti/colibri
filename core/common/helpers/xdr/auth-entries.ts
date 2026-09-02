@@ -4,9 +4,9 @@ import type {
   FnArg,
   InvocationParams,
 } from "@/common/helpers/xdr/types.ts";
-import { getAddressCredentialsFromAuthEntry } from "@/common/helpers/xdr/get-address-credentials-from-auth-entry.ts";
 import {
   MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_PARAMS,
+  UNSUPPORTED_AUTH_ENTRY_CREDENTIALS_FOR_PARAMS,
   UNSUPPORTED_AUTHORIZED_FUNCTION,
 } from "@/common/helpers/xdr/error.ts";
 
@@ -58,10 +58,15 @@ export const paramsToInvocation = (
 export const authEntryToParams = (
   entry: xdr.SorobanAuthorizationEntry,
 ): AuthEntryParams => {
-  const credentials = getAddressCredentialsFromAuthEntry(entry);
-  if (!credentials) {
+  if (entry.credentials.type === "sorobanCredentialsSourceAccount") {
     throw new MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_PARAMS();
   }
+  if (entry.credentials.type !== "sorobanCredentialsAddress") {
+    throw new UNSUPPORTED_AUTH_ENTRY_CREDENTIALS_FOR_PARAMS(
+      entry.credentials.type,
+    );
+  }
+  const credentials = entry.credentials.address;
 
   const entryParams: AuthEntryParams = {
     credentials: {

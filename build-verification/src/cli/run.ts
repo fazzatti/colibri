@@ -62,13 +62,12 @@ type CliRunState = CliOutputOptions & {
 const outputOptionsFromFlags = (
   flags: ParsedBuildVerificationFlags,
   jsonOutput: boolean,
-): CliOutputOptions => {
+  logsPath: string | undefined,
+): Pick<CliOutputOptions, "jsonOutput" | "logFormat"> => {
   const requestedLogFormat = getBuildVerificationStringFlag(
     flags,
     "log-format",
   );
-  const logsPath = getBuildVerificationStringFlag(flags, "logs");
-  const evidencePath = getBuildVerificationStringFlag(flags, "evidence");
   if (
     requestedLogFormat && requestedLogFormat !== "jsonl" &&
     requestedLogFormat !== "text"
@@ -80,8 +79,6 @@ const outputOptionsFromFlags = (
   }
   return {
     jsonOutput,
-    evidencePath,
-    logsPath,
     logFormat: requestedLogFormat === "text" ? "text" : "jsonl",
   };
 };
@@ -331,7 +328,12 @@ export const runBuildVerificationCli = async (
       io.stdout(BUILD_VERIFICATION_CLI_HELP);
       return BuildVerificationCliExitCode.Verified;
     }
-    Object.assign(state, outputOptionsFromFlags(flags, jsonOutput));
+    state.evidencePath = getBuildVerificationStringFlag(flags, "evidence");
+    state.logsPath = getBuildVerificationStringFlag(flags, "logs");
+    Object.assign(
+      state,
+      outputOptionsFromFlags(flags, jsonOutput, state.logsPath),
+    );
     const input = await verificationInputFromFlags(flags, io);
     const { options, spinner } = createVerifierOptions(flags, io, jsonOutput);
     const result = await verifyWithProgress(
