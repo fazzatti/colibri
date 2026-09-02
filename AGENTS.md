@@ -44,6 +44,7 @@ Primary workspace commands live in `deno.json`:
 deno lint
 deno task check
 deno task check:jsr
+deno task check:package-versions
 deno task test
 deno task test:unit
 deno task test:integration
@@ -57,6 +58,8 @@ What they mean:
   packages.
 - `deno task check:jsr`: run `deno doc --lint` against the JSR entrypoints.
   Public exports need valid docs.
+- `deno task check:package-versions`: verify that package-version constants used
+  at runtime match their package `deno.json` metadata.
 - `deno task test`: run the full suite, including unit and integration tests.
 - `deno task test:unit`: run fast unit coverage without integration tests.
 - `deno task test:integration`: run integration tests only.
@@ -69,6 +72,7 @@ Good default validation:
 deno lint
 deno task check
 deno task check:jsr
+deno task check:package-versions
 deno task test:unit
 ```
 
@@ -98,6 +102,8 @@ GitHub Actions behavior matters when changing structure or versions:
   recreates the instrumented source cache, merges the profiles into one
   workspace LCOV report, and uploads it to Codecov.
 - The publish workflow runs only on pushes to `main`.
+- Both CI and publishing reject package-version constants that do not match the
+  corresponding package `deno.json` metadata.
 - Publish detects package version bumps from each package `deno.json` and then
   creates tags if the tag does not already exist.
 
