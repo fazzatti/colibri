@@ -29,10 +29,10 @@ export type ChannelAccountsPluginTarget =
 /**
  * All pipeline ids supported by the channel-accounts plugin when no explicit target is supplied.
  */
-export const CHANNEL_ACCOUNTS_PLUGIN_TARGETS = [
-  CLASSIC_TRANSACTION_PIPELINE_ID,
-  INVOKE_CONTRACT_PIPELINE_ID,
-] as const satisfies readonly ChannelAccountsPluginTarget[];
+export const CHANNEL_ACCOUNTS_PLUGIN_TARGETS: readonly [
+  "ClassicTransactionPipeline",
+  "InvokeContractPipeline",
+] = [CLASSIC_TRANSACTION_PIPELINE_ID, INVOKE_CONTRACT_PIPELINE_ID];
 
 /**
  * Maximum number of channel accounts handled in a single setup or close transaction batch.

@@ -12,6 +12,17 @@ Colibri exposes factory functions instead of wrapper objects:
 
 Each pipeline also exports a stable `*_PIPELINE_ID` constant.
 
+The returned pipeline is callable. Name it after the action and invoke it
+directly:
+
+```ts
+const invokeContract = createInvokeContractPipeline({ networkConfig });
+const result = await invokeContract({ operations, config });
+```
+
+The callable also exposes methods such as `use(...)` for composition. Calling
+`.run(...)` is unnecessary in application code.
+
 ## Common Structure
 
 Each built-in pipeline typically includes:
@@ -24,16 +35,18 @@ Each built-in pipeline typically includes:
 
 ## Plugins
 
-Plugins target a specific step id and are attached with `pipeline.use(...)`:
+Plugins target a specific step or pipeline ID and are attached with the callable
+pipeline's `use(...)` method. This fragment uses an application-provided
+sponsor:
 
 ```ts
 import { createInvokeContractPipeline, NetworkConfig } from "@colibri/core";
 import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
 
 const networkConfig = NetworkConfig.TestNet();
-const pipeline = createInvokeContractPipeline({ networkConfig });
+const invokeWithSponsor = createInvokeContractPipeline({ networkConfig });
 
-pipeline.use(
+invokeWithSponsor.use(
   createFeeBumpPlugin({
     networkConfig,
     feeBumpConfig: {

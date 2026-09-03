@@ -1,9 +1,17 @@
 # @colibri/core
 
-Colibri Core supplies pipelines, processes, and utilities for Stellar and
-Soroban workflows. Currently in beta release with hardened error handling,
-transaction orchestration, account primitives, and typed helpers ready for
-integrated pipelines.
+[📚 Start with the complete Core documentation](https://fifo-docs.gitbook.io/colibri/core/overview)
+| [💡 Explore runnable examples](https://github.com/fazzatti/colibri-examples)
+
+Colibri Core is the foundation for building Stellar applications with
+TypeScript. It coordinates classic transactions and Soroban calls, but it also
+provides the account, signer, contract, asset, ledger, event, network,
+identifier, discovery, and error primitives needed around those workflows.
+
+Start with a high-level client or pipeline when its workflow fits. Move down to
+individual processes, steps, ledger keys, XDR helpers, or authorization tools
+when your application needs a custom composition. Both levels use the same
+public types and typed error model.
 
 <a href="https://jsr.io/@colibri/core">
   <img src="https://jsr.io/badges/@colibri/core" alt="JSR @colibri/core" />
@@ -11,9 +19,6 @@ integrated pipelines.
 <a href="https://jsr.io/@colibri/core">
   <img src="https://jsr.io/badges/@colibri/core/total-downloads" alt="JSR total downloads for @colibri/core" />
 </a>
-
-[📚 Documentation](https://fifo-docs.gitbook.io/colibri) |
-[💡 Examples](https://github.com/fazzatti/colibri-examples)
 
 ## Installation
 
@@ -27,12 +32,272 @@ the underlying Stellar SDK 17 dependency.
 deno add jsr:@colibri/core
 
 # Node.js / bundlers
-npm install @colibri/core
+npx jsr add @colibri/core
 ```
 
 After installation, import from the package root (`jsr:@colibri/core`).
 Published exports are declared in `core/deno.json`, ensuring compatibility with
 Deno, Node, and bundlers.
+
+## What Core helps you build
+
+The package root exposes the complete supported API. This map gives each family
+a small introduction before the later sections explain how the pieces work.
+
+| Area                          | What it provides                                                                                                                          | Typical use                                                                                    |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Transactions and pipelines    | Classic submission, read-only contract simulation, state-changing contract invocation, fee strategies, memos, preconditions, and plugins  | Send a payment, call a contract, cap a Soroban fee, or insert application policy               |
+| Contracts                     | ABI/spec loading, typed method arguments, reads, invocations, deployment, error metadata, Wasm hashes, and external executable references | Build a client around an existing contract or deploy one from Wasm                             |
+| Assets                        | SEP-11 canonical asset strings and a high-level Stellar Asset Contract client                                                             | Validate asset identifiers, derive an SAC, manage trustlines, or invoke token methods          |
+| Accounts and signers          | Native and muxed account identities plus Ed25519, HashX, signed-payload, pre-authorized, and delegated signing capabilities               | Keep envelope and Soroban authorization requirements explicit                                  |
+| Ledger entries and inspection | Typed current-state reads plus lazy views over ledgers, transactions, operations, and execution metadata                                  | Inspect accounts, trustlines, contract state, executable code, fees charged, or historical XDR |
+| Events                        | Event IDs, filters, ledger-meta parsing, schema-driven templates, and ready-made SAC, SEP-41, and CAP-67 event models                     | Decode contract output, build filters, or create a typed event model                           |
+| Networks and discovery        | Mainnet, Testnet, Futurenet, and custom configurations; provider helpers; Friendbot; and SEP-1 `stellar.toml` parsing                     | Keep passphrases and endpoints together or discover an integration from its domain             |
+| Addresses and identifiers     | SEP-23 StrKey format/checksum guards, muxed-address normalization, ledger keys, and SEP-35 operation IDs                                  | Validate untrusted identifiers and index exact operations                                      |
+| Errors and utilities          | Stable error namespaces, assertions, binary normalization, ScVal/XDR conversion, auth inspection, caches, and type guards                 | Build reliable application boundaries without duplicating low-level traversal                  |
+
+Core deliberately does not hide the underlying Stellar SDK. Operations and XDR
+values remain SDK objects, while Colibri handles the repeated coordination
+around them. Protocol-specific products build on Core in separate packages—for
+example, use [`@colibri/webauth`](https://jsr.io/@colibri/webauth) for complete
+SEP-10 or SEP-45 web-authentication flows and
+[`@colibri/rpc-streamer`](https://jsr.io/@colibri/rpc-streamer) for continuous
+ingestion.
+
+## Core's design contract
+
+Core is an orchestration toolkit around Stellar, not a replacement protocol
+model. The following constraints shape its public API:
+
+1. **Stellar values cross the boundary unchanged.** You create operations with
+   the Stellar SDK and can continue inspecting transaction envelopes, XDR
+   unions, simulation responses, and RPC results with the SDK. Colibri adds
+   typed configuration and lifecycle coordination around those values.
+2. **Each layer has one responsibility.** Processes perform work, steps give
+   processes stable runtime identities, connectors adapt state, pipelines define
+   order, and clients expose a domain-oriented interface over those pipelines.
+3. **Signing is capability-based.** Envelope authorization, Soroban
+   authorization-entry signing, and pre-authorized transaction validation are
+   separate interfaces. A pipeline checks the capability it needs instead of
+   assuming every signer is an in-memory Ed25519 keypair.
+4. **Soroban recording and enforcement are distinct.** The first simulation
+   discovers resources and authorization. Delegated credentials, when present in
+   the signed operation XDR, trigger the intermediate assembly and enforcing
+   simulation required before final assembly. Ordinary authorization does not
+   pay for or wait on that second simulation.
+5. **Extension points are named.** Pipeline and step ids are stable public
+   integration seams. A plugin declares where it acts, making ordering and
+   ownership reviewable instead of relying on an implicit callback chain.
+6. **Failures preserve context.** Expected and wrapped failures use typed
+   `ColibriError` families with stable codes and metadata. Higher layers may add
+   context, but they do not require callers to reverse-engineer a string.
+7. **Convenience remains inspectable.** High-level objects such as `Contract`
+   own their read and invoke pipelines publicly. You can attach a compatible
+   plugin or move to the underlying pipeline/process without abandoning the
+   types used by the client.
+
+This structure is meant to support gradual adoption. A script can use a single
+helper; an application can use the built-in pipelines; and an infrastructure
+service can compose the exported steps and processes into a workflow with its
+own storage, signing, or policy boundaries.
+
+## How transaction data moves
+
+The built-in pipelines share execution units but stop at different points. That
+prevents a read from accidentally becoming a submitted transaction and keeps the
+additional work of Soroban invocation explicit.
+
+| Stable step                     | Classic | Contract read | Contract invoke | Responsibility                                                                                     |
+| ------------------------------- | :-----: | :-----------: | :-------------: | -------------------------------------------------------------------------------------------------- |
+| `build-transaction`             |    ✓    |       ✓       |        ✓        | Resolve source sequence, operations, time bounds, memo, preconditions, and initial fee             |
+| `simulate-transaction`          |         |       ✓       |        ✓        | Ask RPC to record contract result, resources, footprint, and required authorization                |
+| `sign-auth-entries`             |         |               |        ✓        | Match each address credential to one capable signer and return the complete signed entry           |
+| `assemble-for-enforcement`      |         |               |   conditional   | Materialize an intermediate transaction only when signed delegated credentials require enforcement |
+| `enforce-simulation`            |         |               |   conditional   | Re-simulate delegated authorization and obtain the enforced Soroban data                           |
+| `assemble-transaction`          |         |               |        ✓        | Apply final Soroban data, signed entries, resource fee, and explicit fee strategy                  |
+| `envelope-signing-requirements` |    ✓    |               |        ✓        | Resolve source and operation-level account requirements after the transaction shape is final       |
+| `sign-envelope`                 |    ✓    |               |        ✓        | Select unambiguous matching envelope/pre-authorized signers and satisfy exact extra-signer keys    |
+| `send-transaction`              |    ✓    |               |        ✓        | Submit through RPC and wait for a normalized terminal result                                       |
+
+Typed connectors form the transitions. They can combine the immediately
+preceding output with an earlier step snapshot—for example, final assembly uses
+the original built transaction, the signed authorization entries, the relevant
+simulation data, and the configured fee strategy. The run context holds this
+state inside one pipeline execution; callers do not maintain a parallel bag of
+intermediate values.
+
+Soroban and envelope authorization remain separate phases:
+
+```text
+recording simulation
+  → address authorization requirements
+  → AuthEntrySigner capabilities
+  → optional delegated enforcement
+  → final transaction assembly
+  → account/operation envelope requirements
+  → EnvelopeSigner or PreAuthTransactionSigner capabilities
+  → submission
+```
+
+The current envelope process requires one unambiguous signer key for each
+resolved account requirement; it does not aggregate signer weights into a
+general multisig solver. Account threshold information remains available to
+applications that implement a custom multisig policy.
+
+## Choose the right abstraction
+
+| Start with...                        | When you need...                                                                                                 | What remains available                                                                              |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `Contract` or `StellarAssetContract` | A domain client that encodes methods, owns read/invoke pipelines, and can load ABI or contract-error information | The owned `readPipe` and `invokePipe`, raw invocation methods, contract spec, Wasm, and ledger keys |
+| `LedgerEntries`                      | Typed current-state reads for accounts, trustlines, offers, contract data/code, configuration, or TTL            | Exact ledger keys, raw XDR, decoded discriminated unions, and the RPC client boundary               |
+| A built-in pipeline                  | A complete classic, read-only, or state-changing transaction lifecycle                                           | Stable steps, plugin targets, run output, Stellar transactions, simulation data, and RPC responses  |
+| An exported process                  | One tested execution unit inside application-owned orchestration                                                 | Typed input/output and a process-specific error namespace                                           |
+| Steps and connectors                 | A custom `convee` pipeline with Colibri-compatible observation and plugin boundaries                             | The same process functions and stable ids used by built-in pipelines                                |
+| Primitives and helpers               | Independent address, asset, event, auth, identifier, binary, ScVal, XDR, or network behavior                     | No pipeline or client lifecycle is required                                                         |
+
+## Quick start: send a Testnet payment
+
+This complete example creates two disposable identities, funds them with
+Friendbot, and sends one test XLM. Save it as `payment.ts` and run
+`deno run --allow-net payment.ts`. It writes only to Testnet.
+
+<!-- deno-check -->
+
+```ts
+import {
+  createClassicTransactionPipeline,
+  initializeWithFriendbot,
+  LocalSigner,
+  NetworkConfig,
+} from "@colibri/core";
+import { Asset, Operation } from "npm:@stellar/stellar-sdk@^17.0.1";
+
+const network = NetworkConfig.TestNet();
+const sender = LocalSigner.generateRandom();
+const recipient = LocalSigner.generateRandom();
+
+try {
+  for (const signer of [sender, recipient]) {
+    await initializeWithFriendbot(network.friendbotUrl, signer.publicKey(), {
+      rpcUrl: network.rpcUrl,
+      allowHttp: network.allowHttp,
+    });
+  }
+
+  const executeClassicTransaction = createClassicTransactionPipeline({
+    networkConfig: network,
+  });
+  const result = await executeClassicTransaction({
+    operations: [Operation.payment({
+      destination: recipient.publicKey(),
+      asset: Asset.native(),
+      amount: "1",
+    })],
+    config: {
+      source: sender.publicKey(),
+      signers: [sender],
+      fee: "100",
+      timeout: 30,
+    },
+  });
+
+  console.log("Confirmed transaction:", result.hash);
+} finally {
+  sender.destroy();
+  recipient.destroy();
+}
+```
+
+`fee: "100"` is a base fee in stroops, not 100 XLM. The classic pipeline loads
+the source sequence, builds the transaction, resolves envelope requirements,
+signs it, submits it through RPC, and waits for confirmation. It does not run
+Soroban resource simulation because this payment contains no host function. For
+application code, keep signers out of logs and destroy in-memory signers when
+their lifecycle ends.
+
+Continue with
+[the complete Core guides](https://fifo-docs.gitbook.io/colibri/core/overview),
+the [Colibri examples](https://github.com/fazzatti/colibri-examples), or the
+focused sections below.
+
+The quick start above is a standalone script. The shorter TypeScript blocks in
+the reference-oriented sections below are focused fragments: names such as
+`networkConfig`, `config`, `operations`, `contractId`, `metadataXdr`, `filters`,
+and `plugin` are supplied by the surrounding application. Follow the linked
+guides and examples when you need a complete runnable workflow.
+
+## Recommended practices
+
+### Keep network identity together
+
+Pass a `NetworkConfig` through clients and pipelines so the network passphrase,
+RPC/Horizon endpoints, HTTP policy, archive RPC, and Friendbot availability
+cannot drift independently. Inject an already configured Stellar RPC `Server`
+when transport, headers, connection reuse, or testing belongs to the
+application. Never infer the signing passphrase from an RPC URL.
+
+### Choose fees by intent
+
+`TransactionConfig.fee` accepts a string for the Stellar SDK's familiar
+per-operation base-fee behavior, or one explicit strategy:
+
+| Configuration                | Meaning                                                                                                             |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `"100"` or `{ base: "100" }` | Base fee per operation; the transaction builder derives the inclusion bid from its operation count                  |
+| `{ inclusion: "500" }`       | Exact inclusion-fee bid for the transaction                                                                         |
+| `{ max: "100000" }`          | Maximum complete fee; after simulation, Core reserves the resource fee and uses only the remainder as inclusion fee |
+
+For a Soroban maximum, the configured value must leave at least the minimum
+network inclusion fee after the simulated resource fee is subtracted. Core
+performs that validation during assembly, when the actual resource value is
+known. If an application must override simulated Soroban data itself, that is a
+custom assembly concern rather than another `TransactionConfig` field.
+
+### Treat signers as scoped capabilities
+
+Pass only the signer objects required by the run, and use `signsFor(...)` to
+make target ownership explicit. Keep secrets inside their signer implementation;
+transaction construction should not know how a wallet, HSM, remote service,
+Hash-X preimage, signed payload, or delegated contract produces authorization.
+Destroy `LocalSigner` and `HashXSigner` instances when their retained secret
+material is no longer required.
+
+### Extend the narrowest stable boundary
+
+Use a process when you own orchestration, a step-targeted plugin when policy
+belongs immediately before/after one operation, and a pipe-targeted plugin when
+it must surround the complete lifecycle. Attach invoke-only and read-only
+plugins separately on `Contract`; a policy appropriate for submitted writes may
+be incorrect for simulations.
+
+### Use the right data surface
+
+- Use `LedgerEntries` for typed values that exist at the RPC server's current
+  ledger state.
+- Use `Ledger`/`Transaction`/`Operation` parser views when processing a specific
+  closed ledger and its metadata.
+- Use `RPCStreamer` from its separate package when you need checkpoints,
+  pagination, archive recovery, and a continuing archive-to-live loop.
+
+These APIs intentionally do not pretend that current state, one historical
+ledger, and an unbounded data stream have the same consistency or retention
+model.
+
+### Handle errors structurally
+
+Narrow a concrete error class or stable code, log its `source` and structured
+metadata, and retain its cause. Message text is for humans and can improve
+without becoming a breaking control-flow contract. When custom infrastructure
+throws an unknown value, wrap it with `ColibriError.fromUnknown(...)` at the
+boundary that can add useful context.
+
+### Test the assembled workflow
+
+Unit-test pure requirements, parsing, and conversion logic. Exercise sequence
+loading, RPC simulation, authorization, resource assembly, envelope signing,
+submission, events, and cleanup against a real local ledger with
+`@colibri/test-tooling`. A mocked success response cannot establish that the
+assembled XDR is accepted by Stellar.
 
 ## Architecture overview
 
@@ -53,6 +318,15 @@ Deno, Node, and bundlers.
 - **Accounts and signers** – Strongly typed wrappers around Ed25519 identities,
   muxed accounts, ledger keys, and signing. See
   [Accounts & signers](#accounts--signers).
+- **Contracts and assets** – High-level contract lifecycle and Stellar Asset
+  Contract APIs over the same read/invoke pipelines. See
+  [High-level contract clients](#high-level-contract-clients).
+- **Current and historical state** – Typed ledger-entry reads and lazy ledger,
+  transaction, and operation views. See [Ledger entries](#ledger-entries) and
+  [Ledger parser](#ledger-parser).
+- **Discovery and asset identifiers** – SEP-1 `stellar.toml` retrieval and
+  SEP-11 asset strings for interoperable service and asset configuration. See
+  [Discovery and canonical assets](#discovery-and-canonical-assets).
 - **Events** – Tools for parsing, filtering, and working with Soroban contract
   events from ledger metadata. See [Events](#events).
 - **TOID** – Utilities for working with SEP-0035 operation IDs for precise
@@ -86,7 +360,7 @@ Each module exports its own subclasses. Example:
 import { ColibriError, ERROR_PIPE_INVC } from "jsr:@colibri/core";
 
 try {
-  await pipe.run(input);
+  await executeTransaction(input);
 } catch (err) {
   if (err instanceof ERROR_PIPE_INVC.MISSING_ARG) {
     // handle a known configuration issue
@@ -115,6 +389,12 @@ preserve the original cause while emitting a Colibri-shaped error.
 
 Pipelines combine `convee` steps and shared connectors into end-to-end
 transaction flows. Colibri keeps a clear boundary:
+
+The value returned by a pipeline factory is itself callable. Give it a name that
+describes the action and invoke it directly—for example,
+`await invokeContract(input)`—instead of treating it as a wrapper that requires
+`.run(...)`. Methods such as `use(...)` remain available on the same callable
+value for plugin composition.
 
 - **Processes** are plain functions with typed inputs, outputs, and error
   namespaces.
@@ -153,8 +433,8 @@ access prior step outputs where needed, instead of the old metadata helper
 pattern.
 
 ```ts
-const pipe = createInvokeContractPipeline({ networkConfig });
-const result = await pipe.run({ operations, config }); // config: TransactionConfig
+const invokeContract = createInvokeContractPipeline({ networkConfig });
+const result = await invokeContract({ operations, config }); // config: TransactionConfig
 ```
 
 ### Read-only Soroban access
@@ -195,7 +475,9 @@ outside Colibri's built-in pipelines.
   come from that data and are combined with the configured inclusion fee or
   total maximum exactly once.
 - **EnvelopeSigningRequirements** – Analyzes both envelope and Soroban
-  requirements, yielding a checklist of signatures needed before submission.
+  source/operation requirements, yielding the account checklist used for final
+  envelope authorization. Soroban authorization entries are handled earlier by
+  `SignAuthEntries`.
 - **SignEnvelope** – Deterministically resolves account and exact extra-signer
   requirements, then applies envelope signatures or verifies pre-authorized
   transaction hashes.
@@ -216,7 +498,7 @@ from `jsr:@colibri/core`.
 ## Core plugins
 
 Core plugins are shipped with `@colibri/core` and attach to built-in pipeline
-steps with `pipeline.use(...)`.
+steps with the callable pipeline's `use(...)` method.
 
 The contract error matcher targets the `simulate-transaction` step. It rewrites
 recognized `CONTRACT_ERROR_SIMULATION_FAILED` errors into
@@ -233,9 +515,9 @@ import {
   createInvokeContractPipeline,
 } from "jsr:@colibri/core";
 
-const pipe = createInvokeContractPipeline({ networkConfig });
+const invokeContract = createInvokeContractPipeline({ networkConfig });
 
-pipe.use(
+invokeContract.use(
   createContractErrorMatcherPlugin({
     1: {
       message: "Unauthorized",
@@ -344,6 +626,28 @@ known contract id, wasm, or deployed contract metadata. It exposes its
 `invokePipe` and `readPipe` publicly, which makes it the right seam for advanced
 pipeline plugin composition.
 
+Configure exactly one executable source:
+
+- `contractId` binds to an existing deployment.
+- `wasm` keeps exact contract bytes available for upload, deployment, spec
+  loading, and contract-error metadata.
+- `wasmHash` deploys code that is already present on the network.
+- `externalRef` addresses the executable by its CAP-85 owner/tag reference and
+  resolves the current Wasm when network access is needed.
+
+Load a contract specification before using named `methodArgs`. For a deployed
+contract, `loadSpecFromNetwork()` resolves ordinary Wasm and external references
+and deliberately refreshes mutable mappings on later calls. Then choose `read()`
+for simulation-only access or `invoke()` for a signed, submitted write. The
+corresponding `readRaw()` and `invokeRaw()` methods accept already encoded
+ScVals. Deployment uses the same transaction configuration and supports
+constructor arguments when the contract spec declares them.
+
+Contract error metadata is opt-in: `loadContractErrorsFromWasm()` extracts the
+contract's error map and installs the matcher on both owned pipelines. This can
+turn a numeric simulation failure into a typed error with the contract's message
+without changing the on-chain result.
+
 ## Ledger entries
 
 `LedgerEntries` provides typed RPC reads for well-known Stellar ledger entries
@@ -435,6 +739,25 @@ For advanced plugin usage, attach plugins directly to the owned invoke pipe:
 sac.contract.invokePipe.use(plugin);
 ```
 
+## Ledger parser
+
+`LedgerEntries` reads current state by ledger key. The separate `Ledger`,
+`Transaction`, and `Operation` parser classes inspect ledger-close data returned
+by RPC `getLedgers()`. They lazily decode and memoize XDR so callers can move
+from a ledger to its transactions and operations without eagerly parsing every
+field.
+
+The parser distinguishes envelope data from result metadata. Check
+`transaction.hasEnvelope` before reading envelope-only fields; a transaction
+constructed from result metadata alone still exposes its outcome but cannot
+invent a source, sequence, or operation list. `transaction.fee` is the fee
+charged in the execution result, not the fee bid from the original envelope.
+
+These classes do not query RPC or stream new ledgers. Pair them with an RPC
+client for individual ranges or with `@colibri/rpc-streamer` for continuous
+live/archive ingestion. They are also distinct from the Stellar SDK's
+transaction and operation builder APIs, so alias imports when using both.
+
 ## Events
 
 Colibri Core provides utilities for working with Soroban contract events,
@@ -471,7 +794,7 @@ Create filters to select specific events by type, contract, or topic patterns:
 
 ```ts
 import { EventFilter, EventType } from "jsr:@colibri/core";
-import { xdr } from "stellar-sdk";
+import { xdr } from "npm:@stellar/stellar-sdk";
 
 const filter = new EventFilter({
   type: EventType.Contract,
@@ -486,7 +809,8 @@ const filter = new EventFilter({
 const rawFilter = filter.toRawEventFilter();
 ```
 
-**Topic wildcards:** `"*"` matches one segment, `"**"` matches zero or more.
+**Topic wildcards:** `"*"` matches one segment; terminal `"**"` matches the
+remaining topic suffix. Use a complete topic pattern for a known event schema.
 
 ### Ledger metadata utilities
 
@@ -500,6 +824,20 @@ if (isLedgerCloseMetaV2(meta)) {
   // access V2-specific fields like txProcessing
 }
 ```
+
+### Typed and standardized events
+
+Extend `EventTemplate` with a schema to validate decoded events, expose typed
+fields, and derive topic filters from one definition. Core also exports
+ready-made event classes through:
+
+- `SACEvents` for the events emitted by Stellar Asset Contracts.
+- `SEP41Events` for the SEP-41 token event surface.
+- CAP-67 event helpers for the current classic-operation event model.
+
+Use the matching family for the contract or protocol that produced the event. A
+topic name that looks familiar is not enough to reinterpret one standard's
+payload as another.
 
 ## TOID
 
@@ -623,6 +961,28 @@ All configurations provide:
 - `friendbotUrl` – Friendbot endpoint for test networks (not available on
   mainnet)
 - `allowHttp` – Whether to allow non-HTTPS connections
+
+`NetworkProviders` exposes preset provider helpers when an application wants a
+known public endpoint selection instead of the default profile. For tests,
+`initializeWithFriendbot()` can fund a Testnet or Futurenet identity and poll
+until RPC observes the account. Friendbot is test infrastructure, not available
+on Mainnet, and funding an identity is a separate step from generating its key.
+
+## Discovery and canonical assets
+
+`StellarToml.fromDomain()` fetches and validates a domain's SEP-1
+`/.well-known/stellar.toml`; `fromString()` handles exact content supplied by an
+application. Recognized URLs, accounts, signers, currencies, and validators are
+validated by default, while unknown fields remain available in `raw`. The
+normalized `sep10Config`, `sep45Config`, and `webAuthConfig` getters feed the
+separate WebAuth package without making TOML discovery proof that a service or
+JWT is trustworthy.
+
+For asset interchange, the SEP-11 helpers recognize `native` and `CODE:ISSUER`,
+convert supported inputs to canonical strings, and parse already-validated
+strings. Use `isStellarAssetCanonicalString()` at an untrusted boundary before
+parsing. Syntax and issuer checksum validation do not establish the issuer's
+reputation or prove that an account has a trustline.
 
 ## Common modules
 

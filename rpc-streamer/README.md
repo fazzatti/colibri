@@ -236,7 +236,7 @@ const streamer = RPCStreamer.ledger({
     pagingIntervalMs: 100, // Wait between pagination requests (default: 100)
     archivalIntervalMs: 500, // Wait between archive fetches (default: 500)
     skipLedgerWaitIfBehind: true, // Skip waiting when catching up (default: false)
-    limit: 10, // Max items per request (default: 10)
+    limit: 10, // Event page size (default: 10); ledger ingestion fetches one ledger
   },
 });
 ```
@@ -248,19 +248,24 @@ await streamer.start(callback, {
   startLedger: 1000000, // Starting ledger (defaults to latest)
   stopLedger: 1001000, // Ending ledger (optional, streams indefinitely if omitted)
   onCheckpoint: (ledger) => {
-    // Called periodically for progress persistence
-    db.saveProgress(ledger);
+    // A notification only: a returned promise is NOT awaited by the streamer.
+    console.log("Checkpoint notification", ledger);
   },
   checkpointInterval: 100, // Checkpoint every N ledgers (default: 100)
   onError: (error, ledger) => {
-    // Handle errors gracefully
+    // Stop before advancing past a failed ledger.
     console.error(`Error at ledger ${ledger}:`, error);
-    return true; // Return true to continue, false to stop
+    return false; // true or no return value skips the failed ledger; it does not retry
   },
 });
 ```
 
 ## Stopping and Resuming
+
+Persist processed data and progress together inside the awaited data callback.
+Do not rely on asynchronous `onCheckpoint` writes as a commit barrier, and do
+not assume a final checkpoint at shutdown. For events, replay an incomplete
+ledger and deduplicate by event ID. `stop()` does not abort an active request.
 
 ```typescript
 // Stop the streamer
@@ -278,7 +283,9 @@ await streamer.start(callback, { startLedger: lastProcessed + 1 });
 
 ## Error Handling
 
-All errors are instances of `RPCStreamerError` with specific error codes:
+Streamer-owned validation errors use `RPCStreamerError`, a JavaScript `Error`
+subclass rather than `ColibriError`. SDK/RPC and callback failures can also
+propagate unwrapped; preserve an unknown-error path:
 
 ```typescript
 import { RPCStreamerError, RPCStreamerErrorCode } from "@colibri/rpc-streamer";
@@ -288,6 +295,8 @@ try {
 } catch (error) {
   if (error instanceof RPCStreamerError) {
     console.error(`Error ${error.code}: ${error.message}`);
+  } else {
+    throw error;
   }
 }
 ```
@@ -300,15 +309,15 @@ Generic streaming class that can be used directly for custom streamers or via st
 
 #### Constructor
 
-```typescript
-new RPCStreamer<T>({
-  rpcUrl: string,
-  archiveRpcUrl?: string,
-  ingestLive?: LiveIngestFunc<T>,    // Required for startLive and start
-  ingestArchive?: ArchiveIngestFunc<T>, // Required for startArchive and start (with historical data)
-  options?: StreamerOptions,
-})
-```
+The constructor accepts `RPCStreamerConfig<T>`: `rpcUrl`, optional
+`archiveRpcUrl`, `allowHttp`/`archiveAllowHttp`, `options`, and the relevant
+`ingestLive`/`ingestArchive` functions. Live-only custom streamers need only the
+live ingestor; archive ingestion needs its separate archive ingestor.
+
+See the [scoped developer guides](https://fifo-docs.gitbook.io/colibri) for
+mode selection, callback/checkpoint semantics and recovery, and the
+[complete API reference](https://jsr.io/@colibri/rpc-streamer/doc) for exact
+signatures and every declared error code.
 
 #### Static Methods
 

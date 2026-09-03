@@ -12,7 +12,7 @@
 import { StrKey } from "@/strkeys/index.ts";
 import { EventTemplate } from "@/event/template.ts";
 import * as E from "@/event/error.ts";
-import type { EventSchema } from "@/event/types.ts";
+import type { EventSchema, SchemaField } from "@/event/types.ts";
 import type { Event } from "@/event/event.ts";
 import { isEventMuxedData } from "@/event/standards/cap67/index.ts";
 import { isStellarAssetCanonicalString } from "@/asset/sep11/index.ts";
@@ -24,7 +24,15 @@ import type { StellarAssetCanonicalString } from "@/asset/sep11/types.ts";
  * Topics: [symbol("transfer"), from: Address, to: Address, asset: String]
  * Value: i128 (amount)
  */
-export const TransferEventSchema = {
+export const TransferEventSchema: EventSchema<
+  "transfer",
+  readonly [
+    SchemaField<"from", "address">,
+    SchemaField<"to", "address">,
+    SchemaField<"asset", "string">,
+  ],
+  SchemaField<"amount", "i128">
+> = {
   name: "transfer",
   topics: [
     { name: "from", type: "address" },
@@ -32,7 +40,7 @@ export const TransferEventSchema = {
     { name: "asset", type: "string" },
   ],
   value: { name: "amount", type: "i128" },
-} as const satisfies EventSchema;
+};
 
 /**
  * SAC Transfer Event

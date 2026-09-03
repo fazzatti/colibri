@@ -1,5 +1,10 @@
 # Events Overview
 
+Use [event filters](event-filter.md) to select data and
+[event templates](templates.md) to decode an application's schema. For
+continuous delivery, see [RPC Streamer](../packages/rpc-streamer.md). Parsing an
+event does not itself establish trust in the emitting contract.
+
 Colibri provides tools for filtering and parsing Soroban contract events.
 
 ## Event Structure
@@ -41,4 +46,5 @@ Colibri ships with parsers for Stellar ecosystem standards:
 | [SAC](standardized-events/sac.md)       | Stellar Asset Contract events  |
 | [SEP-41](standardized-events/sep-41.md) | Soroban Token Interface events |
 
-See [Standardized Events](standardized-events/README.md) for details on using these parsers.
+See [Standardized Events](standardized-events/README.md) for details on using
+these parsers.

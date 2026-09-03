@@ -1,54 +1,48 @@
 # StrKeys
 
-The StrKeys module provides TypeScript type guards for validating Stellar key formats as defined in [SEP-23](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0023.md).
+StrKeys encode Stellar keys and identifiers with a type prefix. Core adds
+branded TypeScript types and two distinct levels of validation.
 
-## Type Guards
+## Format guards versus checksum validation
 
-Use `StrKey` to validate and narrow string types:
+| Purpose                     | Examples                                                                                      | What it establishes                                      |
+| --------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Quick format/type narrowing | `isEd25519PublicKey`, `isContractId`, `isMuxedAddress`                                        | Prefix, alphabet, and length; **not** checksum validity  |
+| Format plus checksum        | `isValidEd25519PublicKey`, `isValidContractId`, `isValidMuxedAddress`                         | Structurally valid encoded value; not on-chain existence |
+| Other encoded kinds         | `isPreAuthTx`, `isSha256Hash`, `isSignedPayload`, `isLiquidityPoolId`, `isClaimableBalanceId` | The documented format guard for that kind                |
 
-```typescript
-import { StrKey } from "@colibri/core";
+Checksum-aware variants also exist for secret seeds, signed payloads, liquidity
+pools, and claimable balances. Use the
+[API reference](https://jsr.io/@colibri/core/doc) for the exact names; for
+example, the secret-seed validator is `isValidEd25519SecretSeed`, while its
+format guard is `isEd25519SecretKey`.
 
-const input = "GABC...";
+## Validate application input
 
-if (StrKey.isEd25519PublicKey(input)) {
-  // TypeScript knows input is Ed25519PublicKey
-  await loadAccount(input);
-}
+Install Core and run this complete local script with `deno run address.ts`.
+There is no network request.
 
-if (StrKey.isContractId(input)) {
-  // TypeScript knows input is ContractId
-  await invokeContract(input);
-}
+<!-- deno-check -->
 
-if (StrKey.isMuxedAddress(input)) {
-  // TypeScript knows input is MuxedAddress
-}
+```ts
+import { NativeAccount, StrKey } from "@colibri/core";
 
-if (StrKey.isEd25519SecretKey(input)) {
-  // TypeScript knows input is Ed25519SecretKey
-  const signer = LocalSigner.fromSecret(input);
-}
-```
-
-## Example Usage
-
-```typescript
-import { StrKey } from "@colibri/core";
-
-function processAddress(address: string) {
-  if (StrKey.isEd25519PublicKey(address)) {
-    return loadAccount(address);
-  }
-  if (StrKey.isContractId(address)) {
-    return invokeContract(address);
-  }
-  throw new Error(`Invalid address: ${address}`);
+const input = "GALAXYVOIDAOPZTDLHILAJQKCVVFMD4IKLXLSZV5YHO7VY74IWZILUTO";
+if (StrKey.isValidEd25519PublicKey(input)) {
+  // The guard both checks the checksum and narrows input's type.
+  const account = NativeAccount.fromAddress(input);
+  console.log(account.address());
+} else {
+  console.error("Expected a checksummed Stellar G-address");
 }
 ```
 
-## Next Steps
+A format guard may accept a key whose checksum is wrong. Neither level proves
+that an account is funded, that a contract is deployed, or that the user
+controls a private key. Read the network or perform the relevant authorization
+separately.
 
-- [Account](account.md) — Load accounts using validated public keys
-- [Contract](contract.md) — Work with validated contract IDs
-- [Signer](signer/README.md) — Create signers from secret keys
+Do not infer address ownership from its prefix, and never log an input that may
+contain a secret seed. For muxed-account normalization and embedded IDs, see
+[address helpers](address.md). For exact signer keys in transaction
+preconditions, see [signers](signer/README.md).

@@ -21,15 +21,17 @@ import {
   NetworkConfig,
 } from "@colibri/core";
 import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
-import { Operation } from "stellar-sdk";
+import { Operation } from "npm:@stellar/stellar-sdk";
 
 const userSigner = LocalSigner.fromSecret("USER_SECRET...");
 const sponsorSigner = LocalSigner.fromSecret("SPONSOR_SECRET...");
 const network = NetworkConfig.TestNet();
 
-const pipeline = createInvokeContractPipeline({ networkConfig: network });
+const invokeWithSponsor = createInvokeContractPipeline({
+  networkConfig: network,
+});
 
-pipeline.use(
+invokeWithSponsor.use(
   createFeeBumpPlugin({
     networkConfig: network,
     feeBumpConfig: {
@@ -40,7 +42,7 @@ pipeline.use(
   }),
 );
 
-const result = await pipeline.run({
+const result = await invokeWithSponsor({
   operations: [
     Operation.invokeContractFunction({
       contract: "CABC...",
@@ -95,13 +97,21 @@ custom fee-bump signers.
 The inner transaction signatures are preserved. The outer source can use an
 Ed25519, Hash-X, signed-payload, or exact pre-authorized transaction signer.
 
-## Error Codes
+The outer `fee` remains the SDK's **base fee**, not Core's `{ max }` or
+`{ inclusion }` strategy object. The current wrapping process also requires its
+numeric value to exceed the inner transaction's total before calling the SDK.
+The SDK computes the outer bid using fee-bump rules. Inspect the resulting
+envelope when budgeting; the string is not the final total. An inner maximum
+does not cap the sponsor's outer fee.
 
-| Code          | Class               | Description                    |
-| ------------- | ------------------- | ------------------------------ |
-| `PLG_FBP_000` | `UNEXPECTED_ERROR`  | Unexpected plugin failure      |
-| `PLG_FBP_001` | `MISSING_ARG`       | Required configuration missing |
-| `PLG_FBP_002` | `NOT_A_TRANSACTION` | Intercepted payload invalid    |
+See [the channel/payment example](channel-accounts/example.md) for a complete
+funded Testnet flow using this plugin.
+
+## Errors
+
+See [every code for this context](../../reference/errors/plugins-fee-bump.md)
+and the [error-handling guide](../../core/error.md). Failures from lower-level
+processes can retain their original context and code.
 
 ## Related Docs
 

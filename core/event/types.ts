@@ -67,9 +67,12 @@ export type SchemaFieldType =
  * A field definition in an event schema.
  */
 /** @internal */
-export interface SchemaField {
-  readonly name: string;
-  readonly type: SchemaFieldType;
+export interface SchemaField<
+  Name extends string = string,
+  Type extends SchemaFieldType = SchemaFieldType,
+> {
+  readonly name: Name;
+  readonly type: Type;
 }
 
 /**
@@ -86,13 +89,17 @@ export interface SchemaField {
  * } as const satisfies EventSchema;
  */
 /** @internal */
-export interface EventSchema {
+export interface EventSchema<
+  Name extends string = string,
+  Topics extends readonly SchemaField[] = readonly SchemaField[],
+  Value extends SchemaField = SchemaField,
+> {
   /** The event name (first topic, must be a symbol) */
-  readonly name: string;
+  readonly name: Name;
   /** Topic fields after the event name (max 3) */
-  readonly topics: readonly SchemaField[];
+  readonly topics: Topics;
   /** The event value/data field */
-  readonly value: SchemaField;
+  readonly value: Value;
 }
 
 /**

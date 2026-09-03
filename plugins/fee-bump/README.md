@@ -43,8 +43,8 @@ const plugin = createFeeBumpPlugin({
   },
 });
 
-const pipeline = createInvokeContractPipeline({ networkConfig });
-pipeline.use(plugin);
+const invokeWithSponsor = createInvokeContractPipeline({ networkConfig });
+invokeWithSponsor.use(plugin);
 ```
 
 See the tests for full examples.

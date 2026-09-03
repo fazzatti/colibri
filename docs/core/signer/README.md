@@ -62,9 +62,9 @@ Pass every signer through the same `TransactionConfig.signers` list:
 import { createInvokeContractPipeline, NetworkConfig } from "@colibri/core";
 
 const networkConfig = NetworkConfig.TestNet();
-const pipeline = createInvokeContractPipeline({ networkConfig });
+const invokeContract = createInvokeContractPipeline({ networkConfig });
 
-const result = await pipeline.run({
+const result = await invokeContract({
   operations,
   config: {
     source: signer.publicKey(),
@@ -97,19 +97,43 @@ Weighted multi-signature policy remains an application-level concern.
 
 ## Implementing A Custom Authorization-Entry Signer
 
+This complete adapter declaration forwards the full entry to an
+application-provided authorizer. Install Core and save it as a TypeScript
+module; construct it with your contract address and actual wallet/signature
+function. It does not guess or supply a contract's custom authorization policy.
+
+<!-- deno-check -->
+
 ```ts
+import type {
+  AuthEntrySigner,
+  ContractId,
+  Ed25519PublicKey,
+  SorobanAuthorizationEntryLike,
+} from "@colibri/core";
+
 class CustomAuthEntrySigner implements AuthEntrySigner {
-  async signSorobanAuthEntry(
+  constructor(
+    private readonly address: ContractId,
+    private readonly authorize: AuthEntrySigner["signSorobanAuthEntry"],
+  ) {}
+
+  signSorobanAuthEntry(
     authEntry: SorobanAuthorizationEntryLike,
     validUntilLedgerSeq: number,
     networkPassphrase: string,
     forAddress?: Ed25519PublicKey | ContractId,
   ): Promise<SorobanAuthorizationEntryLike> {
-    throw new Error("Implement me");
+    return this.authorize(
+      authEntry,
+      validUntilLedgerSeq,
+      networkPassphrase,
+      forAddress,
+    );
   }
 
   signsFor(target: Ed25519PublicKey | ContractId) {
-    throw new Error("Implement me");
+    return target === this.address;
   }
 }
 ```

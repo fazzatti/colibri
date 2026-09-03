@@ -1,72 +1,63 @@
 # Introduction
 
-{% hint style="info" %}
-**Beta Software** — All packages are currently in beta (`0.x.x`). Public APIs may still change between minor releases.
-{% endhint %}
+{% hint style="info" %} **Beta software** — Colibri packages are currently
+`0.x`. Public APIs may change between minor releases. {% endhint %}
 
-<figure><picture><source srcset=".gitbook/assets/colibri-logo-dark (1).png" media="(prefers-color-scheme: dark)"><img src=".gitbook/assets/colibri-logo.png" alt=""></picture><figcaption></figcaption></figure>
+<figure><picture><source srcset=".gitbook/assets/colibri-logo-dark (1).png" media="(prefers-color-scheme: dark)"><img src=".gitbook/assets/colibri-logo.png" alt="Colibri"></picture><figcaption></figcaption></figure>
 
-Colibri is a TypeScript-first toolkit for building Stellar and Soroban applications. It combines high-level clients, reusable transaction pipelines, low-level process functions, typed errors, and optional plugins so you can work at the level of abstraction that fits your project.
+Colibri is a TypeScript toolkit for Stellar applications. Use a focused client
+for a common workflow, a transaction pipeline when you need to attach plugins,
+or an individual process when you need to control orchestration.
 
-## Why Colibri?
+These guides explain **how and why** to use the APIs. The
+[API and error reference](reference/README.md) links every package's generated
+symbol documentation and lists every declared error code by context.
 
-* **Layered API surface** — Start with high-level tools like `Contract` and `StellarAssetContract`, then drop down to pipelines, steps, or raw processes when you need more control.
-* **Factory-style orchestration** — Built-in pipelines and plugins are created with `create*Pipeline(...)` and `create*Plugin(...)` factories, which keeps orchestration explicit and testable.
-* **Plugin-friendly flows** — Attach behavior such as fee sponsorship or channel-account source swapping to specific pipeline targets without rewriting the transaction flow.
-* **Typed error model** — Stable error codes and typed error classes make it easier to debug network, signing, simulation, and orchestration failures.
-* **Event tooling** — Parse raw Soroban events and work with standardized SAC and SEP-41 event templates.
-* **Deno + JSR ready** — Published on [JSR](https://jsr.io/) with Deno-native install and import flows.
+## Choose your task
+
+| I want to…                                | Start here                                                                                           |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Install a package and submit a payment    | [Installation](getting-started/installation.md), [first transaction](getting-started/quick-start.md) |
+| Read or invoke a Soroban contract         | [Contract tutorial](getting-started/contract-call.md), [Contract client](core/contract.md)           |
+| Choose fees, signers, and authorization   | [Transaction config](core/transaction-config.md), [authorization](core/authorization.md)             |
+| Read current ledger state                 | [Ledger Entries](core/ledger-entries.md)                                                             |
+| Follow events or historical ledgers       | [RPC Streamer](packages/rpc-streamer.md)                                                             |
+| Authenticate a wallet or contract account | [WebAuth](packages/webauth.md)                                                                       |
+| Rebuild and compare a contract's Wasm     | [Build Verification](packages/build-verification.md)                                                 |
+| Render a recognizable account image       | [Identicons](packages/identicon.md)                                                                  |
+| Run a disposable local ledger             | [Test Tooling](packages/test-tooling.md)                                                             |
 
 ## Packages
 
-| Package                              | Description                                           | JSR                                                                                                               |
-| ------------------------------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| **@colibri/core**                    | Core primitives, clients, processes, pipelines, tools | [![JSR](https://jsr.io/badges/@colibri/core)](https://jsr.io/@colibri/core)                                       |
-| **@colibri/webauth**                 | Unified SEP-10 and SEP-45 Web Authentication          | [![JSR](https://jsr.io/badges/@colibri/webauth)](https://jsr.io/@colibri/webauth)                                 |
-| **@colibri/identicon**               | Reference-compatible SEP-33 SVG and PNG identicons     | [![JSR](https://jsr.io/badges/@colibri/identicon)](https://jsr.io/@colibri/identicon)                             |
-| **@colibri/rpc-streamer**            | Real-time and historical RPC streaming                | [![JSR](https://jsr.io/badges/@colibri/rpc-streamer)](https://jsr.io/@colibri/rpc-streamer)                       |
-| **@colibri/test-tooling**            | Docker-backed integration test harnesses              | [![JSR](https://jsr.io/badges/@colibri/test-tooling)](https://jsr.io/@colibri/test-tooling)                       |
-| **@colibri/plugin-fee-bump**         | Fee sponsorship plugin for transaction pipelines      | [![JSR](https://jsr.io/badges/@colibri/plugin-fee-bump)](https://jsr.io/@colibri/plugin-fee-bump)                 |
-| **@colibri/plugin-channel-accounts** | Sponsored channel-account pooling for write pipelines | [![JSR](https://jsr.io/badges/@colibri/plugin-channel-accounts)](https://jsr.io/@colibri/plugin-channel-accounts) |
+Install only the packages your application needs. Events, account/address
+helpers, ledger readers, and transaction orchestration belong to Core; the other
+packages provide focused capabilities.
 
-## Quick Example
+| Package                                                                    | Scope                                                                               |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| [`@colibri/core`](core/overview.md)                                        | Accounts, assets, contracts, signing, processes, pipelines, ledger data, and events |
+| [`@colibri/rpc-streamer`](packages/rpc-streamer.md)                        | Live/archive ingestion with callbacks and checkpoints                               |
+| [`@colibri/webauth`](packages/webauth.md)                                  | SEP-10 and SEP-45 client authentication                                             |
+| [`@colibri/build-verification`](packages/build-verification.md)            | SEP-58 and caller-supplied reproducible build verification, API and CLI             |
+| [`@colibri/identicon`](packages/identicon.md)                              | Reference-compatible SEP-33 SVG, PNG, and image data                                |
+| [`@colibri/plugin-fee-bump`](packages/plugins/fee-bump.md)                 | Fee sponsorship for transaction pipelines                                           |
+| [`@colibri/plugin-channel-accounts`](packages/plugins/channel-accounts.md) | Reusable sponsored transaction-source accounts                                      |
+| [`@colibri/test-tooling`](packages/test-tooling.md)                        | Docker-backed Stellar Quickstart lifecycle                                          |
 
-```ts
-import { Contract, LocalSigner, NetworkConfig } from "@colibri/core";
+## How to read the guides
 
-const network = NetworkConfig.TestNet();
-const signer = LocalSigner.fromSecret("S...");
+Start with a complete tutorial, then follow the scoped guides for configuration,
+failure handling, or customization. Short fragments illustrate one step; they
+are not independent scripts unless explicitly labeled. Placeholder secrets,
+contract IDs, and example domains must be supplied by your application.
 
-const contract = new Contract({
-  networkConfig: network,
-  contractConfig: {
-    contractId: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
-  },
-});
-
-const result = await contract.invoke({
-  method: "hello",
-  methodArgs: { to: "World" },
-  config: {
-    source: signer.publicKey(),
-    fee: "100000",
-    timeout: 30,
-    signers: [signer],
-  },
-});
-
-console.log("Transaction successful:", result.hash);
-console.log("Return value:", result.returnValue);
-```
-
-## Next Steps
-
-* [Installation](getting-started/installation.md) — Add Colibri packages to your project
-* [Quick Start](getting-started/quick-start.md) — Build your first contract interaction
-* [Architecture Overview](getting-started/architecture.md) — Understand how processes, steps, pipelines, and plugins fit together
+The [architecture guide](getting-started/architecture.md) explains the shared
+process → step → pipeline → client layering. The
+[error-handling guide](core/error.md) explains stable codes and safe
+diagnostics.
 
 ## Resources
 
-* [GitHub Repository](https://github.com/fazzatti/colibri)
-* [Examples Repository](https://github.com/fazzatti/colibri-examples)
-* [Stellar Developer Docs](https://developers.stellar.org/)
+- [Colibri source](https://github.com/fazzatti/colibri)
+- [Runnable examples repository](https://github.com/fazzatti/colibri-examples)
+- [Stellar developer documentation](https://developers.stellar.org/)

@@ -1,12 +1,10 @@
 # LocalSigner
 
-`LocalSigner` is Colibri's in-memory signer implementation. It is convenient
-for development, testing, CI, and local tooling.
+`LocalSigner` is Colibri's in-memory signer implementation. It is convenient for
+development, testing, CI, and local tooling.
 
-{% hint style="info" %}
-`LocalSigner` keeps the secret key inside a closure and does not expose it
-through public object properties.
-{% endhint %}
+{% hint style="info" %} `LocalSigner` keeps the secret key inside a closure and
+does not expose it through public object properties. {% endhint %}
 
 ## Creating A LocalSigner
 
@@ -33,14 +31,14 @@ import {
   LocalSigner,
   NetworkConfig,
 } from "@colibri/core";
-import { Operation } from "stellar-sdk";
+import { Operation } from "npm:@stellar/stellar-sdk";
 
 const network = NetworkConfig.TestNet();
 const signer = LocalSigner.fromSecret("S...");
 
-const pipeline = createInvokeContractPipeline({ networkConfig: network });
+const invokeContract = createInvokeContractPipeline({ networkConfig: network });
 
-const result = await pipeline.run({
+const result = await invokeContract({
   operations: [
     Operation.invokeContractFunction({
       contract: "CABC...",
@@ -59,9 +57,9 @@ const result = await pipeline.run({
 
 ## Signing Targets
 
-Colibri resolves signers through `signsFor(target)`. By default,
-`LocalSigner` signs for its own public key. If you also need it to sign for a
-contract id, add that target explicitly:
+Colibri resolves signers through `signsFor(target)`. By default, `LocalSigner`
+signs for its own public key. If you also need it to sign for a contract id, add
+that target explicitly:
 
 ```ts
 import type { ContractId } from "@colibri/core";
@@ -85,9 +83,11 @@ const network = NetworkConfig.TestNet();
 const userSigner = LocalSigner.fromSecret("S_USER...");
 const sponsorSigner = LocalSigner.fromSecret("S_SPONSOR...");
 
-const pipeline = createInvokeContractPipeline({ networkConfig: network });
+const invokeWithSponsor = createInvokeContractPipeline({
+  networkConfig: network,
+});
 
-pipeline.use(
+invokeWithSponsor.use(
   createFeeBumpPlugin({
     networkConfig: network,
     feeBumpConfig: {

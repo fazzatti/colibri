@@ -1,7 +1,7 @@
 import { StrKey } from "@/strkeys/index.ts";
 import { EventTemplate } from "@/event/template.ts";
 import * as E from "@/event/error.ts";
-import type { EventSchema } from "@/event/types.ts";
+import type { EventSchema, SchemaField } from "@/event/types.ts";
 import type { Event } from "@/event/event.ts";
 import { isEventMuxedData } from "@/event/standards/cap67/index.ts";
 
@@ -11,14 +11,21 @@ import { isEventMuxedData } from "@/event/standards/cap67/index.ts";
  * Topics: [symbol("transfer"), from: Address, to: Address]
  * Value: i128 (amount)
  */
-export const TransferEventSchema = {
+export const TransferEventSchema: EventSchema<
+  "transfer",
+  readonly [
+    SchemaField<"from", "address">,
+    SchemaField<"to", "address">,
+  ],
+  SchemaField<"amount", "i128">
+> = {
   name: "transfer",
   topics: [
     { name: "from", type: "address" },
     { name: "to", type: "address" },
   ],
   value: { name: "amount", type: "i128" },
-} as const satisfies EventSchema;
+};
 
 /**
  * SEP-41 Transfer Event

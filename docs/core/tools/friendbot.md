@@ -39,10 +39,10 @@ Creating and funding a new test account:
 
 ```typescript
 import {
-  LocalSigner,
-  NetworkConfig,
   initializeWithFriendbot,
+  LocalSigner,
   NativeAccount,
+  NetworkConfig,
 } from "@colibri/core";
 
 const signer = LocalSigner.generateRandom();

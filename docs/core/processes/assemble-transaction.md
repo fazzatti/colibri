@@ -66,22 +66,7 @@ The process:
 
 ## Errors
 
-| Code      | Description                                                   |
-| --------- | ------------------------------------------------------------- |
-| `ASM_001` | Missing required argument                                     |
-| `ASM_002` | Not a smart-contract transaction                              |
-| `ASM_003` | Unsupported operation type                                    |
-| `ASM_004` | Failed to assemble the transaction                            |
-| `ASM_005` | Failed to build the transaction                               |
-| `ASM_006` | Failed to build Soroban data                                  |
-| `ASM_007` | Fee configuration does not select exactly one mode            |
-| `ASM_008` | Invalid base fee                                              |
-| `ASM_009` | Invalid inclusion fee                                         |
-| `ASM_010` | Invalid maximum fee                                           |
-| `ASM_011` | Base fee is not positive                                      |
-| `ASM_012` | Inclusion fee is below 100 stroops                            |
-| `ASM_013` | Maximum cannot cover resources plus 100 stroops               |
-| `ASM_014` | Final total fee exceeds the XDR limit                         |
-| `ASM_015` | Incoming transaction total is below its embedded resource fee |
-| `ASM_016` | Resource-fee override is not an integer string                |
-| `ASM_017` | Resource-fee override is below the simulated minimum          |
+See
+[every code for this context](../../reference/errors/core-processes-assemble-transaction.md)
+and the [error-handling guide](../../core/error.md). Failures from lower-level
+processes can retain their original context and code.

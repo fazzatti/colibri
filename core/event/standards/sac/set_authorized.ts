@@ -12,7 +12,7 @@
 import { StrKey } from "@/strkeys/index.ts";
 import { EventTemplate } from "@/event/template.ts";
 import * as E from "@/event/error.ts";
-import type { EventSchema } from "@/event/types.ts";
+import type { EventSchema, SchemaField } from "@/event/types.ts";
 import { isStellarAssetCanonicalString } from "@/asset/sep11/index.ts";
 import type { StellarAssetCanonicalString } from "@/asset/sep11/types.ts";
 
@@ -24,14 +24,21 @@ import type { StellarAssetCanonicalString } from "@/asset/sep11/types.ts";
  *
  * Note: CAP-0067 removed the admin from the topics.
  */
-export const SetAuthorizedEventSchema = {
+export const SetAuthorizedEventSchema: EventSchema<
+  "set_authorized",
+  readonly [
+    SchemaField<"account", "address">,
+    SchemaField<"asset", "string">,
+  ],
+  SchemaField<"authorize", "bool">
+> = {
   name: "set_authorized",
   topics: [
     { name: "account", type: "address" },
     { name: "asset", type: "string" },
   ],
   value: { name: "authorize", type: "bool" },
-} as const satisfies EventSchema;
+};
 
 /**
  * SAC Set Authorized Event

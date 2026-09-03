@@ -82,22 +82,7 @@ Returns a `Transaction` ready for simulation or signing.
 
 ## Errors
 
-| Code      | Description                                               |
-| --------- | --------------------------------------------------------- |
-| `BTX_001` | Invalid base fee                                          |
-| `BTX_002` | Base fee is not positive                                  |
-| `BTX_003` | Could not load the source account                         |
-| `BTX_004` | Could not create the transaction builder                  |
-| `BTX_005` | Could not set Soroban data                                |
-| `BTX_006` | Could not build the transaction                           |
-| `BTX_007` | Could not initialize the source account from the sequence |
-| `BTX_008` | Conflicting time constraints                              |
-| `BTX_009` | Failed to set preconditions                               |
-| `BTX_010` | No operations provided                                    |
-| `BTX_011` | RPC required when no sequence is provided                 |
-| `BTX_012` | Fee configuration does not select exactly one mode        |
-| `BTX_013` | Invalid inclusion fee                                     |
-| `BTX_014` | Invalid maximum fee                                       |
-| `BTX_015` | Inclusion fee cannot cover the operation minimums         |
-| `BTX_016` | Maximum fee cannot cover resources and operation minimums |
-| `BTX_017` | Exact transaction fee exceeds the XDR limit               |
+See
+[every code for this context](../../reference/errors/core-processes-build-transaction.md)
+and the [error-handling guide](../../core/error.md). Failures from lower-level
+processes can retain their original context and code.

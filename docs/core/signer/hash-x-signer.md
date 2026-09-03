@@ -22,7 +22,7 @@ transaction. `StrKey.decodeSha256Hash(...)` converts the `X...` identity into
 the exact SDK input:
 
 ```ts
-import { Operation } from "stellar-sdk";
+import { Operation } from "npm:@stellar/stellar-sdk";
 import { StrKey } from "@colibri/core";
 
 const installSigner = Operation.setOptions({
@@ -34,7 +34,8 @@ const installSigner = Operation.setOptions({
 
 signer.addTarget(accountId);
 
-await pipeline.run({
+// `submitWithHashX` is a configured callable transaction pipeline.
+await submitWithHashX({
   operations,
   config: {
     source: accountId,
@@ -56,13 +57,13 @@ persistent account signer, remove or rotate it after disclosure.
 A Hash-X key can also be a transaction precondition:
 
 ```ts
-config: {
+const config = {
   source: accountId,
   fee: "100",
   timeout: 30,
   signers: [accountSigner, hashXSigner],
   extraSigners: [hashXSigner.signerKey()],
-}
+};
 ```
 
 An exact extra signer does not need `addTarget(...)`; Colibri matches it by

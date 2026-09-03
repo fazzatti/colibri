@@ -30,11 +30,11 @@ const result = await wrapFeeBump({
 
 ### FeeBumpConfig
 
-| Property  | Type                                             | Description                                                |
-| --------- | ------------------------------------------------ | ---------------------------------------------------------- |
-| `source`  | `Ed25519PublicKey`                               | Fee bump source (sponsor)                                  |
-| `fee`     | `BaseFee`                                        | Total fee (must exceed inner)                              |
-| `signers` | `(EnvelopeSigner \| PreAuthTransactionSigner)[]` | Signers that authorize or pre-authorize the outer envelope |
+| Property  | Type                                             | Description                                                                            |
+| --------- | ------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| `source`  | `Ed25519PublicKey`                               | Fee bump source (sponsor)                                                              |
+| `fee`     | `BaseFee`                                        | SDK outer base fee; current process also requires this value to exceed the inner total |
+| `signers` | `(EnvelopeSigner \| PreAuthTransactionSigner)[]` | Signers that authorize or pre-authorize the outer envelope                             |
 
 ## Output
 
@@ -70,13 +70,10 @@ submission. The inner transaction's signatures are preserved.
 
 ## Errors
 
-| Code      | Description                           |
-| --------- | ------------------------------------- |
-| `WFB_001` | Missing required argument             |
-| `WFB_002` | Transaction is already a fee bump     |
-| `WFB_003` | Not a valid transaction               |
-| `WFB_004` | Failed to build fee bump transaction  |
-| `WFB_005` | Fee bump fee must exceed inner tx fee |
+See
+[every code for this context](../../reference/errors/core-processes-wrap-fee-bump.md)
+and the [error-handling guide](../../core/error.md). Failures from lower-level
+processes can retain their original context and code.
 
 ## See Also
 

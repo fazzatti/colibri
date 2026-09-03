@@ -1,10 +1,13 @@
 # Standardized Events
 
-Colibri ships with built-in support for Stellar ecosystem event standards. These standards define how token contracts emit events for common operations like transfers, mints, and burns.
+Colibri ships with built-in support for Stellar ecosystem event standards. These
+standards define how token contracts emit events for common operations like
+transfers, mints, and burns.
 
 ## Why Standards Matter
 
-By following established standards, different tokens emit events in the same format. This means:
+By following established standards, different tokens emit events in the same
+format. This means:
 
 - **Consistent parsing** — One parser works for all compliant tokens
 - **Reliable filtering** — Topic filters work across contracts
@@ -19,17 +22,21 @@ By following established standards, different tokens emit events in the same for
 
 ## SAC vs SEP-41
 
-Both standards define the same event types (transfer, mint, burn, etc.), but with one key difference:
+Both standards define the same event types (transfer, mint, burn, etc.), but
+with one key difference:
 
-- **SAC events** include the SEP-11 asset string (e.g., `"USDC:GABC..."`) as a topic
-- **SEP-41 events** do not include the asset string (you identify the token by contract ID)
+- **SAC events** include the SEP-11 asset string (e.g., `"USDC:GABC..."`) as a
+  topic
+- **SEP-41 events** do not include the asset string (you identify the token by
+  contract ID)
 
-SAC is used by Stellar's built-in contracts that wrap classic assets. SEP-41 is the interface that custom Soroban token contracts implement.
+SAC is used by Stellar's built-in contracts that wrap classic assets. SEP-41 is
+the interface that custom Soroban token contracts implement.
 
 ## Usage
 
 ```typescript
-import { SACEvents, SEP41Events, EventFilter, EventType } from "@colibri/core";
+import { EventFilter, EventType, SACEvents, SEP41Events } from "@colibri/core";
 
 // For classic assets (XLM, USDC, etc.)
 const sacFilter = new EventFilter({

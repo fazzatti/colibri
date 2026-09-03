@@ -348,9 +348,10 @@ await writeVerificationLogs("verification.log", result.evidence.logs, {
 ```
 
 Evidence and logs retain hashes, sizes, decisions, resolved revisions, image
-facts, execution capabilities, and stage events. They do not retain source
-archive bytes, Wasm bytes, GitHub tokens, URL credentials, or environment
-variable values.
+facts, execution capabilities, and stage events. Structured evidence omits raw
+source/Wasm bytes and sensitive retrieval credentials. Captured build stdout
+and stderr can still contain anything printed by a build script; review them
+before publishing or forwarding logs.
 
 ## One-shot API
 

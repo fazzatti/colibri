@@ -58,16 +58,20 @@ Each one also exports a stable `*_PIPELINE_ID` constant.
 
 ### Plugins
 
-Plugins attach to step ids inside a pipeline.
+Plugins target explicit step or pipeline IDs. Fee sponsorship is step-level;
+channel-account allocation is pipeline-level. The following fragment assumes you
+have configured a sponsor signer; the
+[complete sponsored payment](../packages/plugins/channel-accounts/example.md)
+also shows funding and cleanup.
 
 ```ts
 import { createInvokeContractPipeline, NetworkConfig } from "@colibri/core";
 import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
 
 const networkConfig = NetworkConfig.TestNet();
-const pipeline = createInvokeContractPipeline({ networkConfig });
+const invokeWithSponsor = createInvokeContractPipeline({ networkConfig });
 
-pipeline.use(
+invokeWithSponsor.use(
   createFeeBumpPlugin({
     networkConfig,
     feeBumpConfig: {
@@ -113,18 +117,22 @@ if (StrKey.isEd25519PublicKey(input)) {
 
 ## Error Handling
 
-Every subsystem emits typed errors with stable codes and sources:
+Core-owned failures use typed errors with stable codes and sources. Network,
+application callback, and plugin errors may still propagate as unknown values;
+RPC Streamer has its own error base. Keep an unknown-error branch:
 
 ```ts
 import { ColibriError } from "@colibri/core";
 
 try {
-  await pipeline.run({ operations, config });
+  await invokeWithSponsor({ operations, config });
 } catch (error) {
   if (ColibriError.is(error)) {
     console.log(error.code);
     console.log(error.source);
     console.log(error.details);
+  } else {
+    throw error;
   }
 }
 ```

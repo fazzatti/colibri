@@ -1,10 +1,17 @@
 # SAC Events
 
-The [Stellar Asset Contract (SAC)](https://developers.stellar.org/docs/tokens/stellar-asset-contract) is a built-in Soroban contract that wraps classic Stellar assets. When these wrapped assets are used in Soroban, the SAC emits standardized events.
+The
+[Stellar Asset Contract (SAC)](https://developers.stellar.org/docs/tokens/stellar-asset-contract)
+is a built-in Soroban contract that wraps classic Stellar assets. When these
+wrapped assets are used in Soroban, the SAC emits standardized events.
 
 ## Specification
 
-SAC events are defined in [CAP-46-06](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0046-06.md) and updated by [CAP-67](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0067.md) for muxed account support.
+SAC events are defined in
+[CAP-46-06](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0046-06.md)
+and updated by
+[CAP-67](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0067.md)
+for muxed account support.
 
 ## Key Difference from SEP-41
 
@@ -63,7 +70,10 @@ SACEvents.TransferEvent.toTopicFilter({ from: "GDEF..." });
 
 ## CAP-67: Muxed Account Support
 
-SAC events support [CAP-67](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0067.md) muxed account data. When a transfer involves a muxed account, the event value is a map instead of a simple i128:
+SAC events support
+[CAP-67](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0067.md)
+muxed account data. When a transfer involves a muxed account, the event value is
+a map instead of a simple i128:
 
 ```typescript
 const transfer = SACEvents.TransferEvent.fromEvent(event);

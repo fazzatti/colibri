@@ -1,6 +1,7 @@
 # Asset
 
-The Asset module provides utilities for working with Stellar asset representations and interacting with Stellar Asset Contracts (SAC).
+The Asset module provides utilities for working with Stellar asset
+representations and interacting with Stellar Asset Contracts (SAC).
 
 ## Standards
 

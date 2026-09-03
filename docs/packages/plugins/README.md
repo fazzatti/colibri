@@ -1,7 +1,8 @@
 # Plugins
 
 Plugins extend pipeline step behavior without modifying the core flow. They are
-attached with `pipeline.use(...)` and target stable step ids or pipeline ids.
+attached through the callable pipeline's `use(...)` method and target stable
+step ids or pipeline ids.
 
 ## Why Plugins?
 
@@ -30,9 +31,9 @@ import { createInvokeContractPipeline, NetworkConfig } from "@colibri/core";
 import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
 
 const networkConfig = NetworkConfig.TestNet();
-const pipeline = createInvokeContractPipeline({ networkConfig });
+const invokeWithSponsor = createInvokeContractPipeline({ networkConfig });
 
-pipeline.use(
+invokeWithSponsor.use(
   createFeeBumpPlugin({
     networkConfig,
     feeBumpConfig: {

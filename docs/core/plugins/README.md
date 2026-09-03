@@ -14,7 +14,7 @@ as `simulate-transaction` while keeping the standard pipeline flow.
 
 ## Using Core Plugins
 
-Attach a core plugin to a pipeline with `pipeline.use(...)`:
+Attach a core plugin with the callable pipeline's `use(...)` method:
 
 ```ts
 import {
@@ -23,11 +23,11 @@ import {
   NetworkConfig,
 } from "@colibri/core";
 
-const pipeline = createInvokeContractPipeline({
+const invokeContract = createInvokeContractPipeline({
   networkConfig: NetworkConfig.TestNet(),
 });
 
-pipeline.use(
+invokeContract.use(
   createContractErrorMatcherPlugin({
     1: {
       message: "Unauthorized",

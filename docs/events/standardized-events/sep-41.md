@@ -1,6 +1,8 @@
 # SEP-41 Events
 
-[SEP-41](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0041.md) defines the standard token interface for Soroban smart contracts. Any contract implementing SEP-41 emits standardized events that Colibri can parse.
+[SEP-41](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0041.md)
+defines the standard token interface for Soroban smart contracts. Any contract
+implementing SEP-41 emits standardized events that Colibri can parse.
 
 ## Specification
 

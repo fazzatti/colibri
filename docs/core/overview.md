@@ -1,201 +1,62 @@
-# Core Package Overview
+# Core
 
-`@colibri/core` is the foundation package for the Colibri toolkit. It exposes
-the main clients, transaction configuration types, low-level process functions,
-step factories, built-in pipelines, event helpers, ledger-state accessors, and
-tooling.
+`@colibri/core` is Colibri's foundation: transaction orchestration, account and
+contract clients, signing, current ledger reads, historical parsing, and events.
 
-## Installation
-
-```bash
+```sh
 deno add jsr:@colibri/core
 ```
 
-## Architecture At A Glance
+For a first working integration, use the
+[Testnet payment tutorial](../getting-started/quick-start.md) or
+[contract tutorial](../getting-started/contract-call.md). They include setup and
+explain what runs locally and what reaches the network.
 
-- **Processes** are raw single-purpose functions such as `buildTransaction` and
-  `sendTransaction`
-- **Steps** are `convee` wrappers with stable ids under `steps`
-- **Pipelines** are built with `create*Pipeline(...)` factory functions
-- **Clients** such as `Contract` and `StellarAssetContract` own those pipelines
-  internally
-- **Core plugins** extend built-in pipeline steps without changing the pipeline
-  structure
-- **Errors** are typed, stable, and source-aware
+## Choose a layer
 
-## Quick Import Examples
+| Layer    | Use it when                                                                     | Guide                                                                            |
+| -------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Client   | You want contract methods or asset operations with the pipeline managed for you | [Contract](contract.md), [StellarAssetContract](asset/stellar-asset-contract.md) |
+| Pipeline | You want a complete transaction flow and plugin attachment points               | [Pipelines](pipelines/README.md)                                                 |
+| Step     | You are composing a workflow and need stable IDs and Conv context               | [Steps](steps.md)                                                                |
+| Process  | You need one operation such as building, simulating, or signing                 | [Processes](processes/README.md)                                                 |
+| Helpers  | You need values, conversions, keys, or local validation                         | [Shared helpers](helpers.md)                                                     |
 
-### Network Setup
+Clients build on pipelines; pipelines compose steps; steps wrap processes.
+Plugins target explicit pipeline/step IDs. Using a low-level process does not
+automatically execute the surrounding validation, signing, or submission flow.
 
-```ts
-import { NetworkConfig, NetworkProviders } from "@colibri/core";
+## Values and configuration
 
-const testnet = NetworkConfig.TestNet();
-const lightsail = NetworkProviders.Lightsail.MainNet();
-```
+- [Network](network.md) — network identity, endpoints, and explicit providers.
+- [Accounts](account.md), [addresses](address.md), and [StrKeys](strkeys.md) —
+  distinguish account identity, muxed addresses, and signer capabilities.
+- [Signers](signer/README.md) and [authorization](authorization.md) — envelope
+  signing versus Soroban authorization entries, including delegation.
+- [Transaction config](transaction-config.md) — sources, fee modes, signers,
+  timebounds, and simulation-related parameters.
+- [Assets](asset/README.md) — canonical asset strings and SAC clients.
+- [SEP-1 discovery](sep1.md) — TOML parsing and service discovery.
 
-### Account Management
+## Read data without constructing a write transaction
 
-```ts
-import { LocalSigner, NativeAccount } from "@colibri/core";
+[Ledger Entries](ledger-entries.md) reads current typed state through RPC.
+[Ledger Parser](ledger-parser.md) interprets historical ledger/transaction XDR.
+[Contract.read](contract/invocation.md) simulates a contract method without
+submitting a transaction. These are different operations with different
+freshness and authorization implications.
 
-const signer = LocalSigner.fromSecret("S...");
-const account = NativeAccount.fromMasterSigner(signer);
-```
+[Events](../events/overview.md) normalizes emitted data; filters and templates
+help select and decode it. Use [RPC Streamer](../packages/rpc-streamer.md) for
+continued ingestion and [TOIDs](toid.md) for historical operation locations.
 
-### Transaction Pipelines
+## Errors and API reference
 
-```ts
-import {
-  createInvokeContractPipeline,
-  LocalSigner,
-  NetworkConfig,
-} from "@colibri/core";
-import { Operation } from "stellar-sdk";
+See [handling errors](error.md) before adding retries. A local build, a
+simulation, and confirmed submission are different stages; a generic retry after
+a submission timeout can create a second operation.
 
-const network = NetworkConfig.TestNet();
-const signer = LocalSigner.fromSecret("S...");
-
-const pipeline = createInvokeContractPipeline({ networkConfig: network });
-
-const result = await pipeline.run({
-  operations: [
-    Operation.invokeContractFunction({
-      contract: "CABC...",
-      function: "transfer",
-      args: [],
-    }),
-  ],
-  config: {
-    source: signer.publicKey(),
-    fee: "100000",
-    timeout: 30,
-    signers: [signer],
-  },
-});
-```
-
-### High-Level Clients
-
-```ts
-import {
-  Contract,
-  LedgerEntries,
-  NetworkConfig,
-  StellarAssetContract,
-} from "@colibri/core";
-
-const network = NetworkConfig.TestNet();
-
-const contract = new Contract({
-  networkConfig: network,
-  contractConfig: { contractId: "CABC..." },
-});
-
-const sac = StellarAssetContract.fromContractId({
-  networkConfig: network,
-  contractId: "CBI...",
-});
-
-const ledger = new LedgerEntries({
-  networkConfig: network,
-});
-```
-
-### Ledger State Access
-
-```ts
-import {
-  buildAccountLedgerKey,
-  LedgerEntries,
-  NetworkConfig,
-} from "@colibri/core";
-
-const ledger = new LedgerEntries({
-  networkConfig: NetworkConfig.TestNet(),
-});
-
-const account = await ledger.account({
-  accountId: "GA...",
-});
-
-const generic = await ledger.get(
-  buildAccountLedgerKey({ accountId: "GA..." }),
-);
-```
-
-### Event Parsing
-
-```ts
-import { EventFilter, EventType, SACEvents } from "@colibri/core";
-
-const filter = new EventFilter({
-  contractIds: ["C..."],
-  type: EventType.Contract,
-  topics: [SACEvents.TransferEvent.toTopicFilter()],
-});
-
-const transfer = SACEvents.TransferEvent.fromEvent(rawEvent);
-console.log(transfer.from, transfer.to, transfer.amount);
-```
-
-## Type Exports
-
-`@colibri/core` exports both runtime values and type-only symbols:
-
-```ts
-import {
-  Contract,
-  createInvokeContractPipeline,
-  EventFilter,
-  LocalSigner,
-  NetworkConfig,
-  SACEvents,
-  steps,
-} from "@colibri/core";
-
-import type {
-  ContractId,
-  Ed25519PublicKey,
-  MemoizePolicy,
-  Signer,
-  TransactionConfig,
-} from "@colibri/core";
-```
-
-## Error Handling
-
-```ts
-import { ColibriError } from "@colibri/core";
-
-try {
-  await contract.invoke({ method, methodArgs, config });
-} catch (error) {
-  if (error instanceof ColibriError) {
-    console.log(error.code);
-    console.log(error.source);
-    console.log(error.details);
-  }
-}
-```
-
-## Choosing A Layer
-
-- use high-level clients when you want ergonomics and a stable object-oriented
-  interface
-- use `LedgerEntries` when you want typed RPC access to live ledger state
-- use `create*Pipeline(...)` when you want to attach plugins or own the flow
-- use core plugins when you want built-in extension behavior such as known
-  contract-error matching
-- use `steps` when you need stable orchestration ids
-- use raw processes when you want isolated single-purpose behavior
-
-## Next Steps
-
-- [Contract](contract.md) — High-level Soroban client
-- [Ledger Entries](ledger-entries.md) — Typed RPC access to live ledger state
-- [Stellar Asset Contract](asset/stellar-asset-contract.md) — SAC-specific
-  client
-- [Pipelines](pipelines/README.md) — Built-in write and read flows
-- [Core Plugins](plugins/README.md) — Built-in pipeline extensions
-- [Error Handling](error.md) — Typed error model
+The [module map](../reference/README.md#core-module-map) covers the public
+families, and the [JSR API](https://jsr.io/@colibri/core/doc) provides exact
+types, overloads, and symbols. Core's `xdr` export is a helper namespace; use
+the underlying Stellar SDK's `xdr` for XDR classes.

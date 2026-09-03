@@ -17,10 +17,10 @@ pipeline returns the simulated contract value directly.
 
 ```ts
 import { createReadFromContractPipeline, NetworkConfig } from "@colibri/core";
-import { Operation } from "stellar-sdk";
+import { Operation } from "npm:@stellar/stellar-sdk";
 
 const network = NetworkConfig.TestNet();
-const pipeline = createReadFromContractPipeline({ networkConfig: network });
+const readContract = createReadFromContractPipeline({ networkConfig: network });
 
 const operation = Operation.invokeContractFunction({
   contract: "CABC...",
@@ -28,7 +28,7 @@ const operation = Operation.invokeContractFunction({
   args: [],
 });
 
-const returnValue = await pipeline.run({
+const returnValue = await readContract({
   operations: [operation],
 });
 

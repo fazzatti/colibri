@@ -41,10 +41,7 @@ const transaction = await assembleForEnforcement({
 
 ## Errors
 
-| Code      | Description                                 |
-| --------- | ------------------------------------------- |
-| `AFE_000` | Unexpected assembly-for-enforcement failure |
-| `AFE_001` | Missing transaction                         |
-| `AFE_002` | Missing authorized operation                |
-
-Typed `AssembleTransactionError` failures are preserved.
+See
+[every code for this context](../../reference/errors/core-processes-assemble-for-enforcement.md)
+and the [error-handling guide](../../core/error.md). Failures from lower-level
+processes can retain their original context and code.

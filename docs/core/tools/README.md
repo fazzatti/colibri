@@ -1,6 +1,7 @@
 # Tools
 
-The Tools module provides utility functions for common Stellar development tasks.
+The Tools module provides utility functions for common Stellar development
+tasks.
 
 ## Available Tools
 
