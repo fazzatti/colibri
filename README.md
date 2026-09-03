@@ -137,6 +137,11 @@ plain TypeScript functions, so custom orchestration does not need to instantiate
 a Colibri pipeline merely to reuse fee calculation, simulation, authorization,
 assembly, signing, or submission behavior.
 
+Pipelines and steps are callable values as well. Examples name them after the
+action—such as `executeClassicTransaction`, `readContract`, or
+`invokeContract`—and invoke them directly. Their composition methods, including
+`use(...)` for plugins, remain available on the same function value.
+
 ### Package composition by system boundary
 
 | Boundary in your application | Packages that fit there                        | Responsibility                                                                                                       |

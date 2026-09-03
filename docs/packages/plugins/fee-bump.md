@@ -27,9 +27,11 @@ const userSigner = LocalSigner.fromSecret("USER_SECRET...");
 const sponsorSigner = LocalSigner.fromSecret("SPONSOR_SECRET...");
 const network = NetworkConfig.TestNet();
 
-const pipeline = createInvokeContractPipeline({ networkConfig: network });
+const invokeWithSponsor = createInvokeContractPipeline({
+  networkConfig: network,
+});
 
-pipeline.use(
+invokeWithSponsor.use(
   createFeeBumpPlugin({
     networkConfig: network,
     feeBumpConfig: {
@@ -40,7 +42,7 @@ pipeline.use(
   }),
 );
 
-const result = await pipeline.run({
+const result = await invokeWithSponsor({
   operations: [
     Operation.invokeContractFunction({
       contract: "CABC...",

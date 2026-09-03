@@ -184,10 +184,10 @@ try {
     });
   }
 
-  const pipeline = createClassicTransactionPipeline({
+  const executeClassicTransaction = createClassicTransactionPipeline({
     networkConfig: network,
   });
-  const result = await pipeline.run({
+  const result = await executeClassicTransaction({
     operations: [Operation.payment({
       destination: recipient.publicKey(),
       asset: Asset.native(),
@@ -360,7 +360,7 @@ Each module exports its own subclasses. Example:
 import { ColibriError, ERROR_PIPE_INVC } from "jsr:@colibri/core";
 
 try {
-  await pipe.run(input);
+  await executeTransaction(input);
 } catch (err) {
   if (err instanceof ERROR_PIPE_INVC.MISSING_ARG) {
     // handle a known configuration issue
@@ -389,6 +389,12 @@ preserve the original cause while emitting a Colibri-shaped error.
 
 Pipelines combine `convee` steps and shared connectors into end-to-end
 transaction flows. Colibri keeps a clear boundary:
+
+The value returned by a pipeline factory is itself callable. Give it a name that
+describes the action and invoke it directly—for example,
+`await invokeContract(input)`—instead of treating it as a wrapper that requires
+`.run(...)`. Methods such as `use(...)` remain available on the same callable
+value for plugin composition.
 
 - **Processes** are plain functions with typed inputs, outputs, and error
   namespaces.
@@ -427,8 +433,8 @@ access prior step outputs where needed, instead of the old metadata helper
 pattern.
 
 ```ts
-const pipe = createInvokeContractPipeline({ networkConfig });
-const result = await pipe.run({ operations, config }); // config: TransactionConfig
+const invokeContract = createInvokeContractPipeline({ networkConfig });
+const result = await invokeContract({ operations, config }); // config: TransactionConfig
 ```
 
 ### Read-only Soroban access
@@ -492,7 +498,7 @@ from `jsr:@colibri/core`.
 ## Core plugins
 
 Core plugins are shipped with `@colibri/core` and attach to built-in pipeline
-steps with `pipeline.use(...)`.
+steps with the callable pipeline's `use(...)` method.
 
 The contract error matcher targets the `simulate-transaction` step. It rewrites
 recognized `CONTRACT_ERROR_SIMULATION_FAILED` errors into
@@ -509,9 +515,9 @@ import {
   createInvokeContractPipeline,
 } from "jsr:@colibri/core";
 
-const pipe = createInvokeContractPipeline({ networkConfig });
+const invokeContract = createInvokeContractPipeline({ networkConfig });
 
-pipe.use(
+invokeContract.use(
   createContractErrorMatcherPlugin({
     1: {
       message: "Unauthorized",

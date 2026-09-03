@@ -37,11 +37,11 @@ import {
   NetworkConfig,
 } from "@colibri/core";
 
-const pipeline = createInvokeContractPipeline({
+const invokeContract = createInvokeContractPipeline({
   networkConfig: NetworkConfig.TestNet(),
 });
 
-pipeline.use(
+invokeContract.use(
   createContractErrorMatcherPlugin({
     1: {
       message: "Unauthorized",
@@ -56,7 +56,7 @@ If simulation fails with contract error `#265`, the plugin throws:
 
 ```ts
 try {
-  await pipeline.run(input);
+  await invokeContract(input);
 } catch (error) {
   if (error instanceof KNOWN_CONTRACT_ERROR_SIMULATION_FAILED) {
     console.log(error.message); // "Contract error: InsufficientBalance"

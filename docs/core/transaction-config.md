@@ -104,9 +104,9 @@ const network = NetworkConfig.TestNet();
 const signer = LocalSigner.fromSecret("S...");
 const hashXSigner = HashXSigner.generateRandom(true);
 
-const pipeline = createInvokeContractPipeline({ networkConfig: network });
+const invokeContract = createInvokeContractPipeline({ networkConfig: network });
 
-const result = await pipeline.run({
+const result = await invokeContract({
   operations: [
     Operation.invokeContractFunction({
       contract: "CABC...",

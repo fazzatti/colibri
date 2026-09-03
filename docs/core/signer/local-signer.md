@@ -36,9 +36,9 @@ import { Operation } from "npm:@stellar/stellar-sdk";
 const network = NetworkConfig.TestNet();
 const signer = LocalSigner.fromSecret("S...");
 
-const pipeline = createInvokeContractPipeline({ networkConfig: network });
+const invokeContract = createInvokeContractPipeline({ networkConfig: network });
 
-const result = await pipeline.run({
+const result = await invokeContract({
   operations: [
     Operation.invokeContractFunction({
       contract: "CABC...",
@@ -83,9 +83,11 @@ const network = NetworkConfig.TestNet();
 const userSigner = LocalSigner.fromSecret("S_USER...");
 const sponsorSigner = LocalSigner.fromSecret("S_SPONSOR...");
 
-const pipeline = createInvokeContractPipeline({ networkConfig: network });
+const invokeWithSponsor = createInvokeContractPipeline({
+  networkConfig: network,
+});
 
-pipeline.use(
+invokeWithSponsor.use(
   createFeeBumpPlugin({
     networkConfig: network,
     feeBumpConfig: {
