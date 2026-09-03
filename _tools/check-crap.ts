@@ -5,6 +5,7 @@ const CRAP_THRESHOLD = 15;
 const PACKAGE_ROOTS = [
   "core",
   "build-verification",
+  "identicon",
   "rpc-streamer",
   "webauth",
   "plugins/fee-bump",

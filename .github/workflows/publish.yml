@@ -71,6 +71,9 @@ jobs:
           # Check build-verification package
           check_package "build-verification" "build-verification"
 
+          # Check identicon package
+          check_package "identicon" "identicon"
+
           # Check test-tooling package
           check_package "test-tooling" "test-tooling"
 

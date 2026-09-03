@@ -23,6 +23,7 @@ Colibri is a TypeScript-first toolkit for building Stellar and Soroban applicati
 | ------------------------------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | **@colibri/core**                    | Core primitives, clients, processes, pipelines, tools | [![JSR](https://jsr.io/badges/@colibri/core)](https://jsr.io/@colibri/core)                                       |
 | **@colibri/webauth**                 | Unified SEP-10 and SEP-45 Web Authentication          | [![JSR](https://jsr.io/badges/@colibri/webauth)](https://jsr.io/@colibri/webauth)                                 |
+| **@colibri/identicon**               | Reference-compatible SEP-33 SVG and PNG identicons     | [![JSR](https://jsr.io/badges/@colibri/identicon)](https://jsr.io/@colibri/identicon)                             |
 | **@colibri/rpc-streamer**            | Real-time and historical RPC streaming                | [![JSR](https://jsr.io/badges/@colibri/rpc-streamer)](https://jsr.io/@colibri/rpc-streamer)                       |
 | **@colibri/test-tooling**            | Docker-backed integration test harnesses              | [![JSR](https://jsr.io/badges/@colibri/test-tooling)](https://jsr.io/@colibri/test-tooling)                       |
 | **@colibri/plugin-fee-bump**         | Fee sponsorship plugin for transaction pipelines      | [![JSR](https://jsr.io/badges/@colibri/plugin-fee-bump)](https://jsr.io/@colibri/plugin-fee-bump)                 |
