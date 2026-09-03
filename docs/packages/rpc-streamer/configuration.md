@@ -35,9 +35,19 @@ Read [progress and recovery](recovery.md) before persisting or skipping data.
 ## Runtime access
 
 `rpc`, `archiveRpc`, and `isRunning` expose configured clients and lifecycle
-state. `setArchiveRpc(url, allowHttp?)` configures an archive client later;
-guarded setters reject assigning clients twice. Prefer constructor configuration
-and a new streamer when changing providers.
+state. The property setters and URL-based method behave differently:
+
+- Assigning `streamer.rpc = client` or `streamer.archiveRpc = client` rejects an
+  assignment when that client is already configured, with `RPC_ALREADY_SET` or
+  `ARCHIVE_RPC_ALREADY_SET`, respectively.
+- Calling `streamer.setArchiveRpc(url, allowHttp?)` creates an archive client
+  and **replaces any existing archive client**, including one configured through
+  the constructor's `archiveRpcUrl`. It does not use the guarded property
+  setter. Its `allowHttp` argument defaults to `false`.
+
+Replacing the archive client changes the provider used by subsequent archive
+reads. Prefer constructor configuration and a new streamer when changing
+providers to keep each run's configuration explicit.
 
 See the full types:
 [RPCStreamerConfig](https://jsr.io/@colibri/rpc-streamer/doc/~/RPCStreamerConfig),
