@@ -23,6 +23,7 @@ deno add jsr:@colibri/core
 # Optional packages
 deno add jsr:@colibri/webauth
 deno add jsr:@colibri/build-verification
+deno add jsr:@colibri/identicon
 deno add jsr:@colibri/rpc-streamer
 deno add jsr:@colibri/test-tooling
 deno add jsr:@colibri/plugin-fee-bump
@@ -37,6 +38,7 @@ This will add imports similar to:
     "@colibri/core": "jsr:@colibri/core@^0.27.0",
     "@colibri/webauth": "jsr:@colibri/webauth@^0.2.0",
     "@colibri/build-verification": "jsr:@colibri/build-verification@^0.4.0",
+    "@colibri/identicon": "jsr:@colibri/identicon@^0.1.0",
     "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.2.15",
     "@colibri/test-tooling": "jsr:@colibri/test-tooling@^0.3.1",
     "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.10.2",
@@ -53,6 +55,7 @@ import { RPCStreamer } from "jsr:@colibri/rpc-streamer";
 import { StellarTestLedger } from "jsr:@colibri/test-tooling";
 import { WebAuthClient } from "jsr:@colibri/webauth";
 import { ContractBuildVerifier } from "jsr:@colibri/build-verification";
+import { Identicon } from "jsr:@colibri/identicon";
 ```
 
 ## Package Overview
@@ -77,6 +80,11 @@ explicit protocol clients, and contract authorization hooks.
 Strict SEP-58 and explicitly caller-directed out-of-band contract build
 verification with digest-pinned images, safe source extraction, bounded Docker
 execution, and typed evidence.
+
+### [@colibri/identicon](../packages/identicon.md)
+
+Local SEP-33 identicons for Stellar G-addresses, with reference-compatible
+patterns, SVG and PNG rendering, data URLs, and immutable matrix/color data.
 
 ### [@colibri/test-tooling](../packages/test-tooling.md)
 

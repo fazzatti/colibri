@@ -2,6 +2,7 @@
   "workspace": [
     "./core",
     "./build-verification",
+    "./identicon",
     "./rpc-streamer",
     "./webauth",
     "./plugins/*",
@@ -11,6 +12,7 @@
   "imports": {
     "jsr:@colibri/core": "./core",
     "jsr:@colibri/build-verification": "./build-verification",
+    "jsr:@colibri/identicon": "./identicon",
     "jsr:@colibri/test-tooling": "./test-tooling",
     "jsr:@colibri/webauth": "./webauth",
     "@colibri/test-tooling": "./test-tooling/mod.ts",
@@ -24,11 +26,12 @@
     "@std/assert": "jsr:@std/assert@^1.0.0",
     "@std/testing": "jsr:@std/testing@^1.0.0",
     "@std/expect": "jsr:@std/expect@^1.0.0",
-    "crap4ts-tool": "npm:@alperlabs/crap4ts@0.2.1"
+    "crap4ts-tool": "npm:@alperlabs/crap4ts@0.2.1",
+    "resvg-test": "npm:@resvg/resvg-js@2.6.2"
   },
   "tasks": {
-    "check": "deno check core/mod.ts build-verification/mod.ts build-verification/core.ts build-verification/docker.ts build-verification/cli.ts rpc-streamer/mod.ts webauth/mod.ts plugins/fee-bump/mod.ts plugins/channel-accounts/mod.ts test-tooling/mod.ts",
-    "check:jsr": "deno doc --lint core/mod.ts && deno doc --lint build-verification/mod.ts && deno doc --lint build-verification/core.ts && deno doc --lint build-verification/docker.ts && deno doc --lint build-verification/cli.ts && deno doc --lint webauth/mod.ts && deno doc --lint plugins/fee-bump/mod.ts && deno doc --lint plugins/channel-accounts/mod.ts && deno doc --lint test-tooling/mod.ts",
+    "check": "deno check core/mod.ts build-verification/mod.ts build-verification/core.ts build-verification/docker.ts build-verification/cli.ts identicon/mod.ts rpc-streamer/mod.ts webauth/mod.ts plugins/fee-bump/mod.ts plugins/channel-accounts/mod.ts test-tooling/mod.ts",
+    "check:jsr": "deno doc --lint core/mod.ts && deno doc --lint build-verification/mod.ts && deno doc --lint build-verification/core.ts && deno doc --lint build-verification/docker.ts && deno doc --lint build-verification/cli.ts && deno doc --lint identicon/mod.ts && deno doc --lint webauth/mod.ts && deno doc --lint plugins/fee-bump/mod.ts && deno doc --lint plugins/channel-accounts/mod.ts && deno doc --lint test-tooling/mod.ts",
     "check:package-versions": "deno test --allow-read --clean build-verification/src/core/evidence/package-version.unit.test.ts",
     "check:crap": "deno run --allow-read --allow-env _tools/check-crap.ts",
     "build:webauth-fixtures": "deno run -A _tools/build-webauth-fixtures.ts",

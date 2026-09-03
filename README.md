@@ -83,6 +83,19 @@ deno add jsr:@colibri/build-verification
 
 ---
 
+### [@colibri/identicon](./identicon) <a href="https://jsr.io/@colibri/identicon"><img src="https://jsr.io/badges/@colibri/identicon" alt="JSR @colibri/identicon" /></a>
+
+Local, reference-compatible SEP-33 Stellar identicons with immutable pattern
+data, SVG and PNG output, data URLs, and explicit presentation options.
+
+```sh
+deno add jsr:@colibri/identicon
+```
+
+[View Documentation →](./identicon/README.md)
+
+---
+
 ### [@colibri/plugin-fee-bump](./plugins/fee-bump) <a href="https://jsr.io/@colibri/plugin-fee-bump"><img src="https://jsr.io/badges/@colibri/plugin-fee-bump" alt="JSR @colibri/plugin-fee-bump" /></a>
 
 A plugin that enables fee sponsorship by wrapping transactions in Fee Bump

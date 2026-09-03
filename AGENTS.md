@@ -19,6 +19,9 @@ Soroban packages:
   plugins, contract clients, event tooling, ledger parsing, and utilities.
 - `webauth/`: a unified SEP-10 and SEP-45 web-auth client package built on top
   of Colibri core.
+- `identicon/`: local, reference-compatible SEP-33 generation and SVG/PNG
+  rendering. Keep its immutable generator independent of renderers and never
+  replace its reference offset with the SEP's differing literal raw-key offset.
 - `rpc-streamer/`: a generic callback-based RPC streaming package with event and
   ledger variants.
 - `plugins/fee-bump/`: a plugin that wraps outgoing transactions in a fee-bump
@@ -115,6 +118,7 @@ Current package version sources:
 
 - `core/deno.json`
 - `build-verification/deno.json`
+- `identicon/deno.json`
 - `webauth/deno.json`
 - `rpc-streamer/deno.json`
 - `plugins/fee-bump/deno.json`
