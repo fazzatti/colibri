@@ -70,6 +70,9 @@ jobs:
           - package: webauth
             path: webauth
             test_flags: --parallel
+          - package: identicon
+            path: identicon
+            test_flags: --parallel
           - package: rpc-streamer
             path: rpc-streamer
             test_flags: --parallel
@@ -131,7 +134,7 @@ jobs:
           deno test -A
           --filter='__coverage_cache_prime_never_matches__'
           --coverage=coverage-prime --coverage-raw-data-only
-          core build-verification webauth rpc-streamer
+          core build-verification identicon webauth rpc-streamer
           plugins/fee-bump plugins/channel-accounts test-tooling
 
       - name: Generate aggregate coverage report

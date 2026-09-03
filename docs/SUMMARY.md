@@ -67,6 +67,10 @@
 
 - [Contract Build Verification](packages/build-verification.md)
 
+## @colibri/identicon
+
+- [Identicons](packages/identicon.md)
+
 ## @colibri/test-tooling
 
 - [Test Tooling](packages/test-tooling.md)
