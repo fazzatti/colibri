@@ -5,7 +5,7 @@ Deno-first TypeScript projects.
 
 ## Prerequisites
 
-- [Deno](https://deno.land/) `v2.0` or later
+- [Deno](https://deno.land/) 2; this repository validates with `v2.7.11`
 - Node.js `v22.12` or later when consuming Colibri through npm or a Node-based
   bundler
 - A reachable Docker daemon such as Docker Desktop or OrbStack if you plan to
@@ -57,6 +57,24 @@ import { WebAuthClient } from "jsr:@colibri/webauth";
 import { ContractBuildVerifier } from "jsr:@colibri/build-verification";
 import { Identicon } from "jsr:@colibri/identicon";
 ```
+
+## Runtime boundaries
+
+The examples use Deno and package aliases created by `deno add`. Networked
+examples need `--allow-net`; reading secrets from environment variables also
+needs `--allow-env`. Local file examples need file permissions. Docker-backed
+tools need host access and are not browser APIs.
+
+For Node or a bundler, install JSR packages through the JSR adapter, for example
+`npx jsr add @colibri/core`, and install `@stellar/stellar-sdk` with your
+package manager if you import it directly. Replace the examples'
+`npm:@stellar/stellar-sdk` specifier with `@stellar/stellar-sdk` in that
+environment. Do not copy Deno's `Deno.env`, filesystem, or Docker examples into
+a browser.
+
+Use the SDK major supported by your Colibri release (17 for this release), not
+an independently upgraded major. Colibri's SDK-facing objects should come from
+compatible SDK versions throughout your application.
 
 ## Package Overview
 
@@ -114,10 +132,12 @@ If you need low-level XDR manipulation or raw operation construction, add the
 SDK explicitly:
 
 ```bash
-deno add npm:@stellar/stellar-sdk
+deno add npm:@stellar/stellar-sdk@^17
 ```
 
 ## Next Steps
 
-- [Quick Start](quick-start.md) — Build your first Soroban interaction
+- [Quick Start](quick-start.md) — Submit a complete Testnet payment
+- [Read and invoke a contract](contract-call.md) — Load a deployed contract's
+  spec
 - [Architecture Overview](architecture.md) — Understand the Colibri layers

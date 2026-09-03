@@ -1,6 +1,9 @@
 # SignAuthEntries
 
-Signs Soroban authorization entries for contract calls that require authorization from specific accounts. When a contract calls `require_auth()`, the authorization entry must be signed by the required account before the transaction can succeed.
+Signs Soroban authorization entries for contract calls that require
+authorization from specific accounts. When a contract calls `require_auth()`,
+the authorization entry must be signed by the required account before the
+transaction can succeed.
 
 ## `signAuthEntries`
 
@@ -17,14 +20,14 @@ const result = await signAuthEntries({
 
 ## Input
 
-| Property            | Type                          | Required | Description                            |
-| ------------------- | ----------------------------- | -------- | -------------------------------------- |
-| `auth`              | `SorobanAuthorizationEntry[]` | Yes      | Authorization entries from simulation  |
+| Property            | Type                          | Required | Description                               |
+| ------------------- | ----------------------------- | -------- | ----------------------------------------- |
+| `auth`              | `SorobanAuthorizationEntry[]` | Yes      | Authorization entries from simulation     |
 | `signers`           | `Signer[]`                    | Yes      | Signers narrowed by auth-entry capability |
-| `rpc`               | `Server`                      | Yes      | RPC server (to get current ledger)     |
-| `networkPassphrase` | `string`                      | Yes      | Network passphrase                     |
-| `validity`          | `LedgerValidity`              | —        | How long signatures are valid          |
-| `removeUnsigned`    | `boolean`                     | —        | Remove entries that couldn't be signed |
+| `rpc`               | `Server`                      | Yes      | RPC server (to get current ledger)        |
+| `networkPassphrase` | `string`                      | Yes      | Network passphrase                        |
+| `validity`          | `LedgerValidity`              | —        | How long signatures are valid             |
+| `removeUnsigned`    | `boolean`                     | —        | Remove entries that couldn't be signed    |
 
 ### Validity Options
 
@@ -47,18 +50,21 @@ const result = await signAuthEntries({
 
 ## Output
 
-Returns `SorobanAuthorizationEntry[]` with signatures added to entries matching the provided signers.
+Returns `SorobanAuthorizationEntry[]` with signatures added to entries matching
+the provided signers.
 
 ## Behavior
 
 1. **Fetches current ledger** — Calls RPC to get the latest ledger sequence
-2. **Calculates validity** — Determines the `validUntilLedgerSeq` based on the validity option:
+2. **Calculates validity** — Determines the `validUntilLedgerSeq` based on the
+   validity option:
    - Default: 120 ledgers (~10 minutes)
    - `validForSeconds`: Converts to ledgers (5 seconds per ledger)
    - `validForLedgers`: Uses the specified number
    - `validUntilLedgerSeq`: Uses the exact value
 3. **Separates credential types**:
-   - **Source account credentials** — Passed through (no signature needed in auth entry)
+   - **Source account credentials** — Passed through (no signature needed in
+     auth entry)
    - **Address credentials** — Legacy, V2, and delegated variants can be signed
    - **Already signed entries** — Preserved as-is
 4. **Filters by address type**:
@@ -72,11 +78,12 @@ Returns `SorobanAuthorizationEntry[]` with signatures added to entries matching 
 5. **Signs matching entries** — For each signable address entry, finds an
    `AuthEntrySigner` where `signsFor(requiredSigner)` is true and asks it to
    return the complete authorized entry
-6. **Handles `removeUnsigned`** — If `true`, entries without a matching signer are removed from output; if `false` (default), they're included unsigned
+6. **Handles `removeUnsigned`** — If `true`, entries without a matching signer
+   are removed from output; if `false` (default), they're included unsigned
 
 For delegated credentials, signed/unsigned classification checks the complete
-recursive signature tree. A valid custom account may intentionally retain a
-void top-level signature and authorize through its nested delegates.
+recursive signature tree. A valid custom account may intentionally retain a void
+top-level signature and authorize through its nested delegates.
 
 ### Validity Validation
 
@@ -86,12 +93,7 @@ void top-level signature and authorize through its nested delegates.
 
 ## Errors
 
-| Code      | Description                               |
-| --------- | ----------------------------------------- |
-| `SAE_001` | Missing required argument                 |
-| `SAE_002` | Could not get current ledger from RPC     |
-| `SAE_003` | Failed to sign authorization entry        |
-| `SAE_004` | Missing signer for required address       |
-| `SAE_005` | Valid until ledger sequence too low (≤ 0) |
-| `SAE_006` | Valid for seconds too low (≤ 5)           |
-| `SAE_007` | Valid for ledgers too low (≤ 0)           |
+See
+[every code for this context](../../reference/errors/core-processes-sign-auth-entries.md)
+and the [error-handling guide](../../core/error.md). Failures from lower-level
+processes can retain their original context and code.

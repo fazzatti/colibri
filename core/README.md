@@ -471,7 +471,7 @@ Create filters to select specific events by type, contract, or topic patterns:
 
 ```ts
 import { EventFilter, EventType } from "jsr:@colibri/core";
-import { xdr } from "stellar-sdk";
+import { xdr } from "npm:@stellar/stellar-sdk";
 
 const filter = new EventFilter({
   type: EventType.Contract,
@@ -486,7 +486,8 @@ const filter = new EventFilter({
 const rawFilter = filter.toRawEventFilter();
 ```
 
-**Topic wildcards:** `"*"` matches one segment, `"**"` matches zero or more.
+**Topic wildcards:** `"*"` matches one segment; terminal `"**"` matches the
+remaining topic suffix. Use a complete topic pattern for a known event schema.
 
 ### Ledger metadata utilities
 

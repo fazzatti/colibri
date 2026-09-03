@@ -1,7 +1,7 @@
 # EnforceSimulation
 
-Runs the second simulation required after CAP-71 delegated authorization
-entries are complete.
+Runs the second simulation required after CAP-71 delegated authorization entries
+are complete.
 
 ## `enforceSimulation`
 
@@ -17,10 +17,10 @@ const simulation = await enforceSimulation({
 
 ## Input
 
-| Property              | Type                        | Required | Description |
-| --------------------- | --------------------------- | -------- | ----------- |
-| `transaction`         | `Transaction`               | Yes      | Transaction prepared for enforcement |
-| `recordingSimulation` | `SimulateTransactionOutput` | Yes      | Original recording response |
+| Property              | Type                        | Required | Description                              |
+| --------------------- | --------------------------- | -------- | ---------------------------------------- |
+| `transaction`         | `Transaction`               | Yes      | Transaction prepared for enforcement     |
+| `recordingSimulation` | `SimulateTransactionOutput` | Yes      | Original recording response              |
 | `rpc`                 | `Server`                    | Yes      | RPC server used for enforcing simulation |
 
 ## Behavior
@@ -34,11 +34,7 @@ const simulation = await enforceSimulation({
 
 ## Errors
 
-| Code      | Description |
-| --------- | ----------- |
-| `EFS_000` | Unexpected enforcing-simulation failure |
-| `EFS_001` | Missing transaction |
-| `EFS_002` | Missing recording simulation |
-| `EFS_003` | Missing RPC client |
-
-Typed `SimulateTransactionError` failures are preserved.
+See
+[every code for this context](../../reference/errors/core-processes-enforce-simulation.md)
+and the [error-handling guide](../../core/error.md). Failures from lower-level
+processes can retain their original context and code.

@@ -24,7 +24,8 @@ Each built-in pipeline typically includes:
 
 ## Plugins
 
-Plugins target a specific step id and are attached with `pipeline.use(...)`:
+Plugins target a specific step or pipeline ID and are attached with
+`pipeline.use(...)`. This fragment uses an application-provided sponsor:
 
 ```ts
 import { createInvokeContractPipeline, NetworkConfig } from "@colibri/core";

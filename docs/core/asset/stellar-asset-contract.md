@@ -202,12 +202,9 @@ sac.contract.invokePipe.use(createChannelAccountsPlugin({ channels }));
 
 ## Errors
 
-| Code      | Class                       | Description                              |
-| --------- | --------------------------- | ---------------------------------------- |
-| `SAC_001` | `MISSING_ARG`               | Required SAC argument missing            |
-| `SAC_002` | `FAILED_TO_DEPLOY_CONTRACT` | SAC deployment failed                    |
-| `SAC_003` | `UNMATCHED_CONTRACT_ID`     | Network returned a different contract id |
-| `SAC_004` | `MISSING_RETURN_VALUE`      | Expected contract return value missing   |
+See [every code for this context](../../reference/errors/core-asset-sac.md) and
+the [error-handling guide](../../core/error.md). Failures from lower-level
+processes can retain their original context and code.
 
 ## Notes
 

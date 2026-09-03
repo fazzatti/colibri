@@ -14,7 +14,7 @@ does not add a decorated signature to the envelope.
 4. Associate the signer with that account and run the prepared transaction.
 
 ```ts
-import { Operation } from "stellar-sdk";
+import { Operation } from "npm:@stellar/stellar-sdk";
 import { PreAuthorizedTransactionSigner, StrKey } from "@colibri/core";
 
 const signer = PreAuthorizedTransactionSigner.fromTransaction(

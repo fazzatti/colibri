@@ -20,7 +20,7 @@ import {
   LocalSigner,
   NetworkConfig,
 } from "@colibri/core";
-import { Asset, Operation } from "stellar-sdk";
+import { Asset, Operation } from "npm:@stellar/stellar-sdk";
 
 const signer = LocalSigner.fromSecret("S...");
 const network = NetworkConfig.TestNet();

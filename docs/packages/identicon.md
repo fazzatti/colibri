@@ -11,6 +11,11 @@ network, including when the account has never been funded.
 deno add jsr:@colibri/identicon
 ```
 
+The following is a complete local script: save it as `icon.ts` and run
+`deno run icon.ts`. It performs no network requests.
+
+<!-- deno-check -->
+
 ```ts
 import { Identicon } from "@colibri/identicon";
 
@@ -22,6 +27,7 @@ const icon = new Identicon(
 const svg = icon.toSvg();
 const png = icon.toPng();
 const src = icon.toDataUrl({ format: "svg" });
+console.log(svg.length, png.length, src.slice(0, 30));
 ```
 
 All generation/rendering methods are synchronous. PNG bytes use `Uint8Array`;
@@ -84,3 +90,8 @@ for the exact distinction and pinned reference.
 
 Identicons can collide and are not proof of ownership. They help recognize
 accounts visually, but never replace checking the complete destination address.
+
+See [every identicon error](../reference/errors/identicon.md) and the
+[API reference](https://jsr.io/@colibri/identicon/doc). For browser rendering,
+assign a data URL to an image's `src` and give the image meaningful alt text;
+visual resemblance is not an authentication check.

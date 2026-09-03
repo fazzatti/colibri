@@ -30,6 +30,9 @@
     "resvg-test": "npm:@resvg/resvg-js@2.6.2"
   },
   "tasks": {
+    "docs:errors": "deno run --allow-read --allow-write --allow-env _tools/documentation.ts --write && deno fmt docs/reference/errors docs/SUMMARY.md",
+    "test:docs": "deno test --allow-read --allow-write --allow-env --allow-run --clean _tools/documentation.unit.test.ts",
+    "check:docs": "deno run --check --allow-read --allow-write --allow-env --allow-run _tools/documentation.ts --examples",
     "check": "deno check core/mod.ts build-verification/mod.ts build-verification/core.ts build-verification/docker.ts build-verification/cli.ts identicon/mod.ts rpc-streamer/mod.ts webauth/mod.ts plugins/fee-bump/mod.ts plugins/channel-accounts/mod.ts test-tooling/mod.ts",
     "check:jsr": "deno doc --lint core/mod.ts && deno doc --lint build-verification/mod.ts && deno doc --lint build-verification/core.ts && deno doc --lint build-verification/docker.ts && deno doc --lint build-verification/cli.ts && deno doc --lint identicon/mod.ts && deno doc --lint webauth/mod.ts && deno doc --lint plugins/fee-bump/mod.ts && deno doc --lint plugins/channel-accounts/mod.ts && deno doc --lint test-tooling/mod.ts",
     "check:package-versions": "deno test --allow-read --clean build-verification/src/core/evidence/package-version.unit.test.ts",

@@ -66,10 +66,6 @@ const account = NativeAccount.fromMasterSigner(signer);
 
 ## Errors
 
-| Code          | Description                     |
-| ------------- | ------------------------------- |
-| `ACC_NAT_001` | Invalid Ed25519 public key      |
-| `ACC_NAT_002` | Invalid muxed ID                |
-| `ACC_NAT_003` | Invalid muxed address generated |
-| `ACC_NAT_004` | Missing master signer           |
-| `ACC_NAT_005` | Unsupported address type        |
+See [every code for this context](../reference/errors/core-account-native.md)
+and the [error-handling guide](../core/error.md). Failures from lower-level
+processes can retain their original context and code.

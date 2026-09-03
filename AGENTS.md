@@ -273,7 +273,33 @@ Because CI runs `deno doc --lint` on package entrypoints:
 
 - document new public exports
 - keep existing doc comments accurate when behavior changes
-- prefer updating docs in the same change when the public API changes
+- update documentation in the same change when a public API, default, error,
+  CLI option, lifecycle, or pipeline behavior changes; documentation is required,
+  not deferred release work
+
+GitBook maintenance requirements:
+
+- `docs/SUMMARY.md` must expose every content page. Preserve existing overview
+  URLs when splitting long pages into scoped guides.
+- Teach one coherent developer task per guide: prerequisites, installation,
+  visible SDK calls, configuration/units, results, failures and cleanup.
+  Label incomplete fragments and their application-supplied inputs explicitly.
+- Every published package and public module family needs guide coverage plus a
+  link to its exact JSR API reference. Keep exhaustive references separate from
+  tutorials; do not describe missing public API families as curated omissions.
+- Add `<!-- deno-check -->` immediately before complete TypeScript examples so
+  the repository checks their types against workspace APIs without executing
+  network/Docker actions. Do not hide SDK usage in example-only abstractions.
+- All declared error contexts are documented under `docs/reference/errors/`.
+  Run `deno task docs:errors` after error-code changes; do not hand-edit those
+  generated tables or the marked error-navigation block in SUMMARY.
+- Run `deno task check:docs` for relative links, navigation, error-reference
+  freshness, package/version references, snippet syntax and complete examples.
+  This runs in the existing CI quality job without changing coverage thresholds.
+- Keep package READMEs consumer-facing; do not publish private project material
+  or repository-only fixture instructions as package usage documentation.
+- Documentation-only changes must not silently fix runtime behavior or bump
+  package versions. Report source/design discrepancies for an explicit decision.
 
 ## Testing Conventions
 
