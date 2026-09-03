@@ -1,6 +1,7 @@
 # Processes
 
-Processes are the atomic building blocks of Colibri. Each process is a plain function with:
+Processes are the atomic building blocks of Colibri. Each process is a plain
+function with:
 
 - **Clear inputs and outputs** — Typed interfaces for predictable behavior
 - **Standardized errors** — Every failure is wrapped in a typed `ColibriError`
@@ -11,12 +12,14 @@ Processes are the atomic building blocks of Colibri. Each process is a plain fun
 Each process is exported directly from `@colibri/core`:
 
 ```typescript
-import { buildTransaction, BTX_ERRORS } from "@colibri/core";
+import { BTX_ERRORS, buildTransaction } from "@colibri/core";
 
 const transaction = await buildTransaction(input);
 ```
 
-If you need stable ids or plugin targets for orchestration, use the matching step wrapper from `steps` or one of the built-in [pipelines](../pipelines/README.md).
+If you need stable ids or plugin targets for orchestration, use the matching
+step wrapper from `steps` or one of the built-in
+[pipelines](../pipelines/README.md).
 
 ## When to Use Processes Directly
 

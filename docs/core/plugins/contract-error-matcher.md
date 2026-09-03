@@ -31,9 +31,9 @@ in the simulation:
 
 ```ts
 import {
-  ColibriError,
   createContractErrorMatcherPlugin,
   createInvokeContractPipeline,
+  KNOWN_CONTRACT_ERROR_SIMULATION_FAILED,
   NetworkConfig,
 } from "@colibri/core";
 
@@ -58,7 +58,7 @@ If simulation fails with contract error `#265`, the plugin throws:
 try {
   await pipeline.run(input);
 } catch (error) {
-  if (ColibriError.is(error) && error.code === "PLG_SIM_CEM_001") {
+  if (error instanceof KNOWN_CONTRACT_ERROR_SIMULATION_FAILED) {
     console.log(error.message); // "Contract error: InsufficientBalance"
     console.log(error.meta.data.match.code); // 265
     console.log(error.meta.cause); // Original CONTRACT_ERROR_SIMULATION_FAILED
@@ -129,12 +129,12 @@ pub enum Error {
 the extracted map has the same structure accepted by the plugin:
 
 ```ts
-{
+const errors = {
   1: {
     message: "Unauthorized",
     details: "The caller is not authorized to run this operation.",
   },
-}
+};
 ```
 
 For constructor-time plugin setup, use `contractConfig.plugins` and choose the
@@ -262,7 +262,7 @@ When `details` is present, `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED` also uses it
 as `error.diagnostic.rootCause`.
 
 ```ts
-if (ColibriError.is(error) && error.code === "PLG_SIM_CEM_001") {
+if (error instanceof KNOWN_CONTRACT_ERROR_SIMULATION_FAILED) {
   console.log(error.meta.data.match.details);
   console.log(error.diagnostic?.rootCause);
 }
@@ -270,12 +270,29 @@ if (ColibriError.is(error) && error.code === "PLG_SIM_CEM_001") {
 
 For deeper analysis, inspect the original simulation error:
 
+<!-- deno-check -->
+
 ```ts
-const original = error.meta.cause;
-console.log(original.meta.data.contractError);
-console.log(original.meta.data.contractErrorStack);
-console.log(original.meta.data.diagnosticEvents);
+import {
+  KNOWN_CONTRACT_ERROR_SIMULATION_FAILED,
+  SIM_ERRORS,
+} from "@colibri/core";
+
+function inspect(error: unknown): void {
+  if (!(error instanceof KNOWN_CONTRACT_ERROR_SIMULATION_FAILED)) return;
+  console.log(error.meta.data.match);
+  const original = error.meta.cause;
+  if (original instanceof SIM_ERRORS.CONTRACT_ERROR_SIMULATION_FAILED) {
+    console.log(original.meta.data.contractError);
+    console.log(original.meta.data.contractErrorStack);
+    console.log(original.meta.data.diagnosticEvents);
+  }
+}
 ```
+
+Pass a caught value into this helper. Checking only `ColibriError.is(error)` and
+a code string does not narrow generic `meta.data` to the specific match type;
+the exported constructor does.
 
 ## Related APIs
 

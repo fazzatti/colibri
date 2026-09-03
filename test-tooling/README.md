@@ -288,7 +288,8 @@ const ledger = new StellarTestLedger({
 - `ledger.getContainer()` returns the Dockerode container instance
 - `ledger.getContainerIpAddress()` returns the container IP reported by Docker
 - `ledger.stop()` stops the tracked container without deleting it
-- `ledger.destroy()` removes the tracked container and its named volumes
+- `ledger.destroy()` removes the tracked container with Docker's volume-removal
+  option; it does not delete the host directory used for persistent bind storage
 
 ## Custom Logging
 

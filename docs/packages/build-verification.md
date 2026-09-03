@@ -1,187 +1,25 @@
 # Contract Build Verification
 
-`@colibri/build-verification` rebuilds Stellar contract source inside an exact,
-digest-pinned image and compares the rebuilt Wasm bytes with a local or deployed
-target.
+`@colibri/build-verification` rebuilds source in a digest-pinned image and
+compares the result with target Wasm bytes. A verified build demonstrates
+reproducibility, not contract safety or an audit.
 
-It supports strict
-[SEP-58](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0058.md)
-metadata-driven verification and a clearly labeled out-of-band path for older
-contracts.
-
-## Install
-
-```bash
+```sh
 deno add jsr:@colibri/build-verification jsr:@colibri/core
 ```
 
-The default runner requires a reachable Docker daemon.
+Use strict SEP-58 mode for metadata committed by the target, or explicitly
+choose an out-of-band recipe. The default runner requires a reachable Docker
+daemon.
 
-## Verify a deployed contract
+## Guides
 
-```typescript
-import { ContractBuildVerifier } from "@colibri/build-verification";
-import { NetworkConfig } from "@colibri/core";
+- [Targets and verification results](build-verification/targets.md)
+- [Sources and build recipes](build-verification/sources.md)
+- [Pipelines, providers, and runners](build-verification/architecture.md)
+- [Policies and isolation](build-verification/policies.md)
+- [Command-line verification](build-verification/cli.md)
+- [Evidence and logs](build-verification/reporting.md)
 
-const verifier = new ContractBuildVerifier({
-  network: { networkConfig: NetworkConfig.MainNet() },
-});
-
-const result = await verifier.verify({
-  target: { contractId: "C..." },
-});
-```
-
-Strict mode uses the contract's own `bldimg`, ordered `bldarg`, `bldopt`,
-`source_uri`, and `source_sha256` metadata. The exact source archive is hashed
-before safe extraction, and the rebuilt Wasm is selected without guessing.
-
-Direct Wasm targets need no network. Contract IDs and Wasm hashes accept either
-a Colibri network configuration, an existing compatible RPC reader plus a
-passphrase, or an RPC URL plus a passphrase:
-
-```typescript
-new ContractBuildVerifier({
-  network: {
-    rpcUrl: "https://soroban-testnet.stellar.org",
-    networkPassphrase: "Test SDF Network ; September 2015",
-  },
-});
-```
-
-## Interpret the result
-
-```typescript
-switch (result.status) {
-  case "verified":
-    console.log(result.evidence);
-    break;
-  case "mismatch":
-    console.log(result.evidence.artifact?.sha256);
-    break;
-  case "notApplicable":
-    console.log(result.reason);
-}
-```
-
-Operational failures throw typed Colibri errors with stable `BLDV_*` codes.
-`mismatch` is returned only after a build completes and raw-byte comparison is
-possible.
-
-In `0.3.0`, the former catch-all `INVALID_CLI_ARGUMENTS` (`BLDV_031`) code was
-replaced by occurrence-specific CLI errors in the `BLDV_106` through
-`BLDV_131` range. Consumers should handle the precise error code; there is no
-single replacement for every formerly invalid CLI argument.
-
-## Source inputs
-
-Callers may provide:
-
-- exact archive bytes already available to their application;
-- a local archive;
-- a local directory in out-of-band mode;
-- a policy-checked URL;
-- a GitHub revision resolved to an exact commit; or
-- an exact GitHub release asset.
-
-The default extractor supports `.tar`, `.tar.gz`, `.tgz`, and `.zip`. It rejects
-traversal, links, special files, duplicate or conflicting entries, ambiguous
-roots, corrupt ZIP data, and configured resource-limit violations.
-
-## Out-of-band recipes
-
-```typescript
-await verifier.verify({
-  mode: "outOfBand",
-  target: { wasm: await Deno.readFile("deployed.wasm") },
-  source: { type: "path", path: "./source" },
-  recipe: {
-    image: "docker.io/stellar/stellar-cli@sha256:...",
-    options: ["--package=my-contract"],
-  },
-});
-```
-
-The resulting evidence identifies the recipe as caller-supplied. It does not
-claim that the target or its author committed to that recipe.
-
-## Pipeline architecture
-
-The high-level verifier delegates to a composable `BuildVerificationPipeline`
-and exposes it as `verificationPipe`:
-
-```text
-resolve target -> parse metadata -> validate recipe -> resolve source
-  -> resolve image -> execute build -> select artifact -> compare Wasm
-```
-
-Each process has a thin Convee step and a stable ID. Plugins can target one
-intentional step, while lower-level consumers may call a process directly or
-construct the pipeline with explicit providers and runners. Complete state,
-evidence, and bounded structured logs pass through every stage.
-
-## Security defaults
-
-- Build-container network access is disabled unless `allowBuildNetwork: true` is
-  set.
-- The default image policy checks the configured official Stellar CLI registry,
-  repository, and requested digest before any registry request, then requires
-  the resolved single-platform manifest to have that exact digest.
-- Source and image-registry retrieval policies are checked again after every
-  redirect. Bearer-token endpoints are checked as separate requests, and HTTP
-  connections are pinned to the approved DNS results.
-- Docker execution uses a read-only root filesystem, drops capabilities, and
-  applies CPU, memory, PID, time, output, archive, and artifact limits.
-- Docker output is streamed and bounded before it is retained in host memory,
-  and daemon log persistence is disabled for build containers.
-- Disposable build containers use `colibri-build-verification-<unique-id>`
-  names. Configure `docker.containerNamePrefix` in the API, or
-  `--container-name-prefix` in the CLI, to replace only the prefix; Colibri
-  always appends the unique suffix.
-- The runner executes only. Artifact collection and selection are separate
-  boundaries.
-- Evidence records provenance and SBOM observations without claiming an
-  unverified signature is valid.
-
-Use disposable workers or VMs for hosted verification of untrusted source.
-Container isolation alone is intended for the local developer workflow.
-
-## Evidence, logs, and CLI
-
-`writeVerificationEvidence(...)` writes stable completed evidence or a
-structured failure report. `writeVerificationLogs(...)` writes bounded JSONL or
-text logs. Neither surface retains source bytes, Wasm bytes, URL credentials,
-GitHub tokens, or environment-variable values.
-
-Run the package directly from JSR:
-
-```bash
-deno run -A jsr:@colibri/build-verification@0.4.0/cli \
-  --contract-id C... \
-  --network mainnet \
-  --evidence verification.json \
-  --logs verification.jsonl
-```
-
-The CLI prints one concise summary by default and sends an animated stage status
-only to interactive standard error, for example:
-
-```text
-VERIFIED ba789fe6627de52ebfbd5353f5eb6b7efef23d7e8633ab59051c1a22b2f00a88
-```
-
-Use `--json` to print the complete result or typed error instead, and `--quiet`
-to suppress the interactive spinner. The animation is also disabled when
-standard error is not a terminal. An empty invocation, `-h`, or `--help` prints
-the full command reference. `--github-token-env` reads a token from the selected
-environment variable without exposing it in process arguments.
-
-The `--evidence` and `--logs` files retain partial diagnostics when verification
-fails. Exit code `0` means `verified`, `1` means verification or reporting did
-not complete, `2` means `mismatch`, and `3` means `notApplicable`. This prevents
-a contract without strict SEP-58 metadata from silently passing a CI gate.
-
-The package also publishes `/core`, `/docker`, and `/cli` entrypoints. See the
-[package README](../../build-verification/README.md) for every source variant,
-the out-of-band trust boundary, custom image-policy configuration, stable step
-IDs, granular RPC inputs, and CLI flags.
+See the [API and error reference](../reference/README.md) for exact exported
+symbols and complete error contexts.

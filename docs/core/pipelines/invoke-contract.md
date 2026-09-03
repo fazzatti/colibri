@@ -37,7 +37,7 @@ const pipeline = createInvokeContractPipeline({ networkConfig: network });
 
 ```ts
 import { LocalSigner } from "@colibri/core";
-import { Operation } from "stellar-sdk";
+import { Operation } from "npm:@stellar/stellar-sdk";
 
 const signer = LocalSigner.fromSecret("S...");
 
@@ -64,12 +64,12 @@ console.log(result.returnValue);
 To cap the complete transaction fee, set `config.fee` to a maximum:
 
 ```ts
-config: {
+const config = {
   source: signer.publicKey(),
   fee: { max: "1000000" },
   timeout: 30,
   signers: [signer],
-}
+};
 ```
 
 After each relevant simulation, final assembly subtracts the simulated resource

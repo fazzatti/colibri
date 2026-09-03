@@ -36,6 +36,8 @@ console.log(network.friendbotUrl);
 
 ## Custom Configuration
 
+Override endpoints in a preset without changing its network identity:
+
 ```ts
 const network = NetworkConfig.TestNet({
   rpcUrl: "https://my-custom-rpc.example.com",
@@ -46,14 +48,40 @@ const network = NetworkConfig.TestNet({
 
 ### Common Fields
 
-| Field            | Type        | Description                            |
-| ---------------- | ----------- | -------------------------------------- |
-| `rpcUrl`         | `string?`   | Soroban RPC endpoint                   |
-| `archiveRpcUrl`  | `string?`   | Archive RPC endpoint for older data    |
-| `horizonUrl`     | `string?`   | Horizon endpoint                       |
-| `friendbotUrl`   | `string?`   | Friendbot endpoint for test networks   |
-| `allowHttp`      | `boolean?`  | Allow non-HTTPS endpoints              |
-| `networkPassphrase` | `string` | Stellar network passphrase             |
+For a standalone ledger, use `CustomNet` with its exact passphrase. This
+complete local declaration does not contact the endpoint; it describes a default
+standalone Quickstart network. Run it with `deno run network.ts` after
+installing Core. Prefer the actual details returned by Test Tooling when ports
+are dynamic.
+
+<!-- deno-check -->
+
+```ts
+import { NetworkConfig } from "@colibri/core";
+
+const network = NetworkConfig.CustomNet({
+  networkPassphrase: "Standalone Network ; February 2017",
+  rpcUrl: "http://localhost:8000/rpc",
+  friendbotUrl: "http://localhost:8000/friendbot",
+  allowHttp: true,
+});
+console.log(network.isCustomNet());
+```
+
+Optional URLs are absent until configured. Setters only fill a value that has
+not already been set; construct a new configuration to replace a preset URL.
+Network presets are configuration, not endpoint health checks or guarantees of
+archive retention. Public provider availability, rate limits, and credentials
+are controlled by the provider.
+
+| Field               | Type       | Description                          |
+| ------------------- | ---------- | ------------------------------------ |
+| `rpcUrl`            | `string?`  | Soroban RPC endpoint                 |
+| `archiveRpcUrl`     | `string?`  | Archive RPC endpoint for older data  |
+| `horizonUrl`        | `string?`  | Horizon endpoint                     |
+| `friendbotUrl`      | `string?`  | Friendbot endpoint for test networks |
+| `allowHttp`         | `boolean?` | Allow non-HTTPS endpoints            |
+| `networkPassphrase` | `string`   | Stellar network passphrase           |
 
 ## Network Providers
 
@@ -77,7 +105,7 @@ import {
   LocalSigner,
   NetworkConfig,
 } from "@colibri/core";
-import { Operation } from "stellar-sdk";
+import { Operation } from "npm:@stellar/stellar-sdk";
 
 const network = NetworkConfig.TestNet();
 const signer = LocalSigner.fromSecret("S...");

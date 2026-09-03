@@ -253,6 +253,28 @@ Ensure code style consistency.
 deno lint
 ```
 
+### Documentation
+
+GitBook guides live under [`docs/`](docs/README.md), with scoped navigation in
+[`docs/SUMMARY.md`](docs/SUMMARY.md). Update the affected guides, examples,
+README/JSDoc and error references alongside every public change.
+
+```sh
+# Regenerate the complete error catalog after changing declared error codes
+deno task docs:errors
+
+# Exercise the documentation guard, then validate the actual guides/examples
+deno task test:docs
+deno task check:docs
+```
+
+Complete TypeScript examples use a `<!-- deno-check -->` marker immediately
+before the code fence. CI checks their types without executing transactions,
+Docker builds or other external effects. Shorter fragments are syntax-checked.
+The same check verifies links/headings, navigation, reference freshness and
+installation versions. Keep internal fixture instructions out of published
+package READMEs.
+
 ## License
 
 MIT License - see [LICENSE](./LICENSE) for details.

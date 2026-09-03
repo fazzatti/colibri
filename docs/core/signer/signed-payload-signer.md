@@ -50,13 +50,13 @@ the transaction is built.
 ## Exact Extra Signer
 
 ```ts
-config: {
+const config = {
   source: accountId,
   fee: "100",
   timeout: 30,
   signers: [accountSigner, payloadSigner],
   extraSigners: [payloadSigner.signerKey()],
-}
+};
 ```
 
 Colibri matches the `P...` key exactly and adds the payload signature with the

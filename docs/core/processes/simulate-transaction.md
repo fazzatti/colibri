@@ -103,10 +103,7 @@ For human-friendly application errors, attach the
 
 ## Errors
 
-| Code      | Description                                              |
-| --------- | -------------------------------------------------------- |
-| `SIM_000` | Unexpected non-Colibri error escaped simulation handling |
-| `SIM_001` | Simulation failed without a parsed contract error        |
-| `SIM_002` | Could not reach RPC server                               |
-| `SIM_003` | Simulation result not verified (unknown response)        |
-| `SIM_004` | Simulation failed with a parsed contract error           |
+See
+[every code for this context](../../reference/errors/core-processes-simulate-transaction.md)
+and the [error-handling guide](../../core/error.md). Failures from lower-level
+processes can retain their original context and code.

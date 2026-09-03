@@ -2,8 +2,7 @@
 
 `@colibri/plugin-channel-accounts` provides two related pieces:
 
-- `ChannelAccounts` utilities for opening and closing sponsored channel
-  accounts
+- `ChannelAccounts` utilities for opening and closing sponsored channel accounts
 - `createChannelAccountsPlugin(...)` for reusing those channels in write
   pipelines
 
@@ -31,14 +30,14 @@ const channels = await ChannelAccounts.open({
 
 `ChannelAccounts.open(...)` accepts:
 
-| Property             | Description                                                  |
-| -------------------- | ------------------------------------------------------------ |
-| `numberOfChannels`   | Number of channels to create                                 |
-| `sponsor`            | Sponsor account used to create and fund the channels         |
-| `networkConfig`      | Colibri network configuration                                |
-| `config`             | Transaction config used to submit the setup transaction      |
-| `rpc`                | Optional explicit RPC client                                 |
-| `setSponsorAsSigner` | Also add the sponsor as a sponsored signer on each channel   |
+| Property             | Description                                                |
+| -------------------- | ---------------------------------------------------------- |
+| `numberOfChannels`   | Number of channels to create                               |
+| `sponsor`            | Sponsor account used to create and fund the channels       |
+| `networkConfig`      | Colibri network configuration                              |
+| `config`             | Transaction config used to submit the setup transaction    |
+| `rpc`                | Optional explicit RPC client                               |
+| `setSponsorAsSigner` | Also add the sponsor as a sponsored signer on each channel |
 
 When `setSponsorAsSigner` is enabled, the sponsor is added as a signer with
 weight `1` inside the sponsorship block.
@@ -59,8 +58,8 @@ Closing uses a channel-sourced `accountMerge` back into the sponsor.
 ## Using The Plugin
 
 The plugin allocates one channel account per pipeline run, swaps it into
-`input.config.source`, appends the channel signer, and releases the channel
-when the run finishes or fails.
+`input.config.source`, appends the channel signer, and releases the channel when
+the run finishes or fails.
 
 ```ts
 import {
@@ -121,8 +120,32 @@ sac.contract.invokePipe.use(plugin);
 
 ## Notes
 
-- Channels are opened with a starting balance so they can act as transaction
-  sources without a separate fee-bump layer
-- Adding the sponsor as a signer changes the on-chain account shape, but it
-  does not make sponsor-only signing automatic through current Colibri signing
+- Channels are opened with `startingBalance: "0"` under reserve sponsorship.
+  Sponsoring their reserve does not pay transaction fees. Pair their use as
+  transaction sources with fee bumps or fund them deliberately.
+- Adding the sponsor as a signer changes the on-chain account shape, but it does
+  not make sponsor-only signing automatic through current Colibri signing
   requirements
+
+## Preserve the operation source
+
+The plugin changes `config.source` and appends the channel signer. It does not
+rewrite operation sources. An operation without an explicit source inherits the
+channel after this change. Set a payment operation's `source` to the account
+that should send the asset and keep its signer in `config.signers`.
+
+## Pool lifecycle
+
+The pool leases one channel per run ID and releases it on success and error.
+When all channels are busy, additional runs wait. The plugin provides
+`registerChannels(channels)` and `getChannels()`. A shared in-memory pool does
+not coordinate with another process or independently created plugin.
+
+Wait for all runs before closing channels. `ChannelAccounts.close` merges the
+accounts; it can use a sponsor proxy when on-chain signer/threshold checks
+permit it, otherwise it uses each channel's signer. Persist channel secrets
+securely if the channels must survive a process restart.
+
+See
+[all channel errors](../../reference/errors/plugins-channel-accounts-shared.md)
+and the [complete sponsorship example](channel-accounts/example.md).

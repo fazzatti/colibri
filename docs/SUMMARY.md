@@ -6,17 +6,27 @@
 
 - [Installation](getting-started/installation.md)
 - [Quick Start](getting-started/quick-start.md)
+- [Read and invoke a contract](getting-started/contract-call.md)
 - [Architecture Overview](getting-started/architecture.md)
 
 ## @colibri/core
 
 - [Core](core/overview.md)
   - [Account](core/account.md)
+  - [Addresses](core/address.md)
   - [Asset](core/asset/README.md)
     - [SEP-11](core/asset/sep-11.md)
     - [Stellar Asset Contract](core/asset/stellar-asset-contract.md)
   - [Contract](core/contract.md)
+    - [Configuration](core/contract/configuration.md)
+    - [Reading and invoking](core/contract/invocation.md)
+    - [Deployment and spec loading](core/contract/deployment.md)
+    - [Plugins and contract errors](core/contract/plugins.md)
   - [Ledger Entries](core/ledger-entries.md)
+    - [Reading current state](core/ledger-entries/reading.md)
+    - [Keys and TTL](core/ledger-entries/keys.md)
+    - [Contract data and executables](core/ledger-entries/contracts.md)
+  - [Ledger Parser](core/ledger-parser.md)
   - [Network](core/network.md)
   - [SEP-1](core/sep1.md)
   - [Signer](core/signer/README.md)
@@ -26,6 +36,8 @@
     - [Pre-Authorized Transaction Signer](core/signer/pre-authorized-transaction-signer.md)
     - [DelegatedSigner](core/signer/delegated-signer.md)
   - [Transaction Config](core/transaction-config.md)
+  - [Authorization](core/authorization.md)
+  - [Shared helpers](core/helpers.md)
   - [StrKeys](core/strkeys.md)
   - [TOID](core/toid.md)
   - [Tools](core/tools/README.md)
@@ -51,6 +63,7 @@
   - [Error Handling](core/error.md)
   - [Events](events/overview.md)
     - [Event Filter](events/event-filter.md)
+    - [Event schemas and templates](events/templates.md)
     - [Standardized Events](events/standardized-events/README.md)
       - [SAC](events/standardized-events/sac.md)
       - [SEP-41](events/standardized-events/sep-41.md)
@@ -58,14 +71,30 @@
 ## @colibri/rpc-streamer
 
 - [RPC Streamer](packages/rpc-streamer.md)
+  - [Stream events](packages/rpc-streamer/events.md)
+  - [Stream ledgers](packages/rpc-streamer/ledgers.md)
+  - [Live, archive, and automatic modes](packages/rpc-streamer/modes.md)
+  - [Configuration](packages/rpc-streamer/configuration.md)
+  - [Checkpoints and recovery](packages/rpc-streamer/recovery.md)
+  - [Custom ingestors](packages/rpc-streamer/custom.md)
 
 ## @colibri/webauth
 
 - [WebAuth](packages/webauth.md)
+  - [Discovery and account routing](packages/webauth/discovery.md)
+  - [SEP-10](packages/webauth/sep10.md)
+  - [SEP-45](packages/webauth/sep45.md)
+  - [JWTs and failures](packages/webauth/jwt.md)
 
 ## @colibri/build-verification
 
 - [Contract Build Verification](packages/build-verification.md)
+  - [Targets and networks](packages/build-verification/targets.md)
+  - [Sources and recipes](packages/build-verification/sources.md)
+  - [Policies and Docker](packages/build-verification/policies.md)
+  - [Evidence and logs](packages/build-verification/reporting.md)
+  - [CLI](packages/build-verification/cli.md)
+  - [Processes, pipelines, and providers](packages/build-verification/architecture.md)
 
 ## @colibri/identicon
 
@@ -74,12 +103,96 @@
 ## @colibri/test-tooling
 
 - [Test Tooling](packages/test-tooling.md)
+  - [Start a ledger](packages/test-tooling/quick-start.md)
+  - [Networks and services](packages/test-tooling/networks-services.md)
+  - [Lifecycle, persistence, and reuse](packages/test-tooling/lifecycle.md)
+  - [Docker configuration and errors](packages/test-tooling/configuration.md)
 
 ## Plugins
 
 - [Plugins](packages/plugins/README.md)
   - [Fee Bump](packages/plugins/fee-bump.md)
   - [Channel Accounts](packages/plugins/channel-accounts.md)
+    - [A sponsored channel payment](packages/plugins/channel-accounts/example.md)
+
+## Reference
+
+- [API and module map](reference/README.md)
+
+<!-- error-contexts:start -->
+
+- [Error codes by context](reference/errors/README.md)
+  - [build-verification/error/core](reference/errors/build-verification-error-core.md)
+  - [build-verification/providers/target](reference/errors/build-verification-providers-target.md)
+  - [build-verification/providers/source](reference/errors/build-verification-providers-source.md)
+  - [build-verification/archive](reference/errors/build-verification-archive.md)
+  - [build-verification/providers/image](reference/errors/build-verification-providers-image.md)
+  - [build-verification/core/policy](reference/errors/build-verification-core-policy.md)
+  - [build-verification/runners/docker](reference/errors/build-verification-runners-docker.md)
+  - [build-verification/artifacts](reference/errors/build-verification-artifacts.md)
+  - [build-verification/reporting](reference/errors/build-verification-reporting.md)
+  - [build-verification/processes/execute-contract-build](reference/errors/build-verification-processes-execute-contract-build.md)
+  - [build-verification/pipelines/build-verification](reference/errors/build-verification-pipelines-build-verification.md)
+  - [build-verification/processes/resolve-verification-target](reference/errors/build-verification-processes-resolve-verification-target.md)
+  - [build-verification/processes/parse-contract-metadata](reference/errors/build-verification-processes-parse-contract-metadata.md)
+  - [build-verification/processes/validate-build-recipe](reference/errors/build-verification-processes-validate-build-recipe.md)
+  - [build-verification/processes/resolve-source-archive](reference/errors/build-verification-processes-resolve-source-archive.md)
+  - [build-verification/processes/resolve-build-image](reference/errors/build-verification-processes-resolve-build-image.md)
+  - [build-verification/processes/select-build-artifact](reference/errors/build-verification-processes-select-build-artifact.md)
+  - [build-verification/processes/compare-contract-wasm](reference/errors/build-verification-processes-compare-contract-wasm.md)
+  - [build-verification/cli](reference/errors/build-verification-cli.md)
+  - [core/account/native](reference/errors/core-account-native.md)
+  - [core/address/muxed-to-base-account](reference/errors/core-address-muxed-to-base-account.md)
+  - [core/asset/sac](reference/errors/core-asset-sac.md)
+  - [core/asset/sep11](reference/errors/core-asset-sep11.md)
+  - [core/auth/requirements/classic-operation-threshold](reference/errors/core-auth-requirements-classic-operation-threshold.md)
+  - [core/common/helpers/boolean](reference/errors/core-common-helpers-boolean.md)
+  - [core/common/helpers/bounded-array](reference/errors/core-common-helpers-bounded-array.md)
+  - [core/common/helpers/failed-simulation-response](reference/errors/core-common-helpers-failed-simulation-response.md)
+  - [core/common/helpers/format-units](reference/errors/core-common-helpers-format-units.md)
+  - [core/common/helpers/get-transaction-response](reference/errors/core-common-helpers-get-transaction-response.md)
+  - [core/common/helpers/string](reference/errors/core-common-helpers-string.md)
+  - [core/common/helpers/transaction](reference/errors/core-common-helpers-transaction.md)
+  - [core/common/helpers/xdr](reference/errors/core-common-helpers-xdr.md)
+  - [core/contract](reference/errors/core-contract.md)
+  - [core/event](reference/errors/core-event.md)
+  - [core/event/event-filter](reference/errors/core-event-event-filter.md)
+  - [core/event/event-id](reference/errors/core-event-event-id.md)
+  - [core/event/parsing](reference/errors/core-event-parsing.md)
+  - [core/ledger-entries](reference/errors/core-ledger-entries.md)
+  - [core/ledger-parser](reference/errors/core-ledger-parser.md)
+  - [core/network](reference/errors/core-network.md)
+  - [core/pipelines/classic-transaction](reference/errors/core-pipelines-classic-transaction.md)
+  - [core/pipelines/invoke-contract](reference/errors/core-pipelines-invoke-contract.md)
+  - [core/pipelines/read-from-contract](reference/errors/core-pipelines-read-from-contract.md)
+  - [core/pipelines/shared/connectors/simulate-to-retval](reference/errors/core-pipelines-shared-connectors-simulate-to-retval.md)
+  - [core/plugins/processes/simulate-transaction/contract-error-matcher](reference/errors/core-plugins-processes-simulate-transaction-contract-error-matcher.md)
+  - [core/processes/assemble-for-enforcement](reference/errors/core-processes-assemble-for-enforcement.md)
+  - [core/processes/assemble-transaction](reference/errors/core-processes-assemble-transaction.md)
+  - [core/processes/build-transaction](reference/errors/core-processes-build-transaction.md)
+  - [core/processes/enforce-simulation](reference/errors/core-processes-enforce-simulation.md)
+  - [core/processes/envelope-signing-requirements](reference/errors/core-processes-envelope-signing-requirements.md)
+  - [core/processes/send-transaction](reference/errors/core-processes-send-transaction.md)
+  - [core/processes/sign-auth-entries](reference/errors/core-processes-sign-auth-entries.md)
+  - [core/processes/sign-envelope](reference/errors/core-processes-sign-envelope.md)
+  - [core/processes/simulate-transaction](reference/errors/core-processes-simulate-transaction.md)
+  - [core/processes/wrap-fee-bump](reference/errors/core-processes-wrap-fee-bump.md)
+  - [core/sep1](reference/errors/core-sep1.md)
+  - [core/signer/delegated](reference/errors/core-signer-delegated.md)
+  - [core/signer/hash-x](reference/errors/core-signer-hash-x.md)
+  - [core/signer/local](reference/errors/core-signer-local.md)
+  - [core/signer/pre-authorized-transaction](reference/errors/core-signer-pre-authorized-transaction.md)
+  - [core/signer/signed-payload](reference/errors/core-signer-signed-payload.md)
+  - [core/toid](reference/errors/core-toid.md)
+  - [core/tools/friendbot](reference/errors/core-tools-friendbot.md)
+  - [identicon](reference/errors/identicon.md)
+  - [plugins/channel-accounts/shared](reference/errors/plugins-channel-accounts-shared.md)
+  - [plugins/fee-bump](reference/errors/plugins-fee-bump.md)
+  - [rpc-streamer](reference/errors/rpc-streamer.md)
+  - [test-tooling/quickstart](reference/errors/test-tooling-quickstart.md)
+  - [webauth](reference/errors/webauth.md)
+
+<!-- error-contexts:end -->
 
 ## Examples
 
