@@ -1,9 +1,14 @@
 # @colibri/core
 
-Colibri Core supplies pipelines, processes, and utilities for Stellar and
-Soroban workflows. Currently in beta release with hardened error handling,
-transaction orchestration, account primitives, and typed helpers ready for
-integrated pipelines.
+Colibri Core is the foundation for building Stellar applications with
+TypeScript. It coordinates classic transactions and Soroban calls, but it also
+provides the account, signer, contract, asset, ledger, event, network,
+identifier, discovery, and error primitives needed around those workflows.
+
+Start with a high-level client or pipeline when its workflow fits. Move down to
+individual processes, steps, ledger keys, XDR helpers, or authorization tools
+when your application needs a custom composition. Both levels use the same
+public types and typed error model.
 
 <a href="https://jsr.io/@colibri/core">
   <img src="https://jsr.io/badges/@colibri/core" alt="JSR @colibri/core" />
@@ -27,12 +32,122 @@ the underlying Stellar SDK 17 dependency.
 deno add jsr:@colibri/core
 
 # Node.js / bundlers
-npm install @colibri/core
+npx jsr add @colibri/core
 ```
 
 After installation, import from the package root (`jsr:@colibri/core`).
 Published exports are declared in `core/deno.json`, ensuring compatibility with
 Deno, Node, and bundlers.
+
+## What Core helps you build
+
+The package root exposes the complete supported API. This map gives each family
+a small introduction before the later sections explain how the pieces work.
+
+| Area                          | What it provides                                                                                                                          | Typical use                                                                                    |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Transactions and pipelines    | Classic submission, read-only contract simulation, state-changing contract invocation, fee strategies, memos, preconditions, and plugins  | Send a payment, call a contract, cap a Soroban fee, or insert application policy               |
+| Contracts                     | ABI/spec loading, typed method arguments, reads, invocations, deployment, error metadata, Wasm hashes, and external executable references | Build a client around an existing contract or deploy one from Wasm                             |
+| Assets                        | SEP-11 canonical asset strings and a high-level Stellar Asset Contract client                                                             | Validate asset identifiers, derive an SAC, manage trustlines, or invoke token methods          |
+| Accounts and signers          | Native and muxed account identities plus Ed25519, HashX, signed-payload, pre-authorized, and delegated signing capabilities               | Keep envelope and Soroban authorization requirements explicit                                  |
+| Ledger entries and inspection | Typed current-state reads plus lazy views over ledgers, transactions, operations, and execution metadata                                  | Inspect accounts, trustlines, contract state, executable code, fees charged, or historical XDR |
+| Events                        | Event IDs, filters, ledger-meta parsing, schema-driven templates, and ready-made SAC, SEP-41, and CAP-67 event models                     | Decode contract output, build filters, or create a typed event model                           |
+| Networks and discovery        | Mainnet, Testnet, Futurenet, and custom configurations; provider helpers; Friendbot; and SEP-1 `stellar.toml` parsing                     | Keep passphrases and endpoints together or discover an integration from its domain             |
+| Addresses and identifiers     | SEP-23 StrKey format/checksum guards, muxed-address normalization, ledger keys, and SEP-35 operation IDs                                  | Validate untrusted identifiers and index exact operations                                      |
+| Errors and utilities          | Stable error namespaces, assertions, binary normalization, ScVal/XDR conversion, auth inspection, caches, and type guards                 | Build reliable application boundaries without duplicating low-level traversal                  |
+
+Core deliberately does not hide the underlying Stellar SDK. Operations and XDR
+values remain SDK objects, while Colibri handles the repeated coordination
+around them. Protocol-specific products build on Core in separate packages—for
+example, use [`@colibri/webauth`](https://jsr.io/@colibri/webauth) for complete
+SEP-10 or SEP-45 web-authentication flows and
+[`@colibri/rpc-streamer`](https://jsr.io/@colibri/rpc-streamer) for continuous
+ingestion.
+
+## Choose the right abstraction
+
+- **High-level clients** — choose `Contract`, `StellarAssetContract`, or
+  `LedgerEntries` when you want a domain-oriented API.
+- **Pipelines** — choose a classic, read, or invoke pipeline when you have SDK
+  operations and want Colibri to coordinate the complete transaction lifecycle.
+- **Processes** — call build, simulate, authorize, assemble, sign, or send
+  directly when your own orchestration owns the transitions.
+- **Steps and plugins** — use stable `convee` boundaries when your integration
+  needs observability, composition, or reusable policy at a known point.
+- **Primitives and helpers** — use accounts, signers, branded identifiers,
+  ledger keys, events, and XDR utilities independently; adopting Core does not
+  require running a transaction pipeline.
+
+## Quick start: send a Testnet payment
+
+This complete example creates two disposable identities, funds them with
+Friendbot, and sends one test XLM. Save it as `payment.ts` and run
+`deno run --allow-net payment.ts`. It writes only to Testnet.
+
+<!-- deno-check -->
+
+```ts
+import {
+  createClassicTransactionPipeline,
+  initializeWithFriendbot,
+  LocalSigner,
+  NetworkConfig,
+} from "@colibri/core";
+import { Asset, Operation } from "npm:@stellar/stellar-sdk@^17.0.1";
+
+const network = NetworkConfig.TestNet();
+const sender = LocalSigner.generateRandom();
+const recipient = LocalSigner.generateRandom();
+
+try {
+  for (const signer of [sender, recipient]) {
+    await initializeWithFriendbot(network.friendbotUrl, signer.publicKey(), {
+      rpcUrl: network.rpcUrl,
+      allowHttp: network.allowHttp,
+    });
+  }
+
+  const pipeline = createClassicTransactionPipeline({
+    networkConfig: network,
+  });
+  const result = await pipeline.run({
+    operations: [Operation.payment({
+      destination: recipient.publicKey(),
+      asset: Asset.native(),
+      amount: "1",
+    })],
+    config: {
+      source: sender.publicKey(),
+      signers: [sender],
+      fee: "100",
+      timeout: 30,
+    },
+  });
+
+  console.log("Confirmed transaction:", result.hash);
+} finally {
+  sender.destroy();
+  recipient.destroy();
+}
+```
+
+`fee: "100"` is a base fee in stroops, not 100 XLM. The classic pipeline loads
+the source sequence, builds the transaction, resolves envelope requirements,
+signs it, submits it through RPC, and waits for confirmation. It does not run
+Soroban resource simulation because this payment contains no host function. For
+application code, keep signers out of logs and destroy in-memory signers when
+their lifecycle ends.
+
+Continue with
+[the complete Core guides](https://fifo-docs.gitbook.io/colibri/core/overview),
+the [Colibri examples](https://github.com/fazzatti/colibri-examples), or the
+focused sections below.
+
+The quick start above is a standalone script. The shorter TypeScript blocks in
+the reference-oriented sections below are focused fragments: names such as
+`networkConfig`, `config`, `operations`, `contractId`, `metadataXdr`, `filters`,
+and `plugin` are supplied by the surrounding application. Follow the linked
+guides and examples when you need a complete runnable workflow.
 
 ## Architecture overview
 
@@ -53,6 +168,15 @@ Deno, Node, and bundlers.
 - **Accounts and signers** – Strongly typed wrappers around Ed25519 identities,
   muxed accounts, ledger keys, and signing. See
   [Accounts & signers](#accounts--signers).
+- **Contracts and assets** – High-level contract lifecycle and Stellar Asset
+  Contract APIs over the same read/invoke pipelines. See
+  [High-level contract clients](#high-level-contract-clients).
+- **Current and historical state** – Typed ledger-entry reads and lazy ledger,
+  transaction, and operation views. See [Ledger entries](#ledger-entries) and
+  [Ledger parser](#ledger-parser).
+- **Discovery and asset identifiers** – SEP-1 `stellar.toml` retrieval and
+  SEP-11 asset strings for interoperable service and asset configuration. See
+  [Discovery and canonical assets](#discovery-and-canonical-assets).
 - **Events** – Tools for parsing, filtering, and working with Soroban contract
   events from ledger metadata. See [Events](#events).
 - **TOID** – Utilities for working with SEP-0035 operation IDs for precise
@@ -344,6 +468,28 @@ known contract id, wasm, or deployed contract metadata. It exposes its
 `invokePipe` and `readPipe` publicly, which makes it the right seam for advanced
 pipeline plugin composition.
 
+Configure exactly one executable source:
+
+- `contractId` binds to an existing deployment.
+- `wasm` keeps exact contract bytes available for upload, deployment, spec
+  loading, and contract-error metadata.
+- `wasmHash` deploys code that is already present on the network.
+- `externalRef` addresses the executable by its CAP-85 owner/tag reference and
+  resolves the current Wasm when network access is needed.
+
+Load a contract specification before using named `methodArgs`. For a deployed
+contract, `loadSpecFromNetwork()` resolves ordinary Wasm and external references
+and deliberately refreshes mutable mappings on later calls. Then choose `read()`
+for simulation-only access or `invoke()` for a signed, submitted write. The
+corresponding `readRaw()` and `invokeRaw()` methods accept already encoded
+ScVals. Deployment uses the same transaction configuration and supports
+constructor arguments when the contract spec declares them.
+
+Contract error metadata is opt-in: `loadContractErrorsFromWasm()` extracts the
+contract's error map and installs the matcher on both owned pipelines. This can
+turn a numeric simulation failure into a typed error with the contract's message
+without changing the on-chain result.
+
 ## Ledger entries
 
 `LedgerEntries` provides typed RPC reads for well-known Stellar ledger entries
@@ -435,6 +581,25 @@ For advanced plugin usage, attach plugins directly to the owned invoke pipe:
 sac.contract.invokePipe.use(plugin);
 ```
 
+## Ledger parser
+
+`LedgerEntries` reads current state by ledger key. The separate `Ledger`,
+`Transaction`, and `Operation` parser classes inspect ledger-close data returned
+by RPC `getLedgers()`. They lazily decode and memoize XDR so callers can move
+from a ledger to its transactions and operations without eagerly parsing every
+field.
+
+The parser distinguishes envelope data from result metadata. Check
+`transaction.hasEnvelope` before reading envelope-only fields; a transaction
+constructed from result metadata alone still exposes its outcome but cannot
+invent a source, sequence, or operation list. `transaction.fee` is the fee
+charged in the execution result, not the fee bid from the original envelope.
+
+These classes do not query RPC or stream new ledgers. Pair them with an RPC
+client for individual ranges or with `@colibri/rpc-streamer` for continuous
+live/archive ingestion. They are also distinct from the Stellar SDK's
+transaction and operation builder APIs, so alias imports when using both.
+
 ## Events
 
 Colibri Core provides utilities for working with Soroban contract events,
@@ -501,6 +666,20 @@ if (isLedgerCloseMetaV2(meta)) {
   // access V2-specific fields like txProcessing
 }
 ```
+
+### Typed and standardized events
+
+Extend `EventTemplate` with a schema to validate decoded events, expose typed
+fields, and derive topic filters from one definition. Core also exports
+ready-made event classes through:
+
+- `SACEvents` for the events emitted by Stellar Asset Contracts.
+- `SEP41Events` for the SEP-41 token event surface.
+- CAP-67 event helpers for the current classic-operation event model.
+
+Use the matching family for the contract or protocol that produced the event. A
+topic name that looks familiar is not enough to reinterpret one standard's
+payload as another.
 
 ## TOID
 
@@ -624,6 +803,28 @@ All configurations provide:
 - `friendbotUrl` – Friendbot endpoint for test networks (not available on
   mainnet)
 - `allowHttp` – Whether to allow non-HTTPS connections
+
+`NetworkProviders` exposes preset provider helpers when an application wants a
+known public endpoint selection instead of the default profile. For tests,
+`initializeWithFriendbot()` can fund a Testnet or Futurenet identity and poll
+until RPC observes the account. Friendbot is test infrastructure, not available
+on Mainnet, and funding an identity is a separate step from generating its key.
+
+## Discovery and canonical assets
+
+`StellarToml.fromDomain()` fetches and validates a domain's SEP-1
+`/.well-known/stellar.toml`; `fromString()` handles exact content supplied by an
+application. Recognized URLs, accounts, signers, currencies, and validators are
+validated by default, while unknown fields remain available in `raw`. The
+normalized `sep10Config`, `sep45Config`, and `webAuthConfig` getters feed the
+separate WebAuth package without making TOML discovery proof that a service or
+JWT is trustworthy.
+
+For asset interchange, the SEP-11 helpers recognize `native` and `CODE:ISSUER`,
+convert supported inputs to canonical strings, and parse already-validated
+strings. Use `isStellarAssetCanonicalString()` at an untrusted boundary before
+parsing. Syntax and issuer checksum validation do not establish the issuer's
+reputation or prove that an account has a trustline.
 
 ## Common modules
 

@@ -7,7 +7,7 @@
 </div>
 
 <p align="center">
-A TypeScript-first toolkit for building robust Stellar and Soroban applications with deterministic error handling, composable workflows, and extensible plugin architecture.
+A TypeScript-first toolkit for building, authenticating, testing, operating, and verifying Stellar applications.
 </p>
 
 <p align="center">
@@ -36,6 +36,62 @@ A TypeScript-first toolkit for building robust Stellar and Soroban applications 
 
 <br />
 
+## What is Colibri?
+
+Colibri is a family of focused packages built on the Stellar JavaScript SDK. It
+adds higher-level workflows where applications repeatedly need to coordinate
+network configuration, account sequence numbers, Soroban simulation,
+authorization entries, envelope signatures, submission, and typed failures.
+
+Use only the packages needed at each stage of a project:
+
+| When you are...            | Colibri helps you...                                                                                      | Start with                                                                                                                             |
+| -------------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Prototyping transactions   | Send classic operations, read or invoke contracts, manage assets, and inspect ledger state                | [`@colibri/core`](./core/README.md)                                                                                                    |
+| Integrating a Stellar site | Discover `stellar.toml` services and authenticate classic, muxed, or contract accounts                    | [`@colibri/core`](./core/README.md), [`@colibri/webauth`](./webauth/README.md)                                                         |
+| Building account UI        | Render deterministic local identicons without treating them as proof of ownership                         | [`@colibri/identicon`](./identicon/README.md)                                                                                          |
+| Testing locally            | Start, inspect, reuse, and clean up a Docker-backed Stellar Quickstart ledger                             | [`@colibri/test-tooling`](./test-tooling/README.md)                                                                                    |
+| Preparing for production   | Add fee sponsorship or reuse sponsored channel accounts without replacing the transaction pipeline        | [`@colibri/plugin-fee-bump`](./plugins/fee-bump/README.md), [`@colibri/plugin-channel-accounts`](./plugins/channel-accounts/README.md) |
+| Operating an integration   | Ingest live events or ledgers, recover older ranges from archive RPC, and checkpoint application progress | [`@colibri/rpc-streamer`](./rpc-streamer/README.md)                                                                                    |
+| Shipping contract releases | Rebuild a contract from committed metadata or an explicit recipe and compare the exact resulting Wasm     | [`@colibri/build-verification`](./build-verification/README.md)                                                                        |
+
+The packages compose through shared Core types, but they are published
+separately. A UI that only needs identicons does not need the transaction
+pipeline; a CI job that only verifies Wasm can use Build Verification without
+adopting every runtime package.
+
+## A development journey
+
+Colibri can follow an application from its first local transaction to an
+operated production service:
+
+1. **Model the network and identities.** Use Core network profiles, checked
+   StrKeys, account wrappers, SEP-11 asset strings, and SEP-1 `stellar.toml`
+   discovery rather than copying endpoint and address logic across the app.
+2. **Read and write Stellar state.** Start with high-level contract clients and
+   classic or Soroban pipelines. Drop down to reusable processes, stable steps,
+   raw XDR helpers, or ledger-entry readers when the application needs control.
+3. **Integrate users and services.** Use WebAuth for explicit SEP-10 and SEP-45
+   challenge flows and Identicon for a familiar visual representation of a
+   complete account address. Authentication and visual identity remain separate
+   security boundaries.
+4. **Test the real workflow.** Run the same Core code against a disposable
+   Quickstart network through Test Tooling. Keep unit tests fast and reserve the
+   local ledger for transaction, contract, event, and authorization boundaries.
+5. **Add operational concerns.** Compose fee-bump or channel-account plugins at
+   their intended pipeline boundaries, then consume live and archived data with
+   RPC Streamer.
+6. **Verify what you deploy.** Use Build Verification to reproduce contract Wasm
+   in an isolated build environment and retain structured evidence of the exact
+   comparison.
+
+Colibri implements Stellar-specific standards and protocol capabilities; it is
+not a general identity-provider framework. Current standard-oriented surfaces
+include SEP-1 discovery, SEP-10 and draft SEP-45 Web Authentication, SEP-11
+asset strings, SEP-23 StrKeys, SEP-33 identicons, SEP-35 operation IDs, SEP-41
+token events, and SEP-58 contract build verification. Follow each package's
+documentation for its exact support boundary.
+
 ## Packages
 
 ### [@colibri/core](./core) <a href="https://jsr.io/@colibri/core"><img src="https://jsr.io/badges/@colibri/core" alt="JSR @colibri/core" /></a>
@@ -46,7 +102,7 @@ utilities for Stellar and Soroban workflows.
 ```sh
 deno add jsr:@colibri/core
 # or
-npm install @colibri/core
+npx jsr add @colibri/core
 ```
 
 [View Documentation →](./core/README.md)
@@ -62,7 +118,7 @@ Soroban simulation.
 ```sh
 deno add jsr:@colibri/webauth
 # or
-npm install @colibri/webauth
+npx jsr add @colibri/webauth
 ```
 
 [View Documentation →](./webauth/README.md)
@@ -77,6 +133,8 @@ errors, and exportable evidence.
 
 ```sh
 deno add jsr:@colibri/build-verification
+# or
+npx jsr add @colibri/build-verification
 ```
 
 [View Documentation →](./build-verification/README.md)
@@ -90,6 +148,8 @@ data, SVG and PNG output, data URLs, and explicit presentation options.
 
 ```sh
 deno add jsr:@colibri/identicon
+# or
+npx jsr add @colibri/identicon
 ```
 
 [View Documentation →](./identicon/README.md)
@@ -104,7 +164,7 @@ Transactions.
 ```sh
 deno add jsr:@colibri/plugin-fee-bump
 # or
-npm install @colibri/plugin-fee-bump
+npx jsr add @colibri/plugin-fee-bump
 ```
 
 [View Documentation →](./plugins/fee-bump/README.md)
@@ -119,7 +179,7 @@ accounts across classic and Soroban transaction pipelines.
 ```sh
 deno add jsr:@colibri/plugin-channel-accounts
 # or
-npm install @colibri/plugin-channel-accounts
+npx jsr add @colibri/plugin-channel-accounts
 ```
 
 [View Documentation →](./plugins/channel-accounts/README.md)
@@ -134,7 +194,7 @@ streaming, historical ingestion, and automatic mode switching.
 ```sh
 deno add jsr:@colibri/rpc-streamer
 # or
-npm install @colibri/rpc-streamer
+npx jsr add @colibri/rpc-streamer
 ```
 
 [View Documentation →](./rpc-streamer/README.md)
@@ -148,61 +208,45 @@ Docker-backed test infrastructure helpers for Colibri packages, centered on
 
 ```sh
 deno add jsr:@colibri/test-tooling
+# or
+npx jsr add @colibri/test-tooling
 ```
 
 [View Documentation →](./test-tooling/README.md)
 
 ---
 
-## Core Concepts & Standards
+## Design principles
 
-Colibri is designed around a specific mindset to ensure reliability and
-debuggability in blockchain applications. It is built on top of the
-**[Convee](https://jsr.io/@fifo/convee)** framework, leveraging its patterns for
-functional, railway-oriented programming.
+### Start high-level, keep the lower layers available
 
-### 1. Deterministic Error Handling
+Core clients and pipelines handle complete workflows. The same implementation is
+exposed as plain **processes** for direct reuse, thin `convee` **steps** with
+stable identifiers, and **connectors** that carry typed state between them. An
+application can begin with a standard pipeline and replace or extend only the
+boundary it owns.
 
-We do not throw generic errors. Every error in Colibri is a typed `ColibriError`
-containing:
+### Keep authorization mechanisms explicit
 
-- **Domain**: The logical area (e.g., `Pipeline`, `Process`, `Account`).
-- **Code**: A stable, unique identifier (e.g., `PIPE_INVC_002`).
-- **Meta**: Structured data relevant to the error context.
-- **Diagnostic**: Human-readable suggestions for resolution.
+Classic envelope signatures and Soroban authorization entries are different
+layers. Core models signer capabilities independently and selects only the
+capability required by the current step. WebAuth then adds protocol-specific
+challenge validation without pretending that every contract authenticates the
+same way.
 
-### 2. Pipelines, Processes & Steps
+### Fail with structured context
 
-The architecture separates orchestration from execution, promoting reusability
-and testability.
+Core and most dependent packages expose named errors with stable codes and
+structured metadata rather than requiring callers to parse messages. Packages
+with different runtime boundaries retain their own typed families—for example,
+Test Tooling uses `QuickstartError` and RPC Streamer uses `RPCStreamerError`.
 
-- **Processes (The "How")**: Atomic functions that do one thing well. They are
-  plain reusable building blocks, independent from orchestration.
-  - _Example:_ `signAuthEntries` takes Soroban auth entries plus signers and
-    returns signed authorization entries.
-  - _Example:_ `simulateTransaction` takes a transaction, sends it to the RPC,
-    and returns simulation results.
+### Treat plugins as intentional seams
 
-- **Steps (The orchestration boundary)**: Thin `convee` wrappers around
-  processes. They attach stable step ids, plugin targets, and runtime context
-  without polluting the process layer.
-
-- **Pipelines (The "What")**: Orchestrators that chain processes together to
-  achieve a high-level business goal.
-  - _Example:_ `createInvokeContractPipeline(...)` composes build, recording
-    simulation, authorization-entry signing, conditional delegated-credential
-    assembly and enforcing simulation, final assembly,
-    envelope-signing-requirements, envelope signing, and submission into one
-    write flow.
-
-This composition allows us to swap parts easily. For instance, the `FeeBump`
-plugin targets the `SendTransaction` step and wraps the outgoing transaction
-before submission, without rewriting the rest of the pipeline.
-
-### 3. Type Safety
-
-Everything is strictly typed. From network configurations to error metadata,
-TypeScript is used to enforce correctness at compile time.
+Plugins target stable pipeline or step identifiers. For example, Fee Bump wraps
+the outgoing envelope at `send-transaction`, while Channel Accounts manages a
+temporary transaction source around supported pipelines. This keeps operational
+policy out of the reusable transaction processes.
 
 ---
 
@@ -211,17 +255,17 @@ TypeScript is used to enforce correctness at compile time.
 The system is built in layers, aiming to provide both high-level tools for
 specific use cases and highly specialized, bullet-proof building blocks.
 
-- **Layer 4: Plugins, Clients & Streamers**
-  - Extensions (Fee Bump), specialized clients (Contract, Signer), and event
-    streaming.
+- **Layer 4: Packages and integrations**
+  - WebAuth, Build Verification, Identicon, Test Tooling, RPC Streamer, and
+    transaction plugins compose around the Core boundaries.
 - **Layer 3: Pipelines**
-  - High-level workflows (`createInvokeContractPipeline`,
-    `createReadFromContractPipeline`).
-- **Layer 2: Steps & Processes**
-  - Plain process functions plus `convee` step wrappers with stable ids.
-- **Layer 1: Core**
-  - Base types, Error primitives, Network configurations, account wrappers, and
-    shared auth/address utilities.
+  - High-level classic transaction, contract read, and contract invocation
+    workflows.
+- **Layer 2: Steps, connectors, and processes**
+  - Plain execution functions plus `convee` orchestration boundaries.
+- **Layer 1: Shared primitives**
+  - Networks, accounts, signers, errors, ledger views, events, addresses,
+    assets, authorization, and XDR helpers.
 
 ---
 
