@@ -1,5 +1,8 @@
 # @colibri/core
 
+[📚 Start with the complete Core documentation](https://fifo-docs.gitbook.io/colibri/core/overview)
+| [💡 Explore runnable examples](https://github.com/fazzatti/colibri-examples)
+
 Colibri Core is the foundation for building Stellar applications with
 TypeScript. It coordinates classic transactions and Soroban calls, but it also
 provides the account, signer, contract, asset, ledger, event, network,
@@ -16,9 +19,6 @@ public types and typed error model.
 <a href="https://jsr.io/@colibri/core">
   <img src="https://jsr.io/badges/@colibri/core/total-downloads" alt="JSR total downloads for @colibri/core" />
 </a>
-
-[📚 Documentation](https://fifo-docs.gitbook.io/colibri) |
-[💡 Examples](https://github.com/fazzatti/colibri-examples)
 
 ## Installation
 
@@ -64,19 +64,96 @@ SEP-10 or SEP-45 web-authentication flows and
 [`@colibri/rpc-streamer`](https://jsr.io/@colibri/rpc-streamer) for continuous
 ingestion.
 
+## Core's design contract
+
+Core is an orchestration toolkit around Stellar, not a replacement protocol
+model. The following constraints shape its public API:
+
+1. **Stellar values cross the boundary unchanged.** You create operations with
+   the Stellar SDK and can continue inspecting transaction envelopes, XDR
+   unions, simulation responses, and RPC results with the SDK. Colibri adds
+   typed configuration and lifecycle coordination around those values.
+2. **Each layer has one responsibility.** Processes perform work, steps give
+   processes stable runtime identities, connectors adapt state, pipelines define
+   order, and clients expose a domain-oriented interface over those pipelines.
+3. **Signing is capability-based.** Envelope authorization, Soroban
+   authorization-entry signing, and pre-authorized transaction validation are
+   separate interfaces. A pipeline checks the capability it needs instead of
+   assuming every signer is an in-memory Ed25519 keypair.
+4. **Soroban recording and enforcement are distinct.** The first simulation
+   discovers resources and authorization. Delegated credentials, when present in
+   the signed operation XDR, trigger the intermediate assembly and enforcing
+   simulation required before final assembly. Ordinary authorization does not
+   pay for or wait on that second simulation.
+5. **Extension points are named.** Pipeline and step ids are stable public
+   integration seams. A plugin declares where it acts, making ordering and
+   ownership reviewable instead of relying on an implicit callback chain.
+6. **Failures preserve context.** Expected and wrapped failures use typed
+   `ColibriError` families with stable codes and metadata. Higher layers may add
+   context, but they do not require callers to reverse-engineer a string.
+7. **Convenience remains inspectable.** High-level objects such as `Contract`
+   own their read and invoke pipelines publicly. You can attach a compatible
+   plugin or move to the underlying pipeline/process without abandoning the
+   types used by the client.
+
+This structure is meant to support gradual adoption. A script can use a single
+helper; an application can use the built-in pipelines; and an infrastructure
+service can compose the exported steps and processes into a workflow with its
+own storage, signing, or policy boundaries.
+
+## How transaction data moves
+
+The built-in pipelines share execution units but stop at different points. That
+prevents a read from accidentally becoming a submitted transaction and keeps the
+additional work of Soroban invocation explicit.
+
+| Stable step                     | Classic | Contract read | Contract invoke | Responsibility                                                                                     |
+| ------------------------------- | :-----: | :-----------: | :-------------: | -------------------------------------------------------------------------------------------------- |
+| `build-transaction`             |    ✓    |       ✓       |        ✓        | Resolve source sequence, operations, time bounds, memo, preconditions, and initial fee             |
+| `simulate-transaction`          |         |       ✓       |        ✓        | Ask RPC to record contract result, resources, footprint, and required authorization                |
+| `sign-auth-entries`             |         |               |        ✓        | Match each address credential to one capable signer and return the complete signed entry           |
+| `assemble-for-enforcement`      |         |               |   conditional   | Materialize an intermediate transaction only when signed delegated credentials require enforcement |
+| `enforce-simulation`            |         |               |   conditional   | Re-simulate delegated authorization and obtain the enforced Soroban data                           |
+| `assemble-transaction`          |         |               |        ✓        | Apply final Soroban data, signed entries, resource fee, and explicit fee strategy                  |
+| `envelope-signing-requirements` |    ✓    |               |        ✓        | Resolve source and operation-level account requirements after the transaction shape is final       |
+| `sign-envelope`                 |    ✓    |               |        ✓        | Select unambiguous matching envelope/pre-authorized signers and satisfy exact extra-signer keys    |
+| `send-transaction`              |    ✓    |               |        ✓        | Submit through RPC and wait for a normalized terminal result                                       |
+
+Typed connectors form the transitions. They can combine the immediately
+preceding output with an earlier step snapshot—for example, final assembly uses
+the original built transaction, the signed authorization entries, the relevant
+simulation data, and the configured fee strategy. The run context holds this
+state inside one pipeline execution; callers do not maintain a parallel bag of
+intermediate values.
+
+Soroban and envelope authorization remain separate phases:
+
+```text
+recording simulation
+  → address authorization requirements
+  → AuthEntrySigner capabilities
+  → optional delegated enforcement
+  → final transaction assembly
+  → account/operation envelope requirements
+  → EnvelopeSigner or PreAuthTransactionSigner capabilities
+  → submission
+```
+
+The current envelope process requires one unambiguous signer key for each
+resolved account requirement; it does not aggregate signer weights into a
+general multisig solver. Account threshold information remains available to
+applications that implement a custom multisig policy.
+
 ## Choose the right abstraction
 
-- **High-level clients** — choose `Contract`, `StellarAssetContract`, or
-  `LedgerEntries` when you want a domain-oriented API.
-- **Pipelines** — choose a classic, read, or invoke pipeline when you have SDK
-  operations and want Colibri to coordinate the complete transaction lifecycle.
-- **Processes** — call build, simulate, authorize, assemble, sign, or send
-  directly when your own orchestration owns the transitions.
-- **Steps and plugins** — use stable `convee` boundaries when your integration
-  needs observability, composition, or reusable policy at a known point.
-- **Primitives and helpers** — use accounts, signers, branded identifiers,
-  ledger keys, events, and XDR utilities independently; adopting Core does not
-  require running a transaction pipeline.
+| Start with...                        | When you need...                                                                                                 | What remains available                                                                              |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `Contract` or `StellarAssetContract` | A domain client that encodes methods, owns read/invoke pipelines, and can load ABI or contract-error information | The owned `readPipe` and `invokePipe`, raw invocation methods, contract spec, Wasm, and ledger keys |
+| `LedgerEntries`                      | Typed current-state reads for accounts, trustlines, offers, contract data/code, configuration, or TTL            | Exact ledger keys, raw XDR, decoded discriminated unions, and the RPC client boundary               |
+| A built-in pipeline                  | A complete classic, read-only, or state-changing transaction lifecycle                                           | Stable steps, plugin targets, run output, Stellar transactions, simulation data, and RPC responses  |
+| An exported process                  | One tested execution unit inside application-owned orchestration                                                 | Typed input/output and a process-specific error namespace                                           |
+| Steps and connectors                 | A custom `convee` pipeline with Colibri-compatible observation and plugin boundaries                             | The same process functions and stable ids used by built-in pipelines                                |
+| Primitives and helpers               | Independent address, asset, event, auth, identifier, binary, ScVal, XDR, or network behavior                     | No pipeline or client lifecycle is required                                                         |
 
 ## Quick start: send a Testnet payment
 
@@ -148,6 +225,79 @@ the reference-oriented sections below are focused fragments: names such as
 `networkConfig`, `config`, `operations`, `contractId`, `metadataXdr`, `filters`,
 and `plugin` are supplied by the surrounding application. Follow the linked
 guides and examples when you need a complete runnable workflow.
+
+## Recommended practices
+
+### Keep network identity together
+
+Pass a `NetworkConfig` through clients and pipelines so the network passphrase,
+RPC/Horizon endpoints, HTTP policy, archive RPC, and Friendbot availability
+cannot drift independently. Inject an already configured Stellar RPC `Server`
+when transport, headers, connection reuse, or testing belongs to the
+application. Never infer the signing passphrase from an RPC URL.
+
+### Choose fees by intent
+
+`TransactionConfig.fee` accepts a string for the Stellar SDK's familiar
+per-operation base-fee behavior, or one explicit strategy:
+
+| Configuration                | Meaning                                                                                                             |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `"100"` or `{ base: "100" }` | Base fee per operation; the transaction builder derives the inclusion bid from its operation count                  |
+| `{ inclusion: "500" }`       | Exact inclusion-fee bid for the transaction                                                                         |
+| `{ max: "100000" }`          | Maximum complete fee; after simulation, Core reserves the resource fee and uses only the remainder as inclusion fee |
+
+For a Soroban maximum, the configured value must leave at least the minimum
+network inclusion fee after the simulated resource fee is subtracted. Core
+performs that validation during assembly, when the actual resource value is
+known. If an application must override simulated Soroban data itself, that is a
+custom assembly concern rather than another `TransactionConfig` field.
+
+### Treat signers as scoped capabilities
+
+Pass only the signer objects required by the run, and use `signsFor(...)` to
+make target ownership explicit. Keep secrets inside their signer implementation;
+transaction construction should not know how a wallet, HSM, remote service,
+Hash-X preimage, signed payload, or delegated contract produces authorization.
+Destroy `LocalSigner` and `HashXSigner` instances when their retained secret
+material is no longer required.
+
+### Extend the narrowest stable boundary
+
+Use a process when you own orchestration, a step-targeted plugin when policy
+belongs immediately before/after one operation, and a pipe-targeted plugin when
+it must surround the complete lifecycle. Attach invoke-only and read-only
+plugins separately on `Contract`; a policy appropriate for submitted writes may
+be incorrect for simulations.
+
+### Use the right data surface
+
+- Use `LedgerEntries` for typed values that exist at the RPC server's current
+  ledger state.
+- Use `Ledger`/`Transaction`/`Operation` parser views when processing a specific
+  closed ledger and its metadata.
+- Use `RPCStreamer` from its separate package when you need checkpoints,
+  pagination, archive recovery, and a continuing archive-to-live loop.
+
+These APIs intentionally do not pretend that current state, one historical
+ledger, and an unbounded data stream have the same consistency or retention
+model.
+
+### Handle errors structurally
+
+Narrow a concrete error class or stable code, log its `source` and structured
+metadata, and retain its cause. Message text is for humans and can improve
+without becoming a breaking control-flow contract. When custom infrastructure
+throws an unknown value, wrap it with `ColibriError.fromUnknown(...)` at the
+boundary that can add useful context.
+
+### Test the assembled workflow
+
+Unit-test pure requirements, parsing, and conversion logic. Exercise sequence
+loading, RPC simulation, authorization, resource assembly, envelope signing,
+submission, events, and cleanup against a real local ledger with
+`@colibri/test-tooling`. A mocked success response cannot establish that the
+assembled XDR is accepted by Stellar.
 
 ## Architecture overview
 
@@ -319,7 +469,9 @@ outside Colibri's built-in pipelines.
   come from that data and are combined with the configured inclusion fee or
   total maximum exactly once.
 - **EnvelopeSigningRequirements** – Analyzes both envelope and Soroban
-  requirements, yielding a checklist of signatures needed before submission.
+  source/operation requirements, yielding the account checklist used for final
+  envelope authorization. Soroban authorization entries are handled earlier by
+  `SignAuthEntries`.
 - **SignEnvelope** – Deterministically resolves account and exact extra-signer
   requirements, then applies envelope signatures or verifies pre-authorized
   transaction hashes.
