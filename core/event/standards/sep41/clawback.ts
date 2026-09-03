@@ -1,6 +1,6 @@
 import { StrKey } from "@/strkeys/index.ts";
 import { EventTemplate } from "@/event/template.ts";
-import type { EventSchema } from "@/event/types.ts";
+import type { EventSchema, SchemaField } from "@/event/types.ts";
 
 /**
  * SEP-41 Clawback Event Schema
@@ -8,11 +8,15 @@ import type { EventSchema } from "@/event/types.ts";
  * Topics: [symbol("clawback"), from: Address]
  * Value: i128 (amount)
  */
-export const ClawbackEventSchema = {
+export const ClawbackEventSchema: EventSchema<
+  "clawback",
+  readonly [SchemaField<"from", "address">],
+  SchemaField<"amount", "i128">
+> = {
   name: "clawback",
   topics: [{ name: "from", type: "address" }],
   value: { name: "amount", type: "i128" },
-} as const satisfies EventSchema;
+};
 
 /**
  * SEP-41 Clawback Event

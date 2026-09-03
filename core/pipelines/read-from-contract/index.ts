@@ -1,8 +1,11 @@
-import { pipe, step } from "convee";
+import { type Pipe, pipe, type PipeContext, type Step, step } from "convee";
 import { Server } from "stellar-sdk/rpc";
 import { ColibriError } from "@/error/index.ts";
 import { buildToSimulate } from "@/pipelines/shared/connectors/build-to-simulate.ts";
-import type { CreateReadFromContractPipelineArgs } from "@/pipelines/read-from-contract/types.ts";
+import type {
+  CreateReadFromContractPipelineArgs,
+  ReadFromContractInput,
+} from "@/pipelines/read-from-contract/types.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 import { simulateToRetval } from "@/pipelines/shared/connectors/simulate-to-retval/index.ts";
 import * as E from "@/pipelines/read-from-contract/error.ts";
@@ -12,9 +15,37 @@ import {
   createBuildTransactionStep,
   createSimulateTransactionStep,
 } from "@/steps/index.ts";
+import type {
+  BuildTransactionInput,
+  BuildTransactionOutput,
+} from "@/processes/build-transaction/types.ts";
+import type {
+  SimulateTransactionInput,
+  SimulateTransactionOutput,
+} from "@/processes/simulate-transaction/types.ts";
 
 /** Stable id of the read-from-contract pipeline. */
 export const READ_FROM_CONTRACT_PIPELINE_ID = "ReadFromContractPipeline";
+
+type ReadFromContractPipelineSteps = readonly [
+  Step<
+    ReadFromContractInput,
+    BuildTransactionInput,
+    Error,
+    "read-from-contract-input"
+  >,
+  ReturnType<typeof createBuildTransactionStep>,
+  Step<BuildTransactionOutput, SimulateTransactionInput>,
+  ReturnType<typeof createSimulateTransactionStep>,
+  Step<SimulateTransactionOutput, ReturnType<typeof simulateToRetval>>,
+];
+
+type ReadFromContractPipelineRuntime = Pipe<
+  ReadFromContractPipelineSteps,
+  Error,
+  PipeContext<ReadFromContractPipelineSteps>,
+  typeof READ_FROM_CONTRACT_PIPELINE_ID
+>;
 
 /**
  * Builds the read-from-contract pipeline with fully inferred step types.
@@ -22,19 +53,21 @@ export const READ_FROM_CONTRACT_PIPELINE_ID = "ReadFromContractPipeline";
 const buildReadFromContractPipeline = ({
   networkConfig,
   rpc,
-}: CreateReadFromContractPipelineArgs & { rpc: Server }) => {
+}: CreateReadFromContractPipelineArgs & {
+  rpc: Server;
+}): ReadFromContractPipelineRuntime => {
   const BuildTransaction = createBuildTransactionStep();
   const SimulateTransaction = createSimulateTransactionStep();
 
-  const pipelineSteps = [
+  const pipelineSteps: ReadFromContractPipelineSteps = [
     step(inputToBuild(networkConfig.networkPassphrase), {
       id: "read-from-contract-input" as const,
     }),
     BuildTransaction,
-    buildToSimulate(rpc),
+    step(buildToSimulate(rpc)),
     SimulateTransaction,
-    simulateToRetval,
-  ] as const;
+    step(simulateToRetval),
+  ];
 
   return pipe([...pipelineSteps], {
     id: READ_FROM_CONTRACT_PIPELINE_ID,

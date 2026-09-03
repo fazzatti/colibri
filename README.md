@@ -495,6 +495,17 @@ Ensure code style consistency.
 deno lint
 ```
 
+### Package validation
+
+Type-check every public entrypoint, validate its JSR documentation, and ensure
+that every published API can be analyzed without slow type inference.
+
+```sh
+deno task check
+deno task check:jsr
+deno task check:slow-types
+```
+
 ### Documentation
 
 GitBook guides live under [`docs/`](docs/README.md), with scoped navigation in

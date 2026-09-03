@@ -1,7 +1,8 @@
-import { pipe, step } from "convee";
+import { type Pipe, pipe, type PipeContext, type Step, step } from "convee";
 import { Server } from "stellar-sdk/rpc";
 import type {
   ClassicTransactionInput,
+  ClassicTransactionOutput,
   CreateClassicTransactionPipelineArgs,
 } from "@/pipelines/classic-transaction/types.ts";
 import * as E from "@/pipelines/classic-transaction/error.ts";
@@ -22,9 +23,55 @@ import {
   createSignEnvelopeStep,
 } from "@/steps/index.ts";
 import { CLASSIC_TRANSACTION_INPUT_STEP_ID } from "@/pipelines/classic-transaction/connectors.ts";
+import type {
+  BuildTransactionInput,
+  BuildTransactionOutput,
+} from "@/processes/build-transaction/types.ts";
+import type {
+  EnvelopeSigningRequirementsInput,
+  EnvelopeSigningRequirementsOutput,
+} from "@/processes/envelope-signing-requirements/types.ts";
+import type {
+  SignEnvelopeInput,
+  SignEnvelopeOutput,
+} from "@/processes/sign-envelope/types.ts";
+import type {
+  SendTransactionInput,
+  SendTransactionOutput,
+} from "@/processes/send-transaction/types.ts";
 
 /** Stable id of the classic transaction pipeline. */
 export const CLASSIC_TRANSACTION_PIPELINE_ID = "ClassicTransactionPipeline";
+
+type ClassicTransactionPipelineSteps = readonly [
+  Step<
+    ClassicTransactionInput,
+    ClassicTransactionInput,
+    Error,
+    typeof CLASSIC_TRANSACTION_INPUT_STEP_ID
+  >,
+  Step<
+    ClassicTransactionInput,
+    BuildTransactionInput,
+    Error,
+    "classic-transaction-build-input"
+  >,
+  ReturnType<typeof createBuildTransactionStep>,
+  Step<BuildTransactionOutput, EnvelopeSigningRequirementsInput>,
+  ReturnType<typeof createEnvelopeSigningRequirementsStep>,
+  Step<EnvelopeSigningRequirementsOutput, SignEnvelopeInput>,
+  ReturnType<typeof createSignEnvelopeStep>,
+  Step<SignEnvelopeOutput, SendTransactionInput>,
+  ReturnType<typeof createSendTransactionStep>,
+  Step<SendTransactionOutput, ClassicTransactionOutput>,
+];
+
+type ClassicTransactionPipelineRuntime = Pipe<
+  ClassicTransactionPipelineSteps,
+  Error,
+  PipeContext<ClassicTransactionPipelineSteps>,
+  typeof CLASSIC_TRANSACTION_PIPELINE_ID
+>;
 
 /**
  * Builds the classic transaction pipeline with fully inferred step types.
@@ -32,7 +79,9 @@ export const CLASSIC_TRANSACTION_PIPELINE_ID = "ClassicTransactionPipeline";
 const buildClassicTransactionPipeline = ({
   networkConfig,
   rpc,
-}: CreateClassicTransactionPipelineArgs & { rpc: Server }) => {
+}: CreateClassicTransactionPipelineArgs & {
+  rpc: Server;
+}): ClassicTransactionPipelineRuntime => {
   const inputStep = step(
     (input: ClassicTransactionInput) => input,
     { id: CLASSIC_TRANSACTION_INPUT_STEP_ID },
@@ -48,18 +97,18 @@ const buildClassicTransactionPipeline = ({
   const SignEnvelope = createSignEnvelopeStep();
   const SendTransaction = createSendTransactionStep();
 
-  const pipelineSteps = [
+  const pipelineSteps: ClassicTransactionPipelineSteps = [
     inputStep,
     buildInputStep,
     BuildTransaction,
-    buildToEnvelopeSigningRequirements,
+    step(buildToEnvelopeSigningRequirements),
     EnvelopeSigningRequirements,
     envSignReqToSignEnvelope(),
     SignEnvelope,
-    connectSignEnvelopeToSend,
+    step(connectSignEnvelopeToSend),
     SendTransaction,
-    sendTransactionToPipeOutput,
-  ] as const;
+    step(sendTransactionToPipeOutput),
+  ];
 
   return pipe([...pipelineSteps], {
     id: CLASSIC_TRANSACTION_PIPELINE_ID,

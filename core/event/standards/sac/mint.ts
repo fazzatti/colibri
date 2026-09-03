@@ -12,7 +12,7 @@
 import { StrKey } from "@/strkeys/index.ts";
 import { EventTemplate } from "@/event/template.ts";
 import * as E from "@/event/error.ts";
-import type { EventSchema } from "@/event/types.ts";
+import type { EventSchema, SchemaField } from "@/event/types.ts";
 import type { Event } from "@/event/event.ts";
 import { isEventMuxedData } from "@/event/standards/cap67/index.ts";
 import { isStellarAssetCanonicalString } from "@/asset/sep11/index.ts";
@@ -26,14 +26,21 @@ import type { StellarAssetCanonicalString } from "@/asset/sep11/types.ts";
  *
  * Note: CAP-0067 removed the admin from the topics.
  */
-export const MintEventSchema = {
+export const MintEventSchema: EventSchema<
+  "mint",
+  readonly [
+    SchemaField<"to", "address">,
+    SchemaField<"asset", "string">,
+  ],
+  SchemaField<"amount", "i128">
+> = {
   name: "mint",
   topics: [
     { name: "to", type: "address" },
     { name: "asset", type: "string" },
   ],
   value: { name: "amount", type: "i128" },
-} as const satisfies EventSchema;
+};
 
 /**
  * SAC Mint Event

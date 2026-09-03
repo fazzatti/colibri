@@ -17,7 +17,7 @@ const baseArchiveRpcUrl = "https://archive-rpc-pro.lightsail.network/";
 
 /** Lightsail-backed network configuration presets. */
 export const Lightsail = {
-  MainNet: (apiKey?: string) => {
+  MainNet: (apiKey?: string): WithArchiveRPC<MainNetConfig> => {
     if (isDefined(apiKey)) {
       return NetworkConfig.MainNet({
         rpcUrl: `${baseRpcUrl}${apiKey}`,

@@ -12,7 +12,7 @@
 import { StrKey } from "@/strkeys/index.ts";
 import { EventTemplate } from "@/event/template.ts";
 import * as E from "@/event/error.ts";
-import type { EventSchema } from "@/event/types.ts";
+import type { EventSchema, SchemaField } from "@/event/types.ts";
 import { isStellarAssetCanonicalString } from "@/asset/sep11/index.ts";
 import type { StellarAssetCanonicalString } from "@/asset/sep11/types.ts";
 
@@ -22,7 +22,15 @@ import type { StellarAssetCanonicalString } from "@/asset/sep11/types.ts";
  * Topics: [symbol("approve"), from: Address, spender: Address, asset: String]
  * Value: vec [amount: i128, live_until_ledger: u32]
  */
-export const ApproveEventSchema = {
+export const ApproveEventSchema: EventSchema<
+  "approve",
+  readonly [
+    SchemaField<"from", "address">,
+    SchemaField<"spender", "address">,
+    SchemaField<"asset", "string">,
+  ],
+  SchemaField<"data", "vec">
+> = {
   name: "approve",
   topics: [
     { name: "from", type: "address" },
@@ -30,7 +38,7 @@ export const ApproveEventSchema = {
     { name: "asset", type: "string" },
   ],
   value: { name: "data", type: "vec" },
-} as const satisfies EventSchema;
+};
 
 /**
  * SAC Approve Event

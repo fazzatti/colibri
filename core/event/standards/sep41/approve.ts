@@ -1,6 +1,6 @@
 import { StrKey } from "@/strkeys/index.ts";
 import { EventTemplate } from "@/event/template.ts";
-import type { EventSchema } from "@/event/types.ts";
+import type { EventSchema, SchemaField } from "@/event/types.ts";
 
 /**
  * SEP-41 Approve Event Schema
@@ -8,14 +8,21 @@ import type { EventSchema } from "@/event/types.ts";
  * Topics: [symbol("approve"), from: Address, spender: Address]
  * Value: vec [amount: i128, live_until_ledger: u32]
  */
-export const ApproveEventSchema = {
+export const ApproveEventSchema: EventSchema<
+  "approve",
+  readonly [
+    SchemaField<"from", "address">,
+    SchemaField<"spender", "address">,
+  ],
+  SchemaField<"data", "vec">
+> = {
   name: "approve",
   topics: [
     { name: "from", type: "address" },
     { name: "spender", type: "address" },
   ],
   value: { name: "data", type: "vec" },
-} as const satisfies EventSchema;
+};
 
 /**
  * SEP-41 Approve Event
