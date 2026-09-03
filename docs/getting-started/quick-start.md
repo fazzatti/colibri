@@ -35,8 +35,10 @@ for (const signer of [sender, recipient]) {
   });
 }
 
-const pipeline = createClassicTransactionPipeline({ networkConfig: network });
-const result = await pipeline.run({
+const sendPayment = createClassicTransactionPipeline({
+  networkConfig: network,
+});
+const result = await sendPayment({
   operations: [Operation.payment({
     destination: recipient.publicKey(),
     asset: Asset.native(),

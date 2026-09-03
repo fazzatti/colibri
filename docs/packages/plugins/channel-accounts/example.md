@@ -49,9 +49,9 @@ const channels = await ChannelAccounts.open({
 });
 
 try {
-  const pipeline = createClassicTransactionPipeline({ networkConfig });
-  pipeline.use(createChannelAccountsPlugin({ channels }));
-  pipeline.use(createFeeBumpPlugin({
+  const sendPayment = createClassicTransactionPipeline({ networkConfig });
+  sendPayment.use(createChannelAccountsPlugin({ channels }));
+  sendPayment.use(createFeeBumpPlugin({
     networkConfig,
     feeBumpConfig: {
       source: sponsor.address(),
@@ -59,7 +59,7 @@ try {
       signers: [sponsor.signer()],
     },
   }));
-  const result = await pipeline.run({
+  const result = await sendPayment({
     operations: [Operation.payment({
       source: sponsor.address(), // Asset sender, independent of transaction source.
       destination: recipient.publicKey(),

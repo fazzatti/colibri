@@ -34,7 +34,8 @@ const installSigner = Operation.setOptions({
 
 signer.addTarget(accountId);
 
-await pipeline.run({
+// `submitWithHashX` is a configured callable transaction pipeline.
+await submitWithHashX({
   operations,
   config: {
     source: accountId,

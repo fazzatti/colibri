@@ -77,9 +77,11 @@ const channels = await ChannelAccounts.open({
 });
 
 const plugin = createChannelAccountsPlugin({ channels });
-const pipeline = createClassicTransactionPipeline({ networkConfig });
+const executeClassicTransaction = createClassicTransactionPipeline({
+  networkConfig,
+});
 
-pipeline.use(plugin);
+executeClassicTransaction.use(plugin);
 ```
 
 By default the plugin can be attached to:
@@ -101,8 +103,10 @@ const plugin = createChannelAccountsPlugin({
   target: CLASSIC_TRANSACTION_PIPELINE_ID,
 });
 
-const pipeline = createClassicTransactionPipeline({ networkConfig });
-pipeline.use(plugin);
+const executeClassicTransaction = createClassicTransactionPipeline({
+  networkConfig,
+});
+executeClassicTransaction.use(plugin);
 ```
 
 ## Advanced Usage With High-Level Clients

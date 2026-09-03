@@ -12,7 +12,7 @@
 import { StrKey } from "@/strkeys/index.ts";
 import { EventTemplate } from "@/event/template.ts";
 import * as E from "@/event/error.ts";
-import type { EventSchema } from "@/event/types.ts";
+import type { EventSchema, SchemaField } from "@/event/types.ts";
 import { isStellarAssetCanonicalString } from "@/asset/sep11/index.ts";
 import type { StellarAssetCanonicalString } from "@/asset/sep11/types.ts";
 
@@ -22,14 +22,21 @@ import type { StellarAssetCanonicalString } from "@/asset/sep11/types.ts";
  * Topics: [symbol("set_admin"), admin: Address, asset: String]
  * Value: new_admin: Address
  */
-export const SetAdminEventSchema = {
+export const SetAdminEventSchema: EventSchema<
+  "set_admin",
+  readonly [
+    SchemaField<"admin", "address">,
+    SchemaField<"asset", "string">,
+  ],
+  SchemaField<"newAdmin", "address">
+> = {
   name: "set_admin",
   topics: [
     { name: "admin", type: "address" },
     { name: "asset", type: "string" },
   ],
   value: { name: "newAdmin", type: "address" },
-} as const satisfies EventSchema;
+};
 
 /**
  * SAC Set Admin Event

@@ -110,9 +110,9 @@ import { Operation } from "npm:@stellar/stellar-sdk";
 const network = NetworkConfig.TestNet();
 const signer = LocalSigner.fromSecret("S...");
 
-const pipeline = createInvokeContractPipeline({ networkConfig: network });
+const invokeContract = createInvokeContractPipeline({ networkConfig: network });
 
-const result = await pipeline.run({
+const result = await invokeContract({
   operations: [
     Operation.invokeContractFunction({
       contract: "CABC...",

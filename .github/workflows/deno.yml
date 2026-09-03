@@ -54,6 +54,9 @@ jobs:
       - name: Run JSR entrypoint checks
         run: deno task check:jsr
 
+      - name: Check publishable type surfaces
+        run: deno task check:slow-types
+
       - name: Check GitBook documentation and examples
         run: |
           deno task test:docs

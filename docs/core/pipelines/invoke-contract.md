@@ -30,7 +30,7 @@ returned by that second simulation.
 import { createInvokeContractPipeline, NetworkConfig } from "@colibri/core";
 
 const network = NetworkConfig.TestNet();
-const pipeline = createInvokeContractPipeline({ networkConfig: network });
+const invokeContract = createInvokeContractPipeline({ networkConfig: network });
 ```
 
 ## Running The Pipeline
@@ -41,7 +41,7 @@ import { Operation } from "npm:@stellar/stellar-sdk";
 
 const signer = LocalSigner.fromSecret("S...");
 
-const result = await pipeline.run({
+const result = await invokeContract({
   operations: [
     Operation.invokeContractFunction({
       contract: "CABC...",

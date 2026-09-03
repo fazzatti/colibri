@@ -25,9 +25,11 @@ import { Asset, Operation } from "npm:@stellar/stellar-sdk";
 const signer = LocalSigner.fromSecret("S...");
 const network = NetworkConfig.TestNet();
 
-const pipeline = createClassicTransactionPipeline({ networkConfig: network });
+const executeClassicTransaction = createClassicTransactionPipeline({
+  networkConfig: network,
+});
 
-const result = await pipeline.run({
+const result = await executeClassicTransaction({
   operations: [
     Operation.payment({
       destination: "GDEF...",

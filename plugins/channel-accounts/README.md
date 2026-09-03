@@ -48,9 +48,11 @@ const feeBumpPlugin = createFeeBumpPlugin({
     signers: [sponsor.signer()],
   },
 });
-const pipeline = createClassicTransactionPipeline({ networkConfig });
-pipeline.use(channelAccountsPlugin);
-pipeline.use(feeBumpPlugin);
+const executeClassicTransaction = createClassicTransactionPipeline({
+  networkConfig,
+});
+executeClassicTransaction.use(channelAccountsPlugin);
+executeClassicTransaction.use(feeBumpPlugin);
 ```
 
 ## Opening channels
@@ -117,8 +119,10 @@ const plugin = createChannelAccountsPlugin({
   channels,
   target: CLASSIC_TRANSACTION_PIPELINE_ID,
 });
-const pipeline = createClassicTransactionPipeline({ networkConfig });
-pipeline.use(plugin);
+const executeClassicTransaction = createClassicTransactionPipeline({
+  networkConfig,
+});
+executeClassicTransaction.use(plugin);
 ```
 
 For advanced usage with higher-level clients, attach the plugin to the owned
@@ -137,8 +141,7 @@ sac.contract.invokePipe.use(plugin);
 
 - Channels are opened with `0` balance.
 - If you want zero-balance channels to submit transactions immediately, either
-  fund them separately or combine the pipeline with
-  `@colibri/plugin-fee-bump`.
+  fund them separately or combine the pipeline with `@colibri/plugin-fee-bump`.
 - Channel closing keeps the channel as the `accountMerge` operation source while
   letting the caller-provided transaction config pay the network fee.
 - Adding the sponsor as a channel signer affects the on-chain account shape, but

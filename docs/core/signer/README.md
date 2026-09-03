@@ -62,9 +62,9 @@ Pass every signer through the same `TransactionConfig.signers` list:
 import { createInvokeContractPipeline, NetworkConfig } from "@colibri/core";
 
 const networkConfig = NetworkConfig.TestNet();
-const pipeline = createInvokeContractPipeline({ networkConfig });
+const invokeContract = createInvokeContractPipeline({ networkConfig });
 
-const result = await pipeline.run({
+const result = await invokeContract({
   operations,
   config: {
     source: signer.publicKey(),

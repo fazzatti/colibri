@@ -1,4 +1,4 @@
-import { pipe, step } from "convee";
+import { type Pipe, pipe, type PipeContext, type Step, step } from "convee";
 import { Server } from "stellar-sdk/rpc";
 import type {
   CreateInvokeContractPipelineArgs,
@@ -31,9 +31,98 @@ import {
   createSimulateTransactionStep,
 } from "@/steps/index.ts";
 import { INVOKE_CONTRACT_INPUT_STEP_ID } from "@/pipelines/invoke-contract/connectors.ts";
+import type {
+  BuildTransactionInput,
+  BuildTransactionOutput,
+} from "@/processes/build-transaction/types.ts";
+import type {
+  SimulateTransactionInput,
+  SimulateTransactionOutput,
+} from "@/processes/simulate-transaction/types.ts";
+import type {
+  SignAuthEntriesInput,
+  SignAuthEntriesOutput,
+} from "@/processes/sign-auth-entries/types.ts";
+import type {
+  AssembleForEnforcementInput,
+  AssembleForEnforcementOutput,
+} from "@/processes/assemble-for-enforcement/types.ts";
+import type { EnforceSimulationInput } from "@/processes/enforce-simulation/types.ts";
+import type {
+  AssembleTransactionInput,
+  AssembleTransactionOutput,
+} from "@/processes/assemble-transaction/types.ts";
+import type {
+  EnvelopeSigningRequirementsInput,
+  EnvelopeSigningRequirementsOutput,
+} from "@/processes/envelope-signing-requirements/types.ts";
+import type {
+  SignEnvelopeInput,
+  SignEnvelopeOutput,
+} from "@/processes/sign-envelope/types.ts";
+import type { SendTransactionInput } from "@/processes/send-transaction/types.ts";
 
 /** Stable id of the invoke-contract pipeline. */
 export const INVOKE_CONTRACT_PIPELINE_ID = "InvokeContractPipeline";
+
+type InvokeContractPipelineSteps = readonly [
+  Step<
+    InvokeContractInput,
+    InvokeContractInput,
+    Error,
+    typeof INVOKE_CONTRACT_INPUT_STEP_ID
+  >,
+  Step<
+    InvokeContractInput,
+    BuildTransactionInput,
+    Error,
+    "invoke-contract-build-input"
+  >,
+  ReturnType<typeof createBuildTransactionStep>,
+  Step<BuildTransactionOutput, SimulateTransactionInput>,
+  ReturnType<typeof createSimulateTransactionStep>,
+  Step<
+    SimulateTransactionOutput,
+    SignAuthEntriesInput,
+    Error,
+    "invoke-contract-simulate-to-sign-auth"
+  >,
+  ReturnType<typeof createSignAuthEntriesStep>,
+  Step<
+    SignAuthEntriesOutput,
+    AssembleForEnforcementInput,
+    Error,
+    "invoke-contract-sign-auth-to-assemble-for-enforcement"
+  >,
+  ReturnType<typeof createAssembleForEnforcementStep>,
+  Step<
+    AssembleForEnforcementOutput,
+    EnforceSimulationInput,
+    Error,
+    "invoke-contract-assemble-for-enforcement-to-simulate"
+  >,
+  ReturnType<typeof createEnforceSimulationStep>,
+  Step<
+    SimulateTransactionOutput,
+    AssembleTransactionInput,
+    Error,
+    "invoke-contract-enforce-simulation-to-assemble"
+  >,
+  ReturnType<typeof createAssembleTransactionStep>,
+  Step<AssembleTransactionOutput, EnvelopeSigningRequirementsInput>,
+  ReturnType<typeof createEnvelopeSigningRequirementsStep>,
+  Step<EnvelopeSigningRequirementsOutput, SignEnvelopeInput>,
+  ReturnType<typeof createSignEnvelopeStep>,
+  Step<SignEnvelopeOutput, SendTransactionInput>,
+  ReturnType<typeof createSendTransactionStep>,
+];
+
+type InvokeContractPipelineRuntime = Pipe<
+  InvokeContractPipelineSteps,
+  Error,
+  PipeContext<InvokeContractPipelineSteps>,
+  typeof INVOKE_CONTRACT_PIPELINE_ID
+>;
 
 /**
  * Builds the invoke-contract pipeline with fully inferred step types.
@@ -41,7 +130,9 @@ export const INVOKE_CONTRACT_PIPELINE_ID = "InvokeContractPipeline";
 const buildInvokeContractPipeline = ({
   networkConfig,
   rpc,
-}: CreateInvokeContractPipelineArgs & { rpc: Server }) => {
+}: CreateInvokeContractPipelineArgs & {
+  rpc: Server;
+}): InvokeContractPipelineRuntime => {
   const inputStep = step(
     (input: InvokeContractInput) => input,
     { id: INVOKE_CONTRACT_INPUT_STEP_ID },
@@ -67,11 +158,11 @@ const buildInvokeContractPipeline = ({
   const SignEnvelope = createSignEnvelopeStep();
   const SendTransaction = createSendTransactionStep();
 
-  const pipelineSteps = [
+  const pipelineSteps: InvokeContractPipelineSteps = [
     inputStep,
     buildInputStep,
     BuildTransaction,
-    connectBuildToSimulate,
+    step(connectBuildToSimulate),
     SimulateTransaction,
     connectSimulateToSignAuthEntries,
     SignAuthEntries,
@@ -81,13 +172,13 @@ const buildInvokeContractPipeline = ({
     EnforceSimulation,
     enforceSimulationToAssemble(),
     AssembleTransaction,
-    assembleToEnvelopeSigningRequirements,
+    step(assembleToEnvelopeSigningRequirements),
     EnvelopeSigningRequirements,
     envSignReqToSignEnvelope(),
     SignEnvelope,
-    connectSignEnvelopeToSend,
+    step(connectSignEnvelopeToSend),
     SendTransaction,
-  ] as const;
+  ];
 
   return pipe([...pipelineSteps], {
     id: INVOKE_CONTRACT_PIPELINE_ID,

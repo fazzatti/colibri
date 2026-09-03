@@ -69,9 +69,9 @@ import { createInvokeContractPipeline, NetworkConfig } from "@colibri/core";
 import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
 
 const networkConfig = NetworkConfig.TestNet();
-const pipeline = createInvokeContractPipeline({ networkConfig });
+const invokeWithSponsor = createInvokeContractPipeline({ networkConfig });
 
-pipeline.use(
+invokeWithSponsor.use(
   createFeeBumpPlugin({
     networkConfig,
     feeBumpConfig: {
@@ -125,7 +125,7 @@ RPC Streamer has its own error base. Keep an unknown-error branch:
 import { ColibriError } from "@colibri/core";
 
 try {
-  await pipeline.run({ operations, config });
+  await invokeWithSponsor({ operations, config });
 } catch (error) {
   if (ColibriError.is(error)) {
     console.log(error.code);

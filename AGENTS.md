@@ -47,6 +47,7 @@ Primary workspace commands live in `deno.json`:
 deno lint
 deno task check
 deno task check:jsr
+deno task check:slow-types
 deno task check:package-versions
 deno task check:crap
 deno task test
@@ -62,6 +63,8 @@ What they mean:
   packages.
 - `deno task check:jsr`: run `deno doc --lint` against the JSR entrypoints.
   Public exports need valid docs.
+- `deno task check:slow-types`: perform a dry-run publish of every workspace
+  package and reject public types that JSR cannot analyze without inference.
 - `deno task check:package-versions`: verify that package-version constants used
   at runtime match their package `deno.json` metadata.
 - `deno task check:crap`: enforce the maximum CRAP score of 15 against the
@@ -78,6 +81,7 @@ Good default validation:
 deno lint
 deno task check
 deno task check:jsr
+deno task check:slow-types
 deno task check:package-versions
 deno task check:crap
 deno task test:unit
