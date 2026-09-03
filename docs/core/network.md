@@ -87,6 +87,8 @@ are controlled by the provider.
 
 Provider helpers expose known public infrastructure:
 
+<!-- deno-check -->
+
 ```ts
 import { NetworkProviders } from "@colibri/core";
 
@@ -98,6 +100,8 @@ const ankrArchive = NetworkProviders.Ankr.MainNet();
 ```
 
 ## Using NetworkConfig In Pipelines
+
+<!-- deno-check -->
 
 ```ts
 import {
