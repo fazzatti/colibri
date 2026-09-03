@@ -13,7 +13,11 @@ const paint = (
   for (let y = cell.y; y < cell.y + cell.height; y++) {
     for (let x = cell.x; x < cell.x + cell.width; x++) {
       const offset = (y * size + x) * 4;
-      pixels.set([r, g, b, 255], offset);
+      // Avoid allocating a temporary RGBA array for each pixel.
+      pixels[offset] = r;
+      pixels[offset + 1] = g;
+      pixels[offset + 2] = b;
+      pixels[offset + 3] = 255;
     }
   }
 };

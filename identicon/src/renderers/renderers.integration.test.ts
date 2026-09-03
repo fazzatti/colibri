@@ -1,8 +1,9 @@
-import { assertEquals } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { decodeBase64 } from "@std/encoding/base64";
 import { decode } from "fast-png";
 import { Resvg } from "resvg-test";
+import { StrKey } from "stellar-sdk";
 import { Identicon } from "@/identicon.ts";
 import fixtures from "colibri-internal/identicon/vectors.json" with {
   type: "json",
@@ -78,5 +79,24 @@ describe("Real PNG and SVG rendering", () => {
       assertEquals(pixel(opaque.data, x, y), [18, 52, 86, 255]);
     }
     assertEquals(pixel(transparent.data, 1, 1), [204, 98, 61, 255]);
+  });
+
+  it("preserves every RGBA channel at maximum size with background and full foreground passes", () => {
+    // All selected pattern bits are set, so each of the 49 cells is filled.
+    const publicKey = StrKey.encodeEd25519PublicKey(
+      new Uint8Array(32).fill(255),
+    );
+    const image = decode(
+      new Identicon(publicKey).toPng({ size: 4096, background: "#FFFFFF" }),
+      { checkCrc: true },
+    );
+    assertEquals(image.width, 4096);
+    assertEquals(image.height, 4096);
+    assertEquals(image.channels, 4);
+    assertEquals(image.data.length, 4096 * 4096 * 4);
+
+    // Hue byte 255 wraps to red; foreground must replace every white pixel.
+    const rgba = [204, 61, 61, 255];
+    assert(image.data.every((channel, index) => channel === rgba[index % 4]));
   });
 });
