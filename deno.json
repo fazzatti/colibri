@@ -42,6 +42,8 @@
     "check:webauth-fixtures": "deno run -A _tools/build-webauth-fixtures.ts --check",
     "build:delegated-auth-fixtures": "deno run -A _tools/build-delegated-auth-fixtures.ts",
     "check:delegated-auth-fixtures": "deno run -A _tools/build-delegated-auth-fixtures.ts --check",
+    "build:sep41-fixture": "deno run -A _tools/build-sep41-fixture.ts",
+    "check:sep41-fixture": "deno run -A _tools/build-sep41-fixture.ts --check",
     "build:executable-ref-fixture": "deno run -A _tools/build-executable-ref-fixture.ts",
     "check:executable-ref-fixture": "deno run -A _tools/build-executable-ref-fixture.ts --check",
     "build:build-verification-fixtures": "deno run -A _tools/build-build-verification-fixtures.ts",

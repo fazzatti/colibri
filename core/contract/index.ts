@@ -632,18 +632,22 @@ export class Contract {
   }
 
   /**
+   * Invokes a state-changing contract method with already encoded ScVal arguments.
+   *
+   * This is the escape hatch for methods that are not represented by a loaded
+   * contract specification or by a specialized Colibri client.
+   *
    * @param {object} operationArgs - The raw arguments for the operation.
    * @param {string} operationArgs.function - The function name to invoke.
    * @param {xdr.ScVal[]} operationArgs.args - The arguments for the function invocation as ScVal array.
    * @param {xdr.SorobanAuthorizationEntry[]} [operationArgs.auth] - Optional authorization entries for the invocation.
    * @param {TransactionConfig} config - The transaction configuration object to use in this transaction.
    *
-   * @returns {Promise<unknown>} The output of the invocation.
+   * @returns The processed transaction and raw contract return value.
    *
    * @description - Invokes a contract method that alters the state of the contract.
    * This function requires signers. It builds a transaction, simulates it, signs it, submits it to the network, and extracts the output of the invocation from the processed transaction.
    */
-  /** @internal */
   public async invokeRaw({
     operationArgs,
     config,

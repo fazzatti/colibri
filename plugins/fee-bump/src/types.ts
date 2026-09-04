@@ -1,4 +1,9 @@
-import type { ContractId, Ed25519PublicKey, SignerKey } from "@colibri/core";
+import type {
+  ContractId,
+  Ed25519PublicKey,
+  SignerKey,
+  TransactionSource,
+} from "@colibri/core";
 
 /**
  * Stable identifier used by the fee-bump plugin.
@@ -102,8 +107,8 @@ export interface FeeBumpPluginNetworkConfig {
  * Configuration describing how the fee-bump envelope should be authored.
  */
 export interface FeeBumpPluginConfig {
-  /** Stellar account that will pay the fee-bump fee. */
-  source: string;
+  /** Stellar account, optionally muxed, that will pay the fee-bump fee. */
+  source: TransactionSource;
   /** Base fee, in stroops, assigned to the fee-bump envelope. */
   fee: `${number}`;
   /** Signers used to authorize the fee-bump envelope. */

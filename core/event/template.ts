@@ -53,6 +53,14 @@ function validateFieldType(value: ScValParsed, type: SchemaFieldType): boolean {
   return true;
 }
 
+const validateSchemaField = (
+  value: ScValParsed,
+  field: { type: SchemaFieldType; alternateTypes?: readonly SchemaFieldType[] },
+): boolean =>
+  validateFieldType(value, field.type) ||
+  (field.alternateTypes?.some((type) => validateFieldType(value, type)) ??
+    false);
+
 const STRING_FIELD_TYPES = new Set<SchemaFieldType>([
   "address",
   "string",
@@ -153,13 +161,13 @@ export abstract class EventTemplate<S extends EventSchema> extends Event {
 
     // Check topic field types
     for (let i = 0; i < schema.topics.length; i++) {
-      if (!validateFieldType(topics[i + 1], schema.topics[i].type)) {
+      if (!validateSchemaField(topics[i + 1], schema.topics[i])) {
         return false;
       }
     }
 
     // Check value type
-    if (!validateFieldType(event.value, schema.value.type)) {
+    if (!validateSchemaField(event.value, schema.value)) {
       return false;
     }
 

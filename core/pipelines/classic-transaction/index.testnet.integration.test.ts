@@ -6,7 +6,7 @@ import {
   assertInstanceOf,
 } from "@std/assert";
 import { beforeAll, describe, it } from "@std/testing/bdd";
-import { Operation } from "stellar-sdk";
+import { Account, Asset, Claimant, MuxedAccount, Operation } from "stellar-sdk";
 import { NetworkConfig } from "@/network/index.ts";
 import { createClassicTransactionPipeline } from "@/pipelines/classic-transaction/index.ts";
 import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
@@ -14,16 +14,14 @@ import type { TransactionConfig } from "@/common/types/transaction-config/types.
 import { LocalSigner } from "@/signer/local/index.ts";
 import { NativeAccount } from "@/account/native/index.ts";
 import type { ClassicTransactionOutput } from "@/pipelines/classic-transaction/types.ts";
+import type { MuxedAddress } from "@/strkeys/types.ts";
 
 const assertConfirmedFee = (
   result: ClassicTransactionOutput,
   expectedEnvelopeFee: bigint,
 ) => {
   const envelope = result.response.envelopeXdr;
-  assertEquals(envelope.type, "envelopeTypeTx");
-  if (envelope.type !== "envelopeTypeTx") {
-    throw new Error("Expected a v1 transaction envelope");
-  }
+  assert(envelope.type === "envelopeTypeTx");
   const envelopeFee = BigInt(envelope.v1.tx.fee);
   const chargedFee = result.response.resultXdr.feeCharged;
 
@@ -75,6 +73,64 @@ describe(
       assertExists(result);
       assertExists(result.hash);
       assertExists(result.response);
+      assertEquals(result.feeCharged, result.response.resultXdr.feeCharged);
+      assertEquals(result.operations[0].type, "setOptions");
+      assertEquals(result.operations[0].result.type, "setOptionsSuccess");
+    });
+
+    it("returns protocol data from ordered runtime-typed outcomes", async () => {
+      const executeClassicTransaction = createClassicTransactionPipeline({
+        networkConfig,
+      });
+
+      const result = await executeClassicTransaction({
+        operations: [
+          Operation.setOptions({}),
+          Operation.createClaimableBalance({
+            asset: Asset.native(),
+            amount: "1",
+            claimants: [new Claimant(john.address())],
+          }),
+        ],
+        config: txConfig,
+      });
+
+      assertEquals(result.operations[0].type, "setOptions");
+      const claimableBalance = result.operations[1];
+      assert(claimableBalance.type === "createClaimableBalance");
+      assertEquals(
+        claimableBalance.result.type,
+        "createClaimableBalanceSuccess",
+      );
+      assertEquals(
+        claimableBalance.result.balanceId.type,
+        "claimableBalanceIdTypeV0",
+      );
+    });
+
+    it("submits a transaction whose envelope source remains muxed", async () => {
+      const muxedSource = new MuxedAccount(
+        new Account(john.address(), "0"),
+        "987",
+      ).accountId() as MuxedAddress;
+      const executeClassicTransaction = createClassicTransactionPipeline({
+        networkConfig,
+      });
+
+      const result = await executeClassicTransaction({
+        operations: [Operation.manageData({
+          name: "muxed-source",
+          value: "confirmed",
+        })],
+        config: { ...txConfig, source: muxedSource },
+      });
+
+      assertEquals(result.operations[0].type, "manageData");
+      assert(result.response.envelopeXdr.type === "envelopeTypeTx");
+      assertEquals(
+        result.response.envelopeXdr.v1.tx.sourceAccount.type,
+        "keyTypeMuxedEd25519",
+      );
     });
 
     describe("Confirmed transaction fees", () => {

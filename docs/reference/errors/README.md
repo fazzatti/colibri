@@ -56,6 +56,7 @@ catalog.
   3 codes.
 - [core/asset/sac](core-asset-sac.md) — 5 codes.
 - [core/asset/sep11](core-asset-sep11.md) — 1 codes.
+- [core/asset/sep41-token](core-asset-sep41-token.md) — 1 codes.
 - [core/auth/requirements/classic-operation-threshold](core-auth-requirements-classic-operation-threshold.md)
   — 2 codes.
 - [core/common/helpers/boolean](core-common-helpers-boolean.md) — 1 codes.
@@ -72,7 +73,7 @@ catalog.
   codes.
 - [core/common/helpers/xdr](core-common-helpers-xdr.md) — 19 codes.
 - [core/contract](core-contract.md) — 16 codes.
-- [core/event](core-event.md) — 8 codes.
+- [core/event](core-event.md) — 13 codes.
 - [core/event/event-filter](core-event-event-filter.md) — 2 codes.
 - [core/event/event-id](core-event-event-id.md) — 2 codes.
 - [core/event/parsing](core-event-parsing.md) — 3 codes.
@@ -92,12 +93,14 @@ catalog.
   — 3 codes.
 - [core/processes/assemble-transaction](core-processes-assemble-transaction.md)
   — 18 codes.
-- [core/processes/build-transaction](core-processes-build-transaction.md) — 18
+- [core/processes/build-transaction](core-processes-build-transaction.md) — 21
   codes.
 - [core/processes/enforce-simulation](core-processes-enforce-simulation.md) — 4
   codes.
 - [core/processes/envelope-signing-requirements](core-processes-envelope-signing-requirements.md)
   — 4 codes.
+- [core/processes/parse-classic-transaction-outcome](core-processes-parse-classic-transaction-outcome.md)
+  — 6 codes.
 - [core/processes/send-transaction](core-processes-send-transaction.md) — 12
   codes.
 - [core/processes/sign-auth-entries](core-processes-sign-auth-entries.md) — 8

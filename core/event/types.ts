@@ -73,6 +73,8 @@ export interface SchemaField<
 > {
   readonly name: Name;
   readonly type: Type;
+  /** Additional runtime representations accepted for this field. */
+  readonly alternateTypes?: readonly SchemaFieldType[];
 }
 
 /**
@@ -108,22 +110,14 @@ export interface EventSchema<
 /** @internal */
 export type FieldTypeToTs<T extends SchemaFieldType> = T extends "address"
   ? string
-  : T extends "bool"
-  ? boolean
-  : T extends "bytes"
-  ? Uint8Array
-  : T extends "i32" | "u32"
-  ? number
-  : T extends "i64" | "u64" | "i128" | "u128" | "i256" | "u256"
-  ? bigint
-  : T extends "timepoint" | "duration"
-  ? bigint
-  : T extends "string" | "symbol"
-  ? string
-  : T extends "vec"
-  ? unknown[]
-  : T extends "map"
-  ? Record<string, unknown> | Map<unknown, unknown>
+  : T extends "bool" ? boolean
+  : T extends "bytes" ? Uint8Array
+  : T extends "i32" | "u32" ? number
+  : T extends "i64" | "u64" | "i128" | "u128" | "i256" | "u256" ? bigint
+  : T extends "timepoint" | "duration" ? bigint
+  : T extends "string" | "symbol" ? string
+  : T extends "vec" ? unknown[]
+  : T extends "map" ? Record<string, unknown> | Map<unknown, unknown>
   : unknown;
 
 /**
@@ -147,11 +141,10 @@ export type AllFieldNames<S extends EventSchema> =
 /** @internal */
 export type FieldTypeFor<
   S extends EventSchema,
-  N extends AllFieldNames<S>
-> = N extends S["value"]["name"]
-  ? FieldTypeToTs<S["value"]["type"]>
+  N extends AllFieldNames<S>,
+> = N extends S["value"]["name"] ? FieldTypeToTs<S["value"]["type"]>
   : N extends S["topics"][number]["name"]
-  ? FieldTypeToTs<Extract<S["topics"][number], { name: N }>["type"]>
+    ? FieldTypeToTs<Extract<S["topics"][number], { name: N }>["type"]>
   : never;
 
 /**

@@ -1,12 +1,13 @@
 // deno-lint-ignore-file no-explicit-any
-import { assert, assertThrows } from "@std/assert";
+import { assert, assertEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import {
   Account,
+  MuxedAccount,
   Operation,
+  type Transaction,
   TransactionBuilder,
   type xdr,
-  type Transaction,
 } from "stellar-sdk";
 import { wrapFeeBump } from "@/processes/wrap-fee-bump/index.ts";
 import * as E from "@/processes/wrap-fee-bump/error.ts";
@@ -16,7 +17,7 @@ import type {
   BaseFee,
   FeeBumpConfig,
 } from "@/common/types/transaction-config/types.ts";
-import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
 
 describe("WrapFeeBump", () => {
   const { networkPassphrase } = NetworkConfig.TestNet();
@@ -49,6 +50,25 @@ describe("WrapFeeBump", () => {
 
       assert(isFeeBumpTransaction(result));
     });
+
+    it("preserves a muxed fee source in the fee-bump envelope", () => {
+      const transaction = assembleTransaction(alice, [
+        Operation.setOptions({}),
+      ]);
+      const muxedSource = new MuxedAccount(
+        new Account(bob, "100"),
+        "789",
+      ).accountId() as MuxedAddress;
+
+      const result = wrapFeeBump({
+        transaction,
+        config: { source: muxedSource, fee: "101", signers: [] },
+        networkPassphrase,
+      });
+
+      assert(isFeeBumpTransaction(result));
+      assertEquals(result.feeSource, muxedSource);
+    });
   });
   describe("Errors", () => {
     it("throws UNEXPECTED_ERROR for unexpected errors", () => {
@@ -57,7 +77,7 @@ describe("WrapFeeBump", () => {
         bob,
         "100",
         inner,
-        networkPassphrase
+        networkPassphrase,
       );
 
       assertThrows(
@@ -67,7 +87,7 @@ describe("WrapFeeBump", () => {
             config: null as unknown as FeeBumpConfig,
             networkPassphrase,
           }),
-        E.UNEXPECTED_ERROR
+        E.UNEXPECTED_ERROR,
       );
     });
 
@@ -77,7 +97,7 @@ describe("WrapFeeBump", () => {
         bob,
         "100",
         inner,
-        networkPassphrase
+        networkPassphrase,
       );
 
       assertThrows(
@@ -87,7 +107,7 @@ describe("WrapFeeBump", () => {
             config: { source: bob, fee: "100", signers: [] },
             networkPassphrase,
           }),
-        E.ALREADY_FEE_BUMP
+        E.ALREADY_FEE_BUMP,
       );
     });
   });
@@ -101,7 +121,7 @@ describe("WrapFeeBump", () => {
             config: { source: bob, fee: "100", signers: [] },
             networkPassphrase,
           }),
-        E.NOT_A_TRANSACTION
+        E.NOT_A_TRANSACTION,
       );
     });
 
@@ -122,7 +142,7 @@ describe("WrapFeeBump", () => {
             },
             networkPassphrase,
           }),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
 
       assertThrows(
@@ -137,7 +157,7 @@ describe("WrapFeeBump", () => {
             },
             networkPassphrase,
           }),
-        E.MISSING_ARG
+        E.MISSING_ARG,
       );
     });
 
@@ -160,7 +180,7 @@ describe("WrapFeeBump", () => {
               config: { source: bob, fee: "101", signers: [] },
               networkPassphrase,
             }),
-          E.FAILED_TO_BUILD_FEE_BUMP
+          E.FAILED_TO_BUILD_FEE_BUMP,
         );
       } finally {
         (TransactionBuilder as any).buildFeeBumpTransaction = original;
@@ -179,7 +199,7 @@ describe("WrapFeeBump", () => {
             config: { source: bob, fee: "100", signers: [] },
             networkPassphrase,
           }),
-        E.FEE_TOO_LOW
+        E.FEE_TOO_LOW,
       );
     });
   });

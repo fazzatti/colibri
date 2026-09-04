@@ -41,6 +41,7 @@ import {
   BuildVerificationError,
   Code,
 } from "@/error/base.ts";
+import { BUILD_VERIFICATION_PACKAGE_VERSION } from "@/core/evidence/accumulate.ts";
 import { DockerUnavailableError } from "@/runners/docker/error.ts";
 import {
   EvidenceWriteFailedError,
@@ -696,7 +697,10 @@ describe("runBuildVerificationCli", () => {
     assertStringIncludes(BUILD_VERIFICATION_CLI_HELP, "-h, --help");
     assertStringIncludes(BUILD_VERIFICATION_CLI_HELP, "--github-format");
     assertStringIncludes(BUILD_VERIFICATION_CLI_HELP, "--external-ref-owner");
-    assertStringIncludes(BUILD_VERIFICATION_CLI_HELP, "@0.4.0/cli");
+    assertStringIncludes(
+      BUILD_VERIFICATION_CLI_HELP,
+      `@${BUILD_VERIFICATION_PACKAGE_VERSION}/cli`,
+    );
     const invalid = harness();
     assertEquals(
       await runBuildVerificationCli(["--help", "--allow-http"], invalid.io),

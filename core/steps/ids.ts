@@ -20,3 +20,6 @@ export const SIGN_ENVELOPE_STEP_ID = "sign-envelope" as const;
 export const SIMULATE_TRANSACTION_STEP_ID = "simulate-transaction" as const;
 /** Stable step identifier for wrap-fee-bump pipeline steps. */
 export const WRAP_FEE_BUMP_STEP_ID = "wrap-fee-bump" as const;
+/** Stable step identifier for classic transaction outcome parsing. */
+export const PARSE_CLASSIC_TRANSACTION_OUTCOME_STEP_ID =
+  "parse-classic-transaction-outcome" as const;

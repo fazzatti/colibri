@@ -22,9 +22,11 @@ export type {
 export type {
   ContractId,
   Ed25519PublicKey,
+  MuxedAddress,
   PreAuthTx,
   Sha256Hash,
   SignedPayload,
   SignerKey,
+  TransactionSource,
 } from "@colibri/core";
 export { Code, ERROR_PLG_FBP } from "@/error.ts";

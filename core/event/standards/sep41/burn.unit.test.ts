@@ -1,6 +1,6 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
+import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
 import { BurnEvent, BurnEventSchema } from "@/event/standards/sep41/burn.ts";
 import { EventType } from "@/event/types.ts";
@@ -10,10 +10,10 @@ import type { ContractId } from "@/strkeys/types.ts";
 function createMockEvent(
   topics: xdr.ScVal[],
   value: xdr.ScVal,
-  contractId?: string
+  contractId?: string,
 ): Event {
-  const contract =
-    contractId ?? "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+  const contract = contractId ??
+    "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
   return new Event({
     id: "0000000000000000000-0000000000",
@@ -47,7 +47,7 @@ describe("BurnEvent", () => {
       const from = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("burn"), new Address(from).toScVal()],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(BurnEvent.is(event), true);
@@ -62,7 +62,7 @@ describe("BurnEvent", () => {
           new Address(from).toScVal(),
           new Address(to).toScVal(),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(BurnEvent.is(event), false);
@@ -77,7 +77,7 @@ describe("BurnEvent", () => {
           new Address(from).toScVal(),
           new Address(extra).toScVal(), // extra topic
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(BurnEvent.is(event), false);
@@ -86,7 +86,7 @@ describe("BurnEvent", () => {
     it("should return false for wrong topic type", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("burn"), xdr.ScVal.scvU32(123)], // should be address
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(BurnEvent.is(event), false);
@@ -96,7 +96,7 @@ describe("BurnEvent", () => {
       const from = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("burn"), new Address(from).toScVal()],
-        xdr.ScVal.scvU32(100) // should be i128
+        xdr.ScVal.scvU32(100), // should be i128
       );
 
       assertEquals(BurnEvent.is(event), false);
@@ -109,7 +109,7 @@ describe("BurnEvent", () => {
       const amount = 5000000000n;
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("burn"), new Address(from).toScVal()],
-        nativeToScVal(amount, { type: "i128" })
+        nativeToScVal(amount, { type: "i128" }),
       );
 
       const burnEvent = BurnEvent.fromEvent(event);
@@ -122,13 +122,13 @@ describe("BurnEvent", () => {
     it("should throw for non-burn event", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("mint")],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       assertThrows(
         () => BurnEvent.fromEvent(event),
         Error,
-        "does not match burn schema"
+        "does not match burn schema",
       );
     });
   });
@@ -138,7 +138,7 @@ describe("BurnEvent", () => {
       const from = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("burn"), new Address(from).toScVal()],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       const result = BurnEvent.tryFromEvent(event);
@@ -149,7 +149,7 @@ describe("BurnEvent", () => {
     it("should return undefined for invalid event", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("mint")],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       assertEquals(BurnEvent.tryFromEvent(event), undefined);
@@ -161,7 +161,7 @@ describe("BurnEvent", () => {
       const from = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("burn"), new Address(from).toScVal()],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       const burnEvent = BurnEvent.fromEvent(event);
@@ -175,7 +175,7 @@ describe("BurnEvent", () => {
         "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("burn"), new Address(contractId).toScVal()],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       const burnEvent = BurnEvent.fromEvent(event);

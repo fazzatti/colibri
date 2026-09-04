@@ -32,7 +32,7 @@ const result = await wrapFeeBump({
 
 | Property  | Type                                             | Description                                                                            |
 | --------- | ------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| `source`  | `Ed25519PublicKey`                               | Fee bump source (sponsor)                                                              |
+| `source`  | `TransactionSource`                              | Fee bump source as a G-address or M-address                                            |
 | `fee`     | `BaseFee`                                        | SDK outer base fee; current process also requires this value to exceed the inner total |
 | `signers` | `(EnvelopeSigner \| PreAuthTransactionSigner)[]` | Signers that authorize or pre-authorize the outer envelope                             |
 
@@ -58,7 +58,7 @@ Returns a `FeeBumpTransaction` wrapping the inner transaction.
 
 The process uses `TransactionBuilder.buildFeeBumpTransaction()` with:
 
-- The fee bump source's public key
+- The fee bump source's G-address or M-address
 - The new (higher) fee
 - The original inner transaction
 - The network passphrase
@@ -67,6 +67,9 @@ The process uses `TransactionBuilder.buildFeeBumpTransaction()` with:
 
 The fee bump transaction must then be signed by the fee bump source before
 submission. The inner transaction's signatures are preserved.
+
+When the source is muxed, the envelope preserves the M-address and signing is
+resolved against its embedded base G-account.
 
 ## Errors
 

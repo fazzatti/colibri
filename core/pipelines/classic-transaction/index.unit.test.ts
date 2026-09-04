@@ -1,8 +1,8 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { createRunContext, step } from "convee";
-import { Operation, xdr } from "stellar-sdk";
-import type { Api, Server } from "stellar-sdk/rpc";
+import { Operation } from "stellar-sdk";
+import type { Server } from "stellar-sdk/rpc";
 
 import { NetworkConfig } from "@/network/index.ts";
 import * as E from "@/pipelines/classic-transaction/error.ts";
@@ -12,12 +12,10 @@ import {
   CLASSIC_TRANSACTION_INPUT_STEP_ID,
   envSignReqToSignEnvelope,
   inputToBuild,
-  sendTransactionToPipeOutput,
   signEnvelopeToSendTransaction,
 } from "@/pipelines/classic-transaction/connectors.ts";
 import type { EnvelopeSigningRequirementsOutput } from "@/processes/envelope-signing-requirements/types.ts";
 import type { SignEnvelopeOutput } from "@/processes/sign-envelope/types.ts";
-import type { SendTransactionOutput } from "@/processes/send-transaction/types.ts";
 import { NetworkType } from "@/network/types.ts";
 import { BUILD_TRANSACTION_STEP_ID } from "@/steps/index.ts";
 import { HashXSigner } from "@/signer/hash-x/index.ts";
@@ -30,8 +28,6 @@ const seedStepOutput = async <Output>(
   const seedStep = step(() => output, { id: stepId });
   await seedStep.runWith({ context: { parent: context } });
 };
-
-const CREATED_AT = 1_710_000_000;
 
 describe("createClassicTransactionPipeline", () => {
   describe("Construction", () => {
@@ -58,6 +54,25 @@ describe("createClassicTransactionPipeline", () => {
       const pipeline = createClassicTransactionPipeline({ networkConfig });
 
       assertEquals(pipeline.id, "ClassicTransactionPipeline");
+    });
+
+    it("preserves the caller input at the pipeline boundary", async () => {
+      const networkConfig = NetworkConfig.TestNet();
+      const pipeline = createClassicTransactionPipeline({
+        networkConfig,
+        rpc: {} as Server,
+      });
+      const input: ClassicTransactionInput = {
+        operations: [Operation.setOptions({})],
+        config: {
+          fee: "100",
+          source: "GMOCKEDSOURCE",
+          timeout: 30,
+          signers: [],
+        },
+      };
+
+      assertEquals(await pipeline.steps[0](input), input);
     });
   });
 
@@ -180,24 +195,6 @@ describe("createClassicTransactionPipeline", () => {
         assertExists(result);
         assertEquals(result.transaction, mockSignEnvelopeOutput);
         assertEquals(result.rpc, mockRpc);
-      });
-    });
-
-    describe("sendTransactionToPipeOutput", () => {
-      it("transforms SendTransactionOutput to ClassicTransactionOutput", async () => {
-        const mockSendOutput: SendTransactionOutput = {
-          hash: "mock-hash-123",
-          ledger: 12345,
-          createdAt: CREATED_AT,
-          returnValue: xdr.ScVal.scvVoid(),
-          response: {} as unknown as Api.GetSuccessfulTransactionResponse,
-        };
-
-        const result = await sendTransactionToPipeOutput(mockSendOutput);
-
-        assertExists(result);
-        assertEquals(result.hash, "mock-hash-123");
-        assertEquals(result.response, mockSendOutput.response);
       });
     });
   });

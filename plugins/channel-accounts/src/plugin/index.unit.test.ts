@@ -52,6 +52,11 @@ describe("ChannelAccounts", () => {
   const createClassicPipelineOutput = (): ClassicTransactionOutput => ({
     hash: "classic-hash",
     response: {} as ClassicTransactionOutput["response"],
+    returnValue: undefined,
+    ledger: 12345,
+    createdAt: CREATED_AT,
+    feeCharged: 100n,
+    operations: [],
   });
 
   const createInvokePipelineOutput = (): InvokeContractOutput => ({

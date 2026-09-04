@@ -7,11 +7,13 @@ transactions, Soroban invocations, and delegated authorization.
 ```ts
 type TransactionConfig = {
   fee: BaseFee | TransactionFee;
-  source: Ed25519PublicKey;
+  source: TransactionSource;
   timeout: number;
   signers: Signer[];
   extraSigners?: ExtraSignerKey[];
 };
+
+type TransactionSource = Ed25519PublicKey | MuxedAddress;
 
 type TransactionFee =
   | { base: BaseFee }
@@ -28,7 +30,7 @@ type MaxFee = `${number}`;
 | Property       | Type                        | Description                                              |
 | -------------- | --------------------------- | -------------------------------------------------------- |
 | `fee`          | `BaseFee \| TransactionFee` | String base fee or one explicit fee strategy             |
-| `source`       | `Ed25519PublicKey`          | Source account public key                                |
+| `source`       | `TransactionSource`         | Transaction source as a G-address or M-address           |
 | `timeout`      | `number`                    | Transaction timeout in seconds                           |
 | `signers`      | `Signer[]`                  | Signers used by the selected transaction flow            |
 | `extraSigners` | `ExtraSignerKey[]`          | Exact `G...`, `X...`, or `P...` signer-key preconditions |
@@ -59,6 +61,14 @@ value through the `resourceFee` input of the assembly processes.
 The fee encoded in the submitted envelope is a bid. Stellar can charge less than
 that bid when surge pricing does not require the entire amount. A maximum
 therefore guarantees an upper bound, not the exact amount ultimately charged.
+
+### Muxed Sources
+
+Both `TransactionConfig.source` and `FeeBumpConfig.source` accept muxed
+addresses. Colibri loads sequence state from the M-address's underlying
+G-account, keeps the M-address in the transaction or fee-bump envelope, and
+resolves signing requirements against the underlying G-account. The muxed ID is
+routing information; it is not an independent on-chain signer.
 
 ```ts
 const classicConfig: TransactionConfig = {

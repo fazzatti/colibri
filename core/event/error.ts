@@ -50,13 +50,19 @@ export enum Code {
   UNSUPPORTED_SCHEMA_FIELD_TYPE = "EVT_006",
   INVALID_EVENT_DATA_FORMAT = "EVT_007",
   INVALID_EVENT_ASSET_FORMAT = "EVT_008",
+  TRANSFER_EXTENSION_DECODER_FAILED = "EVT_009",
+  APPROVE_EXTENSION_DECODER_FAILED = "EVT_010",
+  BURN_EXTENSION_DECODER_FAILED = "EVT_011",
+  MINT_EXTENSION_DECODER_FAILED = "EVT_012",
+  CLAWBACK_EXTENSION_DECODER_FAILED = "EVT_013",
 }
 
 export class INVALID_CONTRACT_ID extends EventError<Code> {
   constructor(contractId: string) {
     super({
       code: Code.INVALID_CONTRACT_ID,
-      message: `Invalid event: contractId is not a valid ContractId (${contractId})`,
+      message:
+        `Invalid event: contractId is not a valid ContractId (${contractId})`,
       details:
         "The event payload contains a contract id that is not a valid Stellar contract strkey.",
       data: { contractId },
@@ -149,6 +155,74 @@ export class INVALID_EVENT_ASSET_FORMAT extends EventError<Code> {
   }
 }
 
+abstract class SEP41_EXTENSION_DECODER_FAILED extends EventError<Code> {
+  constructor(
+    code: Code,
+    eventName: string,
+    extensionKeys: readonly string[],
+    cause: Error,
+  ) {
+    super({
+      code,
+      message: `Failed to decode ${eventName} event extensions`,
+      details:
+        "The application-provided SEP-41 extension decoder rejected or failed to transform the event's non-standard map fields.",
+      cause,
+      data: { eventName, extensionKeys },
+    });
+  }
+}
+
+export class TRANSFER_EXTENSION_DECODER_FAILED
+  extends SEP41_EXTENSION_DECODER_FAILED {
+  constructor(extensionKeys: readonly string[], cause: Error) {
+    super(
+      Code.TRANSFER_EXTENSION_DECODER_FAILED,
+      "transfer",
+      extensionKeys,
+      cause,
+    );
+  }
+}
+
+export class APPROVE_EXTENSION_DECODER_FAILED
+  extends SEP41_EXTENSION_DECODER_FAILED {
+  constructor(extensionKeys: readonly string[], cause: Error) {
+    super(
+      Code.APPROVE_EXTENSION_DECODER_FAILED,
+      "approve",
+      extensionKeys,
+      cause,
+    );
+  }
+}
+
+export class BURN_EXTENSION_DECODER_FAILED
+  extends SEP41_EXTENSION_DECODER_FAILED {
+  constructor(extensionKeys: readonly string[], cause: Error) {
+    super(Code.BURN_EXTENSION_DECODER_FAILED, "burn", extensionKeys, cause);
+  }
+}
+
+export class MINT_EXTENSION_DECODER_FAILED
+  extends SEP41_EXTENSION_DECODER_FAILED {
+  constructor(extensionKeys: readonly string[], cause: Error) {
+    super(Code.MINT_EXTENSION_DECODER_FAILED, "mint", extensionKeys, cause);
+  }
+}
+
+export class CLAWBACK_EXTENSION_DECODER_FAILED
+  extends SEP41_EXTENSION_DECODER_FAILED {
+  constructor(extensionKeys: readonly string[], cause: Error) {
+    super(
+      Code.CLAWBACK_EXTENSION_DECODER_FAILED,
+      "clawback",
+      extensionKeys,
+      cause,
+    );
+  }
+}
+
 export const ERROR_EVT = {
   [Code.INVALID_CONTRACT_ID]: INVALID_CONTRACT_ID,
   [Code.INVALID_EVENT_ID]: INVALID_EVENT_ID,
@@ -158,4 +232,9 @@ export const ERROR_EVT = {
   [Code.UNSUPPORTED_SCHEMA_FIELD_TYPE]: UNSUPPORTED_SCHEMA_FIELD_TYPE,
   [Code.INVALID_EVENT_DATA_FORMAT]: INVALID_EVENT_DATA_FORMAT,
   [Code.INVALID_EVENT_ASSET_FORMAT]: INVALID_EVENT_ASSET_FORMAT,
+  [Code.TRANSFER_EXTENSION_DECODER_FAILED]: TRANSFER_EXTENSION_DECODER_FAILED,
+  [Code.APPROVE_EXTENSION_DECODER_FAILED]: APPROVE_EXTENSION_DECODER_FAILED,
+  [Code.BURN_EXTENSION_DECODER_FAILED]: BURN_EXTENSION_DECODER_FAILED,
+  [Code.MINT_EXTENSION_DECODER_FAILED]: MINT_EXTENSION_DECODER_FAILED,
+  [Code.CLAWBACK_EXTENSION_DECODER_FAILED]: CLAWBACK_EXTENSION_DECODER_FAILED,
 };
