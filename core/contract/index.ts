@@ -654,8 +654,8 @@ export class Contract {
   }: {
     operationArgs: {
       function: string;
-      args: xdr.ScVal[];
-      auth?: xdr.SorobanAuthorizationEntry[];
+      args: ScValLike[];
+      auth?: SorobanAuthorizationEntryLike[];
     };
     config: TransactionConfig;
   }): Promise<InvokeContractOutput> {

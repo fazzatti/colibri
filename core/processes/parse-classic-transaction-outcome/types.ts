@@ -1,4 +1,4 @@
-import type { xdr } from "stellar-sdk";
+import type { OperationResultTr } from "@/common/types/index.ts";
 import type { SendTransactionOutput } from "@/processes/send-transaction/types.ts";
 
 /**
@@ -10,14 +10,14 @@ import type { SendTransactionOutput } from "@/processes/send-transaction/types.t
  * transaction.
  */
 export type ClassicOperationOutcome = {
-  [Type in xdr.OperationResultTr["type"]]: {
+  [Type in OperationResultTr["type"]]: {
     /** Zero-based operation position in the submitted transaction. */
     index: number;
     /** Stellar operation-result discriminant. */
     type: Type;
     /** Successful Stellar SDK XDR result for this operation type. */
     result: Extract<
-      Extract<xdr.OperationResultTr, { type: Type }>["value"],
+      Extract<OperationResultTr, { type: Type }>["value"],
       {
         type: {
           createAccount: "createAccountSuccess";
@@ -51,7 +51,7 @@ export type ClassicOperationOutcome = {
       }
     >;
   };
-}[xdr.OperationResultTr["type"]];
+}[OperationResultTr["type"]];
 
 /** Input accepted by the classic-outcome parser. */
 export type ParseClassicTransactionOutcomeInput = SendTransactionOutput;

@@ -1,14 +1,14 @@
 import type { MemoizePolicy } from "@/common/decorators/memoize/types.ts";
+import type { SorobanAuthorizationEntryLike } from "@/common/types/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { NetworkConfig } from "@/network/index.ts";
 import type { InvokeContractOutput } from "@/pipelines/invoke-contract/types.ts";
+import type { RpcServer } from "@/processes/send-transaction/types.ts";
 import type {
   ContractId,
   Ed25519PublicKey,
   MuxedAddress,
 } from "@/strkeys/types.ts";
-import type { xdr } from "stellar-sdk";
-import type { Server } from "stellar-sdk/rpc";
 
 /** Account or contract address accepted by SEP-41 address parameters. */
 export type SEP41Address = Ed25519PublicKey | ContractId;
@@ -29,7 +29,7 @@ export type SEP41TokenContractConstructorArgs = {
   /** Contract id of the SEP-41 token. */
   contractId: ContractId;
   /** Optional preconfigured RPC client. */
-  rpc?: Server;
+  rpc?: RpcServer;
   /** Optional client behavior. */
   options?: SEP41TokenContractOptions;
 };
@@ -39,7 +39,7 @@ export type SEP41Invocation = {
   /** Colibri transaction configuration used by the invoke pipeline. */
   config: TransactionConfig;
   /** Optional preassembled Soroban authorization entries. */
-  auth?: xdr.SorobanAuthorizationEntry[];
+  auth?: SorobanAuthorizationEntryLike[];
 };
 
 /** Result returned by a state-changing SEP-41 invocation. */
