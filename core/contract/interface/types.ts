@@ -2,7 +2,7 @@ import type { Spec } from "stellar-sdk/contract";
 import type { BinaryData } from "@/common/types/index.ts";
 import type { SepClaim } from "@/contract/metadata/types.ts";
 
-/** Contract specification accepted by interface-analysis helpers. */
+/** @internal */
 export type ContractSpec = Spec;
 
 /** JSON-compatible value used in structural interface diagnostics. */
