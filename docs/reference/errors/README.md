@@ -56,7 +56,7 @@ catalog.
   3 codes.
 - [core/asset/sac](core-asset-sac.md) — 5 codes.
 - [core/asset/sep11](core-asset-sep11.md) — 1 codes.
-- [core/asset/sep41-token](core-asset-sep41-token.md) — 1 codes.
+- [core/asset/sep41-token](core-asset-sep41-token.md) — 20 codes.
 - [core/auth/requirements/classic-operation-threshold](core-auth-requirements-classic-operation-threshold.md)
   — 2 codes.
 - [core/common/helpers/boolean](core-common-helpers-boolean.md) — 1 codes.

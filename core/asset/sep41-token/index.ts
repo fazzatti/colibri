@@ -25,6 +25,22 @@ import type {
 } from "@/asset/sep41-token/types.ts";
 import { nativeToScVal, scValToNative } from "stellar-sdk";
 
+type ScValEncodingOptions = NonNullable<
+  Parameters<typeof nativeToScVal>[1]
+>;
+
+const encodeArgument = (
+  value: unknown,
+  options: ScValEncodingOptions,
+  error: (cause: Error) => E.SEP41TokenError,
+): ReturnType<typeof nativeToScVal> => {
+  try {
+    return nativeToScVal(value, options);
+  } catch (cause) {
+    throw error(cause as Error);
+  }
+};
+
 type ResolvedOptions = {
   cache: {
     enabled: boolean;
@@ -99,8 +115,17 @@ export class SEP41TokenContract {
   /** Returns the allowance granted by `from` to `spender`. */
   async allowance({ from, spender }: SEP41AllowanceArgs): Promise<bigint> {
     return await this.readRequired(Method.Allowance, [
-      nativeToScVal(from, { type: "address" }),
-      nativeToScVal(spender, { type: "address" }),
+      encodeArgument(
+        from,
+        { type: "address" },
+        (cause) => new E.FAILED_TO_ENCODE_ALLOWANCE_ARGUMENT_FROM(from, cause),
+      ),
+      encodeArgument(
+        spender,
+        { type: "address" },
+        (cause) =>
+          new E.FAILED_TO_ENCODE_ALLOWANCE_ARGUMENT_SPENDER(spender, cause),
+      ),
     ]);
   }
 
@@ -116,10 +141,32 @@ export class SEP41TokenContract {
     return await this.invokeVoid(
       Method.Approve,
       [
-        nativeToScVal(from, { type: "address" }),
-        nativeToScVal(spender, { type: "address" }),
-        nativeToScVal(amount, { type: "i128" }),
-        nativeToScVal(liveUntilLedger, { type: "u32" }),
+        encodeArgument(
+          from,
+          { type: "address" },
+          (cause) => new E.FAILED_TO_ENCODE_APPROVE_ARGUMENT_FROM(from, cause),
+        ),
+        encodeArgument(
+          spender,
+          { type: "address" },
+          (cause) =>
+            new E.FAILED_TO_ENCODE_APPROVE_ARGUMENT_SPENDER(spender, cause),
+        ),
+        encodeArgument(
+          amount,
+          { type: "i128" },
+          (cause) =>
+            new E.FAILED_TO_ENCODE_APPROVE_ARGUMENT_AMOUNT(amount, cause),
+        ),
+        encodeArgument(
+          liveUntilLedger,
+          { type: "u32" },
+          (cause) =>
+            new E.FAILED_TO_ENCODE_APPROVE_ARGUMENT_LIVE_UNTIL_LEDGER(
+              liveUntilLedger,
+              cause,
+            ),
+        ),
       ],
       config,
       auth,
@@ -129,7 +176,11 @@ export class SEP41TokenContract {
   /** Returns the balance held by an account or contract address. */
   async balance({ id }: SEP41BalanceArgs): Promise<bigint> {
     return await this.readRequired(Method.Balance, [
-      nativeToScVal(id, { type: "address" }),
+      encodeArgument(
+        id,
+        { type: "address" },
+        (cause) => new E.FAILED_TO_ENCODE_BALANCE_ARGUMENT_ID(id, cause),
+      ),
     ]);
   }
 
@@ -144,9 +195,22 @@ export class SEP41TokenContract {
     return await this.invokeVoid(
       Method.Transfer,
       [
-        nativeToScVal(from, { type: "address" }),
-        nativeToScVal(to, { type: "address" }),
-        nativeToScVal(amount, { type: "i128" }),
+        encodeArgument(
+          from,
+          { type: "address" },
+          (cause) => new E.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_FROM(from, cause),
+        ),
+        encodeArgument(
+          to,
+          { type: "address" },
+          (cause) => new E.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_TO(to, cause),
+        ),
+        encodeArgument(
+          amount,
+          { type: "i128" },
+          (cause) =>
+            new E.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_AMOUNT(amount, cause),
+        ),
       ],
       config,
       auth,
@@ -165,10 +229,33 @@ export class SEP41TokenContract {
     return await this.invokeVoid(
       Method.TransferFrom,
       [
-        nativeToScVal(spender, { type: "address" }),
-        nativeToScVal(from, { type: "address" }),
-        nativeToScVal(to, { type: "address" }),
-        nativeToScVal(amount, { type: "i128" }),
+        encodeArgument(
+          spender,
+          { type: "address" },
+          (cause) =>
+            new E.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_SPENDER(
+              spender,
+              cause,
+            ),
+        ),
+        encodeArgument(
+          from,
+          { type: "address" },
+          (cause) =>
+            new E.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_FROM(from, cause),
+        ),
+        encodeArgument(
+          to,
+          { type: "address" },
+          (cause) =>
+            new E.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_TO(to, cause),
+        ),
+        encodeArgument(
+          amount,
+          { type: "i128" },
+          (cause) =>
+            new E.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_AMOUNT(amount, cause),
+        ),
       ],
       config,
       auth,
@@ -185,8 +272,16 @@ export class SEP41TokenContract {
     return await this.invokeVoid(
       Method.Burn,
       [
-        nativeToScVal(from, { type: "address" }),
-        nativeToScVal(amount, { type: "i128" }),
+        encodeArgument(
+          from,
+          { type: "address" },
+          (cause) => new E.FAILED_TO_ENCODE_BURN_ARGUMENT_FROM(from, cause),
+        ),
+        encodeArgument(
+          amount,
+          { type: "i128" },
+          (cause) => new E.FAILED_TO_ENCODE_BURN_ARGUMENT_AMOUNT(amount, cause),
+        ),
       ],
       config,
       auth,
@@ -204,9 +299,24 @@ export class SEP41TokenContract {
     return await this.invokeVoid(
       Method.BurnFrom,
       [
-        nativeToScVal(spender, { type: "address" }),
-        nativeToScVal(from, { type: "address" }),
-        nativeToScVal(amount, { type: "i128" }),
+        encodeArgument(
+          spender,
+          { type: "address" },
+          (cause) =>
+            new E.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_SPENDER(spender, cause),
+        ),
+        encodeArgument(
+          from,
+          { type: "address" },
+          (cause) =>
+            new E.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_FROM(from, cause),
+        ),
+        encodeArgument(
+          amount,
+          { type: "i128" },
+          (cause) =>
+            new E.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_AMOUNT(amount, cause),
+        ),
       ],
       config,
       auth,

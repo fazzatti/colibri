@@ -25,7 +25,7 @@ import type {
 export const MintEventSchema: EventSchema<
   "mint",
   readonly [SchemaField<"to", "address">],
-  SchemaField<"amount", "i128">
+  SchemaField<"amount", "i128", readonly ["map"]>
 > = {
   name: "mint",
   topics: [{ name: "to", type: "address" }],

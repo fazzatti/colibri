@@ -27,7 +27,7 @@ export const ApproveEventSchema: EventSchema<
     SchemaField<"from", "address">,
     SchemaField<"spender", "address">,
   ],
-  SchemaField<"data", "vec">
+  SchemaField<"data", "vec", readonly ["map"]>
 > = {
   name: "approve",
   topics: [

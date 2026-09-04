@@ -262,4 +262,293 @@ describe("SEP41TokenContract", () => {
     assertEquals(destination?.type, "scvAddress");
     assertEquals(scValToNative(destination!), muxed);
   });
+
+  it("maps every argument encoding occurrence to its unique typed error", async () => {
+    const invalidAddress = "invalid-address" as ContractId;
+    const overflowingI128 = 1n << 127n;
+    const cases: ReadonlyArray<{
+      code: E.Code;
+      functionName: string;
+      argumentName: string;
+      stellarType: string;
+      value: unknown;
+      run(token: SEP41TokenContract): Promise<unknown>;
+    }> = [
+      {
+        code: E.Code.FAILED_TO_ENCODE_ALLOWANCE_ARGUMENT_FROM,
+        functionName: "allowance",
+        argumentName: "from",
+        stellarType: "address",
+        value: invalidAddress,
+        run: (token) =>
+          token.allowance({
+            from: invalidAddress,
+            spender: spender.publicKey(),
+          }),
+      },
+      {
+        code: E.Code.FAILED_TO_ENCODE_ALLOWANCE_ARGUMENT_SPENDER,
+        functionName: "allowance",
+        argumentName: "spender",
+        stellarType: "address",
+        value: invalidAddress,
+        run: (token) =>
+          token.allowance({
+            from: owner.publicKey(),
+            spender: invalidAddress,
+          }),
+      },
+      {
+        code: E.Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_FROM,
+        functionName: "approve",
+        argumentName: "from",
+        stellarType: "address",
+        value: invalidAddress,
+        run: (token) =>
+          token.approve({
+            from: invalidAddress,
+            spender: spender.publicKey(),
+            amount: 1n,
+            liveUntilLedger: 1,
+            config,
+          }),
+      },
+      {
+        code: E.Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_SPENDER,
+        functionName: "approve",
+        argumentName: "spender",
+        stellarType: "address",
+        value: invalidAddress,
+        run: (token) =>
+          token.approve({
+            from: owner.publicKey(),
+            spender: invalidAddress,
+            amount: 1n,
+            liveUntilLedger: 1,
+            config,
+          }),
+      },
+      {
+        code: E.Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_AMOUNT,
+        functionName: "approve",
+        argumentName: "amount",
+        stellarType: "i128",
+        value: overflowingI128,
+        run: (token) =>
+          token.approve({
+            from: owner.publicKey(),
+            spender: spender.publicKey(),
+            amount: overflowingI128,
+            liveUntilLedger: 1,
+            config,
+          }),
+      },
+      {
+        code: E.Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_LIVE_UNTIL_LEDGER,
+        functionName: "approve",
+        argumentName: "liveUntilLedger",
+        stellarType: "u32",
+        value: -1,
+        run: (token) =>
+          token.approve({
+            from: owner.publicKey(),
+            spender: spender.publicKey(),
+            amount: 1n,
+            liveUntilLedger: -1,
+            config,
+          }),
+      },
+      {
+        code: E.Code.FAILED_TO_ENCODE_BALANCE_ARGUMENT_ID,
+        functionName: "balance",
+        argumentName: "id",
+        stellarType: "address",
+        value: invalidAddress,
+        run: (token) => token.balance({ id: invalidAddress }),
+      },
+      {
+        code: E.Code.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_FROM,
+        functionName: "transfer",
+        argumentName: "from",
+        stellarType: "address",
+        value: invalidAddress,
+        run: (token) =>
+          token.transfer({
+            from: invalidAddress,
+            to: recipient.publicKey(),
+            amount: 1n,
+            config,
+          }),
+      },
+      {
+        code: E.Code.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_TO,
+        functionName: "transfer",
+        argumentName: "to",
+        stellarType: "address",
+        value: invalidAddress,
+        run: (token) =>
+          token.transfer({
+            from: owner.publicKey(),
+            to: invalidAddress,
+            amount: 1n,
+            config,
+          }),
+      },
+      {
+        code: E.Code.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_AMOUNT,
+        functionName: "transfer",
+        argumentName: "amount",
+        stellarType: "i128",
+        value: overflowingI128,
+        run: (token) =>
+          token.transfer({
+            from: owner.publicKey(),
+            to: recipient.publicKey(),
+            amount: overflowingI128,
+            config,
+          }),
+      },
+      {
+        code: E.Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_SPENDER,
+        functionName: "transfer_from",
+        argumentName: "spender",
+        stellarType: "address",
+        value: invalidAddress,
+        run: (token) =>
+          token.transferFrom({
+            spender: invalidAddress,
+            from: owner.publicKey(),
+            to: recipient.publicKey(),
+            amount: 1n,
+            config,
+          }),
+      },
+      {
+        code: E.Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_FROM,
+        functionName: "transfer_from",
+        argumentName: "from",
+        stellarType: "address",
+        value: invalidAddress,
+        run: (token) =>
+          token.transferFrom({
+            spender: spender.publicKey(),
+            from: invalidAddress,
+            to: recipient.publicKey(),
+            amount: 1n,
+            config,
+          }),
+      },
+      {
+        code: E.Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_TO,
+        functionName: "transfer_from",
+        argumentName: "to",
+        stellarType: "address",
+        value: invalidAddress,
+        run: (token) =>
+          token.transferFrom({
+            spender: spender.publicKey(),
+            from: owner.publicKey(),
+            to: invalidAddress,
+            amount: 1n,
+            config,
+          }),
+      },
+      {
+        code: E.Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_AMOUNT,
+        functionName: "transfer_from",
+        argumentName: "amount",
+        stellarType: "i128",
+        value: overflowingI128,
+        run: (token) =>
+          token.transferFrom({
+            spender: spender.publicKey(),
+            from: owner.publicKey(),
+            to: recipient.publicKey(),
+            amount: overflowingI128,
+            config,
+          }),
+      },
+      {
+        code: E.Code.FAILED_TO_ENCODE_BURN_ARGUMENT_FROM,
+        functionName: "burn",
+        argumentName: "from",
+        stellarType: "address",
+        value: invalidAddress,
+        run: (token) =>
+          token.burn({ from: invalidAddress, amount: 1n, config }),
+      },
+      {
+        code: E.Code.FAILED_TO_ENCODE_BURN_ARGUMENT_AMOUNT,
+        functionName: "burn",
+        argumentName: "amount",
+        stellarType: "i128",
+        value: overflowingI128,
+        run: (token) =>
+          token.burn({
+            from: owner.publicKey(),
+            amount: overflowingI128,
+            config,
+          }),
+      },
+      {
+        code: E.Code.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_SPENDER,
+        functionName: "burn_from",
+        argumentName: "spender",
+        stellarType: "address",
+        value: invalidAddress,
+        run: (token) =>
+          token.burnFrom({
+            spender: invalidAddress,
+            from: owner.publicKey(),
+            amount: 1n,
+            config,
+          }),
+      },
+      {
+        code: E.Code.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_FROM,
+        functionName: "burn_from",
+        argumentName: "from",
+        stellarType: "address",
+        value: invalidAddress,
+        run: (token) =>
+          token.burnFrom({
+            spender: spender.publicKey(),
+            from: invalidAddress,
+            amount: 1n,
+            config,
+          }),
+      },
+      {
+        code: E.Code.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_AMOUNT,
+        functionName: "burn_from",
+        argumentName: "amount",
+        stellarType: "i128",
+        value: overflowingI128,
+        run: (token) =>
+          token.burnFrom({
+            spender: spender.publicKey(),
+            from: owner.publicKey(),
+            amount: overflowingI128,
+            config,
+          }),
+      },
+    ];
+
+    for (const testCase of cases) {
+      const error = await assertRejects(() => testCase.run(createToken()));
+      assertInstanceOf(error, E.SEP41TokenError);
+      assertEquals(error.code, testCase.code);
+      assertStrictEquals(
+        error.constructor,
+        E.ERRORS_SEP41_TOKEN[testCase.code],
+      );
+      assertInstanceOf(error.meta?.cause, Error);
+      assertEquals(error.meta?.data, {
+        functionName: testCase.functionName,
+        argumentName: testCase.argumentName,
+        stellarType: testCase.stellarType,
+        value: testCase.value,
+      });
+    }
+  });
 });

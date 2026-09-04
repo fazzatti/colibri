@@ -23,7 +23,7 @@ import type {
 export const BurnEventSchema: EventSchema<
   "burn",
   readonly [SchemaField<"from", "address">],
-  SchemaField<"amount", "i128">
+  SchemaField<"amount", "i128", readonly ["map"]>
 > = {
   name: "burn",
   topics: [{ name: "from", type: "address" }],

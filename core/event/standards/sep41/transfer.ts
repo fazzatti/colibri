@@ -28,7 +28,7 @@ export const TransferEventSchema: EventSchema<
     SchemaField<"from", "address">,
     SchemaField<"to", "address">,
   ],
-  SchemaField<"amount", "i128">
+  SchemaField<"amount", "i128", readonly ["map"]>
 > = {
   name: "transfer",
   topics: [

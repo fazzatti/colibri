@@ -96,6 +96,11 @@ describe("SEP-41 v0.5.1 event compatibility", () => {
     assertEquals(parsed.amount, 200n);
     assertEquals(parsed.liveUntilLedger, 600);
     assertEquals(parsed.extensions, { reference: "invoice-42" });
+    assertEquals(parsed.get("data"), {
+      amount: 200n,
+      live_until_ledger: 600,
+      reference: "invoice-42",
+    });
     assertEquals(Object.isFrozen(parsed.extensions), true);
   });
 
@@ -168,6 +173,10 @@ describe("SEP-41 v0.5.1 event compatibility", () => {
     );
 
     assertEquals(transfer.amount, 101n);
+    assertEquals(transfer.get("amount"), {
+      amount: 101n,
+      reference: "payment-1",
+    });
     assertEquals(transfer.extensions, { reference: "payment-1" });
     assertEquals(burn.amount, 102n);
     assertEquals(burn.extensions, { reason: "redeem" });

@@ -23,7 +23,7 @@ import type {
 export const ClawbackEventSchema: EventSchema<
   "clawback",
   readonly [SchemaField<"from", "address">],
-  SchemaField<"amount", "i128">
+  SchemaField<"amount", "i128", readonly ["map"]>
 > = {
   name: "clawback",
   topics: [{ name: "from", type: "address" }],
