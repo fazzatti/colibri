@@ -13,6 +13,7 @@ pipeline.
 - [Configure a contract client](contract/configuration.md)
 - [Read and invoke](contract/invocation.md)
 - [Deploy and load a specification](contract/deployment.md)
+- [Inspect metadata, SEP claims, and contract interfaces](contract/metadata-and-interfaces.md)
 - [Contract errors and pipeline plugins](contract/plugins.md)
 
 See the [API and error reference](../reference/README.md) for exact exported

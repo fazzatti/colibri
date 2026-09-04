@@ -72,7 +72,7 @@ catalog.
 - [core/common/helpers/transaction](core-common-helpers-transaction.md) — 2
   codes.
 - [core/common/helpers/xdr](core-common-helpers-xdr.md) — 19 codes.
-- [core/contract](core-contract.md) — 16 codes.
+- [core/contract](core-contract.md) — 21 codes.
 - [core/event](core-event.md) — 13 codes.
 - [core/event/event-filter](core-event-event-filter.md) — 2 codes.
 - [core/event/event-id](core-event-event-id.md) — 2 codes.

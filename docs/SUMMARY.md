@@ -22,6 +22,7 @@
     - [Configuration](core/contract/configuration.md)
     - [Reading and invoking](core/contract/invocation.md)
     - [Deployment and spec loading](core/contract/deployment.md)
+    - [Metadata, claims, and interfaces](core/contract/metadata-and-interfaces.md)
     - [Plugins and contract errors](core/contract/plugins.md)
   - [Ledger Entries](core/ledger-entries.md)
     - [Reading current state](core/ledger-entries/reading.md)

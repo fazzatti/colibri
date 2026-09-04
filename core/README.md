@@ -44,17 +44,17 @@ Deno, Node, and bundlers.
 The package root exposes the complete supported API. This map gives each family
 a small introduction before the later sections explain how the pieces work.
 
-| Area                          | What it provides                                                                                                                          | Typical use                                                                                    |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Transactions and pipelines    | Classic submission, read-only contract simulation, state-changing contract invocation, fee strategies, memos, preconditions, and plugins  | Send a payment, call a contract, cap a Soroban fee, or insert application policy               |
-| Contracts                     | ABI/spec loading, typed method arguments, reads, invocations, deployment, error metadata, Wasm hashes, and external executable references | Build a client around an existing contract or deploy one from Wasm                             |
-| Assets                        | SEP-11 canonical asset strings and a high-level Stellar Asset Contract client                                                             | Validate asset identifiers, derive an SAC, manage trustlines, or invoke token methods          |
-| Accounts and signers          | Native and muxed account identities plus Ed25519, HashX, signed-payload, pre-authorized, and delegated signing capabilities               | Keep envelope and Soroban authorization requirements explicit                                  |
-| Ledger entries and inspection | Typed current-state reads plus lazy views over ledgers, transactions, operations, and execution metadata                                  | Inspect accounts, trustlines, contract state, executable code, fees charged, or historical XDR |
-| Events                        | Event IDs, filters, ledger-meta parsing, schema-driven templates, and ready-made SAC, SEP-41, and CAP-67 event models                     | Decode contract output, build filters, or create a typed event model                           |
-| Networks and discovery        | Mainnet, Testnet, Futurenet, and custom configurations; provider helpers; Friendbot; and SEP-1 `stellar.toml` parsing                     | Keep passphrases and endpoints together or discover an integration from its domain             |
-| Addresses and identifiers     | SEP-23 StrKey format/checksum guards, muxed-address normalization, ledger keys, and SEP-35 operation IDs                                  | Validate untrusted identifiers and index exact operations                                      |
-| Errors and utilities          | Stable error namespaces, assertions, binary normalization, ScVal/XDR conversion, auth inspection, caches, and type guards                 | Build reliable application boundaries without duplicating low-level traversal                  |
+| Area                          | What it provides                                                                                                                              | Typical use                                                                                    |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Transactions and pipelines    | Classic submission, read-only contract simulation, state-changing contract invocation, fee strategies, memos, preconditions, and plugins      | Send a payment, call a contract, cap a Soroban fee, or insert application policy               |
+| Contracts                     | ABI/spec loading, SEP-46 metadata, SEP-47 claims, versioned interface matching, typed calls, deployment, Wasm hashes, and external references | Inspect or interact with an existing contract, or deploy one from Wasm                         |
+| Assets                        | SEP-11 canonical asset strings and a high-level Stellar Asset Contract client                                                                 | Validate asset identifiers, derive an SAC, manage trustlines, or invoke token methods          |
+| Accounts and signers          | Native and muxed account identities plus Ed25519, HashX, signed-payload, pre-authorized, and delegated signing capabilities                   | Keep envelope and Soroban authorization requirements explicit                                  |
+| Ledger entries and inspection | Typed current-state reads plus lazy views over ledgers, transactions, operations, and execution metadata                                      | Inspect accounts, trustlines, contract state, executable code, fees charged, or historical XDR |
+| Events                        | Event IDs, filters, ledger-meta parsing, schema-driven templates, and ready-made SAC, SEP-41, and CAP-67 event models                         | Decode contract output, build filters, or create a typed event model                           |
+| Networks and discovery        | Mainnet, Testnet, Futurenet, and custom configurations; provider helpers; Friendbot; and SEP-1 `stellar.toml` parsing                         | Keep passphrases and endpoints together or discover an integration from its domain             |
+| Addresses and identifiers     | SEP-23 StrKey format/checksum guards, muxed-address normalization, ledger keys, and SEP-35 operation IDs                                      | Validate untrusted identifiers and index exact operations                                      |
+| Errors and utilities          | Stable error namespaces, assertions, binary normalization, ScVal/XDR conversion, auth inspection, caches, and type guards                     | Build reliable application boundaries without duplicating low-level traversal                  |
 
 Core deliberately does not hide the underlying Stellar SDK. Operations and XDR
 values remain SDK objects, while Colibri handles the repeated coordination
@@ -655,6 +655,32 @@ Contract error metadata is opt-in: `loadContractErrorsFromWasm()` extracts the
 contract's error map and installs the matcher on both owned pipelines. This can
 turn a numeric simulation failure into a typed error with the contract's message
 without changing the on-chain result.
+
+Contract-standard inspection deliberately keeps declaration and structure
+separate. `getSepClaims()` parses SEP-47 declarations from SEP-46 metadata;
+`analyzeInterface()` compares the SEP-48 specification with a versioned
+provider; and `inspectStandards()` returns both independent results for every
+requested provider:
+
+```ts
+const report = contract.inspectStandards([
+  ContractStandards.SEP41.latest,
+  ContractStandards.SEP44.latest,
+]);
+
+for (const result of report) {
+  console.log(result.standard, result.claim, result.interface);
+}
+```
+
+The bundled registry covers the concrete interfaces defined by SEP-40, SEP-41,
+SEP-44, SEP-50, SEP-56, and SEP-57. Historical versions explicitly represented
+by Core remain selectable through each standard's `versions` property. SEP-57
+also exposes each component interface under `SEP57.interfaces`. A structural
+match confirms ABI shape, not authorization policy, runtime semantics, event
+behavior, or implementation correctness. See the
+[metadata and interface guide](https://fifo-docs.gitbook.io/colibri/core/contract/metadata-and-interfaces)
+for the complete API and interpretation rules.
 
 ## Ledger entries
 
