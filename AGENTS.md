@@ -110,9 +110,15 @@ GitHub Actions behavior matters when changing structure or versions:
 
 - CI runs on pull requests targeting `main` and `dev`, and can be started
   manually through `workflow_dispatch`.
-- Architecture rules run as part of the required workspace quality job.
+- Architecture rules run first in the required workspace quality job so
+  dependency or repository-shape violations fail before slower checks.
+- CRAP runs in an independent early quality job against unit-test coverage.
+  The final coverage job still merges every unit and integration profile before
+  uploading the repository-wide report to Codecov.
 - CI runs lint, type, and JSR documentation checks once, while every package's
-  complete test suite runs in a required parallel job.
+  complete test suite runs in a required parallel job. Build verification uses
+  separate local, Quickstart, and external-network shards so its Docker and
+  network suites do not serialize the entire package behind one runner.
 - Package jobs upload raw Deno coverage profiles. A final required coverage job
   recreates the instrumented source cache, merges the profiles into one
   workspace LCOV report, and uploads it to Codecov.
