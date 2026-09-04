@@ -50,6 +50,7 @@ deno task check:jsr
 deno task check:slow-types
 deno task check:package-versions
 deno task check:crap
+deno task test:architecture
 deno task test
 deno task test:unit
 deno task test:integration
@@ -69,6 +70,8 @@ What they mean:
   at runtime match their package `deno.json` metadata.
 - `deno task check:crap`: enforce the maximum CRAP score of 15 against the
   aggregate `coverage.lcov` report. Missing function coverage fails the check.
+- `deno task test:architecture`: enforce dependency direction, cycle,
+  publication-boundary, and module-export invariants with ArchUnitTS.
 - `deno task test`: run the full suite, including unit and integration tests.
 - `deno task test:unit`: run fast unit coverage without integration tests.
 - `deno task test:integration`: run integration tests only.

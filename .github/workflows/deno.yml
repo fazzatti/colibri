@@ -45,6 +45,9 @@ jobs:
       - name: Test custom lint rules
         run: deno task test:lint-rules
 
+      - name: Test architecture rules
+        run: deno task test:architecture
+
       - name: Check package version invariants
         run: deno task check:package-versions
 
