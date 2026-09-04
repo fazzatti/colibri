@@ -76,6 +76,11 @@ export enum Code {
   CONTRACT_CONFIG_SOURCES_CONFLICT = "CONTR_013",
   STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM = "CONTR_014",
   NETWORK_EXECUTABLE_NOT_AVAILABLE = "CONTR_015",
+  INVALID_WASM_FOR_METADATA = "CONTR_016",
+  FAILED_TO_DECODE_METADATA_SECTION = "CONTR_017",
+  INVALID_SEP_IDENTIFIER = "CONTR_018",
+  INVALID_WASM_FOR_SPEC = "CONTR_019",
+  FAILED_TO_DECODE_SPEC_SECTION = "CONTR_020",
 }
 
 // Currently unused, reserving
@@ -363,6 +368,79 @@ export class NETWORK_EXECUTABLE_NOT_AVAILABLE extends ContractError<Code> {
   }
 }
 
+/** Raised when metadata extraction receives bytes that are not valid Wasm. */
+export class INVALID_WASM_FOR_METADATA extends ContractError<Code> {
+  /** Creates an invalid-Wasm metadata error. */
+  constructor(cause: Error) {
+    super({
+      code: Code.INVALID_WASM_FOR_METADATA,
+      message: "Invalid Wasm for contract metadata extraction",
+      details:
+        "SEP-46 metadata can only be extracted from a valid WebAssembly module.",
+      cause,
+      data: {},
+    });
+  }
+}
+
+/** Raised when one SEP-46 metadata section does not contain valid XDR. */
+export class FAILED_TO_DECODE_METADATA_SECTION extends ContractError<Code> {
+  /** Creates a metadata-section decoding error. */
+  constructor(sectionIndex: number, cause: Error) {
+    super({
+      code: Code.FAILED_TO_DECODE_METADATA_SECTION,
+      message: "Failed to decode contract metadata section",
+      details:
+        "A contractmetav0 section did not contain a valid stream of SCMetaEntry XDR values.",
+      cause,
+      data: { sectionIndex },
+    });
+  }
+}
+
+/** Raised when a requested SEP number cannot identify a SEP. */
+export class INVALID_SEP_IDENTIFIER extends ContractError<Code> {
+  /** Creates an invalid-SEP-identifier error. */
+  constructor(sep: number) {
+    super({
+      code: Code.INVALID_SEP_IDENTIFIER,
+      message: "Invalid SEP identifier",
+      details: "A SEP identifier must be a positive safe integer.",
+      data: { sep },
+    });
+  }
+}
+
+/** Raised when specification extraction receives bytes that are not valid Wasm. */
+export class INVALID_WASM_FOR_SPEC extends ContractError<Code> {
+  /** Creates an invalid-Wasm specification error. */
+  constructor(cause: Error) {
+    super({
+      code: Code.INVALID_WASM_FOR_SPEC,
+      message: "Invalid Wasm for contract specification extraction",
+      details:
+        "A contract specification can only be extracted from a valid WebAssembly module.",
+      cause,
+      data: {},
+    });
+  }
+}
+
+/** Raised when one SEP-48 specification section does not contain valid XDR. */
+export class FAILED_TO_DECODE_SPEC_SECTION extends ContractError<Code> {
+  /** Creates a specification-section decoding error. */
+  constructor(sectionIndex: number, cause: Error) {
+    super({
+      code: Code.FAILED_TO_DECODE_SPEC_SECTION,
+      message: "Failed to decode contract specification section",
+      details:
+        "A contractspecv0 section did not contain a valid stream of SCSpecEntry XDR values.",
+      cause,
+      data: { sectionIndex },
+    });
+  }
+}
+
 /**
  * Raised when a contract id does not match the expected format.
  */
@@ -437,4 +515,9 @@ export const ERROR_CONTR = {
   [Code.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM]:
     STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM,
   [Code.NETWORK_EXECUTABLE_NOT_AVAILABLE]: NETWORK_EXECUTABLE_NOT_AVAILABLE,
+  [Code.INVALID_WASM_FOR_METADATA]: INVALID_WASM_FOR_METADATA,
+  [Code.FAILED_TO_DECODE_METADATA_SECTION]: FAILED_TO_DECODE_METADATA_SECTION,
+  [Code.INVALID_SEP_IDENTIFIER]: INVALID_SEP_IDENTIFIER,
+  [Code.INVALID_WASM_FOR_SPEC]: INVALID_WASM_FOR_SPEC,
+  [Code.FAILED_TO_DECODE_SPEC_SECTION]: FAILED_TO_DECODE_SPEC_SECTION,
 };

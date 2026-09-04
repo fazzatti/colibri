@@ -1,0 +1,15 @@
+[package]
+name = "sep41-token-contract"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+doctest = false
+
+[dependencies]
+soroban-sdk = "=26.1.1"
+stellar-tokens = "0.7.2"
+
+[dev-dependencies]
+soroban-sdk = { version = "=26.1.1", features = ["testutils"] }

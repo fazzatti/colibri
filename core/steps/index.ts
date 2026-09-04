@@ -9,3 +9,4 @@ export * from "@/steps/enforce-simulation.ts";
 export * from "@/steps/sign-envelope.ts";
 export * from "@/steps/simulate-transaction.ts";
 export * from "@/steps/wrap-fee-bump.ts";
+export * from "@/steps/parse-classic-transaction-outcome.ts";

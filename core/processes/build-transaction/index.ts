@@ -5,7 +5,12 @@ import {
   type TransactionPreconditions,
 } from "@/processes/build-transaction/types.ts";
 import * as E from "@/processes/build-transaction/error.ts";
-import { Account, TransactionBuilder } from "stellar-sdk";
+import {
+  Account,
+  MuxedAccount,
+  TransactionBuilder,
+  type TransactionSource as StellarTransactionSource,
+} from "stellar-sdk";
 import { assert } from "@/common/assert/assert.ts";
 import {
   getTransactionResourceFee,
@@ -17,6 +22,8 @@ import {
   type TransactionFeeParseError,
 } from "@/common/helpers/transaction-fee.ts";
 import type { BaseFee } from "@/common/types/transaction-config/types.ts";
+import { StrKey } from "@/strkeys/index.ts";
+import { muxedAddressToBaseAccount } from "@/address/muxed-to-base-account/index.ts";
 
 type ExactTransactionFee = {
   mode: "inclusion" | "max";
@@ -116,13 +123,50 @@ const resolveTransactionFee = (
 
 const loadSourceAccount = async (
   input: BuildTransactionInput,
-): Promise<Account> => {
+): Promise<StellarTransactionSource> => {
+  const muxedSource = StrKey.isMuxedAddress(input.source)
+    ? input.source
+    : undefined;
+  let baseAccountAddress = input.source;
+  if (muxedSource) {
+    try {
+      baseAccountAddress = muxedAddressToBaseAccount(muxedSource);
+    } catch (error) {
+      throw new E.INVALID_MUXED_SOURCE_ERROR(
+        input,
+        error as Error,
+      );
+    }
+  }
+
   if (!input.sequence) {
     assert(input.rpc, new E.RPC_REQUIRED_TO_LOAD_ACCOUNT_ERROR(input));
+    let account: Account;
     try {
-      return (await input.rpc.getAccount(input.source)) as Account;
+      account = (await input.rpc.getAccount(baseAccountAddress)) as Account;
     } catch (error) {
       throw new E.COULD_NOT_LOAD_ACCOUNT_ERROR(input, error as Error);
+    }
+    if (!muxedSource) return account;
+
+    try {
+      return MuxedAccount.fromAddress(muxedSource, account.sequenceNumber());
+    } catch (error) {
+      throw new E.INVALID_MUXED_SOURCE_RPC_SEQUENCE_ERROR(
+        input,
+        error as Error,
+      );
+    }
+  }
+
+  if (muxedSource) {
+    try {
+      return MuxedAccount.fromAddress(muxedSource, input.sequence);
+    } catch (error) {
+      throw new E.INVALID_MUXED_SOURCE_SEQUENCE_ERROR(
+        input,
+        error as Error,
+      );
     }
   }
 
@@ -138,7 +182,7 @@ const loadSourceAccount = async (
 
 const createTransactionBuilder = (
   input: BuildTransactionInput,
-  sourceAccount: Account,
+  sourceAccount: StellarTransactionSource,
   fee: BaseFee,
 ): TransactionBuilder => {
   try {

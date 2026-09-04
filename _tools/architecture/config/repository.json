@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "baseUrl": "../../..",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "../../../core/**/*.ts",
+    "../../../build-verification/**/*.ts",
+    "../../../identicon/**/*.ts",
+    "../../../rpc-streamer/**/*.ts",
+    "../../../webauth/**/*.ts",
+    "../../../plugins/fee-bump/**/*.ts",
+    "../../../plugins/channel-accounts/**/*.ts",
+    "../../../test-tooling/**/*.ts"
+  ]
+}

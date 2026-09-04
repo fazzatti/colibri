@@ -1,5 +1,5 @@
 /**
- * SAC (Stellar Asset Contract) Set Authorized Event
+ * SAC (Stellar Asset Contract) `set_authorized` event
  *
  * CAP-0067: Emitted when authorization is set for an account.
  *

@@ -22,12 +22,14 @@ import {
   ClawbackEventSchema,
 } from "@/event/standards/sep41/clawback.ts";
 
+export type * from "@/event/standards/sep41/types.ts";
+
 /**
  * All SEP-41 events, schemas, and type guards.
  */
 export const SEP41Events = {
   /** SEP-41 specification version implemented */
-  VERSION: "0.4.0",
+  VERSION: "0.5.1",
   // Events
   MintEvent,
   TransferEvent,

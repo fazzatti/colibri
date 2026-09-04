@@ -50,6 +50,7 @@ deno task check:jsr
 deno task check:slow-types
 deno task check:package-versions
 deno task check:crap
+deno task test:architecture
 deno task test
 deno task test:unit
 deno task test:integration
@@ -69,6 +70,8 @@ What they mean:
   at runtime match their package `deno.json` metadata.
 - `deno task check:crap`: enforce the maximum CRAP score of 15 against the
   aggregate `coverage.lcov` report. Missing function coverage fails the check.
+- `deno task test:architecture`: enforce dependency direction, cycle,
+  publication-boundary, and module-export invariants with ArchUnitTS.
 - `deno task test`: run the full suite, including unit and integration tests.
 - `deno task test:unit`: run fast unit coverage without integration tests.
 - `deno task test:integration`: run integration tests only.
@@ -107,6 +110,7 @@ GitHub Actions behavior matters when changing structure or versions:
 
 - CI runs on pull requests targeting `main` and `dev`, and can be started
   manually through `workflow_dispatch`.
+- Architecture rules run as part of the required workspace quality job.
 - CI runs lint, type, and JSR documentation checks once, while every package's
   complete test suite runs in a required parallel job.
 - Package jobs upload raw Deno coverage profiles. A final required coverage job
@@ -139,6 +143,17 @@ Release implications:
 ## Workspace Structure And Boundaries
 
 This repo has a strong architectural boundary system. Preserve it.
+
+Repository architecture is executable under `_tools/architecture/`. Keep its
+ArchUnitTS rules aligned whenever adding a package, process, step, pipeline,
+entrypoint, or dependency boundary. `deno task test:architecture` checks:
+
+- package dependency direction and public-root-only cross-package imports
+- Core and build-verification layer direction
+- circular dependencies, including explicit baselines for established cycles
+- process-to-step and pipeline physical topology
+- package manifests, entrypoints, licenses, and publication boundaries
+- module, file, directory, test-registration, and typed-error conventions
 
 ### 1. Processes, steps, connectors, and pipelines are distinct layers
 

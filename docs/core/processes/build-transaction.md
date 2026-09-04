@@ -25,6 +25,14 @@ const exactInclusionTransaction = await buildTransaction({
   networkPassphrase: "Test SDF Network ; September 2015",
   rpc,
 });
+
+const muxedSourceTransaction = await buildTransaction({
+  operations,
+  source: "MABC...",
+  baseFee: "100",
+  networkPassphrase: "Test SDF Network ; September 2015",
+  rpc,
+});
 ```
 
 ## Input
@@ -32,7 +40,7 @@ const exactInclusionTransaction = await buildTransaction({
 | Property            | Type                       | Required           | Description                                          |
 | ------------------- | -------------------------- | ------------------ | ---------------------------------------------------- |
 | `operations`        | `xdr.Operation[]`          | Yes                | Operations added to the transaction                  |
-| `source`            | `Ed25519PublicKey`         | Yes                | Source account public key                            |
+| `source`            | `TransactionSource`        | Yes                | Source G-address or M-address                        |
 | `baseFee`           | `BaseFee`                  | One fee input      | Existing Stellar SDK per-operation base-fee behavior |
 | `transactionFee`    | `TransactionFee`           | One fee input      | Explicit `base`, `inclusion`, or `max` strategy      |
 | `networkPassphrase` | `string`                   | Yes                | Network passphrase                                   |
@@ -45,6 +53,10 @@ const exactInclusionTransaction = await buildTransaction({
 Exactly one of `baseFee` or `transactionFee` is required. Either `rpc` or
 `sequence` must also be provided. When `rpc` is selected, the process loads the
 current sequence from the network.
+
+For an M-address source, RPC sequence lookup uses the embedded base G-account,
+while the built envelope retains the original M-address. An explicit `sequence`
+follows the same envelope behavior without an RPC lookup.
 
 ### Explicit Fee Strategies
 

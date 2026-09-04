@@ -70,10 +70,19 @@ export type SchemaFieldType =
 export interface SchemaField<
   Name extends string = string,
   Type extends SchemaFieldType = SchemaFieldType,
+  AlternateTypes extends readonly SchemaFieldType[] = readonly [],
 > {
   readonly name: Name;
   readonly type: Type;
+  /** Additional runtime representations accepted for this field. */
+  readonly alternateTypes?: AlternateTypes;
 }
+
+type AnySchemaField = SchemaField<
+  string,
+  SchemaFieldType,
+  readonly SchemaFieldType[]
+>;
 
 /**
  * Event schema definition.
@@ -91,8 +100,8 @@ export interface SchemaField<
 /** @internal */
 export interface EventSchema<
   Name extends string = string,
-  Topics extends readonly SchemaField[] = readonly SchemaField[],
-  Value extends SchemaField = SchemaField,
+  Topics extends readonly AnySchemaField[] = readonly AnySchemaField[],
+  Value extends AnySchemaField = AnySchemaField,
 > {
   /** The event name (first topic, must be a symbol) */
   readonly name: Name;
@@ -108,23 +117,33 @@ export interface EventSchema<
 /** @internal */
 export type FieldTypeToTs<T extends SchemaFieldType> = T extends "address"
   ? string
-  : T extends "bool"
-  ? boolean
-  : T extends "bytes"
-  ? Uint8Array
-  : T extends "i32" | "u32"
-  ? number
-  : T extends "i64" | "u64" | "i128" | "u128" | "i256" | "u256"
-  ? bigint
-  : T extends "timepoint" | "duration"
-  ? bigint
-  : T extends "string" | "symbol"
-  ? string
-  : T extends "vec"
-  ? unknown[]
-  : T extends "map"
-  ? Record<string, unknown> | Map<unknown, unknown>
+  : T extends "bool" ? boolean
+  : T extends "bytes" ? Uint8Array
+  : T extends "i32" | "u32" ? number
+  : T extends "i64" | "u64" | "i128" | "u128" | "i256" | "u256" ? bigint
+  : T extends "timepoint" | "duration" ? bigint
+  : T extends "string" | "symbol" ? string
+  : T extends "vec" ? unknown[]
+  : T extends "map" ? Record<string, unknown> | Map<unknown, unknown>
   : unknown;
+
+type AlternateFieldTypes<Field extends AnySchemaField> =
+  "alternateTypes" extends keyof Field
+    ? NonNullable<Field["alternateTypes"]>[number]
+    : never;
+
+type FieldTypes<Field extends AnySchemaField> =
+  | Field["type"]
+  | AlternateFieldTypes<Field>;
+
+type FieldTypeForField<Field extends AnySchemaField> = FieldTypeToTs<
+  FieldTypes<Field>
+>;
+
+type PrimaryFieldTypeFor<
+  S extends EventSchema,
+  N extends TopicFieldNames<S>,
+> = FieldTypeToTs<Extract<S["topics"][number], { name: N }>["type"]>;
 
 /**
  * Extracts field names from schema topics.
@@ -147,11 +166,10 @@ export type AllFieldNames<S extends EventSchema> =
 /** @internal */
 export type FieldTypeFor<
   S extends EventSchema,
-  N extends AllFieldNames<S>
-> = N extends S["value"]["name"]
-  ? FieldTypeToTs<S["value"]["type"]>
+  N extends AllFieldNames<S>,
+> = N extends S["value"]["name"] ? FieldTypeForField<S["value"]>
   : N extends S["topics"][number]["name"]
-  ? FieldTypeToTs<Extract<S["topics"][number], { name: N }>["type"]>
+    ? FieldTypeForField<Extract<S["topics"][number], { name: N }>>
   : never;
 
 /**
@@ -168,5 +186,5 @@ export type FieldsFromSchema<S extends EventSchema> = {
  */
 /** @internal */
 export type TopicFilterArgs<S extends EventSchema> = {
-  [K in TopicFieldNames<S>]?: FieldTypeFor<S, K>;
+  [K in TopicFieldNames<S>]?: PrimaryFieldTypeFor<S, K>;
 };

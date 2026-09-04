@@ -1,11 +1,11 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { xdr, Keypair, Address } from "stellar-sdk";
+import { Address, Keypair, xdr } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
 import {
   SetAdminEvent,
   SetAdminEventSchema,
-} from "@/event/standards/sac/set_admin.ts";
+} from "@/event/standards/sac/set-admin.ts";
 import { EventType } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 
@@ -13,10 +13,10 @@ import type { ContractId } from "@/strkeys/types.ts";
 function createMockEvent(
   topics: xdr.ScVal[],
   value: xdr.ScVal,
-  contractId?: string
+  contractId?: string,
 ): Event {
-  const contract =
-    contractId ?? "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+  const contract = contractId ??
+    "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
   return new Event({
     id: "0000000000000000000-0000000000",
@@ -60,7 +60,7 @@ describe("SetAdminEvent", () => {
           new Address(admin).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        new Address(newAdmin).toScVal()
+        new Address(newAdmin).toScVal(),
       );
 
       assertEquals(SetAdminEvent.is(event), true);
@@ -75,7 +75,7 @@ describe("SetAdminEvent", () => {
           new Address(admin).toScVal(),
           xdr.ScVal.scvString("native"),
         ],
-        new Address(newAdmin).toScVal()
+        new Address(newAdmin).toScVal(),
       );
 
       assertEquals(SetAdminEvent.is(event), true);
@@ -90,7 +90,7 @@ describe("SetAdminEvent", () => {
           new Address(admin).toScVal(),
           // missing asset topic
         ],
-        new Address(newAdmin).toScVal()
+        new Address(newAdmin).toScVal(),
       );
 
       assertEquals(SetAdminEvent.is(event), false);
@@ -105,7 +105,7 @@ describe("SetAdminEvent", () => {
           new Address(admin).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        new Address(newAdmin).toScVal()
+        new Address(newAdmin).toScVal(),
       );
 
       assertEquals(SetAdminEvent.is(event), false);
@@ -122,7 +122,7 @@ describe("SetAdminEvent", () => {
           new Address(admin).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        new Address(newAdmin).toScVal()
+        new Address(newAdmin).toScVal(),
       );
 
       const setAdminEvent = SetAdminEvent.fromEvent(event);
@@ -142,14 +142,14 @@ describe("SetAdminEvent", () => {
           new Address(admin).toScVal(),
           xdr.ScVal.scvString("invalid-asset"),
         ],
-        new Address(newAdmin).toScVal()
+        new Address(newAdmin).toScVal(),
       );
 
       const setAdminEvent = SetAdminEvent.fromEvent(event);
       assertThrows(
         () => setAdminEvent.asset,
         Error,
-        "Invalid SEP-11 asset format: invalid-asset"
+        "Invalid SEP-11 asset format: invalid-asset",
       );
     });
   });
@@ -164,7 +164,7 @@ describe("SetAdminEvent", () => {
           new Address(admin).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        new Address(newAdmin).toScVal()
+        new Address(newAdmin).toScVal(),
       );
 
       const setAdminEvent = SetAdminEvent.fromEvent(event);
@@ -185,7 +185,7 @@ describe("SetAdminEvent", () => {
           new Address(contractId).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        new Address(newAdmin).toScVal()
+        new Address(newAdmin).toScVal(),
       );
 
       const setAdminEvent = SetAdminEvent.fromEvent(event);

@@ -1,6 +1,6 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
+import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
 import { MintEvent, MintEventSchema } from "@/event/standards/sep41/mint.ts";
 import { EventType } from "@/event/types.ts";
@@ -11,10 +11,10 @@ import type { ContractId } from "@/strkeys/types.ts";
 function createMockEvent(
   topics: xdr.ScVal[],
   value: xdr.ScVal,
-  contractId?: string
+  contractId?: string,
 ): Event {
-  const contract =
-    contractId ?? "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+  const contract = contractId ??
+    "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
   return new Event({
     id: "0000000000000000000-0000000000",
@@ -48,7 +48,7 @@ describe("MintEvent", () => {
       const to = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("mint"), new Address(to).toScVal()],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(MintEvent.is(event), true);
@@ -67,7 +67,7 @@ describe("MintEvent", () => {
             key: xdr.ScVal.scvSymbol("to_muxed_id"),
             val: nativeToScVal(12345n, { type: "u64" }),
           }),
-        ])
+        ]),
       );
 
       // Muxed map format is now supported per CAP-0067
@@ -83,7 +83,7 @@ describe("MintEvent", () => {
           new Address(from).toScVal(),
           new Address(to).toScVal(),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(MintEvent.is(event), false);
@@ -97,7 +97,7 @@ describe("MintEvent", () => {
           new Address(to).toScVal(),
           new Address(to).toScVal(), // extra topic
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(MintEvent.is(event), false);
@@ -110,7 +110,7 @@ describe("MintEvent", () => {
           xdr.ScVal.scvSymbol("transfer"), // wrong name but correct topic count
           new Address(to).toScVal(),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(MintEvent.is(event), false);
@@ -122,7 +122,7 @@ describe("MintEvent", () => {
           xdr.ScVal.scvSymbol("mint"),
           xdr.ScVal.scvU32(123), // non-string type instead of address
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(MintEvent.is(event), false);
@@ -132,7 +132,7 @@ describe("MintEvent", () => {
       const to = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("mint"), new Address(to).toScVal()],
-        xdr.ScVal.scvString("invalid") // not i128 or muxed map
+        xdr.ScVal.scvString("invalid"), // not i128 or muxed map
       );
 
       assertEquals(MintEvent.is(event), false);
@@ -145,7 +145,7 @@ describe("MintEvent", () => {
       const amount = 5000000000n;
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("mint"), new Address(to).toScVal()],
-        nativeToScVal(amount, { type: "i128" })
+        nativeToScVal(amount, { type: "i128" }),
       );
 
       const mintEvent = MintEvent.fromEvent(event);
@@ -158,13 +158,13 @@ describe("MintEvent", () => {
     it("should throw for non-mint event", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("burn")],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       assertThrows(
         () => MintEvent.fromEvent(event),
         Error,
-        "does not match mint schema"
+        "does not match mint schema",
       );
     });
   });
@@ -174,7 +174,7 @@ describe("MintEvent", () => {
       const to = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("mint"), new Address(to).toScVal()],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       const mintEvent = MintEvent.fromEvent(event);
@@ -188,7 +188,7 @@ describe("MintEvent", () => {
         "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("mint"), new Address(contractId).toScVal()],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       const mintEvent = MintEvent.fromEvent(event);
@@ -203,7 +203,7 @@ describe("MintEvent", () => {
       const to = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("mint"), new Address(to).toScVal()],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       const mintEvent = MintEvent.fromEvent(event);
@@ -216,7 +216,7 @@ describe("MintEvent", () => {
       const to = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("mint"), new Address(to).toScVal()],
-        nativeToScVal(5000n, { type: "i128" })
+        nativeToScVal(5000n, { type: "i128" }),
       );
 
       const mintEvent = MintEvent.fromEvent(event);
@@ -235,7 +235,7 @@ describe("MintEvent", () => {
       const to = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("mint"), new Address(to).toScVal()],
-        nativeToScVal(1000n, { type: "i128" })
+        nativeToScVal(1000n, { type: "i128" }),
       );
 
       const mintEvent = MintEvent.fromEvent(event);
@@ -248,7 +248,7 @@ describe("MintEvent", () => {
       assertThrows(
         () => mintEvent.amount,
         Error,
-        "Invalid mint event data format"
+        "Invalid mint event data format",
       );
     });
   });

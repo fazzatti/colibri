@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "baseUrl": "../../..",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["plugins/channel-accounts/src/*"],
+      "@colibri/core": ["core/mod.ts"],
+      "colibri-internal/*": ["_internal/*"]
+    },
+    "skipLibCheck": true
+  },
+  "include": ["../../../plugins/channel-accounts/**/*.ts"],
+  "exclude": ["../../../plugins/channel-accounts/**/*.test.ts"]
+}

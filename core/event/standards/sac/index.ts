@@ -31,11 +31,11 @@ import {
 import {
   SetAdminEvent,
   SetAdminEventSchema,
-} from "@/event/standards/sac/set_admin.ts";
+} from "@/event/standards/sac/set-admin.ts";
 import {
   SetAuthorizedEvent,
   SetAuthorizedEventSchema,
-} from "@/event/standards/sac/set_authorized.ts";
+} from "@/event/standards/sac/set-authorized.ts";
 
 /**
  * All SAC events, schemas, and type guards.

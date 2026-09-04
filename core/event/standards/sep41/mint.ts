@@ -3,7 +3,18 @@ import { EventTemplate } from "@/event/template.ts";
 import * as E from "@/event/error.ts";
 import type { EventSchema, SchemaField } from "@/event/types.ts";
 import type { Event } from "@/event/event.ts";
-import { isEventMuxedData } from "@/event/standards/cap67/index.ts";
+import {
+  decodeSEP41EventExtensions,
+  getSEP41Amount,
+  getSEP41EventExtensions,
+  getSEP41MuxedId,
+  isSEP41AmountEventData,
+} from "@/event/standards/sep41/data.ts";
+import type {
+  SEP41EventExtensionDecoder,
+  SEP41EventExtensions,
+  SEP41EventMuxedId,
+} from "@/event/standards/sep41/types.ts";
 
 /**
  * SEP-41 Mint Event Schema (simple variant)
@@ -14,11 +25,11 @@ import { isEventMuxedData } from "@/event/standards/cap67/index.ts";
 export const MintEventSchema: EventSchema<
   "mint",
   readonly [SchemaField<"to", "address">],
-  SchemaField<"amount", "i128">
+  SchemaField<"amount", "i128", readonly ["map"]>
 > = {
   name: "mint",
   topics: [{ name: "to", type: "address" }],
-  value: { name: "amount", type: "i128" },
+  value: { name: "amount", type: "i128", alternateTypes: ["map"] },
 };
 
 /**
@@ -52,32 +63,8 @@ export class MintEvent extends EventTemplate<typeof MintEventSchema> {
    * Overrides base implementation to accept both i128 and muxed map value formats.
    */
   static override is(event: Event): boolean {
-    const schema = this.schema;
-    const topics = event.topics;
-
-    // Check topic count: name + topic fields
-    if (topics.length !== schema.topics.length + 1) {
-      return false;
-    }
-
-    // Check event name
-    if (topics[0] !== schema.name) {
-      return false;
-    }
-
-    // Check topic field types (to)
-    if (typeof topics[1] !== "string") return false; // to address
-
-    // Check value type: accept either i128 (bigint) or muxed map format
-    const value = event.value;
-    if (typeof value === "bigint") {
-      return true; // Simple i128 format
-    }
-    if (isEventMuxedData(value)) {
-      return true; // Muxed map format (CAP-0067)
-    }
-
-    return false;
+    return super.is(event) &&
+      isSEP41AmountEventData(event, { muxedId: true });
   }
 
   /** The recipient address that received the minted tokens. */
@@ -90,14 +77,9 @@ export class MintEvent extends EventTemplate<typeof MintEventSchema> {
    * Handles both simple (i128) and muxed (map) data formats.
    */
   get amount(): bigint {
-    const val = this.value;
-    if (typeof val === "bigint") {
-      return val;
-    }
-    if (isEventMuxedData(val)) {
-      return val.amount as bigint;
-    }
-    throw new E.INVALID_EVENT_DATA_FORMAT("mint");
+    const amount = getSEP41Amount(this.value);
+    if (amount === undefined) throw new E.INVALID_EVENT_DATA_FORMAT("mint");
+    return amount;
   }
 
   /**
@@ -112,12 +94,8 @@ export class MintEvent extends EventTemplate<typeof MintEventSchema> {
    * Do not assume that a present value is always a raw muxed-account ID without
    * considering the destination type and transaction context.
    */
-  get toMuxedId(): bigint | string | Uint8Array | undefined {
-    const val = this.value;
-    if (isEventMuxedData(val) && "to_muxed_id" in val) {
-      return val.to_muxed_id as bigint | string | Uint8Array | undefined;
-    }
-    return undefined;
+  get toMuxedId(): SEP41EventMuxedId | undefined {
+    return getSEP41MuxedId(this.value);
   }
 
   /**
@@ -125,6 +103,27 @@ export class MintEvent extends EventTemplate<typeof MintEventSchema> {
    */
   hasMuxedId(): boolean {
     return this.toMuxedId !== undefined;
+  }
+
+  /** Non-standard fields from the map representation, or an empty object. */
+  get extensions(): SEP41EventExtensions {
+    return getSEP41EventExtensions(this.value, ["amount", "to_muxed_id"]);
+  }
+
+  /**
+   * Validates or transforms application-specific mint event fields.
+   *
+   * @param decoder Runtime decoder supplied by the consuming application.
+   * @returns The decoder's typed output.
+   */
+  decodeExtensions<Output>(
+    decoder: SEP41EventExtensionDecoder<Output>,
+  ): Output {
+    return decodeSEP41EventExtensions(
+      this.extensions,
+      decoder,
+      (cause, keys) => new E.MINT_EXTENSION_DECODER_FAILED(keys, cause),
+    );
   }
 
   /**

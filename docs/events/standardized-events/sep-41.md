@@ -1,16 +1,23 @@
-# SEP-41 Events
+# SEP-41 Token Events
 
 [SEP-41](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0041.md)
-defines the standard token interface for Soroban smart contracts. Any contract
-implementing SEP-41 emits standardized events that Colibri can parse.
+defines the standard token interface and event vocabulary for Soroban token
+contracts. Colibri implements the current v0.5.1 event shapes while retaining
+compatibility with the earlier scalar and vector representations.
 
 ## Specification
 
-SEP-41 is the Soroban Token Interface standard. It defines:
+SEP-41 defines these contract methods:
 
-- Token functions (`transfer`, `mint`, `burn`, etc.)
-- Event formats for each function
-- Required metadata methods
+- `allowance`, `approve`, and `balance`
+- `transfer` and `transfer_from`
+- `burn` and `burn_from`
+- `decimals`, `name`, and `symbol`
+
+It also defines `transfer`, `approve`, `burn`, `mint`, and `clawback` events.
+Minting and clawback functions are intentionally **not** standardized because
+administrative token designs can differ. The corresponding event formats remain
+standardized when a contract exposes those capabilities.
 
 ## Key Difference from SAC
 
@@ -18,20 +25,20 @@ SEP-41 events do **not** include the asset string as a topic:
 
 ```
 Topics: ["transfer", from, to]
-Data: amount (i128)
+Data: amount (i128) or a symbol-keyed map
 ```
 
 You identify the token by its contract ID, not by an asset topic.
 
 ## Event Types
 
-| Event    | Export                      | Description        |
-| -------- | --------------------------- | ------------------ |
-| Transfer | `SEP41Events.TransferEvent` | Token transfers    |
-| Mint     | `SEP41Events.MintEvent`     | Token minting      |
-| Burn     | `SEP41Events.BurnEvent`     | Token burning      |
-| Clawback | `SEP41Events.ClawbackEvent` | Admin clawback     |
-| Approve  | `SEP41Events.ApproveEvent`  | Allowance approval |
+| Event    | Export                      | Description                     |
+| -------- | --------------------------- | ------------------------------- |
+| Transfer | `SEP41Events.TransferEvent` | Token transfers                 |
+| Mint     | `SEP41Events.MintEvent`     | Implementation-defined minting  |
+| Burn     | `SEP41Events.BurnEvent`     | Token burning                   |
+| Clawback | `SEP41Events.ClawbackEvent` | Implementation-defined clawback |
+| Approve  | `SEP41Events.ApproveEvent`  | Allowance approval              |
 
 ## Import
 
@@ -50,6 +57,50 @@ if (SEP41Events.TransferEvent.is(event)) {
   console.log(transfer.amount); // bigint
 }
 ```
+
+## Compatible Data Representations
+
+Every parser accepts the earlier event representation and the v0.5.1
+symbol-keyed map representation:
+
+| Event                 | Earlier representation        | Map fields                                       |
+| --------------------- | ----------------------------- | ------------------------------------------------ |
+| `transfer` and `mint` | `amount: i128`                | `amount`, optional `to_muxed_id`, and extensions |
+| `burn` and `clawback` | `amount: i128`                | `amount` and extensions                          |
+| `approve`             | `[amount, live_until_ledger]` | `amount`, `live_until_ledger`, and extensions    |
+
+Unknown symbol-keyed fields are accepted and preserved under `extensions`.
+Colibri continues to validate every standardized field. A map with a missing or
+incorrectly typed `amount`, `live_until_ledger`, or `to_muxed_id` is not treated
+as a matching SEP-41 event.
+
+```ts
+const transfer = SEP41Events.TransferEvent.fromEvent(event);
+
+transfer.amount; // bigint
+transfer.toMuxedId; // bigint | string | Uint8Array | undefined
+transfer.extensions; // Readonly<Record<string, parsed ScVal>>
+```
+
+Extension values cannot be statically known from SEP-41. Applications that know
+their contract's extension schema can validate it at runtime and receive a typed
+result:
+
+```ts
+const extension = transfer.decodeExtensions((fields) => {
+  if (typeof fields.reference !== "string") {
+    throw new Error("Missing transfer reference");
+  }
+  return { reference: fields.reference };
+});
+
+extension.reference; // string
+```
+
+The decoder is application-provided and opt-in. A decoder failure is wrapped in
+an occurrence-specific Colibri error such as
+`TRANSFER_EXTENSION_DECODER_FAILED`; the event itself is still valid SEP-41
+data.
 
 ## Creating Filters
 
@@ -91,3 +142,6 @@ await streamer.start((event) => {
   }
 });
 ```
+
+For invoking the standardized token functions, use the
+[SEP-41 Token Contract client](../../core/asset/sep-41-token-contract.md).

@@ -35,7 +35,7 @@ const networkConfig = NetworkConfig.TestNet();
 const plugin = createFeeBumpPlugin({
   networkConfig,
   feeBumpConfig: {
-    source: "G...FEEPAYER", // fee payer address
+    source: "G...FEEPAYER", // G... or M... fee payer address
     fee: "10000000", // fee in stroops (1 XLM)
     signers: [
       /* signer objects */
@@ -73,9 +73,9 @@ input for the rest of the pipeline.
 - `FeeBumpPluginSignerIdentity` and `FeeBumpSignableTransaction` — interfaces
   for custom fee-bump signer implementations
 
-The package also re-exports Core's branded `SignerKey`, `Ed25519PublicKey`,
-`ContractId`, `PreAuthTx`, `Sha256Hash`, and `SignedPayload` types for custom
-signer implementations.
+The package also re-exports Core's branded `SignerKey`, `TransactionSource`,
+`Ed25519PublicKey`, `MuxedAddress`, `ContractId`, `PreAuthTx`, `Sha256Hash`, and
+`SignedPayload` types for custom signer implementations.
 
 For concrete examples, refer to the unit and integration tests in `src/`.
 
@@ -88,8 +88,9 @@ For concrete examples, refer to the unit and integration tests in `src/`.
   transactions.
 
 - `feeBumpConfig` (required) — Configuration for the fee bump behavior:
-  - `source` (string, required) — The Stellar account address that will pay the
-    fee (fee source).
+  - `source` (`TransactionSource`, required) — The `G...` or `M...` Stellar
+    account address that will pay the fee. A muxed source is preserved in the
+    outer fee-bump envelope; its underlying `G...` account authorizes it.
   - `fee` (string, required) — Fee amount in stroops to set on the
     FeeBumpTransaction as base fee\* (e.g. `"10000000"` equals 1 XLM).
   - `signers` (array, required) — Envelope or pre-authorized transaction signer

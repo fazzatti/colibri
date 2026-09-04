@@ -29,7 +29,8 @@ export class MISSING_ARG extends ClassicTransactionError {
     super({
       code: Code.MISSING_ARG,
       message: `Missing required argument: ${argName}`,
-      details: `The argument '${argName}' is required but was not provided in the pipeline creation.`,
+      details:
+        `The argument '${argName}' is required but was not provided in the pipeline creation.`,
       cause: undefined,
     });
   }
@@ -40,7 +41,8 @@ export class MISSING_RPC_URL extends ClassicTransactionError {
     super({
       code: Code.MISSING_RPC_URL,
       message: "Missing RPC URL in network configuration",
-      details: `The argument 'rpcUrl' is required in the provided 'networkConfig'.`,
+      details:
+        `The argument 'rpcUrl' is required in the provided 'networkConfig'.`,
       diagnostic: {
         suggestion:
           "Either provide a 'rpc' instance or a valid 'rpcUrl' in the 'networkConfig'.",

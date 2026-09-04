@@ -3,8 +3,8 @@ import type { Memo, Transaction, xdr } from "stellar-sdk";
 import type {
   BaseFee,
   TransactionFee,
+  TransactionSource,
 } from "@/common/types/transaction-config/types.ts";
-import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 import type { ExtraSignerKey } from "@/strkeys/types.ts";
 
 /**
@@ -15,8 +15,8 @@ export type BuildTransactionInput =
   & {
     /** Operations that will be added to the transaction envelope. */
     operations: xdr.Operation[];
-    /** Source account for the transaction. */
-    source: Ed25519PublicKey;
+    /** G-address or M-address used as the transaction source. */
+    source: TransactionSource;
     /** Stellar network passphrase. */
     networkPassphrase: string;
     /** Optional Soroban data or encoded Soroban data payload. */

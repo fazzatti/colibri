@@ -26,6 +26,7 @@
     "@std/assert": "jsr:@std/assert@^1.0.0",
     "@std/testing": "jsr:@std/testing@^1.0.0",
     "@std/expect": "jsr:@std/expect@^1.0.0",
+    "archunit": "npm:archunit@2.4.0",
     "crap4ts-tool": "npm:@alperlabs/crap4ts@0.2.1",
     "resvg-test": "npm:@resvg/resvg-js@2.6.2"
   },
@@ -42,6 +43,8 @@
     "check:webauth-fixtures": "deno run -A _tools/build-webauth-fixtures.ts --check",
     "build:delegated-auth-fixtures": "deno run -A _tools/build-delegated-auth-fixtures.ts",
     "check:delegated-auth-fixtures": "deno run -A _tools/build-delegated-auth-fixtures.ts --check",
+    "build:sep41-fixture": "deno run -A _tools/build-sep41-fixture.ts",
+    "check:sep41-fixture": "deno run -A _tools/build-sep41-fixture.ts --check",
     "build:executable-ref-fixture": "deno run -A _tools/build-executable-ref-fixture.ts",
     "check:executable-ref-fixture": "deno run -A _tools/build-executable-ref-fixture.ts --check",
     "build:build-verification-fixtures": "deno run -A _tools/build-build-verification-fixtures.ts",
@@ -50,6 +53,7 @@
     "test:unit": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.integration.test.ts' --ignore='**/*.testnet.integration.test.ts' --coverage=coverage",
     "test:integration": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.unit.test.ts' --coverage=coverage",
     "test:lint-rules": "deno test --clean _tools/lint",
+    "test:architecture": "deno test --allow-read --allow-env --allow-sys=cpus --clean _tools/architecture",
     "test:file": "deno test -A --parallel --clean --ignore='_*/'"
   },
   "lint": {

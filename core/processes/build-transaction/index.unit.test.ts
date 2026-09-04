@@ -1,25 +1,29 @@
 import { assertEquals, assertInstanceOf } from "@std/assert";
-import { describe, it, beforeEach } from "@std/testing/bdd";
+import { beforeEach, describe, it } from "@std/testing/bdd";
 import type { Server } from "stellar-sdk/rpc";
 import {
   Account,
-  Operation,
   Asset,
+  Keypair,
   Memo,
   MemoText,
+  MuxedAccount,
+  Operation,
   Transaction,
   xdr,
-  Keypair,
 } from "stellar-sdk";
 import { buildTransaction } from "@/processes/build-transaction/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import type { BuildTransactionInput } from "@/processes/build-transaction/types.ts";
+import type { MuxedAddress } from "@/strkeys/types.ts";
 
 let isGetAccountCalled = false;
+let loadedAccountAddress: string | undefined;
 const mockSequence = "100";
 const mockRpc = {
   getAccount: (address: string) => {
     isGetAccountCalled = true;
+    loadedAccountAddress = address;
     return new Account(address, mockSequence);
   },
 } as unknown as Server;
@@ -44,6 +48,7 @@ describe("BuildTransaction", () => {
     describe("Account loading", () => {
       beforeEach(() => {
         isGetAccountCalled = false;
+        loadedAccountAddress = undefined;
       });
 
       it("loads account from RPC when no sequence provided", async () => {
@@ -72,6 +77,48 @@ describe("BuildTransaction", () => {
         assertEquals(isGetAccountCalled, false);
 
         assertInstanceOf(tx, Transaction);
+      });
+
+      it("loads a muxed source through its base account and preserves the M-address", async () => {
+        const baseAddress =
+          "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P";
+        const muxedAddress = new MuxedAccount(
+          new Account(baseAddress, mockSequence),
+          "123",
+        ).accountId() as MuxedAddress;
+        const input: BuildTransactionInput = {
+          rpc: mockRpc,
+          operations: [Operation.setOptions({})],
+          source: muxedAddress,
+          baseFee: "100",
+          networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
+        };
+
+        const tx = await buildTransaction(input);
+
+        assertEquals(loadedAccountAddress, baseAddress);
+        assertEquals(tx.source, muxedAddress);
+      });
+
+      it("builds a muxed-source transaction from an explicit sequence", async () => {
+        const baseAddress =
+          "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P";
+        const muxedAddress = new MuxedAccount(
+          new Account(baseAddress, mockSequence),
+          "456",
+        ).accountId() as MuxedAddress;
+        const input: BuildTransactionInput = {
+          operations: [Operation.setOptions({})],
+          source: muxedAddress,
+          sequence: "500",
+          baseFee: "100",
+          networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
+        };
+
+        const tx = await buildTransaction(input);
+
+        assertEquals(isGetAccountCalled, false);
+        assertEquals(tx.source, muxedAddress);
       });
     });
 
@@ -375,7 +422,7 @@ describe("BuildTransaction", () => {
       it("sets soroban data when provided", async () => {
         const sorobanData = xdr.SorobanTransactionData.fromXdr(
           "AAAAAAAAAAEAAAAGAAAAAdeSi3LCcDzP6vfrn/TvTVBKVai5efybRQ6iyEK00c5hAAAAFAAAAAEAAAADAAAAAAAAAAClZfo0zWnOlyv/PMqOyXKqStHsqtWMrbGglMLWqW3QSgAAAAAAAAAA1Tj2cXkwgEDkIjbwQd5c0TGjzOviEzegDNCm43OsOIIAAAAGAAAAAAAAAAClZfo0zWnOlyv/PMqOyXKqStHsqtWMrbGglMLWqW3QSgAAABUVJxzMNVgPHAAAAAAACx/aAAABIAAAAWwAAAAAAANzIQ==",
-          "base64"
+          "base64",
         );
 
         const input: BuildTransactionInput = {

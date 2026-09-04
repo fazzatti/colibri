@@ -1,7 +1,12 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
-import { assertEquals, assertExists } from "@std/assert";
+import { assertEquals, assertExists, assertInstanceOf } from "@std/assert";
 import { afterEach, beforeAll, describe, it } from "@std/testing/bdd";
-import { Asset, Operation } from "stellar-sdk";
+import {
+  Asset,
+  FeeBumpTransaction,
+  Operation,
+  TransactionBuilder,
+} from "stellar-sdk";
 import { Api } from "stellar-sdk/rpc";
 import {
   type Ed25519PublicKey,
@@ -111,10 +116,11 @@ describe(
     });
     describe("Execute", () => {
       it("should wrap and run a successful fee bump transaction", async () => {
+        const muxedFeeSource = feeBumpSource.muxedAddress("123");
         const plugin = createFeeBumpPlugin({
           networkConfig,
           feeBumpConfig: {
-            source: feeBumpSource.address(),
+            source: muxedFeeSource,
             fee: "10000000", // 1XLM
             signers: [feeBumpSource.signer()],
           },
@@ -149,6 +155,12 @@ describe(
         assertExists(res.hash);
         assertExists(res.response);
         assertEquals(res.response.status, Api.GetTransactionStatus.SUCCESS);
+        const submittedTransaction = TransactionBuilder.fromXDR(
+          res.response.envelopeXdr,
+          networkConfig.networkPassphrase,
+        );
+        assertInstanceOf(submittedTransaction, FeeBumpTransaction);
+        assertEquals(submittedTransaction.feeSource, muxedFeeSource);
       });
     });
   },

@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "baseUrl": "../../..",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["rpc-streamer/src/*"],
+      "@colibri/core": ["core/mod.ts"]
+    },
+    "skipLibCheck": true
+  },
+  "include": ["../../../rpc-streamer/**/*.ts"],
+  "exclude": ["../../../rpc-streamer/**/*.test.ts"]
+}
