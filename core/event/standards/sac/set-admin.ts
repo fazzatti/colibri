@@ -1,5 +1,5 @@
 /**
- * SAC (Stellar Asset Contract) Set Admin Event
+ * SAC (Stellar Asset Contract) `set_admin` event
  *
  * CAP-0046-06: Emitted when the admin is changed.
  *

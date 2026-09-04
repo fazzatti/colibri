@@ -110,6 +110,8 @@ GitHub Actions behavior matters when changing structure or versions:
 
 - CI runs on pull requests targeting `main` and `dev`, and can be started
   manually through `workflow_dispatch`.
+- Architecture rules run in their own required CI job, in parallel with the
+  workspace quality and package-test jobs.
 - CI runs lint, type, and JSR documentation checks once, while every package's
   complete test suite runs in a required parallel job.
 - Package jobs upload raw Deno coverage profiles. A final required coverage job
@@ -142,6 +144,17 @@ Release implications:
 ## Workspace Structure And Boundaries
 
 This repo has a strong architectural boundary system. Preserve it.
+
+Repository architecture is executable under `_tools/architecture/`. Keep its
+ArchUnitTS rules aligned whenever adding a package, process, step, pipeline,
+entrypoint, or dependency boundary. `deno task test:architecture` checks:
+
+- package dependency direction and public-root-only cross-package imports
+- Core and build-verification layer direction
+- circular dependencies, including explicit baselines for established cycles
+- process-to-step and pipeline physical topology
+- package manifests, entrypoints, licenses, and publication boundaries
+- module, file, directory, test-registration, and typed-error conventions
 
 ### 1. Processes, steps, connectors, and pipelines are distinct layers
 

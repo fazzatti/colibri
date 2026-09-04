@@ -45,9 +45,6 @@ jobs:
       - name: Test custom lint rules
         run: deno task test:lint-rules
 
-      - name: Test architecture rules
-        run: deno task test:architecture
-
       - name: Check package version invariants
         run: deno task check:package-versions
 
@@ -64,6 +61,22 @@ jobs:
         run: |
           deno task test:docs
           deno task check:docs
+
+  architecture:
+    name: architecture
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.7.11
+
+      - name: Test architecture rules
+        run: deno task test:architecture
 
   package_tests:
     name: test / ${{ matrix.package }}
@@ -166,16 +179,18 @@ jobs:
   test:
     name: test
     if: ${{ always() }}
-    needs: [quality, package_tests, coverage]
+    needs: [quality, architecture, package_tests, coverage]
     runs-on: ubuntu-latest
 
     steps:
       - name: Require every CI job to pass
         env:
           QUALITY_RESULT: ${{ needs.quality.result }}
+          ARCHITECTURE_RESULT: ${{ needs.architecture.result }}
           PACKAGE_TESTS_RESULT: ${{ needs.package_tests.result }}
           COVERAGE_RESULT: ${{ needs.coverage.result }}
         run: |
           test "$QUALITY_RESULT" = "success"
+          test "$ARCHITECTURE_RESULT" = "success"
           test "$PACKAGE_TESTS_RESULT" = "success"
           test "$COVERAGE_RESULT" = "success"
