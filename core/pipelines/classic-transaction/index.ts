@@ -2,7 +2,6 @@ import { type Pipe, pipe, type PipeContext, type Step, step } from "convee";
 import { Server } from "stellar-sdk/rpc";
 import type {
   ClassicTransactionInput,
-  ClassicTransactionOutput,
   CreateClassicTransactionPipelineArgs,
 } from "@/pipelines/classic-transaction/types.ts";
 import * as E from "@/pipelines/classic-transaction/error.ts";
@@ -11,7 +10,6 @@ import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 import {
   envSignReqToSignEnvelope,
   inputToBuild,
-  sendTransactionToPipeOutput,
   signEnvelopeToSendTransaction,
 } from "@/pipelines/classic-transaction/connectors.ts";
 import { buildToEnvelopeSigningRequirements } from "@/pipelines/shared/connectors/build-to-envelope-signing-req.ts";
@@ -19,6 +17,7 @@ import { assert } from "@/common/assert/assert.ts";
 import {
   createBuildTransactionStep,
   createEnvelopeSigningRequirementsStep,
+  createParseClassicTransactionOutcomeStep,
   createSendTransactionStep,
   createSignEnvelopeStep,
 } from "@/steps/index.ts";
@@ -35,10 +34,7 @@ import type {
   SignEnvelopeInput,
   SignEnvelopeOutput,
 } from "@/processes/sign-envelope/types.ts";
-import type {
-  SendTransactionInput,
-  SendTransactionOutput,
-} from "@/processes/send-transaction/types.ts";
+import type { SendTransactionInput } from "@/processes/send-transaction/types.ts";
 
 /** Stable id of the classic transaction pipeline. */
 export const CLASSIC_TRANSACTION_PIPELINE_ID = "ClassicTransactionPipeline";
@@ -63,7 +59,7 @@ type ClassicTransactionPipelineSteps = readonly [
   ReturnType<typeof createSignEnvelopeStep>,
   Step<SignEnvelopeOutput, SendTransactionInput>,
   ReturnType<typeof createSendTransactionStep>,
-  Step<SendTransactionOutput, ClassicTransactionOutput>,
+  ReturnType<typeof createParseClassicTransactionOutcomeStep>,
 ];
 
 type ClassicTransactionPipelineRuntime = Pipe<
@@ -96,6 +92,8 @@ const buildClassicTransactionPipeline = ({
   const EnvelopeSigningRequirements = createEnvelopeSigningRequirementsStep();
   const SignEnvelope = createSignEnvelopeStep();
   const SendTransaction = createSendTransactionStep();
+  const ParseClassicTransactionOutcome =
+    createParseClassicTransactionOutcomeStep();
 
   const pipelineSteps: ClassicTransactionPipelineSteps = [
     inputStep,
@@ -107,7 +105,7 @@ const buildClassicTransactionPipeline = ({
     SignEnvelope,
     step(connectSignEnvelopeToSend),
     SendTransaction,
-    step(sendTransactionToPipeOutput),
+    ParseClassicTransactionOutcome,
   ];
 
   return pipe([...pipelineSteps], {

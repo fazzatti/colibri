@@ -1,7 +1,7 @@
 import { assertRejects } from "@std/assert";
 
 import { describe, it } from "@std/testing/bdd";
-import { Account, Operation, type xdr } from "stellar-sdk";
+import { Account, MuxedAccount, Operation, type xdr } from "stellar-sdk";
 import { buildTransaction } from "@/processes/build-transaction/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import type {
@@ -11,7 +11,7 @@ import type {
 import type { Server } from "stellar-sdk/rpc";
 import * as E from "@/processes/build-transaction/error.ts";
 import type { BaseFee } from "@/common/types/transaction-config/types.ts";
-import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
 
 const mockRpc = {
   getAccount: (address: string) => {
@@ -25,7 +25,7 @@ describe("BuildTransactionErrors", () => {
 
     await assertRejects(
       async () => await buildTransaction(faultyInput),
-      E.UNEXPECTED_ERROR
+      E.UNEXPECTED_ERROR,
     );
   });
 
@@ -41,7 +41,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.INVALID_BASE_FEE_ERROR
+        E.INVALID_BASE_FEE_ERROR,
       );
     });
 
@@ -56,7 +56,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.BASE_FEE_TOO_LOW_ERROR
+        E.BASE_FEE_TOO_LOW_ERROR,
       );
     });
 
@@ -71,7 +71,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.BASE_FEE_TOO_LOW_ERROR
+        E.BASE_FEE_TOO_LOW_ERROR,
       );
     });
   });
@@ -94,7 +94,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.COULD_NOT_LOAD_ACCOUNT_ERROR
+        E.COULD_NOT_LOAD_ACCOUNT_ERROR,
       );
     });
 
@@ -109,7 +109,69 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE_ERROR
+        E.COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE_ERROR,
+      );
+    });
+
+    it("throws a dedicated error when a muxed source cannot be resolved", async () => {
+      const input: BuildTransactionInput = {
+        operations: [Operation.setOptions({})],
+        source: `M${"A".repeat(68)}` as MuxedAddress,
+        baseFee: "100",
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
+        sequence: "100",
+      };
+
+      await assertRejects(
+        async () => await buildTransaction(input),
+        E.INVALID_MUXED_SOURCE_ERROR,
+      );
+    });
+
+    it("throws a dedicated error when a muxed source cannot use its loaded sequence", async () => {
+      const baseAddress =
+        "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P";
+      const source = new MuxedAccount(
+        new Account(baseAddress, "100"),
+        "123",
+      ).accountId() as MuxedAddress;
+      const invalidSequenceRpc = {
+        getAccount: () => ({
+          sequenceNumber: () => "invalid-sequence",
+        }),
+      } as unknown as Server;
+      const input: BuildTransactionInput = {
+        rpc: invalidSequenceRpc,
+        operations: [Operation.setOptions({})],
+        source,
+        baseFee: "100",
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
+      };
+
+      await assertRejects(
+        async () => await buildTransaction(input),
+        E.INVALID_MUXED_SOURCE_RPC_SEQUENCE_ERROR,
+      );
+    });
+
+    it("throws a dedicated error when a muxed source cannot use a provided sequence", async () => {
+      const baseAddress =
+        "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P";
+      const source = new MuxedAccount(
+        new Account(baseAddress, "100"),
+        "456",
+      ).accountId() as MuxedAddress;
+      const input: BuildTransactionInput = {
+        operations: [Operation.setOptions({})],
+        source,
+        baseFee: "100",
+        networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
+        sequence: "invalid-sequence",
+      };
+
+      await assertRejects(
+        async () => await buildTransaction(input),
+        E.INVALID_MUXED_SOURCE_SEQUENCE_ERROR,
       );
     });
   });
@@ -130,7 +192,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.CONFLICTING_TIME_CONSTRAINTS_ERROR
+        E.CONFLICTING_TIME_CONSTRAINTS_ERROR,
       );
     });
   });
@@ -147,7 +209,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        Error
+        Error,
       );
     });
   });
@@ -164,7 +226,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.NO_OPERATIONS_PROVIDED_ERROR
+        E.NO_OPERATIONS_PROVIDED_ERROR,
       );
     });
   });
@@ -187,7 +249,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.COULD_NOT_CREATE_TRANSACTION_BUILDER_ERROR
+        E.COULD_NOT_CREATE_TRANSACTION_BUILDER_ERROR,
       );
     });
   });
@@ -205,7 +267,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.COULD_NOT_BUILD_TRANSACTION_ERROR
+        E.COULD_NOT_BUILD_TRANSACTION_ERROR,
       );
     });
   });
@@ -225,7 +287,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.FAILED_TO_SET_PRECONDITIONS_ERROR
+        E.FAILED_TO_SET_PRECONDITIONS_ERROR,
       );
     });
   });
@@ -244,7 +306,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.COULD_NOT_SET_SOROBAN_DATA_ERROR
+        E.COULD_NOT_SET_SOROBAN_DATA_ERROR,
       );
     });
   });

@@ -5,7 +5,7 @@ import {
   xdr,
 } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
-import { Spec } from "stellar-sdk/contract";
+import type { Spec } from "stellar-sdk/contract";
 import {
   createInvokeContractPipeline,
   type InvokeContractPipeline,
@@ -26,7 +26,6 @@ import {
   getContractIdFromGetTransactionResponse,
   getWasmHashFromGetTransactionResponse,
 } from "@/common/helpers/get-transaction-response.ts";
-import { processSpecEntryStream } from "@/common/helpers/wasm.ts";
 import { generateRandomSalt } from "@/common/helpers/generate-random-salt.ts";
 import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 import * as E from "@/contract/error.ts";
@@ -57,6 +56,27 @@ import type {
   KnownContractErrorMap,
 } from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
 import type { ContractCodeLedgerEntry } from "@/ledger-entries/types.ts";
+import { extractContractMetadata } from "@/contract/metadata/extract-contract-metadata.ts";
+import {
+  claimsSep as analysisClaimsSep,
+  extractSepClaims,
+} from "@/contract/metadata/extract-sep-claims.ts";
+import { analyzeContractInterface } from "@/contract/interface/analyze-contract-interface.ts";
+import { extractContractSpec } from "@/contract/interface/extract-contract-spec.ts";
+import { inspectContractStandards } from "@/contract/interface/inspect-contract-standards.ts";
+import { matchesContractInterface } from "@/contract/interface/matches-contract-interface.ts";
+import type {
+  ContractInterfaceAnalysis,
+  ContractStandardInspection,
+  ContractStandardProvider,
+} from "@/contract/interface/types.ts";
+import type {
+  ContractMetadata,
+  SepClaimAnalysis,
+} from "@/contract/metadata/types.ts";
+
+export * from "@/contract/interface/index.ts";
+export * from "@/contract/metadata/index.ts";
 
 type PipelinePluginIdentity = {
   readonly id: string;
@@ -286,6 +306,57 @@ export class Contract {
     return this.require("externalRef");
   }
 
+  /**
+   * Extracts complete ordered SEP-46 metadata from the loaded contract Wasm.
+   *
+   * A contract configured only by id, Wasm hash, or external reference must
+   * call {@link loadSpecFromNetwork} first so the corresponding Wasm is local.
+   */
+  public getMetadata(): ContractMetadata {
+    return extractContractMetadata(this.getWasm());
+  }
+
+  /** Returns parsed SEP-47 claims and malformed-claim diagnostics. */
+  public getSepClaims(): SepClaimAnalysis {
+    return extractSepClaims(this.getMetadata());
+  }
+
+  /** Returns whether the loaded Wasm declares one SEP through SEP-47. */
+  public claimsSep(sep: number): boolean {
+    return analysisClaimsSep(this.getSepClaims(), sep);
+  }
+
+  /**
+   * Produces a detailed Colibri analysis for one contract-interface provider.
+   *
+   * When the contract was configured with Wasm but its spec has not been
+   * loaded explicitly, the spec is extracted without mutating the client.
+   */
+  public analyzeInterface(
+    provider: ContractStandardProvider,
+  ): ContractInterfaceAnalysis {
+    const spec = this.spec ?? extractContractSpec(this.getWasm());
+    return analyzeContractInterface(spec, provider);
+  }
+
+  /** Returns only whether the contract matches one interface provider. */
+  public matchesInterface(provider: ContractStandardProvider): boolean {
+    const spec = this.spec ?? extractContractSpec(this.getWasm());
+    return matchesContractInterface(spec, provider);
+  }
+
+  /**
+   * Evaluates independent SEP-47 claims and interfaces for many providers.
+   *
+   * Results preserve the supplied provider order and never collapse a claim
+   * plus an interface match into a single compliance verdict.
+   */
+  public inspectStandards(
+    standards: readonly ContractStandardProvider[],
+  ): readonly ContractStandardInspection[] {
+    return inspectContractStandards({ wasm: this.getWasm(), standards });
+  }
+
   /** @internal */
   public getContractFootprint(): LedgerKeyLike {
     return new StellarContract(this.getContractId()).getFootprint();
@@ -424,22 +495,7 @@ export class Contract {
    * @description - Loads the contract specification from the wasm file and stores it in the contract instance.
    */
   public async loadSpecFromWasm(): Promise<void> {
-    const wasm = this.getWasm();
-
-    const wasmModule = await WebAssembly.compile(wasm as BufferSource);
-    const xdrSections = WebAssembly.Module.customSections(
-      wasmModule,
-      "contractspecv0",
-    );
-
-    assert(xdrSections.length > 0, new E.MISSING_SPEC_IN_WASM());
-    // The spec is stored in the 'contractspecv0' custom section of the wasm file.
-    // There should only be one such section, so we take the first one.
-    // We then parse the section as a stream of XDR-encoded SpecEntry objects.
-
-    const specEntryArray = processSpecEntryStream(xdrSections[0]);
-    const spec = new Spec(specEntryArray);
-    this.spec = spec;
+    this.spec = await Promise.resolve(extractContractSpec(this.getWasm()));
   }
 
   /**
@@ -632,26 +688,30 @@ export class Contract {
   }
 
   /**
+   * Invokes a state-changing contract method with already encoded ScVal arguments.
+   *
+   * This is the escape hatch for methods that are not represented by a loaded
+   * contract specification or by a specialized Colibri client.
+   *
    * @param {object} operationArgs - The raw arguments for the operation.
    * @param {string} operationArgs.function - The function name to invoke.
    * @param {xdr.ScVal[]} operationArgs.args - The arguments for the function invocation as ScVal array.
    * @param {xdr.SorobanAuthorizationEntry[]} [operationArgs.auth] - Optional authorization entries for the invocation.
    * @param {TransactionConfig} config - The transaction configuration object to use in this transaction.
    *
-   * @returns {Promise<unknown>} The output of the invocation.
+   * @returns The processed transaction and raw contract return value.
    *
    * @description - Invokes a contract method that alters the state of the contract.
    * This function requires signers. It builds a transaction, simulates it, signs it, submits it to the network, and extracts the output of the invocation from the processed transaction.
    */
-  /** @internal */
   public async invokeRaw({
     operationArgs,
     config,
   }: {
     operationArgs: {
       function: string;
-      args: xdr.ScVal[];
-      auth?: xdr.SorobanAuthorizationEntry[];
+      args: ScValLike[];
+      auth?: SorobanAuthorizationEntryLike[];
     };
     config: TransactionConfig;
   }): Promise<InvokeContractOutput> {

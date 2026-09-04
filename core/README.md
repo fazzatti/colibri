@@ -44,17 +44,17 @@ Deno, Node, and bundlers.
 The package root exposes the complete supported API. This map gives each family
 a small introduction before the later sections explain how the pieces work.
 
-| Area                          | What it provides                                                                                                                          | Typical use                                                                                    |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Transactions and pipelines    | Classic submission, read-only contract simulation, state-changing contract invocation, fee strategies, memos, preconditions, and plugins  | Send a payment, call a contract, cap a Soroban fee, or insert application policy               |
-| Contracts                     | ABI/spec loading, typed method arguments, reads, invocations, deployment, error metadata, Wasm hashes, and external executable references | Build a client around an existing contract or deploy one from Wasm                             |
-| Assets                        | SEP-11 canonical asset strings and a high-level Stellar Asset Contract client                                                             | Validate asset identifiers, derive an SAC, manage trustlines, or invoke token methods          |
-| Accounts and signers          | Native and muxed account identities plus Ed25519, HashX, signed-payload, pre-authorized, and delegated signing capabilities               | Keep envelope and Soroban authorization requirements explicit                                  |
-| Ledger entries and inspection | Typed current-state reads plus lazy views over ledgers, transactions, operations, and execution metadata                                  | Inspect accounts, trustlines, contract state, executable code, fees charged, or historical XDR |
-| Events                        | Event IDs, filters, ledger-meta parsing, schema-driven templates, and ready-made SAC, SEP-41, and CAP-67 event models                     | Decode contract output, build filters, or create a typed event model                           |
-| Networks and discovery        | Mainnet, Testnet, Futurenet, and custom configurations; provider helpers; Friendbot; and SEP-1 `stellar.toml` parsing                     | Keep passphrases and endpoints together or discover an integration from its domain             |
-| Addresses and identifiers     | SEP-23 StrKey format/checksum guards, muxed-address normalization, ledger keys, and SEP-35 operation IDs                                  | Validate untrusted identifiers and index exact operations                                      |
-| Errors and utilities          | Stable error namespaces, assertions, binary normalization, ScVal/XDR conversion, auth inspection, caches, and type guards                 | Build reliable application boundaries without duplicating low-level traversal                  |
+| Area                          | What it provides                                                                                                                              | Typical use                                                                                    |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Transactions and pipelines    | Classic submission, read-only contract simulation, state-changing contract invocation, fee strategies, memos, preconditions, and plugins      | Send a payment, call a contract, cap a Soroban fee, or insert application policy               |
+| Contracts                     | ABI/spec loading, SEP-46 metadata, SEP-47 claims, versioned interface matching, typed calls, deployment, Wasm hashes, and external references | Inspect or interact with an existing contract, or deploy one from Wasm                         |
+| Assets                        | SEP-11 canonical asset strings and a high-level Stellar Asset Contract client                                                                 | Validate asset identifiers, derive an SAC, manage trustlines, or invoke token methods          |
+| Accounts and signers          | Native and muxed account identities plus Ed25519, HashX, signed-payload, pre-authorized, and delegated signing capabilities                   | Keep envelope and Soroban authorization requirements explicit                                  |
+| Ledger entries and inspection | Typed current-state reads plus lazy views over ledgers, transactions, operations, and execution metadata                                      | Inspect accounts, trustlines, contract state, executable code, fees charged, or historical XDR |
+| Events                        | Event IDs, filters, ledger-meta parsing, schema-driven templates, and ready-made SAC, SEP-41, and CAP-67 event models                         | Decode contract output, build filters, or create a typed event model                           |
+| Networks and discovery        | Mainnet, Testnet, Futurenet, and custom configurations; provider helpers; Friendbot; and SEP-1 `stellar.toml` parsing                         | Keep passphrases and endpoints together or discover an integration from its domain             |
+| Addresses and identifiers     | SEP-23 StrKey format/checksum guards, muxed-address normalization, ledger keys, and SEP-35 operation IDs                                      | Validate untrusted identifiers and index exact operations                                      |
+| Errors and utilities          | Stable error namespaces, assertions, binary normalization, ScVal/XDR conversion, auth inspection, caches, and type guards                     | Build reliable application boundaries without duplicating low-level traversal                  |
 
 Core deliberately does not hide the underlying Stellar SDK. Operations and XDR
 values remain SDK objects, while Colibri handles the repeated coordination
@@ -107,17 +107,18 @@ The built-in pipelines share execution units but stop at different points. That
 prevents a read from accidentally becoming a submitted transaction and keeps the
 additional work of Soroban invocation explicit.
 
-| Stable step                     | Classic | Contract read | Contract invoke | Responsibility                                                                                     |
-| ------------------------------- | :-----: | :-----------: | :-------------: | -------------------------------------------------------------------------------------------------- |
-| `build-transaction`             |    ✓    |       ✓       |        ✓        | Resolve source sequence, operations, time bounds, memo, preconditions, and initial fee             |
-| `simulate-transaction`          |         |       ✓       |        ✓        | Ask RPC to record contract result, resources, footprint, and required authorization                |
-| `sign-auth-entries`             |         |               |        ✓        | Match each address credential to one capable signer and return the complete signed entry           |
-| `assemble-for-enforcement`      |         |               |   conditional   | Materialize an intermediate transaction only when signed delegated credentials require enforcement |
-| `enforce-simulation`            |         |               |   conditional   | Re-simulate delegated authorization and obtain the enforced Soroban data                           |
-| `assemble-transaction`          |         |               |        ✓        | Apply final Soroban data, signed entries, resource fee, and explicit fee strategy                  |
-| `envelope-signing-requirements` |    ✓    |               |        ✓        | Resolve source and operation-level account requirements after the transaction shape is final       |
-| `sign-envelope`                 |    ✓    |               |        ✓        | Select unambiguous matching envelope/pre-authorized signers and satisfy exact extra-signer keys    |
-| `send-transaction`              |    ✓    |               |        ✓        | Submit through RPC and wait for a normalized terminal result                                       |
+| Stable step                         | Classic | Contract read | Contract invoke | Responsibility                                                                                     |
+| ----------------------------------- | :-----: | :-----------: | :-------------: | -------------------------------------------------------------------------------------------------- |
+| `build-transaction`                 |    ✓    |       ✓       |        ✓        | Resolve source sequence, operations, time bounds, memo, preconditions, and initial fee             |
+| `simulate-transaction`              |         |       ✓       |        ✓        | Ask RPC to record contract result, resources, footprint, and required authorization                |
+| `sign-auth-entries`                 |         |               |        ✓        | Match each address credential to one capable signer and return the complete signed entry           |
+| `assemble-for-enforcement`          |         |               |   conditional   | Materialize an intermediate transaction only when signed delegated credentials require enforcement |
+| `enforce-simulation`                |         |               |   conditional   | Re-simulate delegated authorization and obtain the enforced Soroban data                           |
+| `assemble-transaction`              |         |               |        ✓        | Apply final Soroban data, signed entries, resource fee, and explicit fee strategy                  |
+| `envelope-signing-requirements`     |    ✓    |               |        ✓        | Resolve source and operation-level account requirements after the transaction shape is final       |
+| `sign-envelope`                     |    ✓    |               |        ✓        | Select unambiguous matching envelope/pre-authorized signers and satisfy exact extra-signer keys    |
+| `send-transaction`                  |    ✓    |               |        ✓        | Submit through RPC and wait for a normalized terminal result                                       |
+| `parse-classic-transaction-outcome` |    ✓    |               |                 | Extract ordered runtime-discriminated operation outcomes and the charged fee                       |
 
 Typed connectors form the transitions. They can combine the immediately
 preceding output with an earlier step snapshot—for example, final assembly uses
@@ -449,7 +450,11 @@ response is preserved so you can review resource usage and footprints.
 `createClassicTransactionPipeline` is the classic counterpart: it builds,
 computes signature requirements, signs, and submits classic operations
 (payments, set options, etc.), reusing the same `TransactionConfig` shape as
-Soroban flows so you can share configuration between the two modes.
+Soroban flows so you can share configuration between the two modes. Its output
+includes the fee actually charged and ordered, runtime-discriminated successful
+operation outcomes. Narrow an outcome's `type` to access its corresponding
+Stellar SDK XDR result, such as a created claimable-balance ID or an offer's
+created, updated, or deleted effect.
 
 ## Processes
 
@@ -483,6 +488,9 @@ outside Colibri's built-in pipelines.
   transaction hashes.
 - **SendTransaction** – Submits the envelope (classic or fee-bump) via RPC and
   normalizes RPC responses into Colibri errors when failures occur.
+- **ParseClassicTransactionOutcome** – Unwraps direct and fee-bump success
+  results into ordered, runtime-discriminated Stellar XDR operation outcomes and
+  exposes the total fee charged.
 
 Each process is exported as a function plus an error namespace. Example:
 
@@ -648,6 +656,34 @@ contract's error map and installs the matcher on both owned pipelines. This can
 turn a numeric simulation failure into a typed error with the contract's message
 without changing the on-chain result.
 
+Contract-standard inspection deliberately keeps declaration and structure
+separate. `getSepClaims()` parses SEP-47 declarations from SEP-46 metadata;
+`analyzeInterface()` compares the SEP-48 specification with a versioned
+provider; and `inspectStandards()` returns both independent results for every
+requested provider:
+
+```ts
+const report = contract.inspectStandards([
+  ContractStandards.SEP41.latest,
+  ContractStandards.SEP44.latest,
+]);
+
+for (const result of report) {
+  console.log(result.standard, result.claim, result.interface);
+}
+```
+
+The bundled registry covers the concrete interfaces defined by SEP-40, SEP-41,
+SEP-44, SEP-50, SEP-56, and SEP-57. Historical versions explicitly represented
+by Core remain selectable through each standard's `versions` property. SEP-57
+also exposes its separate architecture components and optional claim-based
+appendix reference interfaces under `SEP57.interfaces`. Those reference
+interfaces are not mandatory for every SEP-57 deployment. A structural match
+confirms ABI shape, not authorization policy, runtime semantics, event behavior,
+or implementation correctness. See the
+[metadata and interface guide](https://fifo-docs.gitbook.io/colibri/core/contract/metadata-and-interfaces)
+for the complete API and interpretation rules.
+
 ## Ledger entries
 
 `LedgerEntries` provides typed RPC reads for well-known Stellar ledger entries
@@ -680,6 +716,29 @@ const [account, config] = await ledger.getMany(
   ] as const,
 );
 ```
+
+### SEP41TokenContract
+
+`SEP41TokenContract` binds any deployed SEP-41 token to the exact standard
+interface without requiring its contract specification:
+
+```ts
+const token = new SEP41TokenContract({ networkConfig, contractId });
+
+const balance = await token.balance({ id: holder });
+await token.transfer({
+  from: holder,
+  to: recipient,
+  amount: 10_000_000n,
+  config: txConfig,
+});
+```
+
+The client includes allowance, transfer, burn, and descriptive metadata methods.
+`transfer` accepts muxed destinations. Minting, clawback, and administrator
+methods are not part of SEP-41 and are intentionally absent. Custom token
+functions remain accessible through `token.contract.readRaw()` or
+`token.contract.invokeRaw()` with explicitly encoded ScVals.
 
 ### StellarAssetContract
 
@@ -838,6 +897,11 @@ ready-made event classes through:
 Use the matching family for the contract or protocol that produced the event. A
 topic name that looks familiar is not enough to reinterpret one standard's
 payload as another.
+
+SEP-41 parsers accept both the earlier scalar/vector data and the current
+symbol-keyed map format. Standard fields remain typed; unknown map fields are
+preserved under `extensions` and can be transformed through an
+application-provided runtime decoder.
 
 ## TOID
 

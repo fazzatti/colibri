@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "baseUrl": "../../..",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["plugins/fee-bump/src/*"],
+      "jsr:@colibri/core": ["core/mod.ts"]
+    },
+    "skipLibCheck": true
+  },
+  "include": ["../../../plugins/fee-bump/**/*.ts"],
+  "exclude": ["../../../plugins/fee-bump/**/*.test.ts"]
+}

@@ -8,6 +8,7 @@ import * as SignAuthEntriesErrors from "@/processes/sign-auth-entries/error.ts";
 import * as SignEnvelopeErrors from "@/processes/sign-envelope/error.ts";
 import * as SimulateTransactionErrors from "@/processes/simulate-transaction/error.ts";
 import * as WrapFeeBumpErrors from "@/processes/wrap-fee-bump/error.ts";
+import * as ParseClassicTransactionOutcomeErrors from "@/processes/parse-classic-transaction-outcome/error.ts";
 
 export * from "@/processes/assemble-transaction/index.ts";
 /** Error constructors for assemble-transaction process failures. */
@@ -63,3 +64,9 @@ export * from "@/processes/wrap-fee-bump/index.ts";
 /** Error constructors for wrap-fee-bump process failures. */
 export const WFB_ERRORS: typeof WrapFeeBumpErrors = WrapFeeBumpErrors;
 export type * from "@/processes/wrap-fee-bump/types.ts";
+
+export * from "@/processes/parse-classic-transaction-outcome/index.ts";
+/** Error constructors for classic transaction outcome parsing failures. */
+export const PCTO_ERRORS: typeof ParseClassicTransactionOutcomeErrors =
+  ParseClassicTransactionOutcomeErrors;
+export type * from "@/processes/parse-classic-transaction-outcome/types.ts";

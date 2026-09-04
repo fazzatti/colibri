@@ -101,11 +101,11 @@ replace a lifecycle boundary without changing how the workflow is invoked.
 
 ### Built-in transaction pipelines
 
-| Pipeline            | Execution path                                                                                                                                                                                               |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Classic transaction | Load the source account and sequence → build from Stellar SDK operations → resolve account and operation thresholds → apply matching envelope signers → submit and confirm                                   |
-| Contract read       | Build an ephemeral transaction → simulate → decode and return the contract result; no envelope is signed or submitted                                                                                        |
-| Contract invocation | Build → recording simulation → authorize Soroban entries → assemble and enforce delegated credentials when present → assemble resources and fees → resolve envelope requirements → sign → submit and confirm |
+| Pipeline            | Execution path                                                                                                                                                                                                          |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Classic transaction | Load a G-address or M-address source and sequence → build from Stellar SDK operations → resolve account and operation thresholds → apply matching envelope signers → submit, confirm, and expose typed runtime outcomes |
+| Contract read       | Build an ephemeral transaction → simulate → decode and return the contract result; no envelope is signed or submitted                                                                                                   |
+| Contract invocation | Build → recording simulation → authorize Soroban entries → assemble and enforce delegated credentials when present → assemble resources and fees → resolve envelope requirements → sign → submit and confirm            |
 
 The simulation response remains the source of Soroban resource data and
 authorization entries. Assembly carries that response into the transaction;
@@ -159,6 +159,12 @@ const result = await sendPayment({
 });
 
 console.log(result.hash);
+console.log(result.feeCharged);
+
+const payment = result.operations[0];
+if (payment.type === "payment") {
+  console.log(payment.result.type); // paymentSuccess
+}
 ```
 
 ## Signers and authorization
@@ -188,7 +194,12 @@ Core exposes several levels of contract access:
 
 - `Contract` loads contract specifications, binds deployed contracts, deploys
   Wasm or external executable references, and routes reads and invocations
-  through the standard pipelines.
+  through the standard pipelines. It can also extract SEP-46 metadata, parse
+  SEP-47 claims, and compare SEP-48 specifications with versioned standard
+  interface providers without treating a declaration as proof of a match.
+- `SEP41TokenContract` provides the exact portable SEP-41 interface for custom
+  token contracts, including muxed transfer destinations, while retaining its
+  underlying `Contract` for implementation-specific methods.
 - `StellarAssetContract` provides typed operations for Stellar Asset Contract
   administration, balances, allowances, authorization, minting, burning, and
   transfers.
@@ -235,17 +246,22 @@ protocol as a fallback for the other.
 
 Standard-oriented functionality across the workspace includes:
 
-| Standard | Implementation                                       |
-| -------- | ---------------------------------------------------- |
-| SEP-1    | `stellar.toml` retrieval and typed discovery in Core |
-| SEP-10   | Classic-account Web Authentication in WebAuth        |
-| SEP-11   | Canonical Stellar asset identifiers in Core          |
-| SEP-23   | StrKey encoding and validation in Core               |
-| SEP-33   | Reference-compatible Stellar identicons in Identicon |
-| SEP-35   | Operation identifiers and TOID helpers in Core       |
-| SEP-41   | Typed token event schemas in Core                    |
-| SEP-45   | Contract-account Web Authentication in WebAuth       |
-| SEP-58   | Contract build verification in Build Verification    |
+| Standard                       | Implementation                                                         |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| SEP-1                          | `stellar.toml` retrieval and typed discovery in Core                   |
+| SEP-10                         | Classic-account Web Authentication in WebAuth                          |
+| SEP-11                         | Canonical Stellar asset identifiers in Core                            |
+| SEP-23                         | StrKey encoding and validation in Core                                 |
+| SEP-33                         | Reference-compatible Stellar identicons in Identicon                   |
+| SEP-35                         | Operation identifiers and TOID helpers in Core                         |
+| SEP-40                         | Versioned price-feed interface analysis in Core                        |
+| SEP-41                         | Standard token client and version-compatible event schemas in Core     |
+| SEP-44, SEP-50, SEP-56, SEP-57 | Versioned contract-interface providers and structural analysis in Core |
+| SEP-45                         | Contract-account Web Authentication in WebAuth                         |
+| SEP-46                         | Ordered contract metadata extraction in Core                           |
+| SEP-47                         | Contract-interface claim discovery in Core                             |
+| SEP-48                         | Contract specification extraction and interface matching in Core       |
+| SEP-58                         | Contract build verification in Build Verification                      |
 
 Refer to each package's documentation for its exact version and support
 boundary.

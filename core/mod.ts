@@ -1,3 +1,9 @@
+/**
+ * Colibri's transaction, contract, authorization, event, and ledger toolkit.
+ *
+ * @module
+ */
+
 import * as NativeAccountErrors from "@/account/native/error.ts";
 import * as AddressHelpers from "@/address/index.ts";
 import * as AuthHelpers from "@/auth/index.ts";

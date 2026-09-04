@@ -1,12 +1,8 @@
 import type { Server } from "stellar-sdk/rpc";
 import type {
   ClassicTransactionInput,
-  ClassicTransactionOutput,
 } from "@/pipelines/classic-transaction/types.ts";
 import type { BuildTransactionOutput } from "@/processes/build-transaction/types.ts";
-import type {
-  SendTransactionOutput,
-} from "@/processes/send-transaction/types.ts";
 import { BUILD_TRANSACTION_STEP_ID } from "@/steps/index.ts";
 import {
   createEnvSignReqToSignEnvelope,
@@ -32,9 +28,3 @@ export const envSignReqToSignEnvelope = () =>
   });
 
 export { signEnvelopeToSendTransaction };
-
-export const sendTransactionToPipeOutput = (
-  sendOutput: SendTransactionOutput,
-): ClassicTransactionOutput => {
-  return { hash: sendOutput.hash, response: sendOutput.response };
-};

@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "baseUrl": "../../..",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["build-verification/src/*"],
+      "@colibri/core": ["core/mod.ts"],
+      "colibri-internal/*": ["_internal/*"]
+    },
+    "skipLibCheck": true
+  },
+  "include": ["../../../build-verification/**/*.ts"],
+  "exclude": ["../../../build-verification/**/*.test.ts"]
+}

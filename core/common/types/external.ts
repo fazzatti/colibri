@@ -53,6 +53,12 @@ export type SorobanAuthorizationEntryLike = xdr.SorobanAuthorizationEntry;
 export type ScValLike = xdr.ScVal;
 
 /**
+ * Canonical Stellar operation-result union used by classic outcome helpers.
+ * @internal
+ */
+export type OperationResultTr = xdr.OperationResultTr;
+
+/**
  * Canonical Stellar RPC event-filter payload.
  * @internal
  */

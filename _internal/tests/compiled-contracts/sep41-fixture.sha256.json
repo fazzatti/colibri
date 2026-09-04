@@ -1,0 +1,8 @@
+{
+  "stellarCli": "26.1.0",
+  "sorobanSdk": "26.1.1",
+  "stellarTokens": "0.7.2",
+  "artifact": {
+    "sep41_token_contract.wasm": "57384f4ac321d01d8f450850300e082dd6a3cfed42f18093fedad737a9e96299"
+  }
+}

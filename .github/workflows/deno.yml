@@ -39,14 +39,17 @@ jobs:
       # - name: Verify formatting
       #   run: deno fmt --check
 
-      - name: Run linter
-        run: deno lint
+      - name: Test architecture rules
+        run: deno task test:architecture
 
       - name: Test custom lint rules
         run: deno task test:lint-rules
 
       - name: Check package version invariants
         run: deno task check:package-versions
+
+      - name: Run linter
+        run: deno lint
 
       - name: Run type checks
         run: deno task check
@@ -72,9 +75,6 @@ jobs:
           - package: core
             path: core
             test_flags: --parallel
-          - package: build-verification
-            path: build-verification
-            test_flags: ""
           - package: webauth
             path: webauth
             test_flags: --parallel
@@ -117,9 +117,77 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  build_verification_tests:
+    name: test / build-verification / ${{ matrix.shard }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: local
+            test_flags: >-
+              --parallel
+              --ignore=build-verification/src/network-targets.integration.test.ts
+              --ignore=build-verification/src/build-verification.testnet.integration.test.ts
+              --ignore=build-verification/src/public-sources.integration.test.ts
+            test_paths: build-verification
+          - shard: quickstart
+            test_flags: ""
+            test_paths: build-verification/src/network-targets.integration.test.ts
+          - shard: external
+            test_flags: --parallel
+            test_paths: >-
+              build-verification/src/build-verification.testnet.integration.test.ts
+              build-verification/src/public-sources.integration.test.ts
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.7.11
+
+      - name: Run build-verification ${{ matrix.shard }} tests
+        run: >-
+          deno test -A --clean ${{ matrix.test_flags }}
+          --coverage=coverage/build-verification-${{ matrix.shard }}
+          --coverage-raw-data-only ${{ matrix.test_paths }}
+
+      - name: Upload build-verification ${{ matrix.shard }} coverage profile
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-build-verification-${{ matrix.shard }}
+          path: coverage/build-verification-${{ matrix.shard }}/*.json
+          if-no-files-found: error
+          retention-days: 1
+
+  complexity:
+    name: quality / complexity
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.7.11
+
+      - name: Generate unit coverage
+        run: deno task test:unit
+
+      - name: Generate unit coverage report
+        run: deno coverage --lcov --output=coverage.lcov coverage
+
+      - name: Enforce CRAP threshold
+        run: deno task check:crap
+
   coverage:
     name: coverage
-    needs: package_tests
+    needs: [package_tests, build_verification_tests]
     runs-on: ubuntu-latest
 
     steps:
@@ -148,9 +216,6 @@ jobs:
       - name: Generate aggregate coverage report
         run: deno coverage --lcov --output=coverage.lcov coverage/coverage-*
 
-      - name: Enforce CRAP threshold
-        run: deno task check:crap
-
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
@@ -163,16 +228,20 @@ jobs:
   test:
     name: test
     if: ${{ always() }}
-    needs: [quality, package_tests, coverage]
+    needs: [quality, complexity, package_tests, build_verification_tests, coverage]
     runs-on: ubuntu-latest
 
     steps:
       - name: Require every CI job to pass
         env:
           QUALITY_RESULT: ${{ needs.quality.result }}
+          COMPLEXITY_RESULT: ${{ needs.complexity.result }}
           PACKAGE_TESTS_RESULT: ${{ needs.package_tests.result }}
+          BUILD_VERIFICATION_TESTS_RESULT: ${{ needs.build_verification_tests.result }}
           COVERAGE_RESULT: ${{ needs.coverage.result }}
         run: |
           test "$QUALITY_RESULT" = "success"
+          test "$COMPLEXITY_RESULT" = "success"
           test "$PACKAGE_TESTS_RESULT" = "success"
+          test "$BUILD_VERIFICATION_TESTS_RESULT" = "success"
           test "$COVERAGE_RESULT" = "success"

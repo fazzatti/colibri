@@ -23,6 +23,9 @@ export enum Code {
   INCLUSION_FEE_TOO_LOW = "BTX_015",
   MAX_FEE_TOO_LOW = "BTX_016",
   TRANSACTION_FEE_TOO_HIGH = "BTX_017",
+  INVALID_MUXED_SOURCE = "BTX_018",
+  INVALID_MUXED_SOURCE_RPC_SEQUENCE = "BTX_019",
+  INVALID_MUXED_SOURCE_SEQUENCE = "BTX_020",
 }
 
 /**
@@ -233,6 +236,52 @@ export class COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE_ERROR
         suggestion:
           "Ensure the sequence number is a valid bigint string (e.g., '12345678901234567890').",
       },
+      cause,
+    });
+  }
+}
+
+/** Raised when the base G-account cannot be resolved from a muxed source. */
+export class INVALID_MUXED_SOURCE_ERROR extends BuildTransactionError {
+  /** Creates a muxed-source resolution error. */
+  constructor(input: BuildTransactionInput, cause: Error) {
+    super({
+      code: Code.INVALID_MUXED_SOURCE,
+      message: "Could not resolve the muxed transaction source!",
+      input,
+      details:
+        `The base G-account could not be resolved from muxed source '${input.source}'.`,
+      cause,
+    });
+  }
+}
+
+/** Raised when a muxed source cannot use the sequence loaded from RPC. */
+export class INVALID_MUXED_SOURCE_RPC_SEQUENCE_ERROR
+  extends BuildTransactionError {
+  /** Creates a muxed-source loaded-sequence initialization error. */
+  constructor(input: BuildTransactionInput, cause: Error) {
+    super({
+      code: Code.INVALID_MUXED_SOURCE_RPC_SEQUENCE,
+      message: "Could not initialize the muxed source from RPC state!",
+      input,
+      details:
+        `The muxed source '${input.source}' could not be initialized with the sequence loaded from its base G-account.`,
+      cause,
+    });
+  }
+}
+
+/** Raised when a muxed source cannot use an explicitly provided sequence. */
+export class INVALID_MUXED_SOURCE_SEQUENCE_ERROR extends BuildTransactionError {
+  /** Creates a muxed-source provided-sequence initialization error. */
+  constructor(input: BuildTransactionInput, cause: Error) {
+    super({
+      code: Code.INVALID_MUXED_SOURCE_SEQUENCE,
+      message: "Could not initialize the muxed source with the sequence!",
+      input,
+      details:
+        `The muxed source '${input.source}' could not be initialized with the provided sequence '${input.sequence}'.`,
       cause,
     });
   }
@@ -454,4 +503,8 @@ export const ERROR_BY_CODE = {
   [Code.INCLUSION_FEE_TOO_LOW]: INCLUSION_FEE_TOO_LOW_ERROR,
   [Code.MAX_FEE_TOO_LOW]: MAX_FEE_TOO_LOW_ERROR,
   [Code.TRANSACTION_FEE_TOO_HIGH]: TRANSACTION_FEE_TOO_HIGH_ERROR,
+  [Code.INVALID_MUXED_SOURCE]: INVALID_MUXED_SOURCE_ERROR,
+  [Code.INVALID_MUXED_SOURCE_RPC_SEQUENCE]:
+    INVALID_MUXED_SOURCE_RPC_SEQUENCE_ERROR,
+  [Code.INVALID_MUXED_SOURCE_SEQUENCE]: INVALID_MUXED_SOURCE_SEQUENCE_ERROR,
 };

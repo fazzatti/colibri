@@ -1,6 +1,6 @@
 {
   "name": "@colibri/identicon",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "exports": { ".": "./mod.ts" },
   "license": "MIT",
   "publish": {
@@ -9,7 +9,7 @@
   },
   "imports": {
     "@/": "./src/",
-    "@colibri/core": "jsr:@colibri/core@^0.27.0",
+    "@colibri/core": "jsr:@colibri/core@^0.28.0",
     "stellar-sdk": "npm:@stellar/stellar-sdk@^17.0.1",
     "fast-png": "npm:fast-png@8.0.0",
     "@std/encoding": "jsr:@std/encoding@^1.0.10"

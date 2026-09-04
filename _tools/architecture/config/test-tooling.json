@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "baseUrl": "../../..",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["test-tooling/*"]
+    },
+    "skipLibCheck": true
+  },
+  "include": ["../../../test-tooling/**/*.ts"],
+  "exclude": ["../../../test-tooling/**/*.test.ts"]
+}

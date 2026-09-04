@@ -33,18 +33,19 @@ from each other.
 
 ## Available Steps
 
-| Factory                                   | Id                                      |
-| ----------------------------------------- | --------------------------------------- |
-| `createBuildTransactionStep()`            | `BUILD_TRANSACTION_STEP_ID`             |
-| `createSimulateTransactionStep()`         | `SIMULATE_TRANSACTION_STEP_ID`          |
-| `createSignAuthEntriesStep()`             | `SIGN_AUTH_ENTRIES_STEP_ID`             |
-| `createAssembleForEnforcementStep()`      | `ASSEMBLE_FOR_ENFORCEMENT_STEP_ID`      |
-| `createEnforceSimulationStep()`           | `ENFORCE_SIMULATION_STEP_ID`            |
-| `createAssembleTransactionStep()`         | `ASSEMBLE_TRANSACTION_STEP_ID`          |
-| `createEnvelopeSigningRequirementsStep()` | `ENVELOPE_SIGNING_REQUIREMENTS_STEP_ID` |
-| `createSignEnvelopeStep()`                | `SIGN_ENVELOPE_STEP_ID`                 |
-| `createSendTransactionStep()`             | `SEND_TRANSACTION_STEP_ID`              |
-| `createWrapFeeBumpStep()`                 | `WRAP_FEE_BUMP_STEP_ID`                 |
+| Factory                                      | Id                                          |
+| -------------------------------------------- | ------------------------------------------- |
+| `createBuildTransactionStep()`               | `BUILD_TRANSACTION_STEP_ID`                 |
+| `createSimulateTransactionStep()`            | `SIMULATE_TRANSACTION_STEP_ID`              |
+| `createSignAuthEntriesStep()`                | `SIGN_AUTH_ENTRIES_STEP_ID`                 |
+| `createAssembleForEnforcementStep()`         | `ASSEMBLE_FOR_ENFORCEMENT_STEP_ID`          |
+| `createEnforceSimulationStep()`              | `ENFORCE_SIMULATION_STEP_ID`                |
+| `createAssembleTransactionStep()`            | `ASSEMBLE_TRANSACTION_STEP_ID`              |
+| `createEnvelopeSigningRequirementsStep()`    | `ENVELOPE_SIGNING_REQUIREMENTS_STEP_ID`     |
+| `createSignEnvelopeStep()`                   | `SIGN_ENVELOPE_STEP_ID`                     |
+| `createSendTransactionStep()`                | `SEND_TRANSACTION_STEP_ID`                  |
+| `createParseClassicTransactionOutcomeStep()` | `PARSE_CLASSIC_TRANSACTION_OUTCOME_STEP_ID` |
+| `createWrapFeeBumpStep()`                    | `WRAP_FEE_BUMP_STEP_ID`                     |
 
 ## When to Use Steps
 

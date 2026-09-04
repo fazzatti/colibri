@@ -1,6 +1,6 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
+import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
 import {
   ClawbackEvent,
@@ -13,10 +13,10 @@ import type { ContractId } from "@/strkeys/types.ts";
 function createMockEvent(
   topics: xdr.ScVal[],
   value: xdr.ScVal,
-  contractId?: string
+  contractId?: string,
 ): Event {
-  const contract =
-    contractId ?? "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+  const contract = contractId ??
+    "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
   return new Event({
     id: "0000000000000000000-0000000000",
@@ -50,7 +50,7 @@ describe("ClawbackEvent", () => {
       const from = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("clawback"), new Address(from).toScVal()],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(ClawbackEvent.is(event), true);
@@ -60,7 +60,7 @@ describe("ClawbackEvent", () => {
       const from = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("burn"), new Address(from).toScVal()],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(ClawbackEvent.is(event), false);
@@ -75,7 +75,7 @@ describe("ClawbackEvent", () => {
           new Address(from).toScVal(),
           new Address(extra).toScVal(), // extra topic
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(ClawbackEvent.is(event), false);
@@ -84,7 +84,7 @@ describe("ClawbackEvent", () => {
     it("should return false for wrong topic type", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("clawback"), xdr.ScVal.scvU32(123)], // should be address
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(ClawbackEvent.is(event), false);
@@ -94,7 +94,7 @@ describe("ClawbackEvent", () => {
       const from = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("clawback"), new Address(from).toScVal()],
-        xdr.ScVal.scvU32(100) // should be i128
+        xdr.ScVal.scvU32(100), // should be i128
       );
 
       assertEquals(ClawbackEvent.is(event), false);
@@ -107,7 +107,7 @@ describe("ClawbackEvent", () => {
       const amount = 5000000000n;
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("clawback"), new Address(from).toScVal()],
-        nativeToScVal(amount, { type: "i128" })
+        nativeToScVal(amount, { type: "i128" }),
       );
 
       const clawbackEvent = ClawbackEvent.fromEvent(event);
@@ -120,13 +120,13 @@ describe("ClawbackEvent", () => {
     it("should throw for non-clawback event", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("mint")],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       assertThrows(
         () => ClawbackEvent.fromEvent(event),
         Error,
-        "does not match clawback schema"
+        "does not match clawback schema",
       );
     });
   });
@@ -136,7 +136,7 @@ describe("ClawbackEvent", () => {
       const from = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("clawback"), new Address(from).toScVal()],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       const result = ClawbackEvent.tryFromEvent(event);
@@ -147,7 +147,7 @@ describe("ClawbackEvent", () => {
     it("should return undefined for invalid event", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("mint")],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       assertEquals(ClawbackEvent.tryFromEvent(event), undefined);
@@ -159,7 +159,7 @@ describe("ClawbackEvent", () => {
       const from = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("clawback"), new Address(from).toScVal()],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       const clawbackEvent = ClawbackEvent.fromEvent(event);
@@ -173,7 +173,7 @@ describe("ClawbackEvent", () => {
         "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("clawback"), new Address(contractId).toScVal()],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       const clawbackEvent = ClawbackEvent.fromEvent(event);

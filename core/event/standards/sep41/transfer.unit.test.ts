@@ -1,6 +1,6 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
+import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
 import {
   TransferEvent,
@@ -14,10 +14,10 @@ import type { ContractId } from "@/strkeys/types.ts";
 function createMockEvent(
   topics: xdr.ScVal[],
   value: xdr.ScVal,
-  contractId?: string
+  contractId?: string,
 ): Event {
-  const contract =
-    contractId ?? "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+  const contract = contractId ??
+    "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
   return new Event({
     id: "0000000000000000000-0000000000",
@@ -58,7 +58,7 @@ describe("TransferEvent", () => {
           new Address(from).toScVal(),
           new Address(to).toScVal(),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(TransferEvent.is(event), true);
@@ -68,7 +68,7 @@ describe("TransferEvent", () => {
       const to = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("mint"), new Address(to).toScVal()],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(TransferEvent.is(event), false);
@@ -78,7 +78,7 @@ describe("TransferEvent", () => {
       const from = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("transfer"), new Address(from).toScVal()],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(TransferEvent.is(event), false);
@@ -93,7 +93,7 @@ describe("TransferEvent", () => {
           new Address(from).toScVal(),
           new Address(to).toScVal(),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(TransferEvent.is(event), false);
@@ -107,7 +107,7 @@ describe("TransferEvent", () => {
           new Address(from).toScVal(),
           xdr.ScVal.scvU32(123), // should be address
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(TransferEvent.is(event), false);
@@ -134,7 +134,7 @@ describe("TransferEvent", () => {
           new Address(from).toScVal(),
           new Address(to).toScVal(),
         ],
-        muxedValue
+        muxedValue,
       );
 
       assertEquals(TransferEvent.is(event), true);
@@ -148,7 +148,7 @@ describe("TransferEvent", () => {
           xdr.ScVal.scvU32(123), // non-string type instead of address
           new Address(to).toScVal(),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(TransferEvent.is(event), false);
@@ -162,7 +162,7 @@ describe("TransferEvent", () => {
           new Address(from).toScVal(),
           xdr.ScVal.scvU32(456), // non-string type instead of address
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(TransferEvent.is(event), false);
@@ -177,7 +177,7 @@ describe("TransferEvent", () => {
           new Address(from).toScVal(),
           new Address(to).toScVal(),
         ],
-        xdr.ScVal.scvString("invalid") // not i128 or muxed map
+        xdr.ScVal.scvString("invalid"), // not i128 or muxed map
       );
 
       assertEquals(TransferEvent.is(event), false);
@@ -195,7 +195,7 @@ describe("TransferEvent", () => {
           new Address(from).toScVal(),
           new Address(to).toScVal(),
         ],
-        nativeToScVal(amount, { type: "i128" })
+        nativeToScVal(amount, { type: "i128" }),
       );
 
       const transferEvent = TransferEvent.fromEvent(event);
@@ -209,13 +209,13 @@ describe("TransferEvent", () => {
     it("should throw for non-transfer event", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("burn")],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       assertThrows(
         () => TransferEvent.fromEvent(event),
         Error,
-        "does not match transfer schema"
+        "does not match transfer schema",
       );
     });
   });
@@ -230,7 +230,7 @@ describe("TransferEvent", () => {
           new Address(from).toScVal(),
           new Address(to).toScVal(),
         ],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       const result = TransferEvent.tryFromEvent(event);
@@ -241,7 +241,7 @@ describe("TransferEvent", () => {
     it("should return undefined for invalid event", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("mint")],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       assertEquals(TransferEvent.tryFromEvent(event), undefined);
@@ -258,7 +258,7 @@ describe("TransferEvent", () => {
           new Address(from).toScVal(),
           new Address(to).toScVal(),
         ],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       const transferEvent = TransferEvent.fromEvent(event);
@@ -279,7 +279,7 @@ describe("TransferEvent", () => {
           new Address(contractId).toScVal(),
           new Address(to).toScVal(),
         ],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       const transferEvent = TransferEvent.fromEvent(event);
@@ -299,7 +299,7 @@ describe("TransferEvent", () => {
           new Address(from).toScVal(),
           new Address(to).toScVal(),
         ],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       const transferEvent = TransferEvent.fromEvent(event);
@@ -317,7 +317,7 @@ describe("TransferEvent", () => {
           new Address(from).toScVal(),
           new Address(to).toScVal(),
         ],
-        nativeToScVal(5000n, { type: "i128" })
+        nativeToScVal(5000n, { type: "i128" }),
       );
 
       const transferEvent = TransferEvent.fromEvent(event);
@@ -341,7 +341,7 @@ describe("TransferEvent", () => {
           new Address(from).toScVal(),
           new Address(to).toScVal(),
         ],
-        nativeToScVal(1000n, { type: "i128" })
+        nativeToScVal(1000n, { type: "i128" }),
       );
 
       const transferEvent = TransferEvent.fromEvent(event);
@@ -354,7 +354,7 @@ describe("TransferEvent", () => {
       assertThrows(
         () => transferEvent.amount,
         Error,
-        "Invalid transfer event data format"
+        "Invalid transfer event data format",
       );
     });
   });

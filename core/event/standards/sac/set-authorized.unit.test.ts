@@ -1,11 +1,11 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { xdr, Keypair, Address } from "stellar-sdk";
+import { Address, Keypair, xdr } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
 import {
   SetAuthorizedEvent,
   SetAuthorizedEventSchema,
-} from "@/event/standards/sac/set_authorized.ts";
+} from "@/event/standards/sac/set-authorized.ts";
 import { EventType } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 
@@ -13,10 +13,10 @@ import type { ContractId } from "@/strkeys/types.ts";
 function createMockEvent(
   topics: xdr.ScVal[],
   value: xdr.ScVal,
-  contractId?: string
+  contractId?: string,
 ): Event {
-  const contract =
-    contractId ?? "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+  const contract = contractId ??
+    "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
   return new Event({
     id: "0000000000000000000-0000000000",
@@ -59,7 +59,7 @@ describe("SetAuthorizedEvent", () => {
           new Address(account).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        xdr.ScVal.scvBool(true)
+        xdr.ScVal.scvBool(true),
       );
 
       assertEquals(SetAuthorizedEvent.is(event), true);
@@ -73,7 +73,7 @@ describe("SetAuthorizedEvent", () => {
           new Address(account).toScVal(),
           xdr.ScVal.scvString("native"),
         ],
-        xdr.ScVal.scvBool(true)
+        xdr.ScVal.scvBool(true),
       );
 
       assertEquals(SetAuthorizedEvent.is(event), true);
@@ -87,7 +87,7 @@ describe("SetAuthorizedEvent", () => {
           new Address(account).toScVal(),
           // missing asset topic
         ],
-        xdr.ScVal.scvBool(true)
+        xdr.ScVal.scvBool(true),
       );
 
       assertEquals(SetAuthorizedEvent.is(event), false);
@@ -101,7 +101,7 @@ describe("SetAuthorizedEvent", () => {
           new Address(account).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        xdr.ScVal.scvBool(true)
+        xdr.ScVal.scvBool(true),
       );
 
       assertEquals(SetAuthorizedEvent.is(event), false);
@@ -117,7 +117,7 @@ describe("SetAuthorizedEvent", () => {
           new Address(account).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        xdr.ScVal.scvBool(true)
+        xdr.ScVal.scvBool(true),
       );
 
       const setAuthEvent = SetAuthorizedEvent.fromEvent(event);
@@ -136,7 +136,7 @@ describe("SetAuthorizedEvent", () => {
           new Address(account).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        xdr.ScVal.scvBool(false)
+        xdr.ScVal.scvBool(false),
       );
 
       const setAuthEvent = SetAuthorizedEvent.fromEvent(event);
@@ -155,14 +155,14 @@ describe("SetAuthorizedEvent", () => {
           new Address(account).toScVal(),
           xdr.ScVal.scvString("invalid-asset"),
         ],
-        xdr.ScVal.scvBool(true)
+        xdr.ScVal.scvBool(true),
       );
 
       const setAuthEvent = SetAuthorizedEvent.fromEvent(event);
       assertThrows(
         () => setAuthEvent.asset,
         Error,
-        "Invalid SEP-11 asset format: invalid-asset"
+        "Invalid SEP-11 asset format: invalid-asset",
       );
     });
   });
@@ -176,7 +176,7 @@ describe("SetAuthorizedEvent", () => {
           new Address(account).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        xdr.ScVal.scvBool(true)
+        xdr.ScVal.scvBool(true),
       );
 
       const setAuthEvent = SetAuthorizedEvent.fromEvent(event);
@@ -194,7 +194,7 @@ describe("SetAuthorizedEvent", () => {
           new Address(contractId).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        xdr.ScVal.scvBool(true)
+        xdr.ScVal.scvBool(true),
       );
 
       const setAuthEvent = SetAuthorizedEvent.fromEvent(event);

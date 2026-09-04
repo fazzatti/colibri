@@ -16,8 +16,8 @@ import type {
 export type TransactionConfig = {
   /** Fee value or explicit fee strategy applied to the transaction. */
   fee: BaseFee | TransactionFee;
-  /** Source account that will submit the transaction. */
-  source: Ed25519PublicKey;
+  /** G-address or M-address that will submit the transaction. */
+  source: TransactionSource;
   /** Timeout, in seconds, applied to the transaction. */
   timeout: number;
   /**
@@ -33,6 +33,14 @@ export type TransactionConfig = {
    */
   extraSigners?: ExtraSignerKey[];
 };
+
+/**
+ * Account address accepted as a transaction or fee-bump source.
+ *
+ * Muxed sources retain their M-address in the envelope while sharing sequence
+ * state and authorization with their underlying G-account.
+ */
+export type TransactionSource = Ed25519PublicKey | MuxedAddress;
 
 /**
  * String representation of a Stellar base fee value.

@@ -1,6 +1,6 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
+import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
 import {
   ApproveEvent,
@@ -13,10 +13,10 @@ import type { ContractId } from "@/strkeys/types.ts";
 function createMockEvent(
   topics: xdr.ScVal[],
   value: xdr.ScVal,
-  contractId?: string
+  contractId?: string,
 ): Event {
-  const contract =
-    contractId ?? "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+  const contract = contractId ??
+    "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
   return new Event({
     id: "0000000000000000000-0000000000",
@@ -60,7 +60,7 @@ describe("ApproveEvent", () => {
         xdr.ScVal.scvVec([
           nativeToScVal(1000000n, { type: "i128" }),
           xdr.ScVal.scvU32(50000),
-        ])
+        ]),
       );
 
       assertEquals(ApproveEvent.is(event), true);
@@ -75,7 +75,7 @@ describe("ApproveEvent", () => {
           new Address(from).toScVal(),
           new Address(to).toScVal(),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(ApproveEvent.is(event), false);
@@ -88,7 +88,7 @@ describe("ApproveEvent", () => {
         xdr.ScVal.scvVec([
           nativeToScVal(1000000n, { type: "i128" }),
           xdr.ScVal.scvU32(50000),
-        ])
+        ]),
       );
 
       assertEquals(ApproveEvent.is(event), false);
@@ -103,7 +103,7 @@ describe("ApproveEvent", () => {
           new Address(from).toScVal(),
           new Address(spender).toScVal(),
         ],
-        nativeToScVal(1000000n, { type: "i128" }) // should be vec
+        nativeToScVal(1000000n, { type: "i128" }), // should be vec
       );
 
       assertEquals(ApproveEvent.is(event), false);
@@ -125,7 +125,7 @@ describe("ApproveEvent", () => {
         xdr.ScVal.scvVec([
           nativeToScVal(amount, { type: "i128" }),
           xdr.ScVal.scvU32(liveUntilLedger),
-        ])
+        ]),
       );
 
       const approveEvent = ApproveEvent.fromEvent(event);
@@ -140,13 +140,13 @@ describe("ApproveEvent", () => {
     it("should throw for non-approve event", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("burn")],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       assertThrows(
         () => ApproveEvent.fromEvent(event),
         Error,
-        "does not match approve schema"
+        "does not match approve schema",
       );
     });
   });
@@ -164,7 +164,7 @@ describe("ApproveEvent", () => {
         xdr.ScVal.scvVec([
           nativeToScVal(100n, { type: "i128" }),
           xdr.ScVal.scvU32(50000),
-        ])
+        ]),
       );
 
       const result = ApproveEvent.tryFromEvent(event);
@@ -175,7 +175,7 @@ describe("ApproveEvent", () => {
     it("should return undefined for invalid event", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("mint")],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       assertEquals(ApproveEvent.tryFromEvent(event), undefined);
@@ -195,7 +195,7 @@ describe("ApproveEvent", () => {
         xdr.ScVal.scvVec([
           nativeToScVal(100n, { type: "i128" }),
           xdr.ScVal.scvU32(50000),
-        ])
+        ]),
       );
 
       const approveEvent = ApproveEvent.fromEvent(event);
@@ -219,7 +219,7 @@ describe("ApproveEvent", () => {
         xdr.ScVal.scvVec([
           nativeToScVal(100n, { type: "i128" }),
           xdr.ScVal.scvU32(50000),
-        ])
+        ]),
       );
 
       const approveEvent = ApproveEvent.fromEvent(event);
