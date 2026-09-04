@@ -171,11 +171,13 @@ integration must test an explicit historical version.
 | [SEP-44](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0044.md) | `0.2.1`        | Token Memo Extension; `0.1.0`, `0.2.0`, and `0.2.1` remain selectable |
 | [SEP-50](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0050.md) | `0.1.0`        | Non-Fungible Token                                                    |
 | [SEP-56](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0056.md) | `0.1.2`        | Tokenized Vault; `0.1.0`, `0.1.1`, and `0.1.2` remain selectable      |
-| [SEP-57](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0057.md) | `0.3.0`        | RWA Token plus six separately deployed component interfaces           |
+| [SEP-57](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0057.md) | `0.3.0`        | RWA Token, architecture components, and appendix reference interfaces |
 
-SEP-57 defines a component architecture rather than one deployable ABI.
-`ContractStandards.SEP57.latest` selects its primary RWA Token interface. Every
-component is also available explicitly:
+SEP-57 uses multiple contracts rather than one deployable ABI.
+`ContractStandards.SEP57.latest` selects its primary RWA Token interface. The
+identity verifier and compliance interfaces are available separately, together
+with the claim-based interfaces described by the SEP's optional reference
+implementation appendix:
 
 ```ts
 const providers = ContractStandards.SEP57.interfaces;
@@ -188,6 +190,12 @@ providers.identityRegistryStorage.latest;
 providers.identityClaims.latest;
 providers.claimIssuer.latest;
 ```
+
+The claim topics and issuers, identity registry storage, identity claims, and
+claim issuer providers model that appendix profile. They are useful when an
+implementation chooses the claim-based architecture, but they are not required
+for every SEP-57 deployment. In particular, the identity claims provider checks
+the complete reference `Claim` structure as well as its function signatures.
 
 The registry contains the interfaces defined by the referenced SEP versions; it
 does not add interfaces for standards that define only behavior, metadata,

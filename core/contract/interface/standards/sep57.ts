@@ -254,6 +254,15 @@ const identityRegistryStorage: ContractInterfaceDefinition =
     ],
   );
 
+const claim: ContractInterfaceUserType = structDefinition("Claim", [
+  ["topic", types.u32],
+  ["scheme", types.u32],
+  ["issuer", types.address],
+  ["signature", types.bytes],
+  ["data", types.bytes],
+  ["uri", types.string],
+]);
+
 const identityClaims: ContractInterfaceDefinition = interfaceDefinition(
   "identity-claims",
   "Identity Claims",
@@ -277,6 +286,7 @@ const identityClaims: ContractInterfaceDefinition = interfaceDefinition(
       [types.vec(types.bytesN(32))],
     ),
   ],
+  [claim],
 );
 
 const claimIssuer: ContractInterfaceDefinition = interfaceDefinition(
@@ -294,7 +304,7 @@ const claimIssuer: ContractInterfaceDefinition = interfaceDefinition(
 );
 
 const version = "0.3.0";
-/** Named contract interfaces defined by SEP-57's component architecture. */
+/** Named primary, component, and appendix-reference SEP-57 interfaces. */
 export type Sep57InterfaceName =
   | "rwaToken"
   | "identityVerifier"
@@ -304,12 +314,12 @@ export type Sep57InterfaceName =
   | "identityClaims"
   | "claimIssuer";
 
-/** SEP-57 provider catalogs indexed by component interface name. */
+/** SEP-57 provider catalogs indexed by interface name. */
 export type Sep57Interfaces = Readonly<
   Record<Sep57InterfaceName, ContractStandardCatalog<"0.3.0">>
 >;
 
-/** Primary and component provider catalogs bundled for SEP-57. */
+/** Primary, component, and appendix-reference providers bundled for SEP-57. */
 export type Sep57Catalog = ContractStandardCatalog<"0.3.0"> & {
   readonly interfaces: Sep57Interfaces;
 };
@@ -353,8 +363,10 @@ const interfaces: Sep57Interfaces = {
  * SEP-57 interface providers.
  *
  * `latest` and `versions` identify the primary RWA-token interface. The
- * `interfaces` collection exposes every separately deployed component
- * interface defined by the SEP-57 architecture.
+ * `interfaces` collection also exposes the separately deployed identity and
+ * compliance interfaces. Its claim-based identity entries model the optional
+ * reference implementation in the SEP-57 appendix; they are not required for
+ * every SEP-57 deployment.
  */
 export const SEP57: Sep57Catalog = {
   versions: interfaces.rwaToken.versions,

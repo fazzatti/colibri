@@ -676,9 +676,11 @@ for (const result of report) {
 The bundled registry covers the concrete interfaces defined by SEP-40, SEP-41,
 SEP-44, SEP-50, SEP-56, and SEP-57. Historical versions explicitly represented
 by Core remain selectable through each standard's `versions` property. SEP-57
-also exposes each component interface under `SEP57.interfaces`. A structural
-match confirms ABI shape, not authorization policy, runtime semantics, event
-behavior, or implementation correctness. See the
+also exposes its separate architecture components and optional claim-based
+appendix reference interfaces under `SEP57.interfaces`. Those reference
+interfaces are not mandatory for every SEP-57 deployment. A structural match
+confirms ABI shape, not authorization policy, runtime semantics, event behavior,
+or implementation correctness. See the
 [metadata and interface guide](https://fifo-docs.gitbook.io/colibri/core/contract/metadata-and-interfaces)
 for the complete API and interpretation rules.
 

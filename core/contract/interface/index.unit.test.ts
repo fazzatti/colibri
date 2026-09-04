@@ -839,6 +839,77 @@ describe("known contract standards", () => {
       "is_claim_valid",
     ]);
   });
+
+  it("validates the complete SEP-57 reference Claim structure", () => {
+    const claimFields: readonly [name: string, type: xdr.ScSpecTypeDef][] = [
+      ["topic", types.u32],
+      ["scheme", types.u32],
+      ["issuer", types.address],
+      ["signature", types.bytes],
+      ["data", types.bytes],
+      ["uri", types.string],
+    ];
+    const identityClaimsSpec = (
+      fields?: readonly [name: string, type: xdr.ScSpecTypeDef][],
+    ): Spec =>
+      new Spec([
+        functionEntry({
+          name: "add_claim",
+          inputs: claimFields,
+          outputs: [types.bytesN(32)],
+        }),
+        functionEntry({
+          name: "get_claim",
+          inputs: [["claim_id", types.bytesN(32)]],
+          outputs: [types.udt("Claim")],
+        }),
+        functionEntry({
+          name: "get_claim_ids_by_topic",
+          inputs: [["topic", types.u32]],
+          outputs: [types.vec(types.bytesN(32))],
+        }),
+        ...(fields ? [structEntry("Claim", fields)] : []),
+      ]);
+    const provider = ContractStandards.SEP57.interfaces.identityClaims.latest;
+
+    assertEquals(
+      analyzeContractInterface(identityClaimsSpec(claimFields), provider)
+        .matches,
+      true,
+    );
+
+    const missing = analyzeContractInterface(identityClaimsSpec(), provider);
+    assertEquals(missing.matches, false);
+    assertEquals(missing.missingTypes, [{ kind: "struct", name: "Claim" }]);
+
+    const reordered = analyzeContractInterface(
+      identityClaimsSpec([
+        claimFields[1],
+        claimFields[0],
+        ...claimFields.slice(2),
+      ]),
+      provider,
+    );
+    assertEquals(reordered.matches, false);
+    assertEquals(
+      reordered.incompatibleTypes.map(({ name }) => name),
+      ["Claim"],
+    );
+
+    const wrongType = analyzeContractInterface(
+      identityClaimsSpec([
+        ...claimFields.slice(0, 3),
+        ["signature", types.string],
+        ...claimFields.slice(4),
+      ]),
+      provider,
+    );
+    assertEquals(wrongType.matches, false);
+    assertEquals(
+      wrongType.incompatibleTypes.map(({ name }) => name),
+      ["Claim"],
+    );
+  });
 });
 
 describe("standard inspection", () => {
