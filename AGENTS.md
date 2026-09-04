@@ -110,8 +110,7 @@ GitHub Actions behavior matters when changing structure or versions:
 
 - CI runs on pull requests targeting `main` and `dev`, and can be started
   manually through `workflow_dispatch`.
-- Architecture rules run in their own required CI job, in parallel with the
-  workspace quality and package-test jobs.
+- Architecture rules run as part of the required workspace quality job.
 - CI runs lint, type, and JSR documentation checks once, while every package's
   complete test suite runs in a required parallel job.
 - Package jobs upload raw Deno coverage profiles. A final required coverage job
