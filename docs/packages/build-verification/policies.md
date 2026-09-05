@@ -37,6 +37,14 @@ required dependencies already available in the source/image. Enabling container
 networking permits dependency retrieval but also expands the code's network
 access—make that an explicit decision.
 
+The default DNS resolver accepts addresses from either IPv4 or IPv6 when the
+other lookup fails or has no records. The returned addresses are still checked
+by the retrieval policy before use. If no addresses are available and any lookup
+rejected, it raises `SourceDnsResolutionFailedError`; the original failures are
+retained in the `AggregateError` at `error.meta.cause`. Permission denials and
+resolver failures must not be treated as successful empty answers.
+`SourceDnsEmptyError` is reserved for both lookups succeeding without addresses.
+
 ## Resource limits
 
 Override individual fields through `limits`; omitted values use

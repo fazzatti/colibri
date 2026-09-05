@@ -41,7 +41,7 @@ import {
   GitHubSourceProviderInputMismatchError,
   HttpSourceProviderInputMismatchError,
   LocalSourceArchiveReadFailedError,
-  SourceDnsEmptyError,
+  SourceDnsResolutionFailedError,
   SourceDownloadFailedError,
   SourcePolicyRejectedError,
   SourceRedirectLimitExceededError,
@@ -1063,7 +1063,7 @@ describe("source providers", () => {
     );
     await assertRejects(
       () => new DenoSourceAddressResolver().resolve("does-not-exist.invalid"),
-      SourceDnsEmptyError,
+      SourceDnsResolutionFailedError,
     );
   });
 });

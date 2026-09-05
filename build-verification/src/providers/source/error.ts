@@ -32,7 +32,7 @@ export class GitHubReleaseAssetMissingError
   }
 }
 
-/** Raised when DNS provides neither A nor AAAA records for a source host. */
+/** Raised when both DNS lookups succeed without source-host address records. */
 export class SourceDnsEmptyError
   extends BuildVerificationError<Code.SOURCE_DNS_EMPTY> {
   /** Identifies the hostname with no usable address records. */
@@ -42,7 +42,7 @@ export class SourceDnsEmptyError
       source: "@colibri/build-verification/providers/source/http",
       message: "Source hostname has no address records",
       details:
-        "Neither IPv4 nor IPv6 resolution yielded an address for policy evaluation.",
+        "IPv4 and IPv6 resolution completed successfully without addresses for policy evaluation.",
       data: { hostname },
     });
   }

@@ -267,6 +267,13 @@ referrers are recorded when available, but this package does not claim that an
 unverified provenance signature is valid. A digest establishes image identity,
 not that the image or source code is safe.
 
+DNS lookup failures are distinct from successful empty answers. If neither
+address family returns an address and a lookup fails, the default resolver
+raises `SourceDnsResolutionFailedError`, retaining the original failures in an
+`AggregateError` at `error.meta.cause`. `SourceDnsEmptyError` means both lookups
+succeeded without addresses. Addresses from either family remain usable if the
+other lookup fails; they still pass through the retrieval policy.
+
 ## Build isolation and network access
 
 Container network access is disabled by default:
