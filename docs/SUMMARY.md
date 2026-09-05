@@ -116,6 +116,7 @@
 
 - [Plugins](packages/plugins/README.md)
   - [Fee Bump](packages/plugins/fee-bump.md)
+  - [SEP-29 memo requirements](packages/plugins/sep29.md)
   - [Channel Accounts](packages/plugins/channel-accounts.md)
     - [A sponsored channel payment](packages/plugins/channel-accounts/example.md)
 
@@ -195,6 +196,7 @@
   - [identicon](reference/errors/identicon.md)
   - [plugins/channel-accounts/shared](reference/errors/plugins-channel-accounts-shared.md)
   - [plugins/fee-bump](reference/errors/plugins-fee-bump.md)
+  - [plugins/sep29](reference/errors/plugins-sep29.md)
   - [rpc-streamer](reference/errors/rpc-streamer.md)
   - [test-tooling/quickstart](reference/errors/test-tooling-quickstart.md)
   - [webauth](reference/errors/webauth.md)

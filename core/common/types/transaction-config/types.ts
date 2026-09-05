@@ -1,3 +1,4 @@
+import type { Memo } from "stellar-sdk";
 import type {
   EnvelopeSigner,
   PreAuthTransactionSigner,
@@ -20,6 +21,8 @@ export type TransactionConfig = {
   source: TransactionSource;
   /** Timeout in seconds, forwarded through building and assembly. Zero explicitly disables the upper time bound. */
   timeout: number;
+  /** Native Stellar SDK memo, forwarded unchanged to the transaction builder. */
+  memo?: Memo;
   /**
    * Signers used to authorize transaction envelopes and Soroban authorization
    * entries.

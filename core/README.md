@@ -447,6 +447,12 @@ response is preserved so you can review resource usage and footprints.
 
 ### Classic transaction submission
 
+An optional `config.memo` accepts the native Stellar SDK `Memo` and is forwarded
+unchanged to the builder. Omission preserves no-memo behavior. For recipient
+memo requirements, explicitly attach
+[`@colibri/plugin-sep29`](https://jsr.io/@colibri/plugin-sep29); no such policy
+is imposed by Core's default pipelines.
+
 `createClassicTransactionPipeline` is the classic counterpart: it builds,
 computes signature requirements, signs, and submits classic operations
 (payments, set options, etc.), reusing the same `TransactionConfig` shape as

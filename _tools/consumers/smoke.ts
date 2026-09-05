@@ -1,6 +1,7 @@
 import {
   Account,
   Keypair,
+  Memo,
   Networks,
   Operation,
   Transaction,
@@ -15,12 +16,14 @@ import {
   LocalSigner,
   NetworkConfig,
   StrKey,
+  type TransactionConfig,
 } from "@colibri/core";
 import { Identicon } from "@colibri/identicon";
 import { createLedgerStreamer } from "@colibri/rpc-streamer";
 import { WebAuthClient } from "@colibri/webauth";
 import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
 import { createChannelAccountsPlugin } from "@colibri/plugin-channel-accounts";
+import { checkMemoRequired, createSep29Plugin } from "@colibri/plugin-sep29";
 
 // This is a consumer, not a workspace test. The same source is type-checked
 // against isolated Deno modules and installed npm declarations, then executed.
@@ -57,6 +60,21 @@ const unsigned = new TransactionBuilder(
   { fee: "100", networkPassphrase: Networks.TESTNET },
 )
   .addOperation(Operation.setOptions({})).setTimeout(60).build();
+const memoConfig: TransactionConfig = {
+  source: signer.publicKey(),
+  fee: "100",
+  timeout: 60,
+  signers: [signer],
+  memo: Memo.id("29"),
+};
+check(
+  memoConfig.memo?.value === "29",
+  "Native SDK Memo in Colibri configuration",
+);
+await checkMemoRequired({ transaction: unsigned, rpc });
+createClassicTransactionPipeline({ networkConfig, rpc }).use(
+  createSep29Plugin(),
+);
 const signed = new Transaction(
   signer.signTransaction(unsigned),
   Networks.TESTNET,

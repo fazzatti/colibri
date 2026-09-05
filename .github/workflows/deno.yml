@@ -127,6 +127,9 @@ jobs:
           - package: plugin-channel-accounts
             path: plugins/channel-accounts
             test_flags: --parallel
+          - package: plugin-sep29
+            path: plugins/sep29
+            test_flags: --parallel
           - package: test-tooling
             path: test-tooling
             test_flags: --parallel
@@ -248,7 +251,7 @@ jobs:
           --filter='__coverage_cache_prime_never_matches__'
           --coverage=coverage-prime --coverage-raw-data-only
           core build-verification identicon webauth rpc-streamer
-          plugins/fee-bump plugins/channel-accounts test-tooling
+          plugins/fee-bump plugins/channel-accounts plugins/sep29 test-tooling
 
       - name: Generate aggregate coverage report
         run: deno coverage --lcov --output=coverage.lcov coverage/coverage-*

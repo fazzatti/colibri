@@ -133,6 +133,10 @@ catalog.
 
 - [plugins/fee-bump](plugins-fee-bump.md) — 3 codes.
 
+## @colibri/plugin-sep29
+
+- [plugins/sep29](plugins-sep29.md) — 4 codes.
+
 ## @colibri/rpc-streamer
 
 - [rpc-streamer](rpc-streamer.md) — 24 codes.

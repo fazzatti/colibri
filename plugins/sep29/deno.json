@@ -1,0 +1,14 @@
+{
+  "name": "@colibri/plugin-sep29",
+  "version": "0.1.0",
+  "exports": "./mod.ts",
+  "license": "MIT",
+  "publish": {
+    "include": ["./**/*.ts", "./README.md", "./LICENSE", "./deno.json"],
+    "exclude": ["./**/*.test.ts"]
+  },
+  "imports": {
+    "@/": "./src/",
+    "jsr:@colibri/core": "jsr:@colibri/core@^0.29.0"
+  }
+}

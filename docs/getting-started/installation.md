@@ -28,6 +28,7 @@ deno add jsr:@colibri/rpc-streamer
 deno add jsr:@colibri/test-tooling
 deno add jsr:@colibri/plugin-fee-bump
 deno add jsr:@colibri/plugin-channel-accounts
+deno add jsr:@colibri/plugin-sep29
 ```
 
 This will add imports similar to:
@@ -42,7 +43,8 @@ This will add imports similar to:
     "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.3.0",
     "@colibri/test-tooling": "jsr:@colibri/test-tooling@^0.3.1",
     "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.10.4",
-    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^0.2.14"
+    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^0.2.14",
+    "@colibri/plugin-sep29": "jsr:@colibri/plugin-sep29@^0.1.0"
   }
 }
 ```
@@ -116,6 +118,7 @@ Plugins extend pipeline step behavior for specific use cases:
 | ----------------------------------------------------------- | ---------------------------------- | -------------------------------------------------- |
 | [Fee Bump](../packages/plugins/fee-bump.md)                 | `@colibri/plugin-fee-bump`         | Wrap outgoing transactions in a fee-bump envelope  |
 | [Channel Accounts](../packages/plugins/channel-accounts.md) | `@colibri/plugin-channel-accounts` | Reuse sponsored channel accounts across write runs |
+| [SEP-29](../packages/plugins/sep29.md) | `@colibri/plugin-sep29` | Opt-in memo requirements checked through RPC |
 
 ## Stellar SDK Dependency
 

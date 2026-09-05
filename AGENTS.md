@@ -28,6 +28,8 @@ Soroban packages:
   transaction.
 - `plugins/channel-accounts/`: channel-account lifecycle tools and a plugin for
   swapping a pooled channel into classic and invoke-contract runs.
+- `plugins/sep29/`: opt-in, RPC-first memo requirement checking, standalone or
+  at the send-transaction step. No memo mutation or default installation.
 - `test-tooling/`: Docker-backed Quickstart helpers for integration tests.
 - `_internal/`: internal-only fixtures, env helpers, compiled WASM files, Rust
   contracts, and test-only support code. This directory is not a published
@@ -156,6 +158,7 @@ Current package version sources:
 - `rpc-streamer/deno.json`
 - `plugins/fee-bump/deno.json`
 - `plugins/channel-accounts/deno.json`
+- `plugins/sep29/deno.json`
 - `test-tooling/deno.json`
 
 Release implications:

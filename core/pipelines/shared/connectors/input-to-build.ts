@@ -7,7 +7,7 @@ type InputWithTransactionConfig = {
   operations: xdr.Operation[];
   config: Pick<
     TransactionConfig,
-    "extraSigners" | "fee" | "source" | "timeout"
+    "extraSigners" | "fee" | "source" | "timeout" | "memo"
   >;
 };
 
@@ -27,6 +27,7 @@ export const createInputToBuild = <Input extends InputWithTransactionConfig>(
       source: config.source,
       networkPassphrase,
       operations,
+      ...(config.memo !== undefined ? { memo: config.memo } : {}),
       rpc,
       preconditions: {
         timeoutSeconds: config.timeout,

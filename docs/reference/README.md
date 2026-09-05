@@ -15,6 +15,7 @@ exact current signatures.
 | `@colibri/build-verification`      | [Verification](../packages/build-verification.md)   | [Symbols](https://jsr.io/@colibri/build-verification/doc)      |
 | `@colibri/identicon`               | [Identicons](../packages/identicon.md)              | [Symbols](https://jsr.io/@colibri/identicon/doc)               |
 | `@colibri/plugin-fee-bump`         | [Fee sponsorship](../packages/plugins/fee-bump.md)  | [Symbols](https://jsr.io/@colibri/plugin-fee-bump/doc)         |
+| `@colibri/plugin-sep29` | [Memo requirements](../packages/plugins/sep29.md) | [Symbols](https://jsr.io/@colibri/plugin-sep29/doc) |
 | `@colibri/plugin-channel-accounts` | [Channels](../packages/plugins/channel-accounts.md) | [Symbols](https://jsr.io/@colibri/plugin-channel-accounts/doc) |
 | `@colibri/test-tooling`            | [Quickstart](../packages/test-tooling.md)           | [Symbols](https://jsr.io/@colibri/test-tooling/doc)            |
 
