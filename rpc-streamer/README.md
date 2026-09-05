@@ -1,6 +1,9 @@
 # @colibri/rpc-streamer
 
-A generic RPC streaming framework for building custom Stellar data streamers. The `RPCStreamer<T>` class handles all the complex streaming logic—archive-to-live transitions, checkpoints, error handling, pagination—so you can focus on defining what data to extract.
+A generic RPC streaming framework for building custom Stellar data streamers.
+The `RPCStreamer<T>` class handles all the complex streaming
+logic—archive-to-live transitions, checkpoints, error handling, pagination—so
+you can focus on defining what data to extract.
 
 <a href="https://jsr.io/@colibri/rpc-streamer">
   <img src="https://jsr.io/badges/@colibri/rpc-streamer" alt="JSR @colibri/rpc-streamer" />
@@ -13,8 +16,10 @@ A generic RPC streaming framework for building custom Stellar data streamers. Th
 
 This package provides two ways to stream Stellar blockchain data:
 
-1. **Pre-built Variants** - Ready-to-use streamers for common use cases (ledgers, events)
-2. **Custom Streamers** - Build your own streamer for any data type using the generic `RPCStreamer<T>` class
+1. **Pre-built Variants** - Ready-to-use streamers for common use cases
+   (ledgers, events)
+2. **Custom Streamers** - Build your own streamer for any data type using the
+   generic `RPCStreamer<T>` class
 
 ## Installation
 
@@ -64,9 +69,11 @@ await streamer.start(
 
 ## Building Custom Streamers
 
-For data types not covered by the pre-built variants, create a custom streamer by providing two ingestor functions:
+For data types not covered by the pre-built variants, create a custom streamer
+by providing two ingestor functions:
 
-- **`ingestLive`** - Fetches data from live RPC (recent ledgers within retention window)
+- **`ingestLive`** - Fetches data from live RPC (recent ledgers within retention
+  window)
 - **`ingestArchive`** - Fetches historical data from archive RPC
 
 ### Example: Transaction Streamer
@@ -167,7 +174,10 @@ await streamer.start(
 );
 ```
 
-> **Note:** Both `ingestLive` and `ingestArchive` are optional. Provide only the ones you need—if you only want live streaming, you can omit `ingestArchive`. The streamer will throw an error if you try to use a mode without the required ingestor.
+> **Note:** Both `ingestLive` and `ingestArchive` are optional. Provide only the
+> ones you need—if you only want live streaming, you can omit `ingestArchive`.
+> The streamer will throw an error if you try to use a mode without the required
+> ingestor.
 
 ## Streaming Modes
 
@@ -175,7 +185,8 @@ All streamers (pre-built and custom) support three streaming modes:
 
 ### Auto Mode (`start`)
 
-Automatically uses archive RPC for historical data and transitions to live RPC when caught up:
+Automatically uses archive RPC for historical data and transitions to live RPC
+when caught up:
 
 ```typescript
 const streamer = RPCStreamer.ledger({
@@ -262,6 +273,12 @@ await streamer.start(callback, {
 
 ## Stopping and Resuming
 
+Live event ingestion completes one ledger's pages before advancing, retaining
+all IDs from that ledger for deduplication. At the chain tip, it waits for the
+next ledger. An explicit starting ledger ahead of the chain is still rejected.
+Stopping from a live event callback prevents further callbacks from that page
+and does not checkpoint the interrupted ledger as complete.
+
 Persist processed data and progress together inside the awaited data callback.
 Do not rely on asynchronous `onCheckpoint` writes as a commit barrier, and do
 not assume a final checkpoint at shutdown. For events, replay an incomplete
@@ -305,7 +322,8 @@ try {
 
 ### `RPCStreamer<T>`
 
-Generic streaming class that can be used directly for custom streamers or via static factories.
+Generic streaming class that can be used directly for custom streamers or via
+static factories.
 
 #### Constructor
 
@@ -314,8 +332,8 @@ The constructor accepts `RPCStreamerConfig<T>`: `rpcUrl`, optional
 `ingestLive`/`ingestArchive` functions. Live-only custom streamers need only the
 live ingestor; archive ingestion needs its separate archive ingestor.
 
-See the [scoped developer guides](https://fifo-docs.gitbook.io/colibri) for
-mode selection, callback/checkpoint semantics and recovery, and the
+See the [scoped developer guides](https://fifo-docs.gitbook.io/colibri) for mode
+selection, callback/checkpoint semantics and recovery, and the
 [complete API reference](https://jsr.io/@colibri/rpc-streamer/doc) for exact
 signatures and every declared error code.
 
@@ -328,7 +346,8 @@ signatures and every declared error code.
 
 - `start(callback, options?)` - Auto-mode streaming (archive then live)
 - `startLive(callback, options?)` - Live-only streaming
-- `startArchive(callback, options)` - Archive-only streaming (requires start/stop ledgers)
+- `startArchive(callback, options)` - Archive-only streaming (requires
+  start/stop ledgers)
 - `stop()` - Stop streaming
 - `setArchiveRpc(url)` - Set archive RPC by URL
 
@@ -365,4 +384,5 @@ MIT
 
 ## Related Packages
 
-- [@colibri/core](../core) - Core Stellar SDK with Event, Ledger, and EventFilter types
+- [@colibri/core](../core) - Core Stellar SDK with Event, Ledger, and
+  EventFilter types

@@ -57,6 +57,10 @@ isNativeStellarAssetCanonicalString("USDC:GA5Z..."); // false
 
 Create a SEP-11 string from code and issuer:
 
+An explicit issuer is part of the asset identity even when its code is `XLM` or
+`native`. Only issuer-less `XLM` / `native` inputs identify native lumens;
+`toStellarAssetCanonicalString("XLM", issuer)` produces `XLM:ISSUER`.
+
 ```typescript
 import { toStellarAssetCanonicalString } from "@colibri/core";
 

@@ -17,6 +17,10 @@ oldest safe live ledger and default the start to `latestLedger`. Do not
 hard-code a retention duration or copy old ledger numbers. A requested start
 ahead of the latest ledger is rejected; it is not a scheduling mechanism.
 
+Once an accepted run catches up, live and automatic mode wait for the next
+ledger to close. Advancing internally to `latestLedger + 1` is not treated as an
+invalid user-supplied start.
+
 Automatic mode refreshes health as it advances. If the current ledger is too
 old, it reads through the archive up to the live boundary (or your stop), then
 uses the live ingestor. Both an archive RPC and archive ingestor must exist.

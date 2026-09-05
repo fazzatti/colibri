@@ -37,6 +37,14 @@ type MaxFee = `${number}`;
 
 ### Fee Strategies
 
+`timeout` is forwarded to the builder and preserved through Soroban assembly.
+Set it to `0` only when you intentionally want no upper time bound.
+
+Classic transactions support `G...` and `M...` sources. Stellar Core prohibits
+muxed transaction and operation sources for Soroban `invokeHostFunction`
+transactions; use a `G...` source there. A fee bump can still use an `M...`
+outer fee source.
+
 `fee` accepts the existing string form or an object that selects exactly one
 strategy:
 

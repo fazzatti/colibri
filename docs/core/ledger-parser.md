@@ -47,6 +47,13 @@ those without an envelope throws a typed parser error.
 is not the fee bid from the original envelope. Keep that distinction when
 auditing [fee configuration](transaction-config.md).
 
+`transaction.resultCode` preserves the Stellar XDR result name, including
+`txFeeBumpInnerSuccess` and negative-result names such as `txBadAuth`.
+`transaction.successful` is true for both `txSuccess` and
+`txFeeBumpInnerSuccess`. Events extracted from ledger metadata use the same
+success classification; a successful fee-bump transaction is not a failed event
+source simply because it has an outer envelope.
+
 Operation views expose a decoded `body`, fall back to the transaction source
 when no operation source exists, and retain access to their parent transaction.
 Executable descriptions can represent uploaded Wasm, Stellar Asset Contracts, or

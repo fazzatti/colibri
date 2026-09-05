@@ -17,6 +17,10 @@ await running;
 callback, or timer. The promise settles after the active work and loop have
 finished.
 
+For built-in live event streams, calling `stop()` from a data callback prevents
+delivery of the remaining events in that page. An interrupted ledger is not
+reported as a completed checkpoint; replay it when resuming.
+
 ## Durable progress
 
 `onCheckpoint` is a notification, not an acknowledged commit barrier. The

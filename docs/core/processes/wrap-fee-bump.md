@@ -30,11 +30,11 @@ const result = await wrapFeeBump({
 
 ### FeeBumpConfig
 
-| Property  | Type                                             | Description                                                                            |
-| --------- | ------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| `source`  | `TransactionSource`                              | Fee bump source as a G-address or M-address                                            |
-| `fee`     | `BaseFee`                                        | SDK outer base fee; current process also requires this value to exceed the inner total |
-| `signers` | `(EnvelopeSigner \| PreAuthTransactionSigner)[]` | Signers that authorize or pre-authorize the outer envelope                             |
+| Property  | Type                                             | Description                                                        |
+| --------- | ------------------------------------------------ | ------------------------------------------------------------------ |
+| `source`  | `TransactionSource`                              | Fee bump source as a G-address or M-address                        |
+| `fee`     | `BaseFee`                                        | Outer inclusion bid per operation, excluding Soroban resource fees |
+| `signers` | `(EnvelopeSigner \| PreAuthTransactionSigner)[]` | Signers that authorize or pre-authorize the outer envelope         |
 
 ## Output
 
@@ -51,17 +51,24 @@ Returns a `FeeBumpTransaction` wrapping the inner transaction.
    a fee bump transaction (no double-wrapping)
 3. **Verifies is a valid transaction** — Ensures the input is a proper
    Transaction object
-4. **Validates fee** — The fee bump fee must be strictly greater than the inner
-   transaction's fee
+4. **Validates fee** — The outer base fee must be at least 100 stroops and at
+   least the inner inclusion fee divided by its operation count. Equal bids are
+   valid. The inner Soroban resource fee is excluded from this comparison.
 
 ### Fee Bump Construction
 
 The process uses `TransactionBuilder.buildFeeBumpTransaction()` with:
 
 - The fee bump source's G-address or M-address
-- The new (higher) fee
+- The outer per-operation base fee
 - The original inner transaction
 - The network passphrase
+
+The outer total is `base fee × (inner operation count + 1) + resource fee`. For
+example, two classic operations with a 200-stroop inner total can use an outer
+base fee of 150, producing a 450-stroop outer total. A Soroban inner transaction
+with 205 stroops of inclusion and 5,000 of resources can use an outer base fee
+of 205, producing a 5,410-stroop outer total.
 
 ### After Creation
 

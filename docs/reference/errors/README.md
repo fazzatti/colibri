@@ -142,4 +142,4 @@ catalog.
 
 ## @colibri/webauth
 
-- [webauth](webauth.md) — 65 codes.
+- [webauth](webauth.md) — 66 codes.

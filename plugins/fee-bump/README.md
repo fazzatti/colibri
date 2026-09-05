@@ -98,10 +98,10 @@ For concrete examples, refer to the unit and integration tests in `src/`.
     `HashXSigner`, `Ed25519SignedPayloadSigner`, and
     `PreAuthorizedTransactionSigner`.
 
-_\*Since this value defines a base fee, the total amount set as max network fee
-will be this value multiplied by the number of operations in the inner envelope
-plus one(the fee bump wrap). So, for contract invocations for example this will
-be 2 times the value set as it only contains one operation plus the wrapper._
+The outer fee is `base fee × (inner operation count + 1) + resource fee`. For
+Soroban, this is twice the base fee plus the inner resource fee. The base fee
+must meet the network minimum and the inner inclusion bid per operation; it does
+not need to exceed the inner total including resources.
 
 `Example:`
 
