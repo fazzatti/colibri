@@ -69,6 +69,13 @@ export const PACKAGE_ARCHITECTURES: readonly PackageArchitecture[] = [
     allowedColibriDependencies: ["@colibri/core"],
   },
   {
+    name: "@colibri/plugin-sep29",
+    root: "plugins/sep29",
+    config: `${CONFIG_DIRECTORY}/plugin-sep29.json`,
+    source: "../../../plugins/sep29/**/*.ts",
+    allowedColibriDependencies: ["@colibri/core"],
+  },
+  {
     name: "@colibri/test-tooling",
     root: "test-tooling",
     config: `${CONFIG_DIRECTORY}/test-tooling.json`,

@@ -1,368 +1,149 @@
 # @colibri/rpc-streamer
 
-A generic RPC streaming framework for building custom Stellar data streamers. The `RPCStreamer<T>` class handles all the complex streaming logic—archive-to-live transitions, checkpoints, error handling, pagination—so you can focus on defining what data to extract.
+[Developer guides](https://fifo-docs.gitbook.io/colibri/packages/rpc-streamer) ·
+[API reference](https://jsr.io/@colibri/rpc-streamer/doc)
 
-<a href="https://jsr.io/@colibri/rpc-streamer">
-  <img src="https://jsr.io/badges/@colibri/rpc-streamer" alt="JSR @colibri/rpc-streamer" />
-</a>
-<a href="https://jsr.io/@colibri/rpc-streamer">
-  <img src="https://jsr.io/badges/@colibri/rpc-streamer/total-downloads" alt="JSR total downloads for @colibri/rpc-streamer" />
-</a>
+Stream Stellar events and ledgers through Stellar RPC. Built-in factories handle
+ledger boundaries, event pagination, archive-to-live transitions, and awaited
+callbacks. `RPCStreamer<T>` also accepts custom ingestors without replacing the
+native Stellar SDK client.
 
-## Overview
-
-This package provides two ways to stream Stellar blockchain data:
-
-1. **Pre-built Variants** - Ready-to-use streamers for common use cases (ledgers, events)
-2. **Custom Streamers** - Build your own streamer for any data type using the generic `RPCStreamer<T>` class
-
-## Installation
-
-```bash
-deno add jsr:@colibri/rpc-streamer
+```sh
+deno add jsr:@colibri/rpc-streamer jsr:@colibri/core
 ```
 
-## Pre-built Variants
+## Stream events or ledgers
 
-For common use cases, use the static factory methods:
-
-### Streaming Ledgers
-
-```typescript
+```ts
+import { EventFilter, EventType, NetworkConfig } from "@colibri/core";
 import { RPCStreamer } from "@colibri/rpc-streamer";
-
-const streamer = RPCStreamer.ledger({
-  rpcUrl: "https://soroban-testnet.stellar.org",
-});
-
-await streamer.start(
-  async (ledger) => {
-    console.log(`Ledger ${ledger.sequence}: ${ledger.hash}`);
-  },
-  { startLedger: 1000000 },
-);
-```
-
-### Streaming Events
-
-```typescript
-import { RPCStreamer } from "@colibri/rpc-streamer";
-import { EventFilter, EventType } from "@colibri/core";
 
 const streamer = RPCStreamer.event({
-  rpcUrl: "https://soroban-testnet.stellar.org",
+  networkConfig: NetworkConfig.TestNet(),
   filters: [new EventFilter({ type: EventType.Contract })],
 });
 
-await streamer.start(
-  async (event) => {
-    console.log(`Event ${event.id} from contract ${event.contractId}`);
-  },
-  { startLedger: 1000000 },
-);
-```
-
-## Building Custom Streamers
-
-For data types not covered by the pre-built variants, create a custom streamer by providing two ingestor functions:
-
-- **`ingestLive`** - Fetches data from live RPC (recent ledgers within retention window)
-- **`ingestArchive`** - Fetches historical data from archive RPC
-
-### Example: Transaction Streamer
-
-Here's a simple example that streams transactions:
-
-```typescript
-import { RPCStreamer } from "@colibri/rpc-streamer";
-import type { ArchiveIngestFunc, LiveIngestFunc } from "@colibri/rpc-streamer";
-
-// Define your data type
-interface Transaction {
-  hash: string;
-  ledger: number;
-  successful: boolean;
-}
-
-// Live ingestor: fetch transactions from recent ledgers
-const ingestLive: LiveIngestFunc<Transaction> = async (
-  rpc,
-  ledgerSequence,
-  onData,
-  stopLedger,
-) => {
-  // Fetch transactions for this ledger from RPC
-  const response = await rpc.getTransactions({ startLedger: ledgerSequence });
-
-  for (const tx of response.transactions) {
-    await onData({
-      hash: tx.hash,
-      ledger: tx.ledger,
-      successful: tx.status === "SUCCESS",
-    });
-  }
-
-  const latestLedger = response.latestLedger;
-  const hitStop = stopLedger !== undefined && ledgerSequence >= stopLedger;
-
-  return {
-    nextLedger: ledgerSequence + 1,
-    shouldWait: ledgerSequence >= latestLedger,
-    hitStopLedger: hitStop,
-  };
-};
-
-// Archive ingestor: fetch historical transactions
-const ingestArchive: ArchiveIngestFunc<Transaction> = async (
-  rpc,
-  startLedger,
-  stopLedger,
-  onData,
-  context,
-) => {
-  let cursor: string | undefined;
-  let currentLedger = startLedger;
-
-  while (context.isRunning() && currentLedger <= stopLedger) {
-    const response = await rpc.getTransactions({
-      startLedger: currentLedger,
-      cursor,
-    });
-
-    for (const tx of response.transactions) {
-      await onData({
-        hash: tx.hash,
-        ledger: tx.ledger,
-        successful: tx.status === "SUCCESS",
-      });
-      currentLedger = tx.ledger;
-    }
-
-    // Report checkpoint progress if configured
-    if (context.onCheckpoint) {
-      context.onCheckpoint(currentLedger);
-    }
-
-    cursor = response.cursor;
-    if (!cursor) break;
-  }
-
-  return currentLedger;
-};
-
-// Create the custom streamer
-const streamer = new RPCStreamer<Transaction>({
-  rpcUrl: "https://soroban-testnet.stellar.org",
-  archiveRpcUrl: "https://archive-rpc.example.com",
-  ingestLive,
-  ingestArchive,
-});
-
-// Use it like any other streamer
-await streamer.start(
-  async (tx) => {
-    console.log(`Transaction ${tx.hash} in ledger ${tx.ledger}`);
-  },
-  { startLedger: 1000000 },
-);
-```
-
-> **Note:** Both `ingestLive` and `ingestArchive` are optional. Provide only the ones you need—if you only want live streaming, you can omit `ingestArchive`. The streamer will throw an error if you try to use a mode without the required ingestor.
-
-## Streaming Modes
-
-All streamers (pre-built and custom) support three streaming modes:
-
-### Auto Mode (`start`)
-
-Automatically uses archive RPC for historical data and transitions to live RPC when caught up:
-
-```typescript
-const streamer = RPCStreamer.ledger({
-  rpcUrl: "https://soroban-testnet.stellar.org",
-  archiveRpcUrl: "https://archive-rpc.example.com",
-});
-
-await streamer.start(
-  async (ledger) => {
-    console.log(`Ledger: ${ledger.sequence}`);
-  },
-  {
-    startLedger: 50000000, // Historical ledger
-    stopLedger: 50001000, // Optional stop point
-  },
-);
-```
-
-### Live-Only Mode (`startLive`)
-
-Stream only from live RPC (must be within retention window):
-
-```typescript
-await streamer.startLive(
-  async (ledger) => {
-    console.log(`Live ledger: ${ledger.sequence}`);
-  },
-  { startLedger: 50000000 },
-);
-```
-
-### Archive-Only Mode (`startArchive`)
-
-Stream only from archive RPC:
-
-```typescript
-await streamer.startArchive(
-  async (ledger) => {
-    console.log(`Historical ledger: ${ledger.sequence}`);
-  },
-  {
-    startLedger: 1000000,
-    stopLedger: 1001000,
-  },
-);
-```
-
-## Configuration
-
-### Streamer Options
-
-```typescript
-const streamer = RPCStreamer.ledger({
-  rpcUrl: "https://soroban-testnet.stellar.org",
-  archiveRpcUrl: "https://archive-rpc.example.com",
-  options: {
-    waitLedgerIntervalMs: 5000, // Wait between ledger checks in live mode (default: 5000)
-    pagingIntervalMs: 100, // Wait between pagination requests (default: 100)
-    archivalIntervalMs: 500, // Wait between archive fetches (default: 500)
-    skipLedgerWaitIfBehind: true, // Skip waiting when catching up (default: false)
-    limit: 10, // Event page size (default: 10); ledger ingestion fetches one ledger
-  },
+// Without startLedger, begin at the latest ledger.
+// Without stopLedger, continue until stopped.
+await streamer.start(async (event) => {
+  console.log(event.id, event.ledger, event.contractId);
 });
 ```
 
-### Start Options
+Use `RPCStreamer.ledger(config)` to receive Core `Ledger` objects instead. Both
+factories are also exported as `createEventStreamer` and `createLedgerStreamer`.
 
-```typescript
-await streamer.start(callback, {
-  startLedger: 1000000, // Starting ledger (defaults to latest)
-  stopLedger: 1001000, // Ending ledger (optional, streams indefinitely if omitted)
-  onCheckpoint: (ledger) => {
-    // A notification only: a returned promise is NOT awaited by the streamer.
-    console.log("Checkpoint notification", ledger);
+## Connections and modes
+
+Choose exactly one live connection, in both TypeScript and runtime inputs:
+
+- `{ rpcUrl, allowHttp? }` for individual settings;
+- `{ networkConfig }` for a Colibri `NetworkConfig` containing an RPC URL;
+- `{ rpc }` to reuse a caller-owned Stellar SDK `Server` unchanged.
+
+Archive access is separate: optionally provide `archiveRpc`, or `archiveRpcUrl`
+and `archiveAllowHttp`. Do not combine a native client with URL options for the
+same connection. The archive is not inferred from the live network
+configuration. Both endpoints must serve the same network. HTTP defaults to
+disabled; the archive URL inherits the live URL/network's setting unless
+explicitly overridden.
+
+| Method                           | Source and bounds                             |
+| -------------------------------- | --------------------------------------------- |
+| `start(handler, options?)`       | Uses archive for older ledgers, then live RPC |
+| `startLive(handler, options?)`   | Live RPC only, within its retention window    |
+| `startArchive(handler, options)` | Archive RPC only; requires start and stop     |
+
+Bounds are inclusive. An explicitly unavailable future starting ledger is
+rejected; an active run at the chain tip waits for new ledgers. Historical reads
+require a Stellar RPC exposing ledger data, not a raw history-archive bucket.
+
+## Cancellation and checkpoints
+
+This fragment assumes application-owned `saveEvent`, `database`, and a
+configured streamer. Data writes should be idempotent because interrupted
+ledgers can replay.
+
+```ts
+const controller = new AbortController();
+const running = streamer.start(saveEvent, {
+  signal: controller.signal,
+  checkpointInterval: 1,
+  onCheckpoint: async (completedLedger) => {
+    await database.saveProgress(completedLedger);
   },
-  checkpointInterval: 100, // Checkpoint every N ledgers (default: 100)
   onError: (error, ledger) => {
-    // Stop before advancing past a failed ledger.
-    console.error(`Error at ledger ${ledger}:`, error);
-    return false; // true or no return value skips the failed ledger; it does not retry
+    console.error(`Stopped at ledger ${ledger}`, error);
+    return false;
   },
 });
+
+// In your shutdown handler:
+controller.abort(); // Or streamer.stop().
+await running;
+console.log("Next ledger:", streamer.nextLedger);
 ```
 
-## Stopping and Resuming
+- Data callbacks and checkpoint callbacks are awaited. Checkpoint rejection
+  stops with `RPC_023` (`CHECKPOINT_FAILED`), preserving the cause.
+- `stop()`/`AbortSignal` interrupts pacing waits and stops between callbacks.
+  In-flight SDK requests and callbacks are allowed to finish. Await the run's
+  promise before restarting, even if `isRunning` is already false.
+- A fulfilled whole-ledger callback completes that ledger even when it calls
+  `stop()` or aborts. Its checkpoint is awaited when the configured interval
+  applies, and `nextLedger` advances. Stopping partway through an event ledger
+  leaves it uncheckpointed for replay instead.
+- `nextLedger` is an in-memory continuation position, not a durable checkpoint.
+  It points to a partial ledger for replay, or the next ledger after completion.
+  Reuse it only with the same network and filters. A new process must load its
+  last durable checkpoint instead.
+- The checkpoint interval defaults to `100` and means `ledger % interval === 0`.
+  No final checkpoint is forced on shutdown. Use a positive nonzero integer.
+- `onError` returning `true` or nothing deliberately **skips** the failed
+  ledger; it does not retry. Checkpoint failures cannot be skipped this way.
+- This is not exactly-once delivery or a transactional storage abstraction.
 
-Persist processed data and progress together inside the awaited data callback.
-Do not rely on asynchronous `onCheckpoint` writes as a commit barrier, and do
-not assume a final checkpoint at shutdown. For events, replay an incomplete
-ledger and deduplicate by event ID. `stop()` does not abort an active request.
+## Pacing
 
-```typescript
-// Stop the streamer
-streamer.stop();
+Configure these under `options` in the constructor:
 
-// Check if running
-if (streamer.isRunning) {
-  console.log("Streamer is active");
-}
+| Property                 | Default | Applies to                                     |
+| ------------------------ | ------- | ---------------------------------------------- |
+| `limit`                  | `10`    | Event page size; ledger reads fetch one ledger |
+| `waitLedgerIntervalMs`   | `5000`  | Live wait at the tip                           |
+| `pagingIntervalMs`       | `100`   | Event pagination                               |
+| `archivalIntervalMs`     | `500`   | Archive reads                                  |
+| `skipLedgerWaitIfBehind` | `false` | Auto-mode catch-up                             |
 
-// Resume from checkpoint
-const lastProcessed = await db.getProgress();
-await streamer.start(callback, { startLedger: lastProcessed + 1 });
-```
+`pagingIntervalMs` cannot exceed `waitLedgerIntervalMs`. These are pacing
+settings, not automatic retry or failure-budget policies.
 
-## Error Handling
+## Custom ingestors and native SDK compatibility
 
-Streamer-owned validation errors use `RPCStreamerError`, a JavaScript `Error`
-subclass rather than `ColibriError`. SDK/RPC and callback failures can also
-propagate unwrapped; preserve an unknown-error path:
+`new RPCStreamer<T>({ rpc, ingestLive, ingestArchive })` delegates fetching and
+projection to your functions. Either ingestor can be omitted when its mode is
+unused. Use native `Server.getLedgers()` responses directly with
+`Ledger.fromEntry()`; it also accepts raw encoded entries.
 
-```typescript
-import { RPCStreamerError, RPCStreamerErrorCode } from "@colibri/rpc-streamer";
+Custom ingestors own pagination, filter handling, and callback delivery. Check
+the optional live context or archive context between callbacks. An archive
+ingestor should await `context.onLedgerComplete?.(ledger)` only after consuming
+the full ledger, and return the next ledger to request. See the
+[complete custom ingestor example](https://fifo-docs.gitbook.io/colibri/packages/rpc-streamer/custom).
 
-try {
-  await streamer.start(callback, options);
-} catch (error) {
-  if (error instanceof RPCStreamerError) {
-    console.error(`Error ${error.code}: ${error.message}`);
-  } else {
-    throw error;
-  }
-}
-```
+## Errors and runtime access
 
-## API Reference
+Streamer-owned errors use `RPCStreamerError`, a JavaScript `Error` subclass with
+`code`, `details`, `cause`, and `toJSON()`. Native RPC, parsing, and
+data-callback errors can propagate unchanged; keep an unknown-error branch. See
+the
+[complete error catalog](https://fifo-docs.gitbook.io/colibri/reference/errors/rpc-streamer).
 
-### `RPCStreamer<T>`
-
-Generic streaming class that can be used directly for custom streamers or via static factories.
-
-#### Constructor
-
-The constructor accepts `RPCStreamerConfig<T>`: `rpcUrl`, optional
-`archiveRpcUrl`, `allowHttp`/`archiveAllowHttp`, `options`, and the relevant
-`ingestLive`/`ingestArchive` functions. Live-only custom streamers need only the
-live ingestor; archive ingestion needs its separate archive ingestor.
-
-See the [scoped developer guides](https://fifo-docs.gitbook.io/colibri) for
-mode selection, callback/checkpoint semantics and recovery, and the
-[complete API reference](https://jsr.io/@colibri/rpc-streamer/doc) for exact
-signatures and every declared error code.
-
-#### Static Methods
-
-- `RPCStreamer.ledger(config)` - Create ledger streamer
-- `RPCStreamer.event(config)` - Create event streamer
-
-#### Instance Methods
-
-- `start(callback, options?)` - Auto-mode streaming (archive then live)
-- `startLive(callback, options?)` - Live-only streaming
-- `startArchive(callback, options)` - Archive-only streaming (requires start/stop ledgers)
-- `stop()` - Stop streaming
-- `setArchiveRpc(url)` - Set archive RPC by URL
-
-#### Properties
-
-- `rpc` - The live RPC server instance
-- `archiveRpc` - The archive RPC server instance (if configured)
-- `isRunning` - Whether stream is active
-
-### Event Streamer Config
-
-```typescript
-interface EventStreamerConfig {
-  rpcUrl: string;
-  archiveRpcUrl?: string;
-  filters?: EventFilter[];
-  options?: StreamerOptions;
-}
-```
-
-### Ledger Streamer Config
-
-```typescript
-interface LedgerStreamerConfig {
-  rpcUrl: string;
-  archiveRpcUrl?: string;
-  options?: StreamerOptions;
-}
-```
+`rpc`, `archiveRpc`, `isRunning`, and `nextLedger` expose runtime state.
+Assigning an already configured RPC property is rejected. The explicit
+`setArchiveRpc(url, allowHttp?)` method replaces the archive client; prefer a
+new streamer when changing providers between runs.
 
 ## License
 
 MIT
-
-## Related Packages
-
-- [@colibri/core](../core) - Core Stellar SDK with Event, Ledger, and EventFilter types

@@ -1,6 +1,6 @@
 {
   "name": "@colibri/webauth",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "exports": {
     ".": "./mod.ts",
     "./sep10": "./src/sep10/index.ts",
@@ -13,6 +13,6 @@
   },
   "imports": {
     "@/": "./src/",
-    "@colibri/core": "jsr:@colibri/core@^0.28.0"
+    "@colibri/core": "jsr:@colibri/core@^0.29.0"
   }
 }

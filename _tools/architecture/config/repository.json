@@ -15,6 +15,7 @@
     "../../../webauth/**/*.ts",
     "../../../plugins/fee-bump/**/*.ts",
     "../../../plugins/channel-accounts/**/*.ts",
+    "../../../plugins/sep29/**/*.ts",
     "../../../test-tooling/**/*.ts"
   ]
 }

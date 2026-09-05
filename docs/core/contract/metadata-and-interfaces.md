@@ -50,6 +50,10 @@ SDK's `Spec`. Pass the spec and a versioned provider to
 `analyzeContractInterface()` for diagnostics, or use
 `matchesContractInterface()` when only the boolean result is needed.
 
+The SEP-57 Identity Claims provider uses the Rust SDK's canonical named-field
+order for `Claim`. This differs from the prose declaration order; function
+arguments and tuple elements remain positional and are not reordered.
+
 ```ts
 import {
   analyzeContractInterface,

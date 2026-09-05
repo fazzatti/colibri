@@ -19,11 +19,15 @@ const ingestLive: LiveIngestFunc<Summary> = async (
   sequence,
   onData,
   stopLedger,
+  context,
 ) => {
-  const response = await rpc._getLedgers({
+  const response = await rpc.getLedgers({
     startLedger: sequence,
     pagination: { limit: 1 },
   });
+  if (context && !context.isRunning()) {
+    return { nextLedger: sequence, shouldWait: false, hitStopLedger: false };
+  }
   const entry = response.ledgers[0];
   if (!entry) {
     return { nextLedger: sequence, shouldWait: true, hitStopLedger: false };
@@ -55,22 +59,29 @@ await streamer.startLive(console.log, {
 });
 ```
 
-`_getLedgers` is the SDK method returning encoded metadata consumed by
-`Ledger.fromEntry()`. Prefer the built-in factory when no projection is needed.
+`getLedgers` is the SDK's public method. `Ledger.fromEntry()` accepts its native
+decoded entries as well as raw encoded entries. Prefer the built-in factory when
+no projection is needed.
 
 ## Ingestor contracts
 
 - `nextLedger` is the next ledger to request, not the last processed ledger.
   Return the same ledger when it is not yet available.
 - `shouldWait` requests a delay before another live request.
-- `hitStopLedger` signals reaching/passing the requested bound. Never deliver
-  records beyond it.
+- `hitStopLedger` signals an unconsumed response beyond the requested bound. For
+  a fully consumed final ledger return `false` and its next ledger, allowing the
+  engine to checkpoint before stopping. Never deliver records beyond it.
 - Await `onData`. Finish pagination before advancing past a partially consumed
   ledger.
 
 An `ArchiveIngestFunc<T>` receives the archive client, inclusive start/stop,
 handler, and `ArchiveIngestContext`. Check `context.isRunning()` between
 requests, apply your pacing and error policy, and return the next ledger after
-the processed range. Implement checkpoint notifications in that ingestor too.
+the processed range. Await `context.onLedgerComplete?.(ledger)` only after every
+callback for that ledger completes. This lets the engine await persistence and
+record continuation together. For standalone ingestors using an older context,
+await `onCheckpoint` at `ledger % (checkpointInterval ?? 100) === 0` instead.
+Use `context.signal` to interrupt custom pacing waits and check `isRunning()`
+between callbacks. Cancellation of in-flight SDK requests is not implied.
 Live-only configuration is supported; attempting archive mode without its
 ingestor fails with `MISSING_ARCHIVE_INGESTOR`.

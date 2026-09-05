@@ -4,6 +4,8 @@ import { describe, it } from "@std/testing/bdd";
 import {
   Account,
   Asset,
+  Keypair,
+  MuxedAccount,
   Operation,
   SignerKey,
   SorobanDataBuilder,
@@ -46,6 +48,52 @@ const createTestTransaction = (
 
 describe("AssembleTransaction", () => {
   describe("Features", () => {
+    for (const operationSourceKind of ["none", "G", "M"] as const) {
+      it(`preserves native ${operationSourceKind} operation-source XDR without rewriting it`, async () => {
+        const source = new Account(
+          Keypair.random().publicKey(),
+          "9771475800162305",
+        );
+        const operationAccount = new Account(
+          Keypair.random().publicKey(),
+          "0",
+        );
+        const operationSource = operationSourceKind === "none"
+          ? undefined
+          : operationSourceKind === "M"
+          ? new MuxedAccount(operationAccount, "987").accountId()
+          : operationAccount.accountId();
+        const transaction = new TransactionBuilder(
+          source,
+          {
+            fee: "100",
+            networkPassphrase: NetworkConfig.TestNet().networkPassphrase,
+          },
+        ).addOperation(Operation.invokeContractFunction({
+          contract: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+          function: "transfer",
+          args: [],
+          source: operationSource,
+        })).setTimeout(60).build();
+        const original = transaction.toXdr();
+        const assembled = await assembleTransaction({
+          transaction,
+          sorobanData: new SorobanDataBuilder().setResourceFee(200),
+          authEntries: [],
+        });
+        assertEquals(assembled.source, transaction.source);
+        assertEquals(assembled.sequence, transaction.sequence);
+        assertEquals(assembled.operations[0].source, operationSource);
+        assertEquals(
+          assembled.tx.operations[0].toXdr("base64"),
+          transaction.tx.operations[0].toXdr("base64"),
+        );
+        assertEquals(assembled.timeBounds, transaction.timeBounds);
+        assertEquals(assembled.fee, "300");
+        assertEquals(transaction.toXdr(), original);
+      });
+    }
+
     it("executes with minimal valid input", async () => {
       const transaction = createTestTransaction();
 

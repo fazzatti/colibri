@@ -31,11 +31,13 @@
     "resvg-test": "npm:@resvg/resvg-js@2.6.2"
   },
   "tasks": {
+    "check:consumers": "deno run -A _tools/consumers/check.ts",
+    "inspect:error-boundaries": "deno run --allow-read --allow-env _tools/error-boundaries.ts",
     "docs:errors": "deno run --allow-read --allow-write --allow-env _tools/documentation.ts --write && deno fmt docs/reference/errors docs/SUMMARY.md",
     "test:docs": "deno test --allow-read --allow-write --allow-env --allow-run --clean _tools/documentation.unit.test.ts",
     "check:docs": "deno run --check --allow-read --allow-write --allow-env --allow-run _tools/documentation.ts --examples",
-    "check": "deno check core/mod.ts build-verification/mod.ts build-verification/core.ts build-verification/docker.ts build-verification/cli.ts identicon/mod.ts rpc-streamer/mod.ts webauth/mod.ts plugins/fee-bump/mod.ts plugins/channel-accounts/mod.ts test-tooling/mod.ts",
-    "check:jsr": "deno doc --lint core/mod.ts && deno doc --lint build-verification/mod.ts && deno doc --lint build-verification/core.ts && deno doc --lint build-verification/docker.ts && deno doc --lint build-verification/cli.ts && deno doc --lint identicon/mod.ts && deno doc --lint webauth/mod.ts && deno doc --lint plugins/fee-bump/mod.ts && deno doc --lint plugins/channel-accounts/mod.ts && deno doc --lint test-tooling/mod.ts",
+    "check": "deno run --allow-read --allow-run _tools/package-inventory.ts check",
+    "check:jsr": "deno run --allow-read --allow-run _tools/package-inventory.ts doc",
     "check:slow-types": "deno publish --dry-run --allow-dirty",
     "check:package-versions": "deno test --allow-read --clean build-verification/src/core/evidence/package-version.unit.test.ts",
     "check:crap": "deno run --allow-read --allow-env _tools/check-crap.ts",
@@ -53,7 +55,7 @@
     "test:unit": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.integration.test.ts' --ignore='**/*.testnet.integration.test.ts' --coverage=coverage",
     "test:integration": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.unit.test.ts' --coverage=coverage",
     "test:lint-rules": "deno test --clean _tools/lint",
-    "test:architecture": "deno test --allow-read --allow-env --allow-sys=cpus --clean _tools/architecture",
+    "test:architecture": "deno test --allow-read --allow-write --allow-env --allow-sys=cpus --clean _tools/architecture",
     "test:file": "deno test -A --parallel --clean --ignore='_*/'"
   },
   "lint": {

@@ -61,14 +61,17 @@ describe("Event Streamer Ingestors", () => {
   });
 
   describe("Live Ingestor", () => {
-    it("deduplicates events with circular buffer", async () => {
+    it("does not replay events from an earlier ledger", async () => {
       const streamer = createEventStreamer({
         rpcUrl: TEST_RPC_URL,
         options: { waitLedgerIntervalMs: 10, pagingIntervalMs: 5 },
       });
 
-      const healthStub = stub(streamer.rpc as any, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse({ latestLedger: 95002 })),
+      const healthStub = stub(
+        streamer.rpc as any,
+        "getHealth",
+        () =>
+          Promise.resolve(createMockHealthResponse({ latestLedger: 95002 })),
       );
       stubs.push(healthStub);
 
@@ -123,8 +126,11 @@ describe("Event Streamer Ingestors", () => {
         options: { waitLedgerIntervalMs: 10, pagingIntervalMs: 5 },
       });
 
-      const healthStub = stub(streamer.rpc as any, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse({ latestLedger: 95001 })),
+      const healthStub = stub(
+        streamer.rpc as any,
+        "getHealth",
+        () =>
+          Promise.resolve(createMockHealthResponse({ latestLedger: 95001 })),
       );
       stubs.push(healthStub);
 
@@ -243,8 +249,11 @@ describe("Event Streamer Ingestors", () => {
         options: { waitLedgerIntervalMs: 10, pagingIntervalMs: 5 },
       });
 
-      const healthStub = stub(streamer.rpc as any, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse({ latestLedger: 95001 })),
+      const healthStub = stub(
+        streamer.rpc as any,
+        "getHealth",
+        () =>
+          Promise.resolve(createMockHealthResponse({ latestLedger: 95001 })),
       );
       stubs.push(healthStub);
 
@@ -294,16 +303,22 @@ describe("Event Streamer Ingestors", () => {
         options: { waitLedgerIntervalMs: 10, pagingIntervalMs: 5 },
       });
 
-      const healthStub = stub(streamer.rpc as any, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse({ latestLedger: 95010 })),
+      const healthStub = stub(
+        streamer.rpc as any,
+        "getHealth",
+        () =>
+          Promise.resolve(createMockHealthResponse({ latestLedger: 95010 })),
       );
       stubs.push(healthStub);
 
-      const getEventsStub = stub(streamer.rpc as any, "getEvents", () =>
-        Promise.resolve({
-          events: [createMockEventResponse("event-beyond", 95006)],
-          latestLedger: 95010,
-        }),
+      const getEventsStub = stub(
+        streamer.rpc as any,
+        "getEvents",
+        () =>
+          Promise.resolve({
+            events: [createMockEventResponse("event-beyond", 95006)],
+            latestLedger: 95010,
+          }),
       );
       stubs.push(getEventsStub);
 
@@ -343,8 +358,11 @@ describe("Event Streamer Ingestors", () => {
         options: { waitLedgerIntervalMs: 10, pagingIntervalMs: 5 },
       });
 
-      const healthStub = stub(streamer.rpc as any, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse({ latestLedger: 95001 })),
+      const healthStub = stub(
+        streamer.rpc as any,
+        "getHealth",
+        () =>
+          Promise.resolve(createMockHealthResponse({ latestLedger: 95001 })),
       );
       stubs.push(healthStub);
 
@@ -383,20 +401,24 @@ describe("Event Streamer Ingestors", () => {
       assertEquals(receivedFilters!.length, 1);
     });
 
-    it("trims circular buffer after 25 events", async () => {
+    it("retains all ledger IDs across pages beyond 25 events", async () => {
       const streamer = createEventStreamer({
         rpcUrl: TEST_RPC_URL,
         options: { waitLedgerIntervalMs: 10, pagingIntervalMs: 5 },
       });
 
-      const healthStub = stub(streamer.rpc as any, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse({ latestLedger: 95030 })),
+      const healthStub = stub(
+        streamer.rpc as any,
+        "getHealth",
+        () =>
+          Promise.resolve(createMockHealthResponse({ latestLedger: 95030 })),
       );
       stubs.push(healthStub);
 
       // Generate 30 unique events
-      const events = Array.from({ length: 30 }, (_, i) =>
-        createMockEventResponse(`event-${i}`, 95000 + Math.floor(i / 10)),
+      const events = Array.from(
+        { length: 30 },
+        (_, i) => createMockEventResponse(`event-${i}`, 95000),
       );
 
       let callCount = 0;
@@ -406,11 +428,20 @@ describe("Event Streamer Ingestors", () => {
           return Promise.resolve({
             events: events.slice(0, 15),
             latestLedger: 95030,
+            cursor: "page-1",
           });
         } else if (callCount === 2) {
           return Promise.resolve({
             events: events.slice(15, 30),
             latestLedger: 95030,
+            cursor: "page-2",
+          });
+        }
+        if (callCount === 3) {
+          return Promise.resolve({
+            events,
+            latestLedger: 95030,
+            cursor: "page-3",
           });
         }
         return Promise.resolve({
@@ -439,7 +470,7 @@ describe("Event Streamer Ingestors", () => {
         { startLedger: 95000, stopLedger: 95003 },
       );
 
-      // Should have received 30 events (triggering buffer trim after 25th)
+      // Repeated IDs across a later page must not be emitted again.
       assertEquals(receivedEvents.length, 30);
     });
   });
@@ -452,8 +483,11 @@ describe("Event Streamer Ingestors", () => {
         options: { archivalIntervalMs: 5 },
       });
 
-      const healthStub = stub(streamer.rpc as any, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse({ oldestLedger: 90000 })),
+      const healthStub = stub(
+        streamer.rpc as any,
+        "getHealth",
+        () =>
+          Promise.resolve(createMockHealthResponse({ oldestLedger: 90000 })),
       );
       stubs.push(healthStub);
 
@@ -493,8 +527,11 @@ describe("Event Streamer Ingestors", () => {
         options: { archivalIntervalMs: 5 },
       });
 
-      const healthStub = stub(streamer.rpc as any, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse({ oldestLedger: 90000 })),
+      const healthStub = stub(
+        streamer.rpc as any,
+        "getHealth",
+        () =>
+          Promise.resolve(createMockHealthResponse({ oldestLedger: 90000 })),
       );
       stubs.push(healthStub);
 
@@ -529,8 +566,11 @@ describe("Event Streamer Ingestors", () => {
         options: { archivalIntervalMs: 5 },
       });
 
-      const healthStub = stub(streamer.rpc as any, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse({ oldestLedger: 90000 })),
+      const healthStub = stub(
+        streamer.rpc as any,
+        "getHealth",
+        () =>
+          Promise.resolve(createMockHealthResponse({ oldestLedger: 90000 })),
       );
       stubs.push(healthStub);
 

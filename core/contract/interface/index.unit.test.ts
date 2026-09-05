@@ -842,11 +842,11 @@ describe("known contract standards", () => {
 
   it("validates the complete SEP-57 reference Claim structure", () => {
     const claimFields: readonly [name: string, type: xdr.ScSpecTypeDef][] = [
-      ["topic", types.u32],
-      ["scheme", types.u32],
-      ["issuer", types.address],
-      ["signature", types.bytes],
       ["data", types.bytes],
+      ["issuer", types.address],
+      ["scheme", types.u32],
+      ["signature", types.bytes],
+      ["topic", types.u32],
       ["uri", types.string],
     ];
     const identityClaimsSpec = (
@@ -855,7 +855,14 @@ describe("known contract standards", () => {
       new Spec([
         functionEntry({
           name: "add_claim",
-          inputs: claimFields,
+          inputs: [
+            claimFields[4],
+            claimFields[2],
+            claimFields[1],
+            claimFields[3],
+            claimFields[0],
+            claimFields[5],
+          ],
           outputs: [types.bytesN(32)],
         }),
         functionEntry({

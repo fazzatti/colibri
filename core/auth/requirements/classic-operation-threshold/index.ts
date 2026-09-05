@@ -69,13 +69,11 @@ const MEDIUM_THRESHOLD_OPERATIONS = new Set<string>([
 const setOptionsRequiresHighThreshold = (
   operation: Operation.SetOptions,
 ): boolean =>
-  Boolean(
-    operation.masterWeight ||
-      operation.signer ||
-      operation.lowThreshold ||
-      operation.medThreshold ||
-      operation.highThreshold,
-  );
+  operation.masterWeight !== undefined ||
+  operation.signer !== undefined ||
+  operation.lowThreshold !== undefined ||
+  operation.medThreshold !== undefined ||
+  operation.highThreshold !== undefined;
 
 const getThresholdLevel = (
   operation: OperationRecord,

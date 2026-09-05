@@ -27,6 +27,11 @@ This processes one ledger and finishes. No output is valid: that ledger may
 contain no matching contract events. Omit `stopLedger` for a continuing stream;
 the promise resolves when streaming ends, not when it starts.
 
+Live event ingestion drains one ledger at a time, including all of its pages,
+before advancing. IDs are deduplicated across that ledger's pages without a
+25-event limit. A new run can replay a requested ledger; application writes
+still need to be idempotent across restarts.
+
 ## Select events
 
 Pass `contractIds` to narrow the contracts and `topics` to narrow their events.

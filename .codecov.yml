@@ -1,3 +1,6 @@
+# PR status policy, distinct from Colibri's internal 100% implementation target.
+# These existing target/threshold values are intentionally unchanged. Upload
+# success alone is not an exact 100% line/function/branch coverage gate.
 coverage:
   status:
     project:

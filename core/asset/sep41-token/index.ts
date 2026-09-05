@@ -8,8 +8,7 @@
 import { memoize } from "@/common/decorators/memoize/index.ts";
 import { Contract } from "@/contract/index.ts";
 // deno-coverage-ignore-stop
-import { assert } from "@/common/assert/assert.ts";
-import { isDefined } from "@/common/type-guards/is-defined.ts";
+import { decodeTokenValue } from "@/asset/token-value.ts";
 import * as E from "@/asset/sep41-token/error.ts";
 import type {
   SEP41AllowanceArgs,
@@ -23,7 +22,7 @@ import type {
   SEP41TransferArgs,
   SEP41TransferFromArgs,
 } from "@/asset/sep41-token/types.ts";
-import { nativeToScVal, scValToNative } from "stellar-sdk";
+import { nativeToScVal } from "stellar-sdk";
 
 type ScValEncodingOptions = NonNullable<
   Parameters<typeof nativeToScVal>[1]
@@ -368,8 +367,10 @@ export class SEP41TokenContract {
     methodArgs?: Parameters<Contract["readRaw"]>[0]["methodArgs"],
   ): Promise<Output> {
     const result = await this.contract.readRaw({ method, methodArgs });
-    assert(isDefined(result), new E.MISSING_RETURN_VALUE(method));
-    return scValToNative(result) as Output;
+    return decodeTokenValue<Output>(
+      result,
+      new E.MISSING_RETURN_VALUE(method),
+    );
   }
 
   /** Invokes one standardized method that returns void. @internal */

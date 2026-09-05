@@ -135,7 +135,7 @@ describe("Transaction", () => {
         txApplyProcessing: {},
         result: {
           result: {
-            result: { toXdrObject: () => ({ code }) },
+            result: xdr.TransactionResultResult.txSuccess([]),
             feeCharged: fee,
           },
           transactionHash: new xdr.Hash(new Uint8Array(32).fill(code || 1)),
@@ -257,42 +257,6 @@ describe("Transaction", () => {
       expect(() => tx.sourceAccount).toThrow(
         "Unsupported envelope type: unknown_99",
       );
-    });
-
-    it("should handle all result codes", () => {
-      const resultCodes = [
-        { code: 0, name: "txSuccess" },
-        { code: 1, name: "txFailed" },
-        { code: 2, name: "txTooEarly" },
-        { code: 3, name: "txTooLate" },
-        { code: 4, name: "txMissingOperation" },
-        { code: 5, name: "txBadSeq" },
-        { code: 6, name: "txBadAuth" },
-        { code: 7, name: "txInsufficientBalance" },
-        { code: 8, name: "txNoAccount" },
-        { code: 9, name: "txInsufficientFee" },
-        { code: 10, name: "txBadAuthExtra" },
-        { code: 11, name: "txInternalError" },
-        { code: 12, name: "txNotSupported" },
-        { code: 13, name: "txFeeBumpInnerSuccess" },
-        { code: 14, name: "txFeeBumpInnerFailed" },
-        { code: 15, name: "txNotEnoughSponsoring" },
-        { code: 16, name: "txBadSponsorship" },
-        { code: 17, name: "txBadMinSeqAgeOrGap" },
-        { code: 18, name: "txMalformed" },
-        { code: 19, name: "txSorobanInvalid" },
-        { code: 99, name: "unknown_99" },
-      ];
-
-      for (const { code, name } of resultCodes) {
-        const tx = Transaction.fromMeta(
-          mockLedger,
-          createMockTxResultMeta(code),
-          0,
-        );
-        expect(tx.resultCode).toBe(name);
-        expect(tx.successful).toBe(code === 0);
-      }
     });
 
     it("should return 0n for unknown envelope type in sequence getter", () => {

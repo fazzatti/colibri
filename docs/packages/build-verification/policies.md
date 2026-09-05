@@ -53,8 +53,11 @@ Override individual fields through `limits`; omitted values use
 | Container memory / CPUs / PIDs | 4 GiB / 2 / 512  |
 
 Increasing limits can make larger projects work but increases resource exposure.
-Bounded logs can be truncated; absence of a line in retained logs is not proof
-that the build never emitted it.
+ZIP extraction checks the cumulative extracted-byte budget before decoding each
+additional entry, as well as enforcing the individual-file limit. It does not
+unpack the entire archive before applying the aggregate limit. Bounded logs can
+be truncated; absence of a line in retained logs is not proof that the build
+never emitted it.
 
 ## Custom policy decisions
 

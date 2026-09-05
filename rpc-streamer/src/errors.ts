@@ -64,6 +64,18 @@ export enum RPCStreamerErrorCode {
 
   /** Archive ingestor is required but not provided */
   MISSING_ARCHIVE_INGESTOR = "RPC_018",
+  /** Conflicting or missing live connection configuration. */
+  INVALID_LIVE_CONNECTION = "RPC_019",
+  /** Native live RPC client construction failed. */
+  LIVE_CONNECTION_FAILED = "RPC_020",
+  /** Conflicting archive connection configuration. */
+  INVALID_ARCHIVE_CONNECTION = "RPC_021",
+  /** Native archive RPC client construction failed. */
+  ARCHIVE_CONNECTION_FAILED = "RPC_022",
+  /** Checkpoint persistence rejected; ingestion cannot safely advance. */
+  CHECKPOINT_FAILED = "RPC_023",
+  /** The selected network has no live RPC URL. */
+  MISSING_LIVE_RPC_URL = "RPC_024",
 }
 
 /**
@@ -118,7 +130,10 @@ export class RPCStreamerError extends Error {
     this.cause = cause;
 
     // Maintain proper stack trace for where our error was thrown (only available on V8)
-    if (Error.captureStackTrace) {
+    if (
+      "captureStackTrace" in Error &&
+      typeof Error.captureStackTrace === "function"
+    ) {
       Error.captureStackTrace(this, RPCStreamerError);
     }
   }
@@ -142,6 +157,18 @@ export class RPCStreamerError extends Error {
  * Mapping of error codes to their descriptions.
  */
 export const ERROR_DESCRIPTIONS: Record<RPCStreamerErrorCode, string> = {
+  [RPCStreamerErrorCode.MISSING_LIVE_RPC_URL]:
+    "The selected network has no live RPC URL",
+  [RPCStreamerErrorCode.CHECKPOINT_FAILED]:
+    "Checkpoint persistence failed; resume at the uncommitted ledger",
+  [RPCStreamerErrorCode.INVALID_LIVE_CONNECTION]:
+    "Choose one live RPC source without conflicting options",
+  [RPCStreamerErrorCode.LIVE_CONNECTION_FAILED]:
+    "Native live RPC client construction failed",
+  [RPCStreamerErrorCode.INVALID_ARCHIVE_CONNECTION]:
+    "Choose an archive RPC URL or a native client, not both",
+  [RPCStreamerErrorCode.ARCHIVE_CONNECTION_FAILED]:
+    "Native archive RPC client construction failed",
   [RPCStreamerErrorCode.INVALID_CONFIG]:
     "The provided configuration is invalid or incomplete",
   [RPCStreamerErrorCode.INVALID_RPC]:

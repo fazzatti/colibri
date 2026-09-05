@@ -1,23 +1,11 @@
 /** Repository-only GitBook reference generation and validation. */
 import ts from "npm:typescript@5.9.3";
 import { dirname, relative, resolve } from "node:path";
+import { readPackageInventory } from "./package-inventory.ts";
 
 const root = resolve(import.meta.dirname!, "..");
-const workspace = JSON.parse(
-  await Deno.readTextFile(resolve(root, "deno.json")),
-);
-const packages: string[] = [];
-for (const member of workspace.workspace as string[]) {
-  if (member.endsWith("/*")) {
-    const parent = member.slice(0, -2);
-    for await (const entry of Deno.readDir(resolve(root, parent))) {
-      if (entry.isDirectory) {
-        packages.push(relative(root, resolve(root, parent, entry.name)));
-      }
-    }
-  } else packages.push(relative(root, resolve(root, member)));
-}
-packages.sort();
+const packages = (await readPackageInventory(root)).map((pkg) => pkg.root)
+  .sort();
 const write = Deno.args.includes("--write");
 const failures: string[] = [];
 

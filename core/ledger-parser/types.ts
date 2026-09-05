@@ -13,8 +13,8 @@ import type { Operation } from "@/ledger-parser/operation/index.ts";
 /**
  * Ledger entry from RPC `getLedgers()` response.
  *
- * Uses the official Stellar SDK type for RPC getLedgers raw response.
- * This ensures compatibility with the actual RPC API structure.
+ * Accepts both the public SDK's decoded response and raw JSON-RPC responses.
+ * Both alternatives are native SDK types; no conversion facade is required.
  *
  * @see {@link https://developers.stellar.org/docs/data/rpc/api-reference/methods/getLedgers | getLedgers API reference}
  *
@@ -25,7 +25,7 @@ import type { Operation } from "@/ledger-parser/operation/index.ts";
  * const ledger = Ledger.fromEntry(entry);
  * ```
  */
-export type LedgerEntry = rpc.Api.RawLedgerResponse;
+export type LedgerEntry = rpc.Api.RawLedgerResponse | rpc.Api.LedgerResponse;
 
 /**
  * Instance type for a parsed Ledger.

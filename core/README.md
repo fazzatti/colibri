@@ -447,6 +447,12 @@ response is preserved so you can review resource usage and footprints.
 
 ### Classic transaction submission
 
+An optional `config.memo` accepts the native Stellar SDK `Memo` and is forwarded
+unchanged to the builder. Omission preserves no-memo behavior. For recipient
+memo requirements, explicitly attach
+[`@colibri/plugin-sep29`](https://jsr.io/@colibri/plugin-sep29); no such policy
+is imposed by Core's default pipelines.
+
 `createClassicTransactionPipeline` is the classic counterpart: it builds,
 computes signature requirements, signs, and submits classic operations
 (payments, set options, etc.), reusing the same `TransactionConfig` shape as
@@ -455,6 +461,17 @@ includes the fee actually charged and ordered, runtime-discriminated successful
 operation outcomes. Narrow an outcome's `type` to access its corresponding
 Stellar SDK XDR result, such as a created claimable-balance ID or an offer's
 created, updated, or deleted effect.
+
+### Reserve sponsorship
+
+`wrapSponsorship({ sponsor, sponsored, operations })` returns native Stellar XDR
+operations bracketed by `beginSponsoringFutureReserves` and
+`endSponsoringFutureReserves`. It preserves the inner operation sources and uses
+the existing pipeline and signer list. This can create zero-balance sponsored
+accounts or sponsor trustlines and other reserve-bearing entries. Reserve
+sponsorship is separate from paying transaction fees through a fee-bump envelope.
+See [Reserve sponsorship](https://fifo-docs.gitbook.io/colibri/core/sponsorship)
+for account creation, source selection, signatures, and protocol boundaries.
 
 ## Processes
 
@@ -565,6 +582,13 @@ direct Wasm, Stellar Asset Contracts, and external references, resolving the
 current owner/tag mapping when necessary. Calling it again deliberately
 refreshes a mutable external mapping instead of treating an earlier resolved
 hash as permanent.
+
+After a successful network load, `getLoadedSnapshot()` returns a detached record
+of the resolved Wasm hash and code-read ledger, plus separate instance/reference
+observations when applicable. Wasm, spec, and resolved hash are replaced
+together only after retrieval and parsing succeed; a failed refresh retains the
+previous state. This records what was loaded, not an atomic view of changing
+network state.
 
 The same behavior is available at the ledger layer through
 `LedgerEntries.resolveContractExecutable(...)` and

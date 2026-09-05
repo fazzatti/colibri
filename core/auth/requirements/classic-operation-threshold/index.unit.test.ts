@@ -9,11 +9,7 @@ import {
   Claimant,
   Operation,
 } from "stellar-sdk";
-import type {
-  AuthFlag,
-  OperationRecord,
-  xdr,
-} from "stellar-sdk";
+import type { AuthFlag, OperationRecord, xdr } from "stellar-sdk";
 import * as E from "@/auth/requirements/classic-operation-threshold/error.ts";
 import { getRequiredOperationThresholdForClassicOperation as getRequirements } from "@/auth/requirements/classic-operation-threshold/index.ts";
 
@@ -27,6 +23,21 @@ const helperGetOpObj = (op: xdr.Operation) => {
 };
 
 describe("Auth classic operation threshold", () => {
+  it("requires high threshold for explicitly zero weights and thresholds", () => {
+    for (
+      const field of [
+        "masterWeight",
+        "lowThreshold",
+        "medThreshold",
+        "highThreshold",
+      ] as const
+    ) {
+      const requirement = getRequirements(
+        helperGetOpObj(Operation.setOptions({ [field]: 0 })),
+      );
+      assertEquals(requirement?.thresholdLevel, OperationThreshold.high);
+    }
+  });
   it("returns void if no requirements are identified", () => {
     const op = {
       type: "MOCK OP",

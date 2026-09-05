@@ -3,6 +3,7 @@ import { assert, assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import {
   Account,
+  Keypair,
   MuxedAccount,
   Operation,
   type Transaction,
@@ -14,15 +15,39 @@ import * as E from "@/processes/envelope-signing-requirements/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { muxedAddressToBaseAccount } from "@/address/index.ts";
 import type { EnvelopeSigningRequirementsInput } from "@/processes/envelope-signing-requirements/types.ts";
-import type { MuxedAddress } from "@/strkeys/types.ts";
+import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
 import { OperationThreshold } from "@/signer/types.ts";
 
 describe("EnvelopeSigningRequirements", () => {
   const { networkPassphrase } = NetworkConfig.TestNet();
 
+  it("requires both transaction and explicit host-function source signatures", () => {
+    const source = Keypair.random().publicKey() as Ed25519PublicKey;
+    const other = Keypair.random().publicKey() as Ed25519PublicKey;
+    for (const operationSource of [undefined, source, other]) {
+      const transaction = new TransactionBuilder(new Account(source, "0"), {
+        fee: "100",
+        networkPassphrase,
+      })
+        .addOperation(
+          Operation.uploadContractWasm({
+            wasm: new Uint8Array(),
+            source: operationSource,
+          }),
+        )
+        .setTimeout(60).build();
+      assertEquals(
+        envelopeSigningRequirements({ transaction }),
+        (operationSource === other ? [source, other] : [source]).map((
+          address,
+        ) => ({ address, thresholdLevel: OperationThreshold.medium })),
+      );
+    }
+  });
+
   const assembleTransactionWithMuxed = (
     muxed: MuxedAddress,
-    operations: xdr.Operation[]
+    operations: xdr.Operation[],
   ) => {
     const source = muxedAddressToBaseAccount(muxed);
     const sourceAcc = new Account(source, "100");
@@ -62,7 +87,7 @@ describe("EnvelopeSigningRequirements", () => {
     it("Calculates the requirements for a minimal Transaction", async () => {
       const transaction = assembleTransaction(
         "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
-        [Operation.setOptions({})]
+        [Operation.setOptions({})],
       );
 
       const result = await envelopeSigningRequirements({ transaction });
@@ -79,14 +104,14 @@ describe("EnvelopeSigningRequirements", () => {
     it("Calculates the requirements for a minimal FeeBumpTransaction", async () => {
       const transaction = assembleTransaction(
         "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
-        [Operation.setOptions({})]
+        [Operation.setOptions({})],
       );
 
       const feebump = TransactionBuilder.buildFeeBumpTransaction(
         "GDMZZQ62ZEO4B7YMBHPJ3LHCLIYOG7JE4XCHEGHV4MINCN6O3WFA4MVQ",
         "100",
         transaction,
-        networkPassphrase
+        networkPassphrase,
       );
 
       const result = await envelopeSigningRequirements({
@@ -105,7 +130,7 @@ describe("EnvelopeSigningRequirements", () => {
     it("Converts the Transaction source from Muxed to base account ", async () => {
       const transaction = assembleTransactionWithMuxed(
         "MB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU2AAAAAAAAAAAAECKK",
-        [Operation.setOptions({})]
+        [Operation.setOptions({})],
       );
 
       const result = await envelopeSigningRequirements({ transaction });
@@ -122,14 +147,14 @@ describe("EnvelopeSigningRequirements", () => {
     it("Converts the FeeBumpTransaction source from Muxed to base account", async () => {
       const transaction = assembleTransaction(
         "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
-        [Operation.setOptions({})]
+        [Operation.setOptions({})],
       );
 
       const feebump = TransactionBuilder.buildFeeBumpTransaction(
         "MB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU2AAAAAAAAAAAAECKK",
         "100",
         transaction,
-        networkPassphrase
+        networkPassphrase,
       );
 
       const result = await envelopeSigningRequirements({
@@ -181,35 +206,29 @@ describe("EnvelopeSigningRequirements", () => {
       assert(result.length);
       assertEquals(result.length, 3);
 
-      const hasMedAlice =
-        result.filter(
-          (r) =>
-            r.address === alice &&
-            r.thresholdLevel === OperationThreshold.medium
-        ).length === 1;
-      const hasHighAlice =
-        result.filter(
-          (r) =>
-            r.address === alice && r.thresholdLevel === OperationThreshold.high
-        ).length === 1;
+      const hasMedAlice = result.filter(
+        (r) =>
+          r.address === alice &&
+          r.thresholdLevel === OperationThreshold.medium,
+      ).length === 1;
+      const hasHighAlice = result.filter(
+        (r) =>
+          r.address === alice && r.thresholdLevel === OperationThreshold.high,
+      ).length === 1;
 
-      const hasLowBob =
-        result.filter(
-          (r) =>
-            r.address === bob && r.thresholdLevel === OperationThreshold.low
-        ).length === 1;
-      const hasLowCharlie =
-        result.filter(
-          (r) =>
-            r.address === charlie && r.thresholdLevel === OperationThreshold.low
-        ).length === 1;
+      const hasLowBob = result.filter(
+        (r) => r.address === bob && r.thresholdLevel === OperationThreshold.low,
+      ).length === 1;
+      const hasLowCharlie = result.filter(
+        (r) =>
+          r.address === charlie && r.thresholdLevel === OperationThreshold.low,
+      ).length === 1;
 
-      const hasMedCharlie =
-        result.filter(
-          (r) =>
-            r.address === charlie &&
-            r.thresholdLevel === OperationThreshold.medium
-        ).length === 1;
+      const hasMedCharlie = result.filter(
+        (r) =>
+          r.address === charlie &&
+          r.thresholdLevel === OperationThreshold.medium,
+      ).length === 1;
 
       assert(hasHighAlice);
       assert(hasLowBob);
@@ -260,35 +279,29 @@ describe("EnvelopeSigningRequirements", () => {
       assert(result.length);
       assertEquals(result.length, 3);
 
-      const hasMedAlice =
-        result.filter(
-          (r) =>
-            r.address === alice &&
-            r.thresholdLevel === OperationThreshold.medium
-        ).length === 1;
-      const hasHighAlice =
-        result.filter(
-          (r) =>
-            r.address === alice && r.thresholdLevel === OperationThreshold.high
-        ).length === 1;
+      const hasMedAlice = result.filter(
+        (r) =>
+          r.address === alice &&
+          r.thresholdLevel === OperationThreshold.medium,
+      ).length === 1;
+      const hasHighAlice = result.filter(
+        (r) =>
+          r.address === alice && r.thresholdLevel === OperationThreshold.high,
+      ).length === 1;
 
-      const hasLowBob =
-        result.filter(
-          (r) =>
-            r.address === bob && r.thresholdLevel === OperationThreshold.low
-        ).length === 1;
-      const hasLowCharlie =
-        result.filter(
-          (r) =>
-            r.address === charlie && r.thresholdLevel === OperationThreshold.low
-        ).length === 1;
+      const hasLowBob = result.filter(
+        (r) => r.address === bob && r.thresholdLevel === OperationThreshold.low,
+      ).length === 1;
+      const hasLowCharlie = result.filter(
+        (r) =>
+          r.address === charlie && r.thresholdLevel === OperationThreshold.low,
+      ).length === 1;
 
-      const hasMedCharlie =
-        result.filter(
-          (r) =>
-            r.address === charlie &&
-            r.thresholdLevel === OperationThreshold.medium
-        ).length === 1;
+      const hasMedCharlie = result.filter(
+        (r) =>
+          r.address === charlie &&
+          r.thresholdLevel === OperationThreshold.medium,
+      ).length === 1;
 
       assert(hasHighAlice);
       assert(hasLowBob);
@@ -304,7 +317,7 @@ describe("EnvelopeSigningRequirements", () => {
 
       await assertRejects(
         async () => await envelopeSigningRequirements(faultyInput),
-        E.UNEXPECTED_ERROR
+        E.UNEXPECTED_ERROR,
       );
     });
 
@@ -313,21 +326,21 @@ describe("EnvelopeSigningRequirements", () => {
 
       await assertRejects(
         async () => await envelopeSigningRequirements({ transaction }),
-        E.INVALID_TRANSACTION_TYPE
+        E.INVALID_TRANSACTION_TYPE,
       );
     });
 
     it("throws FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX if failing to process the FeeBumpTransaction requirements", async () => {
       const transaction = assembleTransaction(
         "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
-        [Operation.setOptions({})]
+        [Operation.setOptions({})],
       );
 
       const feebump = TransactionBuilder.buildFeeBumpTransaction(
         "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
         "100",
         transaction,
-        networkPassphrase
+        networkPassphrase,
       );
 
       const faultyTx = transaction;
@@ -339,14 +352,14 @@ describe("EnvelopeSigningRequirements", () => {
       await assertRejects(
         async () =>
           await envelopeSigningRequirements({ transaction: faultyTx }),
-        E.FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX
+        E.FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX,
       );
     });
 
     it("throws FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION if failing to process the Transaction requirements", async () => {
       const transaction = assembleTransaction(
         "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
-        [Operation.setOptions({})]
+        [Operation.setOptions({})],
       );
       const faultyTx = {
         source: "FAULTY",
@@ -361,7 +374,7 @@ describe("EnvelopeSigningRequirements", () => {
           await envelopeSigningRequirements({
             transaction: faultyTx,
           }),
-        E.FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION
+        E.FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION,
       );
     });
   });

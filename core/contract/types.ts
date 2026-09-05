@@ -6,6 +6,26 @@ import type { InvokeContractPipeline } from "@/pipelines/invoke-contract/index.t
 import type { ReadFromContractPipeline } from "@/pipelines/read-from-contract/index.ts";
 import type { ContractErrorMatcher } from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
 import type { ExternalExecutableRef } from "@/common/types/index.ts";
+import type {
+  ContractExecutableLedgerObservation,
+  ContractExecutableView,
+} from "@/ledger-entries/types.ts";
+
+/** Provenance of the Wasm/spec most recently loaded successfully from the network. */
+export type LoadedContractSnapshot = {
+  /** Exact immutable code hash loaded, including when resolved through an external reference. */
+  wasmHash: string;
+  /** Ledger reported by the RPC response containing the code. */
+  observedAtLedger: number;
+  /** Deployed contract whose executable was resolved, when applicable. */
+  contractId?: string;
+  /** Executable selected by the instance/reference lookup. */
+  executable: Exclude<ContractExecutableView, { type: "stellarAsset" }>;
+  /** Separate instance observation; reads are not an atomic network snapshot. */
+  instance?: ContractExecutableLedgerObservation;
+  /** Separate external-reference observation, if one was resolved. */
+  reference?: ContractExecutableLedgerObservation;
+};
 
 /** @internal */
 type ContractSpec = Spec;

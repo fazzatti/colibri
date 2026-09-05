@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "baseUrl": "../../..",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["plugins/sep29/src/*"],
+      "jsr:@colibri/core": ["core/mod.ts"]
+    },
+    "skipLibCheck": true
+  },
+  "include": ["../../../plugins/sep29/**/*.ts"],
+  "exclude": ["../../../plugins/sep29/**/*.test.ts"]
+}

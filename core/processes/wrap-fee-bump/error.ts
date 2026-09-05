@@ -144,7 +144,8 @@ export class FEE_TOO_LOW extends WrapFeeBumpError {
       code: Code.FEE_TOO_LOW,
       message: "The fee for the fee bump transaction is too low!",
       input,
-      details: `The fee provided(${input.config.fee}) for the fee bump transaction is not sufficient. It must be higher than the inner transaction fee(${input.transaction.fee}).`,
+      details:
+        `The base-fee bid (${input.config.fee} stroops per operation) must be at least 100 stroops and cover the inner inclusion-fee bid per operation, excluding Soroban resource fees.`,
     });
   }
 }
