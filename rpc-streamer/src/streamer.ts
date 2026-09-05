@@ -341,6 +341,7 @@ export class RPCStreamer<T> {
           onData,
           options.stopLedger,
         );
+      if (!this._isRunning) return currentLedger;
       if (hitStopLedger) {
         this.stop();
         return nextLedger;
@@ -409,6 +410,11 @@ export class RPCStreamer<T> {
         if (this.beyondStopLedger(currentLedger, options.stopLedger)) {
           this.stop();
           break;
+        }
+        const latestLedger = (await this._rpc.getHealth()).latestLedger;
+        if (currentLedger > latestLedger) {
+          await this.waitFor("ledger");
+          continue;
         }
         currentLedger = await this.ingestLiveLedger(
           currentLedger,
@@ -561,6 +567,7 @@ export class RPCStreamer<T> {
           onData,
           options.stopLedger,
         );
+      if (!this._isRunning) return currentLedger;
       if (hitStopLedger) {
         this.stop();
         return nextLedger;
@@ -620,6 +627,8 @@ export class RPCStreamer<T> {
       this.assertHealthy(rpcDetails.status);
       let currentLedger = options.startLedger ?? rpcDetails.latestLedger;
 
+      this.assertLedgerNotAhead(currentLedger, rpcDetails.latestLedger);
+
       while (this._isRunning) {
         if (this.beyondStopLedger(currentLedger, options.stopLedger)) {
           this.stop();
@@ -627,7 +636,10 @@ export class RPCStreamer<T> {
         }
         const health = await this._rpc.getHealth();
         const oldestAvailable = health.oldestLedger + 2; // +2 safety buffer
-        this.assertLedgerNotAhead(currentLedger, health.latestLedger);
+        if (currentLedger > health.latestLedger) {
+          await this.waitFor("ledger");
+          continue;
+        }
         currentLedger = currentLedger < oldestAvailable
           ? await this.ingestAutoArchive(
             currentLedger,

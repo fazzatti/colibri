@@ -107,6 +107,34 @@ const paxRecord = (key: string, value: string): string => {
 };
 
 describe("archive extraction boundary", () => {
+  for (const deflate of [false, true]) {
+    it(`enforces the aggregate ZIP budget before reading the next ${deflate ? "deflated" : "stored"} entry`, async () => {
+      const bytes = testZip([
+        { path: "source/first.txt", value: "1234", deflate },
+        { path: "source/second.txt", value: "5678", deflate },
+      ]);
+      // A bad CRC on the second entry proves that the budget is checked BEFORE
+      // its content is decoded and retained, rather than after the whole ZIP.
+      const first = signatureOffset(bytes, 0x02014b50);
+      const view = new DataView(bytes.buffer);
+      const second = first + 46 + view.getUint16(first + 28, true);
+      setU32(bytes, second + 16, 0);
+      const temporaryWorkspace = await temporaryDirectory();
+      const error = await assertRejects(
+        () =>
+          new DefaultVerificationArchiveExtractor().extract({
+            source: archiveSource("source.zip", bytes),
+            workspaceDirectory: temporaryWorkspace,
+            limits: { ...TEST_LIMITS, maxExtractedBytes: 7 },
+          }),
+        ZipDecodingFailedError,
+      );
+      assertEquals(
+        error.meta?.cause instanceof ArchiveLimitExceededError,
+        true,
+      );
+    });
+  }
   it("detects every supported extension and explicit encoding", () => {
     assertEquals(detectArchiveFormat("SOURCE.TAR?download=1"), "tar");
     assertEquals(detectArchiveFormat("source.tar.gz#x"), "tarGzip");

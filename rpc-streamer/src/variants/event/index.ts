@@ -23,17 +23,15 @@ import type { EventStreamerConfig } from "@/variants/event/types.ts";
 /**
  * Creates the live ingestion function for events.
  *
- * Handles pagination within a ledger and deduplication of events
- * that may be seen multiple times during live streaming.
+ * Fully drains one ledger before advancing. Cursor requests cannot carry an
+ * endLedger, so their events are also checked against the same ledger boundary.
  */
 function createLiveIngestor(
   filters: EventFilter[],
   limit: number,
   pagingIntervalMs: number,
+  isRunning: () => boolean,
 ) {
-  // Circular buffer for deduplication (only needed in live mode)
-  const recentlyCheckedEventsIds: string[] = [];
-
   // Convert filters to raw SDK format once
   const rawFilters = filters.map((f) => f.toRawEventFilter());
 
@@ -44,6 +42,9 @@ function createLiveIngestor(
     stopLedger?: number,
   ): Promise<LiveIngestionResult> {
     let cursor: string | undefined;
+    // No fixed-size eviction: every delivered ID in this ledger remains known
+    // until all of its pages have been consumed. A new run starts independently.
+    const checkedIds = new Set<string>();
 
     while (true) {
       // Fetch events with pagination
@@ -51,35 +52,49 @@ function createLiveIngestor(
         ? await rpc.getEvents({ cursor, filters: rawFilters, limit })
         : await rpc.getEvents({
           startLedger: ledgerSequence,
+          endLedger: ledgerSequence + 1,
           filters: rawFilters,
           limit,
         });
 
       // Process each event
       for (const eventResponse of response.events) {
+        if (!isRunning()) {
+          return {
+            nextLedger: ledgerSequence,
+            shouldWait: false,
+            hitStopLedger: false,
+          };
+        }
         const event = Event.fromEventResponse(eventResponse);
 
-        // Check if this event is past the stop ledger
-        if (isDefined(stopLedger) && event.ledger > stopLedger) {
+        // Cursor pagination may include later ledgers. Leave them for their own
+        // iteration instead of delivering them now and then replaying them.
+        if (event.ledger > ledgerSequence) {
           return {
-            nextLedger: event.ledger,
+            nextLedger: ledgerSequence + 1,
             shouldWait: false,
-            hitStopLedger: true,
+            hitStopLedger: isDefined(stopLedger) &&
+              ledgerSequence >= stopLedger,
           };
         }
 
         // Deduplicate - skip if we've already processed this event
-        if (recentlyCheckedEventsIds.includes(event.id)) {
+        if (event.ledger < ledgerSequence || checkedIds.has(event.id)) {
           continue;
         }
 
         await onEvent(event);
 
-        // Add to circular buffer (max 25 items)
-        recentlyCheckedEventsIds.push(event.id);
-        if (recentlyCheckedEventsIds.length > 25) {
-          recentlyCheckedEventsIds.shift();
-        }
+        checkedIds.add(event.id);
+      }
+
+      if (!isRunning()) {
+        return {
+          nextLedger: ledgerSequence,
+          shouldWait: false,
+          hitStopLedger: false,
+        };
       }
 
       // Check if we need to fetch another page
@@ -213,10 +228,15 @@ export function createEventStreamer(
   const pagingIntervalMs = config.options?.pagingIntervalMs ?? 100;
   const archivalIntervalMs = config.options?.archivalIntervalMs ?? 500;
 
-  const ingestLive = createLiveIngestor(filters, limit, pagingIntervalMs);
+  const ingestLive = createLiveIngestor(
+    filters,
+    limit,
+    pagingIntervalMs,
+    () => streamer.isRunning,
+  );
   const ingestArchive = createArchiveIngestor(filters, archivalIntervalMs);
 
-  return new RPCStreamer<Event>({
+  const streamer = new RPCStreamer<Event>({
     rpcUrl: config.rpcUrl,
     allowHttp: config.allowHttp,
     archiveRpcUrl: config.archiveRpcUrl,
@@ -225,4 +245,5 @@ export function createEventStreamer(
     ingestArchive,
     options: config.options,
   });
+  return streamer;
 }
