@@ -4,14 +4,20 @@
  * @module
  */
 
-import type { Server } from "stellar-sdk/rpc";
-import { isDefined, Ledger } from "@colibri/core";
+import type { Ledger, Server } from "@/native-types.ts";
+import { isDefined, Ledger as CoreLedger } from "@colibri/core";
 import { RPCStreamer } from "@/streamer.ts";
 import type {
   ArchiveIngestContext,
   DataHandler,
+  LiveIngestContext,
   LiveIngestionResult,
 } from "@/types.ts";
+import {
+  archiveErrorAllowsSkipping,
+  completeArchiveLedger,
+  waitForStream,
+} from "@/lifecycle.ts";
 import type { LedgerStreamerConfig } from "@/variants/ledger/types.ts";
 
 /**
@@ -25,9 +31,10 @@ function createLiveIngestor() {
     ledgerSequence: number,
     onLedger: DataHandler<Ledger>,
     stopLedger?: number,
+    context?: LiveIngestContext,
   ): Promise<LiveIngestionResult> {
     // Fetch single ledger
-    const response = await rpc._getLedgers({
+    const response = await rpc.getLedgers({
       startLedger: ledgerSequence,
       pagination: { limit: 1 },
     });
@@ -42,7 +49,14 @@ function createLiveIngestor() {
     }
 
     const ledgerEntry = response.ledgers[0];
-    const ledger = Ledger.fromEntry(ledgerEntry);
+    if (context && !context.isRunning()) {
+      return {
+        nextLedger: ledgerSequence,
+        shouldWait: false,
+        hitStopLedger: false,
+      };
+    }
+    const ledger = CoreLedger.fromEntry(ledgerEntry);
 
     // Check if past stop ledger
     if (isDefined(stopLedger) && ledger.sequence > stopLedger) {
@@ -79,14 +93,14 @@ function createArchiveIngestor(archivalIntervalMs: number) {
     context: ArchiveIngestContext,
   ): Promise<number> {
     let currentLedger = startLedger;
-    const checkpointInterval = context.checkpointInterval ?? 100;
 
     while (context.isRunning() && currentLedger <= stopLedger) {
       try {
-        const response = await rpc._getLedgers({
+        const response = await rpc.getLedgers({
           startLedger: currentLedger,
           pagination: { limit: 1 },
         });
+        if (!context.isRunning()) return currentLedger;
 
         if (!response.ledgers || response.ledgers.length === 0) {
           // No ledgers found, move to next
@@ -100,31 +114,23 @@ function createArchiveIngestor(archivalIntervalMs: number) {
           return ledgerEntry.sequence;
         }
 
-        const ledger = Ledger.fromEntry(ledgerEntry);
+        const ledger = CoreLedger.fromEntry(ledgerEntry);
         await onLedger(ledger);
 
-        // Call checkpoint if configured
-        if (context.onCheckpoint && currentLedger % checkpointInterval === 0) {
-          context.onCheckpoint(currentLedger);
-        }
+        // The entire ledger was delivered successfully, even when its callback
+        // requested shutdown. Persist completion before leaving the loop.
+        await completeArchiveLedger(context, ledgerEntry.sequence);
 
         // Move to next ledger
         currentLedger = ledgerEntry.sequence + 1;
 
         // Wait between archive fetches
-        await new Promise((resolve) => setTimeout(resolve, archivalIntervalMs));
+        await waitForStream(archivalIntervalMs, context.signal);
       } catch (error) {
-        // Check if error handler wants to continue
-        if (context.onError) {
-          const shouldContinue = context.onError(error as Error, currentLedger);
-          if (shouldContinue !== false) {
-            // Error was handled, move to next ledger
-            currentLedger++;
-            continue;
-          }
+        if (!archiveErrorAllowsSkipping(error, currentLedger, context)) {
+          throw error;
         }
-        // Re-throw if no handler or handler returned false
-        throw error;
+        currentLedger++;
       }
     }
 
@@ -166,10 +172,7 @@ export function createLedgerStreamer(
   const ingestArchive = createArchiveIngestor(archivalIntervalMs);
 
   return new RPCStreamer<Ledger>({
-    rpcUrl: config.rpcUrl,
-    allowHttp: config.allowHttp,
-    archiveRpcUrl: config.archiveRpcUrl,
-    archiveAllowHttp: config.archiveAllowHttp,
+    ...config,
     ingestLive,
     ingestArchive,
     options: config.options,

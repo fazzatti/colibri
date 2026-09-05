@@ -142,6 +142,12 @@ export enum Code {
   TARGET_EXTERNAL_REFERENCE_LOOKUP_FAILED = "BLDV_133",
   CLI_EXTERNAL_REFERENCE_INCOMPLETE = "BLDV_134",
   CLI_EXTERNAL_REFERENCE_TAG_INVALID = "BLDV_135",
+  /** GitHub returned no exact commit identifier. */
+  GITHUB_COMMIT_SHA_MISSING = "BLDV_136",
+  /** A GitHub release did not contain the requested named asset. */
+  GITHUB_RELEASE_ASSET_MISSING = "BLDV_137",
+  /** DNS resolution completed without any IPv4 or IPv6 address. */
+  SOURCE_DNS_EMPTY = "BLDV_138",
 }
 
 /** Structured metadata retained by every build-verification error. */

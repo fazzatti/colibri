@@ -98,11 +98,11 @@ The inner transaction signatures are preserved. The outer source can use an
 Ed25519, Hash-X, signed-payload, or exact pre-authorized transaction signer.
 
 The outer `fee` remains the SDK's **base fee**, not Core's `{ max }` or
-`{ inclusion }` strategy object. The current wrapping process also requires its
-numeric value to exceed the inner transaction's total before calling the SDK.
-The SDK computes the outer bid using fee-bump rules. Inspect the resulting
-envelope when budgeting; the string is not the final total. An inner maximum
-does not cap the sponsor's outer fee.
+`{ inclusion }` strategy object. It must meet the network minimum and the inner
+inclusion bid per operation, excluding Soroban resources. The SDK computes the
+outer total as `base fee × (inner operation count + 1) + resource fee`. Inspect
+the resulting envelope when budgeting; the string is not the final total. An
+inner maximum does not cap the sponsor's outer fee.
 
 See [the channel/payment example](channel-accounts/example.md) for a complete
 funded Testnet flow using this plugin.

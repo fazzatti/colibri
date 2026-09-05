@@ -18,12 +18,13 @@ import {
   retrievePinnedHttpResource,
 } from "@/providers/source/http.ts";
 import {
+  GitHubCommitShaMissingError,
+  GitHubReleaseAssetMissingError,
   GitHubReleaseAssetResolutionFailedError,
   GitHubRevisionResolutionFailedError,
   GitHubSourceProviderInputMismatchError,
   UnsupportedSourceError,
 } from "@/providers/source/error.ts";
-import { BuildVerificationError } from "@/error/base.ts";
 
 /** Options used by the GitHub revision and release-asset provider. */
 export type GitHubVerificationSourceProviderOptions =
@@ -48,6 +49,51 @@ const validateRepository = (owner: string, repository: string): string => {
 
 const decodeJson = <Value>(bytes: Uint8Array): Value =>
   JSON.parse(new TextDecoder().decode(bytes)) as Value;
+
+/** Decode the upstream response before using its immutable revision. @internal */
+export function decodeGitHubRevision(
+  bytes: Uint8Array,
+  repository: string,
+  revision: string,
+): string {
+  let resolved: string;
+  try {
+    resolved = decodeJson<{ sha?: string }>(bytes).sha ?? "";
+  } catch (cause) {
+    throw new GitHubRevisionResolutionFailedError(repository, revision, cause);
+  }
+  if (!/^[0-9a-f]{40}$/.test(resolved)) {
+    throw new GitHubCommitShaMissingError(repository, revision);
+  }
+  return resolved;
+}
+
+/** Decode one exact release asset, independently of HTTP transport. @internal */
+export function decodeGitHubReleaseAsset(
+  bytes: Uint8Array,
+  repository: string,
+  tag: string,
+  assetName: string,
+): string {
+  let asset: { name?: string; url?: string } | undefined;
+  try {
+    const release = decodeJson<
+      { assets?: Array<{ name?: string; url?: string }> }
+    >(bytes);
+    asset = release.assets?.find(({ name }) => name === assetName);
+  } catch (cause) {
+    throw new GitHubReleaseAssetResolutionFailedError(
+      repository,
+      tag,
+      assetName,
+      cause,
+    );
+  }
+  if (!asset?.url) {
+    throw new GitHubReleaseAssetMissingError(repository, tag, assetName);
+  }
+  return asset.url;
+}
 
 type GitHubArchiveSource = Extract<
   VerificationSource,
@@ -95,31 +141,18 @@ export class GitHubVerificationSourceProvider
     revision: string,
     limits: VerificationSourceProviderInput["limits"],
   ): Promise<string> {
-    try {
-      const api = await retrievePinnedHttpResource({
-        url: `https://api.github.com/repos/${repository}/commits/${
-          encodeURIComponent(revision)
-        }`,
-        limits,
-        policy: this.#policy,
-        transport: this.#transport,
-        addressResolver: this.#addressResolver,
-        headers: (url) => this.#headersForUrl(url),
-        maxBytes: Math.min(limits.maxArchiveBytes, 2 * 1024 * 1024),
-      });
-      const resolved = decodeJson<{ sha?: string }>(api.bytes).sha ?? "";
-      if (!/^[0-9a-f]{40}$/.test(resolved)) {
-        throw new Error("GitHub response omitted an exact commit SHA");
-      }
-      return resolved;
-    } catch (cause) {
-      if (cause instanceof BuildVerificationError) throw cause;
-      throw new GitHubRevisionResolutionFailedError(
-        repository,
-        revision,
-        cause,
-      );
-    }
+    const api = await retrievePinnedHttpResource({
+      url: `https://api.github.com/repos/${repository}/commits/${
+        encodeURIComponent(revision)
+      }`,
+      limits,
+      policy: this.#policy,
+      transport: this.#transport,
+      addressResolver: this.#addressResolver,
+      headers: (url) => this.#headersForUrl(url),
+      maxBytes: Math.min(limits.maxArchiveBytes, 2 * 1024 * 1024),
+    });
+    return decodeGitHubRevision(api.bytes, repository, revision);
   }
 
   async #resolveArchive(
@@ -171,35 +204,23 @@ export class GitHubVerificationSourceProvider
     limits: VerificationSourceProviderInput["limits"],
     repository: string,
   ): Promise<string> {
-    try {
-      const api = await retrievePinnedHttpResource({
-        url: `https://api.github.com/repos/${repository}/releases/tags/${
-          encodeURIComponent(source.tag)
-        }`,
-        limits,
-        policy: this.#policy,
-        transport: this.#transport,
-        addressResolver: this.#addressResolver,
-        headers: (url) => this.#headersForUrl(url),
-        maxBytes: Math.min(limits.maxArchiveBytes, 4 * 1024 * 1024),
-      });
-      const release = decodeJson<{
-        assets?: Array<{ name?: string; url?: string }>;
-      }>(api.bytes);
-      const asset = release.assets?.find(({ name }) => name === source.asset);
-      if (!asset?.url) {
-        throw new Error("GitHub release omitted the named asset");
-      }
-      return asset.url;
-    } catch (cause) {
-      if (cause instanceof BuildVerificationError) throw cause;
-      throw new GitHubReleaseAssetResolutionFailedError(
-        repository,
-        source.tag,
-        source.asset,
-        cause,
-      );
-    }
+    const api = await retrievePinnedHttpResource({
+      url: `https://api.github.com/repos/${repository}/releases/tags/${
+        encodeURIComponent(source.tag)
+      }`,
+      limits,
+      policy: this.#policy,
+      transport: this.#transport,
+      addressResolver: this.#addressResolver,
+      headers: (url) => this.#headersForUrl(url),
+      maxBytes: Math.min(limits.maxArchiveBytes, 4 * 1024 * 1024),
+    });
+    return decodeGitHubReleaseAsset(
+      api.bytes,
+      repository,
+      source.tag,
+      source.asset,
+    );
   }
 
   async #resolveRelease(

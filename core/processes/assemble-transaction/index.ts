@@ -60,6 +60,7 @@ export const assembleTransaction = async (
     const authorizedOperation = Operation.invokeHostFunction({
       func: body.invokeHostFunctionOp.hostFunction,
       auth: authEntries,
+      source: transaction.operations[0].source,
     });
 
     // Use BigInt math: Soroban sequence numbers are `ledger << 32 | n`, which

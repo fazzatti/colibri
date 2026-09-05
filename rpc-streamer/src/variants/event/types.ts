@@ -4,8 +4,12 @@
  * @module
  */
 
-import type { EventFilter } from "@colibri/core";
-import type { StreamerOptions } from "@/types.ts";
+import type { EventFilter } from "@/native-types.ts";
+import type {
+  StreamerArchiveConfig,
+  StreamerOptions,
+  StreamerRpcConfig,
+} from "@/types.ts";
 
 /**
  * Configuration options specific to event streaming.
@@ -17,17 +21,9 @@ export interface EventStreamerOptions extends StreamerOptions {
 /**
  * Configuration for creating an event streamer.
  */
-export interface EventStreamerConfig {
-  /** URL of the Soroban RPC server for live streaming */
-  rpcUrl: string;
-  /** Allow HTTP for the live RPC server (default: false) */
-  allowHttp?: boolean;
-  /** Optional URL of an archive RPC server for historical ingestion */
-  archiveRpcUrl?: string;
-  /** Allow HTTP for the archive RPC server (defaults to allowHttp or false) */
-  archiveAllowHttp?: boolean;
+export type EventStreamerConfig = StreamerRpcConfig & StreamerArchiveConfig & {
   /** Event filters to apply when fetching events */
   filters?: EventFilter[];
   /** Optional configuration options */
   options?: EventStreamerOptions;
-}
+};

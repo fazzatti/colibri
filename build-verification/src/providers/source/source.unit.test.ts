@@ -36,8 +36,8 @@ import { DefaultVerificationSourceProvider } from "@/providers/source/router.ts"
 import {
   ArchiveSourceProviderInputMismatchError,
   FileSourceProviderInputMismatchError,
-  GitHubReleaseAssetResolutionFailedError,
-  GitHubRevisionResolutionFailedError,
+  GitHubCommitShaMissingError,
+  GitHubReleaseAssetMissingError,
   GitHubSourceProviderInputMismatchError,
   HttpSourceProviderInputMismatchError,
   LocalSourceArchiveReadFailedError,
@@ -863,7 +863,7 @@ describe("source providers", () => {
           repository: "repo",
           revision: "main",
         })),
-      GitHubRevisionResolutionFailedError,
+      GitHubCommitShaMissingError,
     );
     const badRelease = new GitHubVerificationSourceProvider({
       ...options,
@@ -884,7 +884,7 @@ describe("source providers", () => {
           tag: "v1",
           asset: "missing.zip",
         })),
-      GitHubReleaseAssetResolutionFailedError,
+      GitHubReleaseAssetMissingError,
     );
     await assertRejects(
       () =>

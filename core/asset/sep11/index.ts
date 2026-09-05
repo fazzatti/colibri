@@ -32,7 +32,7 @@ import type { StellarAssetCanonicalString } from "@/asset/sep11/types.ts";
  * isStellarAssetCanonicalString("TOOLONGCODE:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN") // false
  */
 export function isStellarAssetCanonicalString(
-  value: unknown
+  value: unknown,
 ): value is StellarAssetCanonicalString {
   if (typeof value !== "string") {
     return false;
@@ -83,7 +83,7 @@ export function isStellarAssetCanonicalString(
  * // { code: "USDC", issuer: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN" }
  */
 export function parseStellarAssetCanonicalString(
-  asset: StellarAssetCanonicalString
+  asset: StellarAssetCanonicalString,
 ): {
   code: string;
   issuer: string | undefined;
@@ -103,7 +103,7 @@ export function parseStellarAssetCanonicalString(
  * Check if a SEP-11 StellarAssetCanonicalString is the native XLM asset.
  */
 export function isNativeStellarAssetCanonicalString(
-  asset: StellarAssetCanonicalString
+  asset: StellarAssetCanonicalString,
 ): asset is "native" {
   return asset === "native";
 }
@@ -122,9 +122,9 @@ export function isNativeStellarAssetCanonicalString(
  */
 export function toStellarAssetCanonicalString(
   code: string,
-  issuer?: string
+  issuer?: string,
 ): StellarAssetCanonicalString {
-  if (code === "XLM" || code === "native") {
+  if (issuer === undefined && (code === "XLM" || code === "native")) {
     return "native";
   }
 

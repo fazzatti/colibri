@@ -70,6 +70,9 @@ const allErrors = (): E.BuildVerificationError<E.Code>[] => {
     new E.SourcePolicyRejectedError("https://example.com", ["reason"]),
     new E.SourceRedirectLimitExceededError("https://example.com", 1),
     new E.SourceDnsResolutionFailedError("example.com", cause),
+    new E.SourceDnsEmptyError("example.com"),
+    new E.GitHubCommitShaMissingError("owner/repo", "revision"),
+    new E.GitHubReleaseAssetMissingError("owner/repo", "v1", "source.tar"),
     new E.SourceRequestTimedOutError("https://example.com", 1),
     new E.GitHubRevisionResolutionFailedError("owner/repo", "abc", cause),
     new E.GitHubReleaseAssetResolutionFailedError(

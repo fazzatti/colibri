@@ -5,6 +5,7 @@ import {
   Account,
   MuxedAccount,
   Operation,
+  SorobanDataBuilder,
   type Transaction,
   TransactionBuilder,
   type xdr,
@@ -37,6 +38,67 @@ describe("WrapFeeBump", () => {
   const bob = "GDMZZQ62ZEO4B7YMBHPJ3LHCLIYOG7JE4XCHEGHV4MINCN6O3WFA4MVQ";
 
   describe("Features", () => {
+    it("matches native fee-bump construction for per-operation bids and Soroban resources", () => {
+      for (const operationCount of [1, 2, 3]) {
+        const transaction = assembleTransaction(
+          alice,
+          Array.from(
+            { length: operationCount },
+            () => Operation.setOptions({}),
+          ),
+        );
+        for (const fee of ["100", "150", "100.0", "1e3"] as const) {
+          const actual = wrapFeeBump({
+            transaction,
+            config: { source: bob, fee, signers: [] },
+            networkPassphrase,
+          });
+          const expected = TransactionBuilder.buildFeeBumpTransaction(
+            bob,
+            fee,
+            transaction,
+            networkPassphrase,
+          );
+          assertEquals(actual.toXdr(), expected.toXdr());
+        }
+      }
+      const transaction = new TransactionBuilder(new Account(alice, "100"), {
+        fee: "205",
+        networkPassphrase,
+      })
+        .addOperation(Operation.invokeContractFunction({
+          contract: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+          function: "transfer",
+          args: [],
+        })).setSorobanData(
+          new SorobanDataBuilder().setResourceFee(5000).build(),
+        ).setTimeout(0).build();
+      assertEquals(transaction.fee, "5205");
+      const actual = wrapFeeBump({
+        transaction,
+        config: { source: bob, fee: "205", signers: [] },
+        networkPassphrase,
+      });
+      assertEquals(actual.fee, "5410");
+      assertEquals(
+        actual.toXdr(),
+        TransactionBuilder.buildFeeBumpTransaction(
+          bob,
+          "205",
+          transaction,
+          networkPassphrase,
+        ).toXdr(),
+      );
+      assertThrows(
+        () =>
+          wrapFeeBump({
+            transaction,
+            config: { source: bob, fee: "204", signers: [] },
+            networkPassphrase,
+          }),
+        E.FEE_TOO_LOW,
+      );
+    });
     it("wraps a Transaction into a FeeBumpTransaction", async () => {
       const transaction = assembleTransaction(alice, [
         Operation.setOptions({}),
@@ -187,7 +249,7 @@ describe("WrapFeeBump", () => {
       }
     });
 
-    it("throws FEE_TOO_LOW when the fee for the outer envelope is lower than the inner transaction fee", () => {
+    it("throws FEE_TOO_LOW when the outer base bid is below the minimum", () => {
       const transaction = assembleTransaction(alice, [
         Operation.setOptions({}),
       ]);
@@ -196,7 +258,7 @@ describe("WrapFeeBump", () => {
         () =>
           wrapFeeBump({
             transaction,
-            config: { source: bob, fee: "100", signers: [] },
+            config: { source: bob, fee: "99", signers: [] },
             networkPassphrase,
           }),
         E.FEE_TOO_LOW,

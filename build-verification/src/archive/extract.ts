@@ -361,12 +361,21 @@ const parseZip = async (
   const directory = readZipDirectory(bytes, limits);
   const entries: VerificationArchiveEntry[] = [];
   let offset = directory.centralOffset;
+  let extractedBytes = 0;
   for (let index = 0; index < directory.entryCount; index += 1) {
     const record = readZipEntryRecord(
       bytes,
       directory.view,
       offset,
       directory.centralEnd,
+    );
+    // Validate the running budget before allocating or inflating another file.
+    // readZipEntryContent also bounds inflation to, and verifies, this size.
+    extractedBytes += record.size;
+    assertArchiveLimit(
+      "extracted byte",
+      extractedBytes,
+      limits.maxExtractedBytes,
     );
     const content = await readZipEntryContent(
       bytes,

@@ -29,9 +29,9 @@ import type {
   VerificationSourceProviderInput,
 } from "@/providers/source/types.ts";
 import { BuildVerificationError } from "@/error/base.ts";
+import { collectSourceDnsAddresses } from "@/providers/source/dns.ts";
 import {
   HttpSourceProviderInputMismatchError,
-  SourceDnsResolutionFailedError,
   SourceDownloadFailedError,
   SourcePolicyRejectedError,
   SourceRedirectLimitExceededError,
@@ -66,21 +66,21 @@ const tlsServerName = (hostname: string): string | undefined => {
 
 /** Default DNS resolver used before each request and redirect. */
 export class DenoSourceAddressResolver implements SourceAddressResolver {
-  /** Resolves literal, IPv4, and IPv6 destinations without retaining DNS state. */
+  /**
+   * Resolves literal, IPv4, and IPv6 destinations without retaining DNS state.
+   * Accepts addresses from either family even if the other lookup fails.
+   * With no addresses, rejected lookups retain their causes in
+   * `SourceDnsResolutionFailedError`; successful empty lookups produce
+   * `SourceDnsEmptyError`.
+   */
   async resolve(hostname: string): Promise<readonly string[]> {
     const normalized = stripIpv6Brackets(hostname);
     if (isIP(normalized)) return [normalized];
-    try {
-      const [ipv4, ipv6] = await Promise.all([
-        Deno.resolveDns(normalized, "A").catch(() => [] as string[]),
-        Deno.resolveDns(normalized, "AAAA").catch(() => [] as string[]),
-      ]);
-      const addresses = [...new Set([...ipv4, ...ipv6])];
-      if (addresses.length === 0) throw new Error("No A or AAAA records");
-      return addresses;
-    } catch (cause) {
-      throw new SourceDnsResolutionFailedError(normalized, cause);
-    }
+    const results = await Promise.allSettled([
+      Deno.resolveDns(normalized, "A"),
+      Deno.resolveDns(normalized, "AAAA"),
+    ]);
+    return collectSourceDnsAddresses(normalized, results);
   }
 }
 

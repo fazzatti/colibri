@@ -9,6 +9,7 @@ type TransactionConfig = {
   fee: BaseFee | TransactionFee;
   source: TransactionSource;
   timeout: number;
+  memo?: Memo;
   signers: Signer[];
   extraSigners?: ExtraSignerKey[];
 };
@@ -32,10 +33,29 @@ type MaxFee = `${number}`;
 | `fee`          | `BaseFee \| TransactionFee` | String base fee or one explicit fee strategy             |
 | `source`       | `TransactionSource`         | Transaction source as a G-address or M-address           |
 | `timeout`      | `number`                    | Transaction timeout in seconds                           |
+| `memo` | Native SDK `Memo` | Optional transaction memo, forwarded unchanged |
 | `signers`      | `Signer[]`                  | Signers used by the selected transaction flow            |
 | `extraSigners` | `ExtraSignerKey[]`          | Exact `G...`, `X...`, or `P...` signer-key preconditions |
 
+### Memos
+
+Use the Stellar SDK's `Memo.text(...)`, `Memo.id(...)`, `Memo.hash(...)`, or
+`Memo.return(...)` directly in `config.memo`. Omission keeps the existing
+no-memo behavior; `Memo.none()` explicitly selects it. Colibri preserves the
+native memo through building and assembly, subject to the network's transaction
+rules. No recipient-specific policy is enabled automatically. Install the
+opt-in [SEP-29 plugin](../packages/plugins/sep29.md) to check memo presence for
+receiving accounts that advertise the requirement.
+
 ### Fee Strategies
+
+`timeout` is forwarded to the builder and preserved through Soroban assembly.
+Set it to `0` only when you intentionally want no upper time bound.
+
+Classic transactions support `G...` and `M...` sources. Stellar Core prohibits
+muxed transaction and operation sources for Soroban `invokeHostFunction`
+transactions; use a `G...` source there. A fee bump can still use an `M...`
+outer fee source.
 
 `fee` accepts the existing string form or an object that selects exactly one
 strategy:

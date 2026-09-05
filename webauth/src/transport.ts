@@ -19,7 +19,7 @@ export interface JsonResponse {
 export interface WebAuthTransportOptions {
   /** Optional fetch implementation. */
   fetch?: typeof fetch;
-  /** Request timeout in milliseconds. @default 30000 */
+  /** Request timeout, including response body consumption, in milliseconds. @default 30000 */
   timeout?: number;
 }
 
@@ -74,29 +74,38 @@ export class WebAuthTransport {
     }, protocol);
   }
 
-  async #request(
+  async #receive(
     endpoint: string,
     init: RequestInit,
     protocol: WebAuthProtocol,
-  ): Promise<JsonResponse> {
+  ): Promise<{ response: Response; text: string }> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.#timeout);
-    let response: Response;
+    let response: Response | undefined;
+    let text: string;
     try {
       response = await this.#fetch(endpoint, {
         ...init,
         signal: controller.signal,
       });
+      text = await response.text();
     } catch (cause) {
-      const aborted = cause instanceof DOMException &&
-        cause.name === "AbortError";
+      const aborted = controller.signal.aborted ||
+        (cause instanceof DOMException &&
+          cause.name === "AbortError");
       const options: WebAuthErrorOptions = {
-        code: aborted ? WebAuthCode.TIMEOUT : WebAuthCode.TRANSPORT,
+        code: aborted
+          ? WebAuthCode.TIMEOUT
+          : response
+          ? WebAuthCode.RESPONSE_BODY_FAILED
+          : WebAuthCode.TRANSPORT,
         message: aborted
           ? "WebAuth request timed out"
           : "WebAuth request failed",
         details: aborted
           ? `The request exceeded ${this.#timeout} milliseconds.`
+          : response
+          ? "The WebAuth response body could not be read."
           : "The WebAuth endpoint could not be reached.",
         protocol,
         endpoint,
@@ -107,8 +116,16 @@ export class WebAuthTransport {
     } finally {
       clearTimeout(timeoutId);
     }
+    return { response, text };
+  }
 
-    const text = await response.text();
+  async #request(
+    endpoint: string,
+    init: RequestInit,
+    protocol: WebAuthProtocol,
+  ): Promise<JsonResponse> {
+    const { response, text } = await this.#receive(endpoint, init, protocol);
+
     if (!response.ok) {
       throw new WebAuthError({
         code: WebAuthCode.TRANSPORT,

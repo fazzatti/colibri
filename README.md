@@ -58,6 +58,7 @@ address identicons.
 | [`@colibri/build-verification`](./build-verification/README.md)            | Reproducible Stellar contract build verification                         | SEP-58 and out-of-band targets, source and image resolution, bounded Docker builds, Wasm comparison, evidence, and CLI output    |
 | [`@colibri/plugin-fee-bump`](./plugins/fee-bump/README.md)                 | Fee sponsorship for transaction pipelines                                | Fee-bump envelope construction and fee-source authorization at the `send-transaction` step                                       |
 | [`@colibri/plugin-channel-accounts`](./plugins/channel-accounts/README.md) | Reusable transaction source accounts for concurrent workloads            | Sponsored channel-account lifecycle, allocation, signer injection, and release around supported pipelines                        |
+| [`@colibri/plugin-sep29`](./plugins/sep29/README.md) | Opt-in recipient memo requirements | Standalone RPC checks and a non-mutating submission guard for native and fee-bump transactions |
 | [`@colibri/identicon`](./identicon/README.md)                              | Deterministic SEP-33-compatible account visuals                          | Local pattern generation and SVG, PNG, or data-URL rendering                                                                     |
 
 Packages are versioned and published separately. Applications only need to
@@ -250,6 +251,7 @@ Standard-oriented functionality across the workspace includes:
 | ------------------------------ | ---------------------------------------------------------------------- |
 | SEP-1                          | `stellar.toml` retrieval and typed discovery in Core                   |
 | SEP-10                         | Classic-account Web Authentication in WebAuth                          |
+| SEP-29 | Opt-in account memo requirements in the SEP-29 plugin |
 | SEP-11                         | Canonical Stellar asset identifiers in Core                            |
 | SEP-23                         | StrKey encoding and validation in Core                                 |
 | SEP-33                         | Reference-compatible Stellar identicons in Identicon                   |
@@ -267,6 +269,18 @@ Refer to each package's documentation for its exact version and support
 boundary.
 
 ## Transaction operations and scaling
+
+`@colibri/plugin-sep29` adds opt-in memo-presence checks for payments, path
+payments, and account merges using RPC account-data reads. It respects muxed
+destinations and checks fee-bump inner transactions without changing either the
+memo or the envelope. Pass a native SDK `Memo` through `TransactionConfig.memo`.
+See [SEP-29](./docs/packages/plugins/sep29.md).
+
+Core's `wrapSponsorship` composes native reserve-sponsorship blocks for account
+creation, trustlines, and other reserve-bearing entries. It preserves the
+operations you provide and uses the normal pipeline signer list. This pays
+reserves without transferring XLM to the sponsored account; it does not pay
+transaction fees. See [Reserve sponsorship](./docs/core/sponsorship.md).
 
 The transaction plugins attach policy at stable pipeline boundaries:
 

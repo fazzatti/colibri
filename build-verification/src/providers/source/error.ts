@@ -1,5 +1,53 @@
 import { BuildVerificationError, Code } from "@/error/base.ts";
 
+/** Raised when GitHub's revision response contains no exact SHA. */
+export class GitHubCommitShaMissingError
+  extends BuildVerificationError<Code.GITHUB_COMMIT_SHA_MISSING> {
+  /** Identifies the requested repository and revision. */
+  constructor(repository: string, revision: string) {
+    super({
+      code: Code.GITHUB_COMMIT_SHA_MISSING,
+      source: "@colibri/build-verification/providers/source/github",
+      message: "GitHub response omitted an exact commit SHA",
+      details:
+        "The response must contain a full 40-character hexadecimal commit SHA.",
+      data: { repository, revision },
+    });
+  }
+}
+
+/** Raised when the requested asset is absent from a GitHub release. */
+export class GitHubReleaseAssetMissingError
+  extends BuildVerificationError<Code.GITHUB_RELEASE_ASSET_MISSING> {
+  /** Identifies the requested release and asset. */
+  constructor(repository: string, tag: string, asset: string) {
+    super({
+      code: Code.GITHUB_RELEASE_ASSET_MISSING,
+      source: "@colibri/build-verification/providers/source/github",
+      message: "GitHub release omitted the named asset",
+      details:
+        "The release must contain the exact requested asset name and its API URL.",
+      data: { repository, tag, asset },
+    });
+  }
+}
+
+/** Raised when both DNS lookups succeed without source-host address records. */
+export class SourceDnsEmptyError
+  extends BuildVerificationError<Code.SOURCE_DNS_EMPTY> {
+  /** Identifies the hostname with no usable address records. */
+  constructor(hostname: string) {
+    super({
+      code: Code.SOURCE_DNS_EMPTY,
+      source: "@colibri/build-verification/providers/source/http",
+      message: "Source hostname has no address records",
+      details:
+        "IPv4 and IPv6 resolution completed successfully without addresses for policy evaluation.",
+      data: { hostname },
+    });
+  }
+}
+
 /** Raised when the archive provider receives another source variant. */
 export class ArchiveSourceProviderInputMismatchError
   extends BuildVerificationError<Code.ARCHIVE_SOURCE_PROVIDER_INPUT_MISMATCH> {

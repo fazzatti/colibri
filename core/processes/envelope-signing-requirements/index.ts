@@ -18,7 +18,7 @@ import { StrKey } from "@/strkeys/index.ts";
 
 /** Computes the signer requirements for a classic or fee-bump transaction envelope. */
 export const envelopeSigningRequirements = (
-  input: EnvelopeSigningRequirementsInput
+  input: EnvelopeSigningRequirementsInput,
 ): EnvelopeSigningRequirementsOutput => {
   try {
     const { transaction } = input;
@@ -37,7 +37,7 @@ export const envelopeSigningRequirements = (
     } catch (e) {
       throw new E.FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX(
         input,
-        e as Error
+        e as Error,
       );
     }
 
@@ -54,8 +54,15 @@ export const envelopeSigningRequirements = (
 
         const opRequirements = [];
         for (const op of operations) {
-          const signerRequirements =
-            getRequiredOperationThresholdForClassicOperation(op);
+          const signerRequirements: SignatureRequirementRaw | void =
+            op.type === "invokeHostFunction"
+              ? {
+                address: op.source
+                  ? sourceToAddress(op.source)
+                  : "source-account",
+                thresholdLevel: OperationThreshold.medium,
+              }
+              : getRequiredOperationThresholdForClassicOperation(op);
           if (signerRequirements) opRequirements.push(signerRequirements);
         }
 
@@ -68,7 +75,7 @@ export const envelopeSigningRequirements = (
     } catch (e) {
       throw new E.FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION(
         input,
-        e as Error
+        e as Error,
       );
     }
 
@@ -97,15 +104,14 @@ const sourceToAddress = (source: string): Ed25519PublicKey => {
 
 const removeConflictingRequirements = (
   operationRequirements: SignatureRequirementRaw[],
-  sourceRequirement: SignatureRequirement
+  sourceRequirement: SignatureRequirement,
 ): SignatureRequirement[] => {
   const requirementsBundle: SignatureRequirement[] = [sourceRequirement];
 
   for (const requirement of operationRequirements) {
-    const publicKey =
-      requirement.address === "source-account"
-        ? sourceRequirement.address
-        : requirement.address;
+    const publicKey = requirement.address === "source-account"
+      ? sourceRequirement.address
+      : requirement.address;
 
     const index = requirementsBundle.findIndex((r) => r.address === publicKey);
     if (index === -1) {
@@ -116,7 +122,7 @@ const removeConflictingRequirements = (
     } else {
       requirementsBundle[index].thresholdLevel = Math.max(
         requirementsBundle[index].thresholdLevel,
-        requirement.thresholdLevel
+        requirement.thresholdLevel,
       );
     }
   }

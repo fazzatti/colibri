@@ -20,7 +20,7 @@ catalog.
 - [build-verification/providers/target](build-verification-providers-target.md)
   — 8 codes.
 - [build-verification/providers/source](build-verification-providers-source.md)
-  — 17 codes.
+  — 20 codes.
 - [build-verification/archive](build-verification-archive.md) — 15 codes.
 - [build-verification/providers/image](build-verification-providers-image.md) —
   12 codes.
@@ -116,6 +116,7 @@ catalog.
 - [core/signer/pre-authorized-transaction](core-signer-pre-authorized-transaction.md)
   — 6 codes.
 - [core/signer/signed-payload](core-signer-signed-payload.md) — 12 codes.
+- [core/sponsorship](core-sponsorship.md) — 2 codes.
 - [core/toid](core-toid.md) — 4 codes.
 - [core/tools/friendbot](core-tools-friendbot.md) — 3 codes.
 
@@ -132,9 +133,13 @@ catalog.
 
 - [plugins/fee-bump](plugins-fee-bump.md) — 3 codes.
 
+## @colibri/plugin-sep29
+
+- [plugins/sep29](plugins-sep29.md) — 4 codes.
+
 ## @colibri/rpc-streamer
 
-- [rpc-streamer](rpc-streamer.md) — 18 codes.
+- [rpc-streamer](rpc-streamer.md) — 24 codes.
 
 ## @colibri/test-tooling
 
@@ -142,4 +147,4 @@ catalog.
 
 ## @colibri/webauth
 
-- [webauth](webauth.md) — 65 codes.
+- [webauth](webauth.md) — 66 codes.

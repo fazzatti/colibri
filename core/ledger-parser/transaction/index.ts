@@ -7,9 +7,7 @@
 import { memoize } from "@/common/decorators/memoize/index.ts";
 // deno-coverage-ignore-stop
 import type { xdr } from "stellar-sdk";
-import {
-  parseMuxedAccount,
-} from "@/common/helpers/xdr/index.ts";
+import { parseMuxedAccount } from "@/common/helpers/xdr/index.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import { Operation } from "@/ledger-parser/operation/index.ts";
 import {
@@ -142,8 +140,8 @@ export class Transaction {
    */
   @memoize()
   get successful(): boolean {
-    // TransactionResultCode.txSuccess() returns 0
-    return this.txResult.result.toXdrObject().code === 0;
+    return this.txResult.result.type === "txSuccess" ||
+      this.txResult.result.type === "txFeeBumpInnerSuccess";
   }
 
   /**
@@ -151,31 +149,7 @@ export class Transaction {
    */
   @memoize()
   get resultCode(): string {
-    const resultSwitch = this.txResult.result.toXdrObject().code;
-    // Map numeric codes to strings (0 = txSuccess, etc.)
-    const codeMap: Record<number, string> = {
-      0: "txSuccess",
-      1: "txFailed",
-      2: "txTooEarly",
-      3: "txTooLate",
-      4: "txMissingOperation",
-      5: "txBadSeq",
-      6: "txBadAuth",
-      7: "txInsufficientBalance",
-      8: "txNoAccount",
-      9: "txInsufficientFee",
-      10: "txBadAuthExtra",
-      11: "txInternalError",
-      12: "txNotSupported",
-      13: "txFeeBumpInnerSuccess",
-      14: "txFeeBumpInnerFailed",
-      15: "txNotEnoughSponsoring",
-      16: "txBadSponsorship",
-      17: "txBadMinSeqAgeOrGap",
-      18: "txMalformed",
-      19: "txSorobanInvalid",
-    };
-    return codeMap[resultSwitch] || `unknown_${resultSwitch}`;
+    return this.txResult.result.type;
   }
 
   /**

@@ -267,6 +267,13 @@ referrers are recorded when available, but this package does not claim that an
 unverified provenance signature is valid. A digest establishes image identity,
 not that the image or source code is safe.
 
+DNS lookup failures are distinct from successful empty answers. If neither
+address family returns an address and a lookup fails, the default resolver
+raises `SourceDnsResolutionFailedError`, retaining the original failures in an
+`AggregateError` at `error.meta.cause`. `SourceDnsEmptyError` means both lookups
+succeeded without addresses. Addresses from either family remain usable if the
+other lookup fails; they still pass through the retrieval policy.
+
 ## Build isolation and network access
 
 Container network access is disabled by default:
@@ -371,7 +378,7 @@ const result = await verifyContractBuild(
 Run the package directly from JSR:
 
 ```sh
-deno run -A jsr:@colibri/build-verification@0.4.1/cli \
+deno run -A jsr:@colibri/build-verification@0.4.2/cli \
   --contract-id C... \
   --network mainnet \
   --evidence verification.json \
@@ -382,12 +389,12 @@ Verify an external reference directly with either a UTF-8 tag or lossless base64
 tag bytes:
 
 ```sh
-deno run -A jsr:@colibri/build-verification@0.4.1/cli \
+deno run -A jsr:@colibri/build-verification@0.4.2/cli \
   --external-ref-owner COWNER... \
   --external-ref-tag stable \
   --network testnet
 
-deno run -A jsr:@colibri/build-verification@0.4.1/cli \
+deno run -A jsr:@colibri/build-verification@0.4.2/cli \
   --external-ref-owner COWNER... \
   --external-ref-tag-base64 c3RhYmxl \
   --network testnet
@@ -407,7 +414,7 @@ Pass `--json` when stdout or stderr must contain the complete machine-readable
 result or typed Colibri error:
 
 ```sh
-deno run -A jsr:@colibri/build-verification@0.4.1/cli \
+deno run -A jsr:@colibri/build-verification@0.4.2/cli \
   --contract-id C... \
   --network mainnet \
   --json
@@ -416,7 +423,7 @@ deno run -A jsr:@colibri/build-verification@0.4.1/cli \
 Out-of-band mode uses a JSON recipe file:
 
 ```sh
-deno run -A jsr:@colibri/build-verification@0.4.1/cli \
+deno run -A jsr:@colibri/build-verification@0.4.2/cli \
   --wasm deployed.wasm \
   --source source.tar.gz \
   --recipe recipe.json \
@@ -427,7 +434,7 @@ Private or rate-limited GitHub sources read a token from an explicitly named
 environment variable so the token never appears in process arguments:
 
 ```sh
-deno run -A jsr:@colibri/build-verification@0.4.1/cli \
+deno run -A jsr:@colibri/build-verification@0.4.2/cli \
   --wasm deployed.wasm \
   --github-owner organization \
   --github-repository private-contract \
@@ -450,7 +457,7 @@ deno run \
   --allow-net \
   --allow-env \
   --allow-sys=homedir \
-  jsr:@colibri/build-verification@0.4.1/cli \
+  jsr:@colibri/build-verification@0.4.2/cli \
   --contract-id C... \
   --network mainnet
 ```

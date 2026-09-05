@@ -72,6 +72,8 @@ export type * from "@/toid/types.ts";
 
 export * from "@/tools/index.ts";
 
+export * from "@/sponsorship/index.ts";
+
 export * from "@/sep1/index.ts";
 export type * from "@/sep1/types.ts";
 /** Error constructors for SEP-1 helpers. */

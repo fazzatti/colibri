@@ -1,3 +1,4 @@
+import type { Memo as NativeMemo } from "stellar-sdk";
 import type {
   EnvelopeSigner,
   PreAuthTransactionSigner,
@@ -10,16 +11,21 @@ import type {
   MuxedAddress,
 } from "@/strkeys/types.ts";
 
+/** @internal Exact native SDK type, retained for JSR declaration generation. */
+export type Memo = NativeMemo;
+
 /**
  * Transaction-level configuration shared by Colibri transaction builders.
  */
 export type TransactionConfig = {
   /** Fee value or explicit fee strategy applied to the transaction. */
   fee: BaseFee | TransactionFee;
-  /** G-address or M-address that will submit the transaction. */
+  /** G-address, or an M-address for classic transactions. Soroban invocations require a G-address. */
   source: TransactionSource;
-  /** Timeout, in seconds, applied to the transaction. */
+  /** Timeout in seconds, forwarded through building and assembly. Zero explicitly disables the upper time bound. */
   timeout: number;
+  /** Native Stellar SDK memo, forwarded unchanged to the transaction builder. */
+  memo?: Memo;
   /**
    * Signers used to authorize transaction envelopes and Soroban authorization
    * entries.

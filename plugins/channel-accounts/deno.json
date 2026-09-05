@@ -1,6 +1,6 @@
 {
   "name": "@colibri/plugin-channel-accounts",
-  "version": "0.2.13",
+  "version": "0.2.14",
   "exports": "./mod.ts",
   "license": "MIT",
   "publish": {
@@ -9,6 +9,6 @@
   },
   "imports": {
     "@/": "./src/",
-    "@colibri/core": "jsr:@colibri/core@^0.28.0"
+    "@colibri/core": "jsr:@colibri/core@^0.29.0"
   }
 }

@@ -42,6 +42,17 @@ jobs:
       - name: Test architecture rules
         run: deno task test:architecture
 
+      - name: Inventory error boundaries
+        run: deno task inspect:error-boundaries > "${{ runner.temp }}/error-boundaries.json"
+
+      - name: Upload error boundary inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: error-boundaries
+          path: ${{ runner.temp }}/error-boundaries.json
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Test custom lint rules
         run: deno task test:lint-rules
 
@@ -65,6 +76,30 @@ jobs:
           deno task test:docs
           deno task check:docs
 
+  compatibility:
+    name: consumer / Node ${{ matrix.node }} / SDK ${{ matrix.sdk }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - node: "22.12.0"
+            sdk: "17.0.1"
+          - node: "24"
+            sdk: "^17.0.1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.7.11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Check isolated Deno, installed npm artifacts, and browser bundles
+        env:
+          STELLAR_SDK_VERSION: ${{ matrix.sdk }}
+        run: deno task check:consumers
+
   package_tests:
     name: test / ${{ matrix.package }}
     runs-on: ubuntu-latest
@@ -83,12 +118,17 @@ jobs:
             test_flags: --parallel
           - package: rpc-streamer
             path: rpc-streamer
-            test_flags: --parallel
+            # Both Mainnet suites share the public archive provider. Avoid
+            # concurrent requests from separate test-file workers.
+            test_flags: ""
           - package: plugin-fee-bump
             path: plugins/fee-bump
             test_flags: --parallel
           - package: plugin-channel-accounts
             path: plugins/channel-accounts
+            test_flags: --parallel
+          - package: plugin-sep29
+            path: plugins/sep29
             test_flags: --parallel
           - package: test-tooling
             path: test-tooling
@@ -211,7 +251,7 @@ jobs:
           --filter='__coverage_cache_prime_never_matches__'
           --coverage=coverage-prime --coverage-raw-data-only
           core build-verification identicon webauth rpc-streamer
-          plugins/fee-bump plugins/channel-accounts test-tooling
+          plugins/fee-bump plugins/channel-accounts plugins/sep29 test-tooling
 
       - name: Generate aggregate coverage report
         run: deno coverage --lcov --output=coverage.lcov coverage/coverage-*
@@ -228,19 +268,28 @@ jobs:
   test:
     name: test
     if: ${{ always() }}
-    needs: [quality, complexity, package_tests, build_verification_tests, coverage]
+    needs: [
+      quality,
+      compatibility,
+      complexity,
+      package_tests,
+      build_verification_tests,
+      coverage,
+    ]
     runs-on: ubuntu-latest
 
     steps:
       - name: Require every CI job to pass
         env:
           QUALITY_RESULT: ${{ needs.quality.result }}
+          COMPATIBILITY_RESULT: ${{ needs.compatibility.result }}
           COMPLEXITY_RESULT: ${{ needs.complexity.result }}
           PACKAGE_TESTS_RESULT: ${{ needs.package_tests.result }}
           BUILD_VERIFICATION_TESTS_RESULT: ${{ needs.build_verification_tests.result }}
           COVERAGE_RESULT: ${{ needs.coverage.result }}
         run: |
           test "$QUALITY_RESULT" = "success"
+          test "$COMPATIBILITY_RESULT" = "success"
           test "$COMPLEXITY_RESULT" = "success"
           test "$PACKAGE_TESTS_RESULT" = "success"
           test "$BUILD_VERIFICATION_TESTS_RESULT" = "success"

@@ -28,9 +28,13 @@ trustworthiness of that discovery data.
 
 Construction accepts `timeout` (30,000 ms by default), `fetch`,
 `submissionFormat` (`json` by default or `form`), and `allowHttp` for deliberate
-local development. The timeout bounds HTTP requests, not the server challenge's
-validity period. The challenge's own time/ledger constraints remain
-authoritative.
+local development. The timeout bounds both the HTTP request and consumption of
+its response body, not the server challenge's validity period. The challenge's
+own time/ledger constraints remain authoritative.
+
+A connection that fails while reading the body raises
+`WEBAUTH_RESPONSE_BODY_FAILED`; a body that outlives the deadline raises
+`WEBAUTH_TIMEOUT`.
 
 ## Choose a path
 

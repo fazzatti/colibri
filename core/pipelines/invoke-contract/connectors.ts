@@ -124,6 +124,7 @@ export const signAuthEntriesToAssembleForEnforcement = () =>
     const authorizedOperation = Operation.invokeHostFunction({
       func: body.invokeHostFunctionOp.hostFunction,
       auth: signAuthEntriesOutput,
+      source: transaction.operations[0].source,
     });
 
     return {
