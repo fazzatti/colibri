@@ -17,6 +17,8 @@ import {
   NetworkConfig,
   StrKey,
   type TransactionConfig,
+  wrapSponsorship,
+  type WrapSponsorshipArgs,
 } from "@colibri/core";
 import { Identicon } from "@colibri/identicon";
 import { createLedgerStreamer } from "@colibri/rpc-streamer";
@@ -67,9 +69,22 @@ const memoConfig: TransactionConfig = {
   signers: [signer],
   memo: Memo.id("29"),
 };
+const nativeMemo: Memo | undefined = memoConfig.memo;
 check(
-  memoConfig.memo?.value === "29",
+  nativeMemo?.value === "29",
   "Native SDK Memo in Colibri configuration",
+);
+const nativeOperation = Operation.manageData({ name: "consumer", value: "1" });
+const sponsorshipInput: WrapSponsorshipArgs = {
+  sponsor: signer.publicKey(),
+  sponsored: LocalSigner.generateRandom().publicKey(),
+  operations: Object.freeze([nativeOperation]),
+};
+const nativeInputs: readonly xdr.Operation[] = sponsorshipInput.operations;
+const nativeOutputs: xdr.Operation[] = wrapSponsorship(sponsorshipInput);
+check(
+  nativeInputs[0] === nativeOperation && nativeOutputs[1] === nativeOperation,
+  "Sponsorship inputs and outputs preserve native SDK operations",
 );
 await checkMemoRequired({ transaction: unsigned, rpc });
 createClassicTransactionPipeline({ networkConfig, rpc }).use(

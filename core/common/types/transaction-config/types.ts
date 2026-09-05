@@ -1,4 +1,4 @@
-import type { Memo } from "stellar-sdk";
+import type { Memo as NativeMemo } from "stellar-sdk";
 import type {
   EnvelopeSigner,
   PreAuthTransactionSigner,
@@ -10,6 +10,9 @@ import type {
   ExtraSignerKey,
   MuxedAddress,
 } from "@/strkeys/types.ts";
+
+/** @internal Exact native SDK type, retained for JSR declaration generation. */
+export type Memo = NativeMemo;
 
 /**
  * Transaction-level configuration shared by Colibri transaction builders.
