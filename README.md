@@ -268,6 +268,12 @@ boundary.
 
 ## Transaction operations and scaling
 
+Core's `wrapSponsorship` composes native reserve-sponsorship blocks for account
+creation, trustlines, and other reserve-bearing entries. It preserves the
+operations you provide and uses the normal pipeline signer list. This pays
+reserves without transferring XLM to the sponsored account; it does not pay
+transaction fees. See [Reserve sponsorship](./docs/core/sponsorship.md).
+
 The transaction plugins attach policy at stable pipeline boundaries:
 
 - `@colibri/plugin-fee-bump` targets the `send-transaction` step. It wraps the

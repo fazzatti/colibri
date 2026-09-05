@@ -456,6 +456,17 @@ operation outcomes. Narrow an outcome's `type` to access its corresponding
 Stellar SDK XDR result, such as a created claimable-balance ID or an offer's
 created, updated, or deleted effect.
 
+### Reserve sponsorship
+
+`wrapSponsorship({ sponsor, sponsored, operations })` returns native Stellar XDR
+operations bracketed by `beginSponsoringFutureReserves` and
+`endSponsoringFutureReserves`. It preserves the inner operation sources and uses
+the existing pipeline and signer list. This can create zero-balance sponsored
+accounts or sponsor trustlines and other reserve-bearing entries. Reserve
+sponsorship is separate from paying transaction fees through a fee-bump envelope.
+See [Reserve sponsorship](https://fifo-docs.gitbook.io/colibri/core/sponsorship)
+for account creation, source selection, signatures, and protocol boundaries.
+
 ## Processes
 
 Processes are reusable building blocks exported from `jsr:@colibri/core`. They

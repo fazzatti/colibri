@@ -99,6 +99,10 @@ preserving the M-address in the submitted envelope.
 
 ## Typical Use Cases
 
+Use [reserve sponsorship](../sponsorship.md) to compose native begin/end blocks
+around account creation, trustlines, or other sponsorable entries. These are
+ordinary operations; the pipeline uses its existing signing and submission path.
+
 - payments
 - account creation
 - trustline and option changes
