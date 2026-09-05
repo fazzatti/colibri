@@ -255,11 +255,12 @@ const identityRegistryStorage: ContractInterfaceDefinition =
   );
 
 const claim: ContractInterfaceUserType = structDefinition("Claim", [
-  ["topic", types.u32],
-  ["scheme", types.u32],
-  ["issuer", types.address],
-  ["signature", types.bytes],
+  // Named struct fields use the Rust SDK's canonical alphabetical ABI order.
   ["data", types.bytes],
+  ["issuer", types.address],
+  ["scheme", types.u32],
+  ["signature", types.bytes],
+  ["topic", types.u32],
   ["uri", types.string],
 ]);
 

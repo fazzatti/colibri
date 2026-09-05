@@ -16,9 +16,9 @@ import type {
 export type TransactionConfig = {
   /** Fee value or explicit fee strategy applied to the transaction. */
   fee: BaseFee | TransactionFee;
-  /** G-address or M-address that will submit the transaction. */
+  /** G-address, or an M-address for classic transactions. Soroban invocations require a G-address. */
   source: TransactionSource;
-  /** Timeout, in seconds, applied to the transaction. */
+  /** Timeout in seconds, forwarded through building and assembly. Zero explicitly disables the upper time bound. */
   timeout: number;
   /**
    * Signers used to authorize transaction envelopes and Soroban authorization

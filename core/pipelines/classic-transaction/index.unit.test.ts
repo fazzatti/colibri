@@ -129,6 +129,7 @@ describe("createClassicTransactionPipeline", () => {
 
         assertEquals(result.preconditions, {
           extraSigners: [extraSigner.signerKey()],
+          timeoutSeconds: 30,
         });
       });
     });

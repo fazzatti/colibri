@@ -73,7 +73,8 @@ export const parseEventsFromLedgerCloseMeta = async (
     const operations = transactionMeta.v4.operations;
     const txHash = txProcessing.result.transactionHash.toString();
     const inSuccessfulContractCall =
-      txProcessing.result.result.result.type === "txSuccess";
+      txProcessing.result.result.result.type === "txSuccess" ||
+      txProcessing.result.result.result.type === "txFeeBumpInnerSuccess";
     let operationIndex = 0;
 
     for (const op of operations) {
@@ -89,12 +90,11 @@ export const parseEventsFromLedgerCloseMeta = async (
 
         const contractIdXdr = event.contractId;
 
-        const contractId =
-          contractIdXdr !== null
-            ? (Address.fromScAddress(
-                xdr.ScAddress.scAddressTypeContract(contractIdXdr),
-              ).toString() as ContractId)
-            : undefined;
+        const contractId = contractIdXdr !== null
+          ? (Address.fromScAddress(
+            xdr.ScAddress.scAddressTypeContract(contractIdXdr),
+          ).toString() as ContractId)
+          : undefined;
 
         const eventMatchesFilters = isIncludedInFilters({
           filters: filters || [],
@@ -148,8 +148,9 @@ export const isIncludedInFilters = ({
 
   for (const filter of filters) {
     if (type !== undefined && !filter.matchesType(type)) continue;
-    if (contractId !== undefined && !filter.matchesContractId(contractId))
+    if (contractId !== undefined && !filter.matchesContractId(contractId)) {
       continue;
+    }
     if (topics !== undefined && !filter.matchesTopics(topics)) continue;
 
     // If we reach here, the event matches this filter

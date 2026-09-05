@@ -1426,6 +1426,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "sep57-identity-claims-contract"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 26.1.1",
+]
+
+[[package]]
 name = "serde"
 version = "1.0.228"
 source = "registry+https://github.com/rust-lang/crates.io-index"

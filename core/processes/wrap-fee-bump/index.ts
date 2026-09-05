@@ -8,6 +8,10 @@ import { isFeeBumpTransaction } from "@/common/type-guards/is-fee-bump-transacti
 import { isTransaction } from "@/common/type-guards/is-transaction.ts";
 import { assert } from "@/common/assert/assert.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
+import {
+  getTransactionInclusionFee,
+  MINIMUM_BASE_FEE,
+} from "@/common/helpers/transaction-fee.ts";
 
 /** Wraps a classic transaction inside a fee-bump envelope. */
 export const wrapFeeBump = (input: WrapFeeBumpInput): WrapFeeBumpOutput => {
@@ -24,15 +28,21 @@ export const wrapFeeBump = (input: WrapFeeBumpInput): WrapFeeBumpOutput => {
 
     assertRequiredArgs(
       args,
-      (argName: string) => new E.MISSING_ARG(input, argName)
+      (argName: string) => new E.MISSING_ARG(input, argName),
     );
 
     assert(!isFeeBumpTransaction(transaction), new E.ALREADY_FEE_BUMP(input));
     assert(isTransaction(transaction), new E.NOT_A_TRANSACTION(input));
 
+    // Compare like units, excluding Soroban resources. The SDK performs the
+    // authoritative exact-decimal validation below; preserve its accepted base
+    // fee representations (including e.g. "100.0" and scientific notation).
+    const baseFee = Number(config.fee);
     assert(
-      parseInt(config.fee) > parseInt(transaction.fee),
-      new E.FEE_TOO_LOW(input)
+      baseFee >= Number(MINIMUM_BASE_FEE) &&
+        baseFee * transaction.operations.length >=
+          Number(getTransactionInclusionFee(transaction)),
+      new E.FEE_TOO_LOW(input),
     );
 
     try {
@@ -40,7 +50,7 @@ export const wrapFeeBump = (input: WrapFeeBumpInput): WrapFeeBumpOutput => {
         config.source,
         config.fee,
         transaction,
-        networkPassphrase
+        networkPassphrase,
       );
 
       return feeBumpTransaction;
