@@ -18,6 +18,16 @@ import { createEventStreamer } from "@/variants/event/index.ts";
 import type { EventStreamerConfig } from "@/variants/event/types.ts";
 import { createLedgerStreamer } from "@/variants/ledger/index.ts";
 import type { LedgerStreamerConfig } from "@/variants/ledger/types.ts";
+import { transactionStreamerConfig } from "@/variants/transaction/config.ts";
+import type {
+  StreamedTransaction,
+  TransactionStreamerConfig,
+} from "@/variants/transaction/types.ts";
+import { operationStreamerConfig } from "@/variants/operation/config.ts";
+import type {
+  OperationStreamerConfig,
+  StreamedOperation,
+} from "@/variants/operation/types.ts";
 import type {
   ArchiveIngestContext,
   ArchiveIngestFunc,
@@ -791,5 +801,19 @@ export class RPCStreamer<T> {
    */
   static ledger(config: LedgerStreamerConfig): RPCStreamer<Ledger> {
     return createLedgerStreamer(config);
+  }
+
+  /** Streams parsed transactions with ledger context, including failed transactions. */
+  static transaction(
+    config: TransactionStreamerConfig,
+  ): RPCStreamer<StreamedTransaction> {
+    return new RPCStreamer(transactionStreamerConfig(config));
+  }
+
+  /** Streams native SDK operation records with their parent transaction status. */
+  static operation(
+    config: OperationStreamerConfig,
+  ): RPCStreamer<StreamedOperation> {
+    return new RPCStreamer(operationStreamerConfig(config));
   }
 }

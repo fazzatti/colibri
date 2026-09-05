@@ -1,5 +1,11 @@
 import * as StellarAssetContractErrors from "@/asset/sac/error.ts";
 import * as SEP41TokenContractErrors from "@/asset/sep41-token/error.ts";
+import * as StellarAssetErrors from "@/asset/stellar/error.ts";
+
+export * from "@/asset/stellar/index.ts";
+/** Error constructors for native Stellar asset account operations. */
+export const ERRORS_STELLAR_ASSET: typeof StellarAssetErrors =
+  StellarAssetErrors;
 
 export * from "@/asset/sep11/index.ts";
 export type * from "@/asset/sep11/types.ts";

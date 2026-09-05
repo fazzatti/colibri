@@ -3,10 +3,10 @@
 [Developer guides](https://fifo-docs.gitbook.io/colibri/packages/rpc-streamer) ·
 [API reference](https://jsr.io/@colibri/rpc-streamer/doc)
 
-Stream Stellar events and ledgers through Stellar RPC. Built-in factories handle
-ledger boundaries, event pagination, archive-to-live transitions, and awaited
-callbacks. `RPCStreamer<T>` also accepts custom ingestors without replacing the
-native Stellar SDK client.
+Stream Stellar events, ledgers, transactions, and operations through Stellar
+RPC. Built-in factories handle ledger boundaries, event pagination,
+archive-to-live transitions, and awaited callbacks. `RPCStreamer<T>` also
+accepts custom ingestors without replacing the native Stellar SDK client.
 
 ```sh
 deno add jsr:@colibri/rpc-streamer jsr:@colibri/core
@@ -32,6 +32,51 @@ await streamer.start(async (event) => {
 
 Use `RPCStreamer.ledger(config)` to receive Core `Ledger` objects instead. Both
 factories are also exported as `createEventStreamer` and `createLedgerStreamer`.
+
+## Stream transactions or operations
+
+`RPCStreamer.transaction(config)` and `RPCStreamer.operation(config)` are
+additive variants of the same engine. They traverse ledger transactions and
+native operation records without requiring application-owned XDR traversal. The
+`createTransactionStreamer` and `createOperationStreamer` factories are
+equivalent alternatives.
+
+<!-- deno-check -->
+
+```ts
+import { NetworkConfig } from "@colibri/core";
+import { RPCStreamer } from "@colibri/rpc-streamer";
+
+const payments = RPCStreamer.operation({
+  networkConfig: NetworkConfig.TestNet(),
+});
+
+// Starts at the latest ledger. stop() or AbortSignal ends the run.
+await payments.start(async (item) => {
+  if (item.transactionStatus !== "success") return;
+  if (item.operation.type === "payment") {
+    console.log({
+      ledger: item.ledgerSequence,
+      hash: item.transactionHash,
+      index: item.operationIndex,
+      destination: item.operation.destination,
+      amount: item.operation.amount,
+    });
+  }
+});
+```
+
+Records include ledger/hash/index context and `transactionStatus`. Failed
+transactions are included: operation presence describes intent, not execution.
+`operation` is the Stellar SDK's discriminated record; `parsedOperation` and
+`transaction` retain Core's parser views and raw result access. Fee-bump records
+identify operations in the inner transaction. Ledger checkpoints advance only
+after every callback for that ledger completes; interruption can replay it.
+Filtering and persistence belong to the application, not a built-in indexer.
+
+See the
+[transaction and operation guide](https://fifo-docs.gitbook.io/colibri/packages/rpc-streamer/transactions-and-operations)
+for bounded runs and recovery.
 
 ## Connections and modes
 
@@ -92,7 +137,8 @@ console.log("Next ledger:", streamer.nextLedger);
 - A fulfilled whole-ledger callback completes that ledger even when it calls
   `stop()` or aborts. Its checkpoint is awaited when the configured interval
   applies, and `nextLedger` advances. Stopping partway through an event ledger
-  leaves it uncheckpointed for replay instead.
+  leaves it uncheckpointed for replay instead. The same rule applies when
+  stopping partway through transaction or operation callbacks within a ledger.
 - `nextLedger` is an in-memory continuation position, not a durable checkpoint.
   It points to a partial ledger for replay, or the next ledger after completion.
   Reuse it only with the same network and filters. A new process must load its

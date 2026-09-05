@@ -57,8 +57,10 @@ catalog.
 - [core/asset/sac](core-asset-sac.md) — 5 codes.
 - [core/asset/sep11](core-asset-sep11.md) — 1 codes.
 - [core/asset/sep41-token](core-asset-sep41-token.md) — 20 codes.
+- [core/asset/stellar](core-asset-stellar.md) — 13 codes.
 - [core/auth/requirements/classic-operation-threshold](core-auth-requirements-classic-operation-threshold.md)
   — 2 codes.
+- [core/claimable-balance](core-claimable-balance.md) — 10 codes.
 - [core/common/helpers/boolean](core-common-helpers-boolean.md) — 1 codes.
 - [core/common/helpers/bounded-array](core-common-helpers-bounded-array.md) — 1
   codes.
@@ -78,7 +80,8 @@ catalog.
 - [core/event/event-id](core-event-event-id.md) — 2 codes.
 - [core/event/parsing](core-event-parsing.md) — 3 codes.
 - [core/ledger-entries](core-ledger-entries.md) — 19 codes.
-- [core/ledger-parser](core-ledger-parser.md) — 9 codes.
+- [core/ledger-parser](core-ledger-parser.md) — 10 codes.
+- [core/liquidity-pool](core-liquidity-pool.md) — 10 codes.
 - [core/network](core-network.md) — 2 codes.
 - [core/pipelines/classic-transaction](core-pipelines-classic-transaction.md) —
   3 codes.
@@ -89,6 +92,7 @@ catalog.
   — 1 codes.
 - [core/plugins/processes/simulate-transaction/contract-error-matcher](core-plugins-processes-simulate-transaction-contract-error-matcher.md)
   — 2 codes.
+- [core/price](core-price.md) — 4 codes.
 - [core/processes/assemble-for-enforcement](core-processes-assemble-for-enforcement.md)
   — 3 codes.
 - [core/processes/assemble-transaction](core-processes-assemble-transaction.md)
@@ -109,10 +113,11 @@ catalog.
 - [core/processes/simulate-transaction](core-processes-simulate-transaction.md)
   — 5 codes.
 - [core/processes/wrap-fee-bump](core-processes-wrap-fee-bump.md) — 6 codes.
+- [core/sdex](core-sdex.md) — 9 codes.
 - [core/sep1](core-sep1.md) — 8 codes.
 - [core/signer/delegated](core-signer-delegated.md) — 3 codes.
 - [core/signer/hash-x](core-signer-hash-x.md) — 9 codes.
-- [core/signer/local](core-signer-local.md) — 3 codes.
+- [core/signer/local](core-signer-local.md) — 5 codes.
 - [core/signer/pre-authorized-transaction](core-signer-pre-authorized-transaction.md)
   — 6 codes.
 - [core/signer/signed-payload](core-signer-signed-payload.md) — 12 codes.

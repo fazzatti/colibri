@@ -1,5 +1,7 @@
 import {
   Account,
+  Asset,
+  Claimant,
   Keypair,
   Memo,
   Networks,
@@ -11,17 +13,23 @@ import {
 import { Spec } from "stellar-sdk/contract";
 import { Server } from "stellar-sdk/rpc";
 import {
+  ClaimableBalancePredicates,
   Contract,
   createClassicTransactionPipeline,
+  isMessageSigner,
   LocalSigner,
+  NativeLiquidityPool,
   NetworkConfig,
+  SDEX,
+  StellarAsset,
+  StellarPrice,
   StrKey,
   type TransactionConfig,
   wrapSponsorship,
   type WrapSponsorshipArgs,
 } from "@colibri/core";
 import { Identicon } from "@colibri/identicon";
-import { createLedgerStreamer } from "@colibri/rpc-streamer";
+import { createLedgerStreamer, RPCStreamer } from "@colibri/rpc-streamer";
 import { WebAuthClient } from "@colibri/webauth";
 import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
 import { createChannelAccountsPlugin } from "@colibri/plugin-channel-accounts";
@@ -41,6 +49,56 @@ check(
 const signer = LocalSigner.fromSecret(secret);
 const networkConfig = NetworkConfig.TestNet();
 const rpc = new Server(networkConfig.rpcUrl!);
+const usd = new Asset("USD", signer.publicKey());
+const nativeAsset = new StellarAsset({ asset: usd, networkConfig, rpc });
+check(
+  nativeAsset.asset === usd,
+  "Asset helper accepts the consumer's native Asset",
+);
+const pool = new NativeLiquidityPool({
+  assets: [usd, Asset.native()],
+  networkConfig,
+  rpc,
+});
+const poolTrustOperation: xdr.Operation = pool.changeTrustOperation({
+  source: signer.publicKey(),
+});
+check(
+  poolTrustOperation.body.type === "changeTrust",
+  "Pool operations remain native XDR",
+);
+check(
+  new SDEX({ networkConfig, rpc }).ledgerEntries.rpc === rpc,
+  "SDEX retains native RPC",
+);
+const claim = new Claimant(
+  signer.publicKey(),
+  ClaimableBalancePredicates.unconditional(),
+);
+check(
+  claim.predicate.type === "claimPredicateUnconditional",
+  "Predicate helper returns a native claim predicate",
+);
+check(
+  StellarPrice.fromDecimal("1.25").n === 5,
+  "Exact price helper works in the installed artifact",
+);
+check(
+  isMessageSigner(signer),
+  "Optional message-signing capability is exported",
+);
+check(
+  nativeKey.verifyMessage("consumer", signer.signMessage("consumer")),
+  "Native SDK verifies SEP-53 messages",
+);
+check(
+  RPCStreamer.transaction({ rpc }).rpc === rpc,
+  "Transaction streamer accepts consumer RPC",
+);
+check(
+  RPCStreamer.operation({ rpc }).rpc === rpc,
+  "Operation streamer accepts consumer RPC",
+);
 const spec = new Spec([
   xdr.ScSpecEntry.scSpecEntryFunctionV0(
     new xdr.ScSpecFunctionV0({

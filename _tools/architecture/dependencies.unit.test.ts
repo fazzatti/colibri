@@ -42,6 +42,11 @@ describe("dependency direction", () => {
         target:
           "../../../core/pipelines/{classic-transaction,invoke-contract,read-from-contract}/**/*.ts",
       },
+      {
+        source: "../../../core/{price,claimable-balance}/**/*.ts",
+        target:
+          "../../../core/{pipelines,steps,processes,plugins,sdex,liquidity-pool}/**/*.ts",
+      },
     ];
 
     for (const boundary of forbiddenDependencies) {

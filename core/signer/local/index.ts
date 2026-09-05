@@ -54,6 +54,13 @@ export class LocalSigner implements LocalSignerType {
   sign: (data: BinaryData) => BinaryData;
 
   /**
+   * Signs a string (UTF-8) or raw bytes using SEP-53 domain separation through
+   * Stellar SDK. Verify with native `Keypair.verifyMessage`, not `verify`.
+   * Applications remain responsible for message intent, expiry and replay policy.
+   */
+  signMessage: (message: string | Uint8Array) => Uint8Array;
+
+  /**
    * Returns the Ed25519 signer key represented by this local signer.
    *
    * @returns The signer's `G...` public key.
@@ -132,6 +139,15 @@ export class LocalSigner implements LocalSignerType {
     this.sign = (data: BinaryData): BinaryData => {
       assert(isDefined(kp), new E.SIGNER_DESTROYED());
       return kp.sign(toUint8Array(data));
+    };
+
+    this.signMessage = (message: string | Uint8Array): Uint8Array => {
+      assert(isDefined(kp), new E.MESSAGE_SIGNER_DESTROYED());
+      try {
+        return kp.signMessage(message);
+      } catch (cause) {
+        throw new E.MESSAGE_SIGNING_FAILED(cause as Error);
+      }
     };
 
     this.verifySignature = (

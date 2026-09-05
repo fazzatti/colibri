@@ -72,6 +72,7 @@ export enum Code {
   UNSUPPORTED_OPERATION_TYPE = "LDP_007",
   MISSING_TRANSACTION_ENVELOPE = "LDP_008",
   UNSUPPORTED_ENVELOPE_TYPE = "LDP_009",
+  NATIVE_OPERATION_DECODE_FAILED = "LDP_010",
 }
 
 /**
@@ -150,7 +151,8 @@ export class UNSUPPORTED_LEDGER_CLOSE_META_VERSION extends LedgerParserError {
     super({
       code: Code.UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
       message: "Unsupported LedgerCloseMeta version",
-      details: `LedgerCloseMeta version "${version}" is not supported. Supported versions: v0, v1, v2. Consider updating to a newer version of this library.`,
+      details:
+        `LedgerCloseMeta version "${version}" is not supported. Supported versions: v0, v1, v2. Consider updating to a newer version of this library.`,
       data: { version },
     });
   }
@@ -171,7 +173,8 @@ export class INVALID_TRANSACTION_INDEX extends LedgerParserError {
     super({
       code: Code.INVALID_TRANSACTION_INDEX,
       message: "Invalid transaction index",
-      details: `Transaction index ${index} is out of bounds for ledger ${ledgerSequence} (max index: ${maxIndex}).`,
+      details:
+        `Transaction index ${index} is out of bounds for ledger ${ledgerSequence} (max index: ${maxIndex}).`,
       data: { index, ledgerSequence, maxIndex },
     });
   }
@@ -192,7 +195,8 @@ export class INVALID_OPERATION_INDEX extends LedgerParserError {
     super({
       code: Code.INVALID_OPERATION_INDEX,
       message: "Invalid operation index",
-      details: `Operation index ${index} is out of bounds for transaction ${transactionIndex} (max index: ${maxIndex}).`,
+      details:
+        `Operation index ${index} is out of bounds for transaction ${transactionIndex} (max index: ${maxIndex}).`,
       data: { index, transactionIndex, maxIndex },
     });
   }
@@ -211,7 +215,8 @@ export class UNSUPPORTED_OPERATION_TYPE extends LedgerParserError {
     super({
       code: Code.UNSUPPORTED_OPERATION_TYPE,
       message: "Unsupported operation type",
-      details: `Operation type "${operationType}" is not recognized. This may indicate a new operation type from a protocol upgrade.`,
+      details:
+        `Operation type "${operationType}" is not recognized. This may indicate a new operation type from a protocol upgrade.`,
       data: { operationType },
     });
   }
@@ -262,6 +267,20 @@ export class UNSUPPORTED_ENVELOPE_TYPE extends LedgerParserError {
 /**
  * Export all error classes for convenience.
  */
+/** A ledger operation could not be converted to its native SDK record. */
+export class NATIVE_OPERATION_DECODE_FAILED extends LedgerParserError {
+  /** Retains the SDK decoding failure and zero-based operation index. */
+  constructor(index: number, cause: Error) {
+    super({
+      code: Code.NATIVE_OPERATION_DECODE_FAILED,
+      message: "Failed to decode the native operation record",
+      details: "The operation XDR could not be decoded by Stellar SDK.",
+      data: { index },
+      cause,
+    });
+  }
+}
+
 export const ERROR_LDP = {
   [Code.INVALID_LEDGER_ENTRY]: INVALID_LEDGER_ENTRY,
   [Code.INVALID_HEADER_XDR]: INVALID_HEADER_XDR,
@@ -273,4 +292,5 @@ export const ERROR_LDP = {
   [Code.UNSUPPORTED_OPERATION_TYPE]: UNSUPPORTED_OPERATION_TYPE,
   [Code.MISSING_TRANSACTION_ENVELOPE]: MISSING_TRANSACTION_ENVELOPE,
   [Code.UNSUPPORTED_ENVELOPE_TYPE]: UNSUPPORTED_ENVELOPE_TYPE,
+  [Code.NATIVE_OPERATION_DECODE_FAILED]: NATIVE_OPERATION_DECODE_FAILED,
 };
