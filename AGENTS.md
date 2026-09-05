@@ -112,8 +112,22 @@ GitHub Actions behavior matters when changing structure or versions:
   manually through `workflow_dispatch`.
 - Architecture rules run first in the required workspace quality job so
   dependency or repository-shape violations fail before slower checks.
-- CRAP runs in an independent early quality job against unit-test coverage.
-  The final coverage job still merges every unit and integration profile before
+- Type and JSR documentation checks derive their inputs from workspace package
+  exports through `_tools/package-inventory.ts`, including subpath exports. CRAP
+  and documentation inventories use the same package discovery. Do not add a new
+  hard-coded entrypoint list.
+- Required consumer jobs check isolated Deno package trees and install temporary
+  npm test artifacts on Node 22.12 (minimum SDK) and Node 24 (supported SDK
+  range). They type-check native SDK interop, execute a smoke consumer, and
+  bundle the browser-capable packages. These test artifacts are never published
+  and are not claimed to be JSR's own generated tarballs. See
+  `_tools/consumers/README.md`.
+- Quality uploads a syntax-level constructor/throw/catch inventory alongside the
+  complete stable error-code reference. Review unknown and passthrough
+  boundaries deliberately; do not conflate caller-owned errors with missing SDK
+  wrappers.
+- CRAP runs in an independent early quality job against unit-test coverage. The
+  final coverage job still merges every unit and integration profile before
   uploading the repository-wide report to Codecov.
 - CI runs lint, type, and JSR documentation checks once, while every package's
   complete test suite runs in a required parallel job. Build verification uses
@@ -122,6 +136,11 @@ GitHub Actions behavior matters when changing structure or versions:
 - Package jobs upload raw Deno coverage profiles. A final required coverage job
   recreates the instrumented source cache, merges the profiles into one
   workspace LCOV report, and uploads it to Codecov.
+- Implementation coverage remains a 100% target and CRAP is gated at 15.
+  `.codecov.yml` separately defines the current PR status policy: 80% project
+  and patch targets with 10% and 5% threshold allowances. Upload success is not
+  proof of 100% coverage. Changing that policy requires an explicit decision;
+  never silently lower implementation targets or claim an exact 100% CI gate.
 - The publish workflow runs only on pushes to `main`.
 - Both CI and publishing reject package-version constants that do not match the
   corresponding package `deno.json` metadata.
@@ -298,8 +317,8 @@ Because CI runs `deno doc --lint` on package entrypoints:
 
 - document new public exports
 - keep existing doc comments accurate when behavior changes
-- update documentation in the same change when a public API, default, error,
-  CLI option, lifecycle, or pipeline behavior changes; documentation is required,
+- update documentation in the same change when a public API, default, error, CLI
+  option, lifecycle, or pipeline behavior changes; documentation is required,
   not deferred release work
 
 GitBook maintenance requirements:
@@ -307,16 +326,16 @@ GitBook maintenance requirements:
 - `docs/SUMMARY.md` must expose every content page. Preserve existing overview
   URLs when splitting long pages into scoped guides.
 - Teach one coherent developer task per guide: prerequisites, installation,
-  visible SDK calls, configuration/units, results, failures and cleanup.
-  Label incomplete fragments and their application-supplied inputs explicitly.
+  visible SDK calls, configuration/units, results, failures and cleanup. Label
+  incomplete fragments and their application-supplied inputs explicitly.
 - Every published package and public module family needs guide coverage plus a
   link to its exact JSR API reference. Keep exhaustive references separate from
   tutorials; do not describe missing public API families as curated omissions.
 - Add `<!-- deno-check -->` immediately before complete TypeScript examples so
   the repository checks their types against workspace APIs without executing
   network/Docker actions. Do not hide SDK usage in example-only abstractions.
-- All declared error contexts are documented under `docs/reference/errors/`.
-  Run `deno task docs:errors` after error-code changes; do not hand-edit those
+- All declared error contexts are documented under `docs/reference/errors/`. Run
+  `deno task docs:errors` after error-code changes; do not hand-edit those
   generated tables or the marked error-navigation block in SUMMARY.
 - Run `deno task check:docs` for relative links, navigation, error-reference
   freshness, package/version references, snippet syntax and complete examples.

@@ -15,7 +15,7 @@ import { rpc } from "npm:@stellar/stellar-sdk";
 
 const server = new rpc.Server(NetworkConfig.TestNet().rpcUrl);
 const { latestLedger } = await server.getHealth();
-const response = await server._getLedgers({
+const response = await server.getLedgers({
   startLedger: latestLedger,
   pagination: { limit: 1 },
 });

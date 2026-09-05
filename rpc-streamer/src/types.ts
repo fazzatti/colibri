@@ -4,7 +4,23 @@
  * @module
  */
 
-import type { Server } from "stellar-sdk/rpc";
+import type { NetworkConfig, Server } from "@/native-types.ts";
+
+/** Choose one live RPC source. A supplied native client is reused unchanged. */
+export type StreamerRpcConfig =
+  | { rpcUrl: string; allowHttp?: boolean; rpc?: never; networkConfig?: never }
+  | {
+    networkConfig: NetworkConfig;
+    rpcUrl?: never;
+    rpc?: never;
+    allowHttp?: never;
+  }
+  | { rpc: Server; rpcUrl?: never; networkConfig?: never; allowHttp?: never };
+
+/** Optional archive source; URL and native client are mutually exclusive. */
+export type StreamerArchiveConfig =
+  | { archiveRpcUrl?: string; archiveAllowHttp?: boolean; archiveRpc?: never }
+  | { archiveRpc: Server; archiveRpcUrl?: never; archiveAllowHttp?: never };
 
 /**
  * Handler callback type for processing streamed data.
@@ -13,15 +29,15 @@ import type { Server } from "stellar-sdk/rpc";
 export type DataHandler<T> = (data: T) => void | Promise<void>;
 
 /**
- * Checkpoint handler called periodically during streaming.
- * Use this to persist progress for resumption after crashes/restarts.
+ * Awaited after complete ledgers at the configured interval. A rejection stops
+ * ingestion with CHECKPOINT_FAILED rather than skipping persistence.
  *
  * @param ledgerSequence - The current ledger sequence being processed
  *
  * @example
  * ```typescript
- * const onCheckpoint = (ledgerSequence) => {
- *   db.saveProgress(ledgerSequence);
+ * const onCheckpoint = async (ledgerSequence) => {
+ *   await db.saveProgress(ledgerSequence);
  * };
  * ```
  */
@@ -71,6 +87,8 @@ export interface StreamerOptions {
  * Base options shared by all start methods.
  */
 export interface BaseStartOptions {
+  /** Stops between callbacks/pages and interrupts waits. In-flight SDK requests are allowed to finish. */
+  signal?: AbortSignal;
   /** Checkpoint callback for progress persistence */
   onCheckpoint?: CheckpointHandler;
   /** How often to call checkpoint (in ledgers, default: 100) */
@@ -113,8 +131,11 @@ export interface AutoStartOptions extends BaseStartOptions {
  * Internal result from live ingestion.
  */
 export interface LiveIngestionResult {
+  /** Next ledger to request, or the current ledger when unavailable/incomplete. */
   nextLedger: number;
+  /** Request a pacing delay before another live request. */
   shouldWait: boolean;
+  /** An unconsumed response is beyond the stop bound; stop without a checkpoint. */
   hitStopLedger: boolean;
 }
 
@@ -126,7 +147,16 @@ export type LiveIngestFunc<T> = (
   ledgerSequence: number,
   onData: DataHandler<T>,
   stopLedger?: number,
+  context?: LiveIngestContext,
 ) => Promise<LiveIngestionResult>;
+
+/** Cooperative cancellation passed to live ingestors. */
+export interface LiveIngestContext {
+  /** Whether the owning run still accepts more data. */
+  isRunning: () => boolean;
+  /** Aborted by stop() or the run's external signal. */
+  signal?: AbortSignal;
+}
 
 /**
  * Archive ingestion function type.
@@ -150,6 +180,10 @@ export type ArchiveIngestFunc<T> = (
  * Context passed to archive ingestion functions.
  */
 export interface ArchiveIngestContext {
+  /** Aborted by stop() or the run's external signal. */
+  signal?: AbortSignal;
+  /** Complete a consumed ledger, awaiting persistence before advancing. Prefer this over invoking onCheckpoint directly. */
+  onLedgerComplete?: (ledgerSequence: number) => Promise<void>;
   /** Function that returns whether the streamer is still running */
   isRunning: () => boolean;
   /** Optional checkpoint handler */
@@ -163,19 +197,11 @@ export interface ArchiveIngestContext {
 /**
  * Configuration for creating an RPCStreamer instance.
  */
-export interface RPCStreamerConfig<T> {
-  /** URL of the Soroban RPC server for live streaming */
-  rpcUrl: string;
-  /** Allow HTTP for the live RPC server (default: false) */
-  allowHttp?: boolean;
-  /** Optional URL of an archive RPC server for historical ingestion */
-  archiveRpcUrl?: string;
-  /** Allow HTTP for the archive RPC server (defaults to allowHttp or false) */
-  archiveAllowHttp?: boolean;
+export type RPCStreamerConfig<T> = StreamerRpcConfig & StreamerArchiveConfig & {
   /** Callback for live ingestion logic (required for startLive and start) */
   ingestLive?: LiveIngestFunc<T>;
   /** Callback for archive ingestion logic (required for startArchive and start with archive) */
   ingestArchive?: ArchiveIngestFunc<T>;
   /** Optional configuration options */
   options?: StreamerOptions;
-}
+};

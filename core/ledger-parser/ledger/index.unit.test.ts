@@ -32,6 +32,31 @@ describe("Ledger", () => {
   });
 
   describe("Factory & Validation", () => {
+    it("accepts native public SDK ledger responses without a raw-response adapter", () => {
+      const native: rpc.Api.LedgerResponse = {
+        ...ledgerEntry,
+        headerXdr: xdr.LedgerHeaderHistoryEntry.fromXdr(
+          ledgerEntry.headerXdr,
+          "base64",
+        ),
+        metadataXdr: xdr.LedgerCloseMeta.fromXdr(
+          ledgerEntry.metadataXdr,
+          "base64",
+        ),
+      };
+      const decoded = Ledger.fromEntry(native);
+      const raw = Ledger.fromEntry(ledgerEntry);
+      expect(decoded.meta).toBe(native.metadataXdr);
+      expect(decoded.header).toBe(native.headerXdr.header);
+      expect(
+        decoded.transactions.map((
+          tx,
+        ) => [tx.hash, tx.resultCode, tx.successful]),
+      )
+        .toEqual(
+          raw.transactions.map((tx) => [tx.hash, tx.resultCode, tx.successful]),
+        );
+    });
     it("should create a Ledger from valid entry", () => {
       const ledger = Ledger.fromEntry(ledgerEntry);
 

@@ -1,17 +1,11 @@
 import { analyze, lcovReader, type MethodMetrics } from "crap4ts-tool";
+import { readPackageInventory } from "./package-inventory.ts";
 
 const CRAP_THRESHOLD = 15;
 
-const PACKAGE_ROOTS = [
-  "core",
-  "build-verification",
-  "identicon",
-  "rpc-streamer",
-  "webauth",
-  "plugins/fee-bump",
-  "plugins/channel-accounts",
-  "test-tooling",
-] as const;
+const PACKAGE_ROOTS = (await readPackageInventory(Deno.cwd())).map((pkg) =>
+  pkg.root
+);
 
 const IGNORED_DIRECTORIES = new Set([
   ".git",

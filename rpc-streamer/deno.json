@@ -1,6 +1,6 @@
 {
   "name": "@colibri/rpc-streamer",
-  "version": "0.2.17",
+  "version": "0.3.0",
   "exports": "./mod.ts",
   "license": "MIT",
   "publish": {
@@ -9,6 +9,6 @@
   },
   "imports": {
     "@/": "./src/",
-    "@colibri/core": "jsr:@colibri/core@^0.28.1"
+    "@colibri/core": "jsr:@colibri/core@^0.29.0"
   }
 }

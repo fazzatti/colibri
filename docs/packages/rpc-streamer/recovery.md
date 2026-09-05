@@ -13,20 +13,29 @@ streamer.stop();
 await running;
 ```
 
-`stop()` changes the running flag. It does not abort an ongoing request,
-callback, or timer. The promise settles after the active work and loop have
-finished.
+`stop()` changes the running flag and interrupts pacing timers. An optional
+`signal: controller.signal` in any start method has the same effect. Neither
+mechanism abandons an ongoing SDK request or callback; the promise settles after
+that work finishes. Await it before starting again, even when `isRunning` is
+already false. A pre-aborted signal performs no RPC requests.
 
-For built-in live event streams, calling `stop()` from a data callback prevents
+For built-in event streams, calling `stop()` from a data callback prevents
 delivery of the remaining events in that page. An interrupted ledger is not
 reported as a completed checkpoint; replay it when resuming.
 
 ## Durable progress
 
-`onCheckpoint` is a notification, not an acknowledged commit barrier. The
-current implementation does not await a promise returned by that callback. It
-also does not guarantee a final checkpoint at shutdown. Do not use an
-asynchronous checkpoint callback as the sole proof that data has been persisted.
+Built-in streamers await `onCheckpoint` before advancing beyond the completed
+ledger. A rejected checkpoint stops with `RPC_023` (`CHECKPOINT_FAILED`) and
+preserves the cause; `onError` cannot turn that persistence failure into a skip.
+No final checkpoint is forced at shutdown. A checkpoint acknowledges your
+callback's completion, not a distributed transaction or exactly-once guarantee.
+
+`nextLedger` is the in-memory continuation position of the last run. After a
+clean bounded run it is `stopLedger + 1`; after interruption it is the partial
+ledger to replay. It is undefined before a position has been established. Reuse
+it with the same network and filters. It is **not durable storage** and may be
+ahead of the last interval-based persisted checkpoint.
 
 For ledger processing, await data storage and progress storage together inside
 the data handler, preferably in one database transaction. Resume at the last
@@ -37,11 +46,28 @@ mean every event in that ledger was committed.
 The interval is `ledger % interval === 0`, not an item count since startup. Use
 a positive nonzero integer.
 
+```ts
+const controller = new AbortController();
+const running = streamer.start(saveEvent, {
+  signal: controller.signal,
+  checkpointInterval: 1,
+  onCheckpoint: async (completedLedger) => {
+    await database.saveProgress(completedLedger);
+  },
+});
+// In your shutdown handler:
+controller.abort();
+await running;
+console.log("Next ledger for an in-process restart:", streamer.nextLedger);
+```
+
 ## Continuing after errors skips work
 
 Without `onError`, ingestion errors reject the run. If the callback exists, only
 explicit `false` stops and rethrows. `true` **or no return value** tells the
-current loop to advance past the failed ledger. This is not a retry.
+current loop to advance past the failed ledger. This is not a retry. That
+deliberate skip can advance `nextLedger`; it does not certify successful
+consumption of the skipped data. Checkpoint failures are the exception above.
 
 ```ts
 await streamer.start(handleData, {

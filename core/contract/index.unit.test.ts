@@ -542,10 +542,7 @@ describe("Contract", () => {
       });
       await byExternalRef.loadSpecFromNetwork();
       assertEquals([...byExternalRef.getWasm()], [...wasm]);
-      assertThrows(
-        () => byExternalRef.getWasmHash(),
-        E.MISSING_REQUIRED_PROPERTY,
-      );
+      assertEquals(byExternalRef.getWasmHash(), hash);
     });
 
     it("keeps network executable lookup failures occurrence-specific", async () => {

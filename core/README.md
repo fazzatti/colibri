@@ -566,6 +566,13 @@ current owner/tag mapping when necessary. Calling it again deliberately
 refreshes a mutable external mapping instead of treating an earlier resolved
 hash as permanent.
 
+After a successful network load, `getLoadedSnapshot()` returns a detached record
+of the resolved Wasm hash and code-read ledger, plus separate instance/reference
+observations when applicable. Wasm, spec, and resolved hash are replaced
+together only after retrieval and parsing succeed; a failed refresh retains the
+previous state. This records what was loaded, not an atomic view of changing
+network state.
+
 The same behavior is available at the ledger layer through
 `LedgerEntries.resolveContractExecutable(...)` and
 `LedgerEntries.contractCode({ contractId })`. Resolution returns the raw

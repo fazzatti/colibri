@@ -60,13 +60,16 @@ describe("Ledger Streamer Ingestors", () => {
         options: { waitLedgerIntervalMs: 10, pagingIntervalMs: 5 },
       });
 
-      const healthStub = stub(streamer.rpc as any, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse({ latestLedger: 95002 })),
+      const healthStub = stub(
+        streamer.rpc as any,
+        "getHealth",
+        () =>
+          Promise.resolve(createMockHealthResponse({ latestLedger: 95002 })),
       );
       stubs.push(healthStub);
 
       let callCount = 0;
-      const getLedgersStub = stub(streamer.rpc as any, "_getLedgers", () => {
+      const getLedgersStub = stub(streamer.rpc as any, "getLedgers", () => {
         callCount++;
         if (callCount === 1) {
           // First call: ledger not available yet
@@ -109,15 +112,18 @@ describe("Ledger Streamer Ingestors", () => {
         options: { waitLedgerIntervalMs: 10, pagingIntervalMs: 5 },
       });
 
-      const healthStub = stub(streamer.rpc as any, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse({ latestLedger: 95002 })),
+      const healthStub = stub(
+        streamer.rpc as any,
+        "getHealth",
+        () =>
+          Promise.resolve(createMockHealthResponse({ latestLedger: 95002 })),
       );
       stubs.push(healthStub);
 
       const requestedLedgers: number[] = [];
       const getLedgersStub = stub(
         streamer.rpc as any,
-        "_getLedgers",
+        "getLedgers",
         (opts: any) => {
           requestedLedgers.push(opts.startLedger);
           return Promise.resolve({
@@ -156,15 +162,18 @@ describe("Ledger Streamer Ingestors", () => {
         options: { waitLedgerIntervalMs: 10, pagingIntervalMs: 5 },
       });
 
-      const healthStub = stub(streamer.rpc as any, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse({ latestLedger: 95001 })),
+      const healthStub = stub(
+        streamer.rpc as any,
+        "getHealth",
+        () =>
+          Promise.resolve(createMockHealthResponse({ latestLedger: 95001 })),
       );
       stubs.push(healthStub);
 
       let callCount = 0;
       const getLedgersStub = stub(
         streamer.rpc as any,
-        "_getLedgers",
+        "getLedgers",
         (opts: any) => {
           callCount++;
           return Promise.resolve({
@@ -203,16 +212,22 @@ describe("Ledger Streamer Ingestors", () => {
         options: { waitLedgerIntervalMs: 10, pagingIntervalMs: 5 },
       });
 
-      const healthStub = stub(streamer.rpc as any, "getHealth", () =>
-        Promise.resolve(createMockHealthResponse({ latestLedger: 95010 })),
+      const healthStub = stub(
+        streamer.rpc as any,
+        "getHealth",
+        () =>
+          Promise.resolve(createMockHealthResponse({ latestLedger: 95010 })),
       );
       stubs.push(healthStub);
 
-      const getLedgersStub = stub(streamer.rpc as any, "_getLedgers", () =>
-        Promise.resolve({
-          ledgers: [createMockLedgerEntry(95006)], // Beyond stop
-          latestLedger: 95010,
-        }),
+      const getLedgersStub = stub(
+        streamer.rpc as any,
+        "getLedgers",
+        () =>
+          Promise.resolve({
+            ledgers: [createMockLedgerEntry(95006)], // Beyond stop
+            latestLedger: 95010,
+          }),
       );
       stubs.push(getLedgersStub);
 
@@ -252,7 +267,7 @@ describe("Ledger Streamer Ingestors", () => {
       const requestedLedgers: number[] = [];
       const getLedgersStub = stub(
         streamer.archiveRpc as any,
-        "_getLedgers",
+        "getLedgers",
         (opts: any) => {
           requestedLedgers.push(opts.startLedger);
           return Promise.resolve({
@@ -293,7 +308,7 @@ describe("Ledger Streamer Ingestors", () => {
 
       const getLedgersStub = stub(
         streamer.archiveRpc as any,
-        "_getLedgers",
+        "getLedgers",
         (opts: any) =>
           Promise.resolve({
             ledgers: [createMockLedgerEntry(opts.startLedger)],
@@ -337,7 +352,7 @@ describe("Ledger Streamer Ingestors", () => {
       let callCount = 0;
       const getLedgersStub = stub(
         streamer.archiveRpc as any,
-        "_getLedgers",
+        "getLedgers",
         (opts: any) => {
           callCount++;
           // Return empty for ledger 1001
@@ -386,7 +401,7 @@ describe("Ledger Streamer Ingestors", () => {
 
       const getLedgersStub = stub(
         streamer.archiveRpc as any,
-        "_getLedgers",
+        "getLedgers",
         () =>
           Promise.resolve({
             // Always return ledger way beyond stop
@@ -428,7 +443,7 @@ describe("Ledger Streamer Ingestors", () => {
       let callCount = 0;
       const getLedgersStub = stub(
         streamer.archiveRpc as any,
-        "_getLedgers",
+        "getLedgers",
         (opts: any) => {
           callCount++;
           if (callCount === 2) {
@@ -476,7 +491,7 @@ describe("Ledger Streamer Ingestors", () => {
       let callCount = 0;
       const getLedgersStub = stub(
         streamer.archiveRpc as any,
-        "_getLedgers",
+        "getLedgers",
         () => {
           callCount++;
           if (callCount === 2) {
@@ -524,7 +539,7 @@ describe("Ledger Streamer Ingestors", () => {
       let processedCount = 0;
       const getLedgersStub = stub(
         streamer.archiveRpc as any,
-        "_getLedgers",
+        "getLedgers",
         (opts: any) => {
           processedCount++;
           if (processedCount === 3) {

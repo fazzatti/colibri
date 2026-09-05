@@ -7,12 +7,7 @@ import { memoize } from "@/common/decorators/memoize/index.ts";
 import { getContractIdFromGetTransactionResponse } from "@/common/helpers/get-transaction-response.ts";
 import { getStellarAssetContractIdFromFailedSimulationResponse } from "@/common/helpers/failed-simulation-response.ts";
 import { SIMULATION_FAILED } from "@/processes/simulate-transaction/error.ts";
-import {
-  Asset,
-  nativeToScVal,
-  Operation,
-  scValToNative,
-} from "stellar-sdk";
+import { Asset, nativeToScVal, Operation } from "stellar-sdk";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { Api } from "stellar-sdk/rpc";
 import type { LedgerKeyLike } from "@/common/types/index.ts";
@@ -31,7 +26,7 @@ import {
   type StellarAssetContractNativeArgs,
   type StellarAssetContractOptions,
 } from "@/asset/sac/types.ts";
-import { isDefined } from "@/common/type-guards/is-defined.ts";
+import { decodeTokenValue } from "@/asset/token-value.ts";
 
 type ResolvedStellarAssetContractOptions = {
   cache: {
@@ -448,9 +443,10 @@ export class StellarAssetContract {
       method: Method.Decimals,
     });
 
-    assert(isDefined(result), new E.MISSING_RETURN_VALUE(Method.Decimals));
-
-    return scValToNative(result) as ContractOutput[Method.Decimals];
+    return decodeTokenValue<ContractOutput[Method.Decimals]>(
+      result,
+      new E.MISSING_RETURN_VALUE(Method.Decimals),
+    );
   }
 
   /**
@@ -482,9 +478,10 @@ export class StellarAssetContract {
       method: Method.Name,
     });
 
-    assert(isDefined(result), new E.MISSING_RETURN_VALUE(Method.Name));
-
-    return scValToNative(result) as ContractOutput[Method.Name];
+    return decodeTokenValue<ContractOutput[Method.Name]>(
+      result,
+      new E.MISSING_RETURN_VALUE(Method.Name),
+    );
   }
 
   /**
@@ -515,9 +512,10 @@ export class StellarAssetContract {
       method: Method.Symbol,
     });
 
-    assert(isDefined(result), new E.MISSING_RETURN_VALUE(Method.Symbol));
-
-    return scValToNative(result) as ContractOutput[Method.Symbol];
+    return decodeTokenValue<ContractOutput[Method.Symbol]>(
+      result,
+      new E.MISSING_RETURN_VALUE(Method.Symbol),
+    );
   }
 
   // ============================================
@@ -559,9 +557,10 @@ export class StellarAssetContract {
       ],
     });
 
-    assert(isDefined(result), new E.MISSING_RETURN_VALUE(Method.Allowance));
-
-    return scValToNative(result) as ContractOutput[Method.Allowance];
+    return decodeTokenValue<ContractOutput[Method.Allowance]>(
+      result,
+      new E.MISSING_RETURN_VALUE(Method.Allowance),
+    );
   }
 
   /**
@@ -586,9 +585,10 @@ export class StellarAssetContract {
       methodArgs: [nativeToScVal(id, { type: "address" })],
     });
 
-    assert(isDefined(result), new E.MISSING_RETURN_VALUE(Method.Balance));
-
-    return scValToNative(result) as ContractOutput[Method.Balance];
+    return decodeTokenValue<ContractOutput[Method.Balance]>(
+      result,
+      new E.MISSING_RETURN_VALUE(Method.Balance),
+    );
   }
 
   /**
@@ -619,9 +619,10 @@ export class StellarAssetContract {
       methodArgs: [nativeToScVal(id, { type: "address" })],
     });
 
-    assert(isDefined(result), new E.MISSING_RETURN_VALUE(Method.Authorized));
-
-    return scValToNative(result) as ContractOutput[Method.Authorized];
+    return decodeTokenValue<ContractOutput[Method.Authorized]>(
+      result,
+      new E.MISSING_RETURN_VALUE(Method.Authorized),
+    );
   }
 
   /**
@@ -646,9 +647,10 @@ export class StellarAssetContract {
       method: Method.Admin,
     });
 
-    assert(isDefined(result), new E.MISSING_RETURN_VALUE(Method.Admin));
-
-    return scValToNative(result) as ContractOutput[Method.Admin];
+    return decodeTokenValue<ContractOutput[Method.Admin]>(
+      result,
+      new E.MISSING_RETURN_VALUE(Method.Admin),
+    );
   }
 
   // ============================================

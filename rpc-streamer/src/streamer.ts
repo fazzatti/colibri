@@ -8,18 +8,22 @@
  * @module
  */
 
-import { Server } from "stellar-sdk/rpc";
-import type { Event, Ledger } from "@colibri/core";
+import { Server as StellarServer } from "stellar-sdk/rpc";
+import type { Event, Ledger, Server } from "@/native-types.ts";
 import { isDefined } from "@colibri/core";
+import { resolveArchiveRpc, resolveLiveRpc } from "@/connection.ts";
+import { waitForStream } from "@/lifecycle.ts";
 import { RPCStreamerError, RPCStreamerErrorCode } from "@/errors.ts";
 import { createEventStreamer } from "@/variants/event/index.ts";
 import type { EventStreamerConfig } from "@/variants/event/types.ts";
 import { createLedgerStreamer } from "@/variants/ledger/index.ts";
 import type { LedgerStreamerConfig } from "@/variants/ledger/types.ts";
 import type {
+  ArchiveIngestContext,
   ArchiveIngestFunc,
   ArchiveStartOptions,
   AutoStartOptions,
+  BaseStartOptions,
   CheckpointHandler,
   DataHandler,
   ErrorHandler,
@@ -69,6 +73,58 @@ export class RPCStreamer<T> {
 
   /** Flag indicating if the streamer is currently running */
   protected _isRunning: boolean = false;
+  private activeRun = false;
+  private runController?: AbortController;
+  private detachSignal?: () => void;
+  private resumeLedger?: number;
+
+  /**
+   * Next ledger to consume after the current run settles. Reuse it as startLedger
+   * with the same filters/network. A partially consumed ledger is replayed;
+   * consumers should make their side effects idempotent.
+   */
+  get nextLedger(): number | undefined {
+    return this.resumeLedger;
+  }
+
+  /** @internal */
+  private beginRun(signal?: AbortSignal): void {
+    this.activeRun = true;
+    this.runController = new AbortController();
+    this.resumeLedger = undefined;
+    this._isRunning = true;
+    const stop = () => this.stop();
+    signal?.addEventListener("abort", stop, { once: true });
+    this.detachSignal = () => signal?.removeEventListener("abort", stop);
+    if (signal?.aborted) this.stop();
+  }
+
+  /** @internal */
+  private finishRun(): void {
+    this.stop();
+    this.detachSignal?.();
+    this.detachSignal = undefined;
+    this.activeRun = false;
+  }
+
+  /** @internal */
+  private archiveContext(options: BaseStartOptions): ArchiveIngestContext {
+    return {
+      isRunning: () => this._isRunning,
+      signal: this.runController?.signal,
+      onCheckpoint: options.onCheckpoint,
+      checkpointInterval: options.checkpointInterval,
+      onError: options.onError,
+      onLedgerComplete: async (ledger) => {
+        await this.maybeCheckpoint(
+          ledger,
+          options.onCheckpoint,
+          options.checkpointInterval,
+        );
+        this.resumeLedger = ledger + 1;
+      },
+    };
+  }
 
   /** Live ingestion callback provided by variant */
   private readonly _ingestLive?: LiveIngestFunc<T>;
@@ -84,14 +140,8 @@ export class RPCStreamer<T> {
    * @throws {INVALID_CONFIG} If pagingIntervalMs exceeds waitLedgerIntervalMs
    */
   constructor(config: RPCStreamerConfig<T>) {
-    this._rpc = new Server(config.rpcUrl, {
-      allowHttp: config.allowHttp ?? false,
-    });
-    if (config.archiveRpcUrl) {
-      this._archiveRpc = new Server(config.archiveRpcUrl, {
-        allowHttp: config.archiveAllowHttp ?? config.allowHttp ?? false,
-      });
-    }
+    this._rpc = resolveLiveRpc(config);
+    this._archiveRpc = resolveArchiveRpc(config);
 
     this._ingestLive = config.ingestLive;
     this._ingestArchive = config.ingestArchive;
@@ -176,7 +226,7 @@ export class RPCStreamer<T> {
    * @param allowHttp - Allow HTTP for the archive RPC server
    */
   public setArchiveRpc(archiveRpcUrl: string, allowHttp = false): void {
-    this._archiveRpc = new Server(archiveRpcUrl, { allowHttp });
+    this._archiveRpc = new StellarServer(archiveRpcUrl, { allowHttp });
   }
 
   /**
@@ -197,7 +247,7 @@ export class RPCStreamer<T> {
         intervalMs = this._waitLedgerIntervalMs;
         break;
     }
-    return new Promise((resolve) => setTimeout(resolve, intervalMs));
+    return waitForStream(intervalMs, this.runController?.signal);
   }
 
   /**
@@ -216,6 +266,7 @@ export class RPCStreamer<T> {
    */
   public stop(): void {
     this._isRunning = false;
+    this.runController?.abort();
   }
 
   /**
@@ -226,13 +277,22 @@ export class RPCStreamer<T> {
    * @param checkpointInterval - Interval between checkpoints (default: 100)
    * @internal
    */
-  protected maybeCheckpoint(
+  protected async maybeCheckpoint(
     ledgerSequence: number,
     onCheckpoint?: CheckpointHandler,
     checkpointInterval: number = 100,
-  ): void {
+  ): Promise<void> {
     if (onCheckpoint && ledgerSequence % checkpointInterval === 0) {
-      onCheckpoint(ledgerSequence);
+      try {
+        await onCheckpoint(ledgerSequence);
+      } catch (cause) {
+        throw new RPCStreamerError(
+          RPCStreamerErrorCode.CHECKPOINT_FAILED,
+          "Checkpoint persistence failed",
+          { ledgerSequence },
+          cause as Error,
+        );
+      }
     }
   }
 
@@ -258,8 +318,9 @@ export class RPCStreamer<T> {
     return false; // No handler, rethrow
   }
 
+  /** @internal */
   private assertNotRunning(): void {
-    if (this._isRunning) {
+    if (this.activeRun || this._isRunning) {
       throw new RPCStreamerError(
         RPCStreamerErrorCode.ALREADY_RUNNING,
         "Streamer is already running",
@@ -267,6 +328,7 @@ export class RPCStreamer<T> {
     }
   }
 
+  /** @internal */
   private requireLiveIngestor(): LiveIngestFunc<T> {
     if (!this._ingestLive) {
       throw new RPCStreamerError(
@@ -277,6 +339,7 @@ export class RPCStreamer<T> {
     return this._ingestLive;
   }
 
+  /** @internal */
   private assertHealthy(status: string): void {
     if (status !== "healthy") {
       throw new RPCStreamerError(
@@ -286,6 +349,7 @@ export class RPCStreamer<T> {
     }
   }
 
+  /** @internal */
   private assertLedgerAvailable(
     currentLedger: number,
     oldestAvailable: number,
@@ -300,6 +364,7 @@ export class RPCStreamer<T> {
     this.assertLedgerNotAhead(currentLedger, latestLedger);
   }
 
+  /** @internal */
   private assertLedgerNotAhead(
     currentLedger: number,
     latestLedger: number,
@@ -312,6 +377,7 @@ export class RPCStreamer<T> {
     }
   }
 
+  /** @internal */
   private beyondStopLedger(
     ledger: number,
     stopLedger?: number,
@@ -319,15 +385,21 @@ export class RPCStreamer<T> {
     return isDefined(stopLedger) && ledger > stopLedger;
   }
 
+  /** @internal */
   private recoverFromIngestionError(
     error: unknown,
     currentLedger: number,
     onError?: ErrorHandler,
   ): number {
+    if (
+      error instanceof RPCStreamerError &&
+      error.code === RPCStreamerErrorCode.CHECKPOINT_FAILED
+    ) throw error;
     if (!this.handleError(error as Error, currentLedger, onError)) throw error;
     return currentLedger + 1;
   }
 
+  /** @internal */
   private async ingestLiveLedger(
     currentLedger: number,
     onData: DataHandler<T>,
@@ -340,17 +412,23 @@ export class RPCStreamer<T> {
           currentLedger,
           onData,
           options.stopLedger,
+          {
+            isRunning: () => this._isRunning,
+            signal: this.runController?.signal,
+          },
         );
       if (!this._isRunning) return currentLedger;
       if (hitStopLedger) {
         this.stop();
         return nextLedger;
       }
-      this.maybeCheckpoint(
-        currentLedger,
-        options.onCheckpoint,
-        options.checkpointInterval,
-      );
+      if (nextLedger > currentLedger) {
+        await this.maybeCheckpoint(
+          currentLedger,
+          options.onCheckpoint,
+          options.checkpointInterval,
+        );
+      }
       if (
         shouldWait && !this.beyondStopLedger(nextLedger, options.stopLedger)
       ) {
@@ -393,12 +471,14 @@ export class RPCStreamer<T> {
   ): Promise<void> {
     this.assertNotRunning();
     this.requireLiveIngestor();
-    this._isRunning = true;
+    this.beginRun(options.signal);
 
     try {
+      if (!this._isRunning) return;
       const rpcDetails = await this._rpc.getHealth();
       this.assertHealthy(rpcDetails.status);
       let currentLedger = options.startLedger ?? rpcDetails.latestLedger;
+      this.resumeLedger = currentLedger;
       const oldestAvailable = rpcDetails.oldestLedger + 2; // +2 safety buffer
       this.assertLedgerAvailable(
         currentLedger,
@@ -412,6 +492,7 @@ export class RPCStreamer<T> {
           break;
         }
         const latestLedger = (await this._rpc.getHealth()).latestLedger;
+        if (!this._isRunning) break;
         if (currentLedger > latestLedger) {
           await this.waitFor("ledger");
           continue;
@@ -421,9 +502,10 @@ export class RPCStreamer<T> {
           onData,
           options,
         );
+        this.resumeLedger = currentLedger;
       }
     } finally {
-      this._isRunning = false;
+      this.finishRun();
     }
   }
 
@@ -451,12 +533,7 @@ export class RPCStreamer<T> {
     onData: DataHandler<T>,
     options: ArchiveStartOptions,
   ): Promise<void> {
-    if (this._isRunning) {
-      throw new RPCStreamerError(
-        RPCStreamerErrorCode.ALREADY_RUNNING,
-        "Streamer is already running",
-      );
-    }
+    this.assertNotRunning();
 
     if (!this._ingestArchive) {
       throw new RPCStreamerError(
@@ -479,27 +556,25 @@ export class RPCStreamer<T> {
       );
     }
 
-    this._isRunning = true;
+    this.beginRun(options.signal);
 
     try {
-      await this._ingestArchive(
+      this.resumeLedger = options.startLedger;
+      if (!this._isRunning) return;
+      this.resumeLedger = await this._ingestArchive(
         this._archiveRpc,
         options.startLedger,
         options.stopLedger,
         onData,
-        {
-          isRunning: () => this._isRunning,
-          onCheckpoint: options.onCheckpoint,
-          checkpointInterval: options.checkpointInterval,
-          onError: options.onError,
-        },
+        this.archiveContext(options),
       );
       this.stop();
     } finally {
-      this._isRunning = false;
+      this.finishRun();
     }
   }
 
+  /** @internal */
   private requireAutoArchiveIngestor(
     currentLedger: number,
     oldestAvailable: number,
@@ -519,6 +594,7 @@ export class RPCStreamer<T> {
     return { rpc: this._archiveRpc, ingest: this._ingestArchive };
   }
 
+  /** @internal */
   private async ingestAutoArchive(
     currentLedger: number,
     oldestAvailable: number,
@@ -533,12 +609,13 @@ export class RPCStreamer<T> {
       ? Math.min(oldestAvailable - 1, options.stopLedger)
       : oldestAvailable - 1;
     try {
-      return await ingest(rpc, currentLedger, targetLedger, onData, {
-        isRunning: () => this._isRunning,
-        onCheckpoint: options.onCheckpoint,
-        checkpointInterval: options.checkpointInterval,
-        onError: options.onError,
-      });
+      return await ingest(
+        rpc,
+        currentLedger,
+        targetLedger,
+        onData,
+        this.archiveContext(options),
+      );
     } catch (error) {
       return this.recoverFromIngestionError(
         error,
@@ -548,12 +625,14 @@ export class RPCStreamer<T> {
     }
   }
 
+  /** @internal */
   private async shouldSkipLiveWait(currentLedger: number): Promise<boolean> {
     if (!this._skipLedgerWaitIfBehind) return false;
     const latestLedger = (await this._rpc.getHealth()).latestLedger;
     return currentLedger < latestLedger - 1;
   }
 
+  /** @internal */
   private async ingestAutoLive(
     currentLedger: number,
     onData: DataHandler<T>,
@@ -566,17 +645,23 @@ export class RPCStreamer<T> {
           currentLedger,
           onData,
           options.stopLedger,
+          {
+            isRunning: () => this._isRunning,
+            signal: this.runController?.signal,
+          },
         );
       if (!this._isRunning) return currentLedger;
       if (hitStopLedger) {
         this.stop();
         return nextLedger;
       }
-      this.maybeCheckpoint(
-        currentLedger,
-        options.onCheckpoint,
-        options.checkpointInterval,
-      );
+      if (nextLedger > currentLedger) {
+        await this.maybeCheckpoint(
+          currentLedger,
+          options.onCheckpoint,
+          options.checkpointInterval,
+        );
+      }
       if (this.beyondStopLedger(nextLedger, options.stopLedger)) {
         this.stop();
         return nextLedger;
@@ -620,12 +705,14 @@ export class RPCStreamer<T> {
     options: AutoStartOptions = {},
   ): Promise<void> {
     this.assertNotRunning();
-    this._isRunning = true;
+    this.beginRun(options.signal);
 
     try {
+      if (!this._isRunning) return;
       const rpcDetails = await this._rpc.getHealth();
       this.assertHealthy(rpcDetails.status);
       let currentLedger = options.startLedger ?? rpcDetails.latestLedger;
+      this.resumeLedger = currentLedger;
 
       this.assertLedgerNotAhead(currentLedger, rpcDetails.latestLedger);
 
@@ -635,6 +722,7 @@ export class RPCStreamer<T> {
           break;
         }
         const health = await this._rpc.getHealth();
+        if (!this._isRunning) break;
         const oldestAvailable = health.oldestLedger + 2; // +2 safety buffer
         if (currentLedger > health.latestLedger) {
           await this.waitFor("ledger");
@@ -648,9 +736,10 @@ export class RPCStreamer<T> {
             options,
           )
           : await this.ingestAutoLive(currentLedger, onData, options);
+        this.resumeLedger = currentLedger;
       }
     } finally {
-      this._isRunning = false;
+      this.finishRun();
     }
   }
 

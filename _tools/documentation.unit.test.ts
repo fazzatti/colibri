@@ -42,6 +42,12 @@ async function withFixture(check: (fixture: Fixture) => Promise<void>) {
   };
   try {
     await write(
+      "_tools/package-inventory.ts",
+      await Deno.readTextFile(
+        new URL(import.meta.resolve("colibri-tools/package-inventory.ts")),
+      ),
+    );
+    await write(
       "_tools/documentation.ts",
       await Deno.readTextFile(
         new URL(import.meta.resolve("colibri-tools/documentation.ts")),

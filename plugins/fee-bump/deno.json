@@ -9,6 +9,6 @@
   },
   "imports": {
     "@/": "./src/",
-    "jsr:@colibri/core": "jsr:@colibri/core@^0.28.1"
+    "jsr:@colibri/core": "jsr:@colibri/core@^0.29.0"
   }
 }

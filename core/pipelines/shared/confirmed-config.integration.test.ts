@@ -195,7 +195,7 @@ describe(
         result.response.resultXdr.result.type,
         "txFeeBumpInnerSuccess",
       );
-      const archived = await rpc._getLedgers({
+      const archived = await rpc.getLedgers({
         startLedger: result.ledger,
         pagination: { limit: 1 },
       });

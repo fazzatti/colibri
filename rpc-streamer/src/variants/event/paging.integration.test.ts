@@ -1,6 +1,7 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
 import { Asset, Operation, xdr } from "stellar-sdk";
+import { Server } from "stellar-sdk/rpc";
 import {
   createClassicTransactionPipeline,
   type Event,
@@ -13,6 +14,7 @@ import {
 } from "@colibri/core";
 import { StellarTestLedger } from "@colibri/test-tooling";
 import { createEventStreamer } from "@/variants/event/index.ts";
+import { createLedgerStreamer } from "@/variants/ledger/index.ts";
 import { RPCStreamerError, RPCStreamerErrorCode } from "@/errors.ts";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 
@@ -182,6 +184,152 @@ describe(
       assertEquals(error.code, RPCStreamerErrorCode.LEDGER_TOO_HIGH);
     });
 
+    for (const mode of ["startLive", "start"] as const) {
+      it(`${mode} checkpoints the final ledger even when cursor results include later matching events`, async () => {
+        const streamer = newStreamer();
+        const checkpoints: number[] = [];
+        let count = 0;
+        await streamer[mode](() => {
+          count++;
+        }, {
+          startLedger,
+          stopLedger: startLedger,
+          checkpointInterval: 1,
+          onCheckpoint: (ledger) => {
+            checkpoints.push(ledger);
+          },
+        });
+        assertEquals(count, 40);
+        assertEquals(checkpoints, [startLedger]);
+        assertEquals(streamer.nextLedger, startLedger + 1);
+      });
+
+      it(`${mode} interrupts a pending page timer and detaches the previous run's signal`, async () => {
+        const controller = new AbortController();
+        const streamer = createEventStreamer({
+          rpcUrl,
+          allowHttp: true,
+          filters: [
+            new EventFilter({
+              type: EventType.Contract,
+              topics: [SACEvents.TransferEvent.toTopicFilter()],
+            }),
+          ],
+          options: {
+            limit: 1,
+            pagingIntervalMs: 60_000,
+            waitLedgerIntervalMs: 60_000,
+          },
+        });
+        let timer: number | undefined;
+        let count = 0;
+        const started = Date.now();
+        try {
+          await streamer[mode](() => {
+            count++;
+            timer = setTimeout(() => controller.abort(), 20);
+          }, { startLedger, stopLedger, signal: controller.signal });
+          assertEquals(count, 1);
+          assertEquals(streamer.nextLedger, startLedger);
+          assert(Date.now() - started < 10_000);
+        } finally {
+          clearTimeout(timer);
+        }
+
+        const reusable = newStreamer();
+        const previous = new AbortController();
+        await reusable[mode](() => {}, {
+          startLedger,
+          stopLedger,
+          signal: previous.signal,
+        });
+        let delivered = 0;
+        await reusable[mode](() => {
+          previous.abort();
+          delivered++;
+        }, { startLedger, stopLedger });
+        assertEquals(delivered, 80);
+      });
+    }
+
+    for (const mode of ["startLive", "start", "startArchive"] as const) {
+      it(`ledger ${mode} awaits persistence and does not checkpoint an interrupted callback`, async () => {
+        const streamer = createLedgerStreamer({
+          networkConfig: network,
+          archiveRpcUrl: rpcUrl,
+          options: {
+            pagingIntervalMs: 0,
+            archivalIntervalMs: 0,
+            waitLedgerIntervalMs: 50,
+          },
+        });
+        let persisted = startLedger - 1;
+        await streamer[mode]((ledger) => {
+          assertEquals(ledger.sequence, persisted + 1);
+        }, {
+          startLedger,
+          stopLedger,
+          checkpointInterval: 1,
+          onCheckpoint: async (sequence) => {
+            await new Promise((resolve) => setTimeout(resolve, 1));
+            persisted = sequence;
+          },
+        });
+        assertEquals(streamer.nextLedger, stopLedger + 1);
+        const controller = new AbortController();
+        let callbacks = 0;
+        await streamer[mode](() => {
+          callbacks++;
+          controller.abort();
+        }, {
+          startLedger,
+          stopLedger,
+          signal: controller.signal,
+          checkpointInterval: 1,
+          onCheckpoint: () => {
+            throw new Error("Partial ledger must not be checkpointed");
+          },
+        });
+        assertEquals(callbacks, 1);
+        assertEquals(streamer.nextLedger, startLedger);
+        const failure = await assertRejects(() =>
+          streamer[mode](() => {}, {
+            startLedger,
+            stopLedger,
+            checkpointInterval: 1,
+            onCheckpoint: () =>
+              Promise.reject(new Error("database unavailable")),
+            onError: () => true,
+          }), RPCStreamerError);
+        assertEquals(failure.code, RPCStreamerErrorCode.CHECKPOINT_FAILED);
+        assertEquals(streamer.nextLedger, startLedger);
+      });
+    }
+
+    it("interrupts an archive pacing wait after completing the ledger", async () => {
+      const controller = new AbortController();
+      const streamer = createLedgerStreamer({
+        networkConfig: network,
+        archiveRpcUrl: rpcUrl,
+        options: { archivalIntervalMs: 60_000 },
+      });
+      let timer: number | undefined;
+      try {
+        await streamer.startArchive(() => {}, {
+          startLedger,
+          stopLedger,
+          signal: controller.signal,
+          checkpointInterval: 1,
+          onCheckpoint: () => {
+            timer = setTimeout(() => controller.abort(), 20);
+          },
+        });
+        assertEquals(streamer.nextLedger, startLedger + 1);
+      } finally {
+        clearTimeout(timer);
+      }
+    });
+
     it("keeps the archived path consistent with the same 80 confirmed events", async () => {
       const streamer = newStreamer();
       streamer.setArchiveRpc(rpcUrl, true);
@@ -209,6 +357,158 @@ describe(
           (_, i) => startLedger + i,
         ),
       );
+    });
+
+    for (const mode of ["startLive", "start", "startArchive"] as const) {
+      it(`${mode} awaits persistence and exposes the next fully consumed ledger`, async () => {
+        const streamer = newStreamer();
+        streamer.setArchiveRpc(rpcUrl, true);
+        let persisted = startLedger - 1;
+        await streamer[mode]((event) => {
+          assert(event.ledger <= persisted + 1);
+        }, {
+          startLedger,
+          stopLedger,
+          checkpointInterval: 1,
+          onCheckpoint: async (sequence) => {
+            await new Promise((resolve) => setTimeout(resolve, 5));
+            persisted = sequence;
+          },
+        });
+        assertEquals(persisted, stopLedger);
+        assertEquals(streamer.nextLedger, stopLedger + 1);
+      });
+
+      it(`${mode} does not skip a ledger when checkpoint persistence fails`, async () => {
+        const streamer = newStreamer();
+        streamer.setArchiveRpc(rpcUrl, true);
+        let recoveryCalled = false;
+        const failure = new Error("Application persistence failed");
+        const error = await assertRejects(() =>
+          streamer[mode](() => {}, {
+            startLedger,
+            stopLedger,
+            checkpointInterval: 1,
+            onCheckpoint: () => Promise.reject(failure),
+            onError: () => {
+              recoveryCalled = true;
+              return true;
+            },
+          }), RPCStreamerError);
+        assertEquals(error.code, RPCStreamerErrorCode.CHECKPOINT_FAILED);
+        assertEquals(error.cause, failure);
+        assertEquals(recoveryCalled, false);
+        assertEquals(streamer.nextLedger, startLedger);
+      });
+
+      it(`${mode} aborts between events and leaves a partial ledger for replay`, async () => {
+        const controller = new AbortController();
+        const streamer = newStreamer();
+        streamer.setArchiveRpc(rpcUrl, true);
+        let callbacks = 0;
+        await streamer[mode](() => {
+          callbacks++;
+          controller.abort();
+        }, {
+          startLedger,
+          stopLedger,
+          signal: controller.signal,
+        });
+        assertEquals(callbacks, 1);
+        assertEquals(streamer.nextLedger, startLedger);
+      });
+    }
+
+    for (const mode of ["startLive", "start"] as const) {
+      it(`${mode} observes cancellation while the real health request is in flight`, async () => {
+        const controller = new AbortController();
+        let healthRequests = 0;
+        // Coordinate cancellation at a real SDK response boundary. No response
+        // or transport is replaced: every request goes to the Quickstart node.
+        class ObservedServer extends Server {
+          override async getHealth() {
+            const response = await super.getHealth();
+            if (++healthRequests === 2) controller.abort();
+            return response;
+          }
+        }
+        const streamer = createLedgerStreamer({
+          rpc: new ObservedServer(rpcUrl, { allowHttp: true }),
+        });
+        let delivered = 0;
+        await streamer[mode](() => {
+          delivered++;
+        }, { startLedger, stopLedger, signal: controller.signal });
+        assertEquals(healthRequests, 2);
+        assertEquals(delivered, 0);
+        assertEquals(streamer.nextLedger, startLedger);
+      });
+    }
+
+    it("does not deliver a ledger cancelled while the real ledger request is in flight", async () => {
+      const controller = new AbortController();
+      class ObservedServer extends Server {
+        override async getLedgers(
+          options: Parameters<Server["getLedgers"]>[0],
+        ) {
+          const response = await super.getLedgers(options);
+          controller.abort();
+          return response;
+        }
+      }
+      const streamer = createLedgerStreamer({
+        rpc: new ObservedServer(rpcUrl, { allowHttp: true }),
+      });
+      let delivered = 0;
+      await streamer.startLive(() => {
+        delivered++;
+      }, { startLedger, stopLedger, signal: controller.signal });
+      assertEquals(delivered, 0);
+      assertEquals(streamer.nextLedger, startLedger);
+    });
+
+    for (const createStreamer of [createEventStreamer, createLedgerStreamer]) {
+      it(`${createStreamer.name} does not consume a cancelled archive response`, async () => {
+        const controller = new AbortController();
+        const streamer = createStreamer({
+          networkConfig: network,
+          archiveRpcUrl: rpcUrl,
+        });
+        let delivered = 0;
+        const run = streamer.startArchive(() => {
+          delivered++;
+        }, { startLedger, stopLedger, signal: controller.signal });
+        controller.abort();
+        await run;
+        assertEquals(delivered, 0);
+        assertEquals(streamer.nextLedger, startLedger);
+      });
+    }
+
+    it("keeps a stopped run exclusive until its active callback settles", async () => {
+      const streamer = createLedgerStreamer({ networkConfig: network });
+      let release!: () => void;
+      const held = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      let entered!: () => void;
+      const started = new Promise<void>((resolve) => {
+        entered = resolve;
+      });
+      const run = streamer.startLive(async () => {
+        entered();
+        await held;
+      }, { startLedger, stopLedger });
+      await started;
+      streamer.stop();
+      const error = await assertRejects(
+        () => streamer.startLive(() => {}, { startLedger, stopLedger }),
+        RPCStreamerError,
+      );
+      assertEquals(error.code, RPCStreamerErrorCode.ALREADY_RUNNING);
+      release();
+      await run;
+      assertEquals(streamer.nextLedger, startLedger);
     });
   },
 );

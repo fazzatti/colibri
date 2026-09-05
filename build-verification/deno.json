@@ -20,7 +20,7 @@
   },
   "imports": {
     "@/": "./src/",
-    "@colibri/core": "jsr:@colibri/core@^0.28.1",
+    "@colibri/core": "jsr:@colibri/core@^0.29.0",
     "dockerode": "npm:dockerode@3.3.3"
   }
 }

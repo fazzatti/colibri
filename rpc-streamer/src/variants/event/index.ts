@@ -4,21 +4,43 @@
  * @module
  */
 
-import type { Server } from "stellar-sdk/rpc";
+import type { Event, EventFilter, Server } from "@/native-types.ts";
 import {
-  Event,
-  type EventFilter,
-  type EventHandler,
-  isDefined,
+  Event as CoreEvent,
   parseEventsFromLedgerCloseMeta,
 } from "@colibri/core";
 import { RPCStreamer } from "@/streamer.ts";
 import type {
   ArchiveIngestContext,
   DataHandler,
+  LiveIngestContext,
   LiveIngestionResult,
 } from "@/types.ts";
+import {
+  archiveErrorAllowsSkipping,
+  completeArchiveLedger,
+  waitForStream,
+} from "@/lifecycle.ts";
 import type { EventStreamerConfig } from "@/variants/event/types.ts";
+
+/** Deliver only the requested ledger and retain IDs until its pages finish. */
+async function deliverEventPage(
+  responses: Parameters<typeof CoreEvent.fromEventResponse>[0][],
+  ledgerSequence: number,
+  checkedIds: Set<string>,
+  isRunning: () => boolean,
+  onEvent: DataHandler<Event>,
+): Promise<"stopped" | "next-ledger" | "drained"> {
+  for (const response of responses) {
+    if (!isRunning()) return "stopped";
+    const event = CoreEvent.fromEventResponse(response);
+    if (event.ledger > ledgerSequence) return "next-ledger";
+    if (event.ledger < ledgerSequence || checkedIds.has(event.id)) continue;
+    await onEvent(event);
+    checkedIds.add(event.id);
+  }
+  return "drained";
+}
 
 /**
  * Creates the live ingestion function for events.
@@ -39,7 +61,8 @@ function createLiveIngestor(
     rpc: Server,
     ledgerSequence: number,
     onEvent: DataHandler<Event>,
-    stopLedger?: number,
+    _stopLedger?: number,
+    context?: LiveIngestContext,
   ): Promise<LiveIngestionResult> {
     let cursor: string | undefined;
     // No fixed-size eviction: every delivered ID in this ledger remains known
@@ -57,39 +80,24 @@ function createLiveIngestor(
           limit,
         });
 
-      // Process each event
-      for (const eventResponse of response.events) {
-        if (!isRunning()) {
-          return {
-            nextLedger: ledgerSequence,
-            shouldWait: false,
-            hitStopLedger: false,
-          };
-        }
-        const event = Event.fromEventResponse(eventResponse);
-
-        // Cursor pagination may include later ledgers. Leave them for their own
-        // iteration instead of delivering them now and then replaying them.
-        if (event.ledger > ledgerSequence) {
-          return {
-            nextLedger: ledgerSequence + 1,
-            shouldWait: false,
-            hitStopLedger: isDefined(stopLedger) &&
-              ledgerSequence >= stopLedger,
-          };
-        }
-
-        // Deduplicate - skip if we've already processed this event
-        if (event.ledger < ledgerSequence || checkedIds.has(event.id)) {
-          continue;
-        }
-
-        await onEvent(event);
-
-        checkedIds.add(event.id);
+      const page = await deliverEventPage(
+        response.events,
+        ledgerSequence,
+        checkedIds,
+        isRunning,
+        onEvent,
+      );
+      // Cursor pagination can include later ledgers. The current ledger is now
+      // complete: the engine must checkpoint it before applying stopLedger.
+      if (page === "next-ledger") {
+        return {
+          nextLedger: ledgerSequence + 1,
+          shouldWait: false,
+          hitStopLedger: false,
+        };
       }
 
-      if (!isRunning()) {
+      if (page === "stopped" || !isRunning()) {
         return {
           nextLedger: ledgerSequence,
           shouldWait: false,
@@ -100,7 +108,14 @@ function createLiveIngestor(
       // Check if we need to fetch another page
       if (response.events.length > 0 && response.cursor) {
         cursor = response.cursor;
-        await new Promise((resolve) => setTimeout(resolve, pagingIntervalMs));
+        await waitForStream(pagingIntervalMs, context?.signal);
+        if (!isRunning()) {
+          return {
+            nextLedger: ledgerSequence,
+            shouldWait: false,
+            hitStopLedger: false,
+          };
+        }
         continue;
       }
 
@@ -150,7 +165,6 @@ function createArchiveIngestor(
     context: ArchiveIngestContext,
   ): Promise<number> {
     let currentLedger = startLedger;
-    const checkpointInterval = context.checkpointInterval ?? 100;
 
     while (context.isRunning() && currentLedger <= stopLedger) {
       try {
@@ -158,34 +172,28 @@ function createArchiveIngestor(
           startLedger: currentLedger,
           pagination: { limit: 1 },
         });
+        if (!context.isRunning()) return currentLedger;
 
         for (const ledger of ledgerData.ledgers) {
           await parseEventsFromLedgerCloseMeta(
             ledger.metadataXdr,
-            onEvent as EventHandler,
+            async (event) => {
+              if (context.isRunning()) await onEvent(event as Event);
+            },
             filters,
           );
         }
 
-        // Call checkpoint if configured
-        if (context.onCheckpoint && currentLedger % checkpointInterval === 0) {
-          context.onCheckpoint(currentLedger);
-        }
+        if (!context.isRunning()) return currentLedger;
+        await completeArchiveLedger(context, currentLedger);
 
         currentLedger++;
-        await new Promise((resolve) => setTimeout(resolve, archivalIntervalMs));
+        await waitForStream(archivalIntervalMs, context.signal);
       } catch (error) {
-        // Check if error handler wants to continue
-        if (context.onError) {
-          const shouldContinue = context.onError(error as Error, currentLedger);
-          if (shouldContinue !== false) {
-            // Error was handled, move to next ledger
-            currentLedger++;
-            continue;
-          }
+        if (!archiveErrorAllowsSkipping(error, currentLedger, context)) {
+          throw error;
         }
-        // Re-throw if no handler or handler returned false
-        throw error;
+        currentLedger++;
       }
     }
 
@@ -237,10 +245,7 @@ export function createEventStreamer(
   const ingestArchive = createArchiveIngestor(filters, archivalIntervalMs);
 
   const streamer = new RPCStreamer<Event>({
-    rpcUrl: config.rpcUrl,
-    allowHttp: config.allowHttp,
-    archiveRpcUrl: config.archiveRpcUrl,
-    archiveAllowHttp: config.archiveAllowHttp,
+    ...config,
     ingestLive,
     ingestArchive,
     options: config.options,

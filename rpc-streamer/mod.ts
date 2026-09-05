@@ -80,11 +80,14 @@ export type {
   CheckpointHandler,
   DataHandler,
   ErrorHandler,
+  LiveIngestContext,
   LiveIngestFunc,
   LiveIngestionResult,
   LiveStartOptions,
   RPCStreamerConfig,
+  StreamerArchiveConfig,
   StreamerOptions,
+  StreamerRpcConfig,
 } from "@/types.ts";
 
 // Errors

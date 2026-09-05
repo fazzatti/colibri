@@ -36,12 +36,12 @@ import { DefaultVerificationSourceProvider } from "@/providers/source/router.ts"
 import {
   ArchiveSourceProviderInputMismatchError,
   FileSourceProviderInputMismatchError,
-  GitHubReleaseAssetResolutionFailedError,
-  GitHubRevisionResolutionFailedError,
+  GitHubCommitShaMissingError,
+  GitHubReleaseAssetMissingError,
   GitHubSourceProviderInputMismatchError,
   HttpSourceProviderInputMismatchError,
   LocalSourceArchiveReadFailedError,
-  SourceDnsResolutionFailedError,
+  SourceDnsEmptyError,
   SourceDownloadFailedError,
   SourcePolicyRejectedError,
   SourceRedirectLimitExceededError,
@@ -863,7 +863,7 @@ describe("source providers", () => {
           repository: "repo",
           revision: "main",
         })),
-      GitHubRevisionResolutionFailedError,
+      GitHubCommitShaMissingError,
     );
     const badRelease = new GitHubVerificationSourceProvider({
       ...options,
@@ -884,7 +884,7 @@ describe("source providers", () => {
           tag: "v1",
           asset: "missing.zip",
         })),
-      GitHubReleaseAssetResolutionFailedError,
+      GitHubReleaseAssetMissingError,
     );
     await assertRejects(
       () =>
@@ -1063,7 +1063,7 @@ describe("source providers", () => {
     );
     await assertRejects(
       () => new DenoSourceAddressResolver().resolve("does-not-exist.invalid"),
-      SourceDnsResolutionFailedError,
+      SourceDnsEmptyError,
     );
   });
 });

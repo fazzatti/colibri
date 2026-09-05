@@ -20,7 +20,7 @@ catalog.
 - [build-verification/providers/target](build-verification-providers-target.md)
   — 8 codes.
 - [build-verification/providers/source](build-verification-providers-source.md)
-  — 17 codes.
+  — 20 codes.
 - [build-verification/archive](build-verification-archive.md) — 15 codes.
 - [build-verification/providers/image](build-verification-providers-image.md) —
   12 codes.
@@ -134,7 +134,7 @@ catalog.
 
 ## @colibri/rpc-streamer
 
-- [rpc-streamer](rpc-streamer.md) — 18 codes.
+- [rpc-streamer](rpc-streamer.md) — 24 codes.
 
 ## @colibri/test-tooling
 

@@ -4,7 +4,11 @@
  * @module
  */
 
-import type { StreamerOptions } from "@/types.ts";
+import type {
+  StreamerArchiveConfig,
+  StreamerOptions,
+  StreamerRpcConfig,
+} from "@/types.ts";
 
 /**
  * Configuration options specific to ledger streaming.
@@ -16,15 +20,7 @@ export interface LedgerStreamerOptions extends StreamerOptions {
 /**
  * Configuration for creating a ledger streamer.
  */
-export interface LedgerStreamerConfig {
-  /** URL of the Soroban RPC server for live streaming */
-  rpcUrl: string;
-  /** Allow HTTP for the live RPC server (default: false) */
-  allowHttp?: boolean;
-  /** Optional URL of an archive RPC server for historical ingestion */
-  archiveRpcUrl?: string;
-  /** Allow HTTP for the archive RPC server (defaults to allowHttp or false) */
-  archiveAllowHttp?: boolean;
+export type LedgerStreamerConfig = StreamerRpcConfig & StreamerArchiveConfig & {
   /** Optional configuration options */
   options?: LedgerStreamerOptions;
-}
+};

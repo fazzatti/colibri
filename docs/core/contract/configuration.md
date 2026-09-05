@@ -53,5 +53,31 @@ missing-property error if that value has not been configured or produced yet.
 For example, a Wasm-only client has no instance ID until deployment succeeds.
 The protected `contractId` field is not the public accessor.
 
+## Network-loaded provenance and refresh
+
+`await contract.loadSpecFromNetwork()` resolves the configured instance,
+immutable Wasm hash, or external reference and loads its Wasm/spec. Only after
+successful retrieval and parsing does it replace the local Wasm, spec, resolved
+hash, and `LoadedContractSnapshot` together. A failed refresh leaves the
+preceding loaded state intact. Metadata and claims continue to be extracted from
+that loaded Wasm.
+
+```ts
+await contract.loadSpecFromNetwork();
+const snapshot = contract.getLoadedSnapshot();
+console.log(snapshot?.wasmHash, snapshot?.observedAtLedger);
+console.log(snapshot?.instance, snapshot?.reference);
+```
+
+`getLoadedSnapshot()` returns a detached record, or `undefined` before a
+successful network load. `observedAtLedger` is the code-read RPC ledger;
+`instance` and `reference` retain their separate observations. These are not an
+atomic snapshot of the network, nor a guarantee that an upgradeable reference
+still points to the same code. Refresh is explicit, never automatic before
+signing. `getContractCodeLedgerEntry()` is a read and does not refresh client
+state. After a successful external-reference load, `getWasmHash()` exposes the
+resolved immutable hash; `getExternalRef()` still describes the configured
+deployment target.
+
 - `ContractId` is the branded string type used for Soroban contract ids
 - `TransactionConfig` is the shared write-transaction config shape

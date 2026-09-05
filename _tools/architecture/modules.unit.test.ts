@@ -14,15 +14,26 @@ const KEBAB_CASE_FILE =
 const KEBAB_CASE_DIRECTORY = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const TEST_SUITE_FILE =
   /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:unit|integration|testnet\.integration)\.test\.ts$/;
-const GENERIC_ERROR_EXCEPTIONS: Readonly<Record<string, number>> = {
-  "../../../build-verification/src/providers/source/github.ts": 2,
-  "../../../build-verification/src/providers/source/http.ts": 1,
-};
 
 const genericErrorCount = (content: string): number =>
   [...content.matchAll(/\bthrow\s+new\s+Error\s*\(/g)].length;
 
 describe("module conventions", () => {
+  it("uses public Stellar RPC methods in published code", async () => {
+    for (const architecture of PACKAGE_ARCHITECTURES) {
+      await assertRule(
+        projectFiles(architecture.config).inPath(architecture.source).should()
+          .adhereTo(
+            (file) =>
+              !/\.\s*_(?:get|send|simulate)[A-Z]\w*\s*\(/.test(
+                sourceWithoutComments(architectureFileContent(file)),
+              ),
+            "Use public RPC methods and adapt their native response types at the boundary",
+          ),
+        `${architecture.name} must not call private RPC methods`,
+      );
+    }
+  });
   it("uses named exports throughout published runtime code", async () => {
     for (const architecture of PACKAGE_ARCHITECTURES) {
       await assertRule(
@@ -97,8 +108,7 @@ describe("module conventions", () => {
               );
               if (/\bthrow\s+["'`]/.test(content)) return false;
               const count = genericErrorCount(content);
-              return count === 0 ||
-                count <= (GENERIC_ERROR_EXCEPTIONS[file.path] ?? 0);
+              return count === 0;
             },
             "Runtime failures must use typed domain errors",
           ),

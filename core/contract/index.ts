@@ -32,6 +32,7 @@ import * as E from "@/contract/error.ts";
 import type {
   ContractConstructorArgs,
   LoadContractErrorsFromWasmArgs,
+  LoadedContractSnapshot,
 } from "@/contract/types.ts";
 import type { Api } from "stellar-sdk/rpc";
 import type { ContractId } from "@/strkeys/types.ts";
@@ -56,6 +57,8 @@ import type {
   KnownContractErrorMap,
 } from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
 import type { ContractCodeLedgerEntry } from "@/ledger-entries/types.ts";
+import { decodeLedgerEntryForKey } from "@/ledger-entries/decode.ts";
+import type { ResolvedContractExecutable } from "@/ledger-entries/types.ts";
 import { extractContractMetadata } from "@/contract/metadata/extract-contract-metadata.ts";
 import {
   claimsSep as analysisClaimsSep,
@@ -112,6 +115,7 @@ export class Contract {
   protected contractId?: ContractId;
   /** @internal */
   protected externalRef?: ExternalExecutableRef;
+  private loadedSnapshot?: LoadedContractSnapshot;
 
   /**
    * Creates a contract client bound to the provided network and contract configuration.
@@ -301,6 +305,15 @@ export class Contract {
     return this.require("wasmHash");
   }
 
+  /**
+   * Returns a detached provenance record for the last successful network load.
+   * Undefined before a network load. Refresh is explicit; this does not query RPC.
+   * Instance/reference/code observations may come from different ledgers.
+   */
+  public getLoadedSnapshot(): LoadedContractSnapshot | undefined {
+    return this.loadedSnapshot && structuredClone(this.loadedSnapshot);
+  }
+
   /** Returns the CAP-85 executable reference configured for deployment. */
   public getExternalRef(): ExternalExecutableRef {
     return this.require("externalRef");
@@ -364,7 +377,7 @@ export class Contract {
 
   /** @internal */
   public async getContractCodeLedgerEntry(): Promise<Api.LedgerEntryResult> {
-    const code = await this.getNetworkContractCode();
+    const { code } = await this.getNetworkContractCode();
     return code.xdr as Api.LedgerEntryResult;
   }
 
@@ -513,10 +526,15 @@ export class Contract {
    * @requires - A Wasm hash, external reference, or contract id to be configured.
    */
   public async loadSpecFromNetwork(): Promise<void> {
-    const contractCode = await this.getNetworkContractCode();
-    this.wasm = Uint8Array.from(contractCode.code);
-
-    await this.loadSpecFromWasm();
+    const { code, snapshot } = await this.getNetworkContractCode();
+    const wasm = Uint8Array.from(code.code);
+    const spec = extractContractSpec(wasm);
+    // No mutation before resolution, retrieval, and spec parsing all succeed.
+    // There is deliberately no await between publishing these related fields.
+    this.wasm = wasm;
+    this.spec = spec;
+    this.wasmHash = snapshot.wasmHash;
+    this.loadedSnapshot = snapshot;
   }
 
   /**
@@ -573,23 +591,24 @@ export class Contract {
   }
 
   /** @internal */
-  private async getNetworkContractCode(): Promise<ContractCodeLedgerEntry> {
+  private async getNetworkContractCode(): Promise<{
+    code: ContractCodeLedgerEntry;
+    snapshot: LoadedContractSnapshot;
+  }> {
     const ledger = new LedgerEntries({ rpc: this.rpc });
     let wasmHash = this.wasmHash;
+    let resolved: ResolvedContractExecutable | undefined;
 
     if (this.contractId) {
-      const resolved = await ledger.resolveContractExecutable({
+      resolved = await ledger.resolveContractExecutable({
         contractId: this.contractId,
       });
       if (resolved.executable.type === "stellarAsset") {
         throw new E.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM();
       }
       wasmHash = resolved.resolvedWasmHash;
-      if (resolved.executable.type === "wasm") {
-        this.wasmHash = wasmHash;
-      }
     } else if (this.externalRef) {
-      const resolved = await ledger.resolveContractExecutable({
+      resolved = await ledger.resolveContractExecutable({
         externalRef: this.externalRef,
       });
       wasmHash = resolved.resolvedWasmHash;
@@ -599,11 +618,26 @@ export class Contract {
       throw new E.NETWORK_EXECUTABLE_NOT_AVAILABLE();
     }
 
-    const code = await ledger.get(buildContractCodeLedgerKey({
-      hash: wasmHash,
-    }));
-    assert(code, new E.CONTRACT_CODE_NOT_FOUND(wasmHash));
-    return code;
+    const key = buildContractCodeLedgerKey({ hash: wasmHash });
+    const response = await this.rpc.getLedgerEntries(key);
+    const entry = response.entries.find((entry) =>
+      entry.key.toXdr("base64") === key.toXdr("base64")
+    );
+    assert(entry, new E.CONTRACT_CODE_NOT_FOUND(wasmHash));
+    const code = decodeLedgerEntryForKey(key, entry) as ContractCodeLedgerEntry;
+    return {
+      code,
+      snapshot: {
+        wasmHash,
+        observedAtLedger: response.latestLedger,
+        contractId: resolved?.contractId,
+        executable:
+          resolved?.executable as LoadedContractSnapshot["executable"] ??
+            { type: "wasm", wasmHash },
+        instance: resolved?.instance,
+        reference: resolved?.reference,
+      },
+    };
   }
 
   //==========================================
