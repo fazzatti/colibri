@@ -417,7 +417,6 @@ export class RPCStreamer<T> {
             signal: this.runController?.signal,
           },
         );
-      if (!this._isRunning) return currentLedger;
       if (hitStopLedger) {
         this.stop();
         return nextLedger;
@@ -429,6 +428,9 @@ export class RPCStreamer<T> {
           options.checkpointInterval,
         );
       }
+      // Completion belongs to the ingestor. Stopping prevents another fetch;
+      // it does not undo an already fulfilled whole-ledger callback.
+      if (!this._isRunning) return nextLedger;
       if (
         shouldWait && !this.beyondStopLedger(nextLedger, options.stopLedger)
       ) {
@@ -650,7 +652,6 @@ export class RPCStreamer<T> {
             signal: this.runController?.signal,
           },
         );
-      if (!this._isRunning) return currentLedger;
       if (hitStopLedger) {
         this.stop();
         return nextLedger;
@@ -662,6 +663,7 @@ export class RPCStreamer<T> {
           options.checkpointInterval,
         );
       }
+      if (!this._isRunning) return nextLedger;
       if (this.beyondStopLedger(nextLedger, options.stopLedger)) {
         this.stop();
         return nextLedger;

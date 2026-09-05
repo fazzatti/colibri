@@ -23,6 +23,12 @@ For built-in event streams, calling `stop()` from a data callback prevents
 delivery of the remaining events in that page. An interrupted ledger is not
 reported as a completed checkpoint; replay it when resuming.
 
+For built-in ledger streams, a fulfilled callback completes the entire ledger,
+even if it calls `stop()` or aborts the signal. Colibri still awaits its
+interval-based checkpoint and advances `nextLedger`. If the callback or
+checkpoint rejects, successful completion is not acknowledged. Stopping before
+the fetched ledger reaches its callback also leaves that ledger for replay.
+
 ## Durable progress
 
 Built-in streamers await `onCheckpoint` before advancing beyond the completed
@@ -33,9 +39,10 @@ callback's completion, not a distributed transaction or exactly-once guarantee.
 
 `nextLedger` is the in-memory continuation position of the last run. After a
 clean bounded run it is `stopLedger + 1`; after interruption it is the partial
-ledger to replay. It is undefined before a position has been established. Reuse
-it with the same network and filters. It is **not durable storage** and may be
-ahead of the last interval-based persisted checkpoint.
+ledger to replay, or the next ledger if the whole-ledger callback completed. It
+is undefined before a position has been established. Reuse it with the same
+network and filters. It is **not durable storage** and may be ahead of the last
+interval-based persisted checkpoint.
 
 For ledger processing, await data storage and progress storage together inside
 the data handler, preferably in one database transaction. Resume at the last

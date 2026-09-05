@@ -53,15 +53,19 @@ const getContractIdString = (event: Event): string | undefined => {
 describe(
   "[Mainnet] RPC Event Streamer Variant",
   disableSanitizeConfig,
-
   () => {
     const networkConfig = NetworkProviders.Lightsail.MainNet();
 
     let streamer: RPCStreamer<Event>;
 
-    afterEach(() => {
+    afterEach(async () => {
       if (streamer) {
         streamer.stop();
+        // Give the shared public archive endpoint space between test cases.
+        // CI also runs these test files serially; no failures are retried or skipped.
+        if (streamer.archiveRpc) {
+          await new Promise((resolve) => setTimeout(resolve, 1_000));
+        }
       }
     });
 

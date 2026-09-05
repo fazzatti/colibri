@@ -89,6 +89,10 @@ console.log("Next ledger:", streamer.nextLedger);
 - `stop()`/`AbortSignal` interrupts pacing waits and stops between callbacks.
   In-flight SDK requests and callbacks are allowed to finish. Await the run's
   promise before restarting, even if `isRunning` is already false.
+- A fulfilled whole-ledger callback completes that ledger even when it calls
+  `stop()` or aborts. Its checkpoint is awaited when the configured interval
+  applies, and `nextLedger` advances. Stopping partway through an event ledger
+  leaves it uncheckpointed for replay instead.
 - `nextLedger` is an in-memory continuation position, not a durable checkpoint.
   It points to a partial ledger for replay, or the next ledger after completion.
   Reuse it only with the same network and filters. A new process must load its

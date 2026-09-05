@@ -253,7 +253,90 @@ describe(
     }
 
     for (const mode of ["startLive", "start", "startArchive"] as const) {
-      it(`ledger ${mode} awaits persistence and does not checkpoint an interrupted callback`, async () => {
+      it(`ledger ${mode} checkpoints a completed callback that stops and resumes at the next ledger`, async () => {
+        const streamer = createLedgerStreamer({
+          networkConfig: network,
+          archiveRpcUrl: rpcUrl,
+          options: { archivalIntervalMs: 0 },
+        });
+        const delivered: number[] = [];
+        const checkpoints: number[] = [];
+        await streamer[mode]((ledger) => {
+          delivered.push(ledger.sequence);
+          streamer.stop();
+        }, {
+          startLedger,
+          stopLedger,
+          checkpointInterval: 1,
+          onCheckpoint: async (sequence) => {
+            await new Promise((resolve) => setTimeout(resolve, 1));
+            checkpoints.push(sequence);
+          },
+        });
+        assertEquals(delivered, [startLedger]);
+        assertEquals(checkpoints, [startLedger]);
+        assertEquals(streamer.nextLedger, startLedger + 1);
+
+        await streamer[mode]((ledger) => {
+          delivered.push(ledger.sequence);
+        }, { startLedger: streamer.nextLedger!, stopLedger });
+        assertEquals(
+          delivered,
+          Array.from(
+            { length: stopLedger - startLedger + 1 },
+            (_, i) => startLedger + i,
+          ),
+        );
+        assertEquals(streamer.nextLedger, stopLedger + 1);
+      });
+
+      it(`ledger ${mode} does not acknowledge a stopped callback or checkpoint that rejects`, async () => {
+        const streamer = createLedgerStreamer({
+          networkConfig: network,
+          archiveRpcUrl: rpcUrl,
+        });
+        const callbackFailure = new Error("Ledger storage failed");
+        const checkpoints: number[] = [];
+        const error = await assertRejects(() =>
+          streamer[mode](() => {
+            streamer.stop();
+            return Promise.reject(callbackFailure);
+          }, {
+            startLedger,
+            stopLedger,
+            checkpointInterval: 1,
+            onCheckpoint: (sequence) => {
+              checkpoints.push(sequence);
+            },
+          })
+        );
+        assertEquals(error, callbackFailure);
+        assertEquals(checkpoints, []);
+        assertEquals(streamer.nextLedger, startLedger);
+
+        const persistenceFailure = new Error("Checkpoint storage failed");
+        let recoveryCalled = false;
+        const failure = await assertRejects(
+          () =>
+            streamer[mode](() => streamer.stop(), {
+              startLedger,
+              stopLedger,
+              checkpointInterval: 1,
+              onCheckpoint: () => Promise.reject(persistenceFailure),
+              onError: () => {
+                recoveryCalled = true;
+                return true;
+              },
+            }),
+          RPCStreamerError,
+        );
+        assertEquals(failure.code, RPCStreamerErrorCode.CHECKPOINT_FAILED);
+        assertEquals(failure.cause, persistenceFailure);
+        assertEquals(recoveryCalled, false);
+        assertEquals(streamer.nextLedger, startLedger);
+      });
+
+      it(`ledger ${mode} awaits persistence and checkpoints a completed callback that aborts`, async () => {
         const streamer = createLedgerStreamer({
           networkConfig: network,
           archiveRpcUrl: rpcUrl,
@@ -278,6 +361,7 @@ describe(
         assertEquals(streamer.nextLedger, stopLedger + 1);
         const controller = new AbortController();
         let callbacks = 0;
+        const checkpoints: number[] = [];
         await streamer[mode](() => {
           callbacks++;
           controller.abort();
@@ -286,12 +370,13 @@ describe(
           stopLedger,
           signal: controller.signal,
           checkpointInterval: 1,
-          onCheckpoint: () => {
-            throw new Error("Partial ledger must not be checkpointed");
+          onCheckpoint: (sequence) => {
+            checkpoints.push(sequence);
           },
         });
         assertEquals(callbacks, 1);
-        assertEquals(streamer.nextLedger, startLedger);
+        assertEquals(checkpoints, [startLedger]);
+        assertEquals(streamer.nextLedger, startLedger + 1);
         const failure = await assertRejects(() =>
           streamer[mode](() => {}, {
             startLedger,
@@ -406,6 +491,7 @@ describe(
         const streamer = newStreamer();
         streamer.setArchiveRpc(rpcUrl, true);
         let callbacks = 0;
+        const checkpoints: number[] = [];
         await streamer[mode](() => {
           callbacks++;
           controller.abort();
@@ -413,8 +499,13 @@ describe(
           startLedger,
           stopLedger,
           signal: controller.signal,
+          checkpointInterval: 1,
+          onCheckpoint: (sequence) => {
+            checkpoints.push(sequence);
+          },
         });
         assertEquals(callbacks, 1);
+        assertEquals(checkpoints, []);
         assertEquals(streamer.nextLedger, startLedger);
       });
     }
@@ -485,30 +576,46 @@ describe(
       });
     }
 
-    it("keeps a stopped run exclusive until its active callback settles", async () => {
-      const streamer = createLedgerStreamer({ networkConfig: network });
-      let release!: () => void;
-      const held = new Promise<void>((resolve) => {
-        release = resolve;
+    for (const mode of ["startLive", "start", "startArchive"] as const) {
+      it(`ledger ${mode} keeps a stopped run exclusive until its active callback settles`, async () => {
+        const streamer = createLedgerStreamer({
+          networkConfig: network,
+          archiveRpcUrl: rpcUrl,
+        });
+        let release!: () => void;
+        const held = new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        let entered!: () => void;
+        const started = new Promise<void>((resolve) => {
+          entered = resolve;
+        });
+        const checkpoints: number[] = [];
+        const run = streamer[mode](async () => {
+          entered();
+          await held;
+        }, {
+          startLedger,
+          stopLedger,
+          checkpointInterval: 1,
+          onCheckpoint: (sequence) => {
+            checkpoints.push(sequence);
+          },
+        });
+        await started;
+        streamer.stop();
+        const error = await assertRejects(
+          () => streamer[mode](() => {}, { startLedger, stopLedger }),
+          RPCStreamerError,
+        );
+        assertEquals(error.code, RPCStreamerErrorCode.ALREADY_RUNNING);
+        assertEquals(checkpoints, []);
+        assertEquals(streamer.nextLedger, startLedger);
+        release();
+        await run;
+        assertEquals(checkpoints, [startLedger]);
+        assertEquals(streamer.nextLedger, startLedger + 1);
       });
-      let entered!: () => void;
-      const started = new Promise<void>((resolve) => {
-        entered = resolve;
-      });
-      const run = streamer.startLive(async () => {
-        entered();
-        await held;
-      }, { startLedger, stopLedger });
-      await started;
-      streamer.stop();
-      const error = await assertRejects(
-        () => streamer.startLive(() => {}, { startLedger, stopLedger }),
-        RPCStreamerError,
-      );
-      assertEquals(error.code, RPCStreamerErrorCode.ALREADY_RUNNING);
-      release();
-      await run;
-      assertEquals(streamer.nextLedger, startLedger);
-    });
+    }
   },
 );

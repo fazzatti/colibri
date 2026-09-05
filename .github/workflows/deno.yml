@@ -118,7 +118,9 @@ jobs:
             test_flags: --parallel
           - package: rpc-streamer
             path: rpc-streamer
-            test_flags: --parallel
+            # Both Mainnet suites share the public archive provider. Avoid
+            # concurrent requests from separate test-file workers.
+            test_flags: ""
           - package: plugin-fee-bump
             path: plugins/fee-bump
             test_flags: --parallel

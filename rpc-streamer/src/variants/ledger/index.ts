@@ -117,7 +117,8 @@ function createArchiveIngestor(archivalIntervalMs: number) {
         const ledger = CoreLedger.fromEntry(ledgerEntry);
         await onLedger(ledger);
 
-        if (!context.isRunning()) return currentLedger;
+        // The entire ledger was delivered successfully, even when its callback
+        // requested shutdown. Persist completion before leaving the loop.
         await completeArchiveLedger(context, ledgerEntry.sequence);
 
         // Move to next ledger

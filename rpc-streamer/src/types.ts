@@ -131,7 +131,10 @@ export interface AutoStartOptions extends BaseStartOptions {
  * Internal result from live ingestion.
  */
 export interface LiveIngestionResult {
-  /** Next ledger to request, or the current ledger when unavailable/incomplete. */
+  /**
+   * Next ledger to request, or the current ledger when unavailable/incomplete.
+   * Advancing acknowledges completion even if the callback requested a stop.
+   */
   nextLedger: number;
   /** Request a pacing delay before another live request. */
   shouldWait: boolean;
