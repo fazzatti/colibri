@@ -13,3 +13,4 @@ constructors and diagnostic fields.
 | `SIG_LOC_003` | `SIGNER_DESTROYED` — Declared condition: signer destroyed.                                      | [Definition](https://github.com/fazzatti/colibri/blob/main/core/signer/local/error.ts#L6) |
 | `SIG_LOC_004` | `MESSAGE_SIGNER_DESTROYED` — SEP-53 signing was attempted after the local secret was destroyed. | [Definition](https://github.com/fazzatti/colibri/blob/main/core/signer/local/error.ts#L7) |
 | `SIG_LOC_005` | `MESSAGE_SIGNING_FAILED` — The native SDK could not sign the supplied SEP-53 message.           | [Definition](https://github.com/fazzatti/colibri/blob/main/core/signer/local/error.ts#L8) |
+| `SIG_LOC_006` | `MESSAGE_VERIFICATION_FAILED` — The native SDK rejected malformed SEP-53 verification inputs.   | [Definition](https://github.com/fazzatti/colibri/blob/main/core/signer/local/error.ts#L9) |

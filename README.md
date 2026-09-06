@@ -199,17 +199,22 @@ application's replay-protection policy.
 Core exposes domain-specific actions alongside lower-level protocol reads:
 
 - `StellarAsset` owns a classic transaction pipeline for explicit trustline,
-  transfer, authorization, and clawback actions on a native SDK `Asset`. Issuer
-  and trustline reads are separate; transfers never silently add trustlines.
+  transfer, issuance/redemption, authorization and clawback actions on a native
+  SDK `Asset`. It reads balances and holder state, exposes identity/precision
+  and exact amount conversion, and binds the SAC explicitly with `toContract()`.
+  Transfers never silently add trustlines or switch to Soroban.
 - `SDEX` manages known sell, buy, and passive offers. `sell` and `buy` variants
   express minimum receive or maximum spend per unit, while `StellarPrice`
-  converts exact decimal limits without silently rounding them.
+  converts exact decimal limits or quantity ratios without silently rounding
+  them. Equivalent unit names are available for updates and passive offers.
 - `NativeLiquidityPool` binds a protocol-native pool, reads its reserves, and
   exposes explicit pool-share trustline, deposit, and withdrawal operations.
-  Asset-labelled amount variants avoid requiring callers to remember A/B order.
+  Asset-labelled amounts and price bounds avoid requiring callers to remember
+  A/B order. Position reads combine pool reserves and the holder's share
+  trustline in one RPC observation.
 - `ClaimableBalancePredicates` groups static time and boolean helpers that
-  return native SDK predicates; claiming or refunding still needs an explicit
-  transaction.
+  return native SDK predicates, including time windows and balanced all/any
+  lists; claiming or refunding still needs an explicit transaction.
 
 - `Contract` loads contract specifications, binds deployed contracts, deploys
   Wasm or external executable references, and routes reads and invocations

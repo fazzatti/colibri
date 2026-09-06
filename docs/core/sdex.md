@@ -186,6 +186,22 @@ explicit base/quote assets and includes the issuer of issued assets, so two
 currencies sharing a code are not confused. No percentage tolerance, reference
 market price, or exchange-rate policy is selected automatically.
 
+For an exchange stated as quantities, use `StellarPrice.fromAmounts`:
+
+```typescript
+// Two quote units for three base units. No repeating decimal needs to be typed.
+const price = StellarPrice.fromAmounts({ baseAmount: "3", quoteAmount: "2" });
+console.log(price); // { n: 2, d: 3 }
+console.log(StellarPrice.format(price)); // "2/3"
+console.log(StellarPrice.compare(price, { n: 1, d: 1 })); // -1
+```
+
+Both quantities must be positive native decimal amounts. The ratio is reduced
+before int32 range validation. `compare` uses exact bigint cross-products and
+returns -1, 0, or 1, including when floating-point multiplication would lose
+precision. These tools do not fetch a market price or infer which asset should
+be base or quote.
+
 ## Updates, passive offers, sources and plugins
 
 - `updateSellOffer` requires a positive existing `offerId` and accepts the
@@ -193,9 +209,14 @@ market price, or exchange-rate policy is selected automatically.
   convention. These methods reject ID zero rather than silently placing a new
   offer.
 - Zero `amount` or `buyAmount` retains the native cancellation behavior.
+- `updateSell` and `updateBuy` use the same plain-language fields and units as
+  `sell` and `buy`, plus an explicit positive `offerId`. They do not read and
+  preserve a stale remaining amount on your behalf.
 - `createPassiveSellOffer` does not consume a counter-offer at exactly the same
   price. Better-priced liquidity can still trade. Update or cancel it using its
   ordinary known offer ID.
+- `passiveSell` supplies the same plain-language fields as `sell` for the
+  passive operation. Passive does not mean unfillable; better prices can trade.
 - `source`, when provided to an operation method, is independent from
   `config.source`. When omitted, it is set to the original `config.source`
   before plugins run, so channel allocation cannot change the offer owner.
@@ -217,12 +238,15 @@ can consume existing liquidity and leave no offer at all. Check the actual
 instead of assuming a create method must yield an ID.
 
 `getOffer({ seller, offerId })` returns a decoded ledger entry or `null` when
-the known key is absent. Use string or bigint IDs for large values; unsafe
-numeric IDs are rejected with `SDEX_009` before RPC access rather than rounded.
-Cancellation of an absent offer reports `SDEX_006`. Construction failures have
-distinct `SDEXErrors` codes and preserve native SDK causes; ledger-read and
-pipeline failures retain their existing Colibri codes. Exact-price input
-failures use `StellarPriceErrors`.
+the known key is absent. Like the other asynchronous reads, validation and
+transport failures reject its promise. Use string or bigint IDs for large
+values; unsafe numeric IDs are rejected with `SDEX_009` before RPC access rather
+than rounded. Cancellation of an absent offer reports `SDEX_006`. A native RPC
+transport failure reports `SDEX_010`, retaining its original cause; it is never
+interpreted as an absent offer. Construction failures have distinct `SDEXErrors`
+codes and preserve native SDK causes; ledger-read and pipeline failures retain
+their existing Colibri codes. Exact-price input failures use
+`StellarPriceErrors`.
 
 There is no account-offer listing, full order book, history, best-price routing,
 or path discovery in this class. RPC known-key reads are not a market indexer.
@@ -232,3 +256,9 @@ reserves, and the choice of financial limits.
 [SDEX API reference](https://jsr.io/@colibri/core/doc/~/SDEX) ·
 [StellarPrice API reference](https://jsr.io/@colibri/core/doc/~/StellarPrice) ·
 [Transaction outcomes](pipelines/classic-transaction.md)
+
+Constructor `plugins: { transactionPipe: [plugin] }` installs the same plugins
+on `sdex.transactionPipe` before the first write, as with `StellarAsset`. Memos
+belong in each write's `config.memo`; channel and fee-bump plugins retain native
+operation sources. See the
+[complete asset plugin example](asset/stellar-asset.md#sources-plugins-and-native-interoperability).

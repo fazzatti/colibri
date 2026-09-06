@@ -171,6 +171,13 @@ projection to your functions. Either ingestor can be omitted when its mode is
 unused. Use native `Server.getLedgers()` responses directly with
 `Ledger.fromEntry()`; it also accepts raw encoded entries.
 
+Envelope and operation access require `Ledger.fromEntry(entry, networkConfig)`
+or the standalone network passphrase so results can be matched by transaction
+hash. Without it, the parser exposes result-only data. Built-in ledger,
+transaction, and operation factories supply the configured passphrase or
+discover it once per RPC connection through `getNetwork()`; they never assume
+Mainnet.
+
 Custom ingestors own pagination, filter handling, and callback delivery. Check
 the optional live context or archive context between callbacks. An archive
 ingestor should await `context.onLedgerComplete?.(ledger)` only after consuming

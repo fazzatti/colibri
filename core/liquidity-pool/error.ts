@@ -12,6 +12,11 @@ export enum Code {
   INVALID_DEPOSIT_ASSETS = "NLP_008",
   INVALID_WITHDRAWAL_ASSETS = "NLP_009",
   FAILED_TO_READ_TRUSTLINE = "NLP_010",
+  INVALID_PRICE_ASSETS = "NLP_011",
+  REVERSED_PRICE_BOUNDS = "NLP_012",
+  POSITION_POOL_MISSING = "NLP_013",
+  POSITION_TRUSTLINE_MISSING = "NLP_014",
+  FAILED_TO_READ_POSITION = "NLP_015",
 }
 
 /** Base error for explicit protocol-native pool actions. */
@@ -133,6 +138,55 @@ export class FAILED_TO_READ_TRUSTLINE extends NativeLiquidityPoolError {
     super(
       Code.FAILED_TO_READ_TRUSTLINE,
       "Could not read the pool-share trustline.",
+      cause,
+    );
+  }
+}
+
+/** A labelled price must name this pool's two distinct assets. */
+export class INVALID_PRICE_ASSETS extends NativeLiquidityPoolError {
+  /** Explains the mismatched units. */
+  constructor() {
+    super(
+      Code.INVALID_PRICE_ASSETS,
+      "Price base and quote must be this pool's two different assets.",
+    );
+  }
+}
+/** A price interval has a minimum greater than its maximum. */
+export class REVERSED_PRICE_BOUNDS extends NativeLiquidityPoolError {
+  /** Explains the invalid interval without silently swapping the user's input. */
+  constructor() {
+    super(
+      Code.REVERSED_PRICE_BOUNDS,
+      "Minimum price must not exceed maximum price.",
+    );
+  }
+}
+/** The position query found no pool entry. */
+export class POSITION_POOL_MISSING extends NativeLiquidityPoolError {
+  /** Distinguishes missing pool state from missing holder state. */
+  constructor() {
+    super(Code.POSITION_POOL_MISSING, "The position's pool does not exist.");
+  }
+}
+/** The position query found no pool-share trustline. */
+export class POSITION_TRUSTLINE_MISSING extends NativeLiquidityPoolError {
+  /** Explains the absent holder position. */
+  constructor() {
+    super(
+      Code.POSITION_TRUSTLINE_MISSING,
+      "The holder has no pool-share trustline.",
+    );
+  }
+}
+/** A native transport failure prevented the position observation. */
+export class FAILED_TO_READ_POSITION extends NativeLiquidityPoolError {
+  /** Retains the original cause. */
+  constructor(cause: unknown) {
+    super(
+      Code.FAILED_TO_READ_POSITION,
+      "Could not read the pool position.",
       cause,
     );
   }

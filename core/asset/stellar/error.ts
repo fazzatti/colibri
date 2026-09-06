@@ -15,6 +15,13 @@ export enum Code {
   READ_ISSUER_FAILED = "STAS_011",
   READ_TRUSTLINE_FAILED = "STAS_012",
   NATIVE_ASSET_CODE_MISMATCH = "STAS_013",
+  INVALID_CANONICAL_ASSET = "STAS_014",
+  ISSUER_BALANCE_UNDEFINED = "STAS_015",
+  BALANCE_TRUSTLINE_MISSING = "STAS_016",
+  READ_HOLDER_STATE_FAILED = "STAS_017",
+  SAC_BINDING_FAILED = "STAS_018",
+  NATIVE_ISSUANCE = "STAS_019",
+  NATIVE_REDEMPTION = "STAS_020",
 }
 
 /** Base error preserving the original asset-operation failure. */
@@ -166,6 +173,82 @@ export class NATIVE_ASSET_CODE_MISMATCH
   }
 }
 
+/** The supplied string is not an exact SEP-11 asset identity. */
+export class INVALID_CANONICAL_ASSET
+  extends StellarAssetError<Code.INVALID_CANONICAL_ASSET> {
+  /** Records the invalid identity. */
+  constructor(value: string) {
+    super(Code.INVALID_CANONICAL_ASSET, `Invalid canonical asset: ${value}.`);
+  }
+}
+/** An issuer has no finite native trustline balance of its own asset. */
+export class ISSUER_BALANCE_UNDEFINED
+  extends StellarAssetError<Code.ISSUER_BALANCE_UNDEFINED> {
+  /** Explains why an issuer cannot be treated as a trustline holder. */
+  constructor() {
+    super(
+      Code.ISSUER_BALANCE_UNDEFINED,
+      "An issuer has no finite balance of its own issued asset.",
+    );
+  }
+}
+/** A requested balance cannot be read because no trustline exists. */
+export class BALANCE_TRUSTLINE_MISSING
+  extends StellarAssetError<Code.BALANCE_TRUSTLINE_MISSING> {
+  /** Identifies the account whose holding is absent. */
+  constructor(account: string) {
+    super(
+      Code.BALANCE_TRUSTLINE_MISSING,
+      `No trustline exists for ${account}.`,
+    );
+  }
+}
+/** A transport failure prevented reading a native holding. */
+export class READ_HOLDER_STATE_FAILED
+  extends StellarAssetError<Code.READ_HOLDER_STATE_FAILED> {
+  /** Retains the account-read failure. */
+  constructor(cause: unknown) {
+    super(
+      Code.READ_HOLDER_STATE_FAILED,
+      "Unable to read the asset holder state.",
+      cause,
+    );
+  }
+}
+/** The associated Stellar Asset Contract could not be bound. */
+export class SAC_BINDING_FAILED
+  extends StellarAssetError<Code.SAC_BINDING_FAILED> {
+  /** Retains the SAC binding failure. */
+  constructor(cause: unknown) {
+    super(
+      Code.SAC_BINDING_FAILED,
+      "Unable to bind the Stellar Asset Contract.",
+      cause,
+    );
+  }
+}
+/** Native XLM cannot be issued by a user account. */
+export class NATIVE_ISSUANCE extends StellarAssetError<Code.NATIVE_ISSUANCE> {
+  /** Explains the missing native issuer. */
+  constructor() {
+    super(
+      Code.NATIVE_ISSUANCE,
+      "Native XLM has no issuer from which to issue units.",
+    );
+  }
+}
+/** Native XLM cannot be redeemed to an issuer. */
+export class NATIVE_REDEMPTION
+  extends StellarAssetError<Code.NATIVE_REDEMPTION> {
+  /** Explains the missing redemption destination. */
+  constructor() {
+    super(
+      Code.NATIVE_REDEMPTION,
+      "Native XLM has no issuer to which to redeem units.",
+    );
+  }
+}
+
 /** Asset-operation error constructors indexed by stable code. */
 export const ERROR_STAS = {
   [Code.INVALID_ASSET]: INVALID_ASSET,
@@ -181,4 +264,11 @@ export const ERROR_STAS = {
   [Code.READ_ISSUER_FAILED]: READ_ISSUER_FAILED,
   [Code.READ_TRUSTLINE_FAILED]: READ_TRUSTLINE_FAILED,
   [Code.NATIVE_ASSET_CODE_MISMATCH]: NATIVE_ASSET_CODE_MISMATCH,
+  [Code.INVALID_CANONICAL_ASSET]: INVALID_CANONICAL_ASSET,
+  [Code.ISSUER_BALANCE_UNDEFINED]: ISSUER_BALANCE_UNDEFINED,
+  [Code.BALANCE_TRUSTLINE_MISSING]: BALANCE_TRUSTLINE_MISSING,
+  [Code.READ_HOLDER_STATE_FAILED]: READ_HOLDER_STATE_FAILED,
+  [Code.SAC_BINDING_FAILED]: SAC_BINDING_FAILED,
+  [Code.NATIVE_ISSUANCE]: NATIVE_ISSUANCE,
+  [Code.NATIVE_REDEMPTION]: NATIVE_REDEMPTION,
 };

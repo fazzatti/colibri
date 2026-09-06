@@ -500,13 +500,35 @@ const usd = new StellarAsset({
 const trustline = await usd.getTrustline(holder.publicKey());
 await usd.changeTrust({ limit: "1000", config });
 await usd.transfer({ destination, amount: "10", config });
+const units = await usd.balance({ id: holder.publicKey() });
+console.log(usd.toString(), usd.formatAmount(units), usd.decimals());
 ```
 
 Use `getIssuer()` for issuer-account flags and `getTrustline()` for one known
 holder. `setTrustLineFlags()` and `clawback()` are separate, explicit issuer
-actions; neither enables account policy as a side effect. Use
-`StellarAssetContract` or `SEP41TokenContract` when invoking the Soroban
-interface instead.
+actions; neither enables account policy as a side effect. Use `issue` and
+`redeem` to make the issuer payment endpoints explicit. `getHolderState` returns
+the actual account/trustline with flags and liabilities; `authorized` reports
+full holder authorization. Missing trustlines are not zero balances, issuers
+have no finite balance of their own issued asset, and XLM balance is a total
+rather than a spendable estimate.
+
+`NativeXLM` and `fromCanonical` bind identities without RPC. The asset's
+`parseAmount`/`formatAmount` helpers convert seven-decimal units exactly,
+rejecting overflow or required rounding. `usd.toContract()` returns a separate
+`StellarAssetContract` for deliberate Soroban use, without deployment or copying
+native pipeline plugins. It does not add native allowances or switch payment
+execution routes. Use `SEP41TokenContract` for arbitrary SEP-41 tokens.
+
+`StellarAsset`, `SDEX`, and `NativeLiquidityPool` accept constructor plugins as
+`plugins: { transactionPipe: [channelPlugin, feeBumpPlugin, sep29Plugin] }`, or
+let you attach them to the existing `transactionPipe` binding. Native
+`config.memo` is preserved through channel allocation and fee bumping; the
+optional SEP-29 plugin checks the recipient's memo requirement. The operation
+source remains the intended holder or issuer even when a channel account
+supplies the envelope source and another account pays the fee. See the
+[complete plugin example](https://fifo-docs.gitbook.io/colibri/core/asset/stellar-asset)
+for explicit setup and signer roles.
 
 `SDEX` owns the same kind of pipeline for known sell, buy, and passive offers:
 
@@ -529,10 +551,14 @@ This offers up to 10 USD at a limit of at least 2 XLM per USD. The corresponding
 `createPassiveSellOffer` remain available. A successful submission can fill
 fully or partly; it does not guarantee that a resting offer exists. Read/cancel
 an offer with its seller and ID. There is no order-book or path discovery.
+`updateSell`, `updateBuy`, and `passiveSell` provide the same explicit unit
+names as their creation counterparts.
 
 `StellarPrice.fromDecimal("1.25")` returns exactly `{ n: 5, d: 4 }`. It rejects
 limits that cannot fit Stellar's positive int32 fraction instead of rounding.
 `invert`, `format`, and `describe` make price direction and units explicit.
+`fromAmounts({ baseAmount: "3", quoteAmount: "2" })` produces exact `2/3`, and
+`compare` compares fractions without floating-point multiplication.
 
 `NativeLiquidityPool` binds two native SDK assets and applies canonical
 ordering. Its `changeTrust`, `deposit`, and `withdraw` methods execute through
@@ -541,6 +567,12 @@ asset instead of relying on A/B ordering. Protocol-native pools can contain two
 issued assets: "native" does not mean XLM-only. No method chooses a price
 tolerance, sets up underlying asset trustlines, or discovers a market
 automatically.
+
+`priceBounds` converts a named base/quote interval to native A/B prices,
+including inverting and swapping endpoints when needed. `getPosition` reads a
+holder's share trustline and pool state in one RPC observation, with an exact
+ownership fraction rather than a rounded percentage or promised withdrawal
+amount.
 
 See the complete
 [asset guide](https://fifo-docs.gitbook.io/colibri/core/asset/stellar-asset),
@@ -752,6 +784,12 @@ Soroban transaction's signer list.
 SEP-53 domain-separated message format. It is not equivalent to `sign(data)`,
 does not grant transaction-signing eligibility, and does not add
 application-level expiry or replay prevention.
+
+`LocalSigner.verifyMessage(message, signature)` is the matching SEP-53 verifier.
+It uses the public key and remains usable after destroying the signer's secret,
+like `verifySignature`. A valid signature proves the message bytes were signed;
+it does not prove account-threshold control, fresh consent, or absence of
+replay.
 
 ```ts
 if (isMessageSigner(signer)) {

@@ -63,6 +63,13 @@ await streamer.startLive(console.log, {
 decoded entries as well as raw encoded entries. Prefer the built-in factory when
 no projection is needed.
 
+This summary reads only ledger identity, so it needs no network context. For
+transaction envelopes or operations, use
+`Ledger.fromEntry(entry, networkConfig)` or pass the RPC's network passphrase.
+The built-in ledger, transaction, and operation factories handle this using
+configuration or `rpc.getNetwork()`; custom ingestors must supply that context
+themselves.
+
 ## Ingestor contracts
 
 - `nextLedger` is the next ledger to request, not the last processed ledger.

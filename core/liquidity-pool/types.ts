@@ -6,8 +6,13 @@ import type {
 } from "stellar-sdk";
 import type { Server as NativeServer } from "stellar-sdk/rpc";
 import type { NetworkConfig } from "@/network/index.ts";
+import type { ClassicTransactionPipelinePlugins } from "@/pipelines/classic-transaction/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
-import type { LiquidityPoolLedgerEntry } from "@/ledger-entries/types.ts";
+import type {
+  LiquidityPoolLedgerEntry,
+  TrustlineLedgerEntry,
+} from "@/ledger-entries/types.ts";
+import type { StellarPriceRatio } from "@/price/types.ts";
 
 /** @internal Exact native SDK asset type. */
 export type Asset = NativeAsset;
@@ -28,6 +33,8 @@ type WithdrawOptions = NonNullable<
 
 /** Configuration for a protocol-native constant-product liquidity pool. */
 export type NativeLiquidityPoolArgs = {
+  /** Plugins attached to the owned transaction pipe during construction. */
+  plugins?: ClassicTransactionPipelinePlugins;
   /** Two different native SDK assets; Colibri applies canonical ordering. */
   assets: readonly [Asset, Asset];
   /** Network used by the owned transaction pipeline. */
@@ -85,3 +92,31 @@ export type PoolWithdrawByAssetArgs =
     /** Exactly one minimum for each asset, in either order. */
     minimumAmounts: readonly [PoolAssetAmount, PoolAssetAmount];
   };
+
+/** A price interval stated explicitly as quote units per one base unit. */
+export type PoolPriceBoundsArgs = {
+  /** One of the two pool assets, whose quantity is one. */
+  baseAsset: Asset;
+  /** The other pool asset, in which prices are expressed. */
+  quoteAsset: Asset;
+  /** Inclusive minimum, as exact decimal text or a native-compatible fraction. */
+  minimum: string | StellarPriceRatio;
+  /** Inclusive maximum in the same direction. */
+  maximum: string | StellarPriceRatio;
+};
+/** Exact native A/B bounds, suitable for spreading into a deposit input. */
+export type PoolPriceBounds = {
+  minPrice: StellarPriceRatio;
+  maxPrice: StellarPriceRatio;
+};
+/** A holder and the pool read together in one RPC observation. */
+export type NativeLiquidityPoolPosition = {
+  /** Native decoded pool reserves and total share supply. */
+  pool: LiquidityPoolLedgerEntry;
+  /** Holder's pool-share trustline, including liabilities and limit. */
+  trustline: TrustlineLedgerEntry;
+  /** Exact ownership fraction, or null while total supply is zero. Not a withdrawal quote. */
+  ownership: { shares: bigint; totalShares: bigint } | null;
+  /** Latest ledger reported by the single RPC response containing both entries. */
+  observedAtLedger: number;
+};

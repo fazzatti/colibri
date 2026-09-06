@@ -17,6 +17,41 @@ import * as E from "@/claimable-balance/error.ts";
  * they do not schedule transactions or automatically refund funds.
  */
 export class ClaimableBalancePredicates {
+  /**
+   * Combines a nonempty list into a balanced native AND tree, preserving order.
+   * An empty list is rejected rather than silently authorizing a claim.
+   */
+  static allOf(predicates: readonly ClaimPredicate[]): ClaimPredicate {
+    if (predicates.length === 0) throw new E.EMPTY_ALL_OF();
+    return combinePredicates(predicates, ClaimableBalancePredicates.and);
+  }
+
+  /** Combines a nonempty list into a balanced native OR tree, preserving order. */
+  static anyOf(predicates: readonly ClaimPredicate[]): ClaimPredicate {
+    if (predicates.length === 0) throw new E.EMPTY_ANY_OF();
+    return combinePredicates(predicates, ClaimableBalancePredicates.or);
+  }
+
+  /** Permits claims at or after a Date, based on the execution ledger's close time. */
+  static atOrAfter(start: Date): ClaimPredicate {
+    return ClaimableBalancePredicates.not(
+      ClaimableBalancePredicates.before(start),
+    );
+  }
+
+  /**
+   * Permits claims in [start, end): the start is inclusive and the end exclusive.
+   * This is a time condition, not a scheduled transaction or automatic refund.
+   */
+  static between({ start, end }: { start: Date; end: Date }): ClaimPredicate {
+    const afterStart = ClaimableBalancePredicates.atOrAfter(start);
+    const beforeEnd = ClaimableBalancePredicates.before(end);
+    if (Math.ceil(start.getTime() / 1000) >= Math.ceil(end.getTime() / 1000)) {
+      throw new E.EMPTY_TIME_WINDOW();
+    }
+    return ClaimableBalancePredicates.and(afterStart, beforeEnd);
+  }
+
   /** Returns the native predicate that permits claiming without a time condition. */
   static unconditional(): ClaimPredicate {
     return Claimant.predicateUnconditional();
@@ -73,6 +108,21 @@ export class ClaimableBalancePredicates {
     validateClaimPredicate(child, 2);
     return Claimant.predicateNot(child);
   }
+}
+
+function combinePredicates(
+  predicates: readonly ClaimPredicate[],
+  combine: (left: ClaimPredicate, right: ClaimPredicate) => ClaimPredicate,
+): ClaimPredicate {
+  if (predicates.length === 1) {
+    validateClaimPredicate(predicates[0]);
+    return predicates[0];
+  }
+  const middle = Math.floor(predicates.length / 2);
+  return combine(
+    combinePredicates(predicates.slice(0, middle), combine),
+    combinePredicates(predicates.slice(middle), combine),
+  );
 }
 
 export type { ClaimPredicateSeconds } from "@/claimable-balance/types.ts";

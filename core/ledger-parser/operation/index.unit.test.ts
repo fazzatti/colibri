@@ -8,6 +8,7 @@
 
 // deno-lint-ignore-file no-explicit-any
 
+import { Networks } from "stellar-sdk";
 import { beforeAll, describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { Ledger } from "@/ledger-parser/ledger/index.ts";
@@ -32,7 +33,7 @@ describe("Operation", () => {
     let operation: Operation;
 
     beforeAll(() => {
-      const ledger = Ledger.fromEntry(ledgerEntry);
+      const ledger = Ledger.fromEntry(ledgerEntry, Networks.PUBLIC);
       const transactions = ledger.transactions;
 
       if (transactions.length === 0) {
@@ -698,7 +699,7 @@ describe("Operation", () => {
 
     it("should parse createAccount operations from real fixtures", () => {
       for (const entry of v2Fixtures) {
-        const ledger = Ledger.fromEntry(entry);
+        const ledger = Ledger.fromEntry(entry, Networks.PUBLIC);
         for (const tx of ledger.transactions) {
           if (!tx.hasEnvelope) continue;
           for (const op of tx.operations) {
@@ -714,7 +715,7 @@ describe("Operation", () => {
 
     it("should parse payment operations from real fixtures", () => {
       for (const entry of v2Fixtures) {
-        const ledger = Ledger.fromEntry(entry);
+        const ledger = Ledger.fromEntry(entry, Networks.PUBLIC);
         for (const tx of ledger.transactions) {
           if (!tx.hasEnvelope) continue;
           for (const op of tx.operations) {
@@ -731,7 +732,7 @@ describe("Operation", () => {
 
     it("should parse pathPaymentStrictSend operations from real fixtures", () => {
       for (const entry of v2Fixtures) {
-        const ledger = Ledger.fromEntry(entry);
+        const ledger = Ledger.fromEntry(entry, Networks.PUBLIC);
         for (const tx of ledger.transactions) {
           if (!tx.hasEnvelope) continue;
           for (const op of tx.operations) {
@@ -751,7 +752,7 @@ describe("Operation", () => {
 
     it("should parse manageSellOffer operations from real fixtures", () => {
       for (const entry of v2Fixtures) {
-        const ledger = Ledger.fromEntry(entry);
+        const ledger = Ledger.fromEntry(entry, Networks.PUBLIC);
         for (const tx of ledger.transactions) {
           if (!tx.hasEnvelope) continue;
           for (const op of tx.operations) {
@@ -770,7 +771,7 @@ describe("Operation", () => {
 
     it("should parse manageBuyOffer operations from real fixtures", () => {
       for (const entry of v2Fixtures) {
-        const ledger = Ledger.fromEntry(entry);
+        const ledger = Ledger.fromEntry(entry, Networks.PUBLIC);
         for (const tx of ledger.transactions) {
           if (!tx.hasEnvelope) continue;
           for (const op of tx.operations) {
@@ -789,7 +790,7 @@ describe("Operation", () => {
 
     it("should parse changeTrust operations from real fixtures", () => {
       for (const entry of v2Fixtures) {
-        const ledger = Ledger.fromEntry(entry);
+        const ledger = Ledger.fromEntry(entry, Networks.PUBLIC);
         for (const tx of ledger.transactions) {
           if (!tx.hasEnvelope) continue;
           for (const op of tx.operations) {
@@ -805,7 +806,7 @@ describe("Operation", () => {
 
     it("should parse invokeHostFunction operations from real fixtures", () => {
       for (const entry of v2Fixtures) {
-        const ledger = Ledger.fromEntry(entry);
+        const ledger = Ledger.fromEntry(entry, Networks.PUBLIC);
         for (const tx of ledger.transactions) {
           if (!tx.hasEnvelope) continue;
           for (const op of tx.operations) {
@@ -823,7 +824,7 @@ describe("Operation", () => {
       const opTypes = new Set<string>();
 
       for (const entry of v2Fixtures) {
-        const ledger = Ledger.fromEntry(entry);
+        const ledger = Ledger.fromEntry(entry, Networks.PUBLIC);
         for (const tx of ledger.transactions) {
           if (!tx.hasEnvelope) continue;
           for (const op of tx.operations) {

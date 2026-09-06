@@ -6,6 +6,7 @@ export enum Code {
   SIGNER_DESTROYED = "SIG_LOC_003",
   MESSAGE_SIGNER_DESTROYED = "SIG_LOC_004",
   MESSAGE_SIGNING_FAILED = "SIG_LOC_005",
+  MESSAGE_VERIFICATION_FAILED = "SIG_LOC_006",
 }
 export type MetaData = unknown;
 
@@ -92,10 +93,26 @@ export class MESSAGE_SIGNING_FAILED extends LocalSignerError {
   }
 }
 
+/** The native SDK rejected malformed SEP-53 verification inputs. */
+export class MESSAGE_VERIFICATION_FAILED extends LocalSignerError {
+  /** Retains the cause without copying message or signature bytes. */
+  constructor(cause: Error) {
+    super({
+      code: Code.MESSAGE_VERIFICATION_FAILED,
+      message: "Failed to verify a SEP-53 message",
+      details:
+        "Provide UTF-8 text or Uint8Array message bytes and a detached signature.",
+      cause,
+      data: null,
+    });
+  }
+}
+
 export const ERROR_SIG_LOC = {
   [Code.CANNOT_REMOVE_MASTER_TARGET]: CANNOT_REMOVE_MASTER_TARGET,
   [Code.SECRET_NOT_ACCESSIBLE]: SECRET_NOT_ACCESSIBLE,
   [Code.SIGNER_DESTROYED]: SIGNER_DESTROYED,
   [Code.MESSAGE_SIGNER_DESTROYED]: MESSAGE_SIGNER_DESTROYED,
   [Code.MESSAGE_SIGNING_FAILED]: MESSAGE_SIGNING_FAILED,
+  [Code.MESSAGE_VERIFICATION_FAILED]: MESSAGE_VERIFICATION_FAILED,
 };

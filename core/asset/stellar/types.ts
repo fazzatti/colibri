@@ -1,8 +1,13 @@
 import type { Asset as NativeAsset, Operation } from "stellar-sdk";
 import type { Server as NativeServer } from "stellar-sdk/rpc";
 import type { NetworkConfig } from "@/network/index.ts";
+import type { ClassicTransactionPipelinePlugins } from "@/pipelines/classic-transaction/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+import type {
+  AccountLedgerEntry,
+  TrustlineLedgerEntry,
+} from "@/ledger-entries/types.ts";
 
 /** @internal Exact native SDK asset type. */
 export type Asset = NativeAsset;
@@ -26,6 +31,8 @@ export type StellarAssetArgs =
     networkConfig: NetworkConfig;
     /** Optional native SDK RPC server, shared by reads and the transaction pipe. */
     rpc?: Server;
+    /** Plugins for the owned transaction pipe, including channel accounts and fee bumps. */
+    plugins?: ClassicTransactionPipelinePlugins;
   }
   & (
     | {
@@ -77,3 +84,22 @@ export type StellarAssetClawbackArgs =
     /** Envelope configuration. The operation defaults to the asset issuer. */
     config: TransactionConfig;
   };
+
+/** Connection shared by native asset factories. */
+export type StellarAssetNetwork = {
+  networkConfig: NetworkConfig;
+  rpc?: Server;
+  /** Plugins for the native transaction pipe; not copied by `toContract()`. */
+  plugins?: ClassicTransactionPipelinePlugins;
+};
+/** Inputs for native asset balance and holder-state reads. */
+export type StellarAssetBalanceArgs = { id: Ed25519PublicKey };
+/** Native account or trustline data, including the balance's actual storage kind. */
+export type StellarAssetHolderState = AccountLedgerEntry | TrustlineLedgerEntry;
+/** Explicit issuance, always authorized by the issuing account. */
+export type StellarAssetIssueArgs = Omit<StellarAssetTransferArgs, "source">;
+/** Explicit redemption, always paying the asset's issuer. */
+export type StellarAssetRedeemArgs = Omit<
+  StellarAssetTransferArgs,
+  "destination"
+>;

@@ -21,3 +21,10 @@ constructors and diagnostic fields.
 | `STAS_011` | `READ_ISSUER_FAILED` — A non-Colibri RPC failure prevented reading the issuer account.                | [Definition](https://github.com/fazzatti/colibri/blob/main/core/asset/stellar/error.ts#L15) |
 | `STAS_012` | `READ_TRUSTLINE_FAILED` — A non-Colibri RPC failure prevented reading the holder's trustline.         | [Definition](https://github.com/fazzatti/colibri/blob/main/core/asset/stellar/error.ts#L16) |
 | `STAS_013` | `NATIVE_ASSET_CODE_MISMATCH` — A native issuer marker was paired with a code other than XLM.          | [Definition](https://github.com/fazzatti/colibri/blob/main/core/asset/stellar/error.ts#L17) |
+| `STAS_014` | `INVALID_CANONICAL_ASSET` — The supplied string is not an exact SEP-11 asset identity.                | [Definition](https://github.com/fazzatti/colibri/blob/main/core/asset/stellar/error.ts#L18) |
+| `STAS_015` | `ISSUER_BALANCE_UNDEFINED` — An issuer has no finite native trustline balance of its own asset.       | [Definition](https://github.com/fazzatti/colibri/blob/main/core/asset/stellar/error.ts#L19) |
+| `STAS_016` | `BALANCE_TRUSTLINE_MISSING` — A requested balance cannot be read because no trustline exists.         | [Definition](https://github.com/fazzatti/colibri/blob/main/core/asset/stellar/error.ts#L20) |
+| `STAS_017` | `READ_HOLDER_STATE_FAILED` — A transport failure prevented reading a native holding.                  | [Definition](https://github.com/fazzatti/colibri/blob/main/core/asset/stellar/error.ts#L21) |
+| `STAS_018` | `SAC_BINDING_FAILED` — The associated Stellar Asset Contract could not be bound.                      | [Definition](https://github.com/fazzatti/colibri/blob/main/core/asset/stellar/error.ts#L22) |
+| `STAS_019` | `NATIVE_ISSUANCE` — Native XLM cannot be issued by a user account.                                    | [Definition](https://github.com/fazzatti/colibri/blob/main/core/asset/stellar/error.ts#L23) |
+| `STAS_020` | `NATIVE_REDEMPTION` — Native XLM cannot be redeemed to an issuer.                                     | [Definition](https://github.com/fazzatti/colibri/blob/main/core/asset/stellar/error.ts#L24) |

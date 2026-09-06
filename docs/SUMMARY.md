@@ -157,6 +157,7 @@
   - [core/asset/sac](reference/errors/core-asset-sac.md)
   - [core/asset/sep11](reference/errors/core-asset-sep11.md)
   - [core/asset/sep41-token](reference/errors/core-asset-sep41-token.md)
+  - [core/asset/stellar/amount](reference/errors/core-asset-stellar-amount.md)
   - [core/asset/stellar](reference/errors/core-asset-stellar.md)
   - [core/auth/requirements/classic-operation-threshold](reference/errors/core-auth-requirements-classic-operation-threshold.md)
   - [core/claimable-balance](reference/errors/core-claimable-balance.md)

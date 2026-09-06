@@ -1,3 +1,4 @@
+import { Networks, TransactionBuilder, xdr } from "stellar-sdk";
 import {
   assert,
   assertEquals,
@@ -9,6 +10,7 @@ import { Ledger, NetworkConfig } from "@colibri/core";
 import { Server } from "stellar-sdk/rpc";
 import { loadLedgerFixtures } from "colibri-internal/tests/fixtures/rpc/get_ledgers/index.ts";
 import { RPCStreamer } from "@/streamer.ts";
+import { createLedgerStreamer } from "@/variants/ledger/index.ts";
 import { createTransactionStreamer } from "@/variants/transaction/index.ts";
 import { createOperationStreamer } from "@/variants/operation/index.ts";
 import { transactionRecords } from "@/variants/transaction/records.ts";
@@ -30,13 +32,23 @@ describe("Transaction and operation ledger projections", () => {
   it("preserves every recorded ledger transaction and operation across metadata versions", () => {
     let failed = 0;
     for (const fixture of fixtures) {
-      const ledger = Ledger.fromEntry(fixture);
+      const ledger = Ledger.fromEntry(fixture, Networks.PUBLIC);
       const transactions = transactionRecords(ledger);
       assertEquals(transactions.length, ledger.transactionCount);
       for (const [index, record] of transactions.entries()) {
         assertEquals(record.transaction, ledger.transactions[index]);
         assertEquals(record.transactionIndex, index);
         assertEquals(record.transactionHash, ledger.transactions[index].hash);
+        assertEquals(
+          record.transactionHash,
+          xdr.encodeBytes(
+            TransactionBuilder.fromXdr(
+              record.transaction.toEnvelope().toXdr("base64"),
+              Networks.PUBLIC,
+            ).hash(),
+            "hex",
+          ),
+        );
         assertEquals(record.ledgerSequence, ledger.sequence);
         assertEquals(record.ledgerHash, ledger.hash);
         assertEquals(record.ledgerCloseTime, ledger.ledgerCloseTime);
@@ -108,6 +120,8 @@ describe("Transaction and operation streaming over recorded RPC transport", () =
   let server: Deno.HttpServer<Deno.NetAddr>;
   let rpc: Server;
   let abortOnRequest: AbortController | undefined;
+  let abortOnNetwork: AbortController | undefined;
+  let abortOnLedger: AbortController | undefined;
 
   beforeAll(() => {
     server = Deno.serve(
@@ -115,9 +129,13 @@ describe("Transaction and operation streaming over recorded RPC transport", () =
       async (request) => {
         const body = await request.json();
         abortOnRequest?.abort();
+        if (body.method === "getNetwork") abortOnNetwork?.abort();
+        if (body.method === "getLedgers") abortOnLedger?.abort();
         const sequence = body.params?.startLedger;
         const entry = fixtures.find((fixture) => fixture.sequence >= sequence);
-        const result = body.method === "getHealth"
+        const result = body.method === "getNetwork"
+          ? { passphrase: Networks.PUBLIC, protocolVersion: 28 }
+          : body.method === "getHealth"
           ? {
             status: "healthy",
             oldestLedger: first.sequence - 2,
@@ -141,6 +159,41 @@ describe("Transaction and operation streaming over recorded RPC transport", () =
   });
   afterAll(async () => {
     await server.shutdown();
+  });
+
+  it("does not deliver a ledger after cancellation during fetching or network discovery", async () => {
+    for (const phase of ["ledger", "network"] as const) {
+      for (const mode of ["live", "archive"] as const) {
+        const controller = new AbortController();
+        if (phase === "network") abortOnNetwork = controller;
+        else abortOnLedger = controller;
+        const streamer = createLedgerStreamer({
+          rpc,
+          archiveRpc: rpc,
+          options: { archivalIntervalMs: 0 },
+        });
+        let delivered = 0;
+        const options = {
+          startLedger: first.sequence,
+          stopLedger: first.sequence,
+          signal: controller.signal,
+        };
+        try {
+          if (mode === "live") {
+            await streamer.startLive(() => {
+              delivered++;
+            }, options);
+          } else {await streamer.startArchive(() => {
+              delivered++;
+            }, options);}
+          assertEquals(delivered, 0);
+          assertEquals(streamer.nextLedger, first.sequence);
+        } finally {
+          abortOnNetwork = undefined;
+          abortOnLedger = undefined;
+        }
+      }
+    }
   });
 
   it("accepts native Server, NetworkConfig and URL factory paths", () => {
@@ -190,9 +243,9 @@ describe("Transaction and operation streaming over recorded RPC transport", () =
     });
     assertEquals(
       records.map((record) => record.transactionHash),
-      transactionRecords(Ledger.fromEntry(first)).map((record) =>
-        record.transactionHash
-      ),
+      transactionRecords(Ledger.fromEntry(first, Networks.PUBLIC)).map((
+        record,
+      ) => record.transactionHash),
     );
     assertEquals(checkpoints, [first.sequence]);
     assertEquals(streamer.nextLedger, first.sequence + 1);
@@ -200,7 +253,10 @@ describe("Transaction and operation streaming over recorded RPC transport", () =
     await streamer.start((record) => {
       latest.push(record);
     }, { stopLedger: last.sequence });
-    assertEquals(latest.length, Ledger.fromEntry(last).transactionCount);
+    assertEquals(
+      latest.length,
+      Ledger.fromEntry(last, Networks.PUBLIC).transactionCount,
+    );
     assertEquals(streamer.nextLedger, last.sequence + 1);
   });
 
@@ -230,7 +286,10 @@ describe("Transaction and operation streaming over recorded RPC transport", () =
       resumed.push(record.transactionHash);
     }, { startLedger: streamer.nextLedger, stopLedger: first.sequence });
     assertEquals(resumed[0], partial[0]);
-    assertEquals(resumed.length, Ledger.fromEntry(first).transactionCount);
+    assertEquals(
+      resumed.length,
+      Ledger.fromEntry(first, Networks.PUBLIC).transactionCount,
+    );
   });
 
   it("stops between operation callbacks and acknowledges a stop in the final callback", async () => {
@@ -243,7 +302,7 @@ describe("Transaction and operation streaming over recorded RPC transport", () =
         waitLedgerIntervalMs: 0,
       },
     });
-    const expected = operationRecords(Ledger.fromEntry(first));
+    const expected = operationRecords(Ledger.fromEntry(first, Networks.PUBLIC));
     const checkpoints: number[] = [];
     const partial: StreamedOperation[] = [];
     await streamer.startArchive((record) => {

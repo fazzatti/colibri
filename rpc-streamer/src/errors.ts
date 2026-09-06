@@ -76,6 +76,10 @@ export enum RPCStreamerErrorCode {
   CHECKPOINT_FAILED = "RPC_023",
   /** The selected network has no live RPC URL. */
   MISSING_LIVE_RPC_URL = "RPC_024",
+  /** Failed to resolve network identity from the ledger RPC connection. */
+  NETWORK_DISCOVERY_FAILED = "RPC_025",
+  /** Network discovery returned an empty or malformed passphrase. */
+  INVALID_NETWORK_PASSPHRASE = "RPC_026",
 }
 
 /**
@@ -157,6 +161,10 @@ export class RPCStreamerError extends Error {
  * Mapping of error codes to their descriptions.
  */
 export const ERROR_DESCRIPTIONS: Record<RPCStreamerErrorCode, string> = {
+  [RPCStreamerErrorCode.NETWORK_DISCOVERY_FAILED]:
+    "Ledger RPC network discovery failed",
+  [RPCStreamerErrorCode.INVALID_NETWORK_PASSPHRASE]:
+    "Ledger RPC returned an invalid passphrase",
   [RPCStreamerErrorCode.MISSING_LIVE_RPC_URL]:
     "The selected network has no live RPC URL",
   [RPCStreamerErrorCode.CHECKPOINT_FAILED]:

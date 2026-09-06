@@ -1,3 +1,4 @@
+import { createLedgerParser } from "@/variants/ledger/parser.ts";
 import type { RPCStreamerConfig } from "@/types.ts";
 import { operationRecords } from "@/variants/operation/records.ts";
 import {
@@ -13,12 +14,14 @@ import type {
 export function operationStreamerConfig(
   config: OperationStreamerConfig,
 ): RPCStreamerConfig<StreamedOperation> {
+  const parseLedger = createLedgerParser(config.networkConfig);
   return {
     ...config,
-    ingestLive: createLiveItemIngestor(operationRecords),
+    ingestLive: createLiveItemIngestor(operationRecords, parseLedger),
     ingestArchive: createArchiveItemIngestor(
       operationRecords,
       config.options?.archivalIntervalMs ?? 500,
+      parseLedger,
     ),
   };
 }

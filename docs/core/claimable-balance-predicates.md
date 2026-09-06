@@ -41,15 +41,19 @@ native balance ID; retain it for the subsequent claim.
 
 ## Methods and units
 
-| Method                        | Meaning                                                                   |
-| ----------------------------- | ------------------------------------------------------------------------- |
-| `unconditional()`             | No predicate time restriction.                                            |
-| `before(date)`                | The claiming ledger closes strictly before this `Date`.                   |
-| `beforeAbsoluteTime(seconds)` | Strictly before absolute Unix seconds, not milliseconds.                  |
-| `beforeRelativeTime(seconds)` | Strictly before this duration after the balance's creation ledger closes. |
-| `and(left, right)`            | Both predicates must hold.                                                |
-| `or(left, right)`             | Either predicate may hold.                                                |
-| `not(predicate)`              | Negates the predicate, including its exact time boundary.                 |
+| Method                        | Meaning                                                                          |
+| ----------------------------- | -------------------------------------------------------------------------------- |
+| `unconditional()`             | No predicate time restriction.                                                   |
+| `before(date)`                | The claiming ledger closes strictly before this `Date`.                          |
+| `beforeAbsoluteTime(seconds)` | Strictly before absolute Unix seconds, not milliseconds.                         |
+| `beforeRelativeTime(seconds)` | Strictly before this duration after the balance's creation ledger closes.        |
+| `and(left, right)`            | Both predicates must hold.                                                       |
+| `or(left, right)`             | Either predicate may hold.                                                       |
+| `not(predicate)`              | Negates the predicate, including its exact time boundary.                        |
+| `atOrAfter(date)`             | Includes the start time by negating `before(date)`.                              |
+| `between({ start, end })`     | Includes the start and excludes the end. Rejects an empty whole-second window.   |
+| `allOf(predicates)`           | Requires all members of a nonempty list, composed as a balanced native AND tree. |
+| `anyOf(predicates)`           | Permits any member of a nonempty list, composed as a balanced native OR tree.    |
 
 Absolute and relative seconds accept decimal integer strings, `bigint`, or safe
 integer numbers. They must fit the protocol's nonnegative signed-64-bit range.
@@ -70,6 +74,28 @@ exactly two children; NOT requires a non-null child. The composition helpers
 validate these rules for the complete resulting tree, including children built
 directly with the native SDK. They do not mutate input predicates, collapse
 expressions, or change the network's authorization semantics.
+
+For example, a claim can be eligible in either of two explicit time windows:
+
+<!-- deno-check -->
+
+```typescript
+import { ClaimableBalancePredicates as P } from "@colibri/core";
+
+const window = P.between({
+  start: new Date("2030-01-01T00:00:00Z"),
+  end: new Date("2030-02-01T00:00:00Z"),
+});
+const later = P.atOrAfter(new Date("2030-03-01T00:00:00Z"));
+const eitherWindow = P.anyOf([window, later]);
+console.log(eitherWindow.toXdr("base64"));
+```
+
+List helpers preserve condition order and use balanced trees to avoid wasting
+depth on left-associated chains. Eight leaf predicates fit the four-level limit;
+nested children can reduce the available capacity. Empty lists fail explicitly,
+rather than silently becoming unconditional or impossible claims. They do not
+simplify logical expressions to bypass the protocol's depth limit.
 
 The native SDK remains available when you need raw construction. Claimant count,
 duplicate destinations, source balances, reserve requirements, asset

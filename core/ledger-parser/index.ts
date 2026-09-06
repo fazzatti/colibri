@@ -7,14 +7,18 @@
  *
  * @example
  * ```typescript
- * import { Ledger } from "@colibri/core";
+ * import { Ledger, NetworkConfig } from "@colibri/core";
+ * import { Server } from "npm:@stellar/stellar-sdk/rpc";
  *
- * const response = await rpc.Server.getLedgers({ startLedger: 1000, pagination: { limit: 1 } });
- * const ledger = Ledger.fromEntry(response.ledgers[0]);
+ * const networkConfig = NetworkConfig.TestNet();
+ * const rpc = new Server(networkConfig.rpcUrl);
+ * const { sequence } = await rpc.getLatestLedger();
+ * const response = await rpc.getLedgers({ startLedger: sequence, pagination: { limit: 1 } });
+ * const ledger = Ledger.fromEntry(response.ledgers[0], networkConfig);
  *
- * console.log(\`Ledger \${ledger.sequence} (version: \${ledger.version})\`);
- * console.log(\`Total coins: \${ledger.totalCoins}\`);
- * console.log(\`Transactions: \${ledger.transactions.length}\`);
+ * console.log("Ledger:", ledger.sequence, "version:", ledger.version);
+ * console.log("Total coins:", ledger.totalCoins);
+ * console.log("Transactions:", ledger.transactions.length);
  * ```
  */
 

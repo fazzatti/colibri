@@ -10,6 +10,7 @@ import {
 import type { ClassicTransactionOutput } from "@/pipelines/classic-transaction/types.ts";
 import { StellarPrice } from "@/price/index.ts";
 import * as E from "@/sdex/error.ts";
+import { ColibriError } from "@/error/index.ts";
 import type {
   BuyArgs,
   CancelOfferArgs,
@@ -19,7 +20,9 @@ import type {
   GetOfferArgs,
   SDEXConstructorArgs,
   SellArgs,
+  UpdateBuyArgs,
   UpdateBuyOfferArgs,
+  UpdateSellArgs,
   UpdateSellOfferArgs,
 } from "@/sdex/types.ts";
 
@@ -44,24 +47,32 @@ export class SDEX {
   readonly ledgerEntries: LedgerEntries;
 
   /** Binds the class to the same network/RPC for reads and transactions. */
-  constructor({ networkConfig, rpc }: SDEXConstructorArgs) {
+  constructor({ networkConfig, rpc, plugins }: SDEXConstructorArgs) {
     this.transactionPipe = createClassicTransactionPipeline({
       networkConfig,
       rpc,
     });
     this.ledgerEntries = new LedgerEntries(rpc ? { rpc } : { networkConfig });
+    for (const plugin of plugins?.transactionPipe ?? []) {
+      this.transactionPipe.use(plugin);
+    }
   }
 
   /** Reads a known seller/ID pair, returning null if no live offer remains. */
-  getOffer(
+  async getOffer(
     { seller, offerId }: GetOfferArgs,
   ): Promise<OfferLedgerEntry | null> {
     if (typeof offerId === "number" && !Number.isSafeInteger(offerId)) {
       throw new E.UNSAFE_OFFER_ID(offerId);
     }
-    return this.ledgerEntries.get(
-      buildOfferLedgerKey({ sellerId: seller, offerId }),
-    );
+    try {
+      return await this.ledgerEntries.get(
+        buildOfferLedgerKey({ sellerId: seller, offerId }),
+      );
+    } catch (cause) {
+      if (cause instanceof ColibriError) throw cause;
+      throw new E.READ_OFFER_FAILED(cause);
+    }
   }
 
   /** Creates a sell offer. Price is buying units per selling unit, as in Stellar SDK. */
@@ -198,6 +209,45 @@ export class SDEX {
       price: StellarPrice.fromDecimal(maximumSpendPerUnit),
       source,
       config,
+    });
+  }
+
+  /** Updates a sell limit using receive units per asset unit; zero amount cancels. */
+  updateSell(
+    { asset, amount, receive, minimumReceivePerUnit, ...args }: UpdateSellArgs,
+  ): Promise<ClassicTransactionOutput> {
+    return this.updateSellOffer({
+      ...args,
+      selling: asset,
+      buying: receive,
+      amount,
+      price: StellarPrice.fromDecimal(minimumReceivePerUnit),
+    });
+  }
+
+  /** Updates a buy limit using payment units per asset unit; zero amount cancels. */
+  updateBuy(
+    { asset, amount, payWith, maximumSpendPerUnit, ...args }: UpdateBuyArgs,
+  ): Promise<ClassicTransactionOutput> {
+    return this.updateBuyOffer({
+      ...args,
+      selling: payWith,
+      buying: asset,
+      buyAmount: amount,
+      price: StellarPrice.fromDecimal(maximumSpendPerUnit),
+    });
+  }
+
+  /** Creates a plain-language sell limit without consuming equally priced offers. */
+  passiveSell(
+    { asset, amount, receive, minimumReceivePerUnit, ...args }: SellArgs,
+  ): Promise<ClassicTransactionOutput> {
+    return this.createPassiveSellOffer({
+      ...args,
+      selling: asset,
+      buying: receive,
+      amount,
+      price: StellarPrice.fromDecimal(minimumReceivePerUnit),
     });
   }
 }

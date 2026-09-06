@@ -1,4 +1,7 @@
-import { Ledger as CoreLedger } from "@colibri/core";
+import {
+  createLedgerParser,
+  type LedgerParser,
+} from "@/variants/ledger/parser.ts";
 import type { Ledger } from "@/native-types.ts";
 import type {
   ArchiveIngestContext,
@@ -36,6 +39,7 @@ export async function deliverLedgerItems<T>(
 /** Live getLedgers ingestion shared by transaction and operation variants. @internal */
 export function createLiveItemIngestor<T>(
   select: LedgerItems<T>,
+  parseLedger: LedgerParser = createLedgerParser(),
 ): LiveIngestFunc<T> {
   return async (rpc, sequence, onData, stopLedger, context) => {
     const response = await rpc.getLedgers({
@@ -52,8 +56,9 @@ export function createLiveItemIngestor<T>(
     if (context && !context.isRunning()) {
       return { nextLedger: sequence, shouldWait: false, hitStopLedger: false };
     }
+    const ledger = await parseLedger(rpc, entry);
     const complete = await deliverLedgerItems(
-      select(CoreLedger.fromEntry(entry)),
+      select(ledger),
       onData,
       context,
     );
@@ -73,6 +78,7 @@ async function ingestArchiveItemLedger<T>(
   select: LedgerItems<T>,
   onData: DataHandler<T>,
   context: ArchiveIngestContext,
+  parseLedger: LedgerParser,
 ): Promise<number> {
   const response = await rpc.getLedgers({
     startLedger: sequence,
@@ -82,8 +88,9 @@ async function ingestArchiveItemLedger<T>(
   const entry = response.ledgers[0];
   if (!entry) return sequence + 1;
   if (entry.sequence > stopLedger) return entry.sequence;
+  const ledger = await parseLedger(rpc, entry);
   const complete = await deliverLedgerItems(
-    select(CoreLedger.fromEntry(entry)),
+    select(ledger),
     onData,
     context,
   );
@@ -96,6 +103,7 @@ async function ingestArchiveItemLedger<T>(
 export function createArchiveItemIngestor<T>(
   select: LedgerItems<T>,
   intervalMs: number,
+  parseLedger: LedgerParser = createLedgerParser(),
 ): ArchiveIngestFunc<T> {
   return async (rpc, start, stop, onData, context) => {
     let sequence = start;
@@ -108,6 +116,7 @@ export function createArchiveItemIngestor<T>(
           select,
           onData,
           context,
+          parseLedger,
         );
         await waitForStream(intervalMs, context.signal);
       } catch (error) {

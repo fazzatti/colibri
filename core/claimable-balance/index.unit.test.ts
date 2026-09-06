@@ -12,6 +12,85 @@ import { validateClaimPredicate } from "@/claimable-balance/validate.ts";
 import type { ClaimPredicate } from "@/claimable-balance/types.ts";
 
 describe("ClaimableBalancePredicates", () => {
+  it("composes lists as balanced native trees without changing condition order", () => {
+    const predicates = Object.freeze(
+      Array.from({ length: 8 }, (_, i) => P.beforeAbsoluteTime(i + 1)),
+    );
+    const expectedAnd = Claimant.predicateAnd(
+      Claimant.predicateAnd(
+        Claimant.predicateAnd(predicates[0], predicates[1]),
+        Claimant.predicateAnd(predicates[2], predicates[3]),
+      ),
+      Claimant.predicateAnd(
+        Claimant.predicateAnd(predicates[4], predicates[5]),
+        Claimant.predicateAnd(predicates[6], predicates[7]),
+      ),
+    );
+    assertEquals(
+      P.allOf(predicates).toXdr("base64"),
+      expectedAnd.toXdr("base64"),
+    );
+    const expectedOr = Claimant.predicateOr(
+      predicates[0],
+      Claimant.predicateOr(predicates[1], predicates[2]),
+    );
+    assertEquals(
+      P.anyOf(predicates.slice(0, 3)).toXdr("base64"),
+      expectedOr.toXdr("base64"),
+    );
+    assertEquals(P.allOf([predicates[0]]), predicates[0]);
+    assertThrows(() => P.allOf([]), E.EMPTY_ALL_OF);
+    assertThrows(() => P.anyOf([]), E.EMPTY_ANY_OF);
+    assertThrows(
+      () => P.allOf([...predicates, P.unconditional()]),
+      E.EXCESSIVE_DEPTH,
+    );
+    assertThrows(
+      () =>
+        P.anyOf([P.not(P.not(P.not(P.unconditional()))), P.unconditional()]),
+      E.EXCESSIVE_DEPTH,
+    );
+    assertThrows(() => P.allOf([{} as ClaimPredicate]), E.INVALID_PREDICATE);
+  });
+
+  it("expresses inclusive starts and exclusive ends at ledger-close precision", () => {
+    const start = new Date(10_000);
+    const end = new Date(20_000);
+    assertEquals(
+      P.atOrAfter(start).toXdr("base64"),
+      Claimant.predicateNot(Claimant.predicateBeforeAbsoluteTime("10")).toXdr(
+        "base64",
+      ),
+    );
+    assertEquals(
+      P.between({ start, end }).toXdr("base64"),
+      P.and(P.not(P.beforeAbsoluteTime(10)), P.beforeAbsoluteTime(20)).toXdr(
+        "base64",
+      ),
+    );
+    for (
+      const [start, end] of [[new Date(20_000), new Date(10_000)], [
+        new Date(10_001),
+        new Date(10_999),
+      ], [new Date(10_000), new Date(10_000)]]
+    ) assertThrows(() => P.between({ start, end }), E.EMPTY_TIME_WINDOW);
+    assertThrows(
+      () => P.between({ start: new Date(NaN), end }),
+      E.INVALID_DATE,
+    );
+    assertThrows(
+      () => P.between({ start, end: new Date(NaN) }),
+      E.INVALID_DATE,
+    );
+    for (
+      const error of [
+        new E.EMPTY_ALL_OF(),
+        new E.EMPTY_ANY_OF(),
+        new E.EMPTY_TIME_WINDOW(),
+      ]
+    ) assertEquals(E.ERROR_CBPR[error.code], error.constructor);
+  });
+
   it("returns native SDK predicates with exact absolute and relative seconds", () => {
     assertEquals(
       P.unconditional().toXdr("base64"),

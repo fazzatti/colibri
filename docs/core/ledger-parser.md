@@ -13,7 +13,8 @@ Install Core and the underlying SDK. Save this as `inspect-ledger.ts` and run
 import { Ledger, NetworkConfig } from "@colibri/core";
 import { rpc } from "npm:@stellar/stellar-sdk";
 
-const server = new rpc.Server(NetworkConfig.TestNet().rpcUrl);
+const networkConfig = NetworkConfig.TestNet();
+const server = new rpc.Server(networkConfig.rpcUrl);
 const { latestLedger } = await server.getHealth();
 const response = await server.getLedgers({
   startLedger: latestLedger,
@@ -21,7 +22,7 @@ const response = await server.getLedgers({
 });
 const entry = response.ledgers[0];
 if (entry) {
-  const ledger = Ledger.fromEntry(entry);
+  const ledger = Ledger.fromEntry(entry, networkConfig);
   console.log(ledger.sequence, ledger.protocolVersion, ledger.closedAt);
   for (const transaction of ledger.transactions) {
     console.log(transaction.hash, transaction.successful, transaction.fee);
@@ -35,6 +36,27 @@ if (entry) {
 }
 ```
 
+## Network context and correct transaction matching
+
+The second argument accepts either Colibri's `NetworkConfig` or the exact
+network passphrase string. Both paths use the same native SDK transaction hash.
+The parser does not guess Mainnet/Testnet and does not request network data.
+
+When you only have an RPC client, discover its network with
+`const { passphrase } = await server.getNetwork()` and pass that value to
+`Ledger.fromEntry(entry, passphrase)`. The RPC Streamer's built-in ledger,
+transaction and operation variants handle this automatically.
+
+Envelope order in a transaction set differs from execution-result order. Colibri
+matches them by network-specific hash and retains execution-result order. A
+wrong passphrase, missing envelope, duplicate hash or unmatched extra envelope
+fails explicitly, rather than returning an envelope belonging to another result.
+
+Calling `Ledger.fromEntry(entry)` remains useful for offline result-only reads:
+hashes, statuses, charged fees and metadata remain available, but `hasEnvelope`
+is false. Provide network context to access sources, sequence numbers and
+operations. Native raw and SDK-decoded RPC responses are both accepted.
+
 ## Lazy views and missing envelopes
 
 The wrapper lazily decodes XDR and memoizes derived fields. `ledger.header` and
@@ -46,6 +68,17 @@ those without an envelope throws a typed parser error.
 `transaction.fee` reads `feeCharged` from the execution result as a `bigint`. It
 is not the fee bid from the original envelope. Keep that distinction when
 auditing [fee configuration](transaction-config.md).
+
+`transaction.sourceAccount` is the source executing the transaction's
+operations. For fee bumps this is the **inner transaction source**, not the
+account paying the outer fee. `transaction.feeSource` exposes that fee payer
+separately. Both preserve muxed addresses. An operation without an explicit
+source inherits `transaction.sourceAccount`.
+
+`transaction.toEnvelope()` returns a separate native SDK XDR envelope. This is
+useful for independent hashing or decoding with `TransactionBuilder.fromXdr`;
+use the correct network passphrase. Result-only transactions raise distinct
+errors for unavailable native envelope or fee-source access.
 
 `transaction.resultCode` preserves the Stellar XDR result name, including
 `txFeeBumpInnerSuccess` and negative-result names such as `txBadAuth`.

@@ -336,5 +336,72 @@ describe(
         config: config(maker),
       });
     });
+
+    it("uses the same explicit limits for plain-language creation and updates", async () => {
+      const offerId = createdId(
+        await sdex.passiveSell({
+          asset: usd,
+          receive: xlm,
+          amount: "7",
+          minimumReceivePerUnit: "2",
+          config: config(maker),
+        }),
+      );
+      assertEquals(
+        (await sdex.getOffer({ seller: maker.publicKey(), offerId }))?.flags
+          .passive,
+        true,
+      );
+      const sold = await sdex.updateSell({
+        asset: usd,
+        receive: xlm,
+        amount: "6",
+        minimumReceivePerUnit: "2.5",
+        offerId,
+        config: config(maker),
+      });
+      assertEquals(success(sold).offer.type, "manageOfferUpdated");
+      assertEquals(
+        (await sdex.getOffer({ seller: maker.publicKey(), offerId }))?.price,
+        { n: 5, d: 2 },
+      );
+      await sdex.cancelOffer({
+        seller: maker.publicKey(),
+        offerId,
+        config: config(maker),
+      });
+      const buyId = createdId(
+        await sdex.buy({
+          asset: usd,
+          payWith: xlm,
+          amount: "7",
+          maximumSpendPerUnit: "2",
+          config: config(maker),
+        }),
+      );
+      const bought = await sdex.updateBuy({
+        asset: usd,
+        payWith: xlm,
+        amount: "6",
+        maximumSpendPerUnit: "1.5",
+        offerId: buyId,
+        config: config(maker),
+      });
+      assertEquals(success(bought).offer.type, "manageOfferUpdated");
+      const raw = Operation.fromXdrObject(nativeOperation(bought));
+      assert(raw.type === "manageBuyOffer");
+      assertEquals(raw.price, "1.5");
+      // The stored offer still uses buying/selling; this is intentionally the reciprocal.
+      assertEquals(
+        (await sdex.getOffer({ seller: maker.publicKey(), offerId: buyId }))
+          ?.price,
+        { n: 2, d: 3 },
+      );
+      await sdex.cancelOffer({
+        seller: maker.publicKey(),
+        offerId: buyId,
+        config: config(maker),
+      });
+    });
   },
 );

@@ -4,6 +4,7 @@ import {
   LiquidityPoolAsset,
   LiquidityPoolId as NativeLiquidityPoolId,
   Operation,
+  xdr,
 } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import { StrKey } from "@/strkeys/index.ts";
@@ -15,10 +16,15 @@ import {
 import type { ClassicTransactionOutput } from "@/pipelines/classic-transaction/types.ts";
 import {
   buildLiquidityPoolLedgerKey,
+  buildTrustlineLedgerKey,
   LedgerEntries,
 } from "@/ledger-entries/index.ts";
 import { decodeLedgerEntryForKey } from "@/ledger-entries/decode.ts";
-import type { TrustlineLedgerEntry } from "@/ledger-entries/types.ts";
+import type {
+  LiquidityPoolLedgerEntry,
+  TrustlineLedgerEntry,
+} from "@/ledger-entries/types.ts";
+import { StellarPrice } from "@/price/index.ts";
 import type { NetworkConfig } from "@/network/index.ts";
 import { ColibriError } from "@/error/index.ts";
 import * as E from "@/liquidity-pool/error.ts";
@@ -26,12 +32,15 @@ import type {
   Asset as AssetType,
   LiquidityPoolAsset as PoolShareAsset,
   NativeLiquidityPoolArgs,
+  NativeLiquidityPoolPosition,
   NativeLiquidityPoolState,
   Operation as NativeOperation,
   PoolAssetAmount,
   PoolChangeTrustArgs,
   PoolDepositArgs,
   PoolDepositByAssetArgs,
+  PoolPriceBounds,
+  PoolPriceBoundsArgs,
   PoolTransaction,
   PoolWithdrawArgs,
   PoolWithdrawByAssetArgs,
@@ -60,7 +69,9 @@ export class NativeLiquidityPool {
   readonly ledgerEntries: LedgerEntries;
 
   /** Creates a pool binding without deploying, funding or changing trustlines. */
-  constructor({ assets, networkConfig, rpc }: NativeLiquidityPoolArgs) {
+  constructor(
+    { assets, networkConfig, rpc, plugins }: NativeLiquidityPoolArgs,
+  ) {
     try {
       const [first, second] = assets.map((asset) =>
         Asset.fromOperation(asset.toXdrObject())
@@ -74,10 +85,7 @@ export class NativeLiquidityPool {
         this.shareAsset.getLiquidityPoolParameters(),
       );
       this.poolId = StrKey.encodeLiquidityPool(bytes);
-      this.idHex = Array.from(
-        bytes,
-        (byte) => byte.toString(16).padStart(2, "0"),
-      ).join("");
+      this.idHex = xdr.encodeBytes(bytes, "hex");
     } catch (cause) {
       throw new E.INVALID_ASSET_PAIR(cause);
     }
@@ -95,6 +103,9 @@ export class NativeLiquidityPool {
       networkConfig,
       rpc: this.rpc,
     });
+    for (const plugin of plugins?.transactionPipe ?? []) {
+      this.transactionPipe.use(plugin);
+    }
   }
 
   /** First asset in canonical protocol order, returned as a native SDK copy. */
@@ -108,6 +119,77 @@ export class NativeLiquidityPool {
   /** Native SDK pool-share asset suitable for `Operation.changeTrust`. */
   get poolShareAsset(): PoolShareAsset {
     return new LiquidityPoolAsset(this.assetA, this.assetB, 30);
+  }
+
+  /**
+   * Converts asset-labelled prices to canonical A/B bounds. When the direction
+   * is reversed, inverts and swaps the endpoints. No price tolerance is added.
+   */
+  priceBounds(
+    { baseAsset, quoteAsset, minimum, maximum }: PoolPriceBoundsArgs,
+  ): PoolPriceBounds {
+    const canonical = baseAsset.equals(this.assetB) &&
+      quoteAsset.equals(this.assetA);
+    const reversed = baseAsset.equals(this.assetA) &&
+      quoteAsset.equals(this.assetB);
+    if (!canonical && !reversed) throw new E.INVALID_PRICE_ASSETS();
+    const min = typeof minimum === "string"
+      ? StellarPrice.fromDecimal(minimum)
+      : minimum;
+    const max = typeof maximum === "string"
+      ? StellarPrice.fromDecimal(maximum)
+      : maximum;
+    if (StellarPrice.compare(min, max) > 0) throw new E.REVERSED_PRICE_BOUNDS();
+    return canonical ? { minPrice: { ...min }, maxPrice: { ...max } } : {
+      minPrice: StellarPrice.invert(max),
+      maxPrice: StellarPrice.invert(min),
+    };
+  }
+
+  /**
+   * Reads a holder's shares and pool reserves in one RPC request. No percentage
+   * is rounded, and the ownership fraction is not a promised redemption amount.
+   * Both entries must exist; an absent holding is not silently reported as zero.
+   */
+  async getPosition(
+    account: Ed25519PublicKey,
+  ): Promise<NativeLiquidityPoolPosition> {
+    const poolKey = buildLiquidityPoolLedgerKey({
+      liquidityPoolId: this.poolId,
+    });
+    const trustKey = buildTrustlineLedgerKey({
+      accountId: account,
+      asset: new NativeLiquidityPoolId(this.idHex),
+    });
+    try {
+      const response = await this.rpc.getLedgerEntries(poolKey, trustKey);
+      const entries = new Map(
+        response.entries.map((entry) => [entry.key.toXdr("base64"), entry]),
+      );
+      const poolEntry = entries.get(poolKey.toXdr("base64"));
+      const trustEntry = entries.get(trustKey.toXdr("base64"));
+      if (!poolEntry) throw new E.POSITION_POOL_MISSING();
+      if (!trustEntry) throw new E.POSITION_TRUSTLINE_MISSING();
+      const pool = decodeLedgerEntryForKey(
+        poolKey,
+        poolEntry,
+      ) as LiquidityPoolLedgerEntry;
+      const trustline = decodeLedgerEntryForKey(
+        trustKey,
+        trustEntry,
+      ) as TrustlineLedgerEntry;
+      return {
+        pool,
+        trustline,
+        ownership: pool.totalPoolShares === 0n
+          ? null
+          : { shares: trustline.balance, totalShares: pool.totalPoolShares },
+        observedAtLedger: response.latestLedger,
+      };
+    } catch (cause) {
+      if (cause instanceof ColibriError) throw cause;
+      throw new E.FAILED_TO_READ_POSITION(cause);
+    }
   }
 
   /** Reads reserves/shares in integer 10^-7 units and retains the observation ledger. */
@@ -241,11 +323,14 @@ export class NativeLiquidityPool {
 export const ERRORS_NATIVE_LIQUIDITY_POOL: typeof E = E;
 export type {
   NativeLiquidityPoolArgs,
+  NativeLiquidityPoolPosition,
   NativeLiquidityPoolState,
   PoolAssetAmount,
   PoolChangeTrustArgs,
   PoolDepositArgs,
   PoolDepositByAssetArgs,
+  PoolPriceBounds,
+  PoolPriceBoundsArgs,
   PoolTransaction,
   PoolWithdrawArgs,
   PoolWithdrawByAssetArgs,

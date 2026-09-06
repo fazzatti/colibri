@@ -1,9 +1,11 @@
 import type { Asset } from "stellar-sdk";
 import type {
   DescribeStellarPriceArgs,
+  StellarPriceAmounts,
   StellarPriceRatio,
 } from "@/price/types.ts";
 import * as E from "@/price/error.ts";
+import { parseStellarAssetAmount } from "@/asset/stellar/amount.ts";
 
 const INT32_MAX = 2_147_483_647;
 
@@ -37,6 +39,36 @@ const label = (asset: Asset): string =>
  * Native SDK operation methods remain available for other price inputs.
  */
 export class StellarPrice {
+  /**
+   * Prices a quantity directly: 3 base units for 2 quote units becomes 2/3.
+   * Both quantities use native seven-decimal units. No floating-point division
+   * or approximation occurs; an unrepresentable int32 fraction fails explicitly.
+   */
+  static fromAmounts(
+    { baseAmount, quoteAmount }: StellarPriceAmounts,
+  ): StellarPriceRatio {
+    const base = parseStellarAssetAmount(baseAmount);
+    const quote = parseStellarAssetAmount(quoteAmount);
+    if (base === 0n || quote === 0n) throw new E.ZERO_PRICE_AMOUNT();
+    const [n, d] = reduced(quote, base);
+    if (n > BigInt(INT32_MAX) || d > BigInt(INT32_MAX)) {
+      throw new E.UNREPRESENTABLE_AMOUNTS(baseAmount, quoteAmount);
+    }
+    return { n: Number(n), d: Number(d) };
+  }
+
+  /** Compares two prices exactly, returning -1, 0 or 1 without floating-point rounding. */
+  static compare(
+    left: StellarPriceRatio,
+    right: StellarPriceRatio,
+  ): -1 | 0 | 1 {
+    validateRatio(left);
+    validateRatio(right);
+    const difference = BigInt(left.n) * BigInt(right.d) -
+      BigInt(right.n) * BigInt(left.d);
+    return difference < 0n ? -1 : difference > 0n ? 1 : 0;
+  }
+
   /**
    * Converts a strictly positive plain decimal string to its exact reduced ratio.
    * Throws when either reduced component exceeds positive int32. For example,
@@ -101,6 +133,7 @@ export class StellarPrice {
 
 export type {
   DescribeStellarPriceArgs,
+  StellarPriceAmounts,
   StellarPriceRatio,
 } from "@/price/types.ts";
 export { ERROR_PRCE as StellarPriceErrors } from "@/price/error.ts";

@@ -1,6 +1,7 @@
 export {
   CLASSIC_TRANSACTION_PIPELINE_ID,
   type ClassicTransactionPipeline,
+  type ClassicTransactionPipelinePlugins,
   createClassicTransactionPipeline,
   ERROR_PIPE_CLTX,
 } from "@/pipelines/classic-transaction/index.ts";

@@ -4,7 +4,11 @@ import { Asset, Operation } from "stellar-sdk";
 import { StellarTestLedger } from "@colibri/test-tooling";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { NativeLiquidityPool } from "@/liquidity-pool/index.ts";
-import { POOL_NOT_FOUND } from "@/liquidity-pool/error.ts";
+import {
+  POOL_NOT_FOUND,
+  POSITION_POOL_MISSING,
+  POSITION_TRUSTLINE_MISSING,
+} from "@/liquidity-pool/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
@@ -90,6 +94,25 @@ describe(
       assertEquals(trustline.asset, `pool:${pool.poolId}`);
     });
 
+    it("distinguishes absent and empty positions before any deposit", async () => {
+      const absent = new NativeLiquidityPool({
+        assets: [xlm, new Asset("ABSENT", issuer.publicKey())],
+        networkConfig: pool.networkConfig,
+      });
+      await assertRejects(
+        () => absent.getPosition(provider.publicKey()),
+        POSITION_POOL_MISSING,
+      );
+      await assertRejects(
+        () => pool.getPosition(issuer.publicKey()),
+        POSITION_TRUSTLINE_MISSING,
+      );
+      const position = await pool.getPosition(provider.publicKey());
+      assertEquals(position.trustline.balance, 0n);
+      assertEquals(position.pool.totalPoolShares, 0n);
+      assertEquals(position.ownership, null);
+    });
+
     it("deposits non-equal amounts at the exact native A/B price and verifies on-chain reserves", async () => {
       const result = await pool.deposit({
         maxAmountA: "100",
@@ -158,6 +181,41 @@ describe(
       assertEquals(
         (await pool.getTrustline(provider.publicKey())).balance,
         after.totalPoolShares,
+      );
+    });
+
+    it("uses named price units in a confirmed deposit and observes the complete holder position", async () => {
+      const result = await pool.depositByAsset({
+        maximumAmounts: [{ asset: usd, amount: "2" }, {
+          asset: xlm,
+          amount: "1",
+        }],
+        ...pool.priceBounds({
+          baseAsset: xlm,
+          quoteAsset: usd,
+          minimum: "2",
+          maximum: "2",
+        }),
+        config,
+      });
+      const operation = confirmedOperation(result);
+      assert(operation.type === "liquidityPoolDeposit");
+      assertEquals(operation.minPrice, "0.5");
+      assertEquals(operation.maxPrice, "0.5");
+      const position = await pool.getPosition(provider.publicKey());
+      assert(position.ownership);
+      assertEquals(position.ownership.shares, position.pool.totalPoolShares);
+      assertEquals(
+        position.ownership.totalShares,
+        position.pool.totalPoolShares,
+      );
+      assertEquals(position.trustline.balance, position.pool.totalPoolShares);
+      const independentlyRead = await pool.getState();
+      assertEquals(position.pool.reserveA, independentlyRead.reserveA);
+      assertEquals(position.pool.reserveB, independentlyRead.reserveB);
+      assert(position.observedAtLedger >= position.pool.lastModifiedLedgerSeq!);
+      assert(
+        position.observedAtLedger >= position.trustline.lastModifiedLedgerSeq!,
       );
     });
   },

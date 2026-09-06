@@ -7,6 +7,7 @@ import {
   AuthRequiredFlag,
   AuthRevocableFlag,
   Claimant,
+  FeeBumpTransaction,
   Memo,
   MuxedAccount,
   Operation,
@@ -14,9 +15,20 @@ import {
   TransactionBuilder,
 } from "stellar-sdk";
 import { StellarTestLedger } from "@colibri/test-tooling";
+import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
 import { createChannelAccountsPlugin } from "@colibri/plugin-channel-accounts";
+import {
+  createSep29Plugin,
+  SEP29_MEMO_REQUIRED_DATA_NAME,
+  Sep29Errors,
+} from "@colibri/plugin-sep29";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { StellarAsset } from "@/asset/stellar/index.ts";
+import { StellarAssetContract } from "@/asset/sac/index.ts";
+import {
+  BALANCE_TRUSTLINE_MISSING,
+  ISSUER_BALANCE_UNDEFINED,
+} from "@/asset/stellar/error.ts";
 import { ClaimableBalancePredicates as P } from "@/claimable-balance/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import { NativeAccount } from "@/account/native/index.ts";
@@ -110,6 +122,282 @@ describe(
     afterAll(async () => {
       await ledger.stop();
       await ledger.destroy();
+    });
+
+    it("executes every issued-asset action with constructor channel and fee-bump plugins plus memo", async () => {
+      const token = StellarAsset.fromCanonical({
+        canonical: `PLUG:${issuer.publicKey()}`,
+        networkConfig,
+        plugins: {
+          transactionPipe: [
+            createChannelAccountsPlugin({
+              channels: [NativeAccount.fromMasterSigner(channel)],
+            }),
+            createFeeBumpPlugin({
+              networkConfig,
+              feeBumpConfig: {
+                source: recipient.publicKey(),
+                signers: [recipient],
+                fee: "200",
+              },
+            }),
+          ],
+        },
+      });
+      const actions: [() => Promise<ClassicTransactionOutput>, LocalSigner][] =
+        [
+          [
+            () => token.changeTrust({ limit: "10", config: configFor(holder) }),
+            holder,
+          ],
+          [
+            () =>
+              token.setTrustLineFlags({
+                trustor: holder.publicKey(),
+                flags: { authorized: true },
+                config: configFor(issuer),
+              }),
+            issuer,
+          ],
+          [
+            () =>
+              token.issue({
+                destination: holder.publicKey(),
+                amount: "3",
+                config: configFor(issuer),
+              }),
+            issuer,
+          ],
+          [
+            () =>
+              token.clawback({
+                from: holder.publicKey(),
+                amount: "1",
+                config: configFor(issuer),
+              }),
+            issuer,
+          ],
+          [
+            () => token.redeem({ amount: "2", config: configFor(holder) }),
+            holder,
+          ],
+          [
+            () => token.changeTrust({ limit: "0", config: configFor(holder) }),
+            holder,
+          ],
+        ];
+      for (const [action, operationSigner] of actions) {
+        const result = await action();
+        const native = TransactionBuilder.fromXdr(
+          result.response.envelopeXdr.toXdr("base64"),
+          networkConfig.networkPassphrase,
+        );
+        assert(native instanceof FeeBumpTransaction);
+        assertEquals(native.feeSource, recipient.publicKey());
+        assertEquals(native.innerTransaction.source, channel.publicKey());
+        assertEquals(
+          native.innerTransaction.operations[0].source,
+          operationSigner.publicKey(),
+        );
+        assertEquals(
+          native.innerTransaction.memo.value,
+          new TextEncoder().encode("asset workflow"),
+        );
+        assertEquals(native.innerTransaction.fee, "100");
+        assertEquals(result.operations.length, 1);
+        assert(result.feeCharged > 0n);
+      }
+      assertEquals(await token.getTrustline(holder.publicKey()), null);
+      assertEquals(token.transactionPipe.plugins.length, 2);
+      assertEquals(token.toContract().contract.invokePipe.plugins.length, 0);
+    });
+
+    it("enforces SEP-29 with channel accounts and fee bumps on the asset pipeline", async () => {
+      const memoRecipient = LocalSigner.generateRandom();
+      await execute({
+        operations: [
+          Operation.createAccount({
+            destination: memoRecipient.publicKey(),
+            startingBalance: "10",
+          }),
+          Operation.manageData({
+            source: memoRecipient.publicKey(),
+            name: SEP29_MEMO_REQUIRED_DATA_NAME,
+            value: "1",
+          }),
+        ],
+        config: { ...configFor(holder), signers: [holder, memoRecipient] },
+      });
+      const xlm = StellarAsset.NativeXLM({
+        networkConfig,
+        plugins: {
+          transactionPipe: [
+            createChannelAccountsPlugin({
+              channels: [NativeAccount.fromMasterSigner(channel)],
+            }),
+            createFeeBumpPlugin({
+              networkConfig,
+              feeBumpConfig: {
+                source: recipient.publicKey(),
+                signers: [recipient],
+                fee: "200",
+              },
+            }),
+            createSep29Plugin(),
+          ],
+        },
+      });
+      const payment = { destination: memoRecipient.publicKey(), amount: "1" };
+      await assertRejects(
+        () =>
+          xlm.transfer({
+            ...payment,
+            config: { ...configFor(holder), memo: Memo.none() },
+          }),
+        Sep29Errors.MEMO_REQUIRED,
+      );
+      const result = await xlm.transfer({
+        ...payment,
+        config: { ...configFor(holder), memo: Memo.id("29") },
+      });
+      const native = TransactionBuilder.fromXdr(
+        result.response.envelopeXdr,
+        networkConfig.networkPassphrase,
+      );
+      assert(native instanceof FeeBumpTransaction);
+      assertEquals(native.feeSource, recipient.publicKey());
+      assertEquals(native.innerTransaction.source, channel.publicKey());
+      assertEquals(
+        native.innerTransaction.operations[0].source,
+        holder.publicKey(),
+      );
+      assertEquals(native.innerTransaction.memo.value, "29");
+      assertEquals(
+        await xlm.balance({ id: memoRecipient.publicKey() }),
+        110_000_000n,
+      );
+    });
+
+    it("preserves every native memo variant through a fee bump on XLM transfers", async () => {
+      const token = StellarAsset.NativeXLM({
+        networkConfig,
+        plugins: {
+          transactionPipe: [
+            createFeeBumpPlugin({
+              networkConfig,
+              feeBumpConfig: {
+                source: recipient.publicKey(),
+                signers: [recipient],
+                fee: "200",
+              },
+            }),
+          ],
+        },
+      });
+      for (
+        const memo of [
+          Memo.none(),
+          Memo.text("payment"),
+          Memo.id("42"),
+          Memo.hash(new Uint8Array(32).fill(1)),
+          Memo.return(new Uint8Array(32).fill(2)),
+        ]
+      ) {
+        const result = await token.transfer({
+          destination: recipient.publicKey(),
+          amount: "0.0000001",
+          config: { ...configFor(holder), memo },
+        });
+        const envelope = result.response.envelopeXdr;
+        assert(envelope.type === "envelopeTypeTxFeeBump");
+        assertEquals(
+          envelope.feeBump.tx.innerTx.v1.tx.memo.toXdr("base64"),
+          memo.toXdrObject().toXdr("base64"),
+        );
+      }
+    });
+
+    it("reads exact balances and authorization and explicitly bridges native holdings to SAC reads", async () => {
+      const token = new StellarAsset({
+        code: "BRIDGE",
+        issuer: issuer.publicKey(),
+        networkConfig,
+      });
+      await assertRejects(
+        () => token.balance({ id: recipient.publicKey() }),
+        BALANCE_TRUSTLINE_MISSING,
+      );
+      await assertRejects(
+        () => token.balance({ id: issuer.publicKey() }),
+        ISSUER_BALANCE_UNDEFINED,
+      );
+      await token.changeTrust({ limit: "100", config: configFor(recipient) });
+      assertEquals(await token.balance({ id: recipient.publicKey() }), 0n);
+      assertEquals(
+        await token.authorized({ id: recipient.publicKey() }),
+        false,
+      );
+      await token.setTrustLineFlags({
+        trustor: recipient.publicKey(),
+        flags: { authorized: true },
+        config: configFor(issuer),
+      });
+      assertEquals(await token.authorized({ id: recipient.publicKey() }), true);
+      const issued = await token.issue({
+        destination: recipient.publicKey(),
+        amount: "12.3456789",
+        config: { ...configFor(channel), signers: [channel, issuer] },
+      });
+      assertSubmittedOperation(
+        issued,
+        Operation.payment({
+          asset: token.asset,
+          destination: recipient.publicKey(),
+          source: issuer.publicKey(),
+          amount: "12.3456789",
+        }),
+      );
+      assertEquals(
+        await token.balance({ id: recipient.publicKey() }),
+        123_456_789n,
+      );
+      const holding = await token.getHolderState({ id: recipient.publicKey() });
+      assertEquals(holding.type, "trustline");
+      const sac = token.toContract();
+      // SAC deployment is explicitly Soroban; unlike native payments it has no memo.
+      await StellarAssetContract.deploy({
+        asset: token.asset,
+        networkConfig,
+        config: { ...configFor(issuer), memo: undefined },
+      });
+      assertEquals(
+        await sac.balance({ id: recipient.publicKey() }),
+        await token.balance({ id: recipient.publicKey() }),
+      );
+      const redeemed = await token.redeem({
+        amount: "12.3456789",
+        config: configFor(recipient),
+      });
+      assertSubmittedOperation(
+        redeemed,
+        Operation.payment({
+          asset: token.asset,
+          destination: issuer.publicKey(),
+          source: recipient.publicKey(),
+          amount: "12.3456789",
+        }),
+      );
+      assertEquals(await token.balance({ id: recipient.publicKey() }), 0n);
+      const xlm = StellarAsset.NativeXLM({ networkConfig });
+      assertEquals(
+        (await xlm.getHolderState({ id: recipient.publicKey() })).type,
+        "account",
+      );
+      assertEquals(
+        await xlm.balance({ id: recipient.publicKey() }),
+        (await entries.account({ accountId: recipient.publicKey() })).balance,
+      );
+      assertEquals(await xlm.authorized({ id: recipient.publicKey() }), true);
     });
 
     it("executes granular trustline, authorization, issue, clawback, redemption, and removal actions", async () => {

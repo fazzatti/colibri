@@ -1,6 +1,7 @@
 import type { Asset as SdkAsset, Operation } from "stellar-sdk";
 import type { Server as SdkServer } from "stellar-sdk/rpc";
 import type { NetworkConfig } from "@/network/index.ts";
+import type { ClassicTransactionPipelinePlugins } from "@/pipelines/classic-transaction/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 
@@ -19,6 +20,8 @@ type PassiveOptions = Parameters<typeof Operation.createPassiveSellOffer>[0];
 export type SDEXConstructorArgs = {
   networkConfig: NetworkConfig;
   rpc?: Server;
+  /** Plugins attached to the owned transaction pipe during construction. */
+  plugins?: ClassicTransactionPipelinePlugins;
 };
 
 /** Creates a new offer using the SDK's buying-per-selling price convention. */
@@ -97,4 +100,15 @@ export type BuyArgs = {
   source?: string;
   /** Transaction authorization and fee settings. */
   config: TransactionConfig;
+};
+
+/** Explicit update with the same units as the plain-language sell method. */
+export type UpdateSellArgs = SellArgs & {
+  /** Existing positive offer ID; the protocol decides whether it still exists. */
+  offerId: string;
+};
+/** Explicit update with the same units as the plain-language buy method. */
+export type UpdateBuyArgs = BuyArgs & {
+  /** Existing positive offer ID; the protocol decides whether it still exists. */
+  offerId: string;
 };

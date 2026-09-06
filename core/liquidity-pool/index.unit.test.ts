@@ -46,6 +46,81 @@ describe("NativeLiquidityPool", () => {
   };
   const withdrawal = { amount: "1", minAmountA: "0", minAmountB: "0" };
 
+  it("converts explicitly labelled price intervals including reciprocal endpoint reversal", () => {
+    assertEquals(
+      pool.priceBounds({
+        baseAsset: xlm,
+        quoteAsset: usd,
+        minimum: "2",
+        maximum: "4",
+      }),
+      { minPrice: { n: 1, d: 4 }, maxPrice: { n: 1, d: 2 } },
+    );
+    const minimum = Object.freeze({ n: 1, d: 4 });
+    const maximum = Object.freeze({ n: 1, d: 2 });
+    const bounds = pool.priceBounds({
+      baseAsset: usd,
+      quoteAsset: xlm,
+      minimum,
+      maximum,
+    });
+    assertEquals(bounds, { minPrice: minimum, maxPrice: maximum });
+    assert(bounds.minPrice !== minimum);
+    assertEquals(
+      pool.priceBounds({
+        baseAsset: usd,
+        quoteAsset: xlm,
+        minimum: "0.5",
+        maximum: "0.5",
+      }),
+      { minPrice: { n: 1, d: 2 }, maxPrice: { n: 1, d: 2 } },
+    );
+    for (
+      const [baseAsset, quoteAsset] of [[xlm, xlm], [usd, usd], [
+        xlm,
+        new Asset("USD", other.publicKey()),
+      ]]
+    ) {
+      assertThrows(
+        () =>
+          pool.priceBounds({
+            baseAsset,
+            quoteAsset,
+            minimum: "1",
+            maximum: "2",
+          }),
+        E.INVALID_PRICE_ASSETS,
+      );
+    }
+    assertThrows(
+      () =>
+        pool.priceBounds({
+          baseAsset: xlm,
+          quoteAsset: usd,
+          minimum: "4",
+          maximum: "2",
+        }),
+      E.REVERSED_PRICE_BOUNDS,
+    );
+  });
+
+  it("keeps position transport failures identified without swallowing key validation", async () => {
+    const unavailable = new NativeLiquidityPool({
+      assets: [xlm, usd],
+      networkConfig,
+      rpc: new Server("http://127.0.0.1:0", { allowHttp: true }),
+    });
+    const error = await assertRejects(
+      () => unavailable.getPosition(signer.publicKey()),
+      E.FAILED_TO_READ_POSITION,
+    );
+    assert(error.meta?.cause instanceof Error);
+    await assertRejects(
+      () => unavailable.getPosition("Ginvalid"),
+      INVALID_ACCOUNT_ID,
+    );
+  });
+
   it("canonicalizes assets and uses the exact native SDK pool identity", () => {
     const native = new LiquidityPoolAsset(xlm, usd, 30);
     const bytes = getLiquidityPoolId(

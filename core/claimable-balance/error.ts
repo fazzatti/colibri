@@ -12,6 +12,9 @@ export enum Code {
   EMPTY_NOT = "CBPR_008",
   INVALID_ABSOLUTE_PREDICATE = "CBPR_009",
   INVALID_RELATIVE_PREDICATE = "CBPR_010",
+  EMPTY_ALL_OF = "CBPR_011",
+  EMPTY_ANY_OF = "CBPR_012",
+  EMPTY_TIME_WINDOW = "CBPR_013",
 }
 
 /** Base error for a specific predicate-construction or validation failure. */
@@ -145,6 +148,35 @@ export class INVALID_RELATIVE_PREDICATE
   }
 }
 
+/** An AND list must not silently become unconditional. */
+export class EMPTY_ALL_OF
+  extends ClaimableBalancePredicateError<Code.EMPTY_ALL_OF> {
+  /** Explains the missing AND conditions. */
+  constructor() {
+    super(Code.EMPTY_ALL_OF, "Provide at least one allOf predicate.", 0);
+  }
+}
+/** An OR list must contain a condition. */
+export class EMPTY_ANY_OF
+  extends ClaimableBalancePredicateError<Code.EMPTY_ANY_OF> {
+  /** Explains the missing OR conditions. */
+  constructor() {
+    super(Code.EMPTY_ANY_OF, "Provide at least one anyOf predicate.", 0);
+  }
+}
+/** No integer ledger-close time satisfies the requested time window. */
+export class EMPTY_TIME_WINDOW
+  extends ClaimableBalancePredicateError<Code.EMPTY_TIME_WINDOW> {
+  /** Explains the empty or reversed interval. */
+  constructor() {
+    super(
+      Code.EMPTY_TIME_WINDOW,
+      "The claim window must include at least one whole-second ledger-close time.",
+      null,
+    );
+  }
+}
+
 /** Predicate errors indexed by stable code. */
 export const ERROR_CBPR = {
   [Code.INVALID_DATE]: INVALID_DATE,
@@ -157,4 +189,7 @@ export const ERROR_CBPR = {
   [Code.EMPTY_NOT]: EMPTY_NOT,
   [Code.INVALID_ABSOLUTE_PREDICATE]: INVALID_ABSOLUTE_PREDICATE,
   [Code.INVALID_RELATIVE_PREDICATE]: INVALID_RELATIVE_PREDICATE,
+  [Code.EMPTY_ALL_OF]: EMPTY_ALL_OF,
+  [Code.EMPTY_ANY_OF]: EMPTY_ANY_OF,
+  [Code.EMPTY_TIME_WINDOW]: EMPTY_TIME_WINDOW,
 };

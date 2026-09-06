@@ -11,6 +11,7 @@ export enum Code {
   INVALID_UPDATE_SELL_ID = "SDEX_007",
   INVALID_UPDATE_BUY_ID = "SDEX_008",
   UNSAFE_OFFER_ID = "SDEX_009",
+  READ_OFFER_FAILED = "SDEX_010",
 }
 
 /** Shared diagnostic shape for SDEX's distinct failures. */
@@ -122,6 +123,14 @@ export class UNSAFE_OFFER_ID extends SDEXError<Code.UNSAFE_OFFER_ID> {
   }
 }
 
+/** Native transport failed while querying a known offer. */
+export class READ_OFFER_FAILED extends SDEXError<Code.READ_OFFER_FAILED> {
+  /** Retains the original transport cause. */
+  constructor(cause: unknown) {
+    super(Code.READ_OFFER_FAILED, "Could not read the Stellar offer.", cause);
+  }
+}
+
 /** SDEX errors indexed by stable code. */
 export const ERROR_SDEX = {
   [Code.CREATE_SELL_FAILED]: CREATE_SELL_FAILED,
@@ -133,4 +142,5 @@ export const ERROR_SDEX = {
   [Code.INVALID_UPDATE_SELL_ID]: INVALID_UPDATE_SELL_ID,
   [Code.INVALID_UPDATE_BUY_ID]: INVALID_UPDATE_BUY_ID,
   [Code.UNSAFE_OFFER_ID]: UNSAFE_OFFER_ID,
+  [Code.READ_OFFER_FAILED]: READ_OFFER_FAILED,
 };

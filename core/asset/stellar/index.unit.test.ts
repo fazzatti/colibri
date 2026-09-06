@@ -31,6 +31,128 @@ describe("StellarAsset", () => {
     memo: Memo.text("asset example"),
   };
 
+  it("exposes native identity, exact units and an explicitly separate SAC binding", () => {
+    const usd = StellarAsset.fromCanonical({
+      canonical: `USD:${issuer.publicKey()}`,
+      networkConfig,
+    });
+    assertEquals(usd.code, "USD");
+    assertEquals(usd.issuer, issuer.publicKey());
+    assertEquals(usd.symbol(), "USD");
+    assertEquals(usd.decimals(), 7);
+    assertEquals(usd.isNative(), false);
+    assertEquals(usd.toString(), `USD:${issuer.publicKey()}`);
+    assertEquals(usd.parseAmount("1.25"), 12_500_000n);
+    assertEquals(usd.formatAmount(12_500_000n), "1.25");
+    const xlm = StellarAsset.NativeXLM({ networkConfig });
+    assertEquals(xlm.isNative(), true);
+    assertEquals(xlm.issuer, undefined);
+    assertEquals(xlm.toString(), "native");
+    assertEquals(
+      StellarAsset.fromCanonical({ canonical: "native", networkConfig }).asset
+        .equals(xlm.asset),
+      true,
+    );
+    assertThrows(
+      () => StellarAsset.fromCanonical({ canonical: "USD", networkConfig }),
+      E.INVALID_CANONICAL_ASSET,
+    );
+    for (const value of [usd, xlm]) {
+      const sac = value.toContract();
+      assertEquals(
+        sac.contractId,
+        value.asset.contractId(networkConfig.networkPassphrase),
+      );
+      assertStrictEquals(sac.contract.networkConfig, networkConfig);
+      assertStrictEquals(sac.contract.rpc, value.rpc);
+      assert(sac.contract.invokePipe !== value.transactionPipe as unknown);
+    }
+  });
+
+  it("keeps issuer balances undefined and wraps only actual account transport failures", async () => {
+    const rpc = new Server("http://127.0.0.1:0", { allowHttp: true });
+    const usd = new StellarAsset({ asset, networkConfig, rpc });
+    await assertRejects(
+      () => usd.balance({ id: issuer.publicKey() }),
+      E.ISSUER_BALANCE_UNDEFINED,
+    );
+    await assertRejects(
+      () => usd.balance({ id: holder.publicKey() }),
+      E.READ_TRUSTLINE_FAILED,
+    );
+    const xlm = StellarAsset.NativeXLM({ networkConfig, rpc });
+    const error = await assertRejects(
+      () => xlm.balance({ id: holder.publicKey() }),
+      E.READ_HOLDER_STATE_FAILED,
+    );
+    assert(error.meta?.cause instanceof Error);
+    await assertRejects(
+      () => xlm.getHolderState({ id: "Ginvalid" }),
+      INVALID_ACCOUNT_ID,
+    );
+  });
+
+  it("identifies SAC binding failure without leaking a native hashing exception", () => {
+    const invalidNetwork = {
+      ...networkConfig,
+      networkPassphrase: 42,
+    } as unknown as NetworkConfig;
+    const invalid = new StellarAsset({
+      asset,
+      networkConfig: invalidNetwork,
+      rpc: new Server(networkConfig.rpcUrl!),
+    });
+    const error = assertThrows(
+      () => invalid.toContract(),
+      E.SAC_BINDING_FAILED,
+    );
+    assert(error.meta?.cause instanceof Error);
+    assertEquals(E.ERROR_STAS[error.code], error.constructor);
+  });
+
+  it("issues and redeems using explicit issuer payment endpoints", async () => {
+    const usd = new StellarAsset({ asset, networkConfig });
+    const issue = await assertRejects(
+      () => usd.issue({ destination: holder.publicKey(), amount: "2", config }),
+      BASE_FEE_TOO_LOW_ERROR,
+    );
+    const redemption = await assertRejects(
+      () => usd.redeem({ amount: "2", config }),
+      BASE_FEE_TOO_LOW_ERROR,
+    );
+    assertEquals(
+      Operation.fromXdrObject(issue.meta.data.input.operations[0]),
+      Operation.fromXdrObject(
+        Operation.payment({
+          asset,
+          destination: holder.publicKey(),
+          source: issuer.publicKey(),
+          amount: "2",
+        }),
+      ),
+    );
+    assertEquals(
+      Operation.fromXdrObject(redemption.meta.data.input.operations[0]),
+      Operation.fromXdrObject(
+        Operation.payment({
+          asset,
+          destination: issuer.publicKey(),
+          source: holder.publicKey(),
+          amount: "2",
+        }),
+      ),
+    );
+    const xlm = StellarAsset.NativeXLM({ networkConfig });
+    await assertRejects(
+      () => xlm.issue({ destination: holder.publicKey(), amount: "1", config }),
+      E.NATIVE_ISSUANCE,
+    );
+    await assertRejects(
+      () => xlm.redeem({ amount: "1", config }),
+      E.NATIVE_REDEMPTION,
+    );
+  });
+
   it("retains native Asset and RPC instances and exposes the existing owned pipeline", () => {
     const rpc = new Server(networkConfig.rpcUrl!);
     const usd = new StellarAsset({ asset, networkConfig, rpc });

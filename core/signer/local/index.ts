@@ -61,6 +61,16 @@ export class LocalSigner implements LocalSignerType {
   signMessage: (message: string | Uint8Array) => Uint8Array;
 
   /**
+   * Verifies SEP-53 domain-separated message bytes using this signer's public key.
+   * Like `verifySignature`, this remains available after secret destruction.
+   * A valid signature proves the bytes were signed, not intent, freshness or consent.
+   */
+  verifyMessage: (
+    message: string | Uint8Array,
+    signature: Uint8Array,
+  ) => boolean;
+
+  /**
    * Returns the Ed25519 signer key represented by this local signer.
    *
    * @returns The signer's `G...` public key.
@@ -156,6 +166,17 @@ export class LocalSigner implements LocalSignerType {
     ): boolean => {
       const keypair = Keypair.fromPublicKey(this.publicKey());
       return keypair.verify(toUint8Array(data), toUint8Array(signature));
+    };
+
+    this.verifyMessage = (message, signature): boolean => {
+      try {
+        return Keypair.fromPublicKey(this.publicKey()).verifyMessage(
+          message,
+          signature,
+        );
+      } catch (cause) {
+        throw new E.MESSAGE_VERIFICATION_FAILED(cause as Error);
+      }
     };
 
     this.signTransaction = (

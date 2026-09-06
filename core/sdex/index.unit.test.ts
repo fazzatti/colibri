@@ -1,4 +1,4 @@
-import { assertEquals, assertRejects, assertThrows } from "@std/assert";
+import { assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Asset, Keypair, Operation } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
@@ -31,6 +31,91 @@ describe("SDEX explicit operation boundaries", () => {
     price: { n: 2, d: 1 },
     config,
   };
+
+  it("wraps real offer lookup and cancellation transport failures without changing key validation", async () => {
+    const unavailable = new SDEX({
+      networkConfig,
+      rpc: new Server("http://127.0.0.1:0", { allowHttp: true }),
+    });
+    const args = { seller: config.source as Ed25519PublicKey, offerId: "1" };
+    for (
+      const action of [
+        () => unavailable.getOffer(args),
+        () => unavailable.cancelOffer({ ...args, config }),
+      ]
+    ) {
+      const error = await assertRejects(action, E.READ_OFFER_FAILED);
+      assertEquals(error.meta?.cause instanceof Error, true);
+      assertEquals(E.ERROR_SDEX[error.code], E.READ_OFFER_FAILED);
+    }
+  });
+
+  it("maps plain-language updates and passive sells to native operation prices and identities", async () => {
+    const actions = [
+      {
+        run: () =>
+          sdex.updateSell({
+            asset: selling,
+            receive: buying,
+            amount: "7",
+            minimumReceivePerUnit: "1.25",
+            offerId: "42",
+            config,
+          }),
+        expected: Operation.manageSellOffer({
+          selling,
+          buying,
+          amount: "7",
+          price: { n: 5, d: 4 },
+          offerId: "42",
+          source: config.source,
+        }),
+      },
+      {
+        run: () =>
+          sdex.updateBuy({
+            asset: buying,
+            payWith: selling,
+            amount: "7",
+            maximumSpendPerUnit: "1.25",
+            offerId: "42",
+            config,
+          }),
+        expected: Operation.manageBuyOffer({
+          selling,
+          buying,
+          buyAmount: "7",
+          price: { n: 5, d: 4 },
+          offerId: "42",
+          source: config.source,
+        }),
+      },
+      {
+        run: () =>
+          sdex.passiveSell({
+            asset: selling,
+            receive: buying,
+            amount: "7",
+            minimumReceivePerUnit: "1.25",
+            config,
+          }),
+        expected: Operation.createPassiveSellOffer({
+          selling,
+          buying,
+          amount: "7",
+          price: { n: 5, d: 4 },
+          source: config.source,
+        }),
+      },
+    ];
+    for (const { run, expected } of actions) {
+      const error = await assertRejects(run, BASE_FEE_TOO_LOW_ERROR);
+      assertEquals(
+        error.meta.data.input.operations[0].toXdr("base64"),
+        expected.toXdr("base64"),
+      );
+    }
+  });
 
   it("owns the existing callable transaction pipeline and accepts a native RPC server", () => {
     assertEquals(typeof sdex.transactionPipe, "function");
@@ -106,8 +191,11 @@ describe("SDEX explicit operation boundaries", () => {
 
   it("retains typed ledger-key validation for reads and cancellation", async () => {
     const args = { seller: "invalid" as Ed25519PublicKey, offerId: "1" };
-    assertThrows(() => sdex.getOffer(args), ColibriError);
-    assertThrows(() => sdex.getOffer({ ...args, offerId: 1 }), ColibriError);
+    await assertRejects(() => sdex.getOffer(args), ColibriError);
+    await assertRejects(
+      () => sdex.getOffer({ ...args, offerId: 1 }),
+      ColibriError,
+    );
     await assertRejects(
       () => sdex.cancelOffer({ ...args, config }),
       ColibriError,
@@ -117,7 +205,7 @@ describe("SDEX explicit operation boundaries", () => {
   it("rejects unsafe numeric offer IDs before any RPC read or cancellation", async () => {
     for (const offerId of [Number.MAX_SAFE_INTEGER + 1, Infinity, NaN, 1.5]) {
       const args = { seller: config.source as Ed25519PublicKey, offerId };
-      assertThrows(() => sdex.getOffer(args), E.UNSAFE_OFFER_ID);
+      await assertRejects(() => sdex.getOffer(args), E.UNSAFE_OFFER_ID);
       await assertRejects(
         () => sdex.cancelOffer({ ...args, config }),
         E.UNSAFE_OFFER_ID,

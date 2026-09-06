@@ -1,12 +1,54 @@
-# Stellar asset account operations
+# Stellar assets
 
 `StellarAsset` binds a native Stellar SDK `Asset` to a network and an existing
-Colibri classic transaction pipeline. Use it for asset payments, trustline
-limits, issuer authorization, and clawback. Use
-[StellarAssetContract](stellar-asset-contract.md) when you need the Soroban
-contract interface for the same asset.
+Colibri classic transaction pipeline. It exposes asset identity, exact amounts,
+balances, holder authorization, payments, trustline limits, issuance,
+redemption, and clawback. Use [StellarAssetContract](stellar-asset-contract.md)
+when you need the Soroban contract interface for the same asset.
 
 API: [StellarAsset on JSR](https://jsr.io/@colibri/core/doc/~/StellarAsset).
+
+## Identity and amounts
+
+Bind an existing SDK `Asset`, a code/issuer pair, or a SEP-11 canonical
+identity. Construction performs no RPC calls. `code`, `issuer`, `symbol()`,
+`decimals()`, `isNative()` and `toString()` are available immediately. The
+symbol is the on-chain asset code, not an off-chain display name or a verified
+issuer identity.
+
+<!-- deno-check -->
+
+```typescript
+import {
+  fromDecimals,
+  LocalSigner,
+  NetworkConfig,
+  StellarAsset,
+} from "@colibri/core";
+
+const networkConfig = NetworkConfig.TestNet();
+const issuer = LocalSigner.generateRandom();
+const usd = StellarAsset.fromCanonical({
+  canonical: `USD:${issuer.publicKey()}`,
+  networkConfig,
+});
+const xlm = StellarAsset.NativeXLM({ networkConfig });
+
+console.log(usd.toString()); // USD:G...; includes the issuer, not just the code.
+console.log(xlm.toString(), xlm.issuer); // "native", undefined
+console.log(usd.symbol(), usd.decimals()); // "USD", 7
+
+const units = usd.parseAmount("12.3456789"); // 123_456_789n
+console.log(usd.formatAmount(units)); // "12.3456789"
+console.log(fromDecimals("0.0000001", 7)); // Existing generic converter, with explicit precision.
+```
+
+The asset methods reuse `fromDecimals` and `toDecimals`, adding the native asset
+nonnegative int64 bounds. It rejects exponent notation, negative values,
+overflow and fractions requiring rounding. Extra trailing decimal zeros are
+harmless and accepted. Formatting produces exact decimal text. These helpers are
+for native seven-decimal assets; they do not assume an arbitrary Soroban token
+has the same precision.
 
 ## Create a trustline and receive an issued asset
 
@@ -58,7 +100,7 @@ await usd.changeTrust({
 
 // Payment from the issuing account issues units. Authorization is not required
 // here because this new issuer has not enabled AUTH_REQUIRED.
-const result = await usd.transfer({
+const result = await usd.issue({
   destination: holder.publicKey(),
   amount: "100",
   config: {
@@ -71,6 +113,7 @@ const result = await usd.transfer({
 
 console.log(result.hash, result.operations);
 console.log(await usd.getTrustline(holder.publicKey()));
+console.log(usd.formatAmount(await usd.balance({ id: holder.publicKey() })));
 ```
 
 Amounts and trustline limits are decimal strings in asset units. Ledger-entry
@@ -80,14 +123,29 @@ fees use stroops and the existing [fee configuration](../transaction-config.md).
 
 ## Explicit methods, no automatic account changes
 
-| Method                                          | Action                                                                                      |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `getIssuer()`                                   | Reads the issuer account, including its protocol flags; returns `null` for native XLM.      |
-| `getTrustline(accountId)`                       | Reads a known trustline, or returns `null` when absent. Native XLM also returns `null`.     |
-| `changeTrust({ limit, config })`                | Creates or changes the source's trustline. A zero limit requests removal.                   |
-| `transfer({ destination, amount, config })`     | Transfers using a native payment operation. Payments from/to the issuer issue/redeem units. |
-| `setTrustLineFlags({ trustor, flags, config })` | Explicitly changes issuer-controlled trustline flags.                                       |
-| `clawback({ from, amount, config })`            | Requests issuer clawback when the existing trustline permits it.                            |
+| Method                                          | Action                                                                                             |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `getIssuer()`                                   | Reads the issuer account, including its protocol flags; returns `null` for native XLM.             |
+| `getTrustline(accountId)`                       | Reads a known trustline, or returns `null` when absent. Native XLM also returns `null`.            |
+| `getHolderState({ id })`                        | Reads the actual native account or issued-asset trustline with its balance, flags and liabilities. |
+| `balance({ id })`                               | Reads the total holding in bigint smallest units. Missing holdings fail explicitly.                |
+| `authorized({ id })`                            | Reads full transfer authorization for an existing holding, not future issuer-policy guarantees.    |
+| `changeTrust({ limit, config })`                | Creates or changes the source's trustline. A zero limit requests removal.                          |
+| `transfer({ destination, amount, config })`     | Transfers using a native payment operation. Payments from/to the issuer issue/redeem units.        |
+| `issue({ destination, amount, config })`        | Makes the asset issuer the explicit payment source, independent of the envelope source.            |
+| `redeem({ amount, config })`                    | Pays the asset issuer from the caller's operation source. Does not remove the trustline.           |
+| `setTrustLineFlags({ trustor, flags, config })` | Explicitly changes issuer-controlled trustline flags.                                              |
+| `clawback({ from, amount, config })`            | Requests issuer clawback when the existing trustline permits it.                                   |
+
+Reads take G addresses: an M address identifies the same underlying account, not
+a distinct holding. For XLM, `balance` returns the native account's total
+balance. It is **not spendable balance** after reserves, liabilities and fees.
+For issued assets, a missing trustline raises `STAS_016`; an existing empty
+trustline returns `0n`. An issuer has no finite balance of its own asset and
+raises `STAS_015`, rather than returning zero or pretending to hold a trustline.
+`authorized` preserves these missing/issuer-state errors. For an existing XLM
+account it is true; for an issued asset it reports the trustline's full
+authorization flag, not merely authorization to maintain liabilities.
 
 No write performs a preliminary read or silently skips an operation. No transfer
 creates a trustline or authorizes a holder. Trustline removal fails if its
@@ -111,6 +169,123 @@ Each write accepts the native operation's optional `source`. When omitted,
 before pipeline plugins execute. Consequently, using a channel account for
 envelope sequence numbers does not change which account the asset operation acts
 on.
+
+`issue` always binds the issuer as operation source. `redeem` always binds the
+issuer as destination and defaults its operation source to `config.source`.
+Neither method inserts extra setup operations; both submit ordinary SDK
+payments.
+
+Constructor-time plugins follow the same pipeline-specific pattern as
+`Contract`. Install `@colibri/plugin-channel-accounts` and
+`@colibri/plugin-fee-bump` in addition to Core for this example. The three
+signers have distinct roles: the owner authorizes the asset transfer, the
+channel supplies the transaction sequence, and the fee payer signs the outer
+fee-bump envelope. The example funds them through Testnet Friendbot.
+
+<!-- deno-check -->
+
+```ts
+import {
+  initializeWithFriendbot,
+  LocalSigner,
+  NativeAccount,
+  NetworkConfig,
+  StellarAsset,
+} from "@colibri/core";
+import { createChannelAccountsPlugin } from "@colibri/plugin-channel-accounts";
+import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
+import { createSep29Plugin } from "@colibri/plugin-sep29";
+import { Memo } from "npm:@stellar/stellar-sdk";
+
+const networkConfig = NetworkConfig.TestNet();
+const owner = LocalSigner.generateRandom();
+const channel = LocalSigner.generateRandom();
+const feePayer = LocalSigner.generateRandom();
+for (const signer of [owner, channel, feePayer]) {
+  await initializeWithFriendbot(
+    networkConfig.friendbotUrl,
+    signer.publicKey(),
+    {
+      rpcUrl: networkConfig.rpcUrl,
+      allowHttp: networkConfig.allowHttp,
+    },
+  );
+}
+const xlm = StellarAsset.NativeXLM({
+  networkConfig,
+  plugins: {
+    transactionPipe: [
+      createChannelAccountsPlugin({
+        channels: [NativeAccount.fromMasterSigner(channel)],
+      }),
+      createFeeBumpPlugin({
+        networkConfig,
+        feeBumpConfig: {
+          source: feePayer.publicKey(),
+          signers: [feePayer],
+          fee: "200",
+        },
+      }),
+      createSep29Plugin(),
+    ],
+  },
+});
+
+const result = await xlm.transfer({
+  destination: feePayer.publicKey(),
+  amount: "1",
+  config: {
+    source: owner.publicKey(),
+    signers: [owner],
+    fee: "100",
+    timeout: 60,
+    memo: Memo.text("asset payment"),
+  },
+});
+console.log(result.hash);
+```
+
+Memos remain native Stellar SDK `Memo` values in `TransactionConfig`. Channel
+allocation preserves the operation's owner and the memo; a fee bump preserves
+them in the inner transaction. The optional SEP-29 plugin rejects a payment with
+no memo when the recipient requires one; it does not invent or set the memo.
+None of these plugins is installed implicitly. You may also attach them later
+using `xlm.transactionPipe.use(plugin)`. Keep calling the original pipe binding;
+do not replace it with the return value of `.use(...)`. Read-only methods do not
+run transaction plugins.
+
+## Explicit access to the Stellar Asset Contract
+
+`usd.toContract()` returns a separate existing `StellarAssetContract` instance
+with the deterministically derived contract ID and the same network/RPC. It does
+not deploy the SAC, run simulation, or copy native transaction plugins. Store
+that instance when attaching its Soroban pipeline plugins.
+
+```typescript
+// Fragment: usd, networkConfig and issuer are the bindings from the examples above.
+const sac = usd.toContract();
+
+// If the SAC does not exist, deployment is a separate deliberate transaction.
+// Import StellarAssetContract from @colibri/core for this deployment path.
+await StellarAssetContract.deploy({
+  asset: usd.asset,
+  networkConfig,
+  config: {
+    source: issuer.publicKey(),
+    signers: [issuer],
+    fee: "100",
+    timeout: 60,
+  },
+});
+const contractBalance = await sac.balance({ id: holder.publicKey() });
+```
+
+For a G holder with a trustline, the deployed SAC accesses the same native
+holding. Contract-account balances, allowances, `transferFrom` and other Soroban
+methods belong to the SAC API. Native `StellarAsset` methods never switch routes
+automatically. Native payments use decimal amounts; SAC methods use bigint
+smallest units. Soroban transactions do not support native transaction memos, so
+do not blindly reuse a payment config containing one for SAC deployment.
 
 Include signers for both the envelope source and every different operation
 source. G and M sources follow the underlying Stellar operation rules. Trustline

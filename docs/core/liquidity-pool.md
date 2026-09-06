@@ -117,6 +117,30 @@ arrays. Each pool asset must occur exactly once. Deposit prices still use the
 native **A/B** convention, regardless of array order. Read `assetA` and `assetB`
 when presenting that convention to a user.
 
+For prices expressed in familiar asset units, `priceBounds` performs the exact
+conversion. This fragment assumes the initialized `pool`, `xlm`, `usd`, and
+`config` from above; it is an alternative deposit, not an extra setup step:
+
+```typescript
+await pool.depositByAsset({
+  maximumAmounts: [{ asset: xlm, amount: "10" }, { asset: usd, amount: "20" }],
+  ...pool.priceBounds({
+    baseAsset: xlm,
+    quoteAsset: usd,
+    minimum: "2", // USD per one XLM
+    maximum: "2",
+  }),
+  config,
+});
+```
+
+With XLM as canonical A and USD as B, a USD/XLM interval of `[2, 4]` becomes an
+A/B interval of `[1/4, 1/2]`: inversion also swaps the endpoints. The assets
+must name this pool's exact pair, including issuers. Inputs accept exact decimal
+strings or `{ n, d }` fractions. Reversed bounds fail rather than being silently
+corrected. No tolerance is added; equal endpoints are deliberate exact-price
+constraints and can fail when current reserves do not satisfy them.
+
 `StellarPrice.fromDecimal` returns an exact native-compatible `{ n, d }` ratio
 or rejects a value that cannot fit the protocol's signed-32-bit components. It
 does not approximate a financial limit. The ordinary SDK price inputs remain
@@ -148,9 +172,29 @@ share balance. Neither method discovers pools or builds a market index. State
 can change before the next transaction: enforce acceptance limits in the
 operation rather than treating an earlier read as a guarantee.
 
+`getPosition(account)` reads the pool and that account's pool-share trustline in
+**one RPC request**, avoiding a combined view assembled from two different
+observations. It returns both decoded entries, `observedAtLedger`, and an exact
+`ownership: { shares, totalShares }` bigint fraction. Ownership is `null` when
+total supply is zero. Missing pool and missing trustline are distinct errors,
+not zero-valued holdings. The fraction is not a withdrawal quote: protocol
+rounding, changing reserves and transaction limits still govern redemption.
+
+```typescript
+const position = await pool.getPosition(provider.publicKey());
+console.log(position.trustline.balance, position.pool.totalPoolShares);
+console.log(position.ownership, position.observedAtLedger);
+```
+
 Errors distinguish a pool absent from a successful lookup, failed RPC retrieval,
 invalid asset mappings, and rejected operation construction. See the
 [pool error reference](../reference/errors/core-liquidity-pool.md).
 
 For the protocol's behavior and failure codes, see the official
 [liquidity-pool operations](https://developers.stellar.org/docs/learn/fundamentals/transactions/list-of-operations#liquidity-pool-deposit).
+
+Constructor `plugins: { transactionPipe: [plugin] }` installs the same plugins
+on `pool.transactionPipe` before the first write, as with `StellarAsset`. Memos
+belong in each write's `config.memo`; channel and fee-bump plugins retain native
+operation sources. See the
+[complete asset plugin example](asset/stellar-asset.md#sources-plugins-and-native-interoperability).

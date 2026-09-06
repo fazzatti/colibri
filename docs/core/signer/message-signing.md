@@ -2,7 +2,8 @@
 
 `LocalSigner.signMessage` signs UTF-8 text or `Uint8Array` using the native
 Stellar SDK's SEP-53 format. It does not sign the raw bytes in the same way as
-`sign`. Use native `Keypair.verifyMessage` to verify the result.
+`sign`. Use `LocalSigner.verifyMessage` or native `Keypair.verifyMessage` to
+verify the result.
 
 ## Sign and verify locally
 
@@ -19,6 +20,7 @@ import { Keypair } from "npm:@stellar/stellar-sdk";
 using signer = LocalSigner.generateRandom();
 const message = "Approve document revision 42.";
 const signature = signer.signMessage(message);
+console.log(signer.verifyMessage(message, signature)); // true
 
 const verifier = Keypair.fromPublicKey(signer.publicKey());
 console.log(verifier.verifyMessage(message, signature)); // true
@@ -27,6 +29,8 @@ console.log(signature.length); // 64 bytes
 
 Keep the message and public key alongside the signature. A verifier needs all
 three. The `using` declaration destroys the local secret handle at scope exit.
+Verification needs only the public key and, like `verifySignature`, still works
+after `signer.destroy()`. No new secret or funded account is required.
 
 ## Optional signer capability
 
@@ -63,6 +67,8 @@ and validate that context according to the application's protocol.
 `LocalSigner` reports `SIG_LOC_004` when message signing follows destruction and
 `SIG_LOC_005` when the native SDK rejects message signing. The latter preserves
 the underlying cause without copying the input message into error metadata.
+Malformed verification inputs rejected by the native SDK use `SIG_LOC_006`. A
+well-formed signature that does not verify returns `false`, not an error.
 
 See the [local signer errors](../../reference/errors/core-signer-local.md),
 [Core API](https://jsr.io/@colibri/core/doc), and
