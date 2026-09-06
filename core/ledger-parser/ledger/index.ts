@@ -7,6 +7,9 @@
 import { memoize } from "@/common/decorators/memoize/index.ts";
 // deno-coverage-ignore-stop
 import { xdr } from "stellar-sdk";
+import type { NetworkConfig } from "@/network/index.ts";
+import { matchTransactionEnvelopes } from "@/ledger-parser/ledger/match-envelopes.ts";
+import { INVALID_NETWORK_PASSPHRASE } from "@/ledger-parser/error.ts";
 import type { LedgerEntry } from "@/ledger-parser/types.ts";
 import { ensureXdrType } from "@/common/helpers/xdr/ensure-xdr-type.ts";
 import { Transaction } from "@/ledger-parser/transaction/index.ts";
@@ -22,11 +25,12 @@ import {
  *
  * Supported versions (based on Lightsail archive RPC):
  * - LedgerCloseMeta: v0, v1, v2
- * - TransactionMeta: v4 only (archive normalizes all to v4)
+ * - Transaction result metadata is preserved in its native XDR form.
  *
  * Envelope availability:
- * - v2: Available from txSet.phases
- * - v0/v1: Not available (v4 meta doesn't include envelope)
+ * - v0: Available from the simple transaction set.
+ * - v1/v2: Available from the generalized transaction set.
+ * - Matching envelopes to results requires the ledger network passphrase.
  *
  * Uses @memoize() to cache expensive parsing operations.
  *
@@ -59,7 +63,19 @@ export class Ledger {
     | xdr.LedgerHeaderHistoryEntry;
   private readonly metadataXdr: string | Uint8Array | xdr.LedgerCloseMeta;
 
-  private constructor(entry: LedgerEntry) {
+  private readonly networkPassphrase?: string;
+
+  private constructor(entry: LedgerEntry, network?: NetworkConfig | string) {
+    this.networkPassphrase = typeof network === "string"
+      ? network
+      : network?.networkPassphrase;
+    if (
+      network !== undefined &&
+      (typeof this.networkPassphrase !== "string" ||
+        this.networkPassphrase.length === 0)
+    ) {
+      throw new INVALID_NETWORK_PASSPHRASE();
+    }
     // Validate required fields
     if (!entry.sequence || !entry.hash || !entry.ledgerCloseTime) {
       throw new INVALID_LEDGER_ENTRY(
@@ -75,10 +91,17 @@ export class Ledger {
   }
 
   /**
-   * Factory method to create a Ledger instance from RPC response
+   * Parses an RPC ledger locally, without making network requests.
+   * Supply its NetworkConfig or passphrase to associate transaction envelopes
+   * with execution results by hash. Without it, transactions expose result-only
+   * data; envelope-dependent access fails explicitly. The passphrase is captured
+   * at construction so later configuration changes cannot alter this ledger.
    */
-  static fromEntry(entry: LedgerEntry): Ledger {
-    return new Ledger(entry);
+  static fromEntry(
+    entry: LedgerEntry,
+    network?: NetworkConfig | string,
+  ): Ledger {
+    return new Ledger(entry, network);
   }
 
   /**
@@ -179,85 +202,52 @@ export class Ledger {
   /**
    * Parse and return all transactions in this ledger
    *
-   * Extracts envelopes from txSet for all versions and matches with txProcessing
+   * Extracts envelopes from txSet and matches txProcessing by network-specific hash.
+   * Omitting network context returns result-only transactions, never index-based guesses.
    *
    * @memoized - First access parses transactions, subsequent accesses return cached array
    */
   @memoize()
   get transactions(): Transaction[] {
     const meta = this.meta;
-
     switch (meta.type) {
-      case "v0": {
-        const v0 = meta.v0;
-        const txProcessing = v0.txProcessing;
-
-        // v0 has simple TransactionSet with txes()
-        const envelopes = v0.txSet.txs;
-
-        return txProcessing.map((resultMeta, index) => {
-          const envelope = envelopes[index];
-          if (envelope) {
-            return Transaction.fromMetaWithEnvelope(
-              this,
-              resultMeta,
-              envelope,
-              index,
-            );
-          } else {
-            return Transaction.fromMeta(this, resultMeta, index);
-          }
-        });
-      }
-      case "v1": {
-        const v1 = meta.v1;
-        const txProcessing = v1.txProcessing;
-
-        // v1 has GeneralizedTransactionSet with v1TxSet().phases()
-        const envelopes = this.extractEnvelopesFromGeneralizedTxSet(v1.txSet);
-
-        return txProcessing.map((resultMeta, index) => {
-          const envelope = envelopes[index];
-          if (envelope) {
-            return Transaction.fromMetaWithEnvelope(
-              this,
-              resultMeta,
-              envelope,
-              index,
-            );
-          } else {
-            return Transaction.fromMeta(this, resultMeta, index);
-          }
-        });
-      }
-      case "v2": {
-        const v2 = meta.v2;
-        const txProcessing = v2.txProcessing;
-
-        // Extract envelopes from txSet
-        const envelopes = this.extractEnvelopesFromGeneralizedTxSet(v2.txSet);
-
-        // Match envelopes with transaction results by index
-        return txProcessing.map((resultMeta, index) => {
-          const envelope = envelopes[index];
-          if (envelope) {
-            return Transaction.fromMetaWithEnvelope(
-              this,
-              resultMeta,
-              envelope,
-              index,
-            );
-          } else {
-            // Fallback to fromMeta if envelope not found (shouldn't happen normally)
-            return Transaction.fromMeta(this, resultMeta, index);
-          }
-        });
-      }
+      case "v0":
+        return this.parseTransactions(meta.v0.txProcessing, meta.v0.txSet.txs);
+      case "v1":
+        return this.parseTransactions(
+          meta.v1.txProcessing,
+          this.extractEnvelopesFromGeneralizedTxSet(meta.v1.txSet),
+        );
+      case "v2":
+        return this.parseTransactions(
+          meta.v2.txProcessing,
+          this.extractEnvelopesFromGeneralizedTxSet(meta.v2.txSet),
+        );
       default:
         throw new UNSUPPORTED_LEDGER_CLOSE_META_VERSION(
           (meta as { type: string }).type,
         );
     }
+  }
+
+  /** Builds result-only views or hash-matched native-envelope views. */
+  private parseTransactions(
+    results: xdr.TransactionResultMeta[],
+    envelopes: xdr.TransactionEnvelope[],
+  ): Transaction[] {
+    if (this.networkPassphrase === undefined) {
+      return results.map((result, index) =>
+        Transaction.fromMeta(this, result, index)
+      );
+    }
+    const matched = matchTransactionEnvelopes(
+      results,
+      envelopes,
+      this.networkPassphrase,
+    );
+    return results.map((result, index) =>
+      Transaction.fromMetaWithEnvelope(this, result, matched[index], index)
+    );
   }
 
   /**

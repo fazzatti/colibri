@@ -82,11 +82,13 @@ describe("dependency cycles", () => {
       "address",
       "asset",
       "auth",
+      "claimable-balance",
       "common",
       "contract",
       "error",
       "event",
       "ledger-entries",
+      "markets",
       "network",
       "pipelines",
       "plugins",
@@ -129,6 +131,14 @@ describe("dependency cycles", () => {
       {
         config: `${CONFIG_DIRECTORY}/rpc-streamer.json`,
         source: "../../../rpc-streamer/src/variants/ledger/**/*.ts",
+      },
+      {
+        config: `${CONFIG_DIRECTORY}/rpc-streamer.json`,
+        source: "../../../rpc-streamer/src/variants/transaction/**/*.ts",
+      },
+      {
+        config: `${CONFIG_DIRECTORY}/rpc-streamer.json`,
+        source: "../../../rpc-streamer/src/variants/operation/**/*.ts",
       },
       {
         config: `${CONFIG_DIRECTORY}/webauth.json`,

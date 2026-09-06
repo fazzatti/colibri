@@ -3,6 +3,7 @@ import type {
   Contract,
   ExternalExecutableRef as StellarExternalExecutableRef,
   FeeBumpTransaction,
+  LiquidityPoolId,
   Transaction,
   xdr,
 } from "stellar-sdk";
@@ -29,10 +30,10 @@ export type XdrSerializable = xdr.XdrValue;
 export type LedgerKeyLike = xdr.LedgerKey;
 
 /**
- * Canonical Stellar asset accepted when deriving a trustline ledger key.
+ * Native SDK asset or pool-share identifier accepted for a trustline ledger key.
  * @internal
  */
-export type TrustlineAssetLike = Asset;
+export type TrustlineAssetLike = Asset | LiquidityPoolId;
 
 /**
  * Canonical Stellar transaction envelopes accepted by signer helpers.

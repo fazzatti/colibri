@@ -1,8 +1,19 @@
 # Asset
 
 The Asset module provides utilities for working with Stellar asset
-representations, arbitrary SEP-41 token contracts, and Stellar Asset Contracts
-(SAC).
+representations, native account operations, arbitrary SEP-41 token contracts,
+and Stellar Asset Contracts (SAC).
+
+## Native account operations
+
+[`StellarAsset`](stellar-asset.md) provides explicit trustline, transfer,
+authorization, and clawback actions through its owned transaction pipeline.
+Issuer and trustline reads are separate and retain native SDK asset identity. It
+does not invoke a contract or silently prepare accounts for a transfer.
+
+For related native workflows, see [SDEX offers](../sdex.md),
+[liquidity pools](../liquidity-pool.md), and
+[claimable-balance predicates](../claimable-balance-predicates.md).
 
 ## Standards
 

@@ -8,6 +8,7 @@
 
 // deno-lint-ignore-file no-explicit-any
 
+import { Networks } from "stellar-sdk";
 import { beforeAll, describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { Ledger } from "@/ledger-parser/ledger/index.ts";
@@ -33,7 +34,7 @@ describe("Transaction", () => {
     let ledger: any;
 
     beforeAll(() => {
-      ledger = Ledger.fromEntry(ledgerEntry);
+      ledger = Ledger.fromEntry(ledgerEntry, Networks.PUBLIC);
       const transactions = ledger.transactions;
 
       if (transactions.length === 0) {
@@ -103,9 +104,9 @@ describe("Transaction", () => {
 
     it("should have envelopes for all LedgerCloseMeta versions", () => {
       const multiFixtures = loadMultiVersionFixtures();
-      const v0Ledger = Ledger.fromEntry(multiFixtures.lcm_v0);
-      const v1Ledger = Ledger.fromEntry(multiFixtures.lcm_v1);
-      const v2Ledger = Ledger.fromEntry(multiFixtures.lcm_v2);
+      const v0Ledger = Ledger.fromEntry(multiFixtures.lcm_v0, Networks.PUBLIC);
+      const v1Ledger = Ledger.fromEntry(multiFixtures.lcm_v1, Networks.PUBLIC);
+      const v2Ledger = Ledger.fromEntry(multiFixtures.lcm_v2, Networks.PUBLIC);
 
       const v0Tx = v0Ledger.transactions[0];
       const v1Tx = v1Ledger.transactions[0];

@@ -12,6 +12,7 @@ import * as LedgerParserErrors from "@/ledger-parser/error.ts";
 import * as LedgerEntryErrors from "@/ledger-entries/error.ts";
 import * as StepFactories from "@/steps/index.ts";
 import * as Sep1Errors from "@/sep1/error.ts";
+import * as ClaimableBalancePredicateErrors from "@/claimable-balance/error.ts";
 
 export * from "@/account/native/index.ts";
 export type * from "@/account/types.ts";
@@ -20,6 +21,11 @@ export type * from "@/account/native/types.ts";
 export const ERRORS_ACC_NAT: typeof NativeAccountErrors = NativeAccountErrors;
 
 export * from "@/asset/index.ts";
+export * from "@/claimable-balance/index.ts";
+/** Error constructors for native claimable-balance predicate composition. */
+export const ERRORS_CLAIMABLE_BALANCE_PREDICATES:
+  typeof ClaimableBalancePredicateErrors = ClaimableBalancePredicateErrors;
+export * from "@/markets/index.ts";
 /** Address helpers for parsing and normalization. */
 export const address: typeof AddressHelpers = AddressHelpers;
 /** Authorization helpers and requirements. */

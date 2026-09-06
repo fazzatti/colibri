@@ -15,7 +15,7 @@ exact current signatures.
 | `@colibri/build-verification`      | [Verification](../packages/build-verification.md)   | [Symbols](https://jsr.io/@colibri/build-verification/doc)      |
 | `@colibri/identicon`               | [Identicons](../packages/identicon.md)              | [Symbols](https://jsr.io/@colibri/identicon/doc)               |
 | `@colibri/plugin-fee-bump`         | [Fee sponsorship](../packages/plugins/fee-bump.md)  | [Symbols](https://jsr.io/@colibri/plugin-fee-bump/doc)         |
-| `@colibri/plugin-sep29` | [Memo requirements](../packages/plugins/sep29.md) | [Symbols](https://jsr.io/@colibri/plugin-sep29/doc) |
+| `@colibri/plugin-sep29`            | [Memo requirements](../packages/plugins/sep29.md)   | [Symbols](https://jsr.io/@colibri/plugin-sep29/doc)            |
 | `@colibri/plugin-channel-accounts` | [Channels](../packages/plugins/channel-accounts.md) | [Symbols](https://jsr.io/@colibri/plugin-channel-accounts/doc) |
 | `@colibri/test-tooling`            | [Quickstart](../packages/test-tooling.md)           | [Symbols](https://jsr.io/@colibri/test-tooling/doc)            |
 
@@ -30,11 +30,14 @@ public consumer imports.
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Accounts, address normalization, branded StrKeys        | [Account](../core/account.md), [Addresses](../core/address.md), [StrKeys](../core/strkeys.md)                                                           |
 | Assets, SEP-11, SAC client                              | [Assets](../core/asset/README.md)                                                                                                                       |
+| Native asset actions, SDEX, exact prices, pools         | [StellarAsset](../core/asset/stellar-asset.md), [SDEX and StellarPrice](../core/sdex.md), [NativeLiquidityPool](../core/liquidity-pool.md)              |
+| Native claimable-balance predicates                     | [ClaimableBalancePredicates](../core/claimable-balance-predicates.md)                                                                                   |
 | Contract client, spec loading, deployment               | [Contract](../core/contract.md)                                                                                                                         |
 | Network presets, providers, TOML discovery              | [Network](../core/network.md), [SEP-1](../core/sep1.md)                                                                                                 |
 | Signer capabilities and classic/auth-entry requirements | [Signers](../core/signer/README.md), [Authorization](../core/authorization.md)                                                                          |
+| Optional SEP-53 message signing                         | [MessageSigner](../core/signer/message-signing.md)                                                                                                      |
 | Transaction config, fee strategies, validity            | [Configuration](../core/transaction-config.md)                                                                                                          |
-| Native reserve-sponsorship operation composition | [Reserve sponsorship](../core/sponsorship.md) |
+| Native reserve-sponsorship operation composition        | [Reserve sponsorship](../core/sponsorship.md)                                                                                                           |
 | Processes, wrappers, built-in pipelines, plugins        | [Processes](../core/processes/README.md), [Steps](../core/steps.md), [Pipelines](../core/pipelines/README.md), [Plugins](../packages/plugins/README.md) |
 | Ledger keys/current state and lazy ledger parsing       | [Entries](../core/ledger-entries.md), [Parser](../core/ledger-parser.md)                                                                                |
 | Events, filters, templates, event IDs                   | [Events](../events/overview.md), [TOID](../core/toid.md)                                                                                                |

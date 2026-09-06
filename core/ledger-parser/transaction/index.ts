@@ -6,17 +6,23 @@
 
 import { memoize } from "@/common/decorators/memoize/index.ts";
 // deno-coverage-ignore-stop
-import type { xdr } from "stellar-sdk";
+import { xdr } from "stellar-sdk";
 import { parseMuxedAccount } from "@/common/helpers/xdr/index.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import { Operation } from "@/ledger-parser/operation/index.ts";
 import {
   INVALID_TRANSACTION_INDEX,
+  MISSING_FEE_SOURCE_ENVELOPE,
+  MISSING_NATIVE_ENVELOPE,
   MISSING_TRANSACTION_ENVELOPE,
+  NATIVE_ENVELOPE_DECODE_FAILED,
   UNSUPPORTED_ENVELOPE_TYPE,
 } from "@/ledger-parser/error.ts";
 import type { Ledger } from "@/ledger-parser/ledger/index.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
+
+/** @internal Exact native SDK envelope union, not a Colibri replacement. */
+export type TransactionEnvelope = xdr.TransactionEnvelope;
 
 /**
  * Transaction class for lazy operation parsing
@@ -56,10 +62,9 @@ export class Transaction {
   }
 
   /**
-   * Factory method to create a Transaction from transaction result metadata
-   *
-   * Note: Only supports TransactionMeta v4.
-   * Envelope is NOT available in v4 meta - use fromMetaWithEnvelope for LedgerCloseMeta v2.
+   * Creates a result-only transaction. Application metadata does not contain
+   * its envelope; use fromMetaWithEnvelope after associating the transaction set
+   * by its network-specific hash, never by array index.
    */
   static fromMeta(
     ledger: Ledger,
@@ -76,16 +81,15 @@ export class Transaction {
     const txResult = resultPair.result;
     const txHash = resultPair.transactionHash.toBytes();
 
-    // TransactionMeta v4: envelope is not stored in meta
-    // For LedgerCloseMeta v2, envelope comes from txSet (use fromMetaWithEnvelope)
-    // For v0/v1, envelope is not available
+    // Envelopes live in the ledger transaction set, not application metadata.
     const txEnvelope = undefined;
 
     return new Transaction(ledger, txEnvelope, txResult, txMeta, txHash, index);
   }
 
   /**
-   * Factory method for V2 where envelope comes from txSet separately
+   * Creates a transaction from a result and its already-associated native envelope.
+   * This low-level factory trusts that the caller matched their hashes correctly.
    */
   static fromMetaWithEnvelope(
     ledger: Ledger,
@@ -153,7 +157,8 @@ export class Transaction {
   }
 
   /**
-   * Get the source account from the transaction envelope
+   * Source executing the operations, including the inner source of a fee bump.
+   * This is distinct from `feeSource`, which identifies the envelope fee payer.
    */
   @memoize()
   get sourceAccount(): string {
@@ -171,11 +176,34 @@ export class Transaction {
           envelope.v0.tx.sourceAccountEd25519.toBytes(),
         );
       case "envelopeTypeTxFeeBump":
-        return parseMuxedAccount(envelope.feeBump.tx.feeSource);
+        return parseMuxedAccount(
+          envelope.feeBump.tx.innerTx.v1.tx.sourceAccount,
+        );
       default:
         throw new UNSUPPORTED_ENVELOPE_TYPE(
           (envelope as { type: string }).type,
         );
+    }
+  }
+
+  /** Fee payer, preserving an M address when present; independent of the operation source. */
+  get feeSource(): string {
+    if (!this.txEnvelope) throw new MISSING_FEE_SOURCE_ENVELOPE(this.hash);
+    return this.txEnvelope.type === "envelopeTypeTxFeeBump"
+      ? parseMuxedAccount(this.txEnvelope.feeBump.tx.feeSource)
+      : this.sourceAccount;
+  }
+
+  /** Returns an independent native SDK envelope for hashing, decoding or inspection. */
+  toEnvelope(): TransactionEnvelope {
+    if (!this.txEnvelope) throw new MISSING_NATIVE_ENVELOPE(this.hash);
+    try {
+      return xdr.TransactionEnvelope.fromXdr(
+        this.txEnvelope.toXdr("base64"),
+        "base64",
+      );
+    } catch (cause) {
+      throw new NATIVE_ENVELOPE_DECODE_FAILED(this.hash, cause as Error);
     }
   }
 
@@ -267,6 +295,7 @@ export class Transaction {
       successful: this.successful,
       resultCode: this.resultCode,
       sourceAccount: this.sourceAccount,
+      feeSource: this.feeSource,
       fee: this.fee.toString(),
       sequence: this.sequence.toString(),
       operationCount: this.operationCount,

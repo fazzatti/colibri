@@ -249,7 +249,9 @@ export function buildTrustlineLedgerKey({
     xdr.LedgerKey.trustline(
       new xdr.LedgerKeyTrustLine({
         accountId: Keypair.fromPublicKey(accountId).xdrAccountId(),
-        asset: asset.toTrustLineXdrObject() as xdr.TrustLineAsset,
+        asset: "toTrustLineXdrObject" in asset
+          ? asset.toTrustLineXdrObject() as xdr.TrustLineAsset
+          : asset.toXdrObject(),
       }),
     ),
   );

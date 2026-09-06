@@ -2,6 +2,7 @@ import type {
   AuthEntrySigner,
   EnvelopeSigner,
   KeypairSigner,
+  MessageSigner,
   PreAuthTransactionSigner,
   Signer,
 } from "@/signer/types.ts";
@@ -18,6 +19,15 @@ export const isEnvelopeSigner = (
     hasFunction(signer, "signTransaction") &&
     hasFunction(signer, "signsFor")
   );
+};
+
+/**
+ * Returns whether the value provides SEP-53 message signing. This capability is
+ * independent of the transaction capabilities checked by `isSigner`.
+ */
+export const isMessageSigner = (signer: unknown): signer is MessageSigner => {
+  return isDefined(signer) && hasFunction(signer, "publicKey") &&
+    hasFunction(signer, "signMessage");
 };
 
 /** Returns `true` when the value can authorize one exact pre-authorized transaction. */

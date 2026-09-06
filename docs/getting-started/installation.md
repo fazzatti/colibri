@@ -36,15 +36,15 @@ This will add imports similar to:
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^0.29.0",
-    "@colibri/webauth": "jsr:@colibri/webauth@^0.2.2",
-    "@colibri/build-verification": "jsr:@colibri/build-verification@^0.4.2",
-    "@colibri/identicon": "jsr:@colibri/identicon@^0.1.2",
-    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.3.0",
+    "@colibri/core": "jsr:@colibri/core@^0.30.0",
+    "@colibri/webauth": "jsr:@colibri/webauth@^0.2.3",
+    "@colibri/build-verification": "jsr:@colibri/build-verification@^0.4.3",
+    "@colibri/identicon": "jsr:@colibri/identicon@^0.1.3",
+    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.4.0",
     "@colibri/test-tooling": "jsr:@colibri/test-tooling@^0.3.1",
-    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.10.4",
-    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^0.2.14",
-    "@colibri/plugin-sep29": "jsr:@colibri/plugin-sep29@^0.1.0"
+    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.10.5",
+    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^0.2.15",
+    "@colibri/plugin-sep29": "jsr:@colibri/plugin-sep29@^0.1.1"
   }
 }
 ```
@@ -118,7 +118,7 @@ Plugins extend pipeline step behavior for specific use cases:
 | ----------------------------------------------------------- | ---------------------------------- | -------------------------------------------------- |
 | [Fee Bump](../packages/plugins/fee-bump.md)                 | `@colibri/plugin-fee-bump`         | Wrap outgoing transactions in a fee-bump envelope  |
 | [Channel Accounts](../packages/plugins/channel-accounts.md) | `@colibri/plugin-channel-accounts` | Reuse sponsored channel accounts across write runs |
-| [SEP-29](../packages/plugins/sep29.md) | `@colibri/plugin-sep29` | Opt-in memo requirements checked through RPC |
+| [SEP-29](../packages/plugins/sep29.md)                      | `@colibri/plugin-sep29`            | Opt-in memo requirements checked through RPC       |
 
 ## Stellar SDK Dependency
 

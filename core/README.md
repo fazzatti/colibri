@@ -48,12 +48,13 @@ a small introduction before the later sections explain how the pieces work.
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | Transactions and pipelines    | Classic submission, read-only contract simulation, state-changing contract invocation, fee strategies, memos, preconditions, and plugins      | Send a payment, call a contract, cap a Soroban fee, or insert application policy               |
 | Contracts                     | ABI/spec loading, SEP-46 metadata, SEP-47 claims, versioned interface matching, typed calls, deployment, Wasm hashes, and external references | Inspect or interact with an existing contract, or deploy one from Wasm                         |
-| Assets                        | SEP-11 canonical asset strings and a high-level Stellar Asset Contract client                                                                 | Validate asset identifiers, derive an SAC, manage trustlines, or invoke token methods          |
+| Assets and exchange           | StellarAsset account actions, SDEX offers, native pools, exact prices, SEP-11 strings, and SAC/SEP-41 contract clients                        | Manage trustlines, submit limit offers, deposit/withdraw liquidity, or invoke token methods    |
 | Accounts and signers          | Native and muxed account identities plus Ed25519, HashX, signed-payload, pre-authorized, and delegated signing capabilities                   | Keep envelope and Soroban authorization requirements explicit                                  |
 | Ledger entries and inspection | Typed current-state reads plus lazy views over ledgers, transactions, operations, and execution metadata                                      | Inspect accounts, trustlines, contract state, executable code, fees charged, or historical XDR |
 | Events                        | Event IDs, filters, ledger-meta parsing, schema-driven templates, and ready-made SAC, SEP-41, and CAP-67 event models                         | Decode contract output, build filters, or create a typed event model                           |
 | Networks and discovery        | Mainnet, Testnet, Futurenet, and custom configurations; provider helpers; Friendbot; and SEP-1 `stellar.toml` parsing                         | Keep passphrases and endpoints together or discover an integration from its domain             |
 | Addresses and identifiers     | SEP-23 StrKey format/checksum guards, muxed-address normalization, ledger keys, and SEP-35 operation IDs                                      | Validate untrusted identifiers and index exact operations                                      |
+| Conditional claims            | Static ClaimableBalancePredicates helpers returning native SDK predicate objects                                                              | Compose explicit payment deadlines and reclaim conditions without a custom contract            |
 | Errors and utilities          | Stable error namespaces, assertions, binary normalization, ScVal/XDR conversion, auth inspection, caches, and type guards                     | Build reliable application boundaries without duplicating low-level traversal                  |
 
 Core deliberately does not hide the underlying Stellar SDK. Operations and XDR
@@ -147,14 +148,15 @@ applications that implement a custom multisig policy.
 
 ## Choose the right abstraction
 
-| Start with...                        | When you need...                                                                                                 | What remains available                                                                              |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `Contract` or `StellarAssetContract` | A domain client that encodes methods, owns read/invoke pipelines, and can load ABI or contract-error information | The owned `readPipe` and `invokePipe`, raw invocation methods, contract spec, Wasm, and ledger keys |
-| `LedgerEntries`                      | Typed current-state reads for accounts, trustlines, offers, contract data/code, configuration, or TTL            | Exact ledger keys, raw XDR, decoded discriminated unions, and the RPC client boundary               |
-| A built-in pipeline                  | A complete classic, read-only, or state-changing transaction lifecycle                                           | Stable steps, plugin targets, run output, Stellar transactions, simulation data, and RPC responses  |
-| An exported process                  | One tested execution unit inside application-owned orchestration                                                 | Typed input/output and a process-specific error namespace                                           |
-| Steps and connectors                 | A custom `convee` pipeline with Colibri-compatible observation and plugin boundaries                             | The same process functions and stable ids used by built-in pipelines                                |
-| Primitives and helpers               | Independent address, asset, event, auth, identifier, binary, ScVal, XDR, or network behavior                     | No pipeline or client lifecycle is required                                                         |
+| Start with...                                    | When you need...                                                                                                 | What remains available                                                                              |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `Contract` or `StellarAssetContract`             | A domain client that encodes methods, owns read/invoke pipelines, and can load ABI or contract-error information | The owned `readPipe` and `invokePipe`, raw invocation methods, contract spec, Wasm, and ledger keys |
+| `StellarAsset`, `SDEX`, or `NativeLiquidityPool` | Explicit account-asset, offer, or pool actions without assembling the submission lifecycle                       | The existing callable `transactionPipe`, its plugins, native assets, and separate ledger reads      |
+| `LedgerEntries`                                  | Typed current-state reads for accounts, trustlines, offers, contract data/code, configuration, or TTL            | Exact ledger keys, raw XDR, decoded discriminated unions, and the RPC client boundary               |
+| A built-in pipeline                              | A complete classic, read-only, or state-changing transaction lifecycle                                           | Stable steps, plugin targets, run output, Stellar transactions, simulation data, and RPC responses  |
+| An exported process                              | One tested execution unit inside application-owned orchestration                                                 | Typed input/output and a process-specific error namespace                                           |
+| Steps and connectors                             | A custom `convee` pipeline with Colibri-compatible observation and plugin boundaries                             | The same process functions and stable ids used by built-in pipelines                                |
+| Primitives and helpers                           | Independent address, asset, event, auth, identifier, binary, ScVal, XDR, or network behavior                     | No pipeline or client lifecycle is required                                                         |
 
 ## Quick start: send a Testnet payment
 
@@ -322,6 +324,10 @@ assembled XDR is accepted by Stellar.
 - **Contracts and assets** – High-level contract lifecycle and Stellar Asset
   Contract APIs over the same read/invoke pipelines. See
   [High-level contract clients](#high-level-contract-clients).
+- **Native asset and market actions** – `StellarAsset`, `SDEX`, and
+  `NativeLiquidityPool` writes use the existing transaction pipe; price and
+  claim-predicate helpers preserve native SDK values. See
+  [Native assets, exchange offers, and liquidity pools](#native-assets-exchange-offers-and-liquidity-pools).
 - **Current and historical state** – Typed ledger-entry reads and lazy ledger,
   transaction, and operation views. See [Ledger entries](#ledger-entries) and
   [Ledger parser](#ledger-parser).
@@ -469,9 +475,147 @@ operations bracketed by `beginSponsoringFutureReserves` and
 `endSponsoringFutureReserves`. It preserves the inner operation sources and uses
 the existing pipeline and signer list. This can create zero-balance sponsored
 accounts or sponsor trustlines and other reserve-bearing entries. Reserve
-sponsorship is separate from paying transaction fees through a fee-bump envelope.
-See [Reserve sponsorship](https://fifo-docs.gitbook.io/colibri/core/sponsorship)
-for account creation, source selection, signatures, and protocol boundaries.
+sponsorship is separate from paying transaction fees through a fee-bump
+envelope. See
+[Reserve sponsorship](https://fifo-docs.gitbook.io/colibri/core/sponsorship) for
+account creation, source selection, signatures, and protocol boundaries.
+
+## Native assets, exchange offers, and liquidity pools
+
+`StellarAsset` works with native SDK `Asset` values, not a replacement asset
+representation. Its writes each execute one explicit action through the owned
+classic transaction pipeline. Reads are separate; no method automatically
+establishes or authorizes a trustline before another action.
+
+These fragments assume a configured `networkConfig`, issuer/holder signers, and
+an authorized/funded `config`. Issued-asset recipients must already have the
+required trustline and authorization before a transfer.
+
+```ts
+const usd = new StellarAsset({
+  asset: new Asset("USD", issuer.publicKey()),
+  networkConfig,
+});
+
+const trustline = await usd.getTrustline(holder.publicKey());
+await usd.changeTrust({ limit: "1000", config });
+await usd.transfer({ destination, amount: "10", config });
+const units = await usd.balance({ id: holder.publicKey() });
+console.log(usd.toString(), usd.formatAmount(units), usd.decimals());
+```
+
+Use `getIssuer()` for issuer-account flags and `getTrustline()` for one known
+holder. `setTrustLineFlags()` and `clawback()` are separate, explicit issuer
+actions; neither enables account policy as a side effect. Use `mint` and `burn`
+for issuer-to-holder and holder-to-issuer payments. `balance` and `authorized`
+query the bound asset without exposing its storage representation.
+`setAuthorized({ id, authorize, config })` grants full transfer authorization or
+revokes it while preserving existing liabilities. Revocation reads current
+trustline flags before submission; use `setTrustLineFlags` for explicit flags.
+Missing trustlines are not zero balances, issuers have no finite balance of
+their own issued asset, and XLM balance is a total rather than a spendable
+estimate.
+
+`NativeXLM` and `fromCanonical` bind identities without RPC. The asset's
+`parseAmount`/`formatAmount` helpers convert seven-decimal units exactly,
+rejecting overflow or required rounding. `usd.toContract()` returns a separate
+`StellarAssetContract` for deliberate Soroban use, without deployment or copying
+native pipeline plugins. It does not add native allowances or switch payment
+execution routes. Use `SEP41TokenContract` for arbitrary SEP-41 tokens.
+
+`createClaimableBalance({ amount, claimants, config })` creates a balance of the
+bound asset through the same pipeline. It accepts native SDK `Claimant` objects
+and returns the protocol's created balance ID in the operation outcome.
+Claiming, trustline setup and reserve sponsorship remain explicit actions.
+
+`StellarAsset`, `SDEX`, and `NativeLiquidityPool` accept constructor plugins as
+`plugins: { transactionPipe: [channelPlugin, feeBumpPlugin, sep29Plugin] }`, or
+let you attach them to the existing `transactionPipe` binding. Native
+`config.memo` is preserved through channel allocation and fee bumping; the
+optional SEP-29 plugin checks the recipient's memo requirement. The operation
+source remains the intended holder or issuer even when a channel account
+supplies the envelope source and another account pays the fee. See the
+[complete plugin example](https://fifo-docs.gitbook.io/colibri/core/asset/stellar-asset)
+for explicit setup and signer roles.
+
+Market tooling lives together under `core/markets/`: `sdex/`,
+`liquidity-pools/`, and `price/`. The public classes remain named exports of
+`@colibri/core`; these directories are implementation organization, not new
+package subpath imports. Prices here describe native market exchange ratios, not
+oracle values or a price standard for arbitrary contracts.
+
+`SDEX` owns the same kind of pipeline for known sell, buy, and passive offers:
+
+```ts
+const sdex = new SDEX({ networkConfig });
+
+const result = await sdex.sell({
+  asset: usd.asset,
+  amount: "10",
+  receive: Asset.native(),
+  minimumReceivePerUnit: "2",
+  config,
+});
+console.log(result.operations); // Protocol-reported trades and offer effects.
+```
+
+This offers up to 10 USD at a limit of at least 2 XLM per USD. The corresponding
+`buy` method uses `maximumSpendPerUnit`. SDK-shaped `createSellOffer`,
+`createBuyOffer`, `updateSellOffer`, `updateBuyOffer`, and
+`createPassiveSellOffer` remain available. A successful submission can fill
+fully or partly; it does not guarantee that a resting offer exists. Read/cancel
+an offer with its seller and ID. There is no order-book or path discovery.
+`updateSell`, `updateBuy`, and `passiveSell` provide the same explicit unit
+names as their creation counterparts.
+
+`StellarPrice.fromDecimal("1.25")` returns exactly `{ n: 5, d: 4 }`. It rejects
+limits that cannot fit Stellar's positive int32 fraction instead of rounding.
+`invert`, `format`, and `describe` make price direction and units explicit.
+`fromAmounts({ baseAmount: "3", quoteAmount: "2" })` produces exact `2/3`, and
+`compare` compares fractions without floating-point multiplication.
+
+`NativeLiquidityPool` binds two native SDK assets and applies canonical
+ordering. Its `changeTrust`, `deposit`, and `withdraw` methods execute through
+`transactionPipe`. `depositByAsset`/`withdrawByAsset` label amounts with an
+asset instead of relying on A/B ordering. Protocol-native pools can contain two
+issued assets: "native" does not mean XLM-only. No method chooses a price
+tolerance, sets up underlying asset trustlines, or discovers a market
+automatically.
+
+`priceBounds` converts a named base/quote interval to native A/B prices,
+including inverting and swapping endpoints when needed. `getPosition` reads a
+holder's share trustline and pool state in one RPC observation, with an exact
+ownership fraction rather than a rounded percentage or promised withdrawal
+amount.
+
+See the complete
+[asset guide](https://fifo-docs.gitbook.io/colibri/core/asset/stellar-asset),
+[SDEX guide](https://fifo-docs.gitbook.io/colibri/core/sdex), and
+[pool guide](https://fifo-docs.gitbook.io/colibri/core/liquidity-pool).
+
+### Claimable-balance predicates
+
+`ClaimableBalancePredicates` groups static `unconditional`, `before`,
+`beforeAbsoluteTime`, `beforeRelativeTime`, `and`, `or`, and `not` methods. They
+return native SDK predicates for use with native `Claimant` and `Operation`
+constructors. For example, a recipient can claim before a deadline while the
+sender can reclaim at/after it:
+
+```ts
+const beforeDeadline = ClaimableBalancePredicates.before(deadline);
+const claimants = [
+  new Claimant(recipient.publicKey(), beforeDeadline),
+  new Claimant(
+    sender.publicKey(),
+    ClaimableBalancePredicates.not(beforeDeadline),
+  ),
+];
+```
+
+These predicates do not schedule a refund. A claimant must submit a successful
+claim transaction, and the first claim consumes the balance. See the
+[predicate guide](https://fifo-docs.gitbook.io/colibri/core/claimable-balance-predicates)
+for time units, protocol nesting limits, and a complete example.
 
 ## Processes
 
@@ -648,6 +792,31 @@ owns an externally assembled recursive `nestedDelegates` topology, applies the
 same full-entry signing method at every node, and returns one completed
 delegated authorization entry. Only the top-level instance belongs in the
 Soroban transaction's signer list.
+
+`MessageSigner` is a separate optional capability, checked with
+`isMessageSigner(signer)`. `LocalSigner.signMessage` uses the native SDK's
+SEP-53 domain-separated message format. It is not equivalent to `sign(data)`,
+does not grant transaction-signing eligibility, and does not add
+application-level expiry or replay prevention.
+
+`LocalSigner.verifyMessage(message, signature)` is the matching SEP-53 verifier.
+It uses the public key and remains usable after destroying the signer's secret,
+like `verifySignature`. A valid signature proves the message bytes were signed;
+it does not prove account-threshold control, fresh consent, or absence of
+replay.
+
+```ts
+if (isMessageSigner(signer)) {
+  const message = "Approve document revision 42";
+  const signature = await signer.signMessage(message);
+  const valid = Keypair.fromPublicKey(signer.publicKey())
+    .verifyMessage(message, signature);
+}
+```
+
+See
+[message signing](https://fifo-docs.gitbook.io/colibri/core/signer/message-signing)
+for a complete local signing and native SDK verification example.
 
 ## High-level contract clients
 

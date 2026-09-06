@@ -14,7 +14,7 @@
  *
  * - **Callback-based API**: Familiar `onEvent`/`onLedger` handler pattern
  * - **Composable design**: Easily create custom streamers for new RPC endpoints
- * - **Static factories**: `RPCStreamer.event()` and `RPCStreamer.ledger()`
+ * - **Static factories**: `RPCStreamer.event()`, `.ledger()`, `.transaction()`, and `.operation()`
  * - **Unified errors**: Consistent error codes across all variants
  * - **Archive support**: Seamless historical data ingestion
  *
@@ -106,3 +106,15 @@ export type {
   LedgerStreamerConfig,
   LedgerStreamerOptions,
 } from "@/variants/ledger/types.ts";
+
+export { createTransactionStreamer } from "@/variants/transaction/index.ts";
+export type {
+  StreamedTransaction,
+  TransactionStreamerConfig,
+} from "@/variants/transaction/types.ts";
+
+export { createOperationStreamer } from "@/variants/operation/index.ts";
+export type {
+  OperationStreamerConfig,
+  StreamedOperation,
+} from "@/variants/operation/types.ts";

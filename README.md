@@ -54,11 +54,11 @@ address identicons.
 | [`@colibri/core`](./core/README.md)                                        | Stellar and Soroban application primitives and transaction orchestration | Network configuration, accounts, signers, classic and Soroban pipelines, contracts, assets, ledger entries, events, typed errors |
 | [`@colibri/test-tooling`](./test-tooling/README.md)                        | Integration testing against a real local Stellar network                 | `StellarTestLedger`, named Quickstart containers, service configuration, readiness, logs, reuse, and cleanup                     |
 | [`@colibri/webauth`](./webauth/README.md)                                  | SEP-10 and SEP-45 Web Authentication                                     | `stellar.toml` discovery, explicit or account-based protocol routing, challenge validation, signing, and JWT retrieval           |
-| [`@colibri/rpc-streamer`](./rpc-streamer/README.md)                        | Checkpointed ledger and contract-event ingestion                         | Live RPC polling, archive RPC backfill, pagination, recovery, checkpoints, and custom ingestors                                  |
+| [`@colibri/rpc-streamer`](./rpc-streamer/README.md)                        | Checkpointed event, ledger, transaction, and operation ingestion         | Live RPC polling, archive RPC backfill, native operation records, recovery, checkpoints, and custom ingestors                    |
 | [`@colibri/build-verification`](./build-verification/README.md)            | Reproducible Stellar contract build verification                         | SEP-58 and out-of-band targets, source and image resolution, bounded Docker builds, Wasm comparison, evidence, and CLI output    |
 | [`@colibri/plugin-fee-bump`](./plugins/fee-bump/README.md)                 | Fee sponsorship for transaction pipelines                                | Fee-bump envelope construction and fee-source authorization at the `send-transaction` step                                       |
 | [`@colibri/plugin-channel-accounts`](./plugins/channel-accounts/README.md) | Reusable transaction source accounts for concurrent workloads            | Sponsored channel-account lifecycle, allocation, signer injection, and release around supported pipelines                        |
-| [`@colibri/plugin-sep29`](./plugins/sep29/README.md) | Opt-in recipient memo requirements | Standalone RPC checks and a non-mutating submission guard for native and fee-bump transactions |
+| [`@colibri/plugin-sep29`](./plugins/sep29/README.md)                       | Opt-in recipient memo requirements                                       | Standalone RPC checks and a non-mutating submission guard for native and fee-bump transactions                                   |
 | [`@colibri/identicon`](./identicon/README.md)                              | Deterministic SEP-33-compatible account visuals                          | Local pattern generation and SVG, PNG, or data-URL rendering                                                                     |
 
 Packages are versioned and published separately. Applications only need to
@@ -176,22 +176,45 @@ relevant process narrows the signer before invoking it.
 
 Core includes implementations for:
 
-| Signer                           | Capability                                                                                  |
-| -------------------------------- | ------------------------------------------------------------------------------------------- |
-| `LocalSigner`                    | Ed25519 envelope signatures and Soroban authorization entries                               |
-| `HashXSigner`                    | Hash-X envelope authorization using a preimage                                              |
-| `Ed25519SignedPayloadSigner`     | Ed25519 signed-payload envelope authorization                                               |
-| `PreAuthorizedTransactionSigner` | Validation of an exact pre-authorized transaction hash without adding a decorated signature |
-| `DelegatedSigner`                | Recursive delegated Soroban authorization entries                                           |
+| Signer                           | Capability                                                                                      |
+| -------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `LocalSigner`                    | Ed25519 envelope signatures, Soroban authorization entries, and optional SEP-53 message signing |
+| `HashXSigner`                    | Hash-X envelope authorization using a preimage                                                  |
+| `Ed25519SignedPayloadSigner`     | Ed25519 signed-payload envelope authorization                                                   |
+| `PreAuthorizedTransactionSigner` | Validation of an exact pre-authorized transaction hash without adding a decorated signature     |
+| `DelegatedSigner`                | Recursive delegated Soroban authorization entries                                               |
 
 Applications can implement the same interfaces for wallets, remote signing
 services, hardware devices, or contract-specific authorization. The pipeline
 matches signers to requirements through `signsFor(...)`; it does not assume that
 every signer owns an accessible secret key.
 
+`MessageSigner` is an independent optional capability, narrowed with
+`isMessageSigner`. SEP-53 message signatures use the Stellar SDK's
+domain-separated format; they do not authorize a transaction or supply an
+application's replay-protection policy.
+
 ## Contracts, assets, and ledger data
 
-Core exposes several levels of contract access:
+Core exposes domain-specific actions alongside lower-level protocol reads:
+
+- `StellarAsset` owns a classic transaction pipeline for explicit trustline,
+  transfer, issuance/redemption, authorization and clawback actions on a native
+  SDK `Asset`. It reads balances and holder state, exposes identity/precision
+  and exact amount conversion, and binds the SAC explicitly with `toContract()`.
+  Transfers never silently add trustlines or switch to Soroban.
+- `SDEX` manages known sell, buy, and passive offers. `sell` and `buy` variants
+  express minimum receive or maximum spend per unit, while `StellarPrice`
+  converts exact decimal limits or quantity ratios without silently rounding
+  them. Equivalent unit names are available for updates and passive offers.
+- `NativeLiquidityPool` binds a protocol-native pool, reads its reserves, and
+  exposes explicit pool-share trustline, deposit, and withdrawal operations.
+  Asset-labelled amounts and price bounds avoid requiring callers to remember
+  A/B order. Position reads combine pool reserves and the holder's share
+  trustline in one RPC observation.
+- `ClaimableBalancePredicates` groups static time and boolean helpers that
+  return native SDK predicates, including time windows and balanced all/any
+  lists; claiming or refunding still needs an explicit transaction.
 
 - `Contract` loads contract specifications, binds deployed contracts, deploys
   Wasm or external executable references, and routes reads and invocations
@@ -209,10 +232,25 @@ Core exposes several levels of contract access:
 - ledger parsing and event schemas turn closed-ledger XDR and contract events
   into typed application data.
 
-Use `RPC Streamer` when ledger or event processing must continue over time. It
-owns pagination, checkpoints, archive backfill, the transition to live RPC, and
-waiting at the network head. It does not replace Core's typed parsing or
-current-state readers.
+Use `RPC Streamer` when event, ledger, transaction, or operation processing must
+continue over time. It owns pagination, checkpoints, archive backfill, the
+transition to live RPC, and waiting at the network head. It does not replace
+Core's typed parsing or current-state readers. Transaction/operation variants
+include failures with explicit transaction status; an operation present in an
+envelope is not proof that it executed successfully.
+
+The native asset, exchange, and pool classes use the existing callable
+`transactionPipe` and its plugin boundaries. These are known-object workflows,
+not an order-book service, market indexer, or best-price discovery engine. See
+the [SDEX guide](./docs/core/sdex.md),
+[native pool guide](./docs/core/liquidity-pool.md), and
+[asset guide](./docs/core/asset/stellar-asset.md).
+
+SDEX, native liquidity pools, and their exact rational price helpers are grouped
+under `core/markets/`. They remain named exports of `@colibri/core` and accept
+native SDK assets and operation inputs. `StellarAsset` supplies asset-level
+balance and authorization queries, explicit `mint`/`burn` payments, issuer
+authorization control, and creation of claimable balances with native claimants.
 
 ## Testing with Quickstart
 
@@ -247,23 +285,24 @@ protocol as a fallback for the other.
 
 Standard-oriented functionality across the workspace includes:
 
-| Standard                       | Implementation                                                         |
-| ------------------------------ | ---------------------------------------------------------------------- |
-| SEP-1                          | `stellar.toml` retrieval and typed discovery in Core                   |
-| SEP-10                         | Classic-account Web Authentication in WebAuth                          |
-| SEP-29 | Opt-in account memo requirements in the SEP-29 plugin |
-| SEP-11                         | Canonical Stellar asset identifiers in Core                            |
-| SEP-23                         | StrKey encoding and validation in Core                                 |
-| SEP-33                         | Reference-compatible Stellar identicons in Identicon                   |
-| SEP-35                         | Operation identifiers and TOID helpers in Core                         |
-| SEP-40                         | Versioned price-feed interface analysis in Core                        |
-| SEP-41                         | Standard token client and version-compatible event schemas in Core     |
-| SEP-44, SEP-50, SEP-56, SEP-57 | Versioned contract-interface providers and structural analysis in Core |
-| SEP-45                         | Contract-account Web Authentication in WebAuth                         |
-| SEP-46                         | Ordered contract metadata extraction in Core                           |
-| SEP-47                         | Contract-interface claim discovery in Core                             |
-| SEP-48                         | Contract specification extraction and interface matching in Core       |
-| SEP-58                         | Contract build verification in Build Verification                      |
+| Standard                       | Implementation                                                             |
+| ------------------------------ | -------------------------------------------------------------------------- |
+| SEP-1                          | `stellar.toml` retrieval and typed discovery in Core                       |
+| SEP-10                         | Classic-account Web Authentication in WebAuth                              |
+| SEP-29                         | Opt-in account memo requirements in the SEP-29 plugin                      |
+| SEP-11                         | Canonical Stellar asset identifiers in Core                                |
+| SEP-23                         | StrKey encoding and validation in Core                                     |
+| SEP-33                         | Reference-compatible Stellar identicons in Identicon                       |
+| SEP-35                         | Operation identifiers and TOID helpers in Core                             |
+| SEP-40                         | Versioned price-feed interface analysis in Core                            |
+| SEP-41                         | Standard token client and version-compatible event schemas in Core         |
+| SEP-53                         | Optional message-signing capability and LocalSigner implementation in Core |
+| SEP-44, SEP-50, SEP-56, SEP-57 | Versioned contract-interface providers and structural analysis in Core     |
+| SEP-45                         | Contract-account Web Authentication in WebAuth                             |
+| SEP-46                         | Ordered contract metadata extraction in Core                               |
+| SEP-47                         | Contract-interface claim discovery in Core                                 |
+| SEP-48                         | Contract specification extraction and interface matching in Core           |
+| SEP-58                         | Contract build verification in Build Verification                          |
 
 Refer to each package's documentation for its exact version and support
 boundary.

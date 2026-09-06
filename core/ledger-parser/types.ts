@@ -20,9 +20,11 @@ import type { Operation } from "@/ledger-parser/operation/index.ts";
  *
  * @example
  * ```typescript
- * const response = await rpc.Server.getLedgers({ startLedger: 1000, pagination: { limit: 10 } });
+ * // server is a native rpc.Server instance.
+ * const response = await server.getLedgers({ startLedger: 1000, pagination: { limit: 10 } });
  * const entry: LedgerEntry = response.ledgers[0];
- * const ledger = Ledger.fromEntry(entry);
+ * const { passphrase } = await server.getNetwork();
+ * const ledger = Ledger.fromEntry(entry, passphrase);
  * ```
  */
 export type LedgerEntry = rpc.Api.RawLedgerResponse | rpc.Api.LedgerResponse;
