@@ -67,22 +67,22 @@ export const INVOKE_CONTRACT_PIPELINE_ID = "InvokeContractPipeline";
 
 type InvokeContractPipelineSteps = readonly [
   Step<
-    InvokeContractInput,
+    [InvokeContractInput],
     InvokeContractInput,
     Error,
     typeof INVOKE_CONTRACT_INPUT_STEP_ID
   >,
   Step<
-    InvokeContractInput,
+    [InvokeContractInput],
     BuildTransactionInput,
     Error,
     "invoke-contract-build-input"
   >,
   ReturnType<typeof createBuildTransactionStep>,
-  Step<BuildTransactionOutput, SimulateTransactionInput>,
+  Step<[BuildTransactionOutput], SimulateTransactionInput>,
   ReturnType<typeof createSimulateTransactionStep>,
   Step<
-    SimulateTransactionOutput,
+    [SimulateTransactionOutput],
     SignAuthEntriesInput,
     Error,
     "invoke-contract-simulate-to-sign-auth"
@@ -96,24 +96,24 @@ type InvokeContractPipelineSteps = readonly [
   >,
   ReturnType<typeof createAssembleForEnforcementStep>,
   Step<
-    AssembleForEnforcementOutput,
+    [AssembleForEnforcementOutput],
     EnforceSimulationInput,
     Error,
     "invoke-contract-assemble-for-enforcement-to-simulate"
   >,
   ReturnType<typeof createEnforceSimulationStep>,
   Step<
-    SimulateTransactionOutput,
+    [SimulateTransactionOutput],
     AssembleTransactionInput,
     Error,
     "invoke-contract-enforce-simulation-to-assemble"
   >,
   ReturnType<typeof createAssembleTransactionStep>,
-  Step<AssembleTransactionOutput, EnvelopeSigningRequirementsInput>,
+  Step<[AssembleTransactionOutput], EnvelopeSigningRequirementsInput>,
   ReturnType<typeof createEnvelopeSigningRequirementsStep>,
   Step<EnvelopeSigningRequirementsOutput, SignEnvelopeInput>,
   ReturnType<typeof createSignEnvelopeStep>,
-  Step<SignEnvelopeOutput, SendTransactionInput>,
+  Step<[SignEnvelopeOutput], SendTransactionInput>,
   ReturnType<typeof createSendTransactionStep>,
 ];
 

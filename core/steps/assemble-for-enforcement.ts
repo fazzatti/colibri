@@ -8,7 +8,7 @@ import { ASSEMBLE_FOR_ENFORCEMENT_STEP_ID } from "@/steps/ids.ts";
  * @returns A configured assembly-for-enforcement step.
  */
 export const createAssembleForEnforcementStep = (): Step<
-  Parameters<typeof assembleForEnforcement>[0],
+  Parameters<typeof assembleForEnforcement>,
   Awaited<ReturnType<typeof assembleForEnforcement>>,
   Error,
   typeof ASSEMBLE_FOR_ENFORCEMENT_STEP_ID

@@ -8,7 +8,7 @@ import { SIGN_AUTH_ENTRIES_STEP_ID } from "@/steps/ids.ts";
  * @returns A configured sign-auth-entries step.
  */
 export const createSignAuthEntriesStep = (): Step<
-  Parameters<typeof signAuthEntries>[0],
+  Parameters<typeof signAuthEntries>,
   Awaited<ReturnType<typeof signAuthEntries>>,
   Error,
   typeof SIGN_AUTH_ENTRIES_STEP_ID

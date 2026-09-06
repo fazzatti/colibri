@@ -2,7 +2,7 @@
 
 Pipelines combine [processes](../processes/README.md), step wrappers, and
 connectors into reusable transaction workflows. They are built on
-[`convee`](https://jsr.io/@fifo/convee).
+[`convee` 2](https://jsr.io/@fifo/convee/2.0.0).
 
 Colibri exposes factory functions instead of wrapper objects:
 
@@ -59,3 +59,27 @@ invokeWithSponsor.use(
 ```
 
 For available plugins, see [Plugins](../../packages/plugins/README.md).
+
+## Convee 2 compatibility
+
+Use Convee 2 when composing custom pipes or plugins with this release. Colibri's
+factory names, callable inputs, step IDs, transaction fees, and signing order
+remain unchanged. `use(...)` and `remove(...)` return the same callable instance.
+
+Custom integrations should review the
+[Convee 1.x migration guide](https://github.com/fazzatti/convee/tree/v2.0.0#migrating-from-1x),
+particularly these upstream rules:
+
+- An array returned by a child is spread into the next child's arguments. To
+  pass one array argument, return an outer one-element tuple, `[array]`.
+- Error hooks handle failures from the step or pipeline body. Failures in that
+  unit's input/output hooks propagate; they do not enter its own error hooks.
+  Do not rely on an error hook as an unconditional cleanup/finally handler.
+- Context views belong to individual invocations. Share state through a parent
+  run context, and keep output capture enabled when using Colibri connectors
+  that read preceding step outputs.
+- Distinct children must not reuse a step ID within a pipe. Update plugins
+  through `use`/`remove`, not by mutating the returned plugin or child lists.
+
+Colibri keeps the original callable binding in its built-in clients; custom
+consumers may also use Convee 2's callable chaining.

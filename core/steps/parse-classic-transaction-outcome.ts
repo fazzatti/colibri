@@ -4,7 +4,7 @@ import { PARSE_CLASSIC_TRANSACTION_OUTCOME_STEP_ID } from "@/steps/ids.ts";
 
 /** Creates the runtime classic-transaction outcome parsing step. */
 export const createParseClassicTransactionOutcomeStep = (): Step<
-  Parameters<typeof parseClassicTransactionOutcome>[0],
+  Parameters<typeof parseClassicTransactionOutcome>,
   ReturnType<typeof parseClassicTransactionOutcome>,
   Error,
   typeof PARSE_CLASSIC_TRANSACTION_OUTCOME_STEP_ID

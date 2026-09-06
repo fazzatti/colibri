@@ -36,15 +36,15 @@ This will add imports similar to:
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^0.30.0",
+    "@colibri/core": "jsr:@colibri/core@^0.30.1",
     "@colibri/webauth": "jsr:@colibri/webauth@^0.2.3",
-    "@colibri/build-verification": "jsr:@colibri/build-verification@^0.4.3",
+    "@colibri/build-verification": "jsr:@colibri/build-verification@^0.4.4",
     "@colibri/identicon": "jsr:@colibri/identicon@^0.1.3",
     "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.4.0",
     "@colibri/test-tooling": "jsr:@colibri/test-tooling@^0.3.1",
-    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.10.5",
-    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^0.2.15",
-    "@colibri/plugin-sep29": "jsr:@colibri/plugin-sep29@^0.1.1"
+    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.10.6",
+    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^0.2.16",
+    "@colibri/plugin-sep29": "jsr:@colibri/plugin-sep29@^0.1.2"
   }
 }
 ```

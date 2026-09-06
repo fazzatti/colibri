@@ -8,7 +8,7 @@ import { WRAP_FEE_BUMP_STEP_ID } from "@/steps/ids.ts";
  * @returns A configured wrap-fee-bump step.
  */
 export const createWrapFeeBumpStep = (): Step<
-  Parameters<typeof wrapFeeBump>[0],
+  Parameters<typeof wrapFeeBump>,
   Awaited<ReturnType<typeof wrapFeeBump>>,
   Error,
   typeof WRAP_FEE_BUMP_STEP_ID

@@ -4,7 +4,7 @@ import { RESOLVE_SOURCE_ARCHIVE_STEP_ID } from "@/steps/ids.ts";
 
 /** Creates the resolve-source-archive step used in verifier pipelines. */
 export const createResolveSourceArchiveStep = (): Step<
-  Parameters<typeof resolveSourceArchive>[0],
+  Parameters<typeof resolveSourceArchive>,
   Awaited<ReturnType<typeof resolveSourceArchive>>,
   Error,
   typeof RESOLVE_SOURCE_ARCHIVE_STEP_ID

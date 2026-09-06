@@ -8,7 +8,7 @@ import { ASSEMBLE_TRANSACTION_STEP_ID } from "@/steps/ids.ts";
  * @returns A configured assemble-transaction step.
  */
 export const createAssembleTransactionStep = (): Step<
-  Parameters<typeof assembleTransaction>[0],
+  Parameters<typeof assembleTransaction>,
   Awaited<ReturnType<typeof assembleTransaction>>,
   Error,
   typeof ASSEMBLE_TRANSACTION_STEP_ID
