@@ -4,7 +4,7 @@ import { Asset } from "stellar-sdk";
 import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
 import { createChannelAccountsPlugin } from "@colibri/plugin-channel-accounts";
 import { createSep29Plugin } from "@colibri/plugin-sep29";
-import { StellarAsset } from "@/asset/stellar/index.ts";
+import { StellarAsset } from "@/asset/native/index.ts";
 import { NativeLiquidityPool } from "@/markets/liquidity-pools/index.ts";
 import { SDEX } from "@/markets/sdex/index.ts";
 import { NetworkConfig } from "@/network/index.ts";

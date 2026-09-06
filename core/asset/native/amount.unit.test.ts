@@ -1,9 +1,9 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { StellarAsset } from "@/asset/stellar/index.ts";
+import { StellarAsset } from "@/asset/native/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { fromDecimals, toDecimals } from "@/common/helpers/format-units.ts";
-import * as E from "@/asset/stellar/amount.error.ts";
+import * as E from "@/asset/native/amount.error.ts";
 
 describe("StellarAsset exact units", () => {
   const asset = StellarAsset.NativeXLM({

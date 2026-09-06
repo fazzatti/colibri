@@ -9,6 +9,11 @@ contract interface for the same asset.
 
 API: [StellarAsset on JSR](https://jsr.io/@colibri/core/doc/~/StellarAsset).
 
+The implementation lives under `core/asset/native/`. Here, native means
+protocol-level asset operations for both XLM and issued assets, not XLM alone.
+Import `StellarAsset` from `@colibri/core`; the source directory is not a
+package subpath export.
+
 ## Identity and amounts
 
 Bind an existing SDK `Asset`, a code/issuer pair, or a SEP-11 canonical

@@ -8,9 +8,9 @@ import {
 import { describe, it } from "@std/testing/bdd";
 import { Asset, Claimant, Memo, Operation } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
-import { StellarAsset } from "@/asset/stellar/index.ts";
-import type { StellarAssetArgs } from "@/asset/stellar/types.ts";
-import * as E from "@/asset/stellar/error.ts";
+import { StellarAsset } from "@/asset/native/index.ts";
+import type { StellarAssetArgs } from "@/asset/native/types.ts";
+import * as E from "@/asset/native/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";

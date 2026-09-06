@@ -54,11 +54,11 @@ catalog.
 - [core/account/native](core-account-native.md) — 5 codes.
 - [core/address/muxed-to-base-account](core-address-muxed-to-base-account.md) —
   3 codes.
+- [core/asset/native/amount](core-asset-native-amount.md) — 4 codes.
+- [core/asset/native](core-asset-native.md) — 23 codes.
 - [core/asset/sac](core-asset-sac.md) — 5 codes.
 - [core/asset/sep11](core-asset-sep11.md) — 1 codes.
 - [core/asset/sep41-token](core-asset-sep41-token.md) — 20 codes.
-- [core/asset/stellar/amount](core-asset-stellar-amount.md) — 4 codes.
-- [core/asset/stellar](core-asset-stellar.md) — 23 codes.
 - [core/auth/requirements/classic-operation-threshold](core-auth-requirements-classic-operation-threshold.md)
   — 2 codes.
 - [core/claimable-balance](core-claimable-balance.md) — 13 codes.

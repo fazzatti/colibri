@@ -89,6 +89,12 @@ const assertStepTopology = async (
 };
 
 describe("workspace structure", () => {
+  it("keeps the StellarAsset implementation in the native asset module", async () => {
+    assert(await exists("core/asset/native/index.ts"));
+    assertEquals(await exists("core/asset/stellar/index.ts"), false);
+    const exports = await Deno.readTextFile("core/asset/index.ts");
+    assert(exports.includes('"@/asset/native/index.ts"'));
+  });
   it("groups native market clients and price utilities behind the markets barrel", async () => {
     const barrel = await Deno.readTextFile("core/markets/index.ts");
     for (const region of ["sdex", "liquidity-pools", "price"]) {

@@ -25,13 +25,13 @@ import type {
   StellarAssetSetAuthorizedArgs,
   StellarAssetSetTrustLineFlagsArgs,
   StellarAssetTransferArgs,
-} from "@/asset/stellar/types.ts";
-import * as E from "@/asset/stellar/error.ts";
+} from "@/asset/native/types.ts";
+import * as E from "@/asset/native/error.ts";
 import { ColibriError } from "@/error/index.ts";
 import {
   formatStellarAssetAmount,
   parseStellarAssetAmount,
-} from "@/asset/stellar/amount.ts";
+} from "@/asset/native/amount.ts";
 import { StellarAssetContract } from "@/asset/sac/index.ts";
 import {
   isStellarAssetCanonicalString,
@@ -43,7 +43,7 @@ import type {
   StellarAssetBurnArgs,
   StellarAssetMintArgs,
   StellarAssetNetwork,
-} from "@/asset/stellar/types.ts";
+} from "@/asset/native/types.ts";
 
 function resolveAsset(args: StellarAssetArgs): Asset {
   if ("asset" in args) return args.asset;
@@ -73,6 +73,7 @@ function resolveRpc(args: StellarAssetArgs): Server {
 
 /**
  * Native Stellar asset account tooling, backed by the existing transaction pipe.
+ * Native refers to protocol-level operations for XLM and issued assets, not XLM alone.
  *
  * Reads never submit transactions. Every write performs one explicit operation;
  * no method creates a trustline, changes issuer policy, or authorizes a holder as
@@ -398,4 +399,4 @@ export type {
   StellarAssetSetAuthorizedArgs,
   StellarAssetSetTrustLineFlagsArgs,
   StellarAssetTransferArgs,
-} from "@/asset/stellar/types.ts";
+} from "@/asset/native/types.ts";

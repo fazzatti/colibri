@@ -23,13 +23,13 @@ import {
   Sep29Errors,
 } from "@colibri/plugin-sep29";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
-import { StellarAsset } from "@/asset/stellar/index.ts";
+import { StellarAsset } from "@/asset/native/index.ts";
 import { StellarAssetContract } from "@/asset/sac/index.ts";
 import {
   AUTHORIZATION_TRUSTLINE_MISSING,
   BALANCE_TRUSTLINE_MISSING,
   ISSUER_BALANCE_UNDEFINED,
-} from "@/asset/stellar/error.ts";
+} from "@/asset/native/error.ts";
 import { ClaimableBalancePredicates as P } from "@/claimable-balance/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import { NativeAccount } from "@/account/native/index.ts";

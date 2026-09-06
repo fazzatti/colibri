@@ -34,7 +34,7 @@ export abstract class StellarAssetError<C extends Code>
   constructor(code: C, message: string, cause?: unknown) {
     super({
       domain: "core",
-      source: "@colibri/core/asset/stellar",
+      source: "@colibri/core/asset/native",
       code,
       message,
       meta: { cause },

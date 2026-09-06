@@ -5,7 +5,7 @@ import type {
   StellarPriceRatio,
 } from "@/markets/price/types.ts";
 import * as E from "@/markets/price/error.ts";
-import { parseStellarAssetAmount } from "@/asset/stellar/amount.ts";
+import { parseStellarAssetAmount } from "@/asset/native/amount.ts";
 
 const INT32_MAX = 2_147_483_647;
 

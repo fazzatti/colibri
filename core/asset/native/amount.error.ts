@@ -14,7 +14,7 @@ export class INVALID_DECIMAL extends ColibriError<Code.INVALID_DECIMAL> {
   constructor(value: unknown) {
     super({
       domain: "core",
-      source: "@colibri/core/asset/stellar/amount",
+      source: "@colibri/core/asset/native/amount",
       code: Code.INVALID_DECIMAL,
       message: "Amount must be a nonnegative plain decimal string.",
       meta: { data: { value } },
@@ -27,7 +27,7 @@ export class EXCESS_PRECISION extends ColibriError<Code.EXCESS_PRECISION> {
   constructor(value: string) {
     super({
       domain: "core",
-      source: "@colibri/core/asset/stellar/amount",
+      source: "@colibri/core/asset/native/amount",
       code: Code.EXCESS_PRECISION,
       message: "Amount exceeds seven decimal places; no rounding is performed.",
       meta: { data: { value } },
@@ -40,7 +40,7 @@ export class DECIMAL_OVERFLOW extends ColibriError<Code.DECIMAL_OVERFLOW> {
   constructor(value: string) {
     super({
       domain: "core",
-      source: "@colibri/core/asset/stellar/amount",
+      source: "@colibri/core/asset/native/amount",
       code: Code.DECIMAL_OVERFLOW,
       message: "Amount exceeds the native signed-64-bit range.",
       meta: { data: { value } },
@@ -53,7 +53,7 @@ export class INVALID_UNITS extends ColibriError<Code.INVALID_UNITS> {
   constructor(value: unknown) {
     super({
       domain: "core",
-      source: "@colibri/core/asset/stellar/amount",
+      source: "@colibri/core/asset/native/amount",
       code: Code.INVALID_UNITS,
       message: "Amount units must be a nonnegative signed-64-bit bigint.",
       meta: { data: { value } },

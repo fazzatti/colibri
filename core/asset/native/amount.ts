@@ -1,5 +1,5 @@
 import { fromDecimals, toDecimals } from "@/common/helpers/format-units.ts";
-import * as E from "@/asset/stellar/amount.error.ts";
+import * as E from "@/asset/native/amount.error.ts";
 
 const MAX_UNITS = 9_223_372_036_854_775_807n;
 
