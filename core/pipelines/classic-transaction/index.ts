@@ -154,4 +154,9 @@ export { createClassicTransactionPipeline };
 export type ClassicTransactionPipeline = ReturnType<
   typeof createClassicTransactionPipeline
 >;
+/** Constructor-time plugins for clients owning a classic transaction pipeline. */
+export type ClassicTransactionPipelinePlugins = {
+  /** Attached to the existing callable binding, in the supplied order. */
+  transactionPipe?: readonly Parameters<ClassicTransactionPipeline["use"]>[0][];
+};
 export { ERROR_PIPE_CLTX } from "@/pipelines/classic-transaction/error.ts";

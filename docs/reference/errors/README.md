@@ -54,11 +54,14 @@ catalog.
 - [core/account/native](core-account-native.md) — 5 codes.
 - [core/address/muxed-to-base-account](core-address-muxed-to-base-account.md) —
   3 codes.
+- [core/asset/native/amount](core-asset-native-amount.md) — 4 codes.
+- [core/asset/native](core-asset-native.md) — 23 codes.
 - [core/asset/sac](core-asset-sac.md) — 5 codes.
 - [core/asset/sep11](core-asset-sep11.md) — 1 codes.
 - [core/asset/sep41-token](core-asset-sep41-token.md) — 20 codes.
 - [core/auth/requirements/classic-operation-threshold](core-auth-requirements-classic-operation-threshold.md)
   — 2 codes.
+- [core/claimable-balance](core-claimable-balance.md) — 13 codes.
 - [core/common/helpers/boolean](core-common-helpers-boolean.md) — 1 codes.
 - [core/common/helpers/bounded-array](core-common-helpers-bounded-array.md) — 1
   codes.
@@ -78,7 +81,10 @@ catalog.
 - [core/event/event-id](core-event-event-id.md) — 2 codes.
 - [core/event/parsing](core-event-parsing.md) — 3 codes.
 - [core/ledger-entries](core-ledger-entries.md) — 19 codes.
-- [core/ledger-parser](core-ledger-parser.md) — 9 codes.
+- [core/ledger-parser](core-ledger-parser.md) — 18 codes.
+- [core/markets/liquidity-pools](core-markets-liquidity-pools.md) — 15 codes.
+- [core/markets/price](core-markets-price.md) — 6 codes.
+- [core/markets/sdex](core-markets-sdex.md) — 10 codes.
 - [core/network](core-network.md) — 2 codes.
 - [core/pipelines/classic-transaction](core-pipelines-classic-transaction.md) —
   3 codes.
@@ -112,7 +118,7 @@ catalog.
 - [core/sep1](core-sep1.md) — 8 codes.
 - [core/signer/delegated](core-signer-delegated.md) — 3 codes.
 - [core/signer/hash-x](core-signer-hash-x.md) — 9 codes.
-- [core/signer/local](core-signer-local.md) — 3 codes.
+- [core/signer/local](core-signer-local.md) — 6 codes.
 - [core/signer/pre-authorized-transaction](core-signer-pre-authorized-transaction.md)
   — 6 codes.
 - [core/signer/signed-payload](core-signer-signed-payload.md) — 12 codes.
@@ -139,7 +145,7 @@ catalog.
 
 ## @colibri/rpc-streamer
 
-- [rpc-streamer](rpc-streamer.md) — 24 codes.
+- [rpc-streamer](rpc-streamer.md) — 26 codes.
 
 ## @colibri/test-tooling
 

@@ -1,7 +1,8 @@
 # Core
 
 `@colibri/core` is Colibri's foundation: transaction orchestration, account and
-contract clients, signing, current ledger reads, historical parsing, and events.
+contract and native asset clients, exchange offers, liquidity pools, signing,
+current ledger reads, historical parsing, and events.
 
 ```sh
 deno add jsr:@colibri/core
@@ -14,13 +15,13 @@ explain what runs locally and what reaches the network.
 
 ## Choose a layer
 
-| Layer    | Use it when                                                                     | Guide                                                                            |
-| -------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Client   | You want contract methods or asset operations with the pipeline managed for you | [Contract](contract.md), [StellarAssetContract](asset/stellar-asset-contract.md) |
-| Pipeline | You want a complete transaction flow and plugin attachment points               | [Pipelines](pipelines/README.md)                                                 |
-| Step     | You are composing a workflow and need stable IDs and Conv context               | [Steps](steps.md)                                                                |
-| Process  | You need one operation such as building, simulating, or signing                 | [Processes](processes/README.md)                                                 |
-| Helpers  | You need values, conversions, keys, or local validation                         | [Shared helpers](helpers.md)                                                     |
+| Layer    | Use it when                                                                         | Guide                                                                                                                      |
+| -------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Client   | You want explicit contract, asset, offer, or pool actions through an owned pipeline | [Contract](contract.md), [StellarAsset](asset/stellar-asset.md), [SDEX](sdex.md), [NativeLiquidityPool](liquidity-pool.md) |
+| Pipeline | You want a complete transaction flow and plugin attachment points                   | [Pipelines](pipelines/README.md)                                                                                           |
+| Step     | You are composing a workflow and need stable IDs and Conv context                   | [Steps](steps.md)                                                                                                          |
+| Process  | You need one operation such as building, simulating, or signing                     | [Processes](processes/README.md)                                                                                           |
+| Helpers  | You need values, conversions, keys, or local validation                             | [Shared helpers](helpers.md)                                                                                               |
 
 Clients build on pipelines; pipelines compose steps; steps wrap processes.
 Plugins target explicit pipeline/step IDs. Using a low-level process does not
@@ -33,9 +34,18 @@ automatically execute the surrounding validation, signing, or submission flow.
   distinguish account identity, muxed addresses, and signer capabilities.
 - [Signers](signer/README.md) and [authorization](authorization.md) — envelope
   signing versus Soroban authorization entries, including delegation.
+- [SEP-53 message signing](signer/message-signing.md) — an optional capability,
+  separate from either transaction authorization path.
 - [Transaction config](transaction-config.md) — sources, fee modes, signers,
   timebounds, and simulation-related parameters.
-- [Assets](asset/README.md) — canonical asset strings and SAC clients.
+- [Assets](asset/README.md) — native account actions, canonical identifiers, and
+  SAC/SEP-41 contract clients.
+- [SDEX](sdex.md) — known-offer lifecycle and exact, unit-labelled price
+  helpers.
+- [Native pools](liquidity-pool.md) — state reads, explicit pool-share
+  trustlines, deposits, and withdrawals; no automatic tolerance selection.
+- [Claim predicates](claimable-balance-predicates.md) — static native predicates
+  for explicit conditional claim transactions.
 - [SEP-1 discovery](sep1.md) — TOML parsing and service discovery.
 
 ## Read data without constructing a write transaction

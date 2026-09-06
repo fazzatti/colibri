@@ -5,7 +5,11 @@
  */
 
 import type { Ledger, Server } from "@/native-types.ts";
-import { isDefined, Ledger as CoreLedger } from "@colibri/core";
+import { isDefined } from "@colibri/core";
+import {
+  createLedgerParser,
+  type LedgerParser,
+} from "@/variants/ledger/parser.ts";
 import { RPCStreamer } from "@/streamer.ts";
 import type {
   ArchiveIngestContext,
@@ -25,7 +29,7 @@ import type { LedgerStreamerConfig } from "@/variants/ledger/types.ts";
  *
  * Fetches a single ledger at a time from the live RPC.
  */
-function createLiveIngestor() {
+function createLiveIngestor(parseLedger: LedgerParser) {
   return async function ingestLiveLedger(
     rpc: Server,
     ledgerSequence: number,
@@ -56,7 +60,14 @@ function createLiveIngestor() {
         hitStopLedger: false,
       };
     }
-    const ledger = CoreLedger.fromEntry(ledgerEntry);
+    const ledger = await parseLedger(rpc, ledgerEntry);
+    if (context && !context.isRunning()) {
+      return {
+        nextLedger: ledgerSequence,
+        shouldWait: false,
+        hitStopLedger: false,
+      };
+    }
 
     // Check if past stop ledger
     if (isDefined(stopLedger) && ledger.sequence > stopLedger) {
@@ -84,7 +95,10 @@ function createLiveIngestor() {
  *
  * Fetches one ledger at a time from the archive RPC with checkpoint and error support.
  */
-function createArchiveIngestor(archivalIntervalMs: number) {
+function createArchiveIngestor(
+  archivalIntervalMs: number,
+  parseLedger: LedgerParser,
+) {
   return async function ingestArchiveLedgers(
     rpc: Server,
     startLedger: number,
@@ -114,7 +128,8 @@ function createArchiveIngestor(archivalIntervalMs: number) {
           return ledgerEntry.sequence;
         }
 
-        const ledger = CoreLedger.fromEntry(ledgerEntry);
+        const ledger = await parseLedger(rpc, ledgerEntry);
+        if (!context.isRunning()) return currentLedger;
         await onLedger(ledger);
 
         // The entire ledger was delivered successfully, even when its callback
@@ -168,8 +183,9 @@ export function createLedgerStreamer(
 ): RPCStreamer<Ledger> {
   const archivalIntervalMs = config.options?.archivalIntervalMs ?? 500;
 
-  const ingestLive = createLiveIngestor();
-  const ingestArchive = createArchiveIngestor(archivalIntervalMs);
+  const parseLedger = createLedgerParser(config.networkConfig);
+  const ingestLive = createLiveIngestor(parseLedger);
+  const ingestArchive = createArchiveIngestor(archivalIntervalMs, parseLedger);
 
   return new RPCStreamer<Ledger>({
     ...config,

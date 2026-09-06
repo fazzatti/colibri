@@ -68,6 +68,17 @@ export type Signer =
   | AuthEntrySigner;
 
 /**
+ * Optional SEP-53 message-signing capability. This does not grant transaction
+ * envelope or Soroban authorization-entry signing eligibility.
+ */
+export type MessageSigner = {
+  /** Returns the Ed25519 public key used to verify the signed message. */
+  publicKey(): Ed25519PublicKey;
+  /** Signs the SEP-53 domain-separated message, not the raw payload bytes. */
+  signMessage(message: string | Uint8Array): Uint8Array | Promise<Uint8Array>;
+};
+
+/**
  * Complete Ed25519 signing surface implemented by local keypair signers.
  */
 export type KeypairSigner = EnvelopeSigner & AuthEntrySigner & {

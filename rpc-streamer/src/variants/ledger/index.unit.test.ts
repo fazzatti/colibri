@@ -2,7 +2,7 @@
 import { assertEquals } from "@std/assert";
 import { afterEach, describe, it } from "@std/testing/bdd";
 import { type Stub, stub } from "@std/testing/mock";
-import { Ledger } from "@colibri/core";
+import { Ledger, NetworkConfig } from "@colibri/core";
 import { createLedgerStreamer } from "@/variants/ledger/index.ts";
 
 // =============================================================================
@@ -56,7 +56,7 @@ describe("Ledger Streamer Ingestors", () => {
   describe("Live Ingestor", () => {
     it("waits when ledger not available (empty response)", async () => {
       const streamer = createLedgerStreamer({
-        rpcUrl: TEST_RPC_URL,
+        networkConfig: NetworkConfig.MainNet({ rpcUrl: TEST_RPC_URL }),
         options: { waitLedgerIntervalMs: 10, pagingIntervalMs: 5 },
       });
 
@@ -108,7 +108,7 @@ describe("Ledger Streamer Ingestors", () => {
 
     it("processes single ledger and moves to next", async () => {
       const streamer = createLedgerStreamer({
-        rpcUrl: TEST_RPC_URL,
+        networkConfig: NetworkConfig.MainNet({ rpcUrl: TEST_RPC_URL }),
         options: { waitLedgerIntervalMs: 10, pagingIntervalMs: 5 },
       });
 
@@ -158,7 +158,7 @@ describe("Ledger Streamer Ingestors", () => {
 
     it("returns shouldWait=true when at latest ledger", async () => {
       const streamer = createLedgerStreamer({
-        rpcUrl: TEST_RPC_URL,
+        networkConfig: NetworkConfig.MainNet({ rpcUrl: TEST_RPC_URL }),
         options: { waitLedgerIntervalMs: 10, pagingIntervalMs: 5 },
       });
 
@@ -208,7 +208,7 @@ describe("Ledger Streamer Ingestors", () => {
 
     it("hits stopLedger when ledger exceeds stop", async () => {
       const streamer = createLedgerStreamer({
-        rpcUrl: TEST_RPC_URL,
+        networkConfig: NetworkConfig.MainNet({ rpcUrl: TEST_RPC_URL }),
         options: { waitLedgerIntervalMs: 10, pagingIntervalMs: 5 },
       });
 
@@ -259,7 +259,7 @@ describe("Ledger Streamer Ingestors", () => {
   describe("Archive Ingestor", () => {
     it("processes ledgers sequentially", async () => {
       const streamer = createLedgerStreamer({
-        rpcUrl: TEST_RPC_URL,
+        networkConfig: NetworkConfig.MainNet({ rpcUrl: TEST_RPC_URL }),
         archiveRpcUrl: TEST_ARCHIVE_RPC_URL,
         options: { archivalIntervalMs: 5 },
       });
@@ -301,7 +301,7 @@ describe("Ledger Streamer Ingestors", () => {
 
     it("calls checkpoint at intervals", async () => {
       const streamer = createLedgerStreamer({
-        rpcUrl: TEST_RPC_URL,
+        networkConfig: NetworkConfig.MainNet({ rpcUrl: TEST_RPC_URL }),
         archiveRpcUrl: TEST_ARCHIVE_RPC_URL,
         options: { archivalIntervalMs: 5 },
       });
@@ -344,7 +344,7 @@ describe("Ledger Streamer Ingestors", () => {
 
     it("skips empty ledger responses", async () => {
       const streamer = createLedgerStreamer({
-        rpcUrl: TEST_RPC_URL,
+        networkConfig: NetworkConfig.MainNet({ rpcUrl: TEST_RPC_URL }),
         archiveRpcUrl: TEST_ARCHIVE_RPC_URL,
         options: { archivalIntervalMs: 5 },
       });
@@ -394,7 +394,7 @@ describe("Ledger Streamer Ingestors", () => {
 
     it("returns early when ledger exceeds stopLedger", async () => {
       const streamer = createLedgerStreamer({
-        rpcUrl: TEST_RPC_URL,
+        networkConfig: NetworkConfig.MainNet({ rpcUrl: TEST_RPC_URL }),
         archiveRpcUrl: TEST_ARCHIVE_RPC_URL,
         options: { archivalIntervalMs: 5 },
       });
@@ -435,7 +435,7 @@ describe("Ledger Streamer Ingestors", () => {
 
     it("handles errors with onError and continues", async () => {
       const streamer = createLedgerStreamer({
-        rpcUrl: TEST_RPC_URL,
+        networkConfig: NetworkConfig.MainNet({ rpcUrl: TEST_RPC_URL }),
         archiveRpcUrl: TEST_ARCHIVE_RPC_URL,
         options: { archivalIntervalMs: 5 },
       });
@@ -483,7 +483,7 @@ describe("Ledger Streamer Ingestors", () => {
 
     it("rethrows when onError returns false", async () => {
       const streamer = createLedgerStreamer({
-        rpcUrl: TEST_RPC_URL,
+        networkConfig: NetworkConfig.MainNet({ rpcUrl: TEST_RPC_URL }),
         archiveRpcUrl: TEST_ARCHIVE_RPC_URL,
         options: { archivalIntervalMs: 5 },
       });
@@ -531,7 +531,7 @@ describe("Ledger Streamer Ingestors", () => {
 
     it("stops when isRunning becomes false", async () => {
       const streamer = createLedgerStreamer({
-        rpcUrl: TEST_RPC_URL,
+        networkConfig: NetworkConfig.MainNet({ rpcUrl: TEST_RPC_URL }),
         archiveRpcUrl: TEST_ARCHIVE_RPC_URL,
         options: { archivalIntervalMs: 5 },
       });

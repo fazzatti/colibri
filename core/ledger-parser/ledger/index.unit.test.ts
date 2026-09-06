@@ -1,3 +1,4 @@
+import { Networks } from "stellar-sdk";
 /**
  * @module ledger-parser/ledger/index.unit.test
  * @description Unit tests for Ledger class
@@ -216,7 +217,7 @@ describe("Ledger", () => {
     });
 
     it("should parse LedgerCloseMeta v0", () => {
-      const ledger = Ledger.fromEntry(multiFixtures.lcm_v0);
+      const ledger = Ledger.fromEntry(multiFixtures.lcm_v0, Networks.PUBLIC);
 
       expect(ledger.version).toBe("v0");
       expect(ledger.sequence).toBe(30000000);
@@ -232,7 +233,7 @@ describe("Ledger", () => {
     });
 
     it("should parse LedgerCloseMeta v1", () => {
-      const ledger = Ledger.fromEntry(multiFixtures.lcm_v1);
+      const ledger = Ledger.fromEntry(multiFixtures.lcm_v1, Networks.PUBLIC);
 
       expect(ledger.version).toBe("v1");
       expect(ledger.sequence).toBe(55000000);
@@ -248,7 +249,7 @@ describe("Ledger", () => {
     });
 
     it("should parse LedgerCloseMeta v2", () => {
-      const ledger = Ledger.fromEntry(multiFixtures.lcm_v2);
+      const ledger = Ledger.fromEntry(multiFixtures.lcm_v2, Networks.PUBLIC);
 
       expect(ledger.version).toBe("v2");
       expect(ledger.sequence).toBe(60661500);
@@ -267,9 +268,9 @@ describe("Ledger", () => {
       // ALL versions have envelopes from txSet
       // v0: from txSet.txes()
       // v1/v2: from txSet.v1TxSet().phases()
-      const v0 = Ledger.fromEntry(multiFixtures.lcm_v0);
-      const v1 = Ledger.fromEntry(multiFixtures.lcm_v1);
-      const v2 = Ledger.fromEntry(multiFixtures.lcm_v2);
+      const v0 = Ledger.fromEntry(multiFixtures.lcm_v0, Networks.PUBLIC);
+      const v1 = Ledger.fromEntry(multiFixtures.lcm_v1, Networks.PUBLIC);
+      const v2 = Ledger.fromEntry(multiFixtures.lcm_v2, Networks.PUBLIC);
 
       for (const tx of v0.transactions) {
         expect(tx.hasEnvelope).toBe(true);
@@ -288,7 +289,7 @@ describe("Ledger", () => {
   describe("Integration", () => {
     it("should parse complete ledger hierarchy for all fixtures", () => {
       for (const entry of fixtures) {
-        const ledger = Ledger.fromEntry(entry);
+        const ledger = Ledger.fromEntry(entry, Networks.PUBLIC);
 
         expect(ledger.sequence).toBe(entry.sequence);
 
@@ -309,7 +310,7 @@ describe("Ledger", () => {
 
     it("should parse both v2 fixtures with full envelope support", () => {
       for (const entry of v2Fixtures) {
-        const ledger = Ledger.fromEntry(entry);
+        const ledger = Ledger.fromEntry(entry, Networks.PUBLIC);
 
         expect(ledger.version).toBe("v2");
 

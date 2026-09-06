@@ -6,7 +6,11 @@
 
 import { memoize } from "@/common/decorators/memoize/index.ts";
 // deno-coverage-ignore-stop
-import type { xdr } from "stellar-sdk";
+import {
+  Operation as StellarOperation,
+  type OperationRecord,
+  type xdr,
+} from "stellar-sdk";
 import {
   parseAccountId,
   parseAsset,
@@ -15,6 +19,7 @@ import {
 } from "@/common/helpers/xdr/index.ts";
 import {
   INVALID_OPERATION_INDEX,
+  NATIVE_OPERATION_DECODE_FAILED,
   UNSUPPORTED_OPERATION_TYPE,
 } from "@/ledger-parser/error.ts";
 import type { Transaction } from "@/ledger-parser/transaction/index.ts";
@@ -23,6 +28,9 @@ const toHex = (bytes: Uint8Array): string =>
   Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 
 const UNPARSED_OPERATION_BODY = Symbol("unparsed-operation-body");
+
+/** @internal Exact native Stellar SDK discriminated operation record. */
+export type NativeOperation = OperationRecord;
 
 /**
  * Operation class with type-specific parsing delegation
@@ -521,6 +529,18 @@ export class Operation {
    */
   get parentTransaction(): Transaction {
     return this.transaction;
+  }
+
+  /**
+   * Decodes this operation with Stellar SDK, retaining its native discriminated
+   * record and amount conventions. The existing `body` parser remains unchanged.
+   */
+  toOperation(): NativeOperation {
+    try {
+      return StellarOperation.fromXdrObject(this.rawOperation);
+    } catch (cause) {
+      throw new NATIVE_OPERATION_DECODE_FAILED(this.index, cause as Error);
+    }
   }
 
   /**

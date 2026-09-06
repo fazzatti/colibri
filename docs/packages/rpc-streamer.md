@@ -1,9 +1,10 @@
 # RPC Streamer
 
 `@colibri/rpc-streamer` turns repeated Stellar RPC reads into an awaited stream
-of callbacks. Use it for indexing ledgers, processing contract events, or
-building an application-specific ingestor. It does not provide a database,
-exactly-once delivery, or an automatic retry policy.
+of callbacks. Use it for indexing ledgers, processing contract events, consuming
+typed transaction/operation records, or building an application-specific
+ingestor. It does not provide a database, exactly-once delivery, or an automatic
+retry policy.
 
 ```sh
 deno add jsr:@colibri/rpc-streamer jsr:@colibri/core
@@ -15,6 +16,8 @@ deno add jsr:@colibri/rpc-streamer jsr:@colibri/core
   bounded first run.
 - [Stream ledgers](rpc-streamer/ledgers.md): complete ledgers and their
   transactions.
+- [Stream transactions and operations](rpc-streamer/transactions-and-operations.md):
+  native operation records, parent transaction status, and ledger checkpoints.
 - [Live, archive, and automatic modes](rpc-streamer/modes.md): retention and
   inclusive ranges.
 - [Configuration](rpc-streamer/configuration.md): constructors, defaults, and
@@ -27,7 +30,10 @@ deno add jsr:@colibri/rpc-streamer jsr:@colibri/core
 
 `RPCStreamer.event()` and `createEventStreamer()` are equivalent factories;
 `RPCStreamer.ledger()` and `createLedgerStreamer()` are the ledger equivalents.
-Both return the generic `RPCStreamer<T>`, not a separate lifecycle API.
+`RPCStreamer.transaction()`/`createTransactionStreamer()` and
+`RPCStreamer.operation()`/`createOperationStreamer()` add transaction and
+operation callbacks. All variants return the generic `RPCStreamer<T>`, not a
+separate lifecycle API. Existing event and ledger callback types are unchanged.
 
 See the [generated API reference](https://jsr.io/@colibri/rpc-streamer/doc) for
 exact signatures and the

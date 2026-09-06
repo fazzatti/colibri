@@ -13,7 +13,7 @@ import { NetworkConfig } from "@colibri/core";
 import { RPCStreamer } from "@colibri/rpc-streamer";
 
 const streamer = RPCStreamer.ledger({
-  rpcUrl: NetworkConfig.TestNet().rpcUrl,
+  networkConfig: NetworkConfig.TestNet(),
 });
 const { latestLedger } = await streamer.rpc.getHealth();
 await streamer.startLive(async (ledger) => {
@@ -25,6 +25,18 @@ await streamer.startLive(async (ledger) => {
 This is a bounded read; it does not submit a transaction. The built-in ledger
 ingestors fetch one ledger per request. Increasing `limit` does not turn the
 ledger variant into a batch ingestor.
+
+## Network identity
+
+Ledger, transaction and operation streams use the supplied `NetworkConfig`
+passphrase. With a URL or native RPC client, they discover it through
+`getNetwork()` and cache successful discovery per RPC connection. Live and
+archive clients must serve the intended network. Discovery failures retain their
+cause and are not cached as successful results.
+
+This context lets Core associate envelopes with execution results by hash
+instead of assuming transaction-set order is execution order. It does not change
+the stream's checkpoint, cancellation or failed-transaction policy.
 
 ## Parsing only what you need
 

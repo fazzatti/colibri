@@ -54,6 +54,23 @@ export class LocalSigner implements LocalSignerType {
   sign: (data: BinaryData) => BinaryData;
 
   /**
+   * Signs a string (UTF-8) or raw bytes using SEP-53 domain separation through
+   * Stellar SDK. Verify with native `Keypair.verifyMessage`, not `verify`.
+   * Applications remain responsible for message intent, expiry and replay policy.
+   */
+  signMessage: (message: string | Uint8Array) => Uint8Array;
+
+  /**
+   * Verifies SEP-53 domain-separated message bytes using this signer's public key.
+   * Like `verifySignature`, this remains available after secret destruction.
+   * A valid signature proves the bytes were signed, not intent, freshness or consent.
+   */
+  verifyMessage: (
+    message: string | Uint8Array,
+    signature: Uint8Array,
+  ) => boolean;
+
+  /**
    * Returns the Ed25519 signer key represented by this local signer.
    *
    * @returns The signer's `G...` public key.
@@ -134,12 +151,32 @@ export class LocalSigner implements LocalSignerType {
       return kp.sign(toUint8Array(data));
     };
 
+    this.signMessage = (message: string | Uint8Array): Uint8Array => {
+      assert(isDefined(kp), new E.MESSAGE_SIGNER_DESTROYED());
+      try {
+        return kp.signMessage(message);
+      } catch (cause) {
+        throw new E.MESSAGE_SIGNING_FAILED(cause as Error);
+      }
+    };
+
     this.verifySignature = (
       data: BinaryData,
       signature: BinaryData,
     ): boolean => {
       const keypair = Keypair.fromPublicKey(this.publicKey());
       return keypair.verify(toUint8Array(data), toUint8Array(signature));
+    };
+
+    this.verifyMessage = (message, signature): boolean => {
+      try {
+        return Keypair.fromPublicKey(this.publicKey()).verifyMessage(
+          message,
+          signature,
+        );
+      } catch (cause) {
+        throw new E.MESSAGE_VERIFICATION_FAILED(cause as Error);
+      }
     };
 
     this.signTransaction = (
