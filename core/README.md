@@ -506,12 +506,15 @@ console.log(usd.toString(), usd.formatAmount(units), usd.decimals());
 
 Use `getIssuer()` for issuer-account flags and `getTrustline()` for one known
 holder. `setTrustLineFlags()` and `clawback()` are separate, explicit issuer
-actions; neither enables account policy as a side effect. Use `issue` and
-`redeem` to make the issuer payment endpoints explicit. `getHolderState` returns
-the actual account/trustline with flags and liabilities; `authorized` reports
-full holder authorization. Missing trustlines are not zero balances, issuers
-have no finite balance of their own issued asset, and XLM balance is a total
-rather than a spendable estimate.
+actions; neither enables account policy as a side effect. Use `mint` and `burn`
+for issuer-to-holder and holder-to-issuer payments. `balance` and `authorized`
+query the bound asset without exposing its storage representation.
+`setAuthorized({ id, authorize, config })` grants full transfer authorization or
+revokes it while preserving existing liabilities. Revocation reads current
+trustline flags before submission; use `setTrustLineFlags` for explicit flags.
+Missing trustlines are not zero balances, issuers have no finite balance of
+their own issued asset, and XLM balance is a total rather than a spendable
+estimate.
 
 `NativeXLM` and `fromCanonical` bind identities without RPC. The asset's
 `parseAmount`/`formatAmount` helpers convert seven-decimal units exactly,
@@ -519,6 +522,11 @@ rejecting overflow or required rounding. `usd.toContract()` returns a separate
 `StellarAssetContract` for deliberate Soroban use, without deployment or copying
 native pipeline plugins. It does not add native allowances or switch payment
 execution routes. Use `SEP41TokenContract` for arbitrary SEP-41 tokens.
+
+`createClaimableBalance({ amount, claimants, config })` creates a balance of the
+bound asset through the same pipeline. It accepts native SDK `Claimant` objects
+and returns the protocol's created balance ID in the operation outcome.
+Claiming, trustline setup and reserve sponsorship remain explicit actions.
 
 `StellarAsset`, `SDEX`, and `NativeLiquidityPool` accept constructor plugins as
 `plugins: { transactionPipe: [channelPlugin, feeBumpPlugin, sep29Plugin] }`, or
@@ -529,6 +537,12 @@ source remains the intended holder or issuer even when a channel account
 supplies the envelope source and another account pays the fee. See the
 [complete plugin example](https://fifo-docs.gitbook.io/colibri/core/asset/stellar-asset)
 for explicit setup and signer roles.
+
+Market tooling lives together under `core/markets/`: `sdex/`,
+`liquidity-pools/`, and `price/`. The public classes remain named exports of
+`@colibri/core`; these directories are implementation organization, not new
+package subpath imports. Prices here describe native market exchange ratios, not
+oracle values or a price standard for arbitrary contracts.
 
 `SDEX` owns the same kind of pipeline for known sell, buy, and passive offers:
 

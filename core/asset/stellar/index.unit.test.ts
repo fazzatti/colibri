@@ -6,7 +6,7 @@ import {
   assertThrows,
 } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { Asset, Memo, Operation } from "stellar-sdk";
+import { Asset, Claimant, Memo, Operation } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import { StellarAsset } from "@/asset/stellar/index.ts";
 import type { StellarAssetArgs } from "@/asset/stellar/types.ts";
@@ -83,11 +83,11 @@ describe("StellarAsset", () => {
     const xlm = StellarAsset.NativeXLM({ networkConfig, rpc });
     const error = await assertRejects(
       () => xlm.balance({ id: holder.publicKey() }),
-      E.READ_HOLDER_STATE_FAILED,
+      E.READ_BALANCE_FAILED,
     );
     assert(error.meta?.cause instanceof Error);
     await assertRejects(
-      () => xlm.getHolderState({ id: "Ginvalid" }),
+      () => xlm.balance({ id: "Ginvalid" }),
       INVALID_ACCOUNT_ID,
     );
   });
@@ -110,14 +110,14 @@ describe("StellarAsset", () => {
     assertEquals(E.ERROR_STAS[error.code], error.constructor);
   });
 
-  it("issues and redeems using explicit issuer payment endpoints", async () => {
+  it("mints and burns using explicit issuer payment endpoints", async () => {
     const usd = new StellarAsset({ asset, networkConfig });
     const issue = await assertRejects(
-      () => usd.issue({ destination: holder.publicKey(), amount: "2", config }),
+      () => usd.mint({ destination: holder.publicKey(), amount: "2", config }),
       BASE_FEE_TOO_LOW_ERROR,
     );
     const redemption = await assertRejects(
-      () => usd.redeem({ amount: "2", config }),
+      () => usd.burn({ amount: "2", config }),
       BASE_FEE_TOO_LOW_ERROR,
     );
     assertEquals(
@@ -144,12 +144,12 @@ describe("StellarAsset", () => {
     );
     const xlm = StellarAsset.NativeXLM({ networkConfig });
     await assertRejects(
-      () => xlm.issue({ destination: holder.publicKey(), amount: "1", config }),
-      E.NATIVE_ISSUANCE,
+      () => xlm.mint({ destination: holder.publicKey(), amount: "1", config }),
+      E.NATIVE_MINT,
     );
     await assertRejects(
-      () => xlm.redeem({ amount: "1", config }),
-      E.NATIVE_REDEMPTION,
+      () => xlm.burn({ amount: "1", config }),
+      E.NATIVE_BURN,
     );
   });
 
@@ -162,6 +162,9 @@ describe("StellarAsset", () => {
     assertStrictEquals(usd.networkConfig, networkConfig);
     assertEquals(usd.transactionPipe.id, "ClassicTransactionPipeline");
     assertEquals(typeof usd.transactionPipe, "function");
+    assertEquals("getHolderState" in usd, false);
+    assertEquals("issue" in usd, false);
+    assertEquals("redeem" in usd, false);
     assertEquals(
       new StellarAsset({
         code: "USD",
@@ -427,6 +430,9 @@ describe("StellarAsset", () => {
       new E.READ_ISSUER_FAILED("cause"),
       new E.READ_TRUSTLINE_FAILED("cause"),
       new E.NATIVE_ASSET_CODE_MISMATCH("USD"),
+      new E.NATIVE_AUTHORIZATION(),
+      new E.AUTHORIZATION_TRUSTLINE_MISSING(holder.publicKey()),
+      new E.CREATE_CLAIMABLE_BALANCE_FAILED("cause"),
     ];
     assertEquals(
       new Set(errors.map((error) => error.code)).size,
@@ -434,6 +440,90 @@ describe("StellarAsset", () => {
     );
     for (const error of errors) {
       assertEquals(E.ERROR_STAS[error.code], error.constructor);
+    }
+  });
+
+  it("authorizes with issuer-owned flags and rejects unsupported authorization distinctly", async () => {
+    const usd = new StellarAsset({ asset, networkConfig });
+    const error = await assertRejects(
+      () =>
+        usd.setAuthorized({ id: holder.publicKey(), authorize: true, config }),
+      BASE_FEE_TOO_LOW_ERROR,
+    );
+    assertEquals(
+      error.meta.data.input.operations[0].toXdr("base64"),
+      Operation.setTrustLineFlags({
+        asset,
+        source: issuer.publicKey(),
+        trustor: holder.publicKey(),
+        flags: { authorized: true, authorizedToMaintainLiabilities: false },
+      }).toXdr("base64"),
+    );
+    await assertRejects(
+      () =>
+        StellarAsset.NativeXLM({ networkConfig }).setAuthorized({
+          id: holder.publicKey(),
+          authorize: false,
+          config,
+        }),
+      E.NATIVE_AUTHORIZATION,
+    );
+    await assertRejects(
+      () => usd.setAuthorized({ id: "Ginvalid", authorize: true, config }),
+      E.TRUSTLINE_FLAGS_FAILED,
+    );
+    const offline = new StellarAsset({
+      asset,
+      networkConfig,
+      rpc: new Server("http://127.0.0.1:0", { allowHttp: true }),
+    });
+    await assertRejects(
+      () =>
+        offline.setAuthorized({
+          id: holder.publicKey(),
+          authorize: false,
+          config,
+        }),
+      E.READ_TRUSTLINE_FAILED,
+    );
+  });
+
+  it("creates bound-asset claimable balances through the real pipeline with default and explicit sources", async () => {
+    const claimants = [new Claimant(other.publicKey())];
+    for (const nativeAsset of [asset, Asset.native()]) {
+      const token = new StellarAsset({ asset: nativeAsset, networkConfig });
+      for (const source of [undefined, other.publicKey()]) {
+        const error = await assertRejects(
+          () =>
+            token.createClaimableBalance({
+              amount: "1.25",
+              claimants,
+              source,
+              config,
+            }),
+          BASE_FEE_TOO_LOW_ERROR,
+        );
+        assertEquals(
+          error.meta.data.input.operations[0].toXdr("base64"),
+          Operation.createClaimableBalance({
+            asset: nativeAsset,
+            amount: "1.25",
+            claimants,
+            source: source ?? config.source,
+          }).toXdr("base64"),
+        );
+        assertStrictEquals(error.meta.data.input.memo, config.memo);
+      }
+      const error = await assertRejects(
+        () => token.createClaimableBalance({ amount: "-1", claimants, config }),
+        E.CREATE_CLAIMABLE_BALANCE_FAILED,
+      );
+      assert(error.meta?.cause instanceof Error);
+      await assertRejects(
+        () =>
+          token.createClaimableBalance({ amount: "1", claimants: [], config }),
+        E.CREATE_CLAIMABLE_BALANCE_FAILED,
+      );
     }
   });
 });

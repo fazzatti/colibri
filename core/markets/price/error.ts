@@ -16,7 +16,7 @@ export class INVALID_DECIMAL extends ColibriError<Code.INVALID_DECIMAL> {
   constructor(value: unknown) {
     super({
       domain: "core",
-      source: "@colibri/core/price",
+      source: "@colibri/core/markets/price",
       code: Code.INVALID_DECIMAL,
       message:
         "Price must be a plain unsigned decimal string, without exponent notation.",
@@ -32,7 +32,7 @@ export class NON_POSITIVE_DECIMAL
   constructor(value: string) {
     super({
       domain: "core",
-      source: "@colibri/core/price",
+      source: "@colibri/core/markets/price",
       code: Code.NON_POSITIVE_DECIMAL,
       message: "Price must be greater than zero.",
       meta: { data: { value } },
@@ -47,7 +47,7 @@ export class UNREPRESENTABLE_DECIMAL
   constructor(value: string) {
     super({
       domain: "core",
-      source: "@colibri/core/price",
+      source: "@colibri/core/markets/price",
       code: Code.UNREPRESENTABLE_DECIMAL,
       message:
         "Price cannot be represented exactly by Stellar's positive int32 numerator and denominator.",
@@ -62,7 +62,7 @@ export class INVALID_RATIO extends ColibriError<Code.INVALID_RATIO> {
   constructor(value: unknown) {
     super({
       domain: "core",
-      source: "@colibri/core/price",
+      source: "@colibri/core/markets/price",
       code: Code.INVALID_RATIO,
       message:
         "Price numerator and denominator must be positive int32 integers.",
@@ -77,7 +77,7 @@ export class ZERO_PRICE_AMOUNT extends ColibriError<Code.ZERO_PRICE_AMOUNT> {
   constructor() {
     super({
       domain: "core",
-      source: "@colibri/core/price",
+      source: "@colibri/core/markets/price",
       code: Code.ZERO_PRICE_AMOUNT,
       message: "Both base and quote amounts must be greater than zero.",
     });
@@ -90,7 +90,7 @@ export class UNREPRESENTABLE_AMOUNTS
   constructor(baseAmount: string, quoteAmount: string) {
     super({
       domain: "core",
-      source: "@colibri/core/price",
+      source: "@colibri/core/markets/price",
       code: Code.UNREPRESENTABLE_AMOUNTS,
       message:
         "The exact quantity ratio exceeds Stellar's positive int32 price range.",

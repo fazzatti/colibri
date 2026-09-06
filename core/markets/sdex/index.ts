@@ -8,8 +8,8 @@ import {
   createClassicTransactionPipeline,
 } from "@/pipelines/classic-transaction/index.ts";
 import type { ClassicTransactionOutput } from "@/pipelines/classic-transaction/types.ts";
-import { StellarPrice } from "@/price/index.ts";
-import * as E from "@/sdex/error.ts";
+import { StellarPrice } from "@/markets/price/index.ts";
+import * as E from "@/markets/sdex/error.ts";
 import { ColibriError } from "@/error/index.ts";
 import type {
   BuyArgs,
@@ -24,7 +24,7 @@ import type {
   UpdateBuyOfferArgs,
   UpdateSellArgs,
   UpdateSellOfferArgs,
-} from "@/sdex/types.ts";
+} from "@/markets/sdex/types.ts";
 
 const isExistingOfferId = (value: string): boolean =>
   typeof value === "string" && /^\d+$/.test(value) && BigInt(value) > 0n &&
@@ -252,5 +252,5 @@ export class SDEX {
   }
 }
 
-export type * from "@/sdex/types.ts";
-export { ERROR_SDEX as SDEXErrors } from "@/sdex/error.ts";
+export type * from "@/markets/sdex/types.ts";
+export { ERROR_SDEX as SDEXErrors } from "@/markets/sdex/error.ts";

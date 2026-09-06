@@ -4,10 +4,6 @@ import type { NetworkConfig } from "@/network/index.ts";
 import type { ClassicTransactionPipelinePlugins } from "@/pipelines/classic-transaction/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
-import type {
-  AccountLedgerEntry,
-  TrustlineLedgerEntry,
-} from "@/ledger-entries/types.ts";
 
 /** @internal Exact native SDK asset type. */
 export type Asset = NativeAsset;
@@ -23,6 +19,10 @@ export type SetTrustLineFlagsOpts = Parameters<
 >[0];
 /** @internal Exact native SDK clawback-operation options. */
 export type ClawbackOpts = Parameters<typeof Operation.clawback>[0];
+/** @internal Exact native SDK claimable-balance options, including Claimant[]. */
+export type CreateClaimableBalanceOpts = Parameters<
+  typeof Operation.createClaimableBalance
+>[0];
 
 /** Asset identity and network used by a {@link StellarAsset}. */
 export type StellarAssetArgs =
@@ -92,14 +92,30 @@ export type StellarAssetNetwork = {
   /** Plugins for the native transaction pipe; not copied by `toContract()`. */
   plugins?: ClassicTransactionPipelinePlugins;
 };
-/** Inputs for native asset balance and holder-state reads. */
+/** Inputs for native asset balance and authorization reads. */
 export type StellarAssetBalanceArgs = { id: Ed25519PublicKey };
-/** Native account or trustline data, including the balance's actual storage kind. */
-export type StellarAssetHolderState = AccountLedgerEntry | TrustlineLedgerEntry;
-/** Explicit issuance, always authorized by the issuing account. */
-export type StellarAssetIssueArgs = Omit<StellarAssetTransferArgs, "source">;
-/** Explicit redemption, always paying the asset's issuer. */
-export type StellarAssetRedeemArgs = Omit<
+/** Mints units through an issuer-signed native payment. */
+export type StellarAssetMintArgs = Omit<StellarAssetTransferArgs, "source">;
+/** Burns units through a holder-signed payment back to the issuer. */
+export type StellarAssetBurnArgs = Omit<
   StellarAssetTransferArgs,
   "destination"
 >;
+
+/** Issuer-controlled transfer authorization, preserving existing liabilities on revocation. */
+export type StellarAssetSetAuthorizedArgs = {
+  /** Account whose trustline authorization is changed. */
+  id: Ed25519PublicKey;
+  /** Enable full authorization, or revoke transfers while retaining existing liabilities. */
+  authorize: boolean;
+  /** Envelope configuration; the operation is always sourced by the asset issuer. */
+  config: TransactionConfig;
+};
+
+/** Creates a claimable balance of this asset with native SDK claimants and predicates. */
+export type StellarAssetCreateClaimableBalanceArgs =
+  & Omit<CreateClaimableBalanceOpts, "asset">
+  & {
+    /** Envelope configuration; the operation defaults to its source before plugins run. */
+    config: TransactionConfig;
+  };

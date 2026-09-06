@@ -25,9 +25,7 @@ export * from "@/claimable-balance/index.ts";
 /** Error constructors for native claimable-balance predicate composition. */
 export const ERRORS_CLAIMABLE_BALANCE_PREDICATES:
   typeof ClaimableBalancePredicateErrors = ClaimableBalancePredicateErrors;
-export * from "@/liquidity-pool/index.ts";
-export * from "@/price/index.ts";
-export * from "@/sdex/index.ts";
+export * from "@/markets/index.ts";
 /** Address helpers for parsing and normalization. */
 export const address: typeof AddressHelpers = AddressHelpers;
 /** Authorization helpers and requirements. */

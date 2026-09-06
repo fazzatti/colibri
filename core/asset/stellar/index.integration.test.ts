@@ -26,6 +26,7 @@ import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-c
 import { StellarAsset } from "@/asset/stellar/index.ts";
 import { StellarAssetContract } from "@/asset/sac/index.ts";
 import {
+  AUTHORIZATION_TRUSTLINE_MISSING,
   BALANCE_TRUSTLINE_MISSING,
   ISSUER_BALANCE_UNDEFINED,
 } from "@/asset/stellar/error.ts";
@@ -161,9 +162,27 @@ describe(
           ],
           [
             () =>
-              token.issue({
+              token.mint({
                 destination: holder.publicKey(),
                 amount: "3",
+                config: configFor(issuer),
+              }),
+            issuer,
+          ],
+          [
+            () =>
+              token.setAuthorized({
+                id: holder.publicKey(),
+                authorize: false,
+                config: configFor(issuer),
+              }),
+            issuer,
+          ],
+          [
+            () =>
+              token.setAuthorized({
+                id: holder.publicKey(),
+                authorize: true,
                 config: configFor(issuer),
               }),
             issuer,
@@ -178,7 +197,7 @@ describe(
             issuer,
           ],
           [
-            () => token.redeem({ amount: "2", config: configFor(holder) }),
+            () => token.burn({ amount: "2", config: configFor(holder) }),
             holder,
           ],
           [
@@ -343,7 +362,7 @@ describe(
         config: configFor(issuer),
       });
       assertEquals(await token.authorized({ id: recipient.publicKey() }), true);
-      const issued = await token.issue({
+      const issued = await token.mint({
         destination: recipient.publicKey(),
         amount: "12.3456789",
         config: { ...configFor(channel), signers: [channel, issuer] },
@@ -361,7 +380,8 @@ describe(
         await token.balance({ id: recipient.publicKey() }),
         123_456_789n,
       );
-      const holding = await token.getHolderState({ id: recipient.publicKey() });
+      const holding = await token.getTrustline(recipient.publicKey());
+      assert(holding);
       assertEquals(holding.type, "trustline");
       const sac = token.toContract();
       // SAC deployment is explicitly Soroban; unlike native payments it has no memo.
@@ -374,7 +394,7 @@ describe(
         await sac.balance({ id: recipient.publicKey() }),
         await token.balance({ id: recipient.publicKey() }),
       );
-      const redeemed = await token.redeem({
+      const redeemed = await token.burn({
         amount: "12.3456789",
         config: configFor(recipient),
       });
@@ -390,17 +410,13 @@ describe(
       assertEquals(await token.balance({ id: recipient.publicKey() }), 0n);
       const xlm = StellarAsset.NativeXLM({ networkConfig });
       assertEquals(
-        (await xlm.getHolderState({ id: recipient.publicKey() })).type,
-        "account",
-      );
-      assertEquals(
         await xlm.balance({ id: recipient.publicKey() }),
         (await entries.account({ accountId: recipient.publicKey() })).balance,
       );
       assertEquals(await xlm.authorized({ id: recipient.publicKey() }), true);
     });
 
-    it("executes granular trustline, authorization, issue, clawback, redemption, and removal actions", async () => {
+    it("executes granular trustline, authorization, mint, clawback, burn, and removal actions", async () => {
       assertEquals(await usd.getTrustline(holder.publicKey()), null);
       const issuerEntry = await usd.getIssuer();
       assert(issuerEntry);
@@ -544,6 +560,196 @@ describe(
           before.balance,
         12_500_000n,
       );
+    });
+
+    it("grants and revokes transfer authorization without upgrading unauthorized holders or removing liabilities", async () => {
+      const token = new StellarAsset({
+        code: "AUTH",
+        issuer: issuer.publicKey(),
+        networkConfig,
+      });
+      const revoke = () =>
+        token.setAuthorized({
+          id: holder.publicKey(),
+          authorize: false,
+          config: { ...configFor(channel), signers: [channel, issuer] },
+        });
+      await assertRejects(revoke, AUTHORIZATION_TRUSTLINE_MISSING);
+      await token.changeTrust({ config: configFor(holder) });
+      await revoke();
+      let trustline = await token.getTrustline(holder.publicKey());
+      assert(trustline);
+      assertEquals(trustline.flags.authorized, false);
+      assertEquals(trustline.flags.authorizedToMaintainLiabilities, false);
+      const grant = () =>
+        token.setAuthorized({
+          id: holder.publicKey(),
+          authorize: true,
+          config: { ...configFor(channel), signers: [channel, issuer] },
+        });
+      const granted = await grant();
+      assertSubmittedOperation(
+        granted,
+        Operation.setTrustLineFlags({
+          asset: token.asset,
+          source: issuer.publicKey(),
+          trustor: holder.publicKey(),
+          flags: { authorized: true, authorizedToMaintainLiabilities: false },
+        }),
+      );
+      await token.mint({
+        destination: holder.publicKey(),
+        amount: "10",
+        config: configFor(issuer),
+      });
+      await execute({
+        operations: [Operation.manageSellOffer({
+          selling: token.asset,
+          buying: Asset.native(),
+          amount: "1",
+          price: "2",
+        })],
+        config: configFor(holder),
+      });
+      const before = await token.getTrustline(holder.publicKey());
+      assert(before);
+      assert(before.liabilities);
+      assertEquals(before.liabilities.selling, 10_000_000n);
+      const revoked = await revoke();
+      assertSubmittedOperation(
+        revoked,
+        Operation.setTrustLineFlags({
+          asset: token.asset,
+          source: issuer.publicKey(),
+          trustor: holder.publicKey(),
+          flags: { authorized: false, authorizedToMaintainLiabilities: true },
+        }),
+      );
+      assertEquals(await token.authorized({ id: holder.publicKey() }), false);
+      trustline = await token.getTrustline(holder.publicKey());
+      assert(trustline);
+      assertEquals(trustline.liabilities, before.liabilities);
+      assertEquals(
+        trustline.flags.clawbackEnabled,
+        before.flags.clawbackEnabled,
+      );
+      await assertRejects(
+        () => token.burn({ amount: "1", config: configFor(holder) }),
+        ColibriError,
+      );
+      await revoke();
+      assertEquals(
+        (await token.getTrustline(holder.publicKey()))?.flags
+          .authorizedToMaintainLiabilities,
+        true,
+      );
+      await grant();
+      assertEquals(await token.authorized({ id: holder.publicKey() }), true);
+      assertEquals(
+        (await token.getTrustline(holder.publicKey()))?.flags
+          .authorizedToMaintainLiabilities,
+        false,
+      );
+      await token.burn({ amount: "1", config: configFor(holder) });
+    });
+
+    it("creates and claims issued and native balances with channel, fee-bump and memo plugins", async () => {
+      for (
+        const asset of [new Asset("CLAIM", issuer.publicKey()), Asset.native()]
+      ) {
+        const token = new StellarAsset({
+          asset,
+          networkConfig,
+          plugins: {
+            transactionPipe: [
+              createChannelAccountsPlugin({
+                channels: [NativeAccount.fromMasterSigner(channel)],
+              }),
+              createFeeBumpPlugin({
+                networkConfig,
+                feeBumpConfig: {
+                  source: recipient.publicKey(),
+                  signers: [recipient],
+                  fee: "200",
+                },
+              }),
+              createSep29Plugin(),
+            ],
+          },
+        });
+        if (!token.isNative()) {
+          for (const signer of [holder, recipient]) {
+            await token.changeTrust({ config: configFor(signer) });
+            await token.setAuthorized({
+              id: signer.publicKey(),
+              authorize: true,
+              config: configFor(issuer),
+            });
+          }
+          await token.mint({
+            destination: holder.publicKey(),
+            amount: "2",
+            config: configFor(issuer),
+          });
+        }
+        const claimants = [
+          new Claimant(recipient.publicKey(), P.unconditional()),
+        ];
+        // Explicit source differs from config.source as well as the plugin's channel.
+        const creation = await token.createClaimableBalance({
+          amount: "2",
+          claimants,
+          source: holder.publicKey(),
+          config: { ...configFor(issuer), signers: [issuer, holder] },
+        });
+        const native = TransactionBuilder.fromXdr(
+          creation.response.envelopeXdr,
+          networkConfig.networkPassphrase,
+        );
+        assert(native instanceof FeeBumpTransaction);
+        assertEquals(native.feeSource, recipient.publicKey());
+        assertEquals(native.innerTransaction.source, channel.publicKey());
+        assertEquals(
+          native.innerTransaction.memo.value,
+          new TextEncoder().encode("asset workflow"),
+        );
+        assertEquals(native.innerTransaction.operations, [
+          Operation.fromXdrObject(Operation.createClaimableBalance({
+            asset,
+            amount: "2",
+            claimants,
+            source: holder.publicKey(),
+          })),
+        ]);
+        const outcome = creation.operations[0];
+        assert(outcome.type === "createClaimableBalance");
+        const balanceId = outcome.result.balanceId;
+        const strkeyBytes = new Uint8Array(33);
+        strkeyBytes.set(balanceId.v0.toBytes(), 1);
+        const key = buildClaimableBalanceLedgerKey({
+          balanceId: StrKey.encodeClaimableBalance(strkeyBytes),
+        });
+        const stored = await entries.get(key);
+        assert(stored);
+        assertEquals(stored.amount, 20_000_000n);
+        const claimed = await execute({
+          operations: [
+            Operation.claimClaimableBalance({
+              balanceId: balanceId.toXdr("hex"),
+            }),
+          ],
+          config: configFor(recipient),
+        });
+        assertEquals(claimed.operations[0].type, "claimClaimableBalance");
+        assertEquals(await entries.get(key), null);
+        if (!token.isNative()) {
+          assertEquals(await token.balance({ id: holder.publicKey() }), 0n);
+          assertEquals(
+            await token.balance({ id: recipient.publicKey() }),
+            20_000_000n,
+          );
+        }
+      }
     });
 
     it("creates and claims native predicate trees while rejecting an ineligible reclaimant", async () => {

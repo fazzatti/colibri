@@ -43,9 +43,9 @@ describe("dependency direction", () => {
           "../../../core/pipelines/{classic-transaction,invoke-contract,read-from-contract}/**/*.ts",
       },
       {
-        source: "../../../core/{price,claimable-balance}/**/*.ts",
+        source: "../../../core/{markets/price,claimable-balance}/**/*.ts",
         target:
-          "../../../core/{pipelines,steps,processes,plugins,sdex,liquidity-pool}/**/*.ts",
+          "../../../core/{pipelines,steps,processes,plugins,markets/sdex,markets/liquidity-pools}/**/*.ts",
       },
     ];
 

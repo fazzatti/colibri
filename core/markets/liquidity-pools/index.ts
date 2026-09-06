@@ -24,10 +24,10 @@ import type {
   LiquidityPoolLedgerEntry,
   TrustlineLedgerEntry,
 } from "@/ledger-entries/types.ts";
-import { StellarPrice } from "@/price/index.ts";
+import { StellarPrice } from "@/markets/price/index.ts";
 import type { NetworkConfig } from "@/network/index.ts";
 import { ColibriError } from "@/error/index.ts";
-import * as E from "@/liquidity-pool/error.ts";
+import * as E from "@/markets/liquidity-pools/error.ts";
 import type {
   Asset as AssetType,
   LiquidityPoolAsset as PoolShareAsset,
@@ -45,7 +45,7 @@ import type {
   PoolWithdrawArgs,
   PoolWithdrawByAssetArgs,
   Server as RpcServer,
-} from "@/liquidity-pool/types.ts";
+} from "@/markets/liquidity-pools/types.ts";
 
 /**
  * Explicit actions on a Stellar protocol-native constant-product pool.
@@ -334,4 +334,4 @@ export type {
   PoolTransaction,
   PoolWithdrawArgs,
   PoolWithdrawByAssetArgs,
-} from "@/liquidity-pool/types.ts";
+} from "@/markets/liquidity-pools/types.ts";

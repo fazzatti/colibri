@@ -89,6 +89,18 @@ const assertStepTopology = async (
 };
 
 describe("workspace structure", () => {
+  it("groups native market clients and price utilities behind the markets barrel", async () => {
+    const barrel = await Deno.readTextFile("core/markets/index.ts");
+    for (const region of ["sdex", "liquidity-pools", "price"]) {
+      assert(await exists(`core/markets/${region}/index.ts`));
+      assert(barrel.includes(`"@/markets/${region}/index.ts"`));
+    }
+    const coreExports = await Deno.readTextFile("core/mod.ts");
+    assert(coreExports.includes('"@/markets/index.ts"'));
+    for (const oldPath of ["sdex", "liquidity-pool", "price"]) {
+      assertEquals(await exists(`core/${oldPath}/index.ts`), false);
+    }
+  });
   it("keeps every published package complete and explicitly registered", async () => {
     const root = JSON.parse(await Deno.readTextFile("deno.json")) as {
       workspace?: string[];

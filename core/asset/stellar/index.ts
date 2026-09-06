@@ -21,6 +21,8 @@ import type {
   StellarAssetArgs,
   StellarAssetChangeTrustArgs,
   StellarAssetClawbackArgs,
+  StellarAssetCreateClaimableBalanceArgs,
+  StellarAssetSetAuthorizedArgs,
   StellarAssetSetTrustLineFlagsArgs,
   StellarAssetTransferArgs,
 } from "@/asset/stellar/types.ts";
@@ -38,10 +40,9 @@ import {
 import type { StellarAssetCanonicalString } from "@/asset/sep11/types.ts";
 import type {
   StellarAssetBalanceArgs,
-  StellarAssetHolderState,
-  StellarAssetIssueArgs,
+  StellarAssetBurnArgs,
+  StellarAssetMintArgs,
   StellarAssetNetwork,
-  StellarAssetRedeemArgs,
 } from "@/asset/stellar/types.ts";
 
 function resolveAsset(args: StellarAssetArgs): Asset {
@@ -156,14 +157,9 @@ export class StellarAsset {
     return formatStellarAssetAmount(amount);
   }
 
-  /**
-   * Reads the actual native account or trustline holding this asset.
-   * Missing state fails explicitly. An issuer has no finite balance of its own
-   * issued asset; this is neither zero nor its XLM account balance.
-   */
-  async getHolderState(
+  async #readBalanceState(
     { id }: StellarAssetBalanceArgs,
-  ): Promise<StellarAssetHolderState> {
+  ): Promise<AccountLedgerEntry | TrustlineLedgerEntry> {
     if (!this.isNative() && id === this.issuer) {
       throw new E.ISSUER_BALANCE_UNDEFINED();
     }
@@ -176,18 +172,18 @@ export class StellarAsset {
       return trustline;
     } catch (cause) {
       if (cause instanceof ColibriError) throw cause;
-      throw new E.READ_HOLDER_STATE_FAILED(cause);
+      throw new E.READ_BALANCE_FAILED(cause);
     }
   }
 
   /** Total balance in smallest units, not spendable balance after reserves/liabilities/fees. */
   async balance(args: StellarAssetBalanceArgs): Promise<bigint> {
-    return (await this.getHolderState(args)).balance;
+    return (await this.#readBalanceState(args)).balance;
   }
 
   /** Full transfer authorization for an existing holding; preserves missing-state errors. */
   async authorized(args: StellarAssetBalanceArgs): Promise<boolean> {
-    const state = await this.getHolderState(args);
+    const state = await this.#readBalanceState(args);
     return state.type === "account" || state.flags.authorized;
   }
 
@@ -208,17 +204,17 @@ export class StellarAsset {
     }
   }
 
-  /** Issues units by an explicit payment from the issuer; never changes holder authorization. */
-  async issue(args: StellarAssetIssueArgs): Promise<ClassicTransactionOutput> {
-    if (this.isNative()) throw new E.NATIVE_ISSUANCE();
+  /** Mints units by a payment from the issuer; never changes holder authorization. */
+  async mint(args: StellarAssetMintArgs): Promise<ClassicTransactionOutput> {
+    if (this.isNative()) throw new E.NATIVE_MINT();
     return await this.transfer({ ...args, source: this.issuer });
   }
 
-  /** Redeems units by an explicit payment to the issuer; no trustline is removed. */
-  async redeem(
-    args: StellarAssetRedeemArgs,
+  /** Burns units by a payment back to the issuer; no trustline is removed. */
+  async burn(
+    args: StellarAssetBurnArgs,
   ): Promise<ClassicTransactionOutput> {
-    if (this.isNative()) throw new E.NATIVE_REDEMPTION();
+    if (this.isNative()) throw new E.NATIVE_BURN();
     return await this.transfer({ ...args, destination: this.issuer! });
   }
 
@@ -273,8 +269,8 @@ export class StellarAsset {
   }
 
   /**
-   * Transfers this asset. Paying from its issuer issues units; paying to its
-   * issuer redeems units. No trustlines or authorization flags are changed.
+   * Transfers this asset. Paying from its issuer mints units; paying to its
+   * issuer burns units. No trustlines or authorization flags are changed.
    */
   async transfer(
     { config, ...args }: StellarAssetTransferArgs,
@@ -315,6 +311,59 @@ export class StellarAsset {
   }
 
   /**
+   * Sets full transfer authorization using an issuer-signed native operation.
+   * Granting clears the maintain-liabilities flag. Revoking downgrades a fully
+   * authorized trustline to maintain-liabilities, preserving offers and pool
+   * positions; it does not upgrade an already unauthorized trustline.
+   * Revocation reads the current trustline before building the operation, not
+   * atomically with submission. Use `setTrustLineFlags` for explicit flag control.
+   * Issuer policy must already permit the action; no account flags are enabled.
+   */
+  async setAuthorized(
+    { id, authorize, config }: StellarAssetSetAuthorizedArgs,
+  ): Promise<ClassicTransactionOutput> {
+    if (this.isNative()) throw new E.NATIVE_AUTHORIZATION();
+    let maintainLiabilities = false;
+    if (!authorize) {
+      const trustline = await this.getTrustline(id);
+      if (!trustline) throw new E.AUTHORIZATION_TRUSTLINE_MISSING(id);
+      maintainLiabilities = trustline.flags.authorized ||
+        trustline.flags.authorizedToMaintainLiabilities;
+    }
+    return await this.setTrustLineFlags({
+      trustor: id,
+      flags: {
+        authorized: authorize,
+        authorizedToMaintainLiabilities: maintainLiabilities,
+      },
+      source: this.issuer,
+      config,
+    });
+  }
+
+  /**
+   * Creates a claimable balance of this asset using native SDK claimants.
+   * The source defaults to `config.source` before plugins change the envelope.
+   * Returns the confirmed transaction; its create-claimable-balance outcome
+   * contains `result.balanceId`. No trustline, authorization or claim is automatic.
+   */
+  async createClaimableBalance(
+    { config, ...args }: StellarAssetCreateClaimableBalanceArgs,
+  ): Promise<ClassicTransactionOutput> {
+    let operation: xdr.Operation;
+    try {
+      operation = Operation.createClaimableBalance({
+        ...args,
+        asset: this.asset,
+        source: args.source ?? config.source,
+      });
+    } catch (cause) {
+      throw new E.CREATE_CLAIMABLE_BALANCE_FAILED(cause);
+    }
+    return await this.transactionPipe({ operations: [operation], config });
+  }
+
+  /**
    * Claws back an explicitly selected amount from a holder. The protocol must
    * already permit clawback for that trustline; no policy flags are changed.
    * The operation source defaults to the issuer, not the transaction source.
@@ -340,12 +389,13 @@ export class StellarAsset {
 export type {
   StellarAssetArgs,
   StellarAssetBalanceArgs,
+  StellarAssetBurnArgs,
   StellarAssetChangeTrustArgs,
   StellarAssetClawbackArgs,
-  StellarAssetHolderState,
-  StellarAssetIssueArgs,
+  StellarAssetCreateClaimableBalanceArgs,
+  StellarAssetMintArgs,
   StellarAssetNetwork,
-  StellarAssetRedeemArgs,
+  StellarAssetSetAuthorizedArgs,
   StellarAssetSetTrustLineFlagsArgs,
   StellarAssetTransferArgs,
 } from "@/asset/stellar/types.ts";

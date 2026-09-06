@@ -14,8 +14,8 @@ import {
   Operation,
 } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
-import { NativeLiquidityPool } from "@/liquidity-pool/index.ts";
-import * as E from "@/liquidity-pool/error.ts";
+import { NativeLiquidityPool } from "@/markets/liquidity-pools/index.ts";
+import * as E from "@/markets/liquidity-pools/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import { StrKey } from "@/strkeys/index.ts";
@@ -23,7 +23,7 @@ import { buildTrustlineLedgerKey } from "@/ledger-entries/index.ts";
 import { INVALID_ACCOUNT_ID } from "@/ledger-entries/error.ts";
 import { BASE_FEE_TOO_LOW_ERROR } from "@/processes/build-transaction/error.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
-import type { PoolDepositByAssetArgs } from "@/liquidity-pool/types.ts";
+import type { PoolDepositByAssetArgs } from "@/markets/liquidity-pools/types.ts";
 
 describe("NativeLiquidityPool", () => {
   const signer = LocalSigner.generateRandom();

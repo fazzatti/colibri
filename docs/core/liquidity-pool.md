@@ -188,7 +188,7 @@ console.log(position.ownership, position.observedAtLedger);
 
 Errors distinguish a pool absent from a successful lookup, failed RPC retrieval,
 invalid asset mappings, and rejected operation construction. See the
-[pool error reference](../reference/errors/core-liquidity-pool.md).
+[pool error reference](../reference/errors/core-markets-liquidity-pools.md).
 
 For the protocol's behavior and failure codes, see the official
 [liquidity-pool operations](https://developers.stellar.org/docs/learn/fundamentals/transactions/list-of-operations#liquidity-pool-deposit).

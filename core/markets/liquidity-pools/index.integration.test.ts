@@ -3,12 +3,12 @@ import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
 import { Asset, Operation } from "stellar-sdk";
 import { StellarTestLedger } from "@colibri/test-tooling";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
-import { NativeLiquidityPool } from "@/liquidity-pool/index.ts";
+import { NativeLiquidityPool } from "@/markets/liquidity-pools/index.ts";
 import {
   POOL_NOT_FOUND,
   POSITION_POOL_MISSING,
   POSITION_TRUSTLINE_MISSING,
-} from "@/liquidity-pool/error.ts";
+} from "@/markets/liquidity-pools/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";

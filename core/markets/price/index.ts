@@ -3,8 +3,8 @@ import type {
   DescribeStellarPriceArgs,
   StellarPriceAmounts,
   StellarPriceRatio,
-} from "@/price/types.ts";
-import * as E from "@/price/error.ts";
+} from "@/markets/price/types.ts";
+import * as E from "@/markets/price/error.ts";
 import { parseStellarAssetAmount } from "@/asset/stellar/amount.ts";
 
 const INT32_MAX = 2_147_483_647;
@@ -135,5 +135,5 @@ export type {
   DescribeStellarPriceArgs,
   StellarPriceAmounts,
   StellarPriceRatio,
-} from "@/price/types.ts";
-export { ERROR_PRCE as StellarPriceErrors } from "@/price/error.ts";
+} from "@/markets/price/types.ts";
+export { ERROR_PRCE as StellarPriceErrors } from "@/markets/price/error.ts";

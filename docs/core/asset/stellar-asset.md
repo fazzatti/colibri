@@ -2,9 +2,10 @@
 
 `StellarAsset` binds a native Stellar SDK `Asset` to a network and an existing
 Colibri classic transaction pipeline. It exposes asset identity, exact amounts,
-balances, holder authorization, payments, trustline limits, issuance,
-redemption, and clawback. Use [StellarAssetContract](stellar-asset-contract.md)
-when you need the Soroban contract interface for the same asset.
+balances, holder authorization, payments, trustline limits, minting, burning,
+clawback, and claimable-balance creation. Use
+[StellarAssetContract](stellar-asset-contract.md) when you need the Soroban
+contract interface for the same asset.
 
 API: [StellarAsset on JSR](https://jsr.io/@colibri/core/doc/~/StellarAsset).
 
@@ -98,9 +99,9 @@ await usd.changeTrust({
   },
 });
 
-// Payment from the issuing account issues units. Authorization is not required
+// Payment from the issuing account mints units. Authorization is not required
 // here because this new issuer has not enabled AUTH_REQUIRED.
-const result = await usd.issue({
+const result = await usd.mint({
   destination: holder.publicKey(),
   amount: "100",
   config: {
@@ -123,19 +124,20 @@ fees use stroops and the existing [fee configuration](../transaction-config.md).
 
 ## Explicit methods, no automatic account changes
 
-| Method                                          | Action                                                                                             |
-| ----------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `getIssuer()`                                   | Reads the issuer account, including its protocol flags; returns `null` for native XLM.             |
-| `getTrustline(accountId)`                       | Reads a known trustline, or returns `null` when absent. Native XLM also returns `null`.            |
-| `getHolderState({ id })`                        | Reads the actual native account or issued-asset trustline with its balance, flags and liabilities. |
-| `balance({ id })`                               | Reads the total holding in bigint smallest units. Missing holdings fail explicitly.                |
-| `authorized({ id })`                            | Reads full transfer authorization for an existing holding, not future issuer-policy guarantees.    |
-| `changeTrust({ limit, config })`                | Creates or changes the source's trustline. A zero limit requests removal.                          |
-| `transfer({ destination, amount, config })`     | Transfers using a native payment operation. Payments from/to the issuer issue/redeem units.        |
-| `issue({ destination, amount, config })`        | Makes the asset issuer the explicit payment source, independent of the envelope source.            |
-| `redeem({ amount, config })`                    | Pays the asset issuer from the caller's operation source. Does not remove the trustline.           |
-| `setTrustLineFlags({ trustor, flags, config })` | Explicitly changes issuer-controlled trustline flags.                                              |
-| `clawback({ from, amount, config })`            | Requests issuer clawback when the existing trustline permits it.                                   |
+| Method                                                  | Action                                                                                          |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `getIssuer()`                                           | Reads the issuer account, including its protocol flags; returns `null` for native XLM.          |
+| `getTrustline(accountId)`                               | Reads a known trustline, or returns `null` when absent. Native XLM also returns `null`.         |
+| `balance({ id })`                                       | Reads the total holding in bigint smallest units. Missing holdings fail explicitly.             |
+| `authorized({ id })`                                    | Reads full transfer authorization for an existing holding, not future issuer-policy guarantees. |
+| `changeTrust({ limit, config })`                        | Creates or changes the source's trustline. A zero limit requests removal.                       |
+| `transfer({ destination, amount, config })`             | Transfers using a native payment operation. Payments from/to the issuer mint/burn units.        |
+| `mint({ destination, amount, config })`                 | Makes the asset issuer the explicit payment source, independent of the envelope source.         |
+| `burn({ amount, config })`                              | Pays the asset issuer from the caller's operation source. Does not remove the trustline.        |
+| `setTrustLineFlags({ trustor, flags, config })`         | Explicitly changes issuer-controlled trustline flags.                                           |
+| `setAuthorized({ id, authorize, config })`              | Grants transfers or revokes them while preserving existing liabilities.                         |
+| `clawback({ from, amount, config })`                    | Requests issuer clawback when the existing trustline permits it.                                |
+| `createClaimableBalance({ amount, claimants, config })` | Locks this asset in a claimable balance with explicit native SDK claimants and predicates.      |
 
 Reads take G addresses: an M address identifies the same underlying account, not
 a distinct holding. For XLM, `balance` returns the native account's total
@@ -147,10 +149,10 @@ raises `STAS_015`, rather than returning zero or pretending to hold a trustline.
 account it is true; for an issued asset it reports the trustline's full
 authorization flag, not merely authorization to maintain liabilities.
 
-No write performs a preliminary read or silently skips an operation. No transfer
-creates a trustline or authorizes a holder. Trustline removal fails if its
-balance or liabilities prevent removal. Reading a trustline does not guarantee
-that its state will remain unchanged until a later transaction executes.
+Every write submits an explicit operation. No transfer creates a trustline or
+authorizes a holder. Trustline removal fails if its balance or liabilities
+prevent removal. Reading a trustline does not guarantee that its state will
+remain unchanged until a later transaction executes.
 
 Native XLM can be transferred but has no issuer-managed trustlines or clawback.
 Trying those writes raises separate `STAS_*` errors. An issued asset named `XLM`
@@ -161,19 +163,115 @@ class does not enable irreversible account-wide flags. `setTrustLineFlags`
 follows SDK semantics: undefined flags are unchanged, and trustline clawback can
 only be cleared, not enabled by that operation.
 
+### Grant or revoke transfers
+
+`setAuthorized` always uses the issuer as operation source. Granting sets full
+authorization and clears the maintain-liabilities flag. Revocation changes a
+fully authorized trustline to maintain-liabilities, retaining outstanding offers
+and pool positions instead of deleting them. It preserves either existing
+unauthorized state, rather than granting maintain-liabilities to a completely
+unauthorized holder. This follows the authorization-state transitions of the
+[Stellar Asset Contract](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0046-06.md#set_authorized),
+using a native `setTrustLineFlags` operation instead of invoking Soroban.
+
+```ts
+// Fragment: usd, holder and issuerConfig are already configured.
+await usd.setAuthorized({
+  id: holder.publicKey(),
+  authorize: true,
+  config: issuerConfig,
+});
+await usd.setAuthorized({
+  id: holder.publicKey(),
+  authorize: false,
+  config: issuerConfig,
+});
+```
+
+Revocation reads the current trustline before building its flags. This read and
+the later transaction are not atomic; concurrent issuer changes can make the
+snapshot stale. Use `setTrustLineFlags` when the intended flags are already
+known and should not be derived from a read. Missing revocation trustlines fail
+with `STAS_022`. No operation enables `AUTH_REQUIRED` or `AUTH_REVOCABLE`;
+issuer policy must already allow the requested change. For complete
+deauthorization that may remove market positions, deliberately clear both
+authorization flags with `setTrustLineFlags`.
+
+### Create a claimable balance
+
+The following complete Testnet example funds a sender and recipient, creates a
+claimable XLM balance, and prints the protocol-reported ID. It does not claim it
+automatically. `Claimant` and predicates remain native SDK objects.
+
+<!-- deno-check -->
+
+```ts
+import {
+  ClaimableBalancePredicates,
+  initializeWithFriendbot,
+  LocalSigner,
+  NetworkConfig,
+  StellarAsset,
+} from "@colibri/core";
+import { Claimant } from "npm:@stellar/stellar-sdk@^17.0.1";
+
+const networkConfig = NetworkConfig.TestNet();
+const sender = LocalSigner.generateRandom();
+const recipient = LocalSigner.generateRandom();
+for (const signer of [sender, recipient]) {
+  await initializeWithFriendbot(
+    networkConfig.friendbotUrl,
+    signer.publicKey(),
+    {
+      rpcUrl: networkConfig.rpcUrl,
+      allowHttp: networkConfig.allowHttp,
+    },
+  );
+}
+const xlm = StellarAsset.NativeXLM({ networkConfig });
+const result = await xlm.createClaimableBalance({
+  amount: "2",
+  claimants: [
+    new Claimant(
+      recipient.publicKey(),
+      ClaimableBalancePredicates.unconditional(),
+    ),
+  ],
+  config: {
+    source: sender.publicKey(),
+    signers: [sender],
+    fee: "100",
+    timeout: 60,
+  },
+});
+const outcome = result.operations[0];
+if (outcome.type === "createClaimableBalance") {
+  console.log(outcome.result.balanceId.toXdr("hex"));
+}
+```
+
+For an issued asset, call the same method on its `StellarAsset` instance. The
+asset is supplied by that instance; the creator and eventual claimant must meet
+the protocol's balance, trustline and authorization requirements. The creating
+account needs reserve for the entry unless reserve sponsorship is explicit.
+Fee-bump sponsorship pays transaction fees, not that reserve. See
+[claimable-balance predicates](../claimable-balance-predicates.md) for time
+windows and an explicit claim operation. Invalid construction arguments raise
+`STAS_023`; pipeline and on-chain failures retain their existing typed errors.
+
 ## Sources, plugins, and native interoperability
 
-Each write accepts the native operation's optional `source`. When omitted,
-`changeTrust` and `transfer` bind the operation to the original `config.source`;
-`setTrustLineFlags` and `clawback` bind it to the asset issuer. This happens
-before pipeline plugins execute. Consequently, using a channel account for
-envelope sequence numbers does not change which account the asset operation acts
-on.
+SDK-shaped writes accept the native operation's optional `source`. When omitted,
+`changeTrust`, `transfer`, `burn`, and `createClaimableBalance` bind the
+operation to the original `config.source`; `setTrustLineFlags` and `clawback`
+bind it to the asset issuer. This happens before pipeline plugins execute.
+Consequently, using a channel account for envelope sequence numbers does not
+change which account the asset operation acts on.
 
-`issue` always binds the issuer as operation source. `redeem` always binds the
-issuer as destination and defaults its operation source to `config.source`.
-Neither method inserts extra setup operations; both submit ordinary SDK
-payments.
+`mint` and `setAuthorized` always bind the issuer as operation source. `burn`
+always binds the issuer as destination and defaults its operation source to
+`config.source`. Neither method inserts extra setup operations; both submit
+ordinary SDK payments.
 
 Constructor-time plugins follow the same pipeline-specific pattern as
 `Contract`. Install `@colibri/plugin-channel-accounts` and

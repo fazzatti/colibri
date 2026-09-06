@@ -1,8 +1,8 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Asset, Keypair, Operation } from "stellar-sdk";
-import { StellarPrice, type StellarPriceRatio } from "@/price/index.ts";
-import * as E from "@/price/error.ts";
+import { StellarPrice, type StellarPriceRatio } from "@/markets/price/index.ts";
+import * as E from "@/markets/price/error.ts";
 import { ColibriError } from "@/error/index.ts";
 
 describe("StellarPrice", () => {
@@ -212,7 +212,7 @@ describe("StellarPrice", () => {
     ];
     for (const error of errors) {
       assertEquals(error instanceof ColibriError, true);
-      assertEquals(error.source, "@colibri/core/price");
+      assertEquals(error.source, "@colibri/core/markets/price");
       assertEquals(E.ERROR_PRCE[error.code], error.constructor);
     }
   });

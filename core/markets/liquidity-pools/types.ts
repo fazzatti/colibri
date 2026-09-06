@@ -12,7 +12,7 @@ import type {
   LiquidityPoolLedgerEntry,
   TrustlineLedgerEntry,
 } from "@/ledger-entries/types.ts";
-import type { StellarPriceRatio } from "@/price/types.ts";
+import type { StellarPriceRatio } from "@/markets/price/types.ts";
 
 /** @internal Exact native SDK asset type. */
 export type Asset = NativeAsset;

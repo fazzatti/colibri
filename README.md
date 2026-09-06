@@ -246,6 +246,12 @@ the [SDEX guide](./docs/core/sdex.md),
 [native pool guide](./docs/core/liquidity-pool.md), and
 [asset guide](./docs/core/asset/stellar-asset.md).
 
+SDEX, native liquidity pools, and their exact rational price helpers are grouped
+under `core/markets/`. They remain named exports of `@colibri/core` and accept
+native SDK assets and operation inputs. `StellarAsset` supplies asset-level
+balance and authorization queries, explicit `mint`/`burn` payments, issuer
+authorization control, and creation of claimable balances with native claimants.
+
 ## Testing with Quickstart
 
 `@colibri/test-tooling` manages Docker-backed Stellar Quickstart instances for

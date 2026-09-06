@@ -26,7 +26,7 @@ export abstract class NativeLiquidityPoolError
   constructor(code: Code, message: string, cause?: unknown) {
     super({
       domain: "core",
-      source: "@colibri/core/liquidity-pool",
+      source: "@colibri/core/markets/liquidity-pools",
       code,
       message,
       details: message,

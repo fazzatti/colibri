@@ -19,7 +19,7 @@ class SDEXError<C extends Code> extends ColibriError<C> {
   constructor(code: C, message: string, cause?: unknown) {
     super({
       domain: "core",
-      source: "@colibri/core/sdex",
+      source: "@colibri/core/markets/sdex",
       code,
       message,
       meta: { cause },
