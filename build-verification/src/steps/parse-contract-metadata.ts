@@ -4,7 +4,7 @@ import { PARSE_CONTRACT_METADATA_STEP_ID } from "@/steps/ids.ts";
 
 /** Creates the parse-contract-metadata step used in verifier pipelines. */
 export const createParseContractMetadataStep = (): Step<
-  Parameters<typeof parseContractMetadata>[0],
+  Parameters<typeof parseContractMetadata>,
   Awaited<ReturnType<typeof parseContractMetadata>>,
   Error,
   typeof PARSE_CONTRACT_METADATA_STEP_ID

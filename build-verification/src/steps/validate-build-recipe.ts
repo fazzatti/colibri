@@ -4,7 +4,7 @@ import { VALIDATE_BUILD_RECIPE_STEP_ID } from "@/steps/ids.ts";
 
 /** Creates the validate-build-recipe step used in verifier pipelines. */
 export const createValidateBuildRecipeStep = (): Step<
-  Parameters<typeof validateBuildRecipe>[0],
+  Parameters<typeof validateBuildRecipe>,
   Awaited<ReturnType<typeof validateBuildRecipe>>,
   Error,
   typeof VALIDATE_BUILD_RECIPE_STEP_ID

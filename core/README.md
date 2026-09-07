@@ -411,8 +411,8 @@ value for plugin composition.
   `core/pipelines/shared/connectors`, while pipeline-specific ones stay next to
   the owning pipeline.
 
-Pipelines are built with `pipe(...)` and `step(...)` from `convee`, and plugins
-target step ids such as `steps.SEND_TRANSACTION_STEP_ID`.
+Pipelines are built with `pipe(...)` and `step(...)` from `convee` 2.1, and
+plugins target step ids such as `steps.SEND_TRANSACTION_STEP_ID`.
 
 ### Soroban invocation
 

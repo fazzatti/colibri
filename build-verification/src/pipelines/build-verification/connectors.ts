@@ -60,7 +60,7 @@ export const ARTIFACT_TO_COMPARISON_CONNECTOR_ID =
 export const buildVerificationInputToResolveTarget = (
   dependencies: BuildVerificationPipelineDependencies,
 ): Step<
-  ContractBuildVerificationInput,
+  [ContractBuildVerificationInput],
   ResolveVerificationTargetInput,
   Error,
   typeof INPUT_TO_RESOLVE_TARGET_CONNECTOR_ID
@@ -88,7 +88,7 @@ export const buildVerificationInputToResolveTarget = (
 export const buildVerificationTargetToMetadata = (
   dependencies: BuildVerificationPipelineDependencies,
 ): Step<
-  ResolveVerificationTargetOutput,
+  [ResolveVerificationTargetOutput],
   ParseContractMetadataInput,
   Error,
   typeof TARGET_TO_METADATA_CONNECTOR_ID
@@ -112,7 +112,7 @@ export const buildVerificationTargetToMetadata = (
 export const buildVerificationMetadataToRecipe = (
   dependencies: BuildVerificationPipelineDependencies,
 ): Step<
-  ParseContractMetadataOutput,
+  [ParseContractMetadataOutput],
   ValidateBuildRecipeInput,
   Error,
   typeof METADATA_TO_RECIPE_CONNECTOR_ID
@@ -138,7 +138,7 @@ export const buildVerificationMetadataToRecipe = (
 export const buildVerificationRecipeToSource = (
   dependencies: BuildVerificationPipelineDependencies,
 ): Step<
-  ValidateBuildRecipeOutput,
+  [ValidateBuildRecipeOutput],
   ResolveSourceArchiveInput,
   Error,
   typeof RECIPE_TO_SOURCE_CONNECTOR_ID
@@ -163,7 +163,7 @@ export const buildVerificationRecipeToSource = (
 export const buildVerificationSourceToImage = (
   dependencies: BuildVerificationPipelineDependencies,
 ): Step<
-  ResolveSourceArchiveOutput,
+  [ResolveSourceArchiveOutput],
   ResolveBuildImageInput,
   Error,
   typeof SOURCE_TO_IMAGE_CONNECTOR_ID
@@ -189,7 +189,7 @@ export const buildVerificationSourceToImage = (
 export const buildVerificationImageToExecution = (
   dependencies: BuildVerificationPipelineDependencies,
 ): Step<
-  ResolveBuildImageOutput,
+  [ResolveBuildImageOutput],
   ExecuteContractBuildInput,
   Error,
   typeof IMAGE_TO_EXECUTION_CONNECTOR_ID
@@ -221,7 +221,7 @@ export const buildVerificationImageToExecution = (
 export const buildVerificationExecutionToArtifact = (
   dependencies: BuildVerificationPipelineDependencies,
 ): Step<
-  ExecuteContractBuildOutput,
+  [ExecuteContractBuildOutput],
   SelectBuildArtifactInput,
   Error,
   typeof EXECUTION_TO_ARTIFACT_CONNECTOR_ID
@@ -245,7 +245,7 @@ export const buildVerificationExecutionToArtifact = (
 export const buildVerificationArtifactToComparison = (
   dependencies: BuildVerificationPipelineDependencies,
 ): Step<
-  SelectBuildArtifactOutput,
+  [SelectBuildArtifactOutput],
   CompareContractWasmInput,
   Error,
   typeof ARTIFACT_TO_COMPARISON_CONNECTOR_ID

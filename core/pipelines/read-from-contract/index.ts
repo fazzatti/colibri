@@ -29,15 +29,15 @@ export const READ_FROM_CONTRACT_PIPELINE_ID = "ReadFromContractPipeline";
 
 type ReadFromContractPipelineSteps = readonly [
   Step<
-    ReadFromContractInput,
+    [ReadFromContractInput],
     BuildTransactionInput,
     Error,
     "read-from-contract-input"
   >,
   ReturnType<typeof createBuildTransactionStep>,
-  Step<BuildTransactionOutput, SimulateTransactionInput>,
+  Step<[BuildTransactionOutput], SimulateTransactionInput>,
   ReturnType<typeof createSimulateTransactionStep>,
-  Step<SimulateTransactionOutput, ReturnType<typeof simulateToRetval>>,
+  Step<[SimulateTransactionOutput], ReturnType<typeof simulateToRetval>>,
 ];
 
 type ReadFromContractPipelineRuntime = Pipe<

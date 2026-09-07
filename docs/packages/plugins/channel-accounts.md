@@ -140,10 +140,16 @@ that should send the asset and keep its signer in `config.signers`.
 
 ## Pool lifecycle
 
-The pool leases one channel per run ID and releases it on success and error.
-When all channels are busy, additional runs wait. The plugin provides
-`registerChannels(channels)` and `getChannels()`. A shared in-memory pool does
-not coordinate with another process or independently created plugin.
+The pool leases one channel per run ID. Convee 2.1's `onFinally` releases it
+after input, body, error, and output processing settles, including failures in
+other plugins' hooks. Cleanup does not replace the original result or error. If
+allocation was never reached, cleanup is a no-op. A hung invocation still holds
+its channel until it settles; finalization is not a timeout mechanism.
+
+When all channels are busy, additional runs wait and resume upon release. The
+plugin provides `registerChannels(channels)` and `getChannels()`. A shared
+in-memory pool does not coordinate with another process or independently created
+plugin.
 
 Wait for all runs before closing channels. `ChannelAccounts.close` merges the
 accounts; it can use a sponsor proxy when on-chain signer/threshold checks
