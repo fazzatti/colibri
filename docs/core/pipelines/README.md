@@ -2,7 +2,7 @@
 
 Pipelines combine [processes](../processes/README.md), step wrappers, and
 connectors into reusable transaction workflows. They are built on
-[`convee` 2](https://jsr.io/@fifo/convee/2.0.0).
+[`convee` 2.1](https://jsr.io/@fifo/convee/2.1.0).
 
 Colibri exposes factory functions instead of wrapper objects:
 
