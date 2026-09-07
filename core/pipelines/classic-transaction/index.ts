@@ -41,23 +41,23 @@ export const CLASSIC_TRANSACTION_PIPELINE_ID = "ClassicTransactionPipeline";
 
 type ClassicTransactionPipelineSteps = readonly [
   Step<
-    ClassicTransactionInput,
+    [ClassicTransactionInput],
     ClassicTransactionInput,
     Error,
     typeof CLASSIC_TRANSACTION_INPUT_STEP_ID
   >,
   Step<
-    ClassicTransactionInput,
+    [ClassicTransactionInput],
     BuildTransactionInput,
     Error,
     "classic-transaction-build-input"
   >,
   ReturnType<typeof createBuildTransactionStep>,
-  Step<BuildTransactionOutput, EnvelopeSigningRequirementsInput>,
+  Step<[BuildTransactionOutput], EnvelopeSigningRequirementsInput>,
   ReturnType<typeof createEnvelopeSigningRequirementsStep>,
   Step<EnvelopeSigningRequirementsOutput, SignEnvelopeInput>,
   ReturnType<typeof createSignEnvelopeStep>,
-  Step<SignEnvelopeOutput, SendTransactionInput>,
+  Step<[SignEnvelopeOutput], SendTransactionInput>,
   ReturnType<typeof createSendTransactionStep>,
   ReturnType<typeof createParseClassicTransactionOutcomeStep>,
 ];

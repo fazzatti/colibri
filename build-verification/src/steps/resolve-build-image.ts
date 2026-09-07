@@ -4,7 +4,7 @@ import { RESOLVE_BUILD_IMAGE_STEP_ID } from "@/steps/ids.ts";
 
 /** Creates the resolve-build-image step used in verifier pipelines. */
 export const createResolveBuildImageStep = (): Step<
-  Parameters<typeof resolveBuildImage>[0],
+  Parameters<typeof resolveBuildImage>,
   Awaited<ReturnType<typeof resolveBuildImage>>,
   Error,
   typeof RESOLVE_BUILD_IMAGE_STEP_ID

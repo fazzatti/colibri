@@ -8,7 +8,7 @@ import { SEND_TRANSACTION_STEP_ID } from "@/steps/ids.ts";
  * @returns A configured send-transaction step.
  */
 export const createSendTransactionStep = (): Step<
-  Parameters<typeof sendTransaction>[0],
+  Parameters<typeof sendTransaction>,
   Awaited<ReturnType<typeof sendTransaction>>,
   Error,
   typeof SEND_TRANSACTION_STEP_ID

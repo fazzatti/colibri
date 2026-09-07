@@ -8,7 +8,7 @@ import { ENVELOPE_SIGNING_REQUIREMENTS_STEP_ID } from "@/steps/ids.ts";
  * @returns A configured envelope-signing-requirements step.
  */
 export const createEnvelopeSigningRequirementsStep = (): Step<
-  Parameters<typeof envelopeSigningRequirements>[0],
+  Parameters<typeof envelopeSigningRequirements>,
   Awaited<ReturnType<typeof envelopeSigningRequirements>>,
   Error,
   typeof ENVELOPE_SIGNING_REQUIREMENTS_STEP_ID

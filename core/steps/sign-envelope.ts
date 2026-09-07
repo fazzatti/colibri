@@ -8,7 +8,7 @@ import { SIGN_ENVELOPE_STEP_ID } from "@/steps/ids.ts";
  * @returns A configured sign-envelope step.
  */
 export const createSignEnvelopeStep = (): Step<
-  Parameters<typeof signEnvelope>[0],
+  Parameters<typeof signEnvelope>,
   Awaited<ReturnType<typeof signEnvelope>>,
   Error,
   typeof SIGN_ENVELOPE_STEP_ID

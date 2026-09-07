@@ -4,7 +4,7 @@ import { SELECT_BUILD_ARTIFACT_STEP_ID } from "@/steps/ids.ts";
 
 /** Creates the select-build-artifact step used in verifier pipelines. */
 export const createSelectBuildArtifactStep = (): Step<
-  Parameters<typeof selectBuildArtifact>[0],
+  Parameters<typeof selectBuildArtifact>,
   Awaited<ReturnType<typeof selectBuildArtifact>>,
   Error,
   typeof SELECT_BUILD_ARTIFACT_STEP_ID

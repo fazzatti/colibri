@@ -8,7 +8,7 @@ import { ENFORCE_SIMULATION_STEP_ID } from "@/steps/ids.ts";
  * @returns A configured enforcing-simulation step.
  */
 export const createEnforceSimulationStep = (): Step<
-  Parameters<typeof enforceSimulation>[0],
+  Parameters<typeof enforceSimulation>,
   Awaited<ReturnType<typeof enforceSimulation>>,
   Error,
   typeof ENFORCE_SIMULATION_STEP_ID

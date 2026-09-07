@@ -19,8 +19,7 @@ type ChannelAccountsPublicPlugin = ChannelAccountsPluginControls & {
   input<TInput extends ChannelAccountsPipelineInput>(
     input: TInput,
   ): Promise<TInput>;
-  output<TOutput>(output: TOutput): TOutput;
-  error<TError extends Error>(error: TError): TError;
+  finally(): void;
 };
 
 const targetsPipeline = (
@@ -44,6 +43,9 @@ const releaseChannelIfAllocated = (
 /**
  * Creates a channel-accounts plugin that swaps one pooled channel into each
  * classic or Soroban invoke pipeline run.
+ * Releases the channel during finalization, including when another plugin's
+ * input, output, or error hook fails. Runs that never acquired a channel need
+ * no cleanup.
  *
  * @param args - Plugin creation arguments
  * @returns A runtime plugin with channel registration controls
@@ -80,13 +82,8 @@ export const createChannelAccountsPlugin = (
       const channel = await pool.allocate(this.context().runId);
       return injectChannelAccount(input, channel);
     })
-    .onOutput(function (this: PluginThis, output) {
+    .onFinally(function (this: PluginThis) {
       releaseChannelIfAllocated(pool, this.context().runId);
-      return output;
-    })
-    .onError(function (this: PluginThis, error: Error): Error {
-      releaseChannelIfAllocated(pool, this.context().runId);
-      return error;
     });
 
   return new Proxy(channelAccountsPlugin, {

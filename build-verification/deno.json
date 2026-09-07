@@ -1,6 +1,6 @@
 {
   "name": "@colibri/build-verification",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "exports": {
     ".": "./mod.ts",
     "./core": "./core.ts",
@@ -20,7 +20,7 @@
   },
   "imports": {
     "@/": "./src/",
-    "@colibri/core": "jsr:@colibri/core@^0.30.0",
+    "@colibri/core": "jsr:@colibri/core@^0.30.1",
     "dockerode": "npm:dockerode@3.3.3"
   }
 }

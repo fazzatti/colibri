@@ -8,7 +8,7 @@ import { SIMULATE_TRANSACTION_STEP_ID } from "@/steps/ids.ts";
  * @returns A configured simulate-transaction step.
  */
 export const createSimulateTransactionStep = (): Step<
-  Parameters<typeof simulateTransaction>[0],
+  Parameters<typeof simulateTransaction>,
   Awaited<ReturnType<typeof simulateTransaction>>,
   Error,
   typeof SIMULATE_TRANSACTION_STEP_ID

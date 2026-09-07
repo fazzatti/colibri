@@ -31,6 +31,12 @@ console.log(steps.BUILD_TRANSACTION_STEP_ID);
 Factories return fresh step instances, which keeps pipelines and tests isolated
 from each other.
 
+Step declarations use Convee 2's argument tuples. For a wrapper around a process,
+the input generic is `Parameters<typeof process>`, not its first element
+`Parameters<typeof process>[0]`. This preserves union-typed inputs and the exact
+function signature. It does **not** add an array to the call: a process that takes
+one input object still runs as `executeStep(input)`, not `executeStep([input])`.
+
 ## Available Steps
 
 | Factory                                      | Id                                          |
