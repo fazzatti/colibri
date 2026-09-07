@@ -1,6 +1,6 @@
 {
   "name": "@colibri/core",
-  "version": "0.30.1",
+  "version": "1.0.0",
   "license": "MIT",
   "exports": {
     ".": "./mod.ts"
@@ -12,8 +12,16 @@
     ]
   },
   "publish": {
-    "include": ["mod.ts", "./**/*.ts", "README.md", "LICENSE", "./deno.json"],
-    "exclude": ["./**/*.test.ts"]
+    "include": [
+      "mod.ts",
+      "./**/*.ts",
+      "README.md",
+      "LICENSE",
+      "./deno.json"
+    ],
+    "exclude": [
+      "./**/*.test.ts"
+    ]
   },
   "imports": {
     "@/": "./"

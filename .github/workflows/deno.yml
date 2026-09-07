@@ -29,11 +29,30 @@ jobs:
     steps:
       - name: Setup repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: 2.7.11
+          deno-version: 2.9.6
+
+      - name: Test release rules and validate reviewed version plan
+        run: |
+          deno task check:release-tooling
+          deno task test:releases
+          deno task release:check --base origin/main
+
+      - name: Check reviewed public declarations
+        run: deno task release:api:check > "${{ runner.temp }}/public-api-changes.json"
+
+      - name: Upload public API change report
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-api-changes
+          path: ${{ runner.temp }}/public-api-changes.json
+          if-no-files-found: error
+          retention-days: 7
 
       # Uncomment this step to verify the use of 'deno fmt' on each commit.
       # - name: Verify formatting
@@ -76,29 +95,120 @@ jobs:
           deno task test:docs
           deno task check:docs
 
-  compatibility:
-    name: consumer / Node ${{ matrix.node }} / SDK ${{ matrix.sdk }}
+  prepare_consumers:
+    name: prepare consumers / SDK ${{ matrix.sdk }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - node: "22.12.0"
-            sdk: "17.0.1"
-          - node: "24"
-            sdk: "^17.0.1"
+        sdk: ["17.0.1", "^17.0.1"]
     steps:
       - uses: actions/checkout@v4
       - uses: denoland/setup-deno@v2
         with:
-          deno-version: 2.7.11
+          deno-version: 2.9.6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Build portable npm consumer artifacts once
+        env:
+          STELLAR_SDK_VERSION: ${{ matrix.sdk }}
+        run: deno task prepare:consumers "${{ runner.temp }}/consumers"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: consumers-${{ matrix.sdk }}
+          path: ${{ runner.temp }}/consumers
+          if-no-files-found: error
+          retention-days: 1
+
+  compatibility:
+    name: consumer / Node ${{ matrix.node }} / TS ${{ matrix.typescript }} / SDK ${{ matrix.sdk }}
+    needs: prepare_consumers
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["22.12.0", "22", "24"]
+        typescript: ["5.9.3", "6.0.3"]
+        sdk: ["17.0.1", "^17.0.1"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.6
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-      - name: Check isolated Deno, installed npm artifacts, and browser bundles
+      - uses: actions/download-artifact@v4
+        with:
+          name: consumers-${{ matrix.sdk }}
+          path: ${{ runner.temp }}/consumers
+      - name: Compile and execute installed consumers
+        env:
+          TYPESCRIPT_VERSION: ${{ matrix.typescript }}
+        run: deno task check:consumers:npm "${{ runner.temp }}/consumers"
+
+  deno_compatibility:
+    name: consumer / Deno ${{ matrix.deno }} / SDK ${{ matrix.sdk }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        deno: ["2.7.11", "2.9.6"]
+        sdk: ["17.0.1", "^17.0.1"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: ${{ matrix.deno }}
+      - name: Compile public entrypoints and execute isolated consumers
         env:
           STELLAR_SDK_VERSION: ${{ matrix.sdk }}
-        run: deno task check:consumers
+        run: deno task check:consumers:deno
+
+  browser_compatibility:
+    name: consumer / browsers / SDK ${{ matrix.sdk }}
+    needs: prepare_consumers
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sdk: ["17.0.1", "^17.0.1"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: actions/download-artifact@v4
+        with:
+          name: consumers-${{ matrix.sdk }}
+          path: ${{ runner.temp }}/consumers
+      - name: Run real Chromium, Firefox, and WebKit consumers
+        env:
+          TYPESCRIPT_VERSION: "6.0.3"
+        run: deno task check:consumers:npm "${{ runner.temp }}/consumers" --browsers
+
+  core_compatibility:
+    name: consumer / released Core ranges / SDK ${{ matrix.sdk }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sdk: ["17.0.1", "^17.0.1"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.6
+      - name: Check minimum Core and historical dependent release trees
+        env:
+          STELLAR_SDK_VERSION: ${{ matrix.sdk }}
+        run: deno task check:consumers:dependencies
 
   package_tests:
     name: test / ${{ matrix.package }}
@@ -271,6 +381,9 @@ jobs:
     needs: [
       quality,
       compatibility,
+      deno_compatibility,
+      browser_compatibility,
+      core_compatibility,
       complexity,
       package_tests,
       build_verification_tests,
@@ -283,6 +396,9 @@ jobs:
         env:
           QUALITY_RESULT: ${{ needs.quality.result }}
           COMPATIBILITY_RESULT: ${{ needs.compatibility.result }}
+          DENO_COMPATIBILITY_RESULT: ${{ needs.deno_compatibility.result }}
+          BROWSER_COMPATIBILITY_RESULT: ${{ needs.browser_compatibility.result }}
+          CORE_COMPATIBILITY_RESULT: ${{ needs.core_compatibility.result }}
           COMPLEXITY_RESULT: ${{ needs.complexity.result }}
           PACKAGE_TESTS_RESULT: ${{ needs.package_tests.result }}
           BUILD_VERIFICATION_TESTS_RESULT: ${{ needs.build_verification_tests.result }}
@@ -290,6 +406,9 @@ jobs:
         run: |
           test "$QUALITY_RESULT" = "success"
           test "$COMPATIBILITY_RESULT" = "success"
+          test "$DENO_COMPATIBILITY_RESULT" = "success"
+          test "$BROWSER_COMPATIBILITY_RESULT" = "success"
+          test "$CORE_COMPATIBILITY_RESULT" = "success"
           test "$COMPLEXITY_RESULT" = "success"
           test "$PACKAGE_TESTS_RESULT" = "success"
           test "$BUILD_VERIFICATION_TESTS_RESULT" = "success"

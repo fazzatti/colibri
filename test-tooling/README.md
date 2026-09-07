@@ -1,5 +1,10 @@
 # @colibri/test-tooling
 
+Version 1.x follows Colibri's
+[compatibility and independent release policy](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility).
+The supported execution environment is Deno with Docker; graduation does not add
+Node or browser support.
+
 Test infrastructure helpers for Colibri packages.
 
 The main public API is `StellarTestLedger`, a Docker-backed harness that starts,

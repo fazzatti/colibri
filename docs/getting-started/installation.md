@@ -5,9 +5,10 @@ Deno-first TypeScript projects.
 
 ## Prerequisites
 
-- [Deno](https://deno.land/) 2; this repository validates with `v2.7.11`
-- Node.js `v22.12` or later when consuming Colibri through npm or a Node-based
-  bundler
+- [Deno](https://deno.land/) 2.7.11 or later; compatibility runs on 2.7.11 and
+  2.9.6
+- Node.js 22.12.0 or supported 22.x/24.x LTS when consuming Colibri through npm
+  or a Node-based bundler
 - A reachable Docker daemon such as Docker Desktop or OrbStack if you plan to
   use `@colibri/test-tooling` or the built-in `@colibri/build-verification`
   runner
@@ -36,15 +37,15 @@ This will add imports similar to:
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^0.30.1",
-    "@colibri/webauth": "jsr:@colibri/webauth@^0.2.3",
-    "@colibri/build-verification": "jsr:@colibri/build-verification@^0.4.4",
-    "@colibri/identicon": "jsr:@colibri/identicon@^0.1.3",
-    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^0.4.0",
-    "@colibri/test-tooling": "jsr:@colibri/test-tooling@^0.3.1",
-    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^0.10.6",
-    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^0.2.16",
-    "@colibri/plugin-sep29": "jsr:@colibri/plugin-sep29@^0.1.2"
+    "@colibri/core": "jsr:@colibri/core@^1.0.0",
+    "@colibri/webauth": "jsr:@colibri/webauth@^1.0.0",
+    "@colibri/build-verification": "jsr:@colibri/build-verification@^0.4.5",
+    "@colibri/identicon": "jsr:@colibri/identicon@^1.0.0",
+    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^1.0.0",
+    "@colibri/test-tooling": "jsr:@colibri/test-tooling@^1.0.0",
+    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^1.0.0",
+    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^1.0.0",
+    "@colibri/plugin-sep29": "jsr:@colibri/plugin-sep29@^1.0.0"
   }
 }
 ```
@@ -61,6 +62,10 @@ import { Identicon } from "jsr:@colibri/identicon";
 ```
 
 ## Runtime boundaries
+
+See [compatibility and releases](compatibility.md) for stable APIs, supported
+dependency/runtime combinations, and why dependent packages need not bump with
+every compatible Core release.
 
 The examples use Deno and package aliases created by `deno add`. Networked
 examples need `--allow-net`; reading secrets from environment variables also

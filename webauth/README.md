@@ -1,5 +1,10 @@
 # @colibri/webauth
 
+Version 1.x follows Colibri's
+[compatibility and independent release policy](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility).
+Compatible Core 1.x updates do not require this package to release again unless
+its API or required dependency floor changes.
+
 Unified SEP-10 and SEP-45 Web Authentication for Stellar.
 
 `WebAuthClient` discovers the protocols advertised by a domain, routes classic

@@ -9,6 +9,10 @@
     "./test-tooling"
   ],
   "nodeModulesDir": "auto",
+  "minimumDependencyAge": {
+    "age": "P1D",
+    "exclude": ["jsr:@fifo/convee"]
+  },
   "imports": {
     "jsr:@colibri/core": "./core",
     "jsr:@colibri/build-verification": "./build-verification",
@@ -31,7 +35,20 @@
     "resvg-test": "npm:@resvg/resvg-js@2.6.2"
   },
   "tasks": {
+    "release:init": "deno run -A _tools/releases/cli.ts init",
+    "release:plan": "deno run -A _tools/releases/cli.ts plan",
+    "release:apply": "deno run -A _tools/releases/cli.ts apply",
+    "release:check": "deno run -A _tools/releases/cli.ts check",
+    "release:api:update": "deno run -A _tools/releases/api.ts --update",
+    "release:api:check": "deno run -A _tools/releases/api.ts",
+    "check:release-tooling": "deno check _tools/releases/cli.ts _tools/releases/api.ts _tools/consumers/check.ts _tools/consumers/deno.ts _tools/consumers/dependencies.ts _tools/consumers/prepare.ts _tools/consumers/published.ts _tools/consumers/run.ts",
+    "test:releases": "deno test -A --clean _tools/releases",
     "check:consumers": "deno run -A _tools/consumers/check.ts",
+    "check:consumers:deno": "deno run -A _tools/consumers/deno.ts",
+    "check:consumers:dependencies": "deno run -A _tools/consumers/dependencies.ts",
+    "prepare:consumers": "deno run -A _tools/consumers/prepare.ts",
+    "check:consumers:npm": "deno run -A _tools/consumers/run.ts",
+    "check:consumers:published": "deno run -A _tools/consumers/published.ts",
     "inspect:error-boundaries": "deno run --allow-read --allow-env _tools/error-boundaries.ts",
     "docs:errors": "deno run --allow-read --allow-write --allow-env _tools/documentation.ts --write && deno fmt docs/reference/errors docs/SUMMARY.md",
     "test:docs": "deno test --allow-read --allow-write --allow-env --allow-run --clean _tools/documentation.unit.test.ts",

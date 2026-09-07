@@ -1,13 +1,8 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
+import { mainnetArchiveTestConfig } from "colibri-internal/tests/mainnet-archive-config.ts";
 import { assertEquals, assertExists } from "@std/assert";
 import { afterEach, describe, it } from "@std/testing/bdd";
-import {
-  type Event,
-  EventFilter,
-  EventType,
-  NetworkProviders,
-  SACEvents,
-} from "@colibri/core";
+import { type Event, EventFilter, EventType, SACEvents } from "@colibri/core";
 import { xdr } from "stellar-sdk";
 import { RPCStreamer } from "@/streamer.ts";
 
@@ -54,7 +49,7 @@ describe(
   "[Mainnet] RPC Event Streamer Variant",
   disableSanitizeConfig,
   () => {
-    const networkConfig = NetworkProviders.Lightsail.MainNet();
+    const networkConfig = mainnetArchiveTestConfig;
 
     let streamer: RPCStreamer<Event>;
 

@@ -1,8 +1,15 @@
 # @colibri/identicon
 
-Deterministic Stellar account identicons, written in TypeScript. Generate the
-familiar SEP-33 symmetric 7×7 pattern as SVG, PNG, or a data URL, with defaults
-compatible with the established Lobstr reference implementation.[^compatibility]
+Version 1.x follows Colibri's
+[compatibility and independent release policy](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility).
+Compatible Core 1.x updates do not require this package to release again unless
+its API or required dependency floor changes.
+
+Deterministic Stellar account and contract identicons, written in TypeScript.
+Generate the familiar SEP-33 symmetric 7×7 pattern as SVG, PNG, or a data URL,
+with defaults compatible with the established Lobstr reference implementation.[^compatibility]
+G-addresses follow SEP-33's account use case; C-addresses are an extended
+Colibri use case that applies the same algorithm to contract ID bytes.[^contracts]
 
 Everything is generated locally. There is no account lookup, network request,
 Canvas, or DOM dependency. PNG output is a `Uint8Array`, not a Node `Buffer`.
@@ -34,10 +41,29 @@ const src = icon.toDataUrl({ format: "svg" }); // Ready for an image's src
 ```
 
 These methods are synchronous. The constructor accepts a checksummed Stellar
-Ed25519 public address (`G...`). Secret keys, contract addresses, and muxed
-addresses are not accepted or silently converted. The account does not need to
-exist on any network, and the same address produces the same icon on every
-network.
+Ed25519 public address (`G...`) or contract address (`C...`). Secret keys and
+muxed addresses are not accepted or silently converted. The account or contract
+does not need to exist on any network, and the same address produces the same
+icon on every network.
+
+### Contract addresses: extended support
+
+Use the same API for a contract address:
+
+```ts
+const contractIcon = new Identicon(
+  "CA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUWDA",
+);
+
+const contractSvg = contractIcon.toSvg();
+const contractPng = contractIcon.toPng();
+```
+
+SEP-33 specifies G-address identicons, not C-address identicons. Colibri's
+extension decodes the 32-byte contract ID and applies the identical byte
+selection, hue and mirrored-grid algorithm. There is no extra hash, type marker,
+Wasm download or contract inspection. The icon represents the contract address,
+not its code, and existing G-address output remains unchanged.[^contracts]
 
 To save the results in Deno:
 
@@ -100,10 +126,13 @@ console.log(data.color); // { r: 204, g: 98, b: 61 }
 console.log(data.matrix[0]); // [true, true, true, false, true, true, true]
 ```
 
-The result contains `publicKey`, `hue`, `color`, and `matrix`. Matrix indexing
-is `matrix[row][column]`, and `true` means a filled foreground cell. The result,
-color, matrix, and each row are frozen and readonly. They can be reused safely
-without one renderer changing the next renderer's input.
+The result contains `publicKey`, `hue`, `color`, and `matrix`. For
+compatibility, the existing `publicKey` property (including the class getter)
+retains its name and returns the original G-address or C-address; a contract ID
+is not a public key. Matrix indexing is `matrix[row][column]`, and `true` means
+a filled foreground cell. The result, color, matrix, and each row are frozen and
+readonly. They can be reused safely without one renderer changing the next
+renderer's input.
 
 ## Typed errors
 
@@ -121,22 +150,23 @@ try {
     error instanceof IdenticonError &&
     error.code === IdenticonCode.INVALID_PUBLIC_KEY
   ) {
-    console.error("Please provide a valid Stellar G-address.");
+    console.error("Please provide a valid Stellar G-address or C-address.");
   } else {
     throw error;
   }
 }
 ```
 
-Invalid public-key input is deliberately not copied into error metadata: a user
+Invalid address input is deliberately not copied into error metadata: a user
 might accidentally paste a secret key. PNG encoder failures retain their
 original cause in `error.meta?.cause`.
 
 ## Identity and compatibility
 
-An identicon is a visual aid, **not proof of account ownership or an address
-checksum**. Different valid addresses can share the same icon. Always verify the
-complete destination address for payments and other sensitive actions.
+An identicon is a visual aid, **not proof of account/contract ownership or an
+address checksum**. Different valid addresses can share the same icon. Always
+verify the complete destination address and its type for payments and other
+sensitive actions.
 
 Compatibility means the same default pattern, color, and decoded image pixels;
 PNG compression and SVG markup are not required to match another encoder's file
@@ -152,3 +182,12 @@ bytes. Custom presentation options intentionally change those rendered pixels.
     instead uses `[2, 16)` on the raw public key, shifting the selected bytes by
     one and producing different icons. Colibri intentionally follows the
     established implementation, rather than introducing that visual change.
+
+[^contracts]: C-address support is a Colibri extension, not an active C-address
+    identicon standard. Until an ecosystem standard is defined for these
+    addresses, Colibri deliberately reuses the account algorithm. Accidental
+    matches between unrelated addresses are unlikely in individual comparisons,
+    but the icon uses only eight hue bits and 28 pattern bits, not all 256
+    payload bits. Identical G/C payloads always produce identical icons, and
+    different payloads can collide too. We consider this suitable for a visual
+    aid, never as a substitute for checking the full address and its type.

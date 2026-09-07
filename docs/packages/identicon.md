@@ -1,9 +1,10 @@
 # Identicons
 
 `@colibri/identicon` generates the familiar symmetric SEP-33 account image
-locally. It accepts a Stellar Ed25519 G-address and derives its pattern and
-color without querying a server. An address produces the same result on every
-network, including when the account has never been funded.
+locally. It accepts Stellar Ed25519 G-addresses and extends the same algorithm
+to C-address contract IDs. Pattern and color are derived without querying a
+server. An address produces the same result on every network, including when the
+account has never been funded or the contract has not been deployed.
 
 ## Installation and rendering
 
@@ -33,9 +34,42 @@ console.log(svg.length, png.length, src.slice(0, 30));
 All generation/rendering methods are synchronous. PNG bytes use `Uint8Array`;
 there is no Canvas, DOM, or Node Buffer requirement for generating an image.
 
-Only checksummed `G...` addresses are supported. Secret keys, contract IDs, and
-muxed addresses fail with `IdenticonCode.INVALID_PUBLIC_KEY` rather than being
-silently converted.
+Only checksummed `G...` and `C...` addresses are supported. Secret keys, raw
+contract-ID bytes, malformed addresses and muxed addresses fail with
+`IdenticonCode.INVALID_PUBLIC_KEY` rather than being silently converted.
+
+## Contract addresses: Colibri extension
+
+[SEP-33](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0033.md)
+defines account identicons for G-addresses. Contract-address support is a
+Colibri extension, not a standardized SEP-33 contract variant.[^contracts]
+
+This complete script uses a checksummed C-address from SEP-23's test vectors. It
+generates an image locally and does not require a deployed contract:
+
+<!-- deno-check -->
+
+```ts
+import { generateIdenticon, Identicon } from "@colibri/identicon";
+
+const contractAddress =
+  "CA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUWDA";
+
+// Decode the contract ID and reuse the account color/pattern algorithm.
+const icon = new Identicon(contractAddress);
+const svg = icon.toSvg();
+const png = icon.toPng();
+const src = icon.toDataUrl({ format: "svg" });
+
+// The standalone generator also accepts C-addresses for custom renderers.
+const { matrix, color } = generateIdenticon(contractAddress);
+console.log(svg.length, png.length, src.slice(0, 30), matrix, color);
+```
+
+For a G-address, the input bytes are the 32-byte public key itself. For a
+C-address, they are the 32-byte contract ID, not the Wasm hash. Both use the
+same byte selection, hue, matrix and rendering code. No additional hashing or
+address-type marker is applied. Existing account images are unchanged.
 
 ## Explicit presentation
 
@@ -75,6 +109,10 @@ const { matrix, color, hue } = generateIdenticon(
 result is deeply frozen. The class also exposes readonly `matrix` and `color`
 getters.
 
+The result and class retain their existing `publicKey` property for API
+compatibility. It returns the supplied G-address or C-address; the name does not
+mean that a contract ID is an Ed25519 public key.
+
 ## Errors and compatibility
 
 All validation and PNG encoding failures use `IdenticonError`, a Colibri error
@@ -89,9 +127,18 @@ literal SEP's differing `[2, 16)` offset. See the
 for the exact distinction and pinned reference.
 
 Identicons can collide and are not proof of ownership. They help recognize
-accounts visually, but never replace checking the complete destination address.
+accounts and contracts visually, but never replace checking the complete
+destination address and its type.
 
 See [every identicon error](../reference/errors/identicon.md) and the
 [API reference](https://jsr.io/@colibri/identicon/doc). For browser rendering,
 assign a data URL to an image's `src` and give the image meaningful alt text;
 visual resemblance is not an authentication check.
+
+[^contracts]: Until an ecosystem standard defines C-address identicons, Colibri
+    deliberately applies the same algorithm as for G-addresses. Accidental image
+    matches between unrelated addresses are unlikely in individual comparisons,
+    but the image uses only eight hue bits and 28 pattern bits rather than the
+    full payload. Equal G/C payloads always produce the same icon; different
+    payloads can also collide. This tradeoff is suitable for visual recognition,
+    not identity verification or authorization.

@@ -1,5 +1,10 @@
 # Channel Accounts Plugin
 
+Version 1.x follows Colibri's
+[compatibility and independent release policy](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility).
+Compatible Core 1.x updates do not require this package to release again unless
+its API or required dependency floor changes.
+
 Utilities for managing sponsored Stellar channel accounts and reusing them in
 Colibri classic and Soroban transaction pipelines.
 

@@ -405,6 +405,31 @@ If you add more environment-sensitive tests, document them.
 
 ## Package-Specific Notes
 
+### Stable release and compatibility review
+
+All public packages except Build Verification have graduated to independent 1.x
+release lines. Build Verification remains 0.x. Read
+`docs/getting-started/compatibility.md` and `_tools/releases/README.md` before
+changing public types, signer/class extension points, IDs, plugin lifecycle,
+errors, defaults, runtime support, or native Stellar SDK interoperability.
+
+- Record reviewed cumulative release intent in `_tools/releases/plan.json`.
+  Calculate versions from fetched `origin/main`, not the current edited version.
+- Use `release:plan`, `release:apply`, and `release:check`; do not apply an
+  unscoped workspace bump or infer compatibility from commit subjects.
+- Keep existing compatible Core minimum ranges unless a fix or new API requires
+  raising them. A compatible Core release alone does not require plugin bumps.
+- Review public declaration changes and update the API snapshot intentionally.
+  Preserve `_tools/consumers/v1/` fixtures; do not edit away a regression.
+- Run native SDK/custom signer/plugin checks against supported minimum/current
+  integrations. Browser bundling is not browser execution, and dnt test artifacts
+  are not JSR's published distribution.
+- Keep the 100% implementation coverage target, existing Codecov policy, CRAP 15,
+  architecture, and full package integration checks. Do not count consumer
+  fixtures as coverage padding.
+- Current-major compatibility is required. Older-major backports or adapters
+  need a separate user decision; do not introduce a standing LTS policy.
+
 ### `core/`
 
 This is the package that defines most repo-wide architectural rules.
