@@ -95,6 +95,9 @@ describe("ChannelAccounts", () => {
       assertExists(plugin);
       assertEquals(plugin.id, CHANNEL_ACCOUNTS_PLUGIN_ID);
       assertEquals(plugin.target, undefined);
+      assertEquals(plugin.supports("finally"), true);
+      assertEquals(plugin.supports("output"), false);
+      assertEquals(plugin.supports("error"), false);
       assertEquals(plugin.targets(CLASSIC_TRANSACTION_PIPELINE_ID), true);
       assertEquals(plugin.targets(INVOKE_CONTRACT_PIPELINE_ID), true);
       assertEquals(plugin.targets("SomeOtherPipeline"), false);
@@ -168,28 +171,17 @@ describe("ChannelAccounts", () => {
       );
     });
 
-    it("ignores output release when no channel is allocated", () => {
+    it("ignores finalization when no channel is allocated", () => {
       const plugin = createChannelAccountsPlugin({
         channels: [channel],
       });
-      const output = createClassicPipelineOutput();
-      const outputHook = (
-        plugin as {
-          output(
-            this: unknown,
-            output: ClassicTransactionOutput,
-          ): ClassicTransactionOutput;
-        }
-      ).output;
-
-      const result = outputHook.call(
+      const result = plugin.finally.call(
         {
           context: () => ({ runId: "missing-run" }),
         } as never,
-        output,
       );
 
-      assertEquals(result, output);
+      assertEquals(result, undefined);
     });
   });
 

@@ -60,21 +60,26 @@ invokeWithSponsor.use(
 
 For available plugins, see [Plugins](../../packages/plugins/README.md).
 
-## Convee 2 compatibility
+## Convee 2.1 compatibility
 
-Use Convee 2 when composing custom pipes or plugins with this release. Colibri's
-factory names, callable inputs, step IDs, transaction fees, and signing order
-remain unchanged. `use(...)` and `remove(...)` return the same callable instance.
+Use Convee 2.1 when composing custom pipes or plugins with this release.
+Colibri's factory names, callable inputs, step IDs, transaction fees, and
+signing order remain unchanged. `use(...)` and `remove(...)` return the same
+callable instance.
 
 Custom integrations should review the
-[Convee 1.x migration guide](https://github.com/fazzatti/convee/tree/v2.0.0#migrating-from-1x),
+[Convee 1.x migration guide](https://github.com/fazzatti/convee/tree/v2.1.0#migrating-from-1x),
 particularly these upstream rules:
 
 - An array returned by a child is spread into the next child's arguments. To
   pass one array argument, return an outer one-element tuple, `[array]`.
 - Error hooks handle failures from the step or pipeline body. Failures in that
-  unit's input/output hooks propagate; they do not enter its own error hooks.
-  Do not rely on an error hook as an unconditional cleanup/finally handler.
+  unit's input/output hooks propagate; they do not enter its own error hooks. Do
+  not rely on an error hook as an unconditional cleanup/finally handler.
+- Use `onFinally` for resource cleanup after execution settles. Finalizers run
+  even when input, output, or error hooks fail, and async cleanup is awaited. A
+  finalizer must tolerate an input hook that never acquired its resource. The
+  channel-accounts plugin uses this lifecycle to return pooled channels.
 - Context views belong to individual invocations. Share state through a parent
   run context, and keep output capture enabled when using Colibri connectors
   that read preceding step outputs.

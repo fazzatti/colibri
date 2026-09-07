@@ -99,6 +99,12 @@ The plugin allocates one channel per pipeline run, swaps it into
 `input.config.source`, appends the channel signer, and releases the channel when
 the run finishes or fails.
 
+Release uses Convee 2.1's `onFinally` hook, after the pipeline's input, body,
+error handling, and output hooks settle. This also releases the channel when
+another plugin's hook rejects, regardless of that plugin's registration order.
+If the run fails before allocation, finalization has nothing to release. When
+the pool is exhausted, waiting runs resume as channels are released.
+
 By default the plugin can be attached to:
 
 - `createClassicTransactionPipeline(...)`
