@@ -1,4 +1,4 @@
-import { assertEquals, assertRejects } from "@std/assert";
+import { assertEquals, assertRejects, assertStringIncludes } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { dirname, resolve } from "node:path";
 import { runReleaseCli } from "./cli.ts";
@@ -267,5 +267,69 @@ describe("release repository and native version editing", () => {
         "RELEASE_ALREADY_EDITED",
       );
     });
+  });
+
+  it("rejects a reused plan on a subsequent push until its baseline and bump are renewed", async () => {
+    await fixture(async (root, plan) => {
+      plan.packages["@colibri/core"] = {
+        bump: "patch",
+        reason: "First reviewed correction",
+      };
+      await write(root, planPath, plan);
+      await runReleaseCli(root, ["apply"]);
+      await commit(root);
+      const beforePush = await git(root, "rev-parse", "HEAD");
+
+      // Another push changes published code but leaves the already-used plan.
+      await write(root, "core/mod.ts", "export const value = 2;\n");
+      await commit(root);
+      await runReleaseCli(root, ["check"]);
+      await assertRejects(
+        () => runReleaseCli(root, ["check", "--base", beforePush]),
+        Error,
+        "RELEASE_STALE_BASELINE",
+      );
+
+      // Renew against the pre-push commit, not the pushed commit now on main.
+      await runReleaseCli(root, ["init", beforePush]);
+      await assertRejects(
+        () => runReleaseCli(root, ["check", "--base", beforePush]),
+        Error,
+        "RELEASE_MISSING_INTENT",
+      );
+      const renewed = readPlan(
+        await Deno.readTextFile(resolve(root, planPath)),
+      );
+      renewed.packages["@colibri/core"] = {
+        bump: "patch",
+        reason: "Second reviewed correction",
+      };
+      await write(root, planPath, renewed);
+      await assertRejects(
+        () => runReleaseCli(root, ["check", "--base", beforePush]),
+        Error,
+        "RELEASE_VERSION_MISMATCH",
+      );
+      await runReleaseCli(root, ["apply"]);
+      await runReleaseCli(root, ["check", "--base", beforePush]);
+      assertEquals(
+        JSON.parse(await Deno.readTextFile(resolve(root, "core/deno.json")))
+          .version,
+        "1.0.2",
+      );
+    });
+  });
+
+  it("binds publication validation to the pre-push commit", async () => {
+    const workflow = await Deno.readTextFile(
+      new URL("../../.github/workflows/publish.yml", import.meta.url),
+    );
+    assertStringIncludes(
+      workflow,
+      "      - name: Validate reviewed release plan\n" +
+        "        env:\n" +
+        "          RELEASE_BASE: ${{ github.event.before }}\n" +
+        '        run: deno task release:check --base "$RELEASE_BASE"\n',
+    );
   });
 });

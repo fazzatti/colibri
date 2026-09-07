@@ -9,6 +9,7 @@ import {
   normalizeDeclaration,
 } from "./api-model.ts";
 import { readPlan } from "./model.ts";
+import { generateDocumentation } from "./documentation.ts";
 import { git, planPath, repositoryRoot } from "./repository.ts";
 
 if (Deno.version.deno !== "2.9.6") {
@@ -30,16 +31,9 @@ const cache = new Map<string, Symbol[]>();
 async function loadSymbols(absolute: string): Promise<Symbol[]> {
   const known = cache.get(absolute);
   if (known) return known;
-  const output = await new Deno.Command(Deno.execPath(), {
-    cwd: repositoryRoot,
-    args: ["doc", "--json", absolute],
-  }).output();
-  if (!output.success) {
-    throw new Error(
-      `API_DOC_FAILED: ${absolute}: ${new TextDecoder().decode(output.stderr)}`,
-    );
-  }
-  const data = JSON.parse(new TextDecoder().decode(output.stdout));
+  const data = JSON.parse(
+    await generateDocumentation(repositoryRoot, absolute),
+  );
   if (data.version !== 2) {
     throw new Error("API_SCHEMA: unsupported Deno doc JSON version");
   }

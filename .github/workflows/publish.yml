@@ -23,7 +23,9 @@ jobs:
           deno-version: 2.9.6
 
       - name: Validate reviewed release plan
-        run: deno task release:check
+        env:
+          RELEASE_BASE: ${{ github.event.before }}
+        run: deno task release:check --base "$RELEASE_BASE"
 
       - name: Check package version invariants
         run: deno task check:package-versions

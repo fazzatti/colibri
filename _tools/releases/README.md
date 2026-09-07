@@ -68,6 +68,9 @@ and visibility while omitting source-machine paths and JSDoc prose. Public
 namespace objects such as `steps` and error registries include their members,
 not only the name of a `typeof` alias. CI compares the candidate with this
 reviewed snapshot and reports changes against the plan's released baseline.
+Generation explicitly disables terminal colors, including colors embedded by
+Deno inside JSON template-type representations. Literal values are preserved;
+the checker does not sanitize or ignore actual public type content.
 
 Changed public declarations require `apiReview`. Removal of an exported symbol
 from a stable package requires a major intent. Other changes need human review:
@@ -92,8 +95,10 @@ Intentional breaking changes require a major and an explicit migration review.
   remain separate from consumer evidence. The implementation target is 100%
   coverage; the existing Codecov YAML policy is unchanged.
 - Publishing remains an explicit merge-to-main workflow using JSR provenance and
-  package-specific tags. It revalidates the cumulative plan and checks actual
-  JSR distributions after publication. A failure after publication requires a
+  package-specific tags. It revalidates the cumulative plan against the push's
+  pre-change main commit (`github.event.before`), so an already-used plan cannot
+  approve another push without renewed release review. It checks actual JSR
+  distributions after publication. A failure after publication requires a
   corrective release; it cannot undo or overwrite an immutable package version.
 
 Deno's 24-hour dependency-age policy stays active. The exact reviewed Convee
