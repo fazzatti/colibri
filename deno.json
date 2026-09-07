@@ -43,6 +43,7 @@
     "release:api:check": "deno run -A _tools/releases/api.ts",
     "check:release-tooling": "deno check _tools/releases/cli.ts _tools/releases/api.ts _tools/consumers/check.ts _tools/consumers/deno.ts _tools/consumers/dependencies.ts _tools/consumers/prepare.ts _tools/consumers/published.ts _tools/consumers/run.ts",
     "test:releases": "deno test -A --clean _tools/releases",
+    "test:browser-runner": "deno test -A --clean _tools/consumers/browser-fixture.integration.test.ts",
     "check:consumers": "deno run -A _tools/consumers/check.ts",
     "check:consumers:deno": "deno run -A _tools/consumers/deno.ts",
     "check:consumers:dependencies": "deno run -A _tools/consumers/dependencies.ts",

@@ -2,6 +2,7 @@
 import { chromium, firefox, webkit } from "playwright";
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
+import { runBrowserFixture } from "./browser-fixture.mjs";
 
 const source = await readFile(new URL("./browser.js", import.meta.url));
 const server = createServer((request, response) => {
@@ -21,34 +22,10 @@ try {
     const browser = await engine.launch();
     try {
       console.log(`${engine.name()}: ${browser.version()}`);
-      const page = await browser.newPage();
-      const errors = [];
-      page.on("pageerror", (error) => {
-        errors.push(error);
-        console.error(`${engine.name()}: ${error.stack ?? error.message}`);
-      });
-      page.on("requestfailed", (request) => {
-        console.error(
-          `${engine.name()}: ${request.url()}: ${request.failure()?.errorText}`,
-        );
-      });
-      page.on(
-        "console",
-        (message) => console.log(`${engine.name()}: ${message.text()}`),
+      await runBrowserFixture(
+        browser,
+        `http://127.0.0.1:${server.address().port}`,
       );
-      // The fixture's explicit completion signal, not the document load event,
-      // is the success criterion for these asynchronous SDK operations.
-      await page.goto(`http://127.0.0.1:${server.address().port}`, {
-        waitUntil: "commit",
-      });
-      await page.waitForFunction(
-        () => globalThis.colibriPassed === true,
-        undefined,
-        { timeout: 30_000 },
-      );
-      if (errors.length) {
-        throw new AggregateError(errors, "Browser consumer failed");
-      }
     } finally {
       await browser.close();
     }

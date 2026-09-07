@@ -23,6 +23,15 @@ Browser engines are pinned through Playwright 1.61.0 and their actual versions
 are logged. Minimum runtime lanes are compatibility fixtures, not recommended
 security patch levels for applications.
 
+Browser consumers require the fixture's explicit completion signal. Page errors
+fail immediately with the original error instead of waiting for that signal's
+30-second timeout; navigation failures and missing signals still fail. Pages,
+browsers and the loopback server are closed after success or failure.
+`deno task test:browser-runner` covers this behavior in real Chromium, including
+immediate/asynchronous exceptions, missing completion and failed navigation. Run
+it after installing the pinned Playwright Chromium binary. CI runs it in the
+existing browser consumer jobs after their browser installation and checks.
+
 ## Preserved consumers
 
 `v1/smoke.ts` verifies native `Asset`, `Operation`, `Transaction`, `Spec`, and

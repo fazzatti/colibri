@@ -44,9 +44,11 @@ jobs:
           deno task release:check --base origin/main
 
       - name: Check reviewed public declarations
+        id: public-api
         run: deno task release:api:check > "${{ runner.temp }}/public-api-changes.json"
 
       - name: Upload public API change report
+        if: ${{ !cancelled() && steps.public-api.outcome != 'skipped' }}
         uses: actions/upload-artifact@v4
         with:
           name: public-api-changes
@@ -190,6 +192,8 @@ jobs:
         env:
           TYPESCRIPT_VERSION: "6.0.3"
         run: deno task check:consumers:npm "${{ runner.temp }}/consumers" --browsers
+      - name: Test browser consumer failure diagnostics and cleanup
+        run: deno task test:browser-runner
 
   core_compatibility:
     name: consumer / released Core ranges / SDK ${{ matrix.sdk }}

@@ -1,7 +1,10 @@
 # Introduction
 
-{% hint style="info" %} **Beta software** — Colibri packages are currently
-`0.x`. Public APIs may change between minor releases. {% endhint %}
+{% hint style="info" %} Colibri packages have independent versions. All packages
+except Build Verification start their stable release lines at `1.0.0`. Build
+Verification remains on `0.x`. See
+[compatibility and releases](getting-started/compatibility.md) for the stability
+and versioning policy. {% endhint %}
 
 <figure><picture><source srcset=".gitbook/assets/colibri-logo-dark (1).png" media="(prefers-color-scheme: dark)"><img src=".gitbook/assets/colibri-logo.png" alt="Colibri"></picture><figcaption></figcaption></figure>
 

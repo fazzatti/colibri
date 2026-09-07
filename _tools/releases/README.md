@@ -72,6 +72,14 @@ Generation explicitly disables terminal colors, including colors embedded by
 Deno inside JSON template-type representations. Literal values are preserved;
 the checker does not sanitize or ignore actual public type content.
 
+`release:api:check` writes a JSON report to stdout on success and failure. It
+includes released-baseline `changes`, `unreviewed` declarations, and an `error`
+message if validation fails. Lists may be incomplete when generation or an
+earlier check fails; the error is authoritative. Failed checks keep their
+non-zero exit status and original diagnostic stack on stderr. CI uploads the
+report even after failure, unless the run was cancelled or the check was
+skipped.
+
 Changed public declarations require `apiReview`. Removal of an exported symbol
 from a stable package requires a major intent. Other changes need human review:
 the tool is not an assignability or semantic-version oracle. In particular,

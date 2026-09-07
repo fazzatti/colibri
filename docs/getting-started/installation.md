@@ -140,7 +140,7 @@ If you need low-level XDR manipulation or raw operation construction, add the
 SDK explicitly:
 
 ```bash
-deno add npm:@stellar/stellar-sdk@^17
+deno add npm:@stellar/stellar-sdk@^17.0.1
 ```
 
 ## Next Steps
