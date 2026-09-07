@@ -11,10 +11,6 @@ import type {
 } from "@/network/types.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
 import * as E from "@/network/error.ts";
-import * as Providers from "@/network/providers/index.ts";
-
-/** Preset provider helpers for commonly used public Stellar RPC networks. */
-export const NetworkProviders: typeof Providers = Providers;
 
 /**
  * Mutable network configuration implementation with preset constructors for

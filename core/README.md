@@ -1222,11 +1222,18 @@ All configurations provide:
   mainnet)
 - `allowHttp` – Whether to allow non-HTTPS connections
 
-`NetworkProviders` exposes preset provider helpers when an application wants a
-known public endpoint selection instead of the default profile. For tests,
-`initializeWithFriendbot()` can fund a Testnet or Futurenet identity and poll
-until RPC observes the account. Friendbot is test infrastructure, not available
-on Mainnet, and funding an identity is a separate step from generating its key.
+To select a different provider, pass `rpcUrl` and, when needed, `archiveRpcUrl`
+to a `NetworkConfig` factory. Mainnet defaults to
+`https://mainnet.sorobanrpc.com`; Testnet and Futurenet retain their SDF
+endpoints. Colibri does not maintain a named provider catalog or automatically
+switch endpoints. See the
+[Stellar RPC provider directory](https://developers.stellar.org/docs/data/apis/rpc/providers)
+for infrastructure options and provider-specific requirements.
+
+For tests, `initializeWithFriendbot()` can fund a Testnet or Futurenet identity
+and poll until RPC observes the account. Friendbot is test infrastructure, not
+available on Mainnet, and funding an identity is a separate step from generating
+its key.
 
 ## Discovery and canonical assets
 

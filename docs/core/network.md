@@ -20,6 +20,9 @@ console.log(network.networkPassphrase);
 
 ### MainNet
 
+The default RPC remains `https://mainnet.sorobanrpc.com`. Pass `rpcUrl` to
+select a different endpoint; Colibri does not automatically switch providers.
+
 ```ts
 const network = NetworkConfig.MainNet();
 console.log(network.rpcUrl);
@@ -83,21 +86,33 @@ are controlled by the provider.
 | `allowHttp`         | `boolean?` | Allow non-HTTPS endpoints            |
 | `networkPassphrase` | `string`   | Stellar network passphrase           |
 
-## Network Providers
+## Choosing RPC Endpoints
 
-Provider helpers expose known public infrastructure:
+Colibri does not maintain a named provider catalog. Choose an endpoint from the
+[Stellar RPC provider directory](https://developers.stellar.org/docs/data/apis/rpc/providers)
+and pass its URL directly to `NetworkConfig`. Check the provider's network,
+authentication requirements, rate limits and archive retention separately.
+
+For example, substitute your provider's URLs below. Constructing this
+configuration does not contact either endpoint:
 
 <!-- deno-check -->
 
 ```ts
-import { NetworkProviders } from "@colibri/core";
+import { NetworkConfig } from "@colibri/core";
 
-const network = NetworkProviders.Lightsail.MainNet();
+const network = NetworkConfig.MainNet({
+  rpcUrl: "https://rpc.example.com",
+  archiveRpcUrl: "https://archive-rpc.example.com",
+});
+
 console.log(network.rpcUrl);
 console.log(network.archiveRpcUrl);
-
-const ankrArchive = NetworkProviders.Ankr.MainNet();
 ```
+
+When migrating from the 0.x `NetworkProviders` helpers, supply the endpoints you
+used explicitly as above. The default Mainnet RPC and the SDF Testnet/Futurenet
+configurations are unchanged.
 
 ## Using NetworkConfig In Pipelines
 

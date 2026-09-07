@@ -4,8 +4,8 @@
   "packages": {
     "@colibri/core": {
       "bump": "major",
-      "reason": "Graduate the documented API and extension points to 1.0; validate Deno timer compatibility and native SDK interoperability.",
-      "apiReview": "Establish the first stable public API baseline without changing the existing consumer contract."
+      "reason": "Graduate the documented API and extension points to 1.0; remove volatile provider presets before the stable API freeze; validate Deno timer compatibility and native SDK interoperability.",
+      "apiReview": "Establish the first stable public API baseline. Intentionally remove NetworkProviders (Ankr, Gateway, Lightsail); consumers configure endpoints through NetworkConfig instead. Preserve the Mainnet, Testnet and Futurenet defaults and explicit endpoint overrides."
     },
     "@colibri/identicon": {
       "bump": "major",
