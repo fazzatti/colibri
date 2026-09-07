@@ -1,6 +1,6 @@
 {
   "name": "@colibri/test-tooling",
-  "version": "0.3.1",
+  "version": "1.0.0",
   "license": "MIT",
   "imports": {
     "@/": "./",
@@ -16,7 +16,14 @@
     ]
   },
   "publish": {
-    "include": ["./**/*.ts", "./README.md", "./LICENSE", "./deno.json"],
-    "exclude": ["./**/*.test.ts"]
+    "include": [
+      "./**/*.ts",
+      "./README.md",
+      "./LICENSE",
+      "./deno.json"
+    ],
+    "exclude": [
+      "./**/*.test.ts"
+    ]
   }
 }

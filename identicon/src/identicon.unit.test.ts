@@ -8,6 +8,7 @@ import { describe, it } from "@std/testing/bdd";
 import { decodeBase64 } from "@std/encoding/base64";
 import { decode } from "fast-png";
 import { ColibriError } from "@colibri/core";
+import { StrKey } from "stellar-sdk";
 import { Identicon } from "@/identicon.ts";
 import { IdenticonCode, IdenticonError } from "@/error/index.ts";
 import { encodePng } from "@/renderers/png.ts";
@@ -22,6 +23,32 @@ import fixtures from "colibri-internal/identicon/vectors.json" with {
 const publicKey = fixtures.vectors[0].publicKey;
 
 describe("Identicon", () => {
+  it("renders G and C addresses with equal payloads identically in every output format", () => {
+    const account = new Identicon(publicKey);
+    const contractId = StrKey.encodeContract(
+      StrKey.decodeEd25519PublicKey(publicKey),
+    );
+    const contract = new Identicon(contractId);
+    assertEquals(contract.publicKey, contractId);
+    assertEquals(contract.matrix, account.matrix);
+    assertEquals(contract.color, account.color);
+
+    for (
+      const options of [{}, { size: 31, padding: 3, background: "#123456" }]
+    ) {
+      assertEquals(contract.toSvg(options), account.toSvg(options));
+      assertEquals(contract.toPng(options), account.toPng(options));
+      assertEquals(
+        contract.toDataUrl({ ...options, format: "svg" }),
+        account.toDataUrl({ ...options, format: "svg" }),
+      );
+      assertEquals(
+        contract.toDataUrl({ ...options, format: "png" }),
+        account.toDataUrl({ ...options, format: "png" }),
+      );
+    }
+  });
+
   it("exposes immutable identity data and renders deterministic default output", () => {
     const icon = new Identicon(publicKey);
     assertEquals(icon.publicKey, publicKey);

@@ -12,20 +12,31 @@ import { IdenticonCode, IdenticonError } from "@/error/index.ts";
 import { renderPng } from "@/renderers/png.ts";
 import { renderSvg } from "@/renderers/svg.ts";
 
-/** A deterministic, reference-compatible SEP-33 icon for one G-address. */
+/**
+ * A deterministic SEP-33 account icon, with extended support for C-addresses.
+ *
+ * G-addresses preserve the established reference output. C-addresses reuse
+ * that algorithm with the contract ID bytes; this is a Colibri extension,
+ * not defined by SEP-33. No network or deployed contract is required.
+ * Icons can collide, including across address types; verify the full address.
+ */
 export class Identicon {
   readonly #data: IdenticonData;
 
   /**
    * Validates the address and generates the immutable default identicon.
-   * @param publicKey - A checksummed Stellar Ed25519 G-address.
+   * Supports SEP-33 G-addresses and Colibri's same-algorithm C-address extension.
+   * @param publicKey - A checksummed Stellar G-address or C-address.
    * @throws {IdenticonError} IDICON_001 if the address is invalid or unsupported.
    */
   constructor(publicKey: string) {
     this.#data = generateIdenticon(publicKey);
   }
 
-  /** The validated Stellar public address. */
+  /**
+   * The validated G-address or C-address supplied to the constructor.
+   * The existing property name is retained; a contract ID is not a public key.
+   */
   get publicKey(): string {
     return this.#data.publicKey;
   }

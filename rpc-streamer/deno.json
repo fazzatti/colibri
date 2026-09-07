@@ -1,14 +1,21 @@
 {
   "name": "@colibri/rpc-streamer",
-  "version": "0.4.0",
+  "version": "1.0.0",
   "exports": "./mod.ts",
   "license": "MIT",
   "publish": {
-    "include": ["./**/*.ts", "./README.md", "./LICENSE", "./deno.json"],
-    "exclude": ["./**/*.test.ts"]
+    "include": [
+      "./**/*.ts",
+      "./README.md",
+      "./LICENSE",
+      "./deno.json"
+    ],
+    "exclude": [
+      "./**/*.test.ts"
+    ]
   },
   "imports": {
     "@/": "./src/",
-    "@colibri/core": "jsr:@colibri/core@^0.30.0"
+    "@colibri/core": "jsr:@colibri/core@^1.0.0"
   }
 }

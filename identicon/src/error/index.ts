@@ -2,7 +2,7 @@ import { ColibriError } from "@colibri/core";
 
 /** Stable, occurrence-specific identicon failure codes. */
 export enum IdenticonCode {
-  /** Input is not a valid checksummed Ed25519 G-address. */
+  /** Input is not a valid checksummed G-address or C-address. */
   INVALID_PUBLIC_KEY = "IDICON_001",
   /** Render options are not an object. */
   INVALID_OPTIONS = "IDICON_002",

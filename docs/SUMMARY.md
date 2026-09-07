@@ -5,6 +5,7 @@
 ## Getting Started
 
 - [Installation](getting-started/installation.md)
+- [Compatibility and releases](getting-started/compatibility.md)
 - [Quick Start](getting-started/quick-start.md)
 - [Read and invoke a contract](getting-started/contract-call.md)
 - [Architecture Overview](getting-started/architecture.md)

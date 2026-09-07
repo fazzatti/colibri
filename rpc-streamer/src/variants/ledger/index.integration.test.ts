@@ -1,11 +1,12 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
+import { mainnetArchiveTestConfig } from "colibri-internal/tests/mainnet-archive-config.ts";
 import {
   getLedgerFixture,
   loadMultiVersionFixtures,
 } from "colibri-internal/tests/fixtures/rpc/get_ledgers/index.ts";
 import { assertEquals, assertExists } from "@std/assert";
 import { afterEach, describe, it } from "@std/testing/bdd";
-import { type Ledger, NetworkProviders } from "@colibri/core";
+import type { Ledger } from "@colibri/core";
 import { RPCStreamer } from "@/streamer.ts";
 
 // =============================================================================
@@ -51,7 +52,7 @@ describe(
   "[Mainnet] RPC Ledger Streamer Variant",
   disableSanitizeConfig,
   () => {
-    const networkConfig = NetworkProviders.Lightsail.MainNet();
+    const networkConfig = mainnetArchiveTestConfig;
 
     let streamer: RPCStreamer<Ledger>;
 

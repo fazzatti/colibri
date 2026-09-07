@@ -8,7 +8,7 @@ constructors and diagnostic fields.
 
 | Code         | Condition                                                                           | Source                                                                                       |
 | ------------ | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `IDICON_001` | `INVALID_PUBLIC_KEY` — Input is not a valid checksummed Ed25519 G-address.          | [Definition](https://github.com/fazzatti/colibri/blob/main/identicon/src/error/index.ts#L6)  |
+| `IDICON_001` | `INVALID_PUBLIC_KEY` — Input is not a valid checksummed G-address or C-address.     | [Definition](https://github.com/fazzatti/colibri/blob/main/identicon/src/error/index.ts#L6)  |
 | `IDICON_002` | `INVALID_OPTIONS` — Render options are not an object.                               | [Definition](https://github.com/fazzatti/colibri/blob/main/identicon/src/error/index.ts#L8)  |
 | `IDICON_003` | `INVALID_SIZE` — Size is not an integer in the supported range.                     | [Definition](https://github.com/fazzatti/colibri/blob/main/identicon/src/error/index.ts#L10) |
 | `IDICON_004` | `INVALID_PADDING` — Padding is not a nonnegative integer.                           | [Definition](https://github.com/fazzatti/colibri/blob/main/identicon/src/error/index.ts#L12) |

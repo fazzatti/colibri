@@ -23,9 +23,12 @@ public types and typed error model.
 ## Installation
 
 Colibri Core is published on [JSR](https://jsr.io/@colibri/core) and ships
-entirely as TypeScript modules. Deno `v2.0` or later is supported directly;
-Node.js consumers should use `v22.12` or later, matching the minimum runtime of
-the underlying Stellar SDK 17 dependency.
+entirely as TypeScript modules. The supported Deno minimum is `2.7.11`; Node.js
+consumers use `22.12.0` or supported 22.x/24.x LTS releases. Core 1.x supports
+Stellar SDK `>=17.0.1 <18` and Convee `2.1.0`. The
+[compatibility policy](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility)
+covers public types, custom signers, class extensions, callable pipelines,
+plugin targets, error codes, and documented transaction behavior.
 
 ```sh
 # Deno (JSR)
@@ -1219,11 +1222,18 @@ All configurations provide:
   mainnet)
 - `allowHttp` – Whether to allow non-HTTPS connections
 
-`NetworkProviders` exposes preset provider helpers when an application wants a
-known public endpoint selection instead of the default profile. For tests,
-`initializeWithFriendbot()` can fund a Testnet or Futurenet identity and poll
-until RPC observes the account. Friendbot is test infrastructure, not available
-on Mainnet, and funding an identity is a separate step from generating its key.
+To select a different provider, pass `rpcUrl` and, when needed, `archiveRpcUrl`
+to a `NetworkConfig` factory. Mainnet defaults to
+`https://mainnet.sorobanrpc.com`; Testnet and Futurenet retain their SDF
+endpoints. Colibri does not maintain a named provider catalog or automatically
+switch endpoints. See the
+[Stellar RPC provider directory](https://developers.stellar.org/docs/data/apis/rpc/providers)
+for infrastructure options and provider-specific requirements.
+
+For tests, `initializeWithFriendbot()` can fund a Testnet or Futurenet identity
+and poll until RPC observes the account. Friendbot is test infrastructure, not
+available on Mainnet, and funding an identity is a separate step from generating
+its key.
 
 ## Discovery and canonical assets
 
