@@ -209,7 +209,7 @@ const waitForBuildContainer = async (
   container: Dockerode.Container,
   timeoutMs: number,
 ): Promise<{ statusCode: number; timedOut: boolean }> => {
-  let timeout = 0;
+  let timeout: ReturnType<typeof setTimeout> | number = 0;
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeout = setTimeout(
       () => reject(new BuildTimedOutError(timeoutMs, "", "")),

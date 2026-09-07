@@ -20,7 +20,10 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: 2.7.11
+          deno-version: 2.9.6
+
+      - name: Validate reviewed release plan
+        run: deno task release:check
 
       - name: Check package version invariants
         run: deno task check:package-versions
@@ -124,3 +127,10 @@ jobs:
                 $LATEST_FLAG
             fi
           done
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Check actual published JSR distributions
+        run: deno task check:consumers:published

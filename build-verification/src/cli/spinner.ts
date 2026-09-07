@@ -64,7 +64,9 @@ export const createBuildVerificationSpinner = (
   };
 
   render();
-  const timer = schedule(render, SPINNER_INTERVAL_MS);
+  // Node-compatible timers expose their cancellable numeric handle.
+  // Preserve the numeric scheduler contract on both Deno timer implementations.
+  const timer = Number(schedule(render, SPINNER_INTERVAL_MS));
 
   return {
     update: (nextStatus) => {

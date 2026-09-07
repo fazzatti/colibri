@@ -64,6 +64,13 @@ address identicons.
 Packages are versioned and published separately. Applications only need to
 install the packages used by their runtime or development workflow.
 
+All packages except Build Verification have stable 1.x APIs. Compatible Core
+updates do not require new plugin releases when their existing dependency ranges
+remain sufficient. See
+[compatibility and releases](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility)
+for the supported SDK/runtime matrix, extension-point guarantees, and
+independent versioning policy. Build Verification remains on 0.x.
+
 ## Installation
 
 Install Core with Deno:

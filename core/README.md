@@ -23,9 +23,12 @@ public types and typed error model.
 ## Installation
 
 Colibri Core is published on [JSR](https://jsr.io/@colibri/core) and ships
-entirely as TypeScript modules. Deno `v2.0` or later is supported directly;
-Node.js consumers should use `v22.12` or later, matching the minimum runtime of
-the underlying Stellar SDK 17 dependency.
+entirely as TypeScript modules. The supported Deno minimum is `2.7.11`; Node.js
+consumers use `22.12.0` or supported 22.x/24.x LTS releases. Core 1.x supports
+Stellar SDK `>=17.0.1 <18` and Convee `2.1.0`. The
+[compatibility policy](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility)
+covers public types, custom signers, class extensions, callable pipelines,
+plugin targets, error codes, and documented transaction behavior.
 
 ```sh
 # Deno (JSR)

@@ -340,7 +340,7 @@ function memoizeMethod<T extends (...args: unknown[]) => unknown>(
     const timersMap = getCacheMap(
       this,
       timersMapKey,
-    ) as Map<string, number>;
+    ) as Map<string, ReturnType<typeof setTimeout>>;
     const key = keyFn(...args);
     const now = Date.now();
     const cachedAt = timestampsMap.get(key) as number | undefined;

@@ -35,6 +35,7 @@ import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
 import { createChannelAccountsPlugin } from "@colibri/plugin-channel-accounts";
 import { checkMemoRequired, createSep29Plugin } from "@colibri/plugin-sep29";
 
+// Preserve this 1.0 consumer when adding future compatibility fixtures.
 // This is a consumer, not a workspace test. The same source is type-checked
 // against isolated Deno modules and installed npm declarations, then executed.
 function check(condition: unknown, message: string): asserts condition {

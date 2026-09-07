@@ -1,5 +1,10 @@
 # FeeBump Plugin
 
+Version 1.x follows Colibri's
+[compatibility and independent release policy](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility).
+Compatible Core 1.x updates do not require this package to release again unless
+its API or required dependency floor changes.
+
 A Colibri plugin that wraps a Stellar Transaction in a Fee Bump Transaction so a
 designated account pays the fees.
 

@@ -18,6 +18,17 @@ const event = (stage: BuildVerificationStage): VerificationLogEvent => ({
 });
 
 describe("build-verification CLI spinner", () => {
+  it("cancels the real runtime timer without leaking resources", async () => {
+    const writes: string[] = [];
+    const spinner = createBuildVerificationSpinner({
+      write: (value) => writes.push(value),
+    });
+    spinner.stop();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    assertEquals(writes.length, 2);
+    assertEquals(writes.at(-1), "\r\x1b[2K");
+  });
+
   it("maps every verification stage to a stable status", () => {
     const stages: readonly BuildVerificationStage[] = [
       "resolve-verification-target",
