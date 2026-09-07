@@ -16,28 +16,36 @@ const matrixFromBytes = (bytes: Uint8Array): IdenticonMatrix => {
 };
 
 /**
- * Generates immutable SEP-33 data using the established reference byte offset.
+ * Generates immutable SEP-33 account data, with a Colibri C-address extension.
  *
- * Only checksummed Ed25519 G-addresses are accepted. Account existence and
- * network are irrelevant. Identicons are not cryptographic proof of identity.
+ * Checksummed G-addresses use the established Lobstr-compatible byte offset.
+ * C-addresses apply the same algorithm to the 32-byte contract ID, not its Wasm
+ * hash. Contract identicons are a Colibri extension, not defined by SEP-33.
+ * No network lookup or account/contract existence check is performed. Identical
+ * G/C payloads produce identical images; distinct payloads can also collide.
+ * An identicon is a visual aid, not cryptographic proof of identity.
  *
- * @param publicKey - Stellar Ed25519 public address.
+ * @param publicKey - A checksummed Stellar G-address or C-address.
  * @returns Frozen address, hue, default RGB color and 7×7 matrix.
  * @throws {IdenticonError} IDICON_001 for invalid or unsupported addresses.
  */
 export const generateIdenticon = (publicKey: string): IdenticonData => {
-  if (
-    typeof publicKey !== "string" ||
-    !StrKey.isValidEd25519PublicKey(publicKey)
-  ) {
+  const isAccount = typeof publicKey === "string" &&
+    StrKey.isValidEd25519PublicKey(publicKey);
+  const isContract = typeof publicKey === "string" &&
+    StrKey.isValidContract(publicKey);
+  if (!isAccount && !isContract) {
     throw new IdenticonError(
       IdenticonCode.INVALID_PUBLIC_KEY,
-      "Expected a valid checksummed Stellar Ed25519 G-address.",
+      "Expected a valid checksummed Stellar G-address or C-address.",
     );
   }
   // Lobstr slices the complete Base32 payload at [2,16). StrKey decoding
   // already removes its version byte, so the equivalent raw slice is [1,15).
-  const bytes = StrKey.decodeEd25519PublicKey(publicKey).slice(1, 15);
+  const bytes =
+    (isAccount
+      ? StrKey.decodeEd25519PublicKey(publicKey)
+      : StrKey.decodeContract(publicKey)).slice(1, 15);
   const hue = bytes[0] / 255;
   return Object.freeze({
     publicKey,

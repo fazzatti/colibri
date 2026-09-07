@@ -11,9 +11,13 @@ export interface IdenticonColor {
 /** Seven rows of seven cells; true means a foreground cell. */
 export type IdenticonMatrix = readonly (readonly boolean[])[];
 
-/** Immutable data for an address's default reference-compatible identicon. */
+/** Immutable SEP-33 account data or Colibri's equivalent C-address extension. */
 export interface IdenticonData {
-  /** Validated G-address, including its StrKey checksum. */
+  /**
+   * Validated G-address or C-address, including its StrKey checksum.
+   * The property name is retained for compatibility; a C-address identifies a
+   * contract, not an Ed25519 public key.
+   */
   readonly publicKey: string;
   /** Address-derived hue in the inclusive range 0–1. */
   readonly hue: number;

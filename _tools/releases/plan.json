@@ -9,8 +9,8 @@
     },
     "@colibri/identicon": {
       "bump": "major",
-      "reason": "Graduate the existing identicon API and adopt the stable Core dependency line.",
-      "apiReview": "Establish the 1.0 public API baseline.",
+      "reason": "Graduate the identicon API, add the approved same-algorithm C-address extension, and adopt the stable Core dependency line.",
+      "apiReview": "Preserve all G-address outputs, renderers, signatures, property names and error codes. Broaden accepted inputs to checksummed C-addresses, applying the identical byte selection and image algorithm as a documented Colibri extension beyond SEP-33.",
       "dependencies": { "@colibri/core": "^1.0.0" }
     },
     "@colibri/webauth": {

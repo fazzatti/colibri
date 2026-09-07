@@ -24,7 +24,7 @@ symbol documentation and lists every declared error code by context.
 | Follow events or historical ledgers       | [RPC Streamer](packages/rpc-streamer.md)                                                             |
 | Authenticate a wallet or contract account | [WebAuth](packages/webauth.md)                                                                       |
 | Rebuild and compare a contract's Wasm     | [Build Verification](packages/build-verification.md)                                                 |
-| Render a recognizable account image       | [Identicons](packages/identicon.md)                                                                  |
+| Render an account or contract identicon   | [Identicons](packages/identicon.md)                                                                  |
 | Run a disposable local ledger             | [Test Tooling](packages/test-tooling.md)                                                             |
 
 ## Packages
@@ -39,7 +39,7 @@ packages provide focused capabilities.
 | [`@colibri/rpc-streamer`](packages/rpc-streamer.md)                        | Live/archive ingestion with callbacks and checkpoints                               |
 | [`@colibri/webauth`](packages/webauth.md)                                  | SEP-10 and SEP-45 client authentication                                             |
 | [`@colibri/build-verification`](packages/build-verification.md)            | SEP-58 and caller-supplied reproducible build verification, API and CLI             |
-| [`@colibri/identicon`](packages/identicon.md)                              | Reference-compatible SEP-33 SVG, PNG, and image data                                |
+| [`@colibri/identicon`](packages/identicon.md)                              | SEP-33 SVG, PNG and image data, with extended C-address support                     |
 | [`@colibri/plugin-fee-bump`](packages/plugins/fee-bump.md)                 | Fee sponsorship for transaction pipelines                                           |
 | [`@colibri/plugin-channel-accounts`](packages/plugins/channel-accounts.md) | Reusable sponsored transaction-source accounts                                      |
 | [`@colibri/test-tooling`](packages/test-tooling.md)                        | Docker-backed Stellar Quickstart lifecycle                                          |

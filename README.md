@@ -59,7 +59,7 @@ address identicons.
 | [`@colibri/plugin-fee-bump`](./plugins/fee-bump/README.md)                 | Fee sponsorship for transaction pipelines                                | Fee-bump envelope construction and fee-source authorization at the `send-transaction` step                                       |
 | [`@colibri/plugin-channel-accounts`](./plugins/channel-accounts/README.md) | Reusable transaction source accounts for concurrent workloads            | Sponsored channel-account lifecycle, allocation, signer injection, and release around supported pipelines                        |
 | [`@colibri/plugin-sep29`](./plugins/sep29/README.md)                       | Opt-in recipient memo requirements                                       | Standalone RPC checks and a non-mutating submission guard for native and fee-bump transactions                                   |
-| [`@colibri/identicon`](./identicon/README.md)                              | Deterministic SEP-33-compatible account visuals                          | Local pattern generation and SVG, PNG, or data-URL rendering                                                                     |
+| [`@colibri/identicon`](./identicon/README.md)                              | SEP-33 account visuals with a same-algorithm C-address extension         | Local pattern generation and SVG, PNG, or data-URL rendering                                                                     |
 
 Packages are versioned and published separately. Applications only need to
 install the packages used by their runtime or development workflow.

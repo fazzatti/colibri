@@ -213,6 +213,14 @@ check(
   new Identicon(nativeKey.publicKey()).toPng().length > 8,
   "Render PNG without a DOM",
 );
+const contractAddress = StrKey.encodeContract(nativeKey.rawPublicKey());
+const contractIcon = new Identicon(contractAddress);
+check(contractIcon.publicKey === contractAddress, "Retain the C-address input");
+check(
+  contractIcon.toSvg() === new Identicon(nativeKey.publicKey()).toSvg(),
+  "Equal G/C payloads preserve the same identicon algorithm",
+);
+check(contractIcon.toPng().length > 8, "Render a contract PNG without a DOM");
 check(typeof WebAuthClient === "function", "WebAuth import");
 check(typeof createFeeBumpPlugin === "function", "Fee-bump plugin import");
 check(

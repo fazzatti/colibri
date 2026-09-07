@@ -11,6 +11,30 @@ import fixtures from "colibri-internal/identicon/vectors.json" with {
 
 describe("Real PNG and SVG rendering", () => {
   for (const vector of fixtures.vectors) {
+    it(`renders the C-address payload of ${vector.publicKey} as the captured reference pixels`, () => {
+      const contract = StrKey.encodeContract(
+        StrKey.decodeEd25519PublicKey(vector.publicKey),
+      );
+      const icon = new Identicon(contract);
+      const expected = decode(decodeBase64(vector.pngBase64), {
+        checkCrc: true,
+      });
+      const png = decode(icon.toPng(), { checkCrc: true });
+      const svg = decode(
+        new Resvg(icon.toSvg(), { font: { loadSystemFonts: false } }).render()
+          .asPng(),
+        { checkCrc: true },
+      );
+      assertEquals(png.width, expected.width);
+      assertEquals(png.height, expected.height);
+      assertEquals(png.data, expected.data);
+      assertEquals(svg.width, expected.width);
+      assertEquals(svg.height, expected.height);
+      assertEquals(svg.data, expected.data);
+    });
+  }
+
+  for (const vector of fixtures.vectors) {
     it(`matches every pixel of the captured Lobstr PNG for ${vector.publicKey}`, () => {
       const actual = decode(new Identicon(vector.publicKey).toPng(), {
         checkCrc: true,
