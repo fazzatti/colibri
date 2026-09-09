@@ -39161,17 +39161,6 @@
                 }
               },
               "name": "CANCELLED"
-            },
-            {
-              "init": {
-                "kind": "literal",
-                "repr": "CBG_006",
-                "value": {
-                  "kind": "string",
-                  "string": "CBG_006"
-                }
-              },
-              "name": "RESULT_DECODE_FAILED"
             }
           ]
         },
@@ -47032,6 +47021,82 @@
               },
               "kind": "method",
               "name": "invoke"
+            },
+            {
+              "accessibility": "protected",
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "method",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "result",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "InvokeContractOutput",
+                      "value": {
+                        "typeName": "InvokeContractOutput"
+                      }
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "intersection",
+                  "value": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "InvokeContractOutput",
+                      "value": {
+                        "typeName": "InvokeContractOutput"
+                      }
+                    },
+                    {
+                      "kind": "typeLiteral",
+                      "value": {
+                        "properties": [
+                          {
+                            "name": "value",
+                            "tsType": {
+                              "kind": "union",
+                              "value": [
+                                {
+                                  "kind": "typeRef",
+                                  "repr": "Value",
+                                  "value": {
+                                    "typeName": "Value"
+                                  }
+                                },
+                                {
+                                  "kind": "keyword",
+                                  "repr": "undefined",
+                                  "value": "undefined"
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                "typeParams": [
+                  {
+                    "name": "Value"
+                  }
+                ]
+              },
+              "kind": "method",
+              "name": "decodeInvocationResult"
             },
             {
               "accessibility": "public",
@@ -101906,6 +101971,17 @@
                   }
                 },
                 "name": "FAILED_TO_DECODE_SPEC_SECTION"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "CONTR_021",
+                  "value": {
+                    "kind": "string",
+                    "string": "CONTR_021"
+                  }
+                },
+                "name": "FAILED_TO_DECODE_INVOCATION_RESULT"
               }
             ]
           },
@@ -102331,12 +102407,167 @@
                   {
                     "computed": true,
                     "name": "[\"CONTR_020\" as Code.FAILED_TO_DECODE_SPEC_SECTION]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"CONTR_021\" as Code.FAILED_TO_DECODE_INVOCATION_RESULT]"
                   }
                 ]
               }
             }
           },
           "kind": "variable"
+        }
+      ],
+      "FAILED_TO_DECODE_INVOCATION_RESULT": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "method",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "result",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "InvokeContractOutput",
+                      "value": {
+                        "typeName": "InvokeContractOutput"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "cause",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "unknown",
+                      "value": "unknown"
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "ColibriError",
+            "properties": [
+              {
+                "isOverride": true,
+                "name": "meta",
+                "readonly": true,
+                "tsType": {
+                  "kind": "typeLiteral",
+                  "value": {
+                    "properties": [
+                      {
+                        "name": "cause",
+                        "tsType": {
+                          "kind": "keyword",
+                          "repr": "unknown",
+                          "value": "unknown"
+                        }
+                      },
+                      {
+                        "name": "data",
+                        "tsType": {
+                          "kind": "typeLiteral",
+                          "value": {
+                            "properties": [
+                              {
+                                "name": "method",
+                                "tsType": {
+                                  "kind": "keyword",
+                                  "repr": "string",
+                                  "value": "string"
+                                }
+                              },
+                              {
+                                "name": "result",
+                                "tsType": {
+                                  "kind": "typeRef",
+                                  "repr": "InvokeContractOutput",
+                                  "value": {
+                                    "typeName": "InvokeContractOutput"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "superTypeParams": [
+              {
+                "kind": "typeRef",
+                "repr": "Code.FAILED_TO_DECODE_INVOCATION_RESULT",
+                "value": {
+                  "typeName": "Code.FAILED_TO_DECODE_INVOCATION_RESULT"
+                }
+              },
+              {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "cause",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "unknown",
+                        "value": "unknown"
+                      }
+                    },
+                    {
+                      "name": "data",
+                      "tsType": {
+                        "kind": "typeLiteral",
+                        "value": {
+                          "properties": [
+                            {
+                              "name": "method",
+                              "tsType": {
+                                "kind": "keyword",
+                                "repr": "string",
+                                "value": "string"
+                              }
+                            },
+                            {
+                              "name": "result",
+                              "tsType": {
+                                "kind": "typeRef",
+                                "repr": "InvokeContractOutput",
+                                "value": {
+                                  "typeName": "InvokeContractOutput"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "kind": "class"
         }
       ],
       "FAILED_TO_DECODE_METADATA_SECTION": [
@@ -134406,7 +134637,7 @@
                     "target": {
                       "byteIndex": 454,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                      "filename": "core/values/types/input.ts",
                       "line": 19
                     }
                   },
@@ -134423,7 +134654,7 @@
                     "target": {
                       "byteIndex": 557,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                      "filename": "core/values/types/input.ts",
                       "line": 21
                     }
                   },
@@ -134440,7 +134671,7 @@
                     "target": {
                       "byteIndex": 681,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                      "filename": "core/values/types/input.ts",
                       "line": 23
                     }
                   },
@@ -134457,7 +134688,7 @@
                     "target": {
                       "byteIndex": 788,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                      "filename": "core/values/types/input.ts",
                       "line": 25
                     }
                   },
@@ -134474,7 +134705,7 @@
                     "target": {
                       "byteIndex": 921,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                      "filename": "core/values/types/input.ts",
                       "line": 27
                     }
                   },
@@ -134491,7 +134722,7 @@
                     "target": {
                       "byteIndex": 1195,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                      "filename": "core/values/types/input.ts",
                       "line": 34
                     }
                   },
@@ -134508,7 +134739,7 @@
                     "target": {
                       "byteIndex": 1333,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                      "filename": "core/values/types/input.ts",
                       "line": 37
                     }
                   },
@@ -134525,7 +134756,7 @@
                     "target": {
                       "byteIndex": 1732,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                      "filename": "core/values/types/input.ts",
                       "line": 46
                     }
                   },
@@ -134542,7 +134773,7 @@
                     "target": {
                       "byteIndex": 1839,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                      "filename": "core/values/types/input.ts",
                       "line": 49
                     }
                   },
@@ -134559,7 +134790,7 @@
                     "target": {
                       "byteIndex": 1975,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                      "filename": "core/values/types/input.ts",
                       "line": 52
                     }
                   },
@@ -134576,7 +134807,7 @@
                     "target": {
                       "byteIndex": 2662,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                      "filename": "core/values/types/input.ts",
                       "line": 66
                     }
                   },
@@ -141853,7 +142084,7 @@
                     "target": {
                       "byteIndex": 393,
                       "col": 9,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/index.ts",
+                      "filename": "core/values/types/index.ts",
                       "line": 7
                     }
                   },
@@ -141870,7 +142101,7 @@
                     "target": {
                       "byteIndex": 403,
                       "col": 19,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/index.ts",
+                      "filename": "core/values/types/index.ts",
                       "line": 7
                     }
                   },
@@ -141887,7 +142118,7 @@
                     "target": {
                       "byteIndex": 459,
                       "col": 2,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/index.ts",
+                      "filename": "core/values/types/index.ts",
                       "line": 9
                     }
                   },
@@ -141904,7 +142135,7 @@
                     "target": {
                       "byteIndex": 475,
                       "col": 2,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/index.ts",
+                      "filename": "core/values/types/index.ts",
                       "line": 10
                     }
                   },
@@ -141921,7 +142152,7 @@
                     "target": {
                       "byteIndex": 490,
                       "col": 2,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/index.ts",
+                      "filename": "core/values/types/index.ts",
                       "line": 11
                     }
                   },
@@ -141938,7 +142169,7 @@
                     "target": {
                       "byteIndex": 502,
                       "col": 2,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/index.ts",
+                      "filename": "core/values/types/index.ts",
                       "line": 12
                     }
                   },
@@ -141955,7 +142186,7 @@
                     "target": {
                       "byteIndex": 516,
                       "col": 2,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/index.ts",
+                      "filename": "core/values/types/index.ts",
                       "line": 13
                     }
                   },
@@ -141972,7 +142203,7 @@
                     "target": {
                       "byteIndex": 528,
                       "col": 2,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/index.ts",
+                      "filename": "core/values/types/index.ts",
                       "line": 14
                     }
                   },
@@ -141989,7 +142220,7 @@
                     "target": {
                       "byteIndex": 578,
                       "col": 9,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/index.ts",
+                      "filename": "core/values/types/index.ts",
                       "line": 16
                     }
                   },
@@ -142006,7 +142237,7 @@
                     "target": {
                       "byteIndex": 716,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/index.ts",
+                      "filename": "core/values/types/index.ts",
                       "line": 19
                     }
                   },
@@ -142023,7 +142254,7 @@
                     "target": {
                       "byteIndex": 1101,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 45
                     }
                   },
@@ -142052,7 +142283,7 @@
                     "target": {
                       "byteIndex": 1444,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 52
                     }
                   },
@@ -142081,7 +142312,7 @@
                     "target": {
                       "byteIndex": 1779,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 59
                     }
                   },
@@ -142110,7 +142341,7 @@
                     "target": {
                       "byteIndex": 2114,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 66
                     }
                   },
@@ -142139,7 +142370,7 @@
                     "target": {
                       "byteIndex": 2449,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 73
                     }
                   },
@@ -142168,7 +142399,7 @@
                     "target": {
                       "byteIndex": 2785,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 80
                     }
                   },
@@ -142197,7 +142428,7 @@
                     "target": {
                       "byteIndex": 3127,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 87
                     }
                   },
@@ -142226,7 +142457,7 @@
                     "target": {
                       "byteIndex": 3469,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 94
                     }
                   },
@@ -142255,7 +142486,7 @@
                     "target": {
                       "byteIndex": 3811,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 101
                     }
                   },
@@ -142284,7 +142515,7 @@
                     "target": {
                       "byteIndex": 4158,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 108
                     }
                   },
@@ -142313,7 +142544,7 @@
                     "target": {
                       "byteIndex": 4534,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 115
                     }
                   },
@@ -142342,7 +142573,7 @@
                     "target": {
                       "byteIndex": 4902,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 122
                     }
                   },
@@ -142371,7 +142602,7 @@
                     "target": {
                       "byteIndex": 5258,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 129
                     }
                   },
@@ -142400,7 +142631,7 @@
                     "target": {
                       "byteIndex": 5613,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 136
                     }
                   },
@@ -142429,7 +142660,7 @@
                     "target": {
                       "byteIndex": 5972,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 143
                     }
                   },
@@ -142458,7 +142689,7 @@
                     "target": {
                       "byteIndex": 6340,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 150
                     }
                   },
@@ -142487,7 +142718,7 @@
                     "target": {
                       "byteIndex": 6731,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 157
                     }
                   },
@@ -142516,7 +142747,7 @@
                     "target": {
                       "byteIndex": 7112,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 166
                     }
                   },
@@ -142545,7 +142776,7 @@
                     "target": {
                       "byteIndex": 7360,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/scalars.ts",
+                      "filename": "core/values/types/scalars.ts",
                       "line": 171
                     }
                   },
@@ -142574,7 +142805,7 @@
                     "target": {
                       "byteIndex": 533,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/collections.ts",
+                      "filename": "core/values/types/collections.ts",
                       "line": 14
                     }
                   },
@@ -142603,7 +142834,7 @@
                     "target": {
                       "byteIndex": 819,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/collections.ts",
+                      "filename": "core/values/types/collections.ts",
                       "line": 19
                     }
                   },
@@ -142632,7 +142863,7 @@
                     "target": {
                       "byteIndex": 1142,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/collections.ts",
+                      "filename": "core/values/types/collections.ts",
                       "line": 26
                     }
                   },
@@ -142661,7 +142892,7 @@
                     "target": {
                       "byteIndex": 1508,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/collections.ts",
+                      "filename": "core/values/types/collections.ts",
                       "line": 33
                     }
                   },
@@ -142690,7 +142921,7 @@
                     "target": {
                       "byteIndex": 1768,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/collections.ts",
+                      "filename": "core/values/types/collections.ts",
                       "line": 38
                     }
                   },
@@ -142719,7 +142950,7 @@
                     "target": {
                       "byteIndex": 2142,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/collections.ts",
+                      "filename": "core/values/types/collections.ts",
                       "line": 47
                     }
                   },
@@ -142748,7 +142979,7 @@
                     "target": {
                       "byteIndex": 427,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/system.ts",
+                      "filename": "core/values/types/system.ts",
                       "line": 11
                     }
                   },
@@ -142777,7 +143008,7 @@
                     "target": {
                       "byteIndex": 772,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/system.ts",
+                      "filename": "core/values/types/system.ts",
                       "line": 18
                     }
                   },
@@ -142806,7 +143037,7 @@
                     "target": {
                       "byteIndex": 1086,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/system.ts",
+                      "filename": "core/values/types/system.ts",
                       "line": 24
                     }
                   },
@@ -142835,7 +143066,7 @@
                     "target": {
                       "byteIndex": 1332,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/system.ts",
+                      "filename": "core/values/types/system.ts",
                       "line": 29
                     }
                   },
@@ -142864,7 +143095,7 @@
                     "target": {
                       "byteIndex": 553,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/custom.ts",
+                      "filename": "core/values/types/custom.ts",
                       "line": 15
                     }
                   },
@@ -142968,7 +143199,7 @@
                     "target": {
                       "byteIndex": 713,
                       "col": 0,
-                      "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/custom.ts",
+                      "filename": "core/values/types/custom.ts",
                       "line": 18
                     }
                   },
@@ -142991,7 +143222,7 @@
                               "target": {
                                 "byteIndex": 454,
                                 "col": 0,
-                                "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                                "filename": "core/values/types/input.ts",
                                 "line": 19
                               }
                             },
@@ -143008,7 +143239,7 @@
                               "target": {
                                 "byteIndex": 557,
                                 "col": 0,
-                                "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                                "filename": "core/values/types/input.ts",
                                 "line": 21
                               }
                             },
@@ -143025,7 +143256,7 @@
                               "target": {
                                 "byteIndex": 681,
                                 "col": 0,
-                                "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                                "filename": "core/values/types/input.ts",
                                 "line": 23
                               }
                             },
@@ -143042,7 +143273,7 @@
                               "target": {
                                 "byteIndex": 788,
                                 "col": 0,
-                                "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                                "filename": "core/values/types/input.ts",
                                 "line": 25
                               }
                             },
@@ -143059,7 +143290,7 @@
                               "target": {
                                 "byteIndex": 921,
                                 "col": 0,
-                                "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                                "filename": "core/values/types/input.ts",
                                 "line": 27
                               }
                             },
@@ -143076,7 +143307,7 @@
                               "target": {
                                 "byteIndex": 1195,
                                 "col": 0,
-                                "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                                "filename": "core/values/types/input.ts",
                                 "line": 34
                               }
                             },
@@ -143093,7 +143324,7 @@
                               "target": {
                                 "byteIndex": 1333,
                                 "col": 0,
-                                "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                                "filename": "core/values/types/input.ts",
                                 "line": 37
                               }
                             },
@@ -143142,7 +143373,7 @@
                               "target": {
                                 "byteIndex": 1839,
                                 "col": 0,
-                                "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                                "filename": "core/values/types/input.ts",
                                 "line": 49
                               }
                             },
@@ -143159,7 +143390,7 @@
                               "target": {
                                 "byteIndex": 1975,
                                 "col": 0,
-                                "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                                "filename": "core/values/types/input.ts",
                                 "line": 52
                               }
                             },
@@ -143176,7 +143407,7 @@
                               "target": {
                                 "byteIndex": 2662,
                                 "col": 0,
-                                "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/types/input.ts",
+                                "filename": "core/values/types/input.ts",
                                 "line": 66
                               }
                             },
@@ -146278,7 +146509,7 @@
           "target": {
             "byteIndex": 3683,
             "col": 0,
-            "filename": "file:///Users/fifo/Documents/Coding/personal-assistant/projects/colibri/repo/core/values/value.ts",
+            "filename": "core/values/value.ts",
             "line": 113
           }
         },

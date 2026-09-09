@@ -1,5 +1,6 @@
 import { ColibriError } from "@/error/index.ts";
 import type { Diagnostic } from "@/error/types.ts";
+import type { InvokeContractOutput } from "@/pipelines/invoke-contract/types.ts";
 
 /**
  * Metadata stored on contract errors.
@@ -81,6 +82,7 @@ export enum Code {
   INVALID_SEP_IDENTIFIER = "CONTR_018",
   INVALID_WASM_FOR_SPEC = "CONTR_019",
   FAILED_TO_DECODE_SPEC_SECTION = "CONTR_020",
+  FAILED_TO_DECODE_INVOCATION_RESULT = "CONTR_021",
 }
 
 // Currently unused, reserving
@@ -441,6 +443,34 @@ export class FAILED_TO_DECODE_SPEC_SECTION extends ContractError<Code> {
   }
 }
 
+/** Raised when a successful transaction's return value cannot be decoded. */
+export class FAILED_TO_DECODE_INVOCATION_RESULT extends ColibriError<
+  Code.FAILED_TO_DECODE_INVOCATION_RESULT,
+  { cause: unknown; data: { method: string; result: InvokeContractOutput } }
+> {
+  /** Original decoding failure and successful transaction context. */
+  override readonly meta: {
+    cause: unknown;
+    data: { method: string; result: InvokeContractOutput };
+  };
+
+  /** Preserves the successful transaction and the original decoding failure. */
+  constructor(method: string, result: InvokeContractOutput, cause: unknown) {
+    const meta = { cause, data: { method, result } };
+    super({
+      domain: "contract",
+      source: "@colibri/contract",
+      code: Code.FAILED_TO_DECODE_INVOCATION_RESULT,
+      message: "Failed to decode contract result",
+      details:
+        "The transaction succeeded but its return value could not be decoded with the loaded spec. " +
+        "Inspect meta.data.result and update the spec or regenerate the bindings if the ABI changed.",
+      meta,
+    });
+    this.meta = meta;
+  }
+}
+
 /**
  * Raised when a contract id does not match the expected format.
  */
@@ -525,4 +555,6 @@ export const ERROR_CONTR = {
   ["CONTR_019" as Code.INVALID_WASM_FOR_SPEC]: INVALID_WASM_FOR_SPEC,
   ["CONTR_020" as Code.FAILED_TO_DECODE_SPEC_SECTION]:
     FAILED_TO_DECODE_SPEC_SECTION,
+  ["CONTR_021" as Code.FAILED_TO_DECODE_INVOCATION_RESULT]:
+    FAILED_TO_DECODE_INVOCATION_RESULT,
 };

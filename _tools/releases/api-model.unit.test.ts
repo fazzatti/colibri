@@ -3,6 +3,35 @@ import { describe, it } from "@std/testing/bdd";
 import { compareApis, normalizeDeclaration } from "./api-model.ts";
 
 describe("public API snapshots", () => {
+  it("makes reference targets portable without erasing their identity or literals", () => {
+    const declaration = (root: string, filename = "types.ts") => ({
+      def: {
+        target: { filename: root + filename, byteIndex: 42, col: 0, line: 3 },
+        tsType: { kind: "literal", value: "file:///local/private/" },
+      },
+      kind: "reference",
+    });
+    const root = "file:///local/private/";
+    const ciRoot = "file:///home/runner/work/colibri/";
+    const normalized = normalizeDeclaration(declaration(root), root);
+    assertEquals(normalized, {
+      def: {
+        target: { filename: "types.ts", byteIndex: 42, col: 0, line: 3 },
+        tsType: { kind: "literal", value: root },
+      },
+      kind: "reference",
+    });
+    assertEquals(normalizeDeclaration(declaration(ciRoot), ciRoot), normalized);
+    assertEquals(
+      compareApis({ core: { Value: normalized } }, {
+        core: {
+          Value: normalizeDeclaration(declaration(ciRoot, "other.ts"), ciRoot),
+        },
+      }),
+      [{ entrypoint: "core", symbol: "Value", kind: "changed" }],
+    );
+  });
+
   it("omits machine locations and documentation but retains the complete type structure", () => {
     assertEquals(
       normalizeDeclaration({

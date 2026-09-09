@@ -1,6 +1,7 @@
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { dirname, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { type ReleasePlan } from "./model.ts";
 import { git } from "./repository.ts";
 
@@ -102,6 +103,27 @@ async function fixture(
 }
 
 describe("API CLI reports survive failed checks", () => {
+  it("stores portable targets for real namespace re-export declarations", async () => {
+    await fixture(async (root) => {
+      await write(root, "core/values.ts", "export type Value = string;\n");
+      await write(
+        root,
+        "core/mod.ts",
+        'export const existing: number = 1;\nexport * from "./values.ts";\nexport * as Types from "./values.ts";\n',
+      );
+      const update = await execute(root, "--update");
+      assertEquals(update.success, true, update.stderr);
+      const snapshot = await Deno.readTextFile(
+        resolve(root, "_tools/releases/public-api.json"),
+      );
+      assertStringIncludes(snapshot, '"filename": "core/values.ts"');
+      assertEquals(snapshot.includes(pathToFileURL(root).href), false);
+      const check = await execute(root);
+      assertEquals(check.success, true, check.stderr);
+      assertEquals(JSON.parse(check.stdout).unreviewed, []);
+    });
+  });
+
   it("emits valid JSON and exits successfully for reviewed declarations", async () => {
     await fixture(async (root) => {
       const output = await execute(root);

@@ -311,7 +311,7 @@ errors from the root invocation. Pass \`errors: false\` if you provide your own
 matcher through \`contractConfig.plugins\`; other configured plugins are preserved.
 Matched errors expose \`name\` and \`category\` in \`error.meta.data.match\`.
 
-If decoding fails after a transaction succeeds, \`CBG_006\` retains the successful
+If decoding fails after a transaction succeeds, Core error \`CONTR_021\` retains the successful
 transaction in \`error.meta.data.result\`. Inspect it before retrying; do not
 resubmit the transaction automatically.
 

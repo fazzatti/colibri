@@ -31,6 +31,18 @@ const result = await contract.invoke({
 });
 ```
 
+`Contract.invoke()` returns the processed transaction, including its raw
+`returnValue`. Generated bindings also expose a typed `value`, decoded by Core
+through an internal subclass helper. The helper is protected and is not part of
+the public instance API. `invokeRaw()` continues to return the raw result.
+
+If this decoding fails after a successful transaction, Core raises `CONTR_021`.
+The error retains the original result in `meta.data.result`, the method name in
+`meta.data.method`, and the original failure in `meta.cause`. Inspect that
+result and the loaded spec before deciding the next action; decoding does not
+retry or resubmit the transaction. An absent return value becomes `undefined`,
+while an encoded Soroban void result becomes `null`.
+
 ### `read()`
 
 Use this for read-only methods:

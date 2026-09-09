@@ -51,7 +51,7 @@ catalog.
 
 ## @colibri/contract-bindings
 
-- [contract-bindings](contract-bindings.md) — 6 codes.
+- [contract-bindings](contract-bindings.md) — 5 codes.
 
 ## @colibri/core
 
@@ -79,7 +79,7 @@ catalog.
 - [core/common/helpers/transaction](core-common-helpers-transaction.md) — 2
   codes.
 - [core/common/helpers/xdr](core-common-helpers-xdr.md) — 19 codes.
-- [core/contract](core-contract.md) — 21 codes.
+- [core/contract](core-contract.md) — 22 codes.
 - [core/contract/events](core-contract-events.md) — 5 codes.
 - [core/event](core-event.md) — 13 codes.
 - [core/event/event-filter](core-event-event-filter.md) — 2 codes.

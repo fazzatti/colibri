@@ -1,6 +1,4 @@
-import { Code } from "@/error.ts";
 import { GENERATED_MARKER } from "@/generation/constants.ts";
-import { quote } from "@/generation/type-map.ts";
 
 /** @internal A focused Contract subclass; constants and ABI types live in their own files. */
 export function renderClient(name: string): string {
@@ -10,11 +8,9 @@ export function renderClient(name: string): string {
  * @module
  */
 import {
-  ColibriError,
   Contract,
   type ContractId,
   createContractErrorMatcherPlugin,
-  decodeSorobanResult,
 } from "@colibri/core";
 import { Spec } from "@colibri/core";
 import { ${name}Errors, ${name}Spec } from "./constants.ts";
@@ -83,32 +79,10 @@ export class ${name} extends Contract {
     args: ${name}Call<Method> & ${name}Invocation,
   ): Promise<${name}InvocationResult<${name}Outputs[Method]>> {
     const result = await super.invoke(args);
-    let value: ${name}Outputs[Method] | undefined;
-
-    try {
-      value = result.returnValue === undefined
-        ? undefined
-        : decodeSorobanResult(
-          this.getSpec(),
-          args.method,
-          result.returnValue,
-        ) as ${name}Outputs[Method];
-    } catch (cause) {
-      // The transaction succeeded. Preserve its result so callers can inspect it.
-      throw ColibriError.unexpected({
-        domain: "contract",
-        source: "@colibri/contract-bindings/generated",
-        code: ${quote(Code.RESULT_DECODE_FAILED)},
-        message: "Failed to decode contract result",
-        details:
-          "The transaction succeeded but its result does not match the embedded ABI. " +
-          "Inspect meta.data.result and regenerate the bindings if the ABI changed.",
-        cause,
-        meta: { data: { method: args.method, result } },
-      });
-    }
-
-    return { ...result, value };
+    return this.decodeInvocationResult<${name}Outputs[Method]>(
+      args.method,
+      result,
+    );
   }
 }
 `;

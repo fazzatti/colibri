@@ -195,10 +195,10 @@ on failure. See the [full API](https://jsr.io/@colibri/contract-bindings/doc)
 and [CLI API](https://jsr.io/@colibri/contract-bindings/doc/cli).
 
 If invoke succeeds but decoding its result fails, the generated client throws
-Core `ColibriError` code `CBG_006`, retaining the successful transaction result
-in `meta.data.result` and the codec failure as its cause. Inspect that result
-and the embedded ABI before deciding the next action; resubmitting would create
-another transaction.
+Core `ColibriError` code `CONTR_021`, retaining the successful transaction
+result in `meta.data.result` and the original codec failure in `meta.cause`.
+Inspect that result and the embedded ABI before deciding the next action;
+resubmitting would create another transaction.
 
 ## Validated contract values
 

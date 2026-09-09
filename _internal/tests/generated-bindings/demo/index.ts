@@ -4,11 +4,9 @@
  * @module
  */
 import {
-  ColibriError,
   Contract,
   type ContractId,
   createContractErrorMatcherPlugin,
-  decodeSorobanResult,
 } from "@colibri/core";
 import { Spec } from "@colibri/core";
 import { DemoErrors, DemoSpec } from "./constants.ts";
@@ -77,31 +75,9 @@ export class Demo extends Contract {
     args: DemoCall<Method> & DemoInvocation,
   ): Promise<DemoInvocationResult<DemoOutputs[Method]>> {
     const result = await super.invoke(args);
-    let value: DemoOutputs[Method] | undefined;
-
-    try {
-      value = result.returnValue === undefined
-        ? undefined
-        : decodeSorobanResult(
-          this.getSpec(),
-          args.method,
-          result.returnValue,
-        ) as DemoOutputs[Method];
-    } catch (cause) {
-      // The transaction succeeded. Preserve its result so callers can inspect it.
-      throw ColibriError.unexpected({
-        domain: "contract",
-        source: "@colibri/contract-bindings/generated",
-        code: "CBG_006",
-        message: "Failed to decode contract result",
-        details:
-          "The transaction succeeded but its result does not match the embedded ABI. " +
-          "Inspect meta.data.result and regenerate the bindings if the ABI changed.",
-        cause,
-        meta: { data: { method: args.method, result } },
-      });
-    }
-
-    return { ...result, value };
+    return this.decodeInvocationResult<DemoOutputs[Method]>(
+      args.method,
+      result,
+    );
   }
 }

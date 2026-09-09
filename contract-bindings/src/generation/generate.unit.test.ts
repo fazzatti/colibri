@@ -195,7 +195,7 @@ describe("bindings rendering", () => {
         "readonly Transfer",
         "override async read",
         "override async invoke",
-        "result.returnValue",
+        "this.decodeInvocationResult",
         "contractConfig.plugins",
         "amount: SorobanType.I128",
       ]

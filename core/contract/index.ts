@@ -792,6 +792,30 @@ export class Contract {
   }
 
   /**
+   * Adds the spec-decoded value to a successful invocation for typed subclasses.
+   * Decoding never resubmits the transaction. Failures retain the original result.
+   * @internal
+   */
+  protected decodeInvocationResult<Value>(
+    method: string,
+    result: InvokeContractOutput,
+  ): InvokeContractOutput & { value: Value | undefined } {
+    let value: Value | undefined;
+    try {
+      value = result.returnValue === undefined
+        ? undefined
+        : decodeSorobanResult(
+          this.getSpec(),
+          method,
+          result.returnValue,
+        ) as Value;
+    } catch (cause) {
+      throw new E.FAILED_TO_DECODE_INVOCATION_RESULT(method, result, cause);
+    }
+    return { ...result, value };
+  }
+
+  /**
    * Invokes a state-changing contract method with already encoded ScVal arguments.
    *
    * This is the escape hatch for methods that are not represented by a loaded

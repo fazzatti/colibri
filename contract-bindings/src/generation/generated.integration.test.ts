@@ -146,6 +146,10 @@ function types() {
   new Token({ ...config, errors: current });
   new Token({ ...config, errors: compatible });
   const base: Contract = token;
+  // @ts-expect-error Decoding is an internal protected subclass helper.
+  token.decodeInvocationResult;
+  // @ts-expect-error The base Contract does not expose the helper publicly either.
+  base.decodeInvocationResult;
   const ledger: Promise<ContractDataLedgerEntry> = token.getLedgerEntry({ key: xdr.ScVal.scvSymbol("counter"), durability: "temporary" });
   // @ts-expect-error The contract identity is already bound.
   token.getLedgerEntry({ key: xdr.ScVal.scvSymbol("counter"), contractId: "C..." });
@@ -187,10 +191,14 @@ try {
   assertEquals(result.hash, "abc");
   Contract.prototype.invoke = async () => ({ ...raw, returnValue: xdr.ScVal.scvString("wrong ABI") });
   const decodingError = await assertRejects(() => token.invoke({ method: "balance", methodArgs: { owner: "alice" }, config: { source: "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF", fee: "100", timeout: 10, signers: [] } }), ColibriError);
-  assertEquals(decodingError.code, "CBG_006");
+  assertEquals(decodingError.code, "CONTR_021");
   assertEquals((decodingError.meta?.data as { result: {hash:string} }).result.hash, "abc");
   Contract.prototype.invoke = async () => ({ ...raw, returnValue: undefined });
   assertEquals((await token.invoke({ method: "ping", config: {source: "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF", fee:"100",timeout:10,signers:[]} })).value, undefined);
+  const pipelineFailure = new Error("submission failed");
+  Contract.prototype.invoke = () => Promise.reject(pipelineFailure);
+  const invocationError = await assertRejects(() => token.invoke({ method: "ping", config: {source: "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF", fee:"100",timeout:10,signers:[]} }));
+  assertEquals(invocationError === pipelineFailure, true);
   const event = new Event({ id: "0000000042949672960-0000000001", type: EventType.Contract, ledger: 10, ledgerClosedAt: "2026-01-01T00:00:00Z", transactionIndex: 1, operationIndex: 0, inSuccessfulContractCall: true, txHash: "abc", contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM", topic: [xdr.ScVal.scvSymbol("transfer"), xdr.ScVal.scvSymbol("alice")], value: xdr.ScVal.scvMap([new xdr.ScMapEntry({key:xdr.ScVal.scvSymbol("amount"),val:raw.returnValue!})]) });
   const amount: bigint = token.events.Transfer.fromEvent(event).get("amount");
   assertEquals(amount, 42n);
