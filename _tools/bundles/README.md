@@ -2,8 +2,7 @@
 
 This tooling measures real minified, standalone browser consumers through public
 package entrypoints. It does not change package side-effect metadata or override
-Rollup's `treeshake.moduleSideEffects`. See
-[the measured investigation](REPORT.md) and the
+Rollup's `treeshake.moduleSideEffects`. See the
 [consumer guide](../../docs/getting-started/browser-bundles.md).
 
 ## Run
