@@ -8,6 +8,7 @@ import {
   Contract,
   type ContractId,
   createContractErrorMatcherPlugin,
+  decodeSorobanResult,
 } from "@colibri/core";
 import { Spec } from "@colibri/core";
 import { DemoErrors, DemoSpec } from "./constants.ts";
@@ -81,7 +82,8 @@ export class Demo extends Contract {
     try {
       value = result.returnValue === undefined
         ? undefined
-        : this.getSpec().funcResToNative(
+        : decodeSorobanResult(
+          this.getSpec(),
           args.method,
           result.returnValue,
         ) as DemoOutputs[Method];

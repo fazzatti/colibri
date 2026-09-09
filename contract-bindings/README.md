@@ -264,3 +264,25 @@ Core `ColibriError` code `CBG_006`, retaining the successful transaction result
 in `meta.data.result` and the codec failure as its cause. Inspect that result
 and the embedded ABI before deciding the next action; resubmitting would create
 another transaction.
+
+## Validated inputs and custom values
+
+Generated inputs use Core's `SorobanSymbolInput`, `SorobanU32Input` and related
+aliases, accepting both existing raw values and optional validated helpers.
+Outputs use descriptive native aliases and remain ordinary strings, numbers,
+bigints, arrays and objects. The existing constants/spec/error layout is
+retained.
+
+Structs and unions export runtime factories alongside their types:
+`SomeStruct.from(fields)` or `SomeUnion.Variant(...values)`. Factories use the
+embedded spec, accept nested helpers, and expose `.type`, `.fromScVal()` and
+`.fromXdr()`. Numeric enums retain their enum object and have a separate
+`NameType` factory. Referenced error codes retain their type aliases and reuse
+the error definitions. A custom input alias that collides with a method input
+uses the descriptive `NameValueInput` suffix.
+
+Use a generated storage-key value directly with
+`client.getLedgerEntry({ key,
+durability: "persistent" })`; durability and
+stored value types are still caller-owned. See
+[validated Soroban values](../docs/core/contract/values.md).

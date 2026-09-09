@@ -65,6 +65,18 @@ export async function runArtifacts(
 import { generateBindings } from "@colibri/contract-bindings";
 import { Spec } from "@stellar/stellar-sdk/contract";
 import { xdr } from "@stellar/stellar-sdk";
+import { SorobanSymbol, SorobanString, SorobanU32, SorobanVec, SorobanBytesN, SorobanValueError } from "@colibri/core/values";
+import { SorobanSymbol as RootSymbol, type SorobanVecInput, type SorobanStringInput } from "@colibri/core";
+if (RootSymbol !== SorobanSymbol) throw new Error("Value constructor identity changed");
+const value = new SorobanSymbol("ADMIN");
+if (SorobanSymbol.type.fromXdr(value.toXdr("base64")).value !== "ADMIN") throw new Error("Value encoding changed");
+const text: SorobanVecInput<SorobanStringInput, string> = new SorobanVec([new SorobanString("hello")], SorobanString.type);
+const fixed = new SorobanBytesN(new Uint8Array(32), 32);
+const length: 32 = fixed.value.length;
+if (length !== 32 || !text) throw new Error("Value type mismatch");
+let rejected = false;
+try { new SorobanU32(-1); } catch (error) { rejected = error instanceof SorobanValueError && error.code === "SV_001"; }
+if (!rejected) throw new Error("Value validation missing");
 const spec = new Spec([xdr.ScSpecEntry.scSpecEntryFunctionV0(new xdr.ScSpecFunctionV0({ name: "ping", doc: "Ping", inputs: [], outputs: [] }))]);
 const plan = generateBindings(spec, {className: "PingClient"});
 if (!plan.files["index.ts"].includes("class PingClient extends Contract")) throw new Error("Portable bindings rendering failed");

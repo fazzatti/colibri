@@ -40,13 +40,23 @@ export function renderMethods(
     const output = `${typeName(name)}Output`;
     model.claim(input);
     model.claim(output);
+    let result = method.outputs[0]
+      ? model.type(method.outputs[0], "Output", true)
+      : "null";
+    if (
+      `export type ${output} = ${result};`.length > 80 &&
+      result.startsWith("StellarResult<")
+    ) {
+      result = result.replace("StellarResult<", "StellarResult<\n  ").replace(
+        ", { message: string }>",
+        ",\n  { message: string }\n>",
+      );
+    }
     declarations.push(`${doc(method.doc.toString(), `Arguments for ${name}.`)}
 export type ${input} = ${model.fields(method.inputs, "Input")};
 
 /** Decoded return value of ${name}. */
-export type ${output} = ${
-      method.outputs[0] ? model.type(method.outputs[0], "Output", true) : "null"
-    };`);
+export type ${output} = ${result};`);
     entries.push(`${property(name)}: {
   input: ${input};
   output: ${output};

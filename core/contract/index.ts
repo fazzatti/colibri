@@ -1,3 +1,9 @@
+import type { ScValLike } from "@/common/types/external.ts";
+import {
+  decodeSorobanResult,
+  encodeSorobanArguments,
+  toContractScVal,
+} from "@/values/arguments.ts";
 import { ContractEventRegistry } from "@/contract/events/index.ts";
 import {
   Address,
@@ -42,7 +48,6 @@ import type {
   BinaryData,
   ExternalExecutableRef,
   LedgerKeyLike,
-  ScValLike,
   SorobanAuthorizationEntryLike,
 } from "@/common/types/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
@@ -526,7 +531,11 @@ export class Contract {
 
     try {
       const encodedArgs = constructorArgs
-        ? this.getSpec().funcArgsToScVals("__constructor", constructorArgs)
+        ? encodeSorobanArguments(
+          this.getSpec(),
+          "__constructor",
+          constructorArgs as object,
+        )
         : undefined;
 
       const common = {
@@ -730,7 +739,7 @@ export class Contract {
     const contractId = this.getContractId();
 
     const encodedArgs = methodArgs
-      ? this.getSpec().funcArgsToScVals(method, methodArgs)
+      ? encodeSorobanArguments(this.getSpec(), method, methodArgs)
       : undefined;
 
     const operation = Operation.invokeContractFunction({
@@ -740,7 +749,7 @@ export class Contract {
     });
 
     const scValOutput = await this.readPipe.run({ operations: [operation] });
-    return this.getSpec().funcResToNative(method, scValOutput);
+    return decodeSorobanResult(this.getSpec(), method, scValOutput);
   }
 
   /**
@@ -769,7 +778,7 @@ export class Contract {
     const contractId = this.getContractId();
 
     const encodedArgs = methodArgs
-      ? this.getSpec().funcArgsToScVals(method, methodArgs)
+      ? encodeSorobanArguments(this.getSpec(), method, methodArgs)
       : undefined;
 
     const operation = Operation.invokeContractFunction({
@@ -814,6 +823,7 @@ export class Contract {
 
     const operation = Operation.invokeContractFunction({
       ...operationArgs,
+      args: operationArgs.args.map(toContractScVal),
       contract: contractId,
     });
 
@@ -843,7 +853,7 @@ export class Contract {
     const operation = Operation.invokeContractFunction({
       function: method,
       contract: contractId,
-      args: (methodArgs as xdr.ScVal[] | undefined) || [],
+      args: methodArgs?.map(toContractScVal) || [],
     });
 
     return await this.readPipe.run({ operations: [operation] });

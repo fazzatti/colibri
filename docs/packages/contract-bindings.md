@@ -199,3 +199,13 @@ Core `ColibriError` code `CBG_006`, retaining the successful transaction result
 in `meta.data.result` and the codec failure as its cause. Inspect that result
 and the embedded ABI before deciding the next action; resubmitting would create
 another transaction.
+
+## Validated contract values
+
+Newly generated inputs accept raw values and
+[validated Soroban helpers](../core/contract/values.md). Native output aliases
+retain existing plain result shapes. Struct/union types also export spec-backed
+factories; numeric enums retain their enum objects and receive a `NameType`
+factory. Factories reuse the embedded declarations rather than duplicating ABI
+metadata. A custom input alias uses `ValueInput` if `Input` would collide with a
+method's input name. The constants and error-map layout is unchanged.

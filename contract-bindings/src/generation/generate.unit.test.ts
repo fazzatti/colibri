@@ -127,7 +127,7 @@ describe("bindings rendering", () => {
         "override async invoke",
         "result.returnValue",
         "contractConfig.plugins",
-        "amount: bigint",
+        "amount: SorobanI128Native",
       ]
     ) assert(source.includes(text), text);
     assert(!source.includes("async balance("));
@@ -238,14 +238,20 @@ describe("bindings rendering", () => {
     );
     assertEquals(
       map.type(type, "Input"),
-      "Map<number, number> | Array<[number, number]>",
+      "SorobanMapInput<SorobanU32Input, SorobanU32Input, SorobanU32Native, SorobanU32Native>",
     );
-    assertEquals(map.type(type, "Output"), "Array<[number, number]>");
+    assertEquals(
+      map.type(type, "Output"),
+      "Array<[SorobanU32Native, SorobanU32Native]>",
+    );
     const option = xdr.ScSpecTypeDef.scSpecTypeOption(
       new xdr.ScSpecTypeOption({ valueType: u32 }),
     );
-    assertEquals(map.type(option, "Input"), "(number) | null | undefined");
-    assertEquals(map.type(option, "Output"), "(number) | null");
+    assertEquals(
+      map.type(option, "Input"),
+      "SorobanOptionInput<SorobanU32Input, SorobanU32Native>",
+    );
+    assertEquals(map.type(option, "Output"), "(SorobanU32Native) | null");
     const result = xdr.ScSpecTypeDef.scSpecTypeResult(
       new xdr.ScSpecTypeResult({
         okType: u32,
@@ -254,12 +260,15 @@ describe("bindings rendering", () => {
     );
     assertEquals(
       map.type(result, "Output", true),
-      "StellarResult<number, { message: string }>",
+      "StellarResult<SorobanU32Native, { message: string }>",
     );
-    assertThrows(() => map.type(result, "Input"), BindingError);
-    assertThrows(
-      () => map.type(xdr.ScSpecTypeDef.scSpecTypeError(), "Output"),
-      BindingError,
+    assertEquals(
+      map.type(result, "Input"),
+      "SorobanResultInput<SorobanU32Input, SorobanErrorInput, SorobanU32Native, SorobanErrorNative>",
+    );
+    assertEquals(
+      map.type(xdr.ScSpecTypeDef.scSpecTypeError(), "Output"),
+      "SorobanErrorNative",
     );
     assertThrows(
       () =>
@@ -308,10 +317,18 @@ describe("bindings rendering", () => {
       xdr.ScSpecTypeDef.scSpecTypeUdt(new xdr.ScSpecTypeUdt({ name: "group" })),
     );
     const model = new TypeMap(new Spec([envelope, group]));
-    assert(model.declarations().includes("export type Group ="));
-    assert(model.declarations().includes("export type GroupInput ="));
-    assert(model.declarations().includes("export type EnvelopeInput ="));
-    assert(!model.declarations().includes("GroupOutput"));
+    assert(
+      model.declarations("ContractClient").includes("export type Group ="),
+    );
+    assert(
+      model.declarations("ContractClient").includes("export type GroupInput ="),
+    );
+    assert(
+      model.declarations("ContractClient").includes(
+        "export type EnvelopeInput =",
+      ),
+    );
+    assert(!model.declarations("ContractClient").includes("GroupOutput"));
     assertThrows(
       () =>
         new TypeMap(

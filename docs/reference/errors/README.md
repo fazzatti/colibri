@@ -130,6 +130,7 @@ catalog.
 - [core/sponsorship](core-sponsorship.md) — 2 codes.
 - [core/toid](core-toid.md) — 4 codes.
 - [core/tools/friendbot](core-tools-friendbot.md) — 3 codes.
+- [core/values](core-values.md) — 3 codes.
 
 ## @colibri/identicon
 

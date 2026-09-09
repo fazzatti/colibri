@@ -51,9 +51,10 @@ export function generateBindings(
         ),
         [`${prefix}types.ts`]: renderTypes(
           className,
-          model.declarations(),
+          model.declarations(className),
           methods,
           events,
+          model.imports,
         ),
         [`${prefix}index.ts`]: renderClient(className),
       },

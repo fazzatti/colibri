@@ -1333,3 +1333,19 @@ retain ledger, transaction, and raw XDR metadata. Missing declarations do not
 imply that a contract emits no events. See
 [the guide](../docs/core/contract/events.md) and the
 [bindings generator](../contract-bindings/README.md).
+
+## Validated Soroban values
+
+Contract arguments can be raw values or validated helpers such as
+`new SorobanSymbol("ADMIN")`, `new SorobanU32(7)`, and
+`new SorobanDuration(60n)`. Helpers preserve the ABI distinction, expose
+`.value`, `.toScVal()` and `.toXdr()`, and compose into vectors, maps, tuples,
+options, results and spec-backed custom values. Inputs and mutable outputs are
+copied. Generated bindings adopt these optional inputs while keeping plain
+outputs.
+
+Import from `@colibri/core` or the supported `@colibri/core/values` entrypoint.
+Use `.toScVal()` with native raw-call interfaces and the Stellar SDK directly.
+Native `Spec` identity, existing pipelines and ordinary result shapes remain
+unchanged. See [the complete value guide](../docs/core/contract/values.md) for
+coverage, units, error codes, custom factories and internal wire values.

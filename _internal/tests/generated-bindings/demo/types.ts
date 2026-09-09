@@ -11,6 +11,15 @@ import type {
   ContractEventRegistry,
 } from "@colibri/core";
 import type { Result as StellarResult } from "@colibri/core";
+import type {
+  SorobanSymbolInput,
+  SorobanSymbolNative,
+  SorobanU32Input,
+  SorobanU32Native,
+  SorobanValue,
+} from "@colibri/core";
+import { createSorobanFactory } from "@colibri/core";
+import { DemoSpec } from "./constants.ts";
 
 // -----------------------------------------------------------------------------
 // Methods
@@ -26,19 +35,22 @@ export type SummaryOutput = CounterSummary;
 export type GetCountInput = Record<string, never>;
 
 /** Decoded return value of get_count. */
-export type GetCountOutput = number;
+export type GetCountOutput = SorobanU32Native;
 
 /** Increase the count by a positive amount, up to a maximum of 100. */
 export type IncrementInput = {
-  by: number;
+  by: SorobanU32Input;
 };
 
 /** Decoded return value of increment. */
-export type IncrementOutput = StellarResult<number, { message: string }>;
+export type IncrementOutput = StellarResult<
+  SorobanU32Native,
+  { message: string }
+>;
 
 /** Return a summary unchanged to exercise named input and output types. */
 export type EchoSummaryInput = {
-  summary: CounterSummary;
+  summary: CounterSummaryInput;
 };
 
 /** Decoded return value of echo_summary. */
@@ -108,9 +120,29 @@ export enum CounterStatus {
 
 /** Current count and its status. */
 export type CounterSummary = {
-  count: number;
+  count: SorobanU32Native;
   status: CounterStatus;
 };
+
+/** Input accepted for CounterSummary; decoded values use CounterSummary. */
+export type CounterSummaryInput =
+  | {
+    count: SorobanU32Input;
+    status: CounterStatus | SorobanValue<CounterStatus>;
+  }
+  | SorobanValue<CounterSummary>;
+
+/** Validate and encode the CounterStatus codes declared by this contract. */
+export const CounterStatusType = createSorobanFactory<CounterStatus>(
+  () => DemoSpec,
+  "CounterStatus",
+);
+
+/** Validate, encode and decode CounterSummary using its contract declaration. */
+export const CounterSummary = createSorobanFactory<
+  CounterSummaryInput,
+  CounterSummary
+>(() => DemoSpec, "CounterSummary");
 
 // -----------------------------------------------------------------------------
 // Events
@@ -120,14 +152,14 @@ export type CounterSummary = {
  * Emitted after the counter changes; action can be used in event filters.
  */
 export type CountChanged = {
-  action: string;
-  old_count: number;
-  new_count: number;
+  action: SorobanSymbolNative;
+  old_count: SorobanU32Native;
+  new_count: SorobanU32Native;
 };
 
 /** Indexed fields accepted by the CountChanged event filters. */
 export type CountChangedTopics = {
-  action: string;
+  action: SorobanSymbolInput;
 };
 
 /** Event definitions bound to this client, with typed decoding and filters. */

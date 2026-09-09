@@ -1,6 +1,8 @@
 import { Spec as NativeSpec } from "stellar-sdk/contract";
 import type { Result as NativeResult } from "stellar-sdk/contract";
 
+/** @internal Canonical native instance; keep public aliases analyzable by supported Deno versions. */
+type NativeSpecInstance = NativeSpec;
 /** @internal Exact native constructor signature, including static helpers. */
 type SpecConstructor = typeof NativeSpec;
 /** @internal Exact native result contract; retain upstream type interoperability. */
@@ -13,7 +15,7 @@ type NativeContractResult<T, E extends { message: string }> = NativeResult<
  * Stellar contract specification used by Colibri's contract, error and event APIs.
  * This is the native SDK type; existing native specs remain interchangeable.
  */
-export type Spec = NativeSpec;
+export type Spec = NativeSpecInstance;
 
 /**
  * Native Stellar spec constructor, exposed through Colibri without a wrapper.

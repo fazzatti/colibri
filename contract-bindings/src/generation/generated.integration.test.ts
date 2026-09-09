@@ -6,6 +6,7 @@ import { extractContractSpec } from "@colibri/core";
 import { loadBindingSource } from "@/source/load.ts";
 import { generateBindings } from "@/generation/generate.ts";
 import { writeBindings } from "@/output/write.ts";
+import { valueSpec } from "colibri-internal/tests/soroban-values-fixtures.ts";
 import { bindingSpec } from "colibri-internal/tests/binding-fixtures.ts";
 import { fileURLToPath } from "node:url";
 
@@ -54,6 +55,55 @@ describe("generated consumer boundary", () => {
           (name) => `${directory}/${name}/index.ts`,
         ),
       ]);
+    } finally {
+      await Deno.remove(directory, { recursive: true });
+    }
+  });
+  it("generates usable custom factories and accepts mixed raw/wrapped values", async () => {
+    const directory = await Deno.makeTempDir();
+    try {
+      await writeBindings(
+        generateBindings(valueSpec(), { className: "ValuesClient" }),
+        { directory },
+      );
+      await Deno.writeTextFile(
+        `${directory}/consumer.ts`,
+        `
+import { ValuesClient, RbacStorage, Config, type Config as ConfigNative } from "./index.ts";
+import { SorobanSymbol, SorobanU32, SorobanString, SorobanVec, NetworkConfig, encodeSorobanArguments, buildContractDataLedgerKey, type ContractId } from "@colibri/core";
+import { assertEquals } from "@std/assert";
+const key = RbacStorage.RoleIndexToAccount(new SorobanSymbol("ADMIN"), new SorobanU32(7));
+assertEquals(key.value, { tag: "RoleIndexToAccount", values: ["ADMIN", 7] });
+assertEquals(RbacStorage.ExistingRoles().value, { tag: "ExistingRoles" });
+const config = Config.from({ role: "ADMIN", count: new SorobanU32(7), key });
+const plain: ConfigNative = config.value;
+const client = new ValuesClient({ errors: false, networkConfig: NetworkConfig.TestNet(), contractConfig: { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" } });
+const raw = encodeSorobanArguments(client.getSpec(), "echo", { config: plain });
+const wrapped = encodeSorobanArguments(client.getSpec(), "echo", { config });
+assertEquals(raw.map(value => value.toXdr("base64")), wrapped.map(value => value.toXdr("base64")));
+assertEquals(Config.fromXdr(config.toXdr("base64")).value, plain);
+const contractId = client.getContractId() as ContractId;
+assertEquals(buildContractDataLedgerKey({ contractId, key }).toXdr("base64"), buildContractDataLedgerKey({ contractId, key: key.toScVal() }).toXdr("base64"));
+function checkTypes() {
+  const text: Promise<string[]> = client.read({ method: "texts", methodArgs: { values: new SorobanVec([new SorobanString("hello")], SorobanString.type) } });
+  const old: Promise<ConfigNative> = client.read({ method: "echo", methodArgs: { config: plain } });
+  const added: Promise<ConfigNative> = client.read({ method: "echo", methodArgs: { config } });
+  const mixed: Promise<ConfigNative> = client.read({ method: "echo", methodArgs: { config: { role: new SorobanSymbol("ADMIN"), count: 7, key } } });
+  // @ts-expect-error A String helper is not a Symbol helper.
+  RbacStorage.RoleIndexToAccount(new SorobanString("ADMIN"), 7);
+  // @ts-expect-error Fixed variant payload arity.
+  RbacStorage.RoleIndexToAccount("ADMIN");
+  // @ts-expect-error Unknown variant.
+  RbacStorage.Missing();
+  // @ts-expect-error Outputs remain plain values.
+  const invalid: { count: SorobanU32 } = plain;
+  void [old, added, mixed, invalid, text];
+}
+void checkTypes;
+`,
+      );
+      await deno(["check", "--config", rootConfig, `${directory}/consumer.ts`]);
+      await deno(["run", "--config", rootConfig, `${directory}/consumer.ts`]);
     } finally {
       await Deno.remove(directory, { recursive: true });
     }

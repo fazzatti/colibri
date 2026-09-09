@@ -5,7 +5,8 @@
   "exports": {
     ".": "./mod.ts",
     "./errors": "./errors.ts",
-    "./strkey": "./strkey.ts"
+    "./strkey": "./strkey.ts",
+    "./values": "./values.ts"
   },
   "lint": {
     "plugins": [

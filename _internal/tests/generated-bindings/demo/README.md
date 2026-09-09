@@ -70,10 +70,30 @@ available through both calls; choose simulation or submission deliberately.
 `invoke()` preserves Colibri's transaction metadata and raw `returnValue`, and
 adds the decoded `value`. That value is `undefined` if no return value is present.
 
+## Validated values and custom types
+
+Inputs accept ordinary JavaScript values or validated Colibri helpers. For example,
+use `new SorobanU32(7)` for a u32 or `new SorobanSymbol("ADMIN")` for a symbol.
+Import these helpers from `@colibri/core`. Helpers check representation before a
+call and expose `.value`, `.toScVal()`, and `.toXdr("base64")`.
+Decoded method outputs remain ordinary values; no migration is required.
+
+Generated structs and unions have factories with the same name as their type.
+Use `SomeStruct.from(fields)` or `SomeUnion.Variant(...values)`, substituting
+names declared in `types.ts`. Factories accept nested raw and validated values,
+and provide `.fromScVal()`, `.fromXdr()`, and a reusable `.type` codec.
+Numeric enums retain their existing enum object and have a separate `NameType`
+factory. Error definitions remain in the error map.
+
+Native output aliases such as `SorobanSymbolNative` describe the ABI meaning while
+remaining assignable to their existing JavaScript types. Input aliases accept
+both forms. If a custom input name would collide with a method input name, the
+custom type uses `NameValueInput`; its spec-derived output name is unchanged.
+
 ## Read contract data
 
 The inherited `getLedgerEntry()` uses this client's contract ID and RPC. Given
-an `encodedKey` ScVal in your contract's storage-key encoding:
+an `encodedKey` ScVal or generated custom value in your contract's storage-key encoding:
 
 ```ts
 const entry = await client.getLedgerEntry({

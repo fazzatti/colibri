@@ -6,7 +6,27 @@ export function renderTypes(
   declarations: string,
   methods: string,
   events: string,
+  imports: ReadonlySet<string> = new Set(),
 ): string {
+  const runtime = [...imports].filter((name) =>
+    name.startsWith("createSoroban")
+  );
+  const typeImports = [...imports].filter((name) =>
+    !name.startsWith("createSoroban")
+  ).sort();
+  const helpers = `${
+    typeImports.length
+      ? `\nimport type {\n  ${
+        typeImports.join(",\n  ")
+      },\n} from "@colibri/core";`
+      : ""
+  }${
+    runtime.length
+      ? `\nimport { ${
+        runtime.sort().join(", ")
+      } } from "@colibri/core";\nimport { ${className}Spec } from "./constants.ts";`
+      : ""
+  }`;
   return `${GENERATED_MARKER}
 /**
  * ${className} contract types, function arguments, results, and events.
@@ -22,7 +42,7 @@ import type {
     methods.includes("StellarResult") || declarations.includes("StellarResult")
       ? `\nimport type { Result as StellarResult } from "@colibri/core";`
       : ""
-  }
+  }${helpers}
 
 // -----------------------------------------------------------------------------
 // Methods

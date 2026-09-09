@@ -16,6 +16,11 @@ import {
   extractContractEventsFromSpec,
   extractContractEventsFromWasm,
 } from "@/contract/events/index.ts";
+import {
+  SorobanError,
+  SorobanString,
+  SorobanSymbol,
+} from "@/values/primitives.ts";
 import * as E from "@/contract/events/error.ts";
 import { validateEventValue } from "@/contract/events/codec.ts";
 import { Contract } from "@/contract/index.ts";
@@ -84,6 +89,14 @@ describe("spec-aware contract events", () => {
       assert(definition.is(input));
       const filter = definition.toEventFilter({ owner: "alice" });
       assert(filter.matchesTopics(input.scvalTopics));
+      assertEquals(
+        definition.toTopicFilter({ owner: new SorobanSymbol("alice") }),
+        definition.toTopicFilter({ owner: "alice" }),
+      );
+      assertThrows(
+        () => definition.toTopicFilter({ owner: new SorobanString("alice") }),
+        E.INVALID_FILTER,
+      );
       assertEquals(definition.toTopicFilter()[1], "*");
       assertThrows(
         () => definition.toTopicFilter({ amount: 1 }),
@@ -95,6 +108,35 @@ describe("spec-aware contract events", () => {
       );
     });
   }
+  it("decodes errors and filters new error-value types", () => {
+    const declaration = eventEntry();
+    assert(declaration.type === "scSpecEntryEventV0");
+    const error = xdr.ScSpecTypeDef.scSpecTypeError();
+    const params = declaration.value.params.map((param) =>
+      new xdr.ScSpecEventParamV0({ ...param, type: error })
+    );
+    const definition = new ContractEventDefinition(
+      new Spec([declaration]),
+      new xdr.ScSpecEventV0({ ...declaration.value, params }),
+    );
+    const value = new SorobanError({ type: "sceContract", code: 7 });
+    const occurrence = event(
+      xdr.ScVal.scvMap([
+        new xdr.ScMapEntry({ key: symbol("amount"), val: value.toScVal() }),
+      ]),
+      [symbol("transfer"), value.toScVal()],
+    );
+    assertEquals(definition.fromEvent(occurrence).fields, {
+      owner: value.value,
+      amount: value.value,
+    });
+    assert(
+      definition.toEventFilter({ owner: value }).matchesTopics(
+        occurrence.scvalTopics,
+      ),
+    );
+    assertEquals(definition.toTopicFilter()[1], "*");
+  });
   it("rejects partial, mistyped, extra and ambiguous occurrences", () => {
     const spec = bindingSpec();
     const definition = new ContractEventRegistry(spec, { contractId }).get(

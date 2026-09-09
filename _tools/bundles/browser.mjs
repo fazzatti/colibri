@@ -53,6 +53,19 @@ try {
               if (name.endsWith("strkey")) {
                 return module.StrKey.isValidEd25519PublicKey(address);
               }
+              if (name === "value-symbol") {
+                const value = new module.SorobanSymbol("ADMIN");
+                if (
+                  module.SorobanSymbol.type.fromXdr(value.toXdr("base64"))
+                    .value !== "ADMIN"
+                ) return false;
+                try {
+                  new module.SorobanSymbol("invalid symbol");
+                } catch (error) {
+                  return error.code === "SV_001";
+                }
+                return false;
+              }
               if (name.startsWith("svg")) return module.toSvg(address);
               return module.verify(address);
             },

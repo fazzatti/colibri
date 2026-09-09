@@ -817,13 +817,26 @@ describe("Contract", () => {
     it("reads from a contract without method arguments", async () => {
       let encodedArgsCallCount = 0;
       const readResult = { ok: true };
-      const spec = {
-        funcArgsToScVals: () => {
-          encodedArgsCallCount++;
-          return [];
-        },
-        funcResToNative: (_method: string, result: unknown) => result,
-      } as unknown as Spec;
+      const spec = new Spec([
+        xdr.ScSpecEntry.scSpecEntryFunctionV0(
+          new xdr.ScSpecFunctionV0({
+            name: "hello",
+            doc: "",
+            inputs: [],
+            outputs: [],
+          }),
+        ),
+      ]);
+      using encode = stub(spec, "funcArgsToScVals", () => {
+        encodedArgsCallCount++;
+        return [];
+      });
+      using decode = stub(
+        spec,
+        "funcResToNative",
+        (_method: string, result: unknown) => result,
+      );
+      void [encode, decode];
       const contract = new Contract({
         networkConfig,
         contractConfig: {

@@ -7,6 +7,10 @@ import {
   KNOWN_CONTRACT_ERROR_SIMULATION_FAILED,
   LocalSigner,
   NetworkConfig,
+  SorobanI128,
+  SorobanLedgerKeyContractInstance,
+  SorobanSymbol,
+  SorobanU32,
   type TransactionConfig,
 } from "@colibri/core";
 import { StellarTestLedger } from "@colibri/test-tooling";
@@ -110,9 +114,16 @@ describe(
               await client.read({ method: "i128", methodArgs: { v: 42n } }),
               42n,
             );
+            assertEquals(
+              await client.read({
+                method: "i128",
+                methodArgs: { v: new SorobanI128(42n) },
+              }),
+              42n,
+            );
             const output = await client.invoke({
               method: "i128",
-              methodArgs: { v: 42n },
+              methodArgs: { v: new SorobanI128(42n) },
               config,
             });
             assertEquals(output.value, 42n);
@@ -153,8 +164,23 @@ describe(
               count: 3,
               status: 1,
             });
+            const summary = exports.CounterSummary.from({
+              count: new SorobanU32(3),
+              status: exports.CounterStatus.Counting,
+            });
+            assertEquals(
+              await client.read({
+                method: "echo_summary",
+                methodArgs: { summary },
+              }),
+              { count: 3, status: 1 },
+            );
+            const entry = await client.getLedgerEntry({
+              key: new SorobanLedgerKeyContractInstance(),
+            });
+            assert(entry);
             const filter = client.events.CountChanged.toEventFilter({
-              action: "increment",
+              action: new SorobanSymbol("increment"),
             });
             const events = await client.rpc.getEvents({
               startLedger: output.ledger,

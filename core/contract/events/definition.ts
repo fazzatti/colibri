@@ -7,6 +7,11 @@ import type { TopicFilter } from "@/event/event-filter/types.ts";
 import type { ContractEventOptions } from "@/contract/events/types.ts";
 import { requireMap, validateEventValue } from "@/contract/events/codec.ts";
 import * as E from "@/contract/events/error.ts";
+import {
+  containsSorobanValue,
+  needsExtendedCodec,
+} from "@/values/arguments.ts";
+import { sorobanTypeFromSpec } from "@/values/spec.ts";
 
 /** A decoded occurrence retaining all Colibri event metadata and raw XDR. */
 export class ContractEvent<Data extends object = Record<string, unknown>>
@@ -117,13 +122,31 @@ export class ContractEventDefinition<
           !params.some((param) => param.name.toString() === key)
         )
       ) throw new E.INVALID_FILTER(this.name);
-      const topics = this.spec.eventTopicFilter(
-        this.name,
-        { ...values },
-        this.occurrence,
-      );
+      const topics = containsSorobanValue(values) || params.some((param) =>
+          needsExtendedCodec(this.spec, param.type)
+        )
+        ? [
+          ...this.declaration.prefixTopics.map((topic) =>
+            xdr.ScVal.scvSymbol(topic.toString()).toXdr("base64")
+          ),
+          ...params.map((param) => {
+            const value =
+              (values as Record<string, unknown>)[param.name.toString()];
+            return Object.hasOwn(values, param.name.toString())
+              ? sorobanTypeFromSpec(this.spec, param.type).encodeUnknown(value)
+                .toXdr("base64")
+              : "*";
+          }),
+        ]
+        : this.spec.eventTopicFilter(
+          this.name,
+          { ...values },
+          this.occurrence,
+        );
       // An event with no topics needs RPC's trailing wildcard filter.
-      if (topics.length === 0) return ["**"];
+      if (topics.length === 0) {
+        return ["**"];
+      }
       return topics.map((value) =>
         value === "*" ? "*" : xdr.ScVal.fromXdr(value, "base64")
       ) as TopicFilter;
@@ -156,6 +179,9 @@ export class ContractEventDefinition<
   }
   /** Validates a field before native decoding. */
   private decode(value: xdr.ScVal, type: xdr.ScSpecTypeDef): unknown {
+    if (needsExtendedCodec(this.spec, type)) {
+      return sorobanTypeFromSpec(this.spec, type).decode(value);
+    }
     validateEventValue(this.spec, value, type);
     return this.spec.scValToNative(value, type);
   }
