@@ -236,6 +236,24 @@ try {
         `Review and refresh ${name}`,
       );
     }
+    // A workspace map exposes Core as local source, so its existing cross-package
+    // private-type-ref diagnostics are expected here. New generated variables
+    // still need explicit types that JSR can analyze without inference.
+    const docs = await new Deno.Command(Deno.execPath(), {
+      args: ["doc", "--lint", `${folder}/index.ts`],
+      stdout: "piped",
+      stderr: "piped",
+    }).output();
+    const diagnostics = new TextDecoder().decode(docs.stderr);
+    const codes = [...diagnostics.matchAll(/error\[([\w-]+)\]/g)].map((match) =>
+      match[1]
+    );
+    assert(
+      docs.success ||
+        (codes.length > 0 &&
+          codes.every((code) => code === "private-type-ref")),
+      diagnostics,
+    );
     const types = plan.files["types.ts"];
     for (
       const name of [

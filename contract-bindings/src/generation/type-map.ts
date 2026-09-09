@@ -100,6 +100,8 @@ export class TypeMap {
       name,
     ) => [name + "Input", name + "Native"]),
     "SorobanValue",
+    "SorobanFactory",
+    "SorobanUnionFactory",
     "SorobanVecInput",
     "SorobanMapInput",
     "SorobanOptionInput",
@@ -445,14 +447,19 @@ export type ${name} = ${
     className: string,
     wireName: string,
   ): string {
-    const prefix = `export const ${name} = ${helper}<${types.join(", ")}>`;
-    const args = `(() => ${className}Spec, ${quote(wireName)});`;
-    if (prefix.length + args.length <= 80) return prefix + args;
+    const factory = this.imported(
+      helper === "createSorobanUnion"
+        ? "SorobanUnionFactory"
+        : "SorobanFactory",
+    );
+    const prefix = `export const ${name}: ${factory}<${types.join(", ")}> =`;
+    const call = `${helper}(() => ${className}Spec, ${quote(wireName)});`;
+    if (prefix.length + call.length + 1 <= 80) return `${prefix} ${call}`;
     if (prefix.length > 80) {
-      return `export const ${name} = ${helper}<\n  ${
+      return `export const ${name}: ${factory}<\n  ${
         types.join(",\n  ")
-      }\n>${args}`;
+      }\n> = ${call}`;
     }
-    return `${prefix}(\n  () => ${className}Spec,\n  ${quote(wireName)},\n);`;
+    return `${prefix}\n  ${call}`;
   }
 }

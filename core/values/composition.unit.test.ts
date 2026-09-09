@@ -256,6 +256,62 @@ describe("Soroban composed and custom values", () => {
     factorySpec.entries.splice(0, 1);
     assertEquals(factory.from({ count: 8 }).value, { count: 8 });
   });
+  it("includes dependencies inside every container even when a value is empty", () => {
+    const leaf = udt("Leaf");
+    const originalLeaf = struct("Leaf", {
+      x: xdr.ScSpecTypeDef.scSpecTypeU32(),
+    });
+    const changedLeaf = struct("Leaf", {
+      x: xdr.ScSpecTypeDef.scSpecTypeString(),
+    });
+    const variants: Array<[xdr.ScSpecTypeDef, unknown]> = [
+      [option(leaf), null],
+      [
+        xdr.ScSpecTypeDef.scSpecTypeVec(
+          new xdr.ScSpecTypeVec({ elementType: leaf }),
+        ),
+        [],
+      ],
+      [
+        xdr.ScSpecTypeDef.scSpecTypeMap(
+          new xdr.ScSpecTypeMap({ keyType: leaf, valueType: leaf }),
+        ),
+        [],
+      ],
+      [
+        xdr.ScSpecTypeDef.scSpecTypeTuple(
+          new xdr.ScSpecTypeTuple({ valueTypes: [leaf] }),
+        ),
+        [{ x: 1 }],
+      ],
+      [
+        xdr.ScSpecTypeDef.scSpecTypeResult(
+          new xdr.ScSpecTypeResult({
+            okType: leaf,
+            errorType: udt("AccessError"),
+          }),
+        ),
+        { ok: { x: 1 } },
+      ],
+    ];
+    const errors = valueSpec().entries.find((entry) =>
+      entry.type === "scSpecEntryUdtErrorEnumV0"
+    )!;
+    for (const [descriptor, value] of variants) {
+      const envelope = struct("Envelope", { value: descriptor });
+      const original = createSorobanType(
+        new Spec([originalLeaf, errors, envelope]),
+        "Envelope",
+      );
+      const changed = createSorobanType(
+        new Spec([changedLeaf, errors, envelope]),
+        "Envelope",
+      );
+      const wrapped = original.from({ value });
+      assertEquals(original.fromScVal(wrapped.toScVal()).value, { value });
+      assertThrows(() => changed.encodeUnknown(wrapped), SorobanValueError);
+    }
+  });
   it("handles recursive types and rejects malformed decoded shapes", () => {
     const node = createSorobanType(valueSpec(), "Node");
     assertEquals(

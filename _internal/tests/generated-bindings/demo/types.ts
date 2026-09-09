@@ -12,6 +12,7 @@ import type {
 } from "@colibri/core";
 import type { Result as StellarResult } from "@colibri/core";
 import type {
+  SorobanFactory,
   SorobanSymbolInput,
   SorobanSymbolNative,
   SorobanU32Input,
@@ -133,16 +134,14 @@ export type CounterSummaryInput =
   | SorobanValue<CounterSummary>;
 
 /** Validate and encode the CounterStatus codes declared by this contract. */
-export const CounterStatusType = createSorobanFactory<CounterStatus>(
-  () => DemoSpec,
-  "CounterStatus",
-);
+export const CounterStatusType: SorobanFactory<CounterStatus> =
+  createSorobanFactory(() => DemoSpec, "CounterStatus");
 
 /** Validate, encode and decode CounterSummary using its contract declaration. */
-export const CounterSummary = createSorobanFactory<
+export const CounterSummary: SorobanFactory<
   CounterSummaryInput,
   CounterSummary
->(() => DemoSpec, "CounterSummary");
+> = createSorobanFactory(() => DemoSpec, "CounterSummary");
 
 // -----------------------------------------------------------------------------
 // Events
