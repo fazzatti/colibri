@@ -105,6 +105,7 @@ export class TypeMap {
     "Partial",
     "Contract",
     "ContractConstructorArgs",
+    "ContractErrorMap",
     "ContractEventDefinition",
     "ContractEventRegistry",
     "StellarResult",

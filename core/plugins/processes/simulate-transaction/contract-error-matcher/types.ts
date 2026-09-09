@@ -33,9 +33,15 @@ export type KnownContractErrorDefinition = {
  * plain map can match the error code surfaced by RPC regardless of which
  * contract emitted the corresponding diagnostic event.
  */
-export type KnownContractErrorMap = Readonly<
+export type ContractErrorMap = Readonly<
   Record<number, KnownContractErrorDefinition>
 >;
+
+/**
+ * Compatibility alias for the contract error-code map.
+ * @deprecated Use {@link ContractErrorMap} instead.
+ */
+export type KnownContractErrorMap = ContractErrorMap;
 
 /**
  * Matching strategy used by a known contract-error matcher entry.
@@ -60,7 +66,7 @@ export type AnyContractErrorMatcher = {
   /** Strategy discriminator. */
   strategy: "any";
   /** Error-code map used by this matcher. */
-  errors: KnownContractErrorMap;
+  errors: ContractErrorMap;
 };
 
 /**
@@ -76,7 +82,7 @@ export type ContractIdContractErrorMatcher = {
   /** Contract id that must have emitted the error. */
   contractId: ContractId;
   /** Error-code map used by this matcher. */
-  errors: KnownContractErrorMap;
+  errors: ContractErrorMap;
 };
 
 /**
@@ -92,7 +98,7 @@ export type IssuedFromContractErrorMatcher = {
   /** Invocation level that must have emitted the error. */
   issuedFrom: ParsedSimulationErrorIssuer;
   /** Error-code map used by this matcher. */
-  errors: KnownContractErrorMap;
+  errors: ContractErrorMap;
 };
 
 /**
@@ -141,7 +147,7 @@ export type ContractErrorMatcher =
  * ```
  */
 export type ContractErrorMatcherPluginConfig =
-  | KnownContractErrorMap
+  | ContractErrorMap
   | readonly ContractErrorMatcher[];
 
 /**

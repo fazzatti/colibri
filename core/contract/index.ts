@@ -54,8 +54,8 @@ import {
 } from "@/ledger-entries/index.ts";
 import type { ReadFromContractOutput } from "@/pipelines/read-from-contract/types.ts";
 import type {
+  ContractErrorMap,
   ContractErrorMatcherPluginConfig,
-  KnownContractErrorMap,
 } from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
 import type {
   BuildContractDataLedgerKeyArgs,
@@ -290,7 +290,7 @@ export class Contract {
   /** @internal */
   private createContractErrorMatcherConfig(
     args: LoadContractErrorsFromWasmArgs,
-    errors: KnownContractErrorMap,
+    errors: ContractErrorMap,
   ): ContractErrorMatcherPluginConfig {
     if (args.strategy === "any") return errors;
 
@@ -627,7 +627,7 @@ export class Contract {
    */
   public async loadContractErrorsFromWasm(
     args: LoadContractErrorsFromWasmArgs,
-  ): Promise<KnownContractErrorMap> {
+  ): Promise<ContractErrorMap> {
     this.assertNoContractErrorMatcherPlugin();
 
     if (!this.spec) {

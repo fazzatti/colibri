@@ -70,9 +70,8 @@ deno run --allow-read --allow-write jsr:@colibri/contract-bindings/cli \
 
 - `--output files` produces `constants.ts`, `types.ts`, `index.ts`, and a
   formatted `README.md` with setup instructions and examples from the spec.
-  Configure the imports in your host project. The default `--target jsr` uses
-  `@colibri/core` and `stellar-sdk/contract`; the npm preset uses
-  `@stellar/stellar-sdk/contract`.
+  Configure the imports in your host project. Both presets import only
+  `@colibri/core`, which supplies the Stellar SDK dependency and spec codec.
 - `--output package --target jsr` adds `mod.ts`, `deno.json`, and a README. Run
   `deno task check`; JSR exports the TypeScript source.
 - `--output package --target npm` adds `package.json`, `tsconfig.json`,
@@ -81,6 +80,11 @@ deno run --allow-read --allow-write jsr:@colibri/contract-bindings/cli \
   dependency via the `@jsr/colibri__core` npm alias. Preserve the `@jsr`
   registry configuration in consuming projects and CI. Node 22.12 or newer is
   required by the SDK.
+
+`types.ts` groups its declarations into labeled sections: methods (named inputs
+and outputs, method maps and call types), contract-declared types, events, and
+client configuration. The contract-types section appears when the spec has
+declarations to emit.
 
 Review your package name, version, license, and publishing settings before
 publishing. Generating a package does not publish or install dependencies.
@@ -166,7 +170,7 @@ numbered.
 ## Errors and events
 
 For a `Token` class, `TokenErrors` is the numeric error map in Colibri's
-`KnownContractErrorMap` format. The constructor installs it once, scoped to the
+`ContractErrorMap` format. The constructor installs it once, scoped to the
 contract ID when one exists; otherwise it matches root-invocation errors only.
 Prepare custom messages ahead of construction:
 

@@ -2,7 +2,7 @@ import { Spec } from "@/contract/spec.ts";
 import type { BinaryData } from "@/common/types/index.ts";
 import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 import * as E from "@/plugins/processes/simulate-transaction/contract-error-matcher/error.ts";
-import type { KnownContractErrorMap } from "@/plugins/processes/simulate-transaction/contract-error-matcher/types.ts";
+import type { ContractErrorMap } from "@/plugins/processes/simulate-transaction/contract-error-matcher/types.ts";
 
 /**
  * Extracts known contract-error codes from a contract specification.
@@ -24,8 +24,8 @@ import type { KnownContractErrorMap } from "@/plugins/processes/simulate-transac
  */
 export function extractContractErrorMapFromSpec(
   spec: Spec,
-): KnownContractErrorMap {
-  const errors: Record<number, KnownContractErrorMap[number]> = {};
+): ContractErrorMap {
+  const errors: Record<number, ContractErrorMap[number]> = {};
 
   for (const entry of spec.entries) {
     if (entry.type !== "scSpecEntryUdtErrorEnumV0") continue;
@@ -71,6 +71,6 @@ export function extractContractErrorMapFromSpec(
  */
 export function extractContractErrorMapFromWasm(
   wasm: BinaryData,
-): KnownContractErrorMap {
+): ContractErrorMap {
   return extractContractErrorMapFromSpec(Spec.fromWasm(toUint8Array(wasm)));
 }

@@ -40805,9 +40805,9 @@
                   "name": "errors",
                   "tsType": {
                     "kind": "typeRef",
-                    "repr": "KnownContractErrorMap",
+                    "repr": "ContractErrorMap",
                     "value": {
-                      "typeName": "KnownContractErrorMap"
+                      "typeName": "ContractErrorMap"
                     }
                   }
                 }
@@ -46176,9 +46176,9 @@
                     "optional": false,
                     "tsType": {
                       "kind": "typeRef",
-                      "repr": "KnownContractErrorMap",
+                      "repr": "ContractErrorMap",
                       "value": {
-                        "typeName": "KnownContractErrorMap"
+                        "typeName": "ContractErrorMap"
                       }
                     }
                   }
@@ -46799,9 +46799,9 @@
                     "typeParams": [
                       {
                         "kind": "typeRef",
-                        "repr": "KnownContractErrorMap",
+                        "repr": "ContractErrorMap",
                         "value": {
-                          "typeName": "KnownContractErrorMap"
+                          "typeName": "ContractErrorMap"
                         }
                       }
                     ]
@@ -48183,6 +48183,44 @@
         "kind": "typeAlias"
       }
     ],
+    "ContractErrorMap": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "Readonly",
+            "value": {
+              "typeName": "Readonly",
+              "typeParams": [
+                {
+                  "kind": "typeRef",
+                  "repr": "Record",
+                  "value": {
+                    "typeName": "Record",
+                    "typeParams": [
+                      {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      },
+                      {
+                        "kind": "typeRef",
+                        "repr": "KnownContractErrorDefinition",
+                        "value": {
+                          "typeName": "KnownContractErrorDefinition"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
     "ContractErrorMatcher": [
       {
         "declarationKind": "export",
@@ -48384,9 +48422,9 @@
             "value": [
               {
                 "kind": "typeRef",
-                "repr": "KnownContractErrorMap",
+                "repr": "ContractErrorMap",
                 "value": {
-                  "typeName": "KnownContractErrorMap"
+                  "typeName": "ContractErrorMap"
                 }
               },
               {
@@ -49609,9 +49647,9 @@
                   "name": "errors",
                   "tsType": {
                     "kind": "typeRef",
-                    "repr": "KnownContractErrorMap",
+                    "repr": "ContractErrorMap",
                     "value": {
-                      "typeName": "KnownContractErrorMap"
+                      "typeName": "ContractErrorMap"
                     }
                   }
                 }
@@ -56854,9 +56892,9 @@
           ],
           "returnType": {
             "kind": "typeRef",
-            "repr": "KnownContractErrorMap",
+            "repr": "ContractErrorMap",
             "value": {
-              "typeName": "KnownContractErrorMap"
+              "typeName": "ContractErrorMap"
             }
           }
         },
@@ -56884,9 +56922,9 @@
           ],
           "returnType": {
             "kind": "typeRef",
-            "repr": "KnownContractErrorMap",
+            "repr": "ContractErrorMap",
             "value": {
-              "typeName": "KnownContractErrorMap"
+              "typeName": "ContractErrorMap"
             }
           }
         },
@@ -61165,9 +61203,9 @@
                   "name": "errors",
                   "tsType": {
                     "kind": "typeRef",
-                    "repr": "KnownContractErrorMap",
+                    "repr": "ContractErrorMap",
                     "value": {
-                      "typeName": "KnownContractErrorMap"
+                      "typeName": "ContractErrorMap"
                     }
                   }
                 }
@@ -61485,32 +61523,9 @@
         "def": {
           "tsType": {
             "kind": "typeRef",
-            "repr": "Readonly",
+            "repr": "ContractErrorMap",
             "value": {
-              "typeName": "Readonly",
-              "typeParams": [
-                {
-                  "kind": "typeRef",
-                  "repr": "Record",
-                  "value": {
-                    "typeName": "Record",
-                    "typeParams": [
-                      {
-                        "kind": "keyword",
-                        "repr": "number",
-                        "value": "number"
-                      },
-                      {
-                        "kind": "typeRef",
-                        "repr": "KnownContractErrorDefinition",
-                        "value": {
-                          "typeName": "KnownContractErrorDefinition"
-                        }
-                      }
-                    ]
-                  }
-                }
-              ]
+              "typeName": "ContractErrorMap"
             }
           }
         },

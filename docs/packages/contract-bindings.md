@@ -56,6 +56,10 @@ and a formatted `README.md` for an existing project. Configure imports in that
 project: both presets import only `@colibri/core`; Core supplies the Stellar SDK
 dependency and spec codec.
 
+The generated `types.ts` is organized into labeled sections: methods and their
+inputs/outputs/maps, contract-declared types when present, events, and client
+configuration. Error maps use Core's `ContractErrorMap` type.
+
 `--output package --target jsr` places the three source files in `generated/`,
 with a `mod.ts` entrypoint and a `deno.json`. Run `deno task check` in the
 output directory. `--target npm` creates a `package.json`, TypeScript build

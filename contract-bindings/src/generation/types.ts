@@ -15,15 +15,20 @@ export function renderTypes(
 import type {
   Contract,
   ContractConstructorArgs,
+  ContractErrorMap,
   ContractEventDefinition,
   ContractEventRegistry,
-  KnownContractErrorMap,
 } from "@colibri/core";${
     methods.includes("StellarResult") || declarations.includes("StellarResult")
       ? `\nimport type { Result as StellarResult } from "@colibri/core";`
       : ""
   }
-${declarations ? declarations + "\n\n" : ""}${methods}
+
+// -----------------------------------------------------------------------------
+// Methods
+// -----------------------------------------------------------------------------
+
+${methods}
 
 /** Method names mapped to their native arguments. */
 export type ${className}Inputs = {
@@ -57,11 +62,29 @@ export type ${className}InvocationResult<Value> =
   & Awaited<ReturnType<Contract["invoke"]>>
   & { value: Value | undefined };
 
+${
+    declarations
+      ? `// -----------------------------------------------------------------------------
+// Contract types
+// -----------------------------------------------------------------------------
+
+${declarations}
+
+`
+      : ""
+  }// -----------------------------------------------------------------------------
+// Events
+// -----------------------------------------------------------------------------
+
+${events.trim()}
+
+// -----------------------------------------------------------------------------
+// Client configuration
+// -----------------------------------------------------------------------------
+
 /** Configure the contract and prepare error messages before construction. */
 export type ${className}ConstructorArgs = ContractConstructorArgs & {
-  errors?: KnownContractErrorMap | false;
+  errors?: ContractErrorMap | false;
 };
-
-${events}
 `;
 }

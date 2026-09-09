@@ -9,7 +9,7 @@ contract's specification. The client extends `Contract` and provides typed
 | File | Contents |
 | --- | --- |
 | [constants.ts](constants.ts) | Method names, embedded spec, and error messages. |
-| [types.ts](types.ts) | Contract types, named function inputs and outputs, method maps, and events. |
+| [types.ts](types.ts) | Sections for methods and their inputs/outputs/maps, contract types, events, and client configuration. |
 | [index.ts](index.ts) | Client class and exports for the generated API. |
 
 ## Setup
@@ -104,7 +104,7 @@ retain their on-chain spelling so they remain compatible with the SDK codec.
 
 ## Contract errors
 
-`DemoErrors` contains the numeric contract error map. The client installs
+`DemoErrors` satisfies Colibri's `ContractErrorMap` type. The client installs
 it once during construction. Each entry retains the spec case name as `name`
 and its declaring error enum as `category`, alongside `message` and optional
 `details`. Error-only enums are not duplicated in `types.ts`. Customize messages

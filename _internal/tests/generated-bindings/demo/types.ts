@@ -6,22 +6,15 @@
 import type {
   Contract,
   ContractConstructorArgs,
+  ContractErrorMap,
   ContractEventDefinition,
   ContractEventRegistry,
-  KnownContractErrorMap,
 } from "@colibri/core";
 import type { Result as StellarResult } from "@colibri/core";
-/** Status of the demonstration counter. */
-export enum CounterStatus {
-  Empty = 0,
-  Counting = 1,
-}
 
-/** Current count and its status. */
-export type CounterSummary = {
-  count: number;
-  status: CounterStatus;
-};
+// -----------------------------------------------------------------------------
+// Methods
+// -----------------------------------------------------------------------------
 
 /** Read a structured summary with a named status enum. */
 export type SummaryInput = Record<string, never>;
@@ -103,10 +96,25 @@ export type DemoInvocationResult<Value> =
   & Awaited<ReturnType<Contract["invoke"]>>
   & { value: Value | undefined };
 
-/** Configure the contract and prepare error messages before construction. */
-export type DemoConstructorArgs = ContractConstructorArgs & {
-  errors?: KnownContractErrorMap | false;
+// -----------------------------------------------------------------------------
+// Contract types
+// -----------------------------------------------------------------------------
+
+/** Status of the demonstration counter. */
+export enum CounterStatus {
+  Empty = 0,
+  Counting = 1,
+}
+
+/** Current count and its status. */
+export type CounterSummary = {
+  count: number;
+  status: CounterStatus;
 };
+
+// -----------------------------------------------------------------------------
+// Events
+// -----------------------------------------------------------------------------
 
 /**
  * Emitted after the counter changes; action can be used in event filters.
@@ -128,4 +136,13 @@ export type DemoEvents = ContractEventRegistry & {
     CountChanged,
     CountChangedTopics
   >;
+};
+
+// -----------------------------------------------------------------------------
+// Client configuration
+// -----------------------------------------------------------------------------
+
+/** Configure the contract and prepare error messages before construction. */
+export type DemoConstructorArgs = ContractConstructorArgs & {
+  errors?: ContractErrorMap | false;
 };

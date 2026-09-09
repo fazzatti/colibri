@@ -83,7 +83,7 @@ function fileGuide(options: GenerateBindingsOptions): string {
 | [constants.ts](${prefix}constants.ts) | Method names, embedded spec, and error messages${
     options.provenance ? "; also source identity" : ""
   }. |
-| [types.ts](${prefix}types.ts) | Contract types, named function inputs and outputs, method maps, and events. |
+| [types.ts](${prefix}types.ts) | Sections for methods and their inputs/outputs/maps, contract types, events, and client configuration. |
 | [index.ts](${prefix}index.ts) | Client class and exports for the generated API. |
 ${
     packaged
@@ -250,7 +250,7 @@ retain their on-chain spelling so they remain compatible with the SDK codec.
 
 ## Contract errors
 
-\`${name}Errors\` contains the numeric contract error map. The client installs
+\`${name}Errors\` satisfies Colibri's \`ContractErrorMap\` type. The client installs
 it once during construction. Each entry retains the spec case name as \`name\`
 and its declaring error enum as \`category\`, alongside \`message\` and optional
 \`details\`. Error-only enums are not duplicated in \`types.ts\`. Customize messages

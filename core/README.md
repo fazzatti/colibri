@@ -872,6 +872,9 @@ original error case as `name` and declaring enum as `category`, alongside the
 message and optional documentation. Matched errors expose those fields in
 `error.meta.data.match`; existing manual maps may omit them.
 
+Use `ContractErrorMap` to type generated or handwritten error maps.
+`KnownContractErrorMap` remains a deprecated alias for existing imports.
+
 `contract.getLedgerEntry({ key, durability })` reads contract data directly from
 RPC, supplying the client's contract ID automatically. Pass an encoded ScVal
 key; durability is `"persistent"` by default or `"temporary"`. It returns the

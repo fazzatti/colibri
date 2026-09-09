@@ -57,7 +57,7 @@ describe("bindings rendering", () => {
     assert(unused.files["constants.ts"].includes('"name": "Unauthorized"'));
     assert(
       unused.files["constants.ts"].includes(
-        "as const satisfies KnownContractErrorMap",
+        "as const satisfies ContractErrorMap",
       ),
     );
     const udt = xdr.ScSpecTypeDef.scSpecTypeUdt(
@@ -181,7 +181,15 @@ describe("bindings rendering", () => {
         assert(plan.scaffold[".npmrc"].includes("https://npm.jsr.io"));
       }
     }
-    for (const className of ["class", "1Token", "Spec", "Token;alert(1)"]) {
+    for (
+      const className of [
+        "class",
+        "1Token",
+        "Spec",
+        "ContractErrorMap",
+        "Token;alert(1)",
+      ]
+    ) {
       assertThrows(
         () => generateBindings(bindingSpec(), { className }),
         BindingError,

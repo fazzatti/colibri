@@ -18,7 +18,7 @@ export function renderConstants(
  * ${className} method names, contract specification, and error messages.
  * @module
  */
-import type { KnownContractErrorMap } from "@colibri/core";
+import type { ContractErrorMap } from "@colibri/core";
 import { Spec } from "@colibri/core";
 
 /** ABI method names. Choose read or invoke at the call site. */
@@ -40,7 +40,7 @@ ${spec.entries.map((entry) => `  ${quote(entry.toXdr("base64"))},`).join("\n")}
 /** Clone and customize these messages before constructing the client. */
 export const ${className}Errors = ${
     literal(extractContractErrorMapFromSpec(spec))
-  } as const satisfies KnownContractErrorMap;
+  } as const satisfies ContractErrorMap;
 ${
     options.provenance
       ? `

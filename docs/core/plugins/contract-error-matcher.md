@@ -149,6 +149,10 @@ for every matching strategy. Matching still uses numeric codes and the selected
 contract/invocation scope; categories do not resolve duplicate numeric codes in
 a spec. Extraction rejects those duplicates.
 
+Use the public `ContractErrorMap` type for these mappings.
+`KnownContractErrorMap` remains a deprecated alias with the same shape, so
+existing consumers can migrate their type imports without changing map values.
+
 This complete example loads metadata and prepares a customized matcher without
 submitting a transaction. Supply your own `contract.wasm`:
 
@@ -156,12 +160,13 @@ submitting a transaction. Supply your own `contract.wasm`:
 
 ```ts
 import {
+  type ContractErrorMap,
   createContractErrorMatcherPlugin,
   extractContractErrorMapFromWasm,
   KNOWN_CONTRACT_ERROR_SIMULATION_FAILED,
 } from "@colibri/core";
 
-const errors = extractContractErrorMapFromWasm(
+const errors: ContractErrorMap = extractContractErrorMapFromWasm(
   await Deno.readFile("./contract.wasm"),
 );
 const first = Object.entries(errors)[0];

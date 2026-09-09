@@ -63,17 +63,19 @@ console.log("Generated npm package: ESM imports, declarations, native SDK codec 
     resolve(output, "consumer.ts"),
     `
 import { PingClient, ContractMethods, PingClientErrors } from "./dist/mod.js";
-import type { KnownContractErrorMap } from "@colibri/core";
+import type { ContractErrorMap, KnownContractErrorMap } from "@colibri/core";
 declare const client: PingClient;
 const literal: Promise<null> = client.read({ method: "ping" });
 const member: Promise<null> = client.read({ method: ContractMethods.Ping });
 const category: "PingError" = PingClientErrors[1].category;
-const manual: KnownContractErrorMap = { 7: { message: "Existing manual map" } };
+const manual: ContractErrorMap = { 7: { message: "Existing manual map" } };
+const previous: KnownContractErrorMap = manual;
+const current: ContractErrorMap = previous;
 // @ts-expect-error Invalid method, including with the enum API present.
 client.read({ method: "absent" });
 // @ts-expect-error Ping has no arguments.
 client.read({ method: ContractMethods.Ping, methodArgs: { value: 1 } });
-void [literal, member, category, manual];
+void [literal, member, category, manual, current];
 `,
   );
   await command("npx", [

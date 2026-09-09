@@ -82,13 +82,19 @@ describe("generated consumer boundary", () => {
         `${directory}/consumer.ts`,
         `
 import { Token, ContractMethods, type TokenInvocationResult } from "./index.ts";
-import { Contract, ColibriError, NetworkConfig, type InvokeContractOutput, type ContractDataLedgerEntry, Event, EventType } from "@colibri/core";
+import { Contract, ColibriError, NetworkConfig, type InvokeContractOutput, type ContractDataLedgerEntry, type ContractErrorMap, type KnownContractErrorMap, Event, EventType } from "@colibri/core";
 import { xdr, nativeToScVal } from "stellar-sdk";
 import { assertEquals, assertRejects } from "@std/assert";
 assertEquals(Object.hasOwn(ContractMethods, "Proto"), true);
 assertEquals(ContractMethods.Proto, "__proto__");
 const token = new Token({ networkConfig: NetworkConfig.TestNet(), contractConfig: { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" } });
 function types() {
+  const previous: KnownContractErrorMap = { 1: { message: "Unauthorized" } };
+  const current: ContractErrorMap = previous;
+  const compatible: KnownContractErrorMap = current;
+  const config = { networkConfig: NetworkConfig.TestNet(), contractConfig: { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as const } };
+  new Token({ ...config, errors: current });
+  new Token({ ...config, errors: compatible });
   const base: Contract = token;
   const ledger: Promise<ContractDataLedgerEntry> = token.getLedgerEntry({ key: xdr.ScVal.scvSymbol("counter"), durability: "temporary" });
   // @ts-expect-error The contract identity is already bound.
