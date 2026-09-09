@@ -40,25 +40,25 @@ export const quote = (value: string): string =>
   );
 export type Direction = "Input" | "Output";
 const SIMPLE: Readonly<Record<string, string>> = {
-  scSpecTypeVal: "SorobanVal",
-  scSpecTypeBool: "SorobanBool",
-  scSpecTypeVoid: "SorobanVoid",
-  scSpecTypeError: "SorobanError",
-  scSpecTypeU32: "SorobanU32",
-  scSpecTypeI32: "SorobanI32",
-  scSpecTypeU64: "SorobanU64",
-  scSpecTypeI64: "SorobanI64",
-  scSpecTypeU128: "SorobanU128",
-  scSpecTypeI128: "SorobanI128",
-  scSpecTypeU256: "SorobanU256",
-  scSpecTypeI256: "SorobanI256",
-  scSpecTypeTimepoint: "SorobanTimepoint",
-  scSpecTypeDuration: "SorobanDuration",
-  scSpecTypeBytes: "SorobanBytes",
-  scSpecTypeString: "SorobanString",
-  scSpecTypeSymbol: "SorobanSymbol",
-  scSpecTypeAddress: "SorobanAddress",
-  scSpecTypeMuxedAddress: "SorobanMuxedAddress",
+  scSpecTypeVal: "Val",
+  scSpecTypeBool: "Bool",
+  scSpecTypeVoid: "Void",
+  scSpecTypeError: "Error",
+  scSpecTypeU32: "U32",
+  scSpecTypeI32: "I32",
+  scSpecTypeU64: "U64",
+  scSpecTypeI64: "I64",
+  scSpecTypeU128: "U128",
+  scSpecTypeI128: "I128",
+  scSpecTypeU256: "U256",
+  scSpecTypeI256: "I256",
+  scSpecTypeTimepoint: "Timepoint",
+  scSpecTypeDuration: "Duration",
+  scSpecTypeBytes: "Bytes",
+  scSpecTypeString: "String",
+  scSpecTypeSymbol: "Symbol",
+  scSpecTypeAddress: "Address",
+  scSpecTypeMuxedAddress: "MuxedAddress",
 };
 /** @internal JavaScript type casing; ABI field names and union tags stay unchanged. */
 export function typeName(value: string): string {
@@ -93,23 +93,9 @@ export class TypeMap {
   readonly inputNames = new Map<string, string>();
   readonly inputVariants = new Set<string>();
   readonly warnings: string[] = [];
-  private readonly factoryNames = new Set<string>();
   private readonly referencedTypes = new Set<string>();
   private readonly claimed = new Set([
-    ...Object.values(SIMPLE).flatMap((
-      name,
-    ) => [name + "Input", name + "Native"]),
-    "SorobanValue",
-    "SorobanFactory",
-    "SorobanUnionFactory",
-    "SorobanVecInput",
-    "SorobanMapInput",
-    "SorobanOptionInput",
-    "SorobanResultInput",
-    "SorobanResultNative",
-    "SorobanBytesNInput",
-    "createSorobanFactory",
-    "createSorobanUnion",
+    "SorobanType",
     "Array",
     "Map",
     "Record",
@@ -145,7 +131,8 @@ export class TypeMap {
     for (const [entry, alias] of this.aliases) {
       if (
         entry.type === "scSpecEntryUdtStructV0" ||
-        entry.type === "scSpecEntryUdtUnionV0"
+        entry.type === "scSpecEntryUdtUnionV0" ||
+        entry.type === "scSpecEntryUdtEnumV0"
       ) this.inputVariants.add(alias);
     }
     const methodNames = new Set(
@@ -184,15 +171,17 @@ export class TypeMap {
     functionResult = false,
   ): string {
     if (SIMPLE[type.type]) {
-      return this.imported(
-        SIMPLE[type.type] + (direction === "Input" ? "Input" : "Native"),
-      );
+      this.imported("SorobanType");
+      return `SorobanType.${direction === "Input" ? "Input." : ""}${
+        SIMPLE[type.type]
+      }`;
     }
+    this.imported("SorobanType");
     switch (type.type) {
       case "scSpecTypeBytesN":
         return direction === "Input"
-          ? `${this.imported("SorobanBytesNInput")}<${type.value.n}>`
-          : this.imported("SorobanBytesNative");
+          ? `SorobanType.Input.BytesN<${type.value.n}>`
+          : `SorobanType.BytesN<${type.value.n}>`;
       case "scSpecTypeOption":
         return this.option(type.value.valueType, direction);
       case "scSpecTypeVec":
@@ -219,17 +208,17 @@ export class TypeMap {
   }
   private option(type: xdr.ScSpecTypeDef, direction: Direction): string {
     return direction === "Input"
-      ? `${this.imported("SorobanOptionInput")}<${
-        this.type(type, direction)
-      }, ${this.type(type, "Output")}>`
-      : `(${this.type(type, direction)}) | null`;
+      ? `SorobanType.Input.Option<${this.type(type, direction)}, ${
+        this.type(type, "Output")
+      }>`
+      : `SorobanType.Option<${this.type(type, direction)}>`;
   }
   private vector(type: xdr.ScSpecTypeDef, direction: Direction): string {
     return direction === "Input"
-      ? `${this.imported("SorobanVecInput")}<${this.type(type, direction)}, ${
+      ? `SorobanType.Input.Vec<${this.type(type, direction)}, ${
         this.type(type, "Output")
       }>`
-      : `Array<${this.type(type, direction)}>`;
+      : `SorobanType.Vec<${this.type(type, direction)}>`;
   }
   private tuple(
     types: readonly xdr.ScSpecTypeDef[],
@@ -239,10 +228,10 @@ export class TypeMap {
       types.map((item) => this.type(item, direction)).join(", ")
     }]`;
     return direction === "Input"
-      ? `${tuple} | ${this.imported("SorobanValue")}<[${
+      ? `SorobanType.Input.Tuple<${tuple}, [${
         types.map((item) => this.type(item, "Output")).join(", ")
-      }], "tuple">`
-      : tuple;
+      }]>`
+      : `SorobanType.Tuple<${tuple}>`;
   }
   private map(
     key: xdr.ScSpecTypeDef,
@@ -250,10 +239,12 @@ export class TypeMap {
     direction: Direction,
   ): string {
     return direction === "Input"
-      ? `${this.imported("SorobanMapInput")}<${this.type(key, direction)}, ${
+      ? `SorobanType.Input.Map<${this.type(key, direction)}, ${
         this.type(value, direction)
       }, ${this.type(key, "Output")}, ${this.type(value, "Output")}>`
-      : `Array<[${this.type(key, direction)}, ${this.type(value, direction)}]>`;
+      : `SorobanType.Map<${this.type(key, direction)}, ${
+        this.type(value, direction)
+      }>`;
   }
   private result(
     ok: xdr.ScSpecTypeDef,
@@ -265,10 +256,10 @@ export class TypeMap {
       return `StellarResult<${this.type(ok, direction)}, { message: string }>`;
     }
     return direction === "Input"
-      ? `${this.imported("SorobanResultInput")}<${this.type(ok, direction)}, ${
+      ? `SorobanType.Input.Result<${this.type(ok, direction)}, ${
         this.type(error, direction)
       }, ${this.type(ok, "Output")}, ${this.type(error, "Output")}>`
-      : `${this.imported("SorobanResultNative")}<${this.type(ok, direction)}, ${
+      : `SorobanType.Result<${this.type(ok, direction)}, ${
         this.type(error, direction)
       }>`;
   }
@@ -284,7 +275,7 @@ export class TypeMap {
     if (direction === "Output") return name;
     return this.inputVariants.has(name)
       ? this.inputNames.get(name)!
-      : `${name} | ${this.imported("SorobanValue")}<${name}>`;
+      : `SorobanType.Input.Value<${name}>`;
   }
   fields(
     fields: readonly {
@@ -309,157 +300,113 @@ export class TypeMap {
       }\n}`
       : "Record<string, never>";
   }
-  private value(entry: xdr.ScSpecEntry, direction: Direction): string {
+  private schema(entry: xdr.ScSpecEntry): string {
     if (entry.type === "scSpecEntryUdtStructV0") {
-      return entry.value.fields.some((field) =>
-          /^\d+$/.test(field.name.toString())
-        )
-        ? `[${
-          entry.value.fields.map((field) => this.type(field.type, direction))
+      if (
+        entry.value.fields.some((field) => /^\d+$/.test(field.name.toString()))
+      ) {
+        return `{
+  kind: "tuple";
+  fields: [${
+          entry.value.fields.map((field) => this.type(field.type, "Output"))
             .join(", ")
-        }]`
-        : this.fields(entry.value.fields, direction);
+        }];
+}`;
+      }
+      return `{
+  kind: "struct";
+  fields: ${indent(this.fields(entry.value.fields, "Output")).trimStart()};
+}`;
     }
     if (entry.type === "scSpecEntryUdtUnionV0") {
-      return entry.value.cases.map((item) =>
-        `  | {\n    tag: ${quote(item.value.name.toString())};${
-          item.type === "scSpecUdtUnionCaseTupleV0"
-            ? `\n    values: [${
-              item.value.type.map((type) => this.type(type, direction)).join(
-                ", ",
-              )
-            }];`
+      const cases = entry.value.cases.map((item) => {
+        const name = item.value.name.toString();
+        if (["type", "from", "fromScVal", "fromXdr"].includes(name)) {
+          throw new BindingError(
+            Code.INVALID_SPEC,
+            `Enum variant conflicts with factory member ${name}`,
+          );
+        }
+        const payload = item.type === "scSpecUdtUnionCaseTupleV0"
+          ? `[${
+            item.value.type.map((type) => this.type(type, "Output")).join(", ")
+          }]`
+          : "SorobanType.Void";
+        return `${
+          item.value.doc.toString()
+            ? doc(item.value.doc.toString(), "") + "\n"
             : ""
-        }\n  }`
-      ).join("\n") || "never";
+        }${property(name)}: ${payload};`;
+      });
+      return `{
+  kind: "enum";
+  encoding: "tagged";
+  variants: {
+${indent(cases.join("\n"), 4)}
+  };
+}`;
     }
-    throw new BindingError(Code.INVALID_SPEC, "Expected a struct or union");
+    if (entry.type === "scSpecEntryUdtEnumV0") {
+      const cases = entry.value.cases.map((item) => {
+        if (
+          ["type", "from", "fromScVal", "fromXdr"].includes(
+            item.name.toString(),
+          )
+        ) {
+          throw new BindingError(
+            Code.INVALID_SPEC,
+            `Enum variant conflicts with factory member ${item.name}`,
+          );
+        }
+        return `${
+          item.doc.toString() ? doc(item.doc.toString(), "") + "\n" : ""
+        }${property(item.name.toString())}: ${item.value};`;
+      });
+      return `{
+  kind: "enum";
+  encoding: "u32";
+  variants: {
+${indent(cases.join("\n"), 4)}
+  };
+}`;
+    }
+    throw new BindingError(Code.INVALID_SPEC, "Expected a custom declaration");
   }
   declarations(className: string): string {
-    const declarations = [...this.aliases].flatMap(([entry, name]) =>
-      this.typeDeclaration(entry, name)
-    );
-    // Preserve ABI references without creating another runtime error registry.
+    const declarations = [...this.aliases].flatMap(([entry, name]) => {
+      if (entry.type === "scSpecEntryUdtErrorEnumV0") return [];
+      this.imported("SorobanType");
+      const schema = this.schema(entry);
+      return `${
+        doc(
+          entry.value.doc.toString(),
+          `The ${entry.value.name} type declared by the contract.`,
+        )
+      }
+export type ${name} = SorobanType.Custom<${schema}>;
+
+/** Raw or validated inputs derived from the ${name} declaration. */
+export type ${this.inputNames.get(name)} = SorobanType.Input.Custom<${name}>;
+
+/** Validate, encode and decode ${name} using its contract declaration. */
+export const ${name}: SorobanType.Factory<${name}> = SorobanType
+  .Custom.fromSpec<${name}>(
+    () => ${className}Spec,
+    ${quote(entry.value.name.toString())},
+  );`;
+    });
     const errors = [...this.aliases].flatMap(([entry, name]) => {
       if (
         entry.type !== "scSpecEntryUdtErrorEnumV0" ||
         !this.referencedTypes.has(name)
       ) return [];
+      this.imported("SorobanType");
+      this.imported(`${className}Errors`);
       return `${doc(entry.value.doc.toString(), `Codes declared by ${name}.`)}
-export type ${name} = ${
-        entry.value.cases.map((item) => item.value).join(" | ") || "never"
-      };`;
+export type ${name} = SorobanType.ErrorCode<typeof ${className}Errors, ${
+        quote(entry.value.name.toString())
+      }>;`;
     });
-    const factories = [...this.aliases].flatMap(([entry, name]) => {
-      if (
-        entry.type === "scSpecEntryUdtErrorEnumV0" &&
-        !this.referencedTypes.has(name)
-      ) return [];
-      const helper = entry.type === "scSpecEntryUdtUnionV0"
-        ? "createSorobanUnion"
-        : "createSorobanFactory";
-      this.imported(helper);
-      if (
-        entry.type === "scSpecEntryUdtEnumV0" ||
-        entry.type === "scSpecEntryUdtErrorEnumV0"
-      ) {
-        if (!this.factoryNames.has(name)) {
-          this.claim(`${name}Type`);
-          this.factoryNames.add(name);
-        }
-        return `/** Validate and encode the ${name} codes declared by this contract. */\n${
-          this.factoryDeclaration(
-            `${name}Type`,
-            helper,
-            [name],
-            className,
-            entry.value.name.toString(),
-          )
-        }`;
-      }
-      if (entry.type === "scSpecEntryUdtUnionV0") {
-        for (const item of entry.value.cases) {
-          if (
-            ["type", "from", "fromScVal", "fromXdr"].includes(
-              item.value.name.toString(),
-            )
-          ) {
-            throw new BindingError(
-              Code.INVALID_SPEC,
-              `Union variant conflicts with factory member ${item.value.name}`,
-            );
-          }
-        }
-      }
-      return `/** Validate, encode and decode ${name} using its contract declaration. */\n${
-        this.factoryDeclaration(
-          name,
-          helper,
-          [this.inputNames.get(name)!, name],
-          className,
-          entry.value.name.toString(),
-        )
-      }`;
-    });
-    return [...errors, ...declarations, ...factories].join("\n\n");
-  }
-  private typeDeclaration(
-    entry: xdr.ScSpecEntry,
-    name: string,
-  ): string[] | string {
-    if (entry.type === "scSpecEntryUdtErrorEnumV0") return [];
-    const documentation = doc(
-      entry.value.doc.toString(),
-      `The ${entry.value.name} type declared by the contract.`,
-    );
-    if (entry.type === "scSpecEntryUdtEnumV0") {
-      return `${documentation}\nexport enum ${name} {\n${
-        indent(
-          entry.value.cases.map((item) =>
-            `${item.doc.toString() ? doc(item.doc.toString(), "") + "\n" : ""}${
-              property(item.name.toString())
-            } = ${item.value},`
-          ).join("\n"),
-        )
-      }\n}`;
-    }
-    const value = this.value(entry, "Output");
-    const declaration = `${documentation}\nexport type ${name} =${
-      value.startsWith("  |") ? "\n" : " "
-    }${value};`;
-    return this.inputVariants.has(name)
-      ? [
-        declaration,
-        `${
-          doc(`Input accepted for ${name}; decoded values use ${name}.`, "")
-        }\nexport type ${this.inputNames.get(name)} =\n${
-          this.value(entry, "Input").startsWith("  |")
-            ? this.value(entry, "Input")
-            : "  | " + this.value(entry, "Input").replaceAll("\n", "\n  ")
-        }\n  | ${this.imported("SorobanValue")}<${name}>;`,
-      ]
-      : [declaration];
-  }
-  private factoryDeclaration(
-    name: string,
-    helper: string,
-    types: string[],
-    className: string,
-    wireName: string,
-  ): string {
-    const factory = this.imported(
-      helper === "createSorobanUnion"
-        ? "SorobanUnionFactory"
-        : "SorobanFactory",
-    );
-    const prefix = `export const ${name}: ${factory}<${types.join(", ")}> =`;
-    const call = `${helper}(() => ${className}Spec, ${quote(wireName)});`;
-    if (prefix.length + call.length + 1 <= 80) return `${prefix} ${call}`;
-    if (prefix.length > 80) {
-      return `export const ${name}: ${factory}<\n  ${
-        types.join(",\n  ")
-      }\n> = ${call}`;
-    }
-    return `${prefix}\n  ${call}`;
+    return [...errors, ...declarations].join("\n\n");
   }
 }

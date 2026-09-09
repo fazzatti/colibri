@@ -1,6 +1,6 @@
 import { canonicalMap, requireOrderedMap } from "@/values/ordering.ts";
 import * as xdr from "stellar-sdk/xdr";
-import { SorobanType, SorobanValue } from "@/values/value.ts";
+import { SorobanCodec, SorobanValue } from "@/values/value.ts";
 import { requireValue } from "@/values/error.ts";
 import { requireTag } from "@/values/scalars.ts";
 
@@ -20,20 +20,20 @@ export type SorobanOptionInput<I, O = I> =
   | undefined
   | SorobanValue<O | null, "option">;
 /** Explicit result value; error branches use the protocol's ScError representation. */
-export type SorobanResultNative<T, E> = { ok: T; error?: never } | {
+export type SorobanResultValue<T, E> = { ok: T; error?: never } | {
   error: E;
   ok?: never;
 };
 /** Native result branches or a validated result. */
 export type SorobanResultInput<T, E, TO = T, EO = E> =
-  | SorobanResultNative<T, E>
-  | SorobanValue<SorobanResultNative<TO, EO>, "result">;
+  | SorobanResultValue<T, E>
+  | SorobanValue<SorobanResultValue<TO, EO>, "result">;
 
 /** @internal */
 export function vectorType<I, O>(
-  element: SorobanType<I, O>,
-): SorobanType<Array<I | SorobanValue<O>>, Array<O>, "vec"> {
-  return new SorobanType("vec", `vec(${element.identity})`, (value) => {
+  element: SorobanCodec<I, O>,
+): SorobanCodec<Array<I | SorobanValue<O>>, Array<O>, "vec"> {
+  return new SorobanCodec("vec", `vec(${element.identity})`, (value) => {
     requireValue(Array.isArray(value), "vec", "expected an array");
     return xdr.ScVal.scvVec(value.map((item) => element.encodeUnknown(item)));
   }, (value) => {
@@ -49,10 +49,10 @@ export function vectorType<I, O>(
 
 /** @internal */
 export function tupleType(
-  types: readonly SorobanType<unknown, unknown>[],
-): SorobanType<unknown[], unknown[], "tuple"> {
+  types: readonly SorobanCodec<unknown, unknown>[],
+): SorobanCodec<unknown[], unknown[], "tuple"> {
   const fields = [...types];
-  return new SorobanType(
+  return new SorobanCodec(
     "tuple",
     `tuple(${fields.map((type) => type.identity).join(",")})`,
     (value) => {
@@ -79,15 +79,15 @@ export function tupleType(
 
 /** @internal */
 export function mapType<K, V, KO, VO>(
-  key: SorobanType<K, KO>,
-  item: SorobanType<V, VO>,
-): SorobanType<
+  key: SorobanCodec<K, KO>,
+  item: SorobanCodec<V, VO>,
+): SorobanCodec<
   | Map<K | SorobanValue<KO>, V | SorobanValue<VO>>
   | Array<[K | SorobanValue<KO>, V | SorobanValue<VO>]>,
   Array<[KO, VO]>,
   "map"
 > {
-  return new SorobanType(
+  return new SorobanCodec(
     "map",
     `map(${key.identity},${item.identity})`,
     (value) => {
@@ -126,9 +126,9 @@ export function mapType<K, V, KO, VO>(
 
 /** @internal */
 export function optionType<I, O>(
-  inner: SorobanType<I, O>,
-): SorobanType<I | SorobanValue<O> | null | undefined, O | null, "option"> {
-  return new SorobanType(
+  inner: SorobanCodec<I, O>,
+): SorobanCodec<I | SorobanValue<O> | null | undefined, O | null, "option"> {
+  return new SorobanCodec(
     "option",
     `option(${inner.identity})`,
     (value) =>
@@ -142,14 +142,14 @@ export function optionType<I, O>(
 
 /** @internal */
 export function resultType<I, E, O, EO>(
-  ok: SorobanType<I, O>,
-  error: SorobanType<E, EO>,
-): SorobanType<
-  SorobanResultNative<I | SorobanValue<O>, E | SorobanValue<EO>>,
-  SorobanResultNative<O, EO>,
+  ok: SorobanCodec<I, O>,
+  error: SorobanCodec<E, EO>,
+): SorobanCodec<
+  SorobanResultValue<I | SorobanValue<O>, E | SorobanValue<EO>>,
+  SorobanResultValue<O, EO>,
   "result"
 > {
-  return new SorobanType(
+  return new SorobanCodec(
     "result",
     `result(${ok.identity},${error.identity})`,
     (value) => {
@@ -192,13 +192,13 @@ export function resultType<I, E, O, EO>(
 /** Validated vector whose element schema also describes an empty vector. */
 export class SorobanVec<I, O = I> extends SorobanValue<O[], "vec"> {
   /** Validates all elements against an explicit element schema. */
-  constructor(value: Array<I | SorobanValue<O>>, element: SorobanType<I, O>) {
+  constructor(value: Array<I | SorobanValue<O>>, element: SorobanCodec<I, O>) {
     super(vectorType(element), value);
   }
   /** Creates a reusable vector schema. */
   static type<I, O>(
-    element: SorobanType<I, O>,
-  ): SorobanType<Array<I | SorobanValue<O>>, O[], "vec"> {
+    element: SorobanCodec<I, O>,
+  ): SorobanCodec<Array<I | SorobanValue<O>>, O[], "vec"> {
     return vectorType(element);
   }
 }
@@ -211,16 +211,16 @@ export class SorobanMap<K, V, KO = K, VO = V>
     value:
       | Map<K | SorobanValue<KO>, V | SorobanValue<VO>>
       | Array<[K | SorobanValue<KO>, V | SorobanValue<VO>]>,
-    key: SorobanType<K, KO>,
-    item: SorobanType<V, VO>,
+    key: SorobanCodec<K, KO>,
+    item: SorobanCodec<V, VO>,
   ) {
     super(mapType(key, item), value);
   }
   /** Creates a reusable map schema. */
   static type<K, V, KO, VO>(
-    key: SorobanType<K, KO>,
-    item: SorobanType<V, VO>,
-  ): SorobanType<
+    key: SorobanCodec<K, KO>,
+    item: SorobanCodec<V, VO>,
+  ): SorobanCodec<
     | Map<K | SorobanValue<KO>, V | SorobanValue<VO>>
     | Array<[K | SorobanValue<KO>, V | SorobanValue<VO>]>,
     Array<[KO, VO]>,
@@ -232,35 +232,39 @@ export class SorobanMap<K, V, KO = K, VO = V>
 
 /** Input accepted by an explicit codec, including a compatible wrapper. */
 export type SorobanTypeInput<Type> = Type extends
-  SorobanType<infer I, infer O, infer N> ? I | SorobanValue<O, N> : never;
+  SorobanCodec<infer I, infer O, infer N> ? I | SorobanValue<O, N> : never;
 /** Native output decoded by an explicit codec. */
-export type SorobanTypeOutput<Type> = Type extends SorobanType<unknown, infer O>
-  ? O
+export type SorobanTypeOutput<Type> = Type extends
+  SorobanCodec<unknown, infer O> ? O
   : never;
 /** Positional inputs inferred from a tuple's schemas. */
 export type SorobanTupleInput<
-  Types extends readonly SorobanType<unknown, unknown>[],
+  Types extends readonly SorobanCodec<unknown, unknown>[],
 > = { -readonly [Index in keyof Types]: SorobanTypeInput<Types[Index]> };
 /** Positional decoded values inferred from a tuple's schemas. */
-export type SorobanTupleNative<
-  Types extends readonly SorobanType<unknown, unknown>[],
+export type SorobanTupleOutput<
+  Types extends readonly SorobanCodec<unknown, unknown>[],
 > = { -readonly [Index in keyof Types]: SorobanTypeOutput<Types[Index]> };
 
 /** Validated fixed-arity tuple with a schema for every position. */
 export class SorobanTuple<
-  Types extends readonly SorobanType<unknown, unknown>[],
-> extends SorobanValue<SorobanTupleNative<Types>, "tuple"> {
+  Types extends readonly SorobanCodec<unknown, unknown>[],
+> extends SorobanValue<SorobanTupleOutput<Types>, "tuple"> {
   /** Validates tuple arity and each field. */
   constructor(value: SorobanTupleInput<Types>, types: Types) {
     super(SorobanTuple.type(types), value);
   }
   /** Creates a reusable positional schema and infers its input/output tuple. */
-  static type<const Types extends readonly SorobanType<unknown, unknown>[]>(
+  static type<const Types extends readonly SorobanCodec<unknown, unknown>[]>(
     types: Types,
-  ): SorobanType<SorobanTupleInput<Types>, SorobanTupleNative<Types>, "tuple"> {
-    return tupleType(types) as SorobanType<
+  ): SorobanCodec<
+    SorobanTupleInput<Types>,
+    SorobanTupleOutput<Types>,
+    "tuple"
+  > {
+    return tupleType(types) as SorobanCodec<
       SorobanTupleInput<Types>,
-      SorobanTupleNative<Types>,
+      SorobanTupleOutput<Types>,
       "tuple"
     >;
   }
@@ -271,36 +275,36 @@ export class SorobanOption<I, O = I> extends SorobanValue<O | null, "option"> {
   /** Validates Some against its explicit inner schema. */
   constructor(
     value: I | SorobanValue<O> | null | undefined,
-    inner: SorobanType<I, O>,
+    inner: SorobanCodec<I, O>,
   ) {
     super(optionType(inner), value);
   }
   /** Creates a reusable optional schema. */
   static type<I, O>(
-    inner: SorobanType<I, O>,
-  ): SorobanType<I | SorobanValue<O> | null | undefined, O | null, "option"> {
+    inner: SorobanCodec<I, O>,
+  ): SorobanCodec<I | SorobanValue<O> | null | undefined, O | null, "option"> {
     return optionType(inner);
   }
 }
 
 /** Validated Result using Ok values and ScError failures on the wire. */
 export class SorobanResult<I, E, O = I, EO = E>
-  extends SorobanValue<SorobanResultNative<O, EO>, "result"> {
+  extends SorobanValue<SorobanResultValue<O, EO>, "result"> {
   /** Validates the selected branch against its explicit schema. */
   constructor(
-    value: SorobanResultNative<I | SorobanValue<O>, E | SorobanValue<EO>>,
-    ok: SorobanType<I, O>,
-    error: SorobanType<E, EO>,
+    value: SorobanResultValue<I | SorobanValue<O>, E | SorobanValue<EO>>,
+    ok: SorobanCodec<I, O>,
+    error: SorobanCodec<E, EO>,
   ) {
     super(resultType(ok, error), value);
   }
   /** Creates a reusable result schema. */
   static type<I, E, O, EO>(
-    ok: SorobanType<I, O>,
-    error: SorobanType<E, EO>,
-  ): SorobanType<
-    SorobanResultNative<I | SorobanValue<O>, E | SorobanValue<EO>>,
-    SorobanResultNative<O, EO>,
+    ok: SorobanCodec<I, O>,
+    error: SorobanCodec<E, EO>,
+  ): SorobanCodec<
+    SorobanResultValue<I | SorobanValue<O>, E | SorobanValue<EO>>,
+    SorobanResultValue<O, EO>,
     "result"
   > {
     return resultType(ok, error);

@@ -11,7 +11,69 @@ import {
   errorEntry,
 } from "colibri-internal/tests/binding-fixtures.ts";
 
+import {
+  union,
+  valueSpec,
+} from "colibri-internal/tests/soroban-values-fixtures.ts";
+
+const numericEnum = (cases: Record<string, number>): xdr.ScSpecEntry =>
+  xdr.ScSpecEntry.scSpecEntryUdtEnumV0(
+    new xdr.ScSpecUdtEnumV0({
+      name: "Status",
+      lib: "",
+      doc: "Workflow status.",
+      cases: Object.entries(cases).map(([name, value]) =>
+        new xdr.ScSpecUdtEnumCaseV0({
+          name,
+          value,
+          doc: name === "Closed" ? "Finished." : "",
+        })
+      ),
+    }),
+  );
+
 describe("bindings rendering", () => {
+  it("renders custom schemas without expanding variants or duplicating input fields", () => {
+    const source = generateBindings(
+      new Spec([
+        ...valueSpec().entries,
+        numericEnum({ Closed: 20, Pending: 1, Active: 10 }),
+      ]),
+    ).files["types.ts"];
+    for (
+      const text of [
+        "export type RbacStorage = SorobanType.Custom<{",
+        'encoding: "tagged";',
+        "ExistingRoles: SorobanType.Void;",
+        "EmptyTuple: [];",
+        "RoleIndexToAccount: [SorobanType.Symbol, SorobanType.U32];",
+        "export type RbacStorageInput = SorobanType.Input.Custom<RbacStorage>;",
+        'kind: "tuple";\n  fields: [SorobanType.Symbol, SorobanType.U32];',
+        "next: SorobanType.Option<Node>;",
+        'encoding: "u32";',
+        "/** Finished. */\n    Closed: 20;\n    Pending: 1;\n    Active: 10;",
+        "export const Status: SorobanType.Factory<Status>",
+      ]
+    ) assert(source.includes(text), text);
+    assert(!source.includes('tag: "RoleIndexToAccount"'));
+    assert(!source.includes("StatusType"));
+  });
+  it("rejects enum names that would replace validation methods", () => {
+    for (const name of ["type", "from", "fromScVal", "fromXdr"]) {
+      for (
+        const entry of [
+          numericEnum({ [name]: 1 }),
+          union("Status", { [name]: null }),
+        ]
+      ) {
+        assertThrows(
+          () => generateBindings(new Spec([entry])),
+          BindingError,
+          "conflicts with factory member",
+        );
+      }
+    }
+  });
   it("uses PascalCase enum members with exact ABI values and rejects casing collisions", () => {
     const method = (name: string) =>
       xdr.ScSpecEntry.scSpecEntryFunctionV0(
@@ -82,8 +144,16 @@ describe("bindings rendering", () => {
         ),
       ]),
     );
-    assert(used.files["types.ts"].includes("export type AccessError = 1;"));
-    assert(used.files["types.ts"].includes("error: AccessError"));
+    assert(
+      used.files["types.ts"].includes(
+        'export type AccessError = SorobanType.ErrorCode<typeof ContractClientErrors, "access_error">;',
+      ),
+    );
+    assert(
+      used.files["types.ts"].includes(
+        "error: SorobanType.Input.Value<AccessError>",
+      ),
+    );
     assert(!used.files["types.ts"].includes("export enum AccessError"));
     assert(!used.files["types.ts"].includes("UnusedError"));
   });
@@ -127,7 +197,7 @@ describe("bindings rendering", () => {
         "override async invoke",
         "result.returnValue",
         "contractConfig.plugins",
-        "amount: SorobanI128Native",
+        "amount: SorobanType.I128",
       ]
     ) assert(source.includes(text), text);
     assert(!source.includes("async balance("));
@@ -238,20 +308,23 @@ describe("bindings rendering", () => {
     );
     assertEquals(
       map.type(type, "Input"),
-      "SorobanMapInput<SorobanU32Input, SorobanU32Input, SorobanU32Native, SorobanU32Native>",
+      "SorobanType.Input.Map<SorobanType.Input.U32, SorobanType.Input.U32, SorobanType.U32, SorobanType.U32>",
     );
     assertEquals(
       map.type(type, "Output"),
-      "Array<[SorobanU32Native, SorobanU32Native]>",
+      "SorobanType.Map<SorobanType.U32, SorobanType.U32>",
     );
     const option = xdr.ScSpecTypeDef.scSpecTypeOption(
       new xdr.ScSpecTypeOption({ valueType: u32 }),
     );
     assertEquals(
       map.type(option, "Input"),
-      "SorobanOptionInput<SorobanU32Input, SorobanU32Native>",
+      "SorobanType.Input.Option<SorobanType.Input.U32, SorobanType.U32>",
     );
-    assertEquals(map.type(option, "Output"), "(SorobanU32Native) | null");
+    assertEquals(
+      map.type(option, "Output"),
+      "SorobanType.Option<SorobanType.U32>",
+    );
     const result = xdr.ScSpecTypeDef.scSpecTypeResult(
       new xdr.ScSpecTypeResult({
         okType: u32,
@@ -260,15 +333,15 @@ describe("bindings rendering", () => {
     );
     assertEquals(
       map.type(result, "Output", true),
-      "StellarResult<SorobanU32Native, { message: string }>",
+      "StellarResult<SorobanType.U32, { message: string }>",
     );
     assertEquals(
       map.type(result, "Input"),
-      "SorobanResultInput<SorobanU32Input, SorobanErrorInput, SorobanU32Native, SorobanErrorNative>",
+      "SorobanType.Input.Result<SorobanType.Input.U32, SorobanType.Input.Error, SorobanType.U32, SorobanType.Error>",
     );
     assertEquals(
       map.type(xdr.ScSpecTypeDef.scSpecTypeError(), "Output"),
-      "SorobanErrorNative",
+      "SorobanType.Error",
     );
     assertThrows(
       () =>

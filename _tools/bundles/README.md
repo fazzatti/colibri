@@ -74,3 +74,10 @@ native SDK objects, cryptography, transactions, signer extensions and plugins.
 Package unit tests cover SVG parity across all 256 hues, G/C addresses, options
 and structured failures. Architecture checks keep all 365 literal registry keys
 aligned with their original enum-member types and values.
+
+The value probes distinguish direct namespace imports (`value-symbol`) from a
+forwarded named namespace (`value-namespace`). Deno 2.9.6 retains the latter as
+a whole object; use `import * as SorobanType from "@colibri/core/values"` when
+individual-codec tree shaking matters. Static alias annotations cover only reads
+of owned readonly fields. The original symbol budget stays unchanged, and the
+forwarded form has its own explicit budget and browser/dependency checks.

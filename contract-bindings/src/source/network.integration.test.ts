@@ -10,7 +10,7 @@ import {
   SorobanI128,
   SorobanLedgerKeyContractInstance,
   SorobanSymbol,
-  SorobanU32,
+  SorobanType,
   type TransactionConfig,
 } from "@colibri/core";
 import { StellarTestLedger } from "@colibri/test-tooling";
@@ -123,7 +123,7 @@ describe(
             );
             const output = await client.invoke({
               method: "i128",
-              methodArgs: { v: new SorobanI128(42n) },
+              methodArgs: { v: SorobanType.I128.from(42n) },
               config,
             });
             assertEquals(output.value, 42n);
@@ -165,7 +165,7 @@ describe(
               status: 1,
             });
             const summary = exports.CounterSummary.from({
-              count: new SorobanU32(3),
+              count: SorobanType.U32.from(3),
               status: exports.CounterStatus.Counting,
             });
             assertEquals(

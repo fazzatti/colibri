@@ -2,7 +2,7 @@ import { canonicalMap, requireOrderedMap } from "@/values/ordering.ts";
 import { nativeToScVal } from "stellar-sdk/base";
 import * as xdr from "stellar-sdk/xdr";
 import { requireValue } from "@/values/error.ts";
-import { SorobanType, SorobanValue } from "@/values/value.ts";
+import { SorobanCodec, SorobanValue } from "@/values/value.ts";
 
 /** @internal Verifies contract-usable values; system-only variants remain available via SorobanVal. */
 export function requireContractValue(value: xdr.ScVal): void {
@@ -106,8 +106,8 @@ function encodeGenericValue(value: unknown, ancestors: Set<object>): xdr.ScVal {
 }
 
 /** @internal Generic contract values retain their ScVal because native decoding may lose type information. */
-export function contractValType(): SorobanType<unknown, xdr.ScVal, "val"> {
-  return new SorobanType("val", "val", (value) => {
+export function contractValType(): SorobanCodec<unknown, xdr.ScVal, "val"> {
+  return new SorobanCodec("val", "val", (value) => {
     const encoded = encodeGeneric(value);
     requireContractValue(encoded);
     return encoded;

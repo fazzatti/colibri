@@ -265,24 +265,25 @@ in `meta.data.result` and the codec failure as its cause. Inspect that result
 and the embedded ABI before deciding the next action; resubmitting would create
 another transaction.
 
-## Validated inputs and custom values
+## Soroban types and custom declarations
 
-Generated inputs use Core's `SorobanSymbolInput`, `SorobanU32Input` and related
-aliases, accepting both existing raw values and optional validated helpers.
-Outputs use descriptive native aliases and remain ordinary strings, numbers,
-bigints, arrays and objects. The existing constants/spec/error layout is
-retained.
+Generated inputs use `SorobanType.Input.Symbol`, `SorobanType.Input.U32` and
+related aliases, accepting raw values or optional validated wrappers. Outputs
+use `SorobanType.Symbol`, `SorobanType.U32`, etc., and remain ordinary
+JavaScript values. The constants/spec/error layout stays unchanged.
 
-Structs and unions export runtime factories alongside their types:
-`SomeStruct.from(fields)` or `SomeUnion.Variant(...values)`. Factories use the
-embedded spec, accept nested helpers, and expose `.type`, `.fromScVal()` and
-`.fromXdr()`. Numeric enums retain their enum object and have a separate
-`NameType` factory. Referenced error codes retain their type aliases and reuse
-the error definitions. A custom input alias that collides with a method input
-uses the descriptive `NameValueInput` suffix.
+Custom types use `SorobanType.Custom` schemas: struct and tuple fields, or enum
+variants with explicit tagged/u32 encoding. Colibri derives their input types
+and the underlying variant shapes without repeating every field. Structs and
+enums have matching spec-backed factories: `Summary.from(fields)` or
+`RbacStorage.RoleIndexToAccount(role, index)`. Numeric enums expose their exact
+codes and validation on one factory, such as `Status.Active` and
+`Status.from(Status.Active)`. All factories provide `.type`, `.fromScVal()` and
+`.fromXdr()`. Referenced error types reuse the categorized error map.
 
-Use a generated storage-key value directly with
-`client.getLedgerEntry({ key,
-durability: "persistent" })`; durability and
-stored value types are still caller-owned. See
-[validated Soroban values](../docs/core/contract/values.md).
+A custom input alias uses `NameValueInput` if `NameInput` would collide with a
+method input. Use generated storage-key wrappers with
+`client.getLedgerEntry({ key, durability: "persistent" })`; durability and
+stored value types remain caller-owned. See
+[Soroban types](../docs/core/contract/values.md) for complete examples,
+validation and encoding behavior.

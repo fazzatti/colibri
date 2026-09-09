@@ -7,7 +7,7 @@ import type { Spec } from "@/contract/spec.ts";
 /** @internal Native SDK schema accepted without introducing a second constructor. */
 type NativeSpec = Spec;
 import { Code, requireValue, SorobanValueError } from "@/values/error.ts";
-import { SorobanType } from "@/values/value.ts";
+import { SorobanCodec } from "@/values/value.ts";
 import {
   addressType,
   boolType,
@@ -29,7 +29,7 @@ import {
 } from "@/values/containers.ts";
 
 const SCALARS: Readonly<
-  Record<string, (() => SorobanType<unknown, unknown>) | undefined>
+  Record<string, (() => SorobanCodec<unknown, unknown>) | undefined>
 > = {
   scSpecTypeVal: () => contractValType(),
   scSpecTypeBool: () => boolType(),
@@ -76,7 +76,7 @@ export class SpecTypes {
     return entry;
   }
 
-  type(type: xdr.ScSpecTypeDef): SorobanType<unknown, unknown> {
+  type(type: xdr.ScSpecTypeDef): SorobanCodec<unknown, unknown> {
     const scalar = SCALARS[type.type];
     if (scalar) return scalar();
     switch (type.type) {
@@ -113,9 +113,9 @@ export class SpecTypes {
     );
   }
 
-  custom(name: string): SorobanType<unknown, unknown> {
+  custom(name: string): SorobanCodec<unknown, unknown> {
     const entry = this.entry(name);
-    return new SorobanType(
+    return new SorobanCodec(
       name,
       JSON.stringify(this.identity(name, new Set())),
       (value) => this.encodeCustom(entry, value),
@@ -246,7 +246,7 @@ export class SpecTypes {
 
   private tupleFields(
     entry: xdr.ScSpecUdtStructV0,
-  ): SorobanType<unknown, unknown>[] | undefined {
+  ): SorobanCodec<unknown, unknown>[] | undefined {
     if (!entry.fields.some((field) => /^\d+$/.test(field.name.toString()))) {
       return;
     }
@@ -384,14 +384,14 @@ export class SpecTypes {
 export function createSorobanType<Input, Output = Input>(
   spec: Pick<NativeSpec, "entries">,
   name: string,
-): SorobanType<Input, Output> {
-  return new SpecTypes(spec).custom(name) as SorobanType<Input, Output>;
+): SorobanCodec<Input, Output> {
+  return new SpecTypes(spec).custom(name) as SorobanCodec<Input, Output>;
 }
 
 /** Creates a codec for any supported contract-spec type, including composition. */
 export function sorobanTypeFromSpec<Input = unknown, Output = Input>(
   spec: Pick<NativeSpec, "entries">,
   type: NativeSpecType,
-): SorobanType<Input, Output> {
-  return new SpecTypes(spec).type(type) as SorobanType<Input, Output>;
+): SorobanCodec<Input, Output> {
+  return new SpecTypes(spec).type(type) as SorobanCodec<Input, Output>;
 }

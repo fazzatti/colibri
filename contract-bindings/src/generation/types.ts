@@ -8,23 +8,16 @@ export function renderTypes(
   events: string,
   imports: ReadonlySet<string> = new Set(),
 ): string {
-  const runtime = [...imports].filter((name) =>
-    name.startsWith("createSoroban")
-  );
-  const typeImports = [...imports].filter((name) =>
-    !name.startsWith("createSoroban")
-  ).sort();
+  const usesTypes = imports.has("SorobanType");
+  const constants = [
+    ...(declarations.includes(".fromSpec<") ? [`${className}Spec`] : []),
+    ...(imports.has(`${className}Errors`) ? [`${className}Errors`] : []),
+  ];
   const helpers = `${
-    typeImports.length
-      ? `\nimport type {\n  ${
-        typeImports.join(",\n  ")
-      },\n} from "@colibri/core";`
-      : ""
+    usesTypes ? '\nimport { SorobanType } from "@colibri/core";' : ""
   }${
-    runtime.length
-      ? `\nimport { ${
-        runtime.sort().join(", ")
-      } } from "@colibri/core";\nimport { ${className}Spec } from "./constants.ts";`
+    constants.length
+      ? `\nimport { ${constants.join(", ")} } from "./constants.ts";`
       : ""
   }`;
   return `${GENERATED_MARKER}
@@ -50,7 +43,7 @@ import type {
 
 ${methods}
 
-/** Method names mapped to their native arguments. */
+/** Method names mapped to their accepted arguments. */
 export type ${className}Inputs = {
   [Method in keyof ${className}MethodMap]: ${className}MethodMap[Method]["input"];
 };

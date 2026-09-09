@@ -1334,18 +1334,23 @@ imply that a contract emits no events. See
 [the guide](../docs/core/contract/events.md) and the
 [bindings generator](../contract-bindings/README.md).
 
-## Validated Soroban values
+## Soroban types and validated values
 
-Contract arguments can be raw values or validated helpers such as
-`new SorobanSymbol("ADMIN")`, `new SorobanU32(7)`, and
-`new SorobanDuration(60n)`. Helpers preserve the ABI distinction, expose
-`.value`, `.toScVal()` and `.toXdr()`, and compose into vectors, maps, tuples,
-options, results and spec-backed custom values. Inputs and mutable outputs are
-copied. Generated bindings adopt these optional inputs while keeping plain
-outputs.
+`SorobanType` groups descriptive types and runtime codecs. For example,
+`SorobanType.U32` describes an ordinary number and `SorobanType.U32.from(7)`
+validates and wraps it. `SorobanType.Input.U32` accepts raw or validated inputs.
+Wrappers expose `.value`, `.toScVal()` and `.toXdr()` and snapshot mutable data.
 
-Import from `@colibri/core` or the supported `@colibri/core/values` entrypoint.
-Use `.toScVal()` with native raw-call interfaces and the Stellar SDK directly.
-Native `Spec` identity, existing pipelines and ordinary result shapes remain
-unchanged. See [the complete value guide](../docs/core/contract/values.md) for
-coverage, units, error codes, custom factories and internal wire values.
+Generated custom types use `SorobanType.Custom` schemas with struct or tuple
+fields, or enum variants with tagged/u32 encoding. Colibri derives the input
+shapes and variant boilerplate. Generated factories reuse the contract spec;
+numeric enums preserve their exact codes. Containers and recursive custom values
+compose without changing ordinary decoded outputs.
+
+Import `SorobanType` from `@colibri/core`, or use
+`import * as SorobanType from "@colibri/core/values"` for lightweight browser
+consumers. Direct namespace imports let Deno discard unused codecs. Use
+`.toScVal()` with native raw-call interfaces and direct Stellar SDK calls.
+Native Spec identity and existing pipelines remain unchanged. See
+[the complete type guide](../docs/core/contract/values.md) for schemas, units,
+errors, enum ordering, custom factories and wire values.

@@ -2,11 +2,11 @@
 type NativeErrorType = xdr.ScError["type"];
 import { Address, scValToBigInt, XdrLargeInt } from "stellar-sdk/base";
 import * as xdr from "stellar-sdk/xdr";
-import { SorobanType, SorobanValue } from "@/values/value.ts";
+import { SorobanCodec, SorobanValue } from "@/values/value.ts";
 import { requireValue } from "@/values/error.ts";
 
 /** Native representation of a contract or host error value. */
-export type SorobanErrorNative = { type: NativeErrorType; code: number };
+export type SorobanErrorValue = { type: NativeErrorType; code: number };
 
 /** @internal */
 export function requireTag<T extends xdr.ScVal["type"]>(
@@ -19,7 +19,7 @@ export function requireTag<T extends xdr.ScVal["type"]>(
 /** @internal */
 export function integerType<N extends "u32" | "i32">(
   name: N,
-): SorobanType<number, number, N> {
+): SorobanCodec<number, number, N> {
   const signed = name === "i32";
   const min = signed ? -(2 ** 31) : 0;
   const max = signed ? 2 ** 31 - 1 : 2 ** 32 - 1;
@@ -32,7 +32,7 @@ export function integerType<N extends "u32" | "i32">(
     );
     return value;
   };
-  return new SorobanType(
+  return new SorobanCodec(
     name,
     name,
     (value) =>
@@ -57,11 +57,11 @@ export function largeIntegerType<
     | "i256"
     | "timepoint"
     | "duration",
->(name: N): SorobanType<bigint, bigint, N> {
+>(name: N): SorobanCodec<bigint, bigint, N> {
   const tag = `scv${name[0].toUpperCase()}${
     name.slice(1)
   }` as xdr.ScVal["type"];
-  return new SorobanType(name, name, (value) => {
+  return new SorobanCodec(name, name, (value) => {
     requireValue(typeof value === "bigint", name, "expected bigint");
     return new XdrLargeInt(name, value).toScVal();
   }, (value) => {
@@ -71,8 +71,8 @@ export function largeIntegerType<
 }
 
 /** @internal */
-export function boolType(): SorobanType<boolean, boolean, "bool"> {
-  return new SorobanType("bool", "bool", (value) => {
+export function boolType(): SorobanCodec<boolean, boolean, "bool"> {
+  return new SorobanCodec("bool", "bool", (value) => {
     requireValue(typeof value === "boolean", "bool", "expected boolean");
     return xdr.ScVal.scvBool(value);
   }, (value) => {
@@ -82,8 +82,8 @@ export function boolType(): SorobanType<boolean, boolean, "bool"> {
 }
 
 /** @internal */
-export function voidType(): SorobanType<null | undefined, null, "void"> {
-  return new SorobanType("void", "void", (value) => {
+export function voidType(): SorobanCodec<null | undefined, null, "void"> {
+  return new SorobanCodec("void", "void", (value) => {
     requireValue(
       value === null || value === undefined,
       "void",
@@ -97,7 +97,7 @@ export function voidType(): SorobanType<null | undefined, null, "void"> {
 }
 
 /** @internal */
-export function symbolType(): SorobanType<string, string, "symbol"> {
+export function symbolType(): SorobanCodec<string, string, "symbol"> {
   const validate = (value: unknown): string => {
     requireValue(
       typeof value === "string" && /^[A-Za-z0-9_]{0,32}$/.test(value),
@@ -106,7 +106,7 @@ export function symbolType(): SorobanType<string, string, "symbol"> {
     );
     return value;
   };
-  return new SorobanType(
+  return new SorobanCodec(
     "symbol",
     "symbol",
     (value) => xdr.ScVal.scvSymbol(validate(value)),
@@ -118,12 +118,12 @@ export function symbolType(): SorobanType<string, string, "symbol"> {
 }
 
 /** @internal */
-export function stringType(): SorobanType<
+export function stringType(): SorobanCodec<
   string | Uint8Array,
   string,
   "string"
 > {
-  return new SorobanType("string", "string", (value) => {
+  return new SorobanCodec("string", "string", (value) => {
     requireValue(
       typeof value === "string" || value instanceof Uint8Array,
       "string",
@@ -148,7 +148,7 @@ export function stringType(): SorobanType<
 /** @internal */
 export function bytesType<N extends number | undefined>(
   length: N,
-): SorobanType<Uint8Array, Uint8Array, "bytes"> {
+): SorobanCodec<Uint8Array, Uint8Array, "bytes"> {
   if (length !== undefined) {
     requireValue(
       Number.isInteger(length) && length >= 0 && length <= 0xffff_ffff,
@@ -165,7 +165,7 @@ export function bytesType<N extends number | undefined>(
     );
     return Uint8Array.from(value);
   };
-  return new SorobanType(
+  return new SorobanCodec(
     "bytes",
     length === undefined ? "bytes" : `bytesN(${length})`,
     (value) => {
@@ -187,7 +187,7 @@ export function bytesType<N extends number | undefined>(
 /** @internal */
 export function addressType<N extends "address" | "muxedAddress">(
   name: N,
-): SorobanType<string, string, N> {
+): SorobanCodec<string, string, N> {
   const validate = (value: xdr.ScVal): string => {
     requireTag(value, "scvAddress");
     const kind = value.address.type;
@@ -199,7 +199,7 @@ export function addressType<N extends "address" | "muxedAddress">(
     );
     return Address.fromScVal(value).toString();
   };
-  return new SorobanType(
+  return new SorobanCodec(
     name,
     name,
     (value) => {
@@ -226,12 +226,12 @@ export function addressType<N extends "address" | "muxedAddress">(
 }
 
 /** @internal */
-export function errorType(): SorobanType<
-  SorobanErrorNative,
-  SorobanErrorNative,
+export function errorType(): SorobanCodec<
+  SorobanErrorValue,
+  SorobanErrorValue,
   "error"
 > {
-  return new SorobanType("error", "error", (value) => {
+  return new SorobanCodec("error", "error", (value) => {
     requireValue(
       value !== null && typeof value === "object" && "type" in value &&
         "code" in value,
@@ -265,12 +265,12 @@ export function errorType(): SorobanType<
 }
 
 /** @internal Lossless coverage of every wire variant, including system-only values. */
-export function valType(): SorobanType<
+export function valType(): SorobanCodec<
   xdr.ScVal | SorobanValue<unknown>,
   xdr.ScVal,
   "val"
 > {
-  return new SorobanType(
+  return new SorobanCodec(
     "val",
     "val",
     (value) => {

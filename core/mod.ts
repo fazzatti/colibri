@@ -35,6 +35,8 @@ export * from "@/common/index.ts";
 
 export * from "@/contract/index.ts";
 export * from "@/values/index.ts";
+/** Soroban declarations, codecs and spec-bound custom factories. */
+export * as SorobanType from "@/values/types/index.ts";
 export { type Result, Spec } from "@/contract/spec.ts";
 export type * from "@/contract/types.ts";
 /** Error constructors for contract helpers. */

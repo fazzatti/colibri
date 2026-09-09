@@ -70,12 +70,12 @@ describe("generated consumer boundary", () => {
         `${directory}/consumer.ts`,
         `
 import { ValuesClient, RbacStorage, Config, type Config as ConfigNative } from "./index.ts";
-import { SorobanSymbol, SorobanU32, SorobanString, SorobanVec, NetworkConfig, encodeSorobanArguments, buildContractDataLedgerKey, type ContractId } from "@colibri/core";
+import { SorobanType, SorobanU32, SorobanString, SorobanVec, NetworkConfig, encodeSorobanArguments, buildContractDataLedgerKey, type ContractId } from "@colibri/core";
 import { assertEquals } from "@std/assert";
-const key = RbacStorage.RoleIndexToAccount(new SorobanSymbol("ADMIN"), new SorobanU32(7));
+const key = RbacStorage.RoleIndexToAccount(SorobanType.Symbol.from("ADMIN"), SorobanType.U32.from(7));
 assertEquals(key.value, { tag: "RoleIndexToAccount", values: ["ADMIN", 7] });
 assertEquals(RbacStorage.ExistingRoles().value, { tag: "ExistingRoles" });
-const config = Config.from({ role: "ADMIN", count: new SorobanU32(7), key });
+const config = Config.from({ role: "ADMIN", count: SorobanType.U32.from(7), key });
 const plain: ConfigNative = config.value;
 const client = new ValuesClient({ errors: false, networkConfig: NetworkConfig.TestNet(), contractConfig: { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" } });
 const raw = encodeSorobanArguments(client.getSpec(), "echo", { config: plain });
@@ -88,7 +88,7 @@ function checkTypes() {
   const text: Promise<string[]> = client.read({ method: "texts", methodArgs: { values: new SorobanVec([new SorobanString("hello")], SorobanString.type) } });
   const old: Promise<ConfigNative> = client.read({ method: "echo", methodArgs: { config: plain } });
   const added: Promise<ConfigNative> = client.read({ method: "echo", methodArgs: { config } });
-  const mixed: Promise<ConfigNative> = client.read({ method: "echo", methodArgs: { config: { role: new SorobanSymbol("ADMIN"), count: 7, key } } });
+  const mixed: Promise<ConfigNative> = client.read({ method: "echo", methodArgs: { config: { role: SorobanType.Symbol.from("ADMIN"), count: 7, key } } });
   // @ts-expect-error A String helper is not a Symbol helper.
   RbacStorage.RoleIndexToAccount(new SorobanString("ADMIN"), 7);
   // @ts-expect-error Fixed variant payload arity.

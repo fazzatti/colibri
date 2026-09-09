@@ -10,7 +10,7 @@ class EncodedValue {
 }
 
 /** A reusable, explicit Soroban schema with validation and bidirectional encoding. */
-export class SorobanType<Input, Output = Input, Name extends string = string> {
+export class SorobanCodec<Input, Output = Input, Name extends string = string> {
   /** Human-readable type name. */
   readonly name: Name;
   /** @internal Structural ABI identity, including custom-type dependencies. */
@@ -113,11 +113,11 @@ export class SorobanType<Input, Output = Input, Name extends string = string> {
 /** Immutable validated value. Native values and XDR objects are returned as copies. */
 export class SorobanValue<Value, Name extends string = string> {
   /** Codec and structural ABI identity used by this value. */
-  readonly codec: SorobanType<unknown, Value, Name>;
+  readonly codec: SorobanCodec<unknown, Value, Name>;
   readonly #bytes: Uint8Array;
 
   /** Validates and snapshots a value using an explicit schema. */
-  constructor(codec: SorobanType<unknown, Value, Name>, value: unknown) {
+  constructor(codec: SorobanCodec<unknown, Value, Name>, value: unknown) {
     this.codec = codec;
     if (value instanceof EncodedValue) codec.decode(value.value);
     this.#bytes = Uint8Array.from(
@@ -129,7 +129,7 @@ export class SorobanValue<Value, Name extends string = string> {
 
   /** @internal Preserves validated encoded data without a potentially lossy native round trip. */
   static fromEncoded<T, N extends string>(
-    codec: SorobanType<unknown, T, N>,
+    codec: SorobanCodec<unknown, T, N>,
     value: ScValLike,
   ): SorobanValue<T, N> {
     return new SorobanValue(codec, new EncodedValue(value));

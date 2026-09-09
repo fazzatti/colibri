@@ -40,6 +40,28 @@ with their existing behavior. Bundle sizes depend on the bundler and dependency
 versions; measure your production application. Listing a module in a bundler's
 dependency graph does not establish that its code survives tree shaking.
 
+## Soroban value helpers
+
+Use a direct namespace import when only selected value helpers are needed:
+
+<!-- deno-check -->
+
+```ts
+import * as SorobanType from "@colibri/core/values";
+
+const role: SorobanType.Symbol = "ADMIN";
+const value = SorobanType.Symbol.from(role);
+console.log(value.toXdr("base64"));
+```
+
+The root's named `SorobanType` namespace remains convenient for contract
+clients. Deno 2.9.6 retains the whole forwarded namespace when using
+`import { SorobanType } from "@colibri/core/values"`; the direct namespace
+import above lets it discard unused members. Both forms share the same codec and
+error implementations. Production checks measure both forms through Deno and
+Rollup. See [Soroban types](../core/contract/values.md) for validation and
+custom schemas.
+
 ## Contract specs through Core
 
 Generated clients can import their spec constructor and result type from Core:

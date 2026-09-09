@@ -11,15 +11,7 @@ import type {
   ContractEventRegistry,
 } from "@colibri/core";
 import type { Result as StellarResult } from "@colibri/core";
-import type {
-  SorobanFactory,
-  SorobanSymbolInput,
-  SorobanSymbolNative,
-  SorobanU32Input,
-  SorobanU32Native,
-  SorobanValue,
-} from "@colibri/core";
-import { createSorobanFactory } from "@colibri/core";
+import { SorobanType } from "@colibri/core";
 import { DemoSpec } from "./constants.ts";
 
 // -----------------------------------------------------------------------------
@@ -36,16 +28,16 @@ export type SummaryOutput = CounterSummary;
 export type GetCountInput = Record<string, never>;
 
 /** Decoded return value of get_count. */
-export type GetCountOutput = SorobanU32Native;
+export type GetCountOutput = SorobanType.U32;
 
 /** Increase the count by a positive amount, up to a maximum of 100. */
 export type IncrementInput = {
-  by: SorobanU32Input;
+  by: SorobanType.Input.U32;
 };
 
 /** Decoded return value of increment. */
 export type IncrementOutput = StellarResult<
-  SorobanU32Native,
+  SorobanType.U32,
   { message: string }
 >;
 
@@ -77,7 +69,7 @@ export type DemoMethodMap = {
   };
 };
 
-/** Method names mapped to their native arguments. */
+/** Method names mapped to their accepted arguments. */
 export type DemoInputs = {
   [Method in keyof DemoMethodMap]: DemoMethodMap[Method]["input"];
 };
@@ -114,34 +106,43 @@ export type DemoInvocationResult<Value> =
 // -----------------------------------------------------------------------------
 
 /** Status of the demonstration counter. */
-export enum CounterStatus {
-  Empty = 0,
-  Counting = 1,
-}
+export type CounterStatus = SorobanType.Custom<{
+  kind: "enum";
+  encoding: "u32";
+  variants: {
+    Empty: 0;
+    Counting: 1;
+  };
+}>;
+
+/** Raw or validated inputs derived from the CounterStatus declaration. */
+export type CounterStatusInput = SorobanType.Input.Custom<CounterStatus>;
+
+/** Validate, encode and decode CounterStatus using its contract declaration. */
+export const CounterStatus: SorobanType.Factory<CounterStatus> = SorobanType
+  .Custom.fromSpec<CounterStatus>(
+    () => DemoSpec,
+    "CounterStatus",
+  );
 
 /** Current count and its status. */
-export type CounterSummary = {
-  count: SorobanU32Native;
-  status: CounterStatus;
-};
+export type CounterSummary = SorobanType.Custom<{
+  kind: "struct";
+  fields: {
+    count: SorobanType.U32;
+    status: CounterStatus;
+  };
+}>;
 
-/** Input accepted for CounterSummary; decoded values use CounterSummary. */
-export type CounterSummaryInput =
-  | {
-    count: SorobanU32Input;
-    status: CounterStatus | SorobanValue<CounterStatus>;
-  }
-  | SorobanValue<CounterSummary>;
-
-/** Validate and encode the CounterStatus codes declared by this contract. */
-export const CounterStatusType: SorobanFactory<CounterStatus> =
-  createSorobanFactory(() => DemoSpec, "CounterStatus");
+/** Raw or validated inputs derived from the CounterSummary declaration. */
+export type CounterSummaryInput = SorobanType.Input.Custom<CounterSummary>;
 
 /** Validate, encode and decode CounterSummary using its contract declaration. */
-export const CounterSummary: SorobanFactory<
-  CounterSummaryInput,
-  CounterSummary
-> = createSorobanFactory(() => DemoSpec, "CounterSummary");
+export const CounterSummary: SorobanType.Factory<CounterSummary> = SorobanType
+  .Custom.fromSpec<CounterSummary>(
+    () => DemoSpec,
+    "CounterSummary",
+  );
 
 // -----------------------------------------------------------------------------
 // Events
@@ -151,14 +152,14 @@ export const CounterSummary: SorobanFactory<
  * Emitted after the counter changes; action can be used in event filters.
  */
 export type CountChanged = {
-  action: SorobanSymbolNative;
-  old_count: SorobanU32Native;
-  new_count: SorobanU32Native;
+  action: SorobanType.Symbol;
+  old_count: SorobanType.U32;
+  new_count: SorobanType.U32;
 };
 
 /** Indexed fields accepted by the CountChanged event filters. */
 export type CountChangedTopics = {
-  action: SorobanSymbolInput;
+  action: SorobanType.Input.Symbol;
 };
 
 /** Event definitions bound to this client, with typed decoding and filters. */

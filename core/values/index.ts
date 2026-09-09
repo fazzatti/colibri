@@ -13,14 +13,14 @@ export type {
   SorobanMapInput,
   SorobanOptionInput,
   SorobanResultInput,
-  SorobanResultNative,
+  SorobanResultValue,
   SorobanTupleInput,
-  SorobanTupleNative,
+  SorobanTupleOutput,
   SorobanTypeInput,
   SorobanTypeOutput,
   SorobanVecInput,
 } from "@/values/containers.ts";
-export type { SorobanErrorNative } from "@/values/scalars.ts";
+export type { SorobanErrorValue } from "@/values/scalars.ts";
 export { createSorobanType, sorobanTypeFromSpec } from "@/values/spec.ts";
 export * from "@/values/factories.ts";
 export {

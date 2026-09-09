@@ -70,25 +70,31 @@ available through both calls; choose simulation or submission deliberately.
 `invoke()` preserves Colibri's transaction metadata and raw `returnValue`, and
 adds the decoded `value`. That value is `undefined` if no return value is present.
 
-## Validated values and custom types
+## Soroban types and validated inputs
 
-Inputs accept ordinary JavaScript values or validated Colibri helpers. For example,
-use `new SorobanU32(7)` for a u32 or `new SorobanSymbol("ADMIN")` for a symbol.
-Import these helpers from `@colibri/core`. Helpers check representation before a
-call and expose `.value`, `.toScVal()`, and `.toXdr("base64")`.
-Decoded method outputs remain ordinary values; no migration is required.
+Generated declarations use `SorobanType.U32`, `SorobanType.Symbol`, and other
+Soroban names. Method inputs use `SorobanType.Input` and accept ordinary values
+or validated wrappers; decoded outputs remain ordinary JavaScript values.
 
-Generated structs and unions have factories with the same name as their type.
-Use `SomeStruct.from(fields)` or `SomeUnion.Variant(...values)`, substituting
-names declared in `types.ts`. Factories accept nested raw and validated values,
-and provide `.fromScVal()`, `.fromXdr()`, and a reusable `.type` codec.
-Numeric enums retain their existing enum object and have a separate `NameType`
-factory. Error definitions remain in the error map.
+Import `SorobanType` from `@colibri/core`. For example,
+`SorobanType.U32.from(7)` checks the integer range and
+`SorobanType.Symbol.from("ADMIN")` checks the symbol alphabet and length.
+Wrappers expose `.value`, `.toScVal()` and `.toXdr("base64")`.
 
-Native output aliases such as `SorobanSymbolNative` describe the ABI meaning while
-remaining assignable to their existing JavaScript types. Input aliases accept
-both forms. If a custom input name would collide with a method input name, the
-custom type uses `NameValueInput`; its spec-derived output name is unchanged.
+Custom declarations use `SorobanType.Custom` schemas: named struct fields,
+positional tuple fields, or enum variants with tagged or u32 encoding. Colibri
+derives their accepted inputs without repeating the fields or tag/value objects.
+The runtime factories reuse this contract's embedded spec.
+
+Use `SomeStruct.from(fields)` or `SomeEnum.Variant(...values)`, substituting
+names from `types.ts`. Numeric enums expose their exact codes on the same
+factory, such as `Status.Active`, and validate with `Status.from(code)`.
+Factories also provide `.fromScVal()`, `.fromXdr()` and a reusable `.type`
+codec. Numeric codes are never renumbered; map keys are ordered according to
+Soroban's comparison rules. Referenced error codes reuse the existing error map.
+
+If a custom input name collides with a method input, it uses `NameValueInput`;
+its spec-derived output name stays unchanged.
 
 ## Read contract data
 

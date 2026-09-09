@@ -4,12 +4,12 @@ import type { Spec } from "@/contract/spec.ts";
 type NativeSpec = Spec;
 import { Code, SorobanValueError } from "@/values/error.ts";
 import { createSorobanType } from "@/values/spec.ts";
-import type { SorobanType, SorobanValue } from "@/values/value.ts";
+import type { SorobanCodec, SorobanValue } from "@/values/value.ts";
 
 /** Lazy, spec-backed factory used by generated custom types. */
 export interface SorobanFactory<Input, Output = Input> {
   /** Reusable codec, initialized from a snapshot on first use. */
-  readonly type: SorobanType<Input, Output>;
+  readonly type: SorobanCodec<Input, Output>;
   /** Validates native or nested wrapped input and returns an immutable value. */
   from(value: Input): SorobanValue<Output>;
   /** Validates and wraps a native ScVal. */
@@ -37,8 +37,8 @@ export function createSorobanFactory<Input, Output = Input>(
   spec: () => Pick<NativeSpec, "entries">,
   name: string,
 ): SorobanFactory<Input, Output> {
-  let cached: SorobanType<Input, Output> | undefined;
-  const type = (): SorobanType<Input, Output> =>
+  let cached: SorobanCodec<Input, Output> | undefined;
+  const type = (): SorobanCodec<Input, Output> =>
     cached ??= createSorobanType<Input, Output>(spec(), name);
   return Object.freeze({
     get type() {

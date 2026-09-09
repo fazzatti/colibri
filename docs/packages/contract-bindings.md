@@ -203,9 +203,10 @@ another transaction.
 ## Validated contract values
 
 Newly generated inputs accept raw values and
-[validated Soroban helpers](../core/contract/values.md). Native output aliases
-retain existing plain result shapes. Struct/union types also export spec-backed
-factories; numeric enums retain their enum objects and receive a `NameType`
-factory. Factories reuse the embedded declarations rather than duplicating ABI
-metadata. A custom input alias uses `ValueInput` if `Input` would collide with a
-method's input name. The constants and error-map layout is unchanged.
+[validated Soroban helpers](../core/contract/values.md). Output aliases such as
+`SorobanType.U32` retain plain result shapes. Custom types use
+`SorobanType.Custom` schemas, with struct/tuple fields or tagged/u32 enum
+variants. Matching factories reuse the embedded spec. Numeric codes and
+validation live on one factory. A custom input alias uses `ValueInput` if
+`Input` would collide with a method's input name. The constants and error-map
+layout is unchanged.

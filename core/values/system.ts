@@ -1,7 +1,7 @@
 /** @internal Canonical native representation, preserving SDK interoperability. */
 type NativeContractInstance = xdr.ScContractInstance;
 import * as xdr from "stellar-sdk/xdr";
-import { SorobanType, SorobanValue } from "@/values/value.ts";
+import { SorobanCodec, SorobanValue } from "@/values/value.ts";
 import { largeIntegerType, requireTag } from "@/values/scalars.ts";
 import { requireValue } from "@/values/error.ts";
 
@@ -13,11 +13,11 @@ export class SorobanContractInstance
     super(SorobanContractInstance.type, value);
   }
   /** Codec for the complete native contract-instance representation. */
-  static readonly type: SorobanType<
+  static readonly type: SorobanCodec<
     NativeContractInstance,
     NativeContractInstance,
     "contractInstance"
-  > = /* @__PURE__ */ new SorobanType(
+  > = /* @__PURE__ */ new SorobanCodec(
     "contractInstance",
     "contractInstance",
     (value) => {
@@ -43,8 +43,8 @@ export class SorobanLedgerKeyContractInstance
     super(SorobanLedgerKeyContractInstance.type, null);
   }
   /** Codec for the payload-free system key. */
-  static readonly type: SorobanType<null, null, "ledgerKeyContractInstance"> =
-    /* @__PURE__ */ new SorobanType(
+  static readonly type: SorobanCodec<null, null, "ledgerKeyContractInstance"> =
+    /* @__PURE__ */ new SorobanCodec(
       "ledgerKeyContractInstance",
       "ledgerKeyContractInstance",
       (value) => {
@@ -70,8 +70,8 @@ export class SorobanLedgerKeyNonce
     super(SorobanLedgerKeyNonce.type, value);
   }
   /** Codec for the complete nonce key. */
-  static readonly type: SorobanType<bigint, bigint, "ledgerKeyNonce"> =
-    /* @__PURE__ */ new SorobanType(
+  static readonly type: SorobanCodec<bigint, bigint, "ledgerKeyNonce"> =
+    /* @__PURE__ */ new SorobanCodec(
       "ledgerKeyNonce",
       "ledgerKeyNonce",
       (value) => {
@@ -95,11 +95,11 @@ export class SorobanExecutableTag
     super(SorobanExecutableTag.type, value);
   }
   /** Codec for a system executable tag. */
-  static readonly type: SorobanType<
+  static readonly type: SorobanCodec<
     string | Uint8Array,
     string | Uint8Array,
     "executableTag"
-  > = /* @__PURE__ */ new SorobanType(
+  > = /* @__PURE__ */ new SorobanCodec(
     "executableTag",
     "executableTag",
     (value) => {

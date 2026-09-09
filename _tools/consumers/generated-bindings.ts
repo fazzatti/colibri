@@ -61,7 +61,7 @@ await writeFile("generated-package/package.json", JSON.stringify(manifest, null,
     resolve(output, "smoke.mjs"),
     `
 import { PingClient, PingClientSpec, PingClientErrors, ContractMethods, Config, RbacStorage } from "./dist/mod.js";
-import { Contract, NetworkConfig, extractContractErrorMapFromSpec, SorobanSymbol, SorobanU32, SorobanValueError } from "@colibri/core";
+import { Contract, NetworkConfig, extractContractErrorMapFromSpec, SorobanType, SorobanValueError } from "@colibri/core";
 import { strict as assert } from "node:assert";
 const client = new PingClient({ networkConfig: NetworkConfig.TestNet(), contractConfig: { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" } });
 assert(client instanceof Contract);
@@ -70,10 +70,10 @@ assert.equal(ContractMethods.Ping, "ping");
 assert.deepEqual(PingClientErrors[1], { name: "Unavailable", category: "PingError", message: "Unavailable", details: "Try again later." });
 assert.deepEqual(extractContractErrorMapFromSpec(PingClientSpec), PingClientErrors);
 assert.equal(client.events.list().length, 0);
-const config = Config.from({ count: new SorobanU32(7), role: new SorobanSymbol("ADMIN") });
+const config = Config.from({ count: SorobanType.U32.from(7), role: SorobanType.Symbol.from("ADMIN") });
 assert.deepEqual(Config.fromScVal(config.toScVal()).value, { count: 7, role: "ADMIN" });
 assert.deepEqual(RbacStorage.ExistingRoles().value, { tag: "ExistingRoles" });
-assert.deepEqual(RbacStorage.RoleIndexToAccount(new SorobanSymbol("ADMIN"), 7).value, { tag: "RoleIndexToAccount", values: ["ADMIN", 7] });
+assert.deepEqual(RbacStorage.RoleIndexToAccount(SorobanType.Symbol.from("ADMIN"), 7).value, { tag: "RoleIndexToAccount", values: ["ADMIN", 7] });
 assert.throws(() => Config.from({ count: -1, role: "ADMIN" }), SorobanValueError);
 console.log("Generated npm package: ESM imports, declarations, custom factories, native SDK codec and Core identity passed.");
 `,
@@ -83,7 +83,7 @@ console.log("Generated npm package: ESM imports, declarations, custom factories,
     resolve(output, "consumer.ts"),
     `
 import { PingClient, ContractMethods, PingClientErrors, Config, RbacStorage } from "./dist/mod.js";
-import { SorobanSymbol, SorobanU32, type ContractErrorMap, type KnownContractErrorMap } from "@colibri/core";
+import { SorobanType, type ContractErrorMap, type KnownContractErrorMap } from "@colibri/core";
 declare const client: PingClient;
 const literal: Promise<null> = client.read({ method: "ping" });
 const member: Promise<null> = client.read({ method: ContractMethods.Ping });
@@ -91,10 +91,10 @@ const category: "PingError" = PingClientErrors[1].category;
 const manual: ContractErrorMap = { 7: { message: "Existing manual map" } };
 const previous: KnownContractErrorMap = manual;
 const current: ContractErrorMap = previous;
-const wrapped = Config.from({ count: new SorobanU32(7), role: "ADMIN" });
+const wrapped = Config.from({ count: SorobanType.U32.from(7), role: "ADMIN" });
 const decoded: Config = wrapped.value;
 const echo: Promise<Config> = client.read({ method: "echo", methodArgs: { config: wrapped } });
-const key: RbacStorage = RbacStorage.RoleIndexToAccount(new SorobanSymbol("ADMIN"), 7).value;
+const key: RbacStorage = RbacStorage.RoleIndexToAccount(SorobanType.Symbol.from("ADMIN"), 7).value;
 // @ts-expect-error Struct fields retain their native or wrapped scalar type.
 Config.from({ count: "wrong", role: "ADMIN" });
 // @ts-expect-error Union constructors require the declared tuple fields.

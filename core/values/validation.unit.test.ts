@@ -23,7 +23,7 @@ import {
 import { contractValType } from "@/values/generic.ts";
 import { createSorobanUnion } from "@/values/factories.ts";
 import { SorobanValueError } from "@/values/error.ts";
-import { SorobanType } from "@/values/value.ts";
+import { SorobanCodec } from "@/values/value.ts";
 import { union } from "colibri-internal/tests/soroban-values-fixtures.ts";
 
 describe("Soroban schema validation", () => {
@@ -111,7 +111,7 @@ describe("Soroban schema validation", () => {
       () => SorobanU32.type.fromXdr(new Uint8Array([1])),
       SorobanValueError,
     );
-    const bad = new SorobanType(
+    const bad = new SorobanCodec(
       "bad",
       "bad",
       () => xdr.ScVal.scvU32(-1),
