@@ -114,6 +114,7 @@ function validateOptions(
     !identifier(className) ||
     [
       "Contract",
+      "ColibriError",
       "Spec",
       "Result",
       "ContractEventRegistry",
@@ -166,7 +167,7 @@ function renderClient(
   const p = `${className}ABI`;
   return `${GENERATED_MARKER}
 /** Typed bindings. The ABI does not distinguish reads from writes. @module */
-import { Contract, createContractErrorMatcherPlugin, type ContractConstructorArgs, type ContractId, type ContractEventDefinition, type ContractEventRegistry, type KnownContractErrorMap } from "@colibri/core";
+import { Contract, ColibriError, createContractErrorMatcherPlugin, type ContractConstructorArgs, type ContractId, type ContractEventDefinition, type ContractEventRegistry, type KnownContractErrorMap } from "@colibri/core";
 import { Spec, type Result } from ${quote(sdk)};
 
 ${declarations}
@@ -224,7 +225,16 @@ export class ${className} extends Contract {
   /** Submits through Core's invoke pipeline and retains its raw returnValue and transaction metadata. */
   override async invoke<Method extends keyof ${p}Methods>(args: ${p}Call<Method> & ${p}Invocation): Promise<${p}InvocationResult<${p}Outputs[Method]>> {
     const result = await super.invoke(args);
-    return { ...result, value: result.returnValue === undefined ? undefined : this.getSpec().funcResToNative(args.method, result.returnValue) as ${p}Outputs[Method] };
+    let value: ${p}Outputs[Method] | undefined;
+    try {
+      value = result.returnValue === undefined ? undefined : this.getSpec().funcResToNative(args.method, result.returnValue) as ${p}Outputs[Method];
+    } catch (cause) {
+      // The transaction already succeeded. Retain its result; do not retry submission on a decode failure.
+      throw ColibriError.unexpected({ domain: "contract", source: "@colibri/contract-bindings/generated", code: ${
+    quote(Code.RESULT_DECODE_FAILED)
+  }, message: "Failed to decode contract result", details: "The transaction succeeded, but its return value does not match the embedded ABI. Inspect meta.data.result and regenerate the bindings if the ABI changed.", cause, meta: { data: { method: args.method, result } } });
+    }
+    return { ...result, value };
   }
 }
 `;

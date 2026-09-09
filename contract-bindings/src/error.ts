@@ -1,12 +1,14 @@
 import { ColibriError } from "@colibri/core";
 
-/** Stable generator and CLI failure codes. */
+/** Stable generator, CLI and generated-client failure codes. */
 export enum Code {
   INVALID_OPTIONS = "CBG_001",
   INVALID_SPEC = "CBG_002",
   SOURCE_FAILED = "CBG_003",
   OUTPUT_FAILED = "CBG_004",
   CANCELLED = "CBG_005",
+  /** A submitted transaction succeeded but its return value could not be decoded. */
+  RESULT_DECODE_FAILED = "CBG_006",
 }
 /** Generator error preserving its cause and actionable context. */
 export class BindingError extends ColibriError<Code, { cause?: unknown }> {

@@ -51,7 +51,7 @@ catalog.
 
 ## @colibri/contract-bindings
 
-- [contract-bindings](contract-bindings.md) — 5 codes.
+- [contract-bindings](contract-bindings.md) — 6 codes.
 
 ## @colibri/core
 

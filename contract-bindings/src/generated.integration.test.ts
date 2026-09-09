@@ -64,9 +64,9 @@ describe("generated consumer boundary", () => {
         `${directory}/consumer.ts`,
         `
 import { Token, type TokenABIInvocationResult } from "./bindings.ts";
-import { Contract, NetworkConfig, type InvokeContractOutput, Event, EventType } from "@colibri/core";
+import { Contract, ColibriError, NetworkConfig, type InvokeContractOutput, Event, EventType } from "@colibri/core";
 import { xdr, nativeToScVal } from "stellar-sdk";
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertRejects } from "@std/assert";
 const token = new Token({ networkConfig: NetworkConfig.TestNet(), contractConfig: { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" } });
 function types() {
   const base: Contract = token;
@@ -99,6 +99,10 @@ try {
   assertEquals(result.value, 42n);
   assertEquals(result.returnValue, raw.returnValue);
   assertEquals(result.hash, "abc");
+  Contract.prototype.invoke = async () => ({ ...raw, returnValue: xdr.ScVal.scvString("wrong ABI") });
+  const decodingError = await assertRejects(() => token.invoke({ method: "balance", methodArgs: { owner: "alice" }, config: { source: "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF", fee: "100", timeout: 10, signers: [] } }), ColibriError);
+  assertEquals(decodingError.code, "CBG_006");
+  assertEquals((decodingError.meta?.data as { result: {hash:string} }).result.hash, "abc");
   Contract.prototype.invoke = async () => ({ ...raw, returnValue: undefined });
   assertEquals((await token.invoke({ method: "ping", config: {source: "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF", fee:"100",timeout:10,signers:[]} })).value, undefined);
   const event = new Event({ id: "0000000042949672960-0000000001", type: EventType.Contract, ledger: 10, ledgerClosedAt: "2026-01-01T00:00:00Z", transactionIndex: 1, operationIndex: 0, inSuccessfulContractCall: true, txHash: "abc", contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM", topic: [xdr.ScVal.scvSymbol("transfer"), xdr.ScVal.scvSymbol("alice")], value: xdr.ScVal.scvMap([new xdr.ScMapEntry({key:xdr.ScVal.scvSymbol("amount"),val:raw.returnValue!})]) });
