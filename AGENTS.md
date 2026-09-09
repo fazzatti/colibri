@@ -433,6 +433,19 @@ errors, defaults, runtime support, or native Stellar SDK interoperability.
 - Current-major compatibility is required. Older-major backports or adapters
   need a separate user decision; do not introduce a standing LTS policy.
 
+### `contract-bindings/`
+
+Keep source and colocated tests grouped by responsibility:
+
+- `src/cli/`: argument parsing, prompts and CLI orchestration.
+- `src/generation/`: portable rendering, ABI type mapping and package scaffolds.
+- `src/source/`: spec loading from Wasm and network sources.
+- `src/output/`: filesystem writing and regeneration safeguards.
+- `src/types.ts` and `src/error.ts`: shared package contracts and errors.
+
+The package root `mod.ts` remains portable; `cli.ts` exposes the Deno-only CLI
+and writer. Generation must not import CLI, source loading or filesystem output.
+
 ### `core/`
 
 This is the package that defines most repo-wide architectural rules.

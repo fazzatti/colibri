@@ -7,7 +7,7 @@ import {
   buildContractInstanceLedgerKey,
   NetworkConfig,
 } from "@colibri/core";
-import { loadBindingSource } from "@/source.ts";
+import { loadBindingSource } from "@/source/load.ts";
 import { BindingError } from "@/error.ts";
 import {
   bindingSpec,

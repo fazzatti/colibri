@@ -1,12 +1,12 @@
-import { loadBindingSource } from "@/source.ts";
-import { generateBindings } from "@/generate.ts";
-import { writeBindings, type WriteBindingsResult } from "@/writer.ts";
+import { loadBindingSource } from "@/source/load.ts";
+import { generateBindings } from "@/generation/generate.ts";
+import { writeBindings, type WriteBindingsResult } from "@/output/write.ts";
 import {
   type CliIO,
   cliNetwork,
   parseCliArgs,
   resolveCliOptions,
-} from "@/cli-options.ts";
+} from "@/cli/options.ts";
 import type { BindingSource } from "@/types.ts";
 import { BindingError, Code } from "@/error.ts";
 export {
@@ -14,7 +14,7 @@ export {
   type CliIO,
   parseCliArgs,
   resolveCliOptions,
-} from "@/cli-options.ts";
+} from "@/cli/options.ts";
 
 /** CLI usage; the same flags work in interactive and automation modes. */
 export const CLI_HELP: string = `Colibri contract bindings

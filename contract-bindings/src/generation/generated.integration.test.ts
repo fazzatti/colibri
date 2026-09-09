@@ -1,12 +1,14 @@
 import { assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { extractContractSpec } from "@colibri/core";
-import { generateBindings } from "@/generate.ts";
-import { writeBindings } from "@/writer.ts";
+import { generateBindings } from "@/generation/generate.ts";
+import { writeBindings } from "@/output/write.ts";
 import { bindingSpec } from "colibri-internal/tests/binding-fixtures.ts";
 import { fileURLToPath } from "node:url";
 
-const rootConfig = fileURLToPath(new URL("../../deno.json", import.meta.url));
+const rootConfig = fileURLToPath(
+  new URL("../../../deno.json", import.meta.url),
+);
 async function deno(args: string[]): Promise<void> {
   const result = await new Deno.Command(Deno.execPath(), {
     args,

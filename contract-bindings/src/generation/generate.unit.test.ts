@@ -3,9 +3,9 @@ import { describe, it } from "@std/testing/bdd";
 import { xdr } from "stellar-sdk";
 import { Spec } from "stellar-sdk/contract";
 import { extractContractSpec } from "@colibri/core";
-import { generateBindings } from "@/generate.ts";
+import { generateBindings } from "@/generation/generate.ts";
 import { BindingError } from "@/error.ts";
-import { doc, identifier, TypeMap } from "@/type-map.ts";
+import { doc, identifier, TypeMap } from "@/generation/type-map.ts";
 import { bindingSpec } from "colibri-internal/tests/binding-fixtures.ts";
 
 describe("bindings rendering", () => {

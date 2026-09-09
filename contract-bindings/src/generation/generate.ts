@@ -6,8 +6,8 @@ import {
 import { Spec } from "stellar-sdk/contract";
 import type { GenerateBindingsOptions, GeneratedBindings } from "@/types.ts";
 import { BindingError, Code } from "@/error.ts";
-import { doc, identifier, quote, TypeMap } from "@/type-map.ts";
-import { packageScaffold } from "@/scaffold.ts";
+import { doc, identifier, quote, TypeMap } from "@/generation/type-map.ts";
+import { packageScaffold } from "@/generation/scaffold.ts";
 
 /** @internal Used by the writer to distinguish generated files from application code. */
 export const GENERATED_MARKER =

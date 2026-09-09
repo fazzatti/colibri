@@ -2,6 +2,6 @@
  * @module
  */
 export * from "@/types.ts";
-export * from "@/source.ts";
-export * from "@/generate.ts";
+export * from "@/source/load.ts";
+export * from "@/generation/generate.ts";
 export { BINDING_ERRORS, BindingError } from "@/error.ts";

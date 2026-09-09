@@ -9,10 +9,10 @@ import {
   type TransactionConfig,
 } from "@colibri/core";
 import { StellarTestLedger } from "@colibri/test-tooling";
-import { runCli } from "@/cli.ts";
-import { loadBindingSource } from "@/source.ts";
-import { generateBindings } from "@/generate.ts";
-import { writeBindings } from "@/writer.ts";
+import { runCli } from "@/cli/run.ts";
+import { loadBindingSource } from "@/source/load.ts";
+import { generateBindings } from "@/generation/generate.ts";
+import { writeBindings } from "@/output/write.ts";
 import { pathToFileURL } from "node:url";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 

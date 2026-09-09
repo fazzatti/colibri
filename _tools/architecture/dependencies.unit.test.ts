@@ -31,11 +31,11 @@ describe("dependency direction", () => {
     await assertRule(
       projectFiles(`${CONFIG_DIRECTORY}/contract-bindings.json`)
         .inPath(
-          "../../../contract-bindings/src/{generate,type-map,scaffold,types,error}.ts",
+          "../../../contract-bindings/src/{generation/**/*.ts,types.ts,error.ts}",
         )
         .shouldNot().dependOnFiles()
         .inPath(
-          "../../../contract-bindings/src/{cli,cli-options,writer,source}.ts",
+          "../../../contract-bindings/src/{cli,output,source}/**/*.ts",
         ),
       "Portable binding rendering must not depend on I/O adapters",
     );

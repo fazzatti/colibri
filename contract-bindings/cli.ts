@@ -1,10 +1,10 @@
 /** Interactive and flag-driven Deno CLI, plus injectable prompt and writer APIs.
  * @module
  */
-export * from "@/cli.ts";
-export * from "@/writer.ts";
+export * from "@/cli/run.ts";
+export * from "@/output/write.ts";
 export type { GeneratedBindings } from "@/types.ts";
-import { runCli } from "@/cli.ts";
+import { runCli } from "@/cli/run.ts";
 if (import.meta.main) {
   try {
     await runCli(Deno.args);
