@@ -152,7 +152,6 @@ try {
     });
     const plan = generateBindings(loaded.spec, {
       className: "Demo",
-      provenance: loaded.provenance,
     });
     assertEquals(plan.warnings, []);
     assertEquals(loaded.spec.events().map((event) => event.name.toString()), [

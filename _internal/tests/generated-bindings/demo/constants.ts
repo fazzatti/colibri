@@ -37,10 +37,3 @@ export const DemoErrors: KnownContractErrorMap = {
     "details": "The counter cannot exceed 100.",
   },
 };
-
-/** Source identity captured during generation. */
-export const DemoProvenance = {
-  "kind": "wasm",
-  "wasmHash":
-    "13a4c2de0e52b07130a95f1562a9a67e9263b519de4c908cd6bcc738e23992a6",
-} as const;

@@ -9,6 +9,8 @@ import {
 } from "@/cli/options.ts";
 import type { BindingSource } from "@/types.ts";
 import { BindingError, Code } from "@/error.ts";
+import { createTerminalIO } from "@/cli/terminal.ts";
+import { defaultClassName } from "@/cli/naming.ts";
 export {
   type CliFlags,
   type CliIO,
@@ -26,13 +28,15 @@ Network sources: --network testnet|futurenet|mainnet|custom
   --network-passphrase TEXT     Required for custom networks
   --allow-http                  Explicitly allow HTTP RPC
 Output: --output files|package --target jsr|npm --out DIRECTORY
-  --class-name NAME             Default: ContractClient
+  --class-name NAME             Override the filename-derived class (remote: ContractClient)
+  --include-provenance          Include source identity in constants.ts (off by default)
   --package-name @scope/name    Required with --output package
   --non-interactive             Never prompt; fail for missing required flags
   --force                       Replace marked generated files; preserve scaffold
   --help                        Show this guide
 
-No flags: interactive wizard in a terminal. Partial flags: ask for missing choices.
+No flags: use arrow keys and Enter to select choices, then type or paste inputs.
+Partial flags: ask only for missing choices. Ctrl+C or Ctrl+D cancels the wizard.
 Full flags: suitable for automation. A local Wasm source needs no network access.
 Generation never deploys a contract or submits a transaction.`;
 
@@ -41,12 +45,7 @@ export async function runCli(
   args: readonly string[],
   io?: CliIO,
 ): Promise<WriteBindingsResult | undefined> {
-  const terminal = io ??
-    {
-      interactive: Deno.stdin.isTerminal(),
-      prompt: (message: string) => prompt(message),
-      log: (message: string) => console.log(message),
-    };
+  const terminal = io ?? createTerminalIO();
   const parsed = parseCliArgs(args);
   if (parsed.help) {
     terminal.log(CLI_HELP);
@@ -78,12 +77,14 @@ export async function runCli(
       : { kind: "hash", wasmHash: flags["wasm-hash"] as string, networkConfig };
   }
   const loaded = await loadBindingSource(source);
+  const className = flags["class-name"] as string | undefined ??
+    defaultClassName(flags.wasm as string | undefined);
   const plan = generateBindings(loaded.spec, {
-    className: flags["class-name"] as string,
+    className,
     output: flags.output as "files" | "package",
     target: flags.target as "jsr" | "npm",
     packageName: flags["package-name"] as string | undefined,
-    provenance: loaded.provenance,
+    provenance: flags["include-provenance"] ? loaded.provenance : undefined,
   });
   for (const warning of plan.warnings) terminal.log(warning);
   const result = await writeBindings(plan, {
@@ -91,7 +92,7 @@ export async function runCli(
     force: flags.force === true,
   });
   terminal.log(
-    `Generated ${result.written.length} files in ${flags.out}; preserved ${result.preserved.length} existing scaffold files.`,
+    `Generated ${className} in ${flags.out} (${result.written.length} files); preserved ${result.preserved.length} existing scaffold files.`,
   );
   return result;
 }

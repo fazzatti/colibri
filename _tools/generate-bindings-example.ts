@@ -12,7 +12,6 @@ const loaded = await loadBindingSource({
 });
 const plan = generateBindings(loaded.spec, {
   className: "Demo",
-  provenance: loaded.provenance,
 });
 const directory = "_internal/tests/generated-bindings/demo";
 await Deno.mkdir(directory, { recursive: true });

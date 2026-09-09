@@ -6,7 +6,16 @@ export type CliIO = {
   /** Whether missing values may be requested. */
   interactive: boolean;
   /** Returns the answer, or null to cancel. */
-  prompt(message: string): string | null | Promise<string | null>;
+  prompt(
+    message: string,
+    defaultValue?: string,
+  ): string | null | Promise<string | null>;
+  /** Selects a labeled option. Prompt-only adapters may omit this callback. */
+  select?(
+    message: string,
+    options: readonly { name: string; value: string }[],
+    defaultValue?: string,
+  ): string | null | Promise<string | null>;
   /** Displays progress and warnings. */
   log(message: string): void;
 };
@@ -25,7 +34,13 @@ const VALUE_FLAGS = new Set([
   "class-name",
   "out",
 ]);
-const SWITCHES = new Set(["help", "force", "non-interactive", "allow-http"]);
+const SWITCHES = new Set([
+  "help",
+  "force",
+  "non-interactive",
+  "allow-http",
+  "include-provenance",
+]);
 /** Parses flags without I/O; rejects typos, duplicate options and ambiguous sources. */
 export function parseCliArgs(args: readonly string[]): CliFlags {
   const flags: CliFlags = {};
@@ -82,7 +97,7 @@ async function answer(
       `Missing --${key}; use interactive mode or supply this flag`,
     );
   }
-  const value = await io.prompt(message + (fallback ? ` [${fallback}]` : ""));
+  const value = await io.prompt(message, fallback);
   if (value === null) {
     throw new BindingError(Code.CANCELLED, "Generation cancelled");
   }
@@ -95,6 +110,48 @@ async function answer(
   }
   return flags[key] = resolved;
 }
+
+async function choose(
+  flags: CliFlags,
+  key: string,
+  message: string,
+  options: readonly { name: string; value: string }[],
+  io: CliIO,
+  fallback?: string,
+): Promise<string> {
+  const value = await answer(flags, key, message, {
+    ...io,
+    prompt: () =>
+      io.select ? io.select(message, options, fallback) : io.prompt(
+        `${message} (${options.map((option) => option.value).join(" / ")})`,
+        fallback,
+      ),
+  }, fallback);
+  if (!options.some((option) => option.value === value)) {
+    throw new BindingError(
+      Code.INVALID_OPTIONS,
+      `Choose --${key} ${options.map((option) => option.value).join("|")}`,
+    );
+  }
+  return value;
+}
+
+const SOURCES = [
+  { name: "WASM file", value: "wasm" },
+  { name: "Contract ID", value: "contract-id" },
+  { name: "WASM hash", value: "wasm-hash" },
+];
+const SOURCE_INPUTS: Readonly<Record<string, string>> = {
+  wasm: "Input the path to the WASM file",
+  "contract-id": "Input the contract ID",
+  "wasm-hash": "Input the WASM hash",
+};
+const NETWORKS = [
+  { name: "Mainnet", value: "mainnet" },
+  { name: "Testnet", value: "testnet" },
+  { name: "Futurenet", value: "futurenet" },
+  { name: "Custom — provide an RPC URL and passphrase", value: "custom" },
+];
 /** Resolves missing CLI choices, preserving every explicit flag. */
 export async function resolveCliOptions(
   flags: CliFlags,
@@ -102,64 +159,69 @@ export async function resolveCliOptions(
 ): Promise<CliFlags> {
   flags = { ...flags };
   if (!["wasm", "wasm-hash", "contract-id"].some((key) => flags[key])) {
-    const kind = await answer(
+    const kind = await choose(
       flags,
       "source",
-      "Source (wasm / wasm-hash / contract-id)",
+      "Select the contract source",
+      SOURCES,
       io,
     );
-    if (!["wasm", "wasm-hash", "contract-id"].includes(kind)) {
-      throw new BindingError(
-        Code.INVALID_OPTIONS,
-        "Choose wasm, wasm-hash or contract-id",
-      );
-    }
-    await answer(flags, kind, kind === "wasm" ? "Wasm file path" : kind, io);
+    await answer(flags, kind, SOURCE_INPUTS[kind], io);
   }
   if (!flags.wasm) {
-    await answer(
+    await choose(
       flags,
       "network",
-      "Network (testnet / futurenet / mainnet / custom)",
+      "Select the network",
+      NETWORKS,
       io,
     );
     if (flags.network === "custom") {
-      await answer(flags, "rpc-url", "RPC URL", io);
-      await answer(flags, "network-passphrase", "Network passphrase", io);
+      await answer(flags, "rpc-url", "Input the RPC URL", io);
+      await answer(
+        flags,
+        "network-passphrase",
+        "Input the network passphrase",
+        io,
+      );
     }
   }
-  const output = await answer(
+  const output = await choose(
     flags,
     "output",
-    "Output (files / package)",
+    "Select the output",
+    [
+      { name: "Files — add bindings to an existing project", value: "files" },
+      { name: "Package — create a standalone package", value: "package" },
+    ],
     io,
     "files",
   );
-  const target = await answer(
+  await choose(
     flags,
     "target",
-    "Import/package preset (jsr / npm)",
+    "Select the import and package preset",
+    [
+      { name: "JSR", value: "jsr" },
+      { name: "npm", value: "npm" },
+    ],
     io,
     "jsr",
   );
-  if (
-    !["files", "package"].includes(output) || !["jsr", "npm"].includes(target)
-  ) {
-    throw new BindingError(
-      Code.INVALID_OPTIONS,
-      "Expected --output files|package and --target jsr|npm",
-    );
-  }
   if (output === "package") {
-    await answer(flags, "package-name", "Package name", io);
+    await answer(
+      flags,
+      "package-name",
+      "Input the package name (for example, @example/token)",
+      io,
+    );
   } else if (flags["package-name"]) {
     throw new BindingError(
       Code.INVALID_OPTIONS,
       "--package-name requires --output package",
     );
   }
-  await answer(flags, "class-name", "Client class name", io, "ContractClient");
-  await answer(flags, "out", "Output directory", io, "./bindings");
+  await answer(flags, "out", "Input the output directory", io, "./bindings");
   return flags;
 }
 /** @internal Resolves a selected preset with explicit endpoint overrides. */

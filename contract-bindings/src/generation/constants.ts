@@ -40,10 +40,12 @@ ${spec.entries.map((entry) => `  ${quote(entry.toXdr("base64"))},`).join("\n")}
 export const ${className}Errors: KnownContractErrorMap = ${
     literal(extractContractErrorMapFromSpec(spec))
   };
-
-/** Source identity captured during generation. */
-export const ${className}Provenance = ${
-    literal(options.provenance ?? { kind: "spec" })
-  } as const;
-`;
+${
+    options.provenance
+      ? `
+/** Source identity captured during generation; included by request. */
+export const ${className}Provenance = ${literal(options.provenance)} as const;
+`
+      : ""
+  }`;
 }

@@ -26,7 +26,6 @@ export function generateBindings(
         "Methods",
         "Spec",
         "Errors",
-        "Provenance",
         "MethodMap",
         "Inputs",
         "Outputs",
@@ -39,6 +38,7 @@ export function generateBindings(
     ) {
       model.claim(className + suffix);
     }
+    if (options.provenance) model.claim(`${className}Provenance`);
     const methods = renderMethods(spec, model, className);
     const events = renderEvents(spec, model, className);
     const sdk = options.target === "npm"

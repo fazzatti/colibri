@@ -8,7 +8,7 @@ contract's specification. The client extends `Contract` and provides typed
 
 | File | Contents |
 | --- | --- |
-| [constants.ts](constants.ts) | Method names, embedded spec, error messages, and source identity. |
+| [constants.ts](constants.ts) | Method names, embedded spec, and error messages. |
 | [types.ts](types.ts) | Contract types, named function inputs and outputs, method maps, and events. |
 | [index.ts](index.ts) | Client class and exports for the generated API. |
 
@@ -157,5 +157,4 @@ To refresh this guide, remove it explicitly before regenerating.
 
 The embedded spec is a snapshot. Regenerate after an ABI change; loading a
 different spec into this typed client invalidates its type guarantees.
-`DemoProvenance` records the source available at generation time.
 Generation itself never submits transactions.

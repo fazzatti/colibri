@@ -12,11 +12,12 @@ Install Deno, then run the interactive wizard:
 deno run --allow-read --allow-write --allow-net jsr:@colibri/contract-bindings/cli
 ```
 
-Choose a local Wasm file, a deployed contract ID, or a Wasm hash. Network
-sources require a network selection; `custom` also requires an RPC URL and
-passphrase. The generator fetches through Core and records the resolved code
-hash. It does not submit transactions. SACs have no downloadable Wasm and cannot
-use these network source modes.
+Use **↑ / ↓** and **Enter** to select a WASM file, contract ID, or WASM hash,
+then paste the value into its labeled prompt. Network sources offer **Mainnet**,
+**Testnet**, **Futurenet**, and **Custom**. Custom asks for both an RPC URL and
+a network passphrase. Output and JSR/npm presets also use menus. The generator
+fetches through Core. It does not submit transactions. SACs have no downloadable
+Wasm and cannot use these network source modes.
 
 For automation, provide flags and disable prompts:
 
@@ -34,7 +35,18 @@ plain HTTP requires `--allow-http`. Local Wasm parsing requires no network
 access after caching dependencies. `--help` describes every flag.
 
 Partial commands prompt only for missing choices in a terminal. In automation,
-missing required flags are errors. Canceling a prompt makes no output changes.
+missing required flags are errors. **Ctrl+C** or **Ctrl+D** cancels a prompt
+without writing output files.
+
+There is no class-name question: local `my_token.wasm` becomes `MyToken`.
+Soroban specs have no contract-name field, so remote sources use
+`ContractClient`, as do filenames that cannot form a valid client name. Use
+`--class-name Token` to override the default.
+
+Provenance is omitted by default. Add `--include-provenance` to emit a
+`TokenProvenance` constant (when the class is `Token`) containing available
+source identity and RPC observations. In the programmatic API, passing
+`provenance: loaded.provenance` explicitly enables the same output.
 
 ## Use files, JSR, or npm
 

@@ -10,7 +10,9 @@ or npm**, independently of the runtime used to run the generator.
 
 ## CLI
 
-Start the wizard in a terminal:
+Start the wizard in a terminal. Move the cursor with **↑ / ↓** and press
+**Enter** to select an option. Type or paste identifiers, paths, and URLs when
+prompted; **Ctrl+C** or **Ctrl+D** cancels before any files are written:
 
 ```sh
 deno run --allow-read --allow-write --allow-net jsr:@colibri/contract-bindings/cli
@@ -21,7 +23,7 @@ installing/caching the tool's dependencies:
 
 ```sh
 deno run --allow-read --allow-write jsr:@colibri/contract-bindings/cli \
-  --wasm ./token.wasm --class-name Token --out ./token-client \
+  --wasm ./token.wasm --out ./token-client \
   --output package --target jsr --package-name @example/token \
   --non-interactive
 ```
@@ -37,6 +39,27 @@ No flags start the wizard; partial flags preserve supplied answers and ask for
 missing choices. A complete command needs no prompts. `--non-interactive` always
 disables prompting. Nonterminal runs fail on missing required values. `--help`
 lists every flag.
+
+The source menu offers **WASM file**, **Contract ID**, and **WASM hash**. After
+selection, the next prompt explicitly names the value to enter. The network menu
+offers **Mainnet**, **Testnet**, **Futurenet**, and **Custom**; Custom asks for
+both the RPC URL and network passphrase. Output and JSR/npm presets also use
+menus. Supplied flags skip their corresponding questions.
+
+The wizard does not ask for a class name. Soroban specs contain names for ABI
+members, but no contract name. For a local file, the CLI uses its filename in
+PascalCase (`my_token.wasm` → `MyToken`). Remote sources and filenames that
+cannot form a valid client name use `ContractClient`. Override either with
+`--class-name Token`; the completion message shows the chosen class name.
+
+Source provenance is **omitted by default**. Add `--include-provenance` when you
+want a `TokenProvenance` export (for a `Token` class) in `constants.ts`,
+including the available contract ID, resolved WASM hash, and RPC observations:
+
+```sh
+deno run --allow-read --allow-write jsr:@colibri/contract-bindings/cli \
+  --wasm ./token.wasm --out ./token-client --include-provenance --non-interactive
+```
 
 ## Files or packages
 
@@ -178,16 +201,17 @@ console.log(plan.files["index.ts"]);
 
 `loadBindingSource` accepts `{ kind: "wasm", wasm }`, `{ kind: "spec", spec }`,
 `{ kind: "contract", contractId, networkConfig, rpc? }`, or
-`{ kind: "hash", wasmHash, networkConfig, rpc? }`. Pass its `provenance` to
-`generateBindings`. The Deno-only `/cli` subpath exports `writeBindings`,
+`{ kind: "hash", wasmHash, networkConfig, rpc? }`. To include source identity,
+explicitly pass its `provenance` to `generateBindings`; otherwise no provenance
+export is emitted. The Deno-only `/cli` subpath exports `writeBindings`,
 `runCli`, and injectable prompt interfaces. The root renderer performs no
 filesystem access and can be used in Node or browser tooling.
 
 Generated specs are snapshots. Regenerate after an ABI change; loading another
 spec into a generated class invalidates its type guarantees. Source provenance
-records the exact resolved Wasm hash and separate RPC observations, not an
-atomic network snapshot. RPC URLs and credentials are not embedded in generated
-code.
+when requested records the exact resolved Wasm hash and separate RPC
+observations, not an atomic network snapshot. RPC URLs and credentials are not
+embedded in generated code.
 
 See the [API reference](https://jsr.io/@colibri/contract-bindings/doc).
 

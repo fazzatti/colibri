@@ -21,7 +21,6 @@ describe("bindings rendering", () => {
         "TokenInputs",
         "TokenOutputs",
         "TokenErrors",
-        "TokenProvenance",
         "TokenEvents",
         "readonly Transfer",
         "override async read",
@@ -33,6 +32,28 @@ describe("bindings rendering", () => {
     ) assert(source.includes(text), text);
     assert(!source.includes("async balance("));
     assertEquals(plan.warnings, []);
+  });
+  it("omits provenance unless explicitly provided, in files and packages", () => {
+    for (const output of ["files", "package"] as const) {
+      const options = {
+        className: "Token",
+        output,
+        packageName: "@example/token",
+      };
+      const lean = generateBindings(bindingSpec(), options);
+      assert(!JSON.stringify(lean).includes("TokenProvenance"));
+      assert(!lean.scaffold["README.md"].includes("source identity"));
+      const full = generateBindings(bindingSpec(), {
+        ...options,
+        provenance: { kind: "wasm", wasmHash: "ab".repeat(32) },
+      });
+      const constants = full.files[
+        output === "package" ? "generated/constants.ts" : "constants.ts"
+      ];
+      assert(constants.includes("TokenProvenance"));
+      assert(constants.includes("ab".repeat(32)));
+      assert(full.scaffold["README.md"].includes("TokenProvenance"));
+    }
   });
   it("renders registry presets and preserves scaffold as a distinct output category", () => {
     for (const target of ["npm", "jsr"] as const) {

@@ -41,7 +41,7 @@ export type GenerateBindingsOptions = {
   target?: "jsr" | "npm";
   /** Required for packages. JSR names must be scoped. */
   packageName?: string;
-  /** Optional source identity included in generated metadata. */
+  /** Opt in to source identity in constants.ts and its guide; omitted by default. */
   provenance?: BindingProvenance;
 };
 /** A deterministic output plan. Rendering never writes files or accesses the network. */

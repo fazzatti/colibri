@@ -39527,6 +39527,119 @@
                         "repr": "string",
                         "value": "string"
                       }
+                    },
+                    {
+                      "kind": "identifier",
+                      "name": "defaultValue",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      },
+                      {
+                        "kind": "keyword",
+                        "repr": "null",
+                        "value": "null"
+                      },
+                      {
+                        "kind": "typeRef",
+                        "repr": "Promise",
+                        "value": {
+                          "typeName": "Promise",
+                          "typeParams": [
+                            {
+                              "kind": "union",
+                              "value": [
+                                {
+                                  "kind": "keyword",
+                                  "repr": "string",
+                                  "value": "string"
+                                },
+                                {
+                                  "kind": "keyword",
+                                  "repr": "null",
+                                  "value": "null"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "method",
+                  "name": "select",
+                  "optional": true,
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "message",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    },
+                    {
+                      "kind": "identifier",
+                      "name": "options",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "typeOperator",
+                        "value": {
+                          "operator": "readonly",
+                          "tsType": {
+                            "kind": "array",
+                            "value": {
+                              "kind": "typeLiteral",
+                              "value": {
+                                "properties": [
+                                  {
+                                    "name": "name",
+                                    "tsType": {
+                                      "kind": "keyword",
+                                      "repr": "string",
+                                      "value": "string"
+                                    }
+                                  },
+                                  {
+                                    "name": "value",
+                                    "tsType": {
+                                      "kind": "keyword",
+                                      "repr": "string",
+                                      "value": "string"
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "kind": "identifier",
+                      "name": "defaultValue",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
                     }
                   ],
                   "returnType": {

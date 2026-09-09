@@ -73,6 +73,25 @@ payload and indexed topic types from \`types.ts\`.
 `
     : "This spec contains no event declarations. The contract may still emit events,\nbut this client cannot infer their field types.\n";
 }
+function fileGuide(options: GenerateBindingsOptions): string {
+  const packaged = options.output === "package";
+  const prefix = packaged ? "generated/" : "";
+  return `## Files
+
+| File | Contents |
+| --- | --- |
+| [constants.ts](${prefix}constants.ts) | Method names, embedded spec, and error messages${
+    options.provenance ? "; also source identity" : ""
+  }. |
+| [types.ts](${prefix}types.ts) | Contract types, named function inputs and outputs, method maps, and events. |
+| [index.ts](${prefix}index.ts) | Client class and exports for the generated API. |
+${
+    packaged
+      ? "\n`mod.ts` is the package entrypoint. Keep application setup and custom exports\nthere or in separate files; regeneration preserves the scaffold.\n"
+      : ""
+  }
+`;
+}
 /** @internal A contract-specific guide with setup, concrete calls and readable reference tables. */
 export function renderGuide(
   options: GenerateBindingsOptions,
@@ -81,7 +100,6 @@ export function renderGuide(
 ): string {
   const packaged = options.output === "package";
   const npm = options.target === "npm";
-  const prefix = packaged ? "generated/" : "";
   const entry = packaged ? "./mod.ts" : "./index.ts";
   const methods = spec.funcs().filter((method) =>
     !method.name.toString().startsWith("__")
@@ -144,19 +162,7 @@ Typed [Colibri](https://jsr.io/@colibri/core) bindings generated from this
 contract's specification. The client extends \`Contract\` and provides typed
 \`read()\` and \`invoke()\` calls for the functions listed below.
 
-## Files
-
-| File | Contents |
-| --- | --- |
-| [constants.ts](${prefix}constants.ts) | Method names, embedded spec, error messages, and source identity. |
-| [types.ts](${prefix}types.ts) | Contract types, named function inputs and outputs, method maps, and events. |
-| [index.ts](${prefix}index.ts) | Client class and exports for the generated API. |
-${
-    packaged
-      ? "\n`mod.ts` is the package entrypoint. Keep application setup and custom exports\nthere or in separate files; regeneration preserves the scaffold.\n"
-      : ""
-  }
-## Setup
+${fileGuide(options)}## Setup
 
 ${setup}
 
@@ -282,7 +288,10 @@ To refresh this guide, remove it explicitly before regenerating.
 
 The embedded spec is a snapshot. Regenerate after an ABI change; loading a
 different spec into this typed client invalidates its type guarantees.
-\`${name}Provenance\` records the source available at generation time.
-Generation itself never submits transactions.
+${
+    options.provenance
+      ? `\`${name}Provenance\` records the source available at generation time.\n`
+      : ""
+  }Generation itself never submits transactions.
 `;
 }
