@@ -8,6 +8,7 @@ import { colibriDependencies, runtimeImports } from "../releases/repository.ts";
 import {
   command,
   copyRuntime,
+  denoOnlyEntrypoints,
   dockerPackages,
   fixtureRoot,
   prepareSource,
@@ -101,7 +102,11 @@ export async function prepareArtifacts(
       await build({
         cwd: source,
         importMap: resolve(source, "imports.json"),
-        entryPoints: Object.entries(pkg.exports).map(([name, path]) => ({
+        entryPoints: Object.entries(pkg.exports).filter(([name]) =>
+          !denoOnlyEntrypoints.has(
+            `${pkg.name}${name === "." ? "" : name.slice(1)}`,
+          )
+        ).map(([name, path]) => ({
           name,
           path: resolve(source, pkg.root, path),
         })),

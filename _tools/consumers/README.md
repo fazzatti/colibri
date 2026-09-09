@@ -87,3 +87,10 @@ Build Verification and Test Tooling remain Deno/Docker packages for this support
 policy. All their public entrypoints are type-checked; normal integration suites
 validate Docker/network execution. Browser-capable classification is explicit in
 `environment.ts`, not inferred from a successful Deno type check.
+
+Contract Bindings adds a portable renderer and a Deno-only `/cli` subpath. The
+CLI is checked in the Deno source lane and excluded from npm artifacts. Node
+lanes also generate an npm client package, install dependencies, compile
+ESM/declarations, execute a native SDK/Core identity check, and pack it. Until
+Core 1.1 is published, that generated package substitutes the pre-publication
+Core test tarball for the otherwise unchanged JSR npm alias.

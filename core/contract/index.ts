@@ -1,3 +1,4 @@
+import { ContractEventRegistry } from "@/contract/events/index.ts";
 import {
   Address,
   Contract as StellarContract,
@@ -79,6 +80,7 @@ import type {
 } from "@/contract/metadata/types.ts";
 
 export * from "@/contract/interface/index.ts";
+export * from "@/contract/events/index.ts";
 export * from "@/contract/metadata/index.ts";
 
 type PipelinePluginIdentity = {
@@ -116,6 +118,32 @@ export class Contract {
   /** @internal */
   protected externalRef?: ExternalExecutableRef;
   private loadedSnapshot?: LoadedContractSnapshot;
+  private eventRegistry?: ContractEventRegistry;
+  private eventSpec?: Spec;
+
+  /** Declared events from the loaded spec. Does not fetch; load a spec first. */
+  public get events(): ContractEventRegistry {
+    const spec = this.getSpec();
+    if (
+      !this.eventRegistry || this.eventSpec !== spec ||
+      this.eventRegistry.contractId !== this.contractId
+    ) {
+      this.eventRegistry = new ContractEventRegistry(spec, {
+        contractId: this.contractId,
+      });
+      this.eventSpec = spec;
+    }
+    return this.eventRegistry;
+  }
+
+  /** Loads the spec if necessary, then returns its declared event registry. */
+  public async loadContractEventsFromWasm(): Promise<ContractEventRegistry> {
+    if (!this.spec) {
+      if (this.wasm) await this.loadSpecFromWasm();
+      else await this.loadSpecFromNetwork();
+    }
+    return this.events;
+  }
 
   /**
    * Creates a contract client bound to the provided network and contract configuration.

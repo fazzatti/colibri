@@ -25,6 +25,7 @@
     - [Reading and invoking](core/contract/invocation.md)
     - [Deployment and spec loading](core/contract/deployment.md)
     - [Metadata, claims, and interfaces](core/contract/metadata-and-interfaces.md)
+    - [Spec-aware events](core/contract/events.md)
     - [Plugins and contract errors](core/contract/plugins.md)
   - [Ledger Entries](core/ledger-entries.md)
     - [Reading current state](core/ledger-entries/reading.md)
@@ -153,6 +154,7 @@
   - [build-verification/processes/select-build-artifact](reference/errors/build-verification-processes-select-build-artifact.md)
   - [build-verification/processes/compare-contract-wasm](reference/errors/build-verification-processes-compare-contract-wasm.md)
   - [build-verification/cli](reference/errors/build-verification-cli.md)
+  - [contract-bindings](reference/errors/contract-bindings.md)
   - [core/account/native](reference/errors/core-account-native.md)
   - [core/address/muxed-to-base-account](reference/errors/core-address-muxed-to-base-account.md)
   - [core/asset/native/amount](reference/errors/core-asset-native-amount.md)
@@ -171,6 +173,7 @@
   - [core/common/helpers/transaction](reference/errors/core-common-helpers-transaction.md)
   - [core/common/helpers/xdr](reference/errors/core-common-helpers-xdr.md)
   - [core/contract](reference/errors/core-contract.md)
+  - [core/contract/events](reference/errors/core-contract-events.md)
   - [core/event](reference/errors/core-event.md)
   - [core/event/event-filter](reference/errors/core-event-event-filter.md)
   - [core/event/event-id](reference/errors/core-event-event-id.md)
@@ -219,3 +222,5 @@
 ## Examples
 
 - [Examples Repository](https://github.com/fazzatti/colibri-examples)
+
+- [Contract bindings](packages/contract-bindings.md)

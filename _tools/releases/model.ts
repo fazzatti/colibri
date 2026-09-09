@@ -9,7 +9,8 @@ import {
 
 export type Bump = "patch" | "minor" | "major";
 export type ReleaseIntent = {
-  bump: Bump;
+  bump: Bump | "initial";
+  initialVersion?: string;
   reason: string;
   apiReview?: string;
   dependencies?: Record<string, string>;
@@ -23,7 +24,7 @@ export type PackageState = {
   name: string;
   root: string;
   version: string;
-  previousVersion: string;
+  previousVersion: string | null;
   dependencies: Record<string, string>;
   changed: boolean;
 };
@@ -47,12 +48,21 @@ export function readPlan(text: string): ReleasePlan {
   for (const [name, value] of Object.entries(plan.packages)) {
     const intent = value as ReleaseIntent;
     if (
-      !intent || !["patch", "minor", "major"].includes(intent.bump) ||
+      !intent ||
+      !["patch", "minor", "major", "initial"].includes(intent.bump) ||
       typeof intent.reason !== "string" || !intent.reason.trim()
     ) {
       throw new Error(
         `RELEASE_INVALID_INTENT: ${name} needs a reviewed bump and reason`,
       );
+    }
+    if (intent.bump === "initial") {
+      if (
+        !intent.initialVersion ||
+        format(parse(intent.initialVersion)) !== intent.initialVersion
+      ) throw new Error(`RELEASE_INVALID_INITIAL_VERSION: ${name}`);
+    } else if (intent.initialVersion !== undefined) {
+      throw new Error(`RELEASE_UNEXPECTED_INITIAL_VERSION: ${name}`);
     }
     if (
       intent.apiReview !== undefined &&
@@ -94,9 +104,18 @@ export function planReleases(
         `RELEASE_MISSING_INTENT: published changes in ${pkg.name}`,
       );
     }
-    const targetVersion = intent
-      ? format(increment(parse(pkg.previousVersion), intent.bump))
-      : pkg.previousVersion;
+    if (
+      pkg.previousVersion === null &&
+      (intent?.bump !== "initial" || !intent.initialVersion)
+    ) throw new Error(`RELEASE_INITIAL_INTENT_REQUIRED: ${pkg.name}`);
+    if (pkg.previousVersion !== null && intent?.bump === "initial") {
+      throw new Error(`RELEASE_ALREADY_PUBLISHED: ${pkg.name}`);
+    }
+    const targetVersion = intent?.bump === "initial"
+      ? intent.initialVersion!
+      : intent
+      ? format(increment(parse(pkg.previousVersion!), intent.bump))
+      : pkg.previousVersion!;
     for (const dependency of Object.keys(intent?.dependencies ?? {})) {
       if (!(dependency in pkg.dependencies)) {
         throw new Error(

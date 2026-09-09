@@ -1,0 +1,154 @@
+# Generate a Colibri contract client
+
+`@colibri/contract-bindings` turns a Soroban contract spec into a `Contract`
+subclass with typed `read` and `invoke`, embedded spec entries, a Colibri error
+map, and typed event definitions. Its initial 0.1 release requires Core 1.1.
+
+## Choose a source and output
+
+Install Deno, then run the interactive wizard:
+
+```sh
+deno run --allow-read --allow-write --allow-net jsr:@colibri/contract-bindings/cli
+```
+
+Choose a local Wasm file, a deployed contract ID, or a Wasm hash. Network
+sources require a network selection; `custom` also requires an RPC URL and
+passphrase. The generator fetches through Core and records the resolved code
+hash. It does not submit transactions. SACs have no downloadable Wasm and cannot
+use these network source modes.
+
+For automation, provide flags and disable prompts:
+
+```sh
+deno run --allow-read --allow-write --allow-net jsr:@colibri/contract-bindings/cli \
+  --wasm ./contract.wasm --class-name Token \
+  --output package --target jsr --package-name @example/token \
+  --out ./token-client --non-interactive
+```
+
+Use `--contract-id C... --network testnet` or
+`--wasm-hash HEX_HASH --network testnet` instead of `--wasm`. Optional
+`--rpc-url` overrides the preset. Custom networks need `--network-passphrase`;
+plain HTTP requires `--allow-http`. Local Wasm parsing requires no network
+access after caching dependencies. `--help` describes every flag.
+
+Partial commands prompt only for missing choices in a terminal. In automation,
+missing required flags are errors. Canceling a prompt makes no output changes.
+
+## Use files, JSR, or npm
+
+`--output files` emits the bindings and a companion README for an existing
+project. Configure imports in that project: the JSR preset uses `@colibri/core`
+and `stellar-sdk`; the npm preset uses `@colibri/core` and
+`@stellar/stellar-sdk`.
+
+`--output package --target jsr` creates TypeScript exports and a `deno.json`.
+Run `deno task check` in the output directory. `--target npm` creates a
+`package.json`, TypeScript build configuration, `.npmrc`, and ESM exports. Run
+`npm install` and `npm run build`; JavaScript and declarations appear in
+`dist/`. The SDK requires Node 22.12 or newer. The npm package shares Core
+through an alias of `@jsr/colibri__core`, using `https://npm.jsr.io` for the
+`@jsr` scope. Carry that registry configuration into consuming projects and CI.
+
+Review the package name, version, license, and publication settings before
+publishing. Neither mode installs dependencies or publishes automatically.
+
+Only generator-owned files are replaced by `--force`. Package scaffold and
+handwritten setup are preserved, including customized dependency versions. Place
+custom subclasses or assembly functions outside `generated/`. Writes are atomic
+per file; a disk failure can leave only part of a multi-file plan written.
+Resolve the failure and rerun.
+
+## Understand the generated types
+
+Every ABI method is available through **both** `read` and `invoke`. The ABI does
+not say which functions write state, so the generator does not infer mutability
+or add individual method wrappers. Choose simulation with `read`, or transaction
+submission through Core's pipeline with `invoke`.
+
+Method names remain correlated with their arguments and outputs. No-argument
+functions can omit `methodArgs`. Invoke keeps Core's raw `returnValue`, hash,
+ledger, timestamp, and RPC response and adds `value`; it is undefined when Core
+has no return value.
+
+The types match SDK decoding: large integers are bigint; bytes are Uint8Array;
+void is null; missing Options decode to null; Maps decode to arrays of tuples.
+Map inputs can also be JavaScript Maps, and Option inputs accept undefined.
+Structs, tuple structs, tagged unions, and enums retain their native shapes.
+Fixed byte sizes and integer bounds are runtime codec constraints. Top-level
+Result uses the SDK Result wrapper with `{ message: string }` errors;
+transaction failures may also throw Core errors. Unsupported SDK encodings such
+as nested Result fail generation explicitly.
+
+Exported UDT aliases include declaration indexes to avoid collisions. Duplicate
+UDT names in dependency specs retain distinct exports; references use the first
+declaration, matching SDK lookup.
+
+## Assemble errors and use events
+
+For a generated `Token` class, `TokenABIErrors` maps numeric codes to
+`{ message, details? }`. Supply a prepared `errors` object in the constructor to
+customize messages. Automatic matching is installed once, scoped to the contract
+ID when present, or to root-invocation errors before an ID is available. Use
+`errors: false` when supplying your own matcher through
+`contractConfig.plugins`. Other constructor plugins keep their Core semantics.
+
+`token.events.Transfer` is a Core event definition when that name is declared in
+the ABI. Its `toTopicFilter` and `toEventFilter` accept only indexed fields.
+`fromEvent` validates exact topic count and types and single-value, vector, or
+map payloads. The resulting `ContractEvent` retains the original ledger,
+transaction, and raw-XDR information alongside typed `fields` and `get()`.
+
+`tryFromEvent` returns undefined on a nonmatch. Registry `parse` throws if more
+than one declaration matches; select the name and occurrence explicitly.
+`events.bindings` records aliases for collisions with registry properties.
+Contracts may emit events even when the spec contains no event declarations.
+
+Core also supports dynamic event extraction without generating files. See
+[spec-aware events](../core/contract/events.md).
+
+## Generate programmatically
+
+Install with `deno add jsr:@colibri/contract-bindings`. This complete script
+reads an application-supplied `contract.wasm` and writes a JSR package:
+
+<!-- deno-check -->
+
+```ts
+import {
+  generateBindings,
+  loadBindingSource,
+} from "@colibri/contract-bindings";
+import { writeBindings } from "@colibri/contract-bindings/cli";
+
+const loaded = await loadBindingSource({
+  kind: "wasm",
+  wasm: await Deno.readFile("./contract.wasm"),
+});
+const plan = generateBindings(loaded.spec, {
+  className: "Token",
+  output: "package",
+  target: "jsr",
+  packageName: "@example/token",
+  provenance: loaded.provenance,
+});
+const result = await writeBindings(plan, { directory: "./token-client" });
+console.log(result.written, plan.warnings);
+```
+
+`loadBindingSource` also accepts an existing Spec, a contract ID, or a Wasm
+hash. Network sources accept a `NetworkConfig` and optional RPC client. The
+package root is portable; `/cli` is Deno-only. `generateBindings` performs no
+I/O. `parseCliArgs`, `resolveCliOptions`, and `runCli` allow a custom prompt
+interface.
+
+The embedded ABI is a snapshot. Regenerate after a contract upgrade. Loading a
+different spec into the typed class invalidates its type guarantees. Provenance
+contains code hashes and separate RPC ledger observations, not an atomic network
+snapshot or endpoint credentials.
+
+Use `BindingError.code` for stable CLI/source/rendering/output failures and
+inspect its cause for the Core or filesystem error. The CLI exits unsuccessfully
+on failure. See the [full API](https://jsr.io/@colibri/contract-bindings/doc)
+and [CLI API](https://jsr.io/@colibri/contract-bindings/doc/cli).

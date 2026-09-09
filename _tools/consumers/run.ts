@@ -1,4 +1,5 @@
 /** Execute installed artifacts with the selected real Node/TypeScript/browser runtime. */
+import { checkGeneratedBindings } from "./generated-bindings.ts";
 import { resolve } from "node:path";
 import { command, playwrightVersion, writeJson } from "./environment.ts";
 
@@ -58,11 +59,23 @@ export async function runArtifacts(
         ),
       );
     }
+    await Deno.writeTextFile(
+      resolve(consumer, "bindings-smoke.ts"),
+      `
+import { generateBindings } from "@colibri/contract-bindings";
+import { Spec } from "@stellar/stellar-sdk/contract";
+import { xdr } from "@stellar/stellar-sdk";
+const spec = new Spec([xdr.ScSpecEntry.scSpecEntryFunctionV0(new xdr.ScSpecFunctionV0({ name: "ping", doc: "Ping", inputs: [], outputs: [] }))]);
+const plan = generateBindings(spec, {className: "PingClient"});
+if (!plan.files["bindings.ts"].includes("class PingClient extends Contract")) throw new Error("Portable bindings rendering failed");
+`,
+    );
     await command("npx", [
       "--no-install",
       "tsc",
       "smoke.ts",
       "extensions.ts",
+      "bindings-smoke.ts",
       "--outDir",
       "out",
       "--module",
@@ -74,10 +87,11 @@ export async function runArtifacts(
     ], consumer);
     await command("node", ["out/smoke.js"], consumer);
     await command("node", ["out/extensions.js"], consumer);
+    await command("node", ["out/bindings-smoke.js"], consumer);
     if (browsers) {
       await Deno.writeTextFile(
         resolve(consumer, "browser-entry.ts"),
-        'import "./smoke.ts";\nimport "./extensions.ts";\n(globalThis as unknown as { colibriPassed: boolean }).colibriPassed = true;\n',
+        'import "./smoke.ts";\nimport "./extensions.ts";\nimport "./bindings-smoke.ts";\n(globalThis as unknown as { colibriPassed: boolean }).colibriPassed = true;\n',
       );
       await command("npx", [
         "--no-install",
@@ -104,6 +118,12 @@ export async function runArtifacts(
         );
       }
       await command("node", ["browser.mjs"], consumer);
+    }
+    if (!browsers) {
+      const core = manifest.packages.find((pkg: { name: string }) =>
+        pkg.name === "@colibri/core"
+      );
+      await checkGeneratedBindings(consumer, resolve(artifacts, core.archive));
     }
     console.log(
       `Installed artifact consumer passed with SDK ${manifest.sdk} / TypeScript ${typescript}${

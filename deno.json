@@ -2,6 +2,7 @@
   "workspace": [
     "./core",
     "./build-verification",
+    "./contract-bindings",
     "./identicon",
     "./rpc-streamer",
     "./webauth",
@@ -11,7 +12,9 @@
   "nodeModulesDir": "auto",
   "minimumDependencyAge": {
     "age": "P1D",
-    "exclude": ["jsr:@fifo/convee"]
+    "exclude": [
+      "jsr:@fifo/convee"
+    ]
   },
   "imports": {
     "jsr:@colibri/core": "./core",
@@ -32,7 +35,8 @@
     "@std/expect": "jsr:@std/expect@^1.0.0",
     "archunit": "npm:archunit@2.4.0",
     "crap4ts-tool": "npm:@alperlabs/crap4ts@0.2.1",
-    "resvg-test": "npm:@resvg/resvg-js@2.6.2"
+    "resvg-test": "npm:@resvg/resvg-js@2.6.2",
+    "jsr:@colibri/contract-bindings": "./contract-bindings"
   },
   "tasks": {
     "release:init": "deno run -A _tools/releases/cli.ts init",
@@ -77,13 +81,22 @@
     "test:file": "deno test -A --parallel --clean --ignore='_*/'"
   },
   "lint": {
-    "plugins": ["./_tools/lint/no-relative-imports.ts"],
+    "plugins": [
+      "./_tools/lint/no-relative-imports.ts"
+    ],
     "rules": {
-      "exclude": ["explicit-function-return-type"]
+      "exclude": [
+        "explicit-function-return-type"
+      ]
     }
   },
   "compilerOptions": {
     "skipLibCheck": true
   },
-  "exclude": ["node_modules", "_*", "dist", "coverage"]
+  "exclude": [
+    "node_modules",
+    "_*",
+    "dist",
+    "coverage"
+  ]
 }

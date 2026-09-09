@@ -56,7 +56,7 @@ describe("module conventions", () => {
     await assertRule(
       projectFiles(REPOSITORY_CONFIG)
         .inPath(
-          /^\.\.\/\.\.\/\.\.\/(?:core|build-verification|identicon|rpc-streamer|webauth|plugins|test-tooling)\//,
+          /^\.\.\/\.\.\/\.\.\/(?:core|build-verification|contract-bindings|identicon|rpc-streamer|webauth|plugins|test-tooling)\//,
         )
         .should()
         .adhereTo(

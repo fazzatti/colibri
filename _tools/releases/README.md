@@ -114,3 +114,11 @@ Deno's 24-hour dependency-age policy stays active. The exact reviewed Convee
 post-publication consumer also exempts the explicitly selected Colibri versions
 it has just published. These exceptions do not widen dependency version ranges.
 No global runtime, registry, or user configuration is changed by these tools.
+
+### First publication of a package
+
+A package absent from the baseline must have `bump: "initial"` and an explicit
+`initialVersion` in its reviewed intent. The manifest must already contain that
+version. Initial intents cannot be used for an existing package. This records a
+first API snapshot and validates dependencies without inventing a prior release
+or incrementing an edited version.

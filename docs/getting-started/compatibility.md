@@ -66,6 +66,10 @@ documents npm alias/deduplication limitations and recommends pnpm where
 duplicate installations are a concern. See
 [JSR npm compatibility](https://jsr.io/docs/npm-compatibility).
 
+Contract Bindings starts at 0.1 as a preview. Its portable root API supports
+Deno/Node tooling; its `/cli` entrypoint is Deno-only. Generated JSR and npm
+clients use Core 1.1 or later in the current major.
+
 ## Supported and tested integrations
 
 | Surface                             | Compatibility boundary and CI checks                                                      |

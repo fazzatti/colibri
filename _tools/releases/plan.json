@@ -1,58 +1,17 @@
 {
   "schema": 1,
-  "base": "ba175d41c6dd0284d55db186d720628249f39573",
+  "base": "58cd5a803e9d2a344da14baf5acb0680c41cae07",
   "packages": {
     "@colibri/core": {
-      "bump": "major",
-      "reason": "Graduate the documented API and extension points to 1.0; remove volatile provider presets before the stable API freeze; validate Deno timer compatibility and native SDK interoperability.",
-      "apiReview": "Establish the first stable public API baseline. Intentionally remove NetworkProviders (Ankr, Gateway, Lightsail); consumers configure endpoints through NetworkConfig instead. Preserve the Mainnet, Testnet and Futurenet defaults and explicit endpoint overrides."
+      "bump": "minor",
+      "reason": "Add spec-aware event definitions and registry access on Contract, and export the existing error-map extraction helper.",
+      "apiReview": "Additive event extraction, strict decoding and indexed filters. Preserve existing read/invoke pipelines and constructor plugin lifecycle. No additional mutable contract-error installer."
     },
-    "@colibri/identicon": {
-      "bump": "major",
-      "reason": "Graduate the identicon API, add the approved same-algorithm C-address extension, and adopt the stable Core dependency line.",
-      "apiReview": "Preserve all G-address outputs, renderers, signatures, property names and error codes. Broaden accepted inputs to checksummed C-addresses, applying the identical byte selection and image algorithm as a documented Colibri extension beyond SEP-33.",
-      "dependencies": { "@colibri/core": "^1.0.0" }
-    },
-    "@colibri/webauth": {
-      "bump": "major",
-      "reason": "Graduate SEP-10/SEP-45 WebAuth APIs and adopt stable Core.",
-      "apiReview": "Establish the 1.0 public API baseline.",
-      "dependencies": { "@colibri/core": "^1.0.0" }
-    },
-    "@colibri/rpc-streamer": {
-      "bump": "major",
-      "reason": "Graduate RPC streaming APIs and adopt stable Core.",
-      "apiReview": "Establish the 1.0 public API baseline.",
-      "dependencies": { "@colibri/core": "^1.0.0" }
-    },
-    "@colibri/plugin-channel-accounts": {
-      "bump": "major",
-      "reason": "Graduate channel-account plugin lifecycle and adopt stable Core.",
-      "apiReview": "Establish the 1.0 public API baseline.",
-      "dependencies": { "@colibri/core": "^1.0.0" }
-    },
-    "@colibri/plugin-fee-bump": {
-      "bump": "major",
-      "reason": "Graduate fee-bump plugin integration and adopt stable Core.",
-      "apiReview": "Establish the 1.0 public API baseline.",
-      "dependencies": { "@colibri/core": "^1.0.0" }
-    },
-    "@colibri/plugin-sep29": {
-      "bump": "major",
-      "reason": "Graduate SEP-29 memo validation and adopt stable Core.",
-      "apiReview": "Establish the 1.0 public API baseline.",
-      "dependencies": { "@colibri/core": "^1.0.0" }
-    },
-    "@colibri/test-tooling": {
-      "bump": "major",
-      "reason": "Graduate the existing Deno/Docker test-tooling API without promising new runtimes.",
-      "apiReview": "Establish the 1.0 public API baseline."
-    },
-    "@colibri/build-verification": {
-      "bump": "patch",
-      "reason": "Keep 0.x; align the Core dependency and preserve spinner/container timeout cleanup on Deno 2.9.",
-      "apiReview": "Record the current 0.x public surface without graduating this package.",
-      "dependencies": { "@colibri/core": "^1.0.0" }
+    "@colibri/contract-bindings": {
+      "bump": "initial",
+      "initialVersion": "0.1.0",
+      "reason": "Initial preview of portable typed bindings generation and a Deno CLI with JSR and npm package presets.",
+      "apiReview": "New preview package. Emits typed generic read/invoke clients, embedded specs, errors and event registries using Core 1.1."
     }
   }
 }

@@ -38790,6 +38790,1197 @@
       }
     ]
   },
+  "@colibri/contract-bindings": {
+    "BINDING_ERRORS": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "kind": "const",
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "BindingError",
+                  "tsType": {
+                    "kind": "typeQuery",
+                    "repr": "BindingError",
+                    "value": "BindingError"
+                  }
+                },
+                {
+                  "name": "Code",
+                  "tsType": {
+                    "kind": "typeQuery",
+                    "repr": "Code",
+                    "value": "Code"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "variable"
+      }
+    ],
+    "BindingError": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "constructors": [
+            {
+              "hasBody": true,
+              "name": "constructor",
+              "params": [
+                {
+                  "kind": "identifier",
+                  "name": "code",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Code",
+                    "value": {
+                      "typeName": "Code"
+                    }
+                  }
+                },
+                {
+                  "kind": "identifier",
+                  "name": "message",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                },
+                {
+                  "kind": "identifier",
+                  "name": "cause",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "unknown",
+                    "value": "unknown"
+                  }
+                }
+              ]
+            }
+          ],
+          "extends": "ColibriError",
+          "superTypeParams": [
+            {
+              "kind": "typeRef",
+              "repr": "Code",
+              "value": {
+                "typeName": "Code"
+              }
+            },
+            {
+              "kind": "typeLiteral",
+              "value": {
+                "properties": [
+                  {
+                    "name": "cause",
+                    "optional": true,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "unknown",
+                      "value": "unknown"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "kind": "class"
+      }
+    ],
+    "BindingProvenance": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "kind",
+                  "tsType": {
+                    "kind": "indexedAccess",
+                    "value": {
+                      "indexType": {
+                        "kind": "literal",
+                        "repr": "kind",
+                        "value": {
+                          "kind": "string",
+                          "string": "kind"
+                        }
+                      },
+                      "objType": {
+                        "kind": "typeRef",
+                        "repr": "BindingSource",
+                        "value": {
+                          "typeName": "BindingSource"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "wasmHash",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                },
+                {
+                  "name": "contractId",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                },
+                {
+                  "name": "snapshot",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "LoadedContractSnapshot",
+                    "value": {
+                      "typeName": "LoadedContractSnapshot"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "BindingSource": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "tsType": {
+                        "kind": "literal",
+                        "repr": "wasm",
+                        "value": {
+                          "kind": "string",
+                          "string": "wasm"
+                        }
+                      }
+                    },
+                    {
+                      "name": "wasm",
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "tsType": {
+                        "kind": "literal",
+                        "repr": "spec",
+                        "value": {
+                          "kind": "string",
+                          "string": "spec"
+                        }
+                      }
+                    },
+                    {
+                      "name": "spec",
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Spec",
+                        "value": {
+                          "typeName": "Spec"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "tsType": {
+                        "kind": "literal",
+                        "repr": "contract",
+                        "value": {
+                          "kind": "string",
+                          "string": "contract"
+                        }
+                      }
+                    },
+                    {
+                      "name": "contractId",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    },
+                    {
+                      "name": "networkConfig",
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "NetworkConfig",
+                        "value": {
+                          "typeName": "NetworkConfig"
+                        }
+                      }
+                    },
+                    {
+                      "name": "rpc",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Server",
+                        "value": {
+                          "typeName": "Server"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "tsType": {
+                        "kind": "literal",
+                        "repr": "hash",
+                        "value": {
+                          "kind": "string",
+                          "string": "hash"
+                        }
+                      }
+                    },
+                    {
+                      "name": "wasmHash",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    },
+                    {
+                      "name": "networkConfig",
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "NetworkConfig",
+                        "value": {
+                          "typeName": "NetworkConfig"
+                        }
+                      }
+                    },
+                    {
+                      "name": "rpc",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Server",
+                        "value": {
+                          "typeName": "Server"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "generateBindings": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "input",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Spec",
+                "value": {
+                  "typeName": "Spec"
+                }
+              }
+            },
+            {
+              "kind": "assign",
+              "left": {
+                "kind": "identifier",
+                "name": "options",
+                "optional": false,
+                "tsType": {
+                  "kind": "typeRef",
+                  "repr": "GenerateBindingsOptions",
+                  "value": {
+                    "typeName": "GenerateBindingsOptions"
+                  }
+                }
+              },
+              "right": "[UNSUPPORTED]"
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "GeneratedBindings",
+            "value": {
+              "typeName": "GeneratedBindings"
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "GenerateBindingsOptions": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "className",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                },
+                {
+                  "name": "output",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "literal",
+                        "repr": "files",
+                        "value": {
+                          "kind": "string",
+                          "string": "files"
+                        }
+                      },
+                      {
+                        "kind": "literal",
+                        "repr": "package",
+                        "value": {
+                          "kind": "string",
+                          "string": "package"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "target",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "literal",
+                        "repr": "jsr",
+                        "value": {
+                          "kind": "string",
+                          "string": "jsr"
+                        }
+                      },
+                      {
+                        "kind": "literal",
+                        "repr": "npm",
+                        "value": {
+                          "kind": "string",
+                          "string": "npm"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "packageName",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                },
+                {
+                  "name": "provenance",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "BindingProvenance",
+                    "value": {
+                      "typeName": "BindingProvenance"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "GENERATED_MARKER": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "kind": "const",
+          "tsType": {
+            "kind": "literal",
+            "repr": "// Generated by @colibri/contract-bindings. Replaceable: keep custom code outside this file.",
+            "value": {
+              "kind": "string",
+              "string": "// Generated by @colibri/contract-bindings. Replaceable: keep custom code outside this file."
+            }
+          }
+        },
+        "kind": "variable"
+      }
+    ],
+    "GeneratedBindings": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "files",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Readonly",
+                    "value": {
+                      "typeName": "Readonly",
+                      "typeParams": [
+                        {
+                          "kind": "typeRef",
+                          "repr": "Record",
+                          "value": {
+                            "typeName": "Record",
+                            "typeParams": [
+                              {
+                                "kind": "keyword",
+                                "repr": "string",
+                                "value": "string"
+                              },
+                              {
+                                "kind": "keyword",
+                                "repr": "string",
+                                "value": "string"
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "scaffold",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Readonly",
+                    "value": {
+                      "typeName": "Readonly",
+                      "typeParams": [
+                        {
+                          "kind": "typeRef",
+                          "repr": "Record",
+                          "value": {
+                            "typeName": "Record",
+                            "typeParams": [
+                              {
+                                "kind": "keyword",
+                                "repr": "string",
+                                "value": "string"
+                              },
+                              {
+                                "kind": "keyword",
+                                "repr": "string",
+                                "value": "string"
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "warnings",
+                  "tsType": {
+                    "kind": "typeOperator",
+                    "value": {
+                      "operator": "readonly",
+                      "tsType": {
+                        "kind": "array",
+                        "value": {
+                          "kind": "keyword",
+                          "repr": "string",
+                          "value": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "loadBindingSource": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "isAsync": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "source",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "BindingSource",
+                "value": {
+                  "typeName": "BindingSource"
+                }
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "Promise",
+            "value": {
+              "typeName": "Promise",
+              "typeParams": [
+                {
+                  "kind": "typeRef",
+                  "repr": "LoadedBindingSource",
+                  "value": {
+                    "typeName": "LoadedBindingSource"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "LoadedBindingSource": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "spec",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Spec",
+                    "value": {
+                      "typeName": "Spec"
+                    }
+                  }
+                },
+                {
+                  "name": "provenance",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "BindingProvenance",
+                    "value": {
+                      "typeName": "BindingProvenance"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ]
+  },
+  "@colibri/contract-bindings/cli": {
+    "CLI_HELP": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "kind": "const",
+          "tsType": {
+            "kind": "keyword",
+            "repr": "string",
+            "value": "string"
+          }
+        },
+        "kind": "variable"
+      }
+    ],
+    "CliFlags": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "Record",
+            "value": {
+              "typeName": "Record",
+              "typeParams": [
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "union",
+                  "value": [
+                    {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    },
+                    {
+                      "kind": "keyword",
+                      "repr": "boolean",
+                      "value": "boolean"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "CliIO": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "methods": [
+                {
+                  "kind": "method",
+                  "name": "prompt",
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "message",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      },
+                      {
+                        "kind": "keyword",
+                        "repr": "null",
+                        "value": "null"
+                      },
+                      {
+                        "kind": "typeRef",
+                        "repr": "Promise",
+                        "value": {
+                          "typeName": "Promise",
+                          "typeParams": [
+                            {
+                              "kind": "union",
+                              "value": [
+                                {
+                                  "kind": "keyword",
+                                  "repr": "string",
+                                  "value": "string"
+                                },
+                                {
+                                  "kind": "keyword",
+                                  "repr": "null",
+                                  "value": "null"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "method",
+                  "name": "log",
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "message",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "keyword",
+                    "repr": "void",
+                    "value": "void"
+                  }
+                }
+              ],
+              "properties": [
+                {
+                  "name": "interactive",
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "boolean",
+                    "value": "boolean"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "GeneratedBindings": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "files",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Readonly",
+                    "value": {
+                      "typeName": "Readonly",
+                      "typeParams": [
+                        {
+                          "kind": "typeRef",
+                          "repr": "Record",
+                          "value": {
+                            "typeName": "Record",
+                            "typeParams": [
+                              {
+                                "kind": "keyword",
+                                "repr": "string",
+                                "value": "string"
+                              },
+                              {
+                                "kind": "keyword",
+                                "repr": "string",
+                                "value": "string"
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "scaffold",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Readonly",
+                    "value": {
+                      "typeName": "Readonly",
+                      "typeParams": [
+                        {
+                          "kind": "typeRef",
+                          "repr": "Record",
+                          "value": {
+                            "typeName": "Record",
+                            "typeParams": [
+                              {
+                                "kind": "keyword",
+                                "repr": "string",
+                                "value": "string"
+                              },
+                              {
+                                "kind": "keyword",
+                                "repr": "string",
+                                "value": "string"
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "warnings",
+                  "tsType": {
+                    "kind": "typeOperator",
+                    "value": {
+                      "operator": "readonly",
+                      "tsType": {
+                        "kind": "array",
+                        "value": {
+                          "kind": "keyword",
+                          "repr": "string",
+                          "value": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "parseCliArgs": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "args",
+              "optional": false,
+              "tsType": {
+                "kind": "typeOperator",
+                "value": {
+                  "operator": "readonly",
+                  "tsType": {
+                    "kind": "array",
+                    "value": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "CliFlags",
+            "value": {
+              "typeName": "CliFlags"
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "resolveCliOptions": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "isAsync": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "flags",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "CliFlags",
+                "value": {
+                  "typeName": "CliFlags"
+                }
+              }
+            },
+            {
+              "kind": "identifier",
+              "name": "io",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "CliIO",
+                "value": {
+                  "typeName": "CliIO"
+                }
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "Promise",
+            "value": {
+              "typeName": "Promise",
+              "typeParams": [
+                {
+                  "kind": "typeRef",
+                  "repr": "CliFlags",
+                  "value": {
+                    "typeName": "CliFlags"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "runCli": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "isAsync": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "args",
+              "optional": false,
+              "tsType": {
+                "kind": "typeOperator",
+                "value": {
+                  "operator": "readonly",
+                  "tsType": {
+                    "kind": "array",
+                    "value": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "kind": "identifier",
+              "name": "io",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "CliIO",
+                "value": {
+                  "typeName": "CliIO"
+                }
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "Promise",
+            "value": {
+              "typeName": "Promise",
+              "typeParams": [
+                {
+                  "kind": "union",
+                  "value": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "WriteBindingsResult",
+                      "value": {
+                        "typeName": "WriteBindingsResult"
+                      }
+                    },
+                    {
+                      "kind": "keyword",
+                      "repr": "undefined",
+                      "value": "undefined"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "writeBindings": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "isAsync": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "plan",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "GeneratedBindings",
+                "value": {
+                  "typeName": "GeneratedBindings"
+                }
+              }
+            },
+            {
+              "kind": "identifier",
+              "name": "options",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "WriteBindingsOptions",
+                "value": {
+                  "typeName": "WriteBindingsOptions"
+                }
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "Promise",
+            "value": {
+              "typeName": "Promise",
+              "typeParams": [
+                {
+                  "kind": "typeRef",
+                  "repr": "WriteBindingsResult",
+                  "value": {
+                    "typeName": "WriteBindingsResult"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "WriteBindingsOptions": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "directory",
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                },
+                {
+                  "name": "force",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "boolean",
+                    "value": "boolean"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "WriteBindingsResult": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "written",
+                  "tsType": {
+                    "kind": "array",
+                    "value": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  }
+                },
+                {
+                  "name": "preserved",
+                  "tsType": {
+                    "kind": "array",
+                    "value": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ]
+  },
   "@colibri/core": {
     "Account": [
       {
@@ -44349,6 +45540,48 @@
           ],
           "methods": [
             {
+              "accessibility": "public",
+              "functionDef": {
+                "hasBody": true,
+                "params": [],
+                "returnType": {
+                  "kind": "typeRef",
+                  "repr": "ContractEventRegistry",
+                  "value": {
+                    "typeName": "ContractEventRegistry"
+                  }
+                }
+              },
+              "kind": "getter",
+              "name": "events"
+            },
+            {
+              "accessibility": "public",
+              "functionDef": {
+                "hasBody": true,
+                "isAsync": true,
+                "params": [],
+                "returnType": {
+                  "kind": "typeRef",
+                  "repr": "Promise",
+                  "value": {
+                    "typeName": "Promise",
+                    "typeParams": [
+                      {
+                        "kind": "typeRef",
+                        "repr": "ContractEventRegistry",
+                        "value": {
+                          "typeName": "ContractEventRegistry"
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "kind": "method",
+              "name": "loadContractEventsFromWasm"
+            },
+            {
               "accessibility": "protected",
               "functionDef": {
                 "params": [
@@ -45842,6 +47075,30 @@
                   "typeName": "LoadedContractSnapshot"
                 }
               }
+            },
+            {
+              "accessibility": "private",
+              "name": "eventRegistry",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ContractEventRegistry",
+                "value": {
+                  "typeName": "ContractEventRegistry"
+                }
+              }
+            },
+            {
+              "accessibility": "private",
+              "name": "eventSpec",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Spec",
+                "value": {
+                  "typeName": "Spec"
+                }
+              }
             }
           ]
         },
@@ -45876,6 +47133,42 @@
             "value": {
               "kind": "string",
               "string": "simulate-transaction"
+            }
+          }
+        },
+        "kind": "variable"
+      }
+    ],
+    "CONTRACT_EVENT_ERRORS": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "kind": "const",
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "computed": true,
+                  "name": "[Code.INVALID_SPEC]"
+                },
+                {
+                  "computed": true,
+                  "name": "[Code.UNKNOWN_EVENT]"
+                },
+                {
+                  "computed": true,
+                  "name": "[Code.DECODE_FAILED]"
+                },
+                {
+                  "computed": true,
+                  "name": "[Code.INVALID_FILTER]"
+                },
+                {
+                  "computed": true,
+                  "name": "[Code.AMBIGUOUS_EVENT]"
+                }
+              ]
             }
           }
         },
@@ -46941,6 +48234,924 @@
           }
         },
         "kind": "typeAlias"
+      }
+    ],
+    "ContractEvent": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "constructors": [
+            {
+              "hasBody": true,
+              "name": "constructor",
+              "params": [
+                {
+                  "kind": "identifier",
+                  "name": "event",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Event",
+                    "value": {
+                      "typeName": "Event"
+                    }
+                  }
+                },
+                {
+                  "kind": "identifier",
+                  "name": "fields",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Data",
+                    "value": {
+                      "typeName": "Data"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "extends": "Event",
+          "methods": [
+            {
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "key",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "Key",
+                      "value": {
+                        "typeName": "Key"
+                      }
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "indexedAccess",
+                  "value": {
+                    "indexType": {
+                      "kind": "typeRef",
+                      "repr": "Key",
+                      "value": {
+                        "typeName": "Key"
+                      }
+                    },
+                    "objType": {
+                      "kind": "typeRef",
+                      "repr": "Data",
+                      "value": {
+                        "typeName": "Data"
+                      }
+                    }
+                  }
+                },
+                "typeParams": [
+                  {
+                    "constraint": {
+                      "kind": "typeOperator",
+                      "value": {
+                        "operator": "keyof",
+                        "tsType": {
+                          "kind": "typeRef",
+                          "repr": "Data",
+                          "value": {
+                            "typeName": "Data"
+                          }
+                        }
+                      }
+                    },
+                    "name": "Key"
+                  }
+                ]
+              },
+              "kind": "method",
+              "name": "get"
+            }
+          ],
+          "properties": [
+            {
+              "name": "fields",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Readonly",
+                "value": {
+                  "typeName": "Readonly",
+                  "typeParams": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "Data",
+                      "value": {
+                        "typeName": "Data"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "keyword",
+                "repr": "object",
+                "value": "object"
+              },
+              "default": {
+                "kind": "typeRef",
+                "repr": "Record",
+                "value": {
+                  "typeName": "Record",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    },
+                    {
+                      "kind": "keyword",
+                      "repr": "unknown",
+                      "value": "unknown"
+                    }
+                  ]
+                }
+              },
+              "name": "Data"
+            }
+          ]
+        },
+        "kind": "class"
+      }
+    ],
+    "ContractEventBinding": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "name",
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                },
+                {
+                  "name": "occurrence",
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  }
+                },
+                {
+                  "name": "key",
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "contractEventBindings": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "spec",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Spec",
+                "value": {
+                  "typeName": "Spec"
+                }
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "array",
+            "value": {
+              "kind": "typeRef",
+              "repr": "ContractEventBinding",
+              "value": {
+                "typeName": "ContractEventBinding"
+              }
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "ContractEventDefinition": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "constructors": [
+            {
+              "hasBody": true,
+              "name": "constructor",
+              "params": [
+                {
+                  "accessibility": "private",
+                  "kind": "identifier",
+                  "name": "spec",
+                  "optional": false,
+                  "readonly": true,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Spec",
+                    "value": {
+                      "typeName": "Spec"
+                    }
+                  }
+                },
+                {
+                  "accessibility": "private",
+                  "kind": "identifier",
+                  "name": "declaration",
+                  "optional": false,
+                  "readonly": true,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "xdr.ScSpecEventV0",
+                    "value": {
+                      "typeName": "xdr.ScSpecEventV0"
+                    }
+                  }
+                },
+                {
+                  "kind": "assign",
+                  "left": {
+                    "kind": "identifier",
+                    "name": "occurrence",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  },
+                  "right": "0"
+                },
+                {
+                  "accessibility": "private",
+                  "kind": "assign",
+                  "left": {
+                    "kind": "identifier",
+                    "name": "options",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "ContractEventOptions",
+                      "value": {
+                        "typeName": "ContractEventOptions"
+                      }
+                    }
+                  },
+                  "readonly": true,
+                  "right": "[UNSUPPORTED]"
+                }
+              ]
+            }
+          ],
+          "methods": [
+            {
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "event",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "Event",
+                      "value": {
+                        "typeName": "Event"
+                      }
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "keyword",
+                  "repr": "boolean",
+                  "value": "boolean"
+                }
+              },
+              "kind": "method",
+              "name": "is"
+            },
+            {
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "event",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "Event",
+                      "value": {
+                        "typeName": "Event"
+                      }
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "union",
+                  "value": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "ContractEvent",
+                      "value": {
+                        "typeName": "ContractEvent",
+                        "typeParams": [
+                          {
+                            "kind": "typeRef",
+                            "repr": "Data",
+                            "value": {
+                              "typeName": "Data"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "keyword",
+                      "repr": "undefined",
+                      "value": "undefined"
+                    }
+                  ]
+                }
+              },
+              "kind": "method",
+              "name": "tryFromEvent"
+            },
+            {
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "event",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "Event",
+                      "value": {
+                        "typeName": "Event"
+                      }
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "typeRef",
+                  "repr": "ContractEvent",
+                  "value": {
+                    "typeName": "ContractEvent",
+                    "typeParams": [
+                      {
+                        "kind": "typeRef",
+                        "repr": "Data",
+                        "value": {
+                          "typeName": "Data"
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "kind": "method",
+              "name": "fromEvent"
+            },
+            {
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "assign",
+                    "left": {
+                      "kind": "identifier",
+                      "name": "values",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Partial",
+                        "value": {
+                          "typeName": "Partial",
+                          "typeParams": [
+                            {
+                              "kind": "typeRef",
+                              "repr": "Topics",
+                              "value": {
+                                "typeName": "Topics"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "right": "[UNSUPPORTED]"
+                  }
+                ],
+                "returnType": {
+                  "kind": "typeRef",
+                  "repr": "TopicFilter",
+                  "value": {
+                    "typeName": "TopicFilter"
+                  }
+                }
+              },
+              "kind": "method",
+              "name": "toTopicFilter"
+            },
+            {
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "assign",
+                    "left": {
+                      "kind": "identifier",
+                      "name": "values",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Partial",
+                        "value": {
+                          "typeName": "Partial",
+                          "typeParams": [
+                            {
+                              "kind": "typeRef",
+                              "repr": "Topics",
+                              "value": {
+                                "typeName": "Topics"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "right": "[UNSUPPORTED]"
+                  }
+                ],
+                "returnType": {
+                  "kind": "typeRef",
+                  "repr": "EventFilter",
+                  "value": {
+                    "typeName": "EventFilter"
+                  }
+                }
+              },
+              "kind": "method",
+              "name": "toEventFilter"
+            },
+            {
+              "accessibility": "private",
+              "functionDef": {
+                "hasBody": true,
+                "params": [],
+                "returnType": {
+                  "kind": "array",
+                  "value": {
+                    "kind": "typeRef",
+                    "repr": "xdr.ScSpecEventParamV0",
+                    "value": {
+                      "typeName": "xdr.ScSpecEventParamV0"
+                    }
+                  }
+                }
+              },
+              "kind": "method",
+              "name": "topicParams"
+            },
+            {
+              "accessibility": "private",
+              "functionDef": {
+                "hasBody": true,
+                "params": [],
+                "returnType": {
+                  "kind": "array",
+                  "value": {
+                    "kind": "typeRef",
+                    "repr": "xdr.ScSpecEventParamV0",
+                    "value": {
+                      "typeName": "xdr.ScSpecEventParamV0"
+                    }
+                  }
+                }
+              },
+              "kind": "method",
+              "name": "dataParams"
+            },
+            {
+              "accessibility": "private",
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "value",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "xdr.ScVal",
+                      "value": {
+                        "typeName": "xdr.ScVal"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "type",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "xdr.ScSpecTypeDef",
+                      "value": {
+                        "typeName": "xdr.ScSpecTypeDef"
+                      }
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "keyword",
+                  "repr": "unknown",
+                  "value": "unknown"
+                }
+              },
+              "kind": "method",
+              "name": "decode"
+            },
+            {
+              "accessibility": "private",
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "value",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "xdr.ScVal",
+                      "value": {
+                        "typeName": "xdr.ScVal"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "fields",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "Record",
+                      "value": {
+                        "typeName": "Record",
+                        "typeParams": [
+                          {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          },
+                          {
+                            "kind": "keyword",
+                            "repr": "unknown",
+                            "value": "unknown"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "keyword",
+                  "repr": "void",
+                  "value": "void"
+                }
+              },
+              "kind": "method",
+              "name": "decodeData"
+            }
+          ],
+          "properties": [
+            {
+              "name": "name",
+              "readonly": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "occurrence",
+              "readonly": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            }
+          ],
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "keyword",
+                "repr": "object",
+                "value": "object"
+              },
+              "default": {
+                "kind": "typeRef",
+                "repr": "Record",
+                "value": {
+                  "typeName": "Record",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    },
+                    {
+                      "kind": "keyword",
+                      "repr": "unknown",
+                      "value": "unknown"
+                    }
+                  ]
+                }
+              },
+              "name": "Data"
+            },
+            {
+              "constraint": {
+                "kind": "keyword",
+                "repr": "object",
+                "value": "object"
+              },
+              "default": {
+                "kind": "typeRef",
+                "repr": "Record",
+                "value": {
+                  "typeName": "Record",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    },
+                    {
+                      "kind": "keyword",
+                      "repr": "unknown",
+                      "value": "unknown"
+                    }
+                  ]
+                }
+              },
+              "name": "Topics"
+            }
+          ]
+        },
+        "kind": "class"
+      }
+    ],
+    "ContractEventOptions": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "contractId",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "ContractId",
+                    "value": {
+                      "typeName": "ContractId"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ContractEventRegistry": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "constructors": [
+            {
+              "hasBody": true,
+              "name": "constructor",
+              "params": [
+                {
+                  "kind": "identifier",
+                  "name": "spec",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Spec",
+                    "value": {
+                      "typeName": "Spec"
+                    }
+                  }
+                },
+                {
+                  "kind": "assign",
+                  "left": {
+                    "kind": "identifier",
+                    "name": "options",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "ContractEventOptions",
+                      "value": {
+                        "typeName": "ContractEventOptions"
+                      }
+                    }
+                  },
+                  "right": "[UNSUPPORTED]"
+                }
+              ]
+            }
+          ],
+          "methods": [
+            {
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "name",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  },
+                  {
+                    "kind": "assign",
+                    "left": {
+                      "kind": "identifier",
+                      "name": "occurrence",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    },
+                    "right": "0"
+                  }
+                ],
+                "returnType": {
+                  "kind": "typeRef",
+                  "repr": "ContractEventDefinition",
+                  "value": {
+                    "typeName": "ContractEventDefinition"
+                  }
+                }
+              },
+              "kind": "method",
+              "name": "get"
+            },
+            {
+              "functionDef": {
+                "hasBody": true,
+                "params": [],
+                "returnType": {
+                  "kind": "typeOperator",
+                  "value": {
+                    "operator": "readonly",
+                    "tsType": {
+                      "kind": "array",
+                      "value": {
+                        "kind": "typeRef",
+                        "repr": "ContractEventDefinition",
+                        "value": {
+                          "typeName": "ContractEventDefinition"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "kind": "method",
+              "name": "list"
+            },
+            {
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "event",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "Event",
+                      "value": {
+                        "typeName": "Event"
+                      }
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "union",
+                  "value": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "ContractEvent",
+                      "value": {
+                        "typeName": "ContractEvent"
+                      }
+                    },
+                    {
+                      "kind": "keyword",
+                      "repr": "undefined",
+                      "value": "undefined"
+                    }
+                  ]
+                }
+              },
+              "kind": "method",
+              "name": "parse"
+            }
+          ],
+          "properties": [
+            {
+              "name": "bindings",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeOperator",
+                "value": {
+                  "operator": "readonly",
+                  "tsType": {
+                    "kind": "array",
+                    "value": {
+                      "kind": "typeRef",
+                      "repr": "ContractEventBinding",
+                      "value": {
+                        "typeName": "ContractEventBinding"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "contractId",
+              "readonly": true,
+              "tsType": {
+                "kind": "indexedAccess",
+                "value": {
+                  "indexType": {
+                    "kind": "literal",
+                    "repr": "contractId",
+                    "value": {
+                      "kind": "string",
+                      "string": "contractId"
+                    }
+                  },
+                  "objType": {
+                    "kind": "typeRef",
+                    "repr": "ContractEventOptions",
+                    "value": {
+                      "typeName": "ContractEventOptions"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "kind": "class"
       }
     ],
     "ContractExecutableLedgerObservation": [
@@ -54362,6 +56573,36 @@
         "kind": "typeAlias"
       }
     ],
+    "extractContractErrorMapFromSpec": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "spec",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Spec",
+                "value": {
+                  "typeName": "Spec"
+                }
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "KnownContractErrorMap",
+            "value": {
+              "typeName": "KnownContractErrorMap"
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
     "extractContractErrorMapFromWasm": [
       {
         "declarationKind": "export",
@@ -54386,6 +56627,98 @@
             "repr": "KnownContractErrorMap",
             "value": {
               "typeName": "KnownContractErrorMap"
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "extractContractEventsFromSpec": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "spec",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Spec",
+                "value": {
+                  "typeName": "Spec"
+                }
+              }
+            },
+            {
+              "kind": "assign",
+              "left": {
+                "kind": "identifier",
+                "name": "options",
+                "optional": false,
+                "tsType": {
+                  "kind": "typeRef",
+                  "repr": "ContractEventOptions",
+                  "value": {
+                    "typeName": "ContractEventOptions"
+                  }
+                }
+              },
+              "right": "[UNSUPPORTED]"
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "ContractEventRegistry",
+            "value": {
+              "typeName": "ContractEventRegistry"
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "extractContractEventsFromWasm": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "wasm",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "BinaryData",
+                "value": {
+                  "typeName": "BinaryData"
+                }
+              }
+            },
+            {
+              "kind": "assign",
+              "left": {
+                "kind": "identifier",
+                "name": "options",
+                "optional": false,
+                "tsType": {
+                  "kind": "typeRef",
+                  "repr": "ContractEventOptions",
+                  "value": {
+                    "typeName": "ContractEventOptions"
+                  }
+                }
+              },
+              "right": "[UNSUPPORTED]"
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "ContractEventRegistry",
+            "value": {
+              "typeName": "ContractEventRegistry"
             }
           }
         },

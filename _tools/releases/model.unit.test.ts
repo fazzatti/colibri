@@ -251,3 +251,51 @@ describe("reviewed release planning", () => {
     );
   });
 });
+
+describe("initial package releases", () => {
+  const initial = {
+    ...core,
+    name: "@colibri/new",
+    version: "0.1.0",
+    previousVersion: null,
+    changed: true,
+  };
+  it("requires an explicit initial version and never increments it", () => {
+    const releasePlan = plan({
+      [initial.name]: {
+        bump: "initial",
+        initialVersion: "0.1.0",
+        reason: "New preview package",
+      },
+    });
+    const parsed = readPlan(JSON.stringify(releasePlan));
+    assertEquals(planReleases([initial], parsed)[0].targetVersion, "0.1.0");
+    assertApplied(planReleases([initial], parsed));
+    assertThrows(
+      () => planReleases([initial], plan({ [initial.name]: intent("minor") })),
+      Error,
+      "INITIAL_INTENT_REQUIRED",
+    );
+    assertThrows(
+      () => planReleases([{ ...initial, previousVersion: "0.0.1" }], parsed),
+      Error,
+      "ALREADY_PUBLISHED",
+    );
+    assertThrows(
+      () =>
+        readPlan(JSON.stringify(plan({ [initial.name]: intent("initial") }))),
+      Error,
+    );
+    assertThrows(
+      () =>
+        readPlan(
+          JSON.stringify(
+            plan({
+              [initial.name]: { ...intent("minor"), initialVersion: "0.1.0" },
+            }),
+          ),
+        ),
+      Error,
+    );
+  });
+});

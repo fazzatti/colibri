@@ -7,7 +7,7 @@ describe("WebAuth response body boundary", () => {
   for (const protocol of ["sep10", "sep45"] as const) {
     it(`keeps the ${protocol} deadline active after receiving headers`, async () => {
       let cancelled = false;
-      let bodyTimer: number | undefined;
+      let bodyTimer: ReturnType<typeof setTimeout> | undefined;
       const server = Deno.serve({
         port: 0,
         hostname: "127.0.0.1",

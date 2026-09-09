@@ -14,6 +14,8 @@ export const dockerPackages = new Set([
   "@colibri/test-tooling",
   "@colibri/build-verification",
 ]);
+/** Runtime-specific subpaths are checked by Deno, not packaged as Node artifacts. */
+export const denoOnlyEntrypoints = new Set(["@colibri/contract-bindings/cli"]);
 export const playwrightVersion = "1.61.0";
 
 export async function command(

@@ -14,6 +14,8 @@ file is:
 Colibri is a Deno workspace that publishes multiple TypeScript-first Stellar and
 Soroban packages:
 
+- `contract-bindings/`: portable ABI rendering with Deno-only CLI/writer subpath,
+  typed Core clients and JSR/npm output presets.
 - `core/`: the architectural center of the repo. It defines the shared error
   model, networks, accounts, signers, helpers, processes, steps, pipelines,
   plugins, contract clients, event tooling, ledger parsing, and utilities.
@@ -151,6 +153,7 @@ GitHub Actions behavior matters when changing structure or versions:
 
 Current package version sources:
 
+- `contract-bindings/deno.json`
 - `core/deno.json`
 - `build-verification/deno.json`
 - `identicon/deno.json`
@@ -407,7 +410,7 @@ If you add more environment-sensitive tests, document them.
 
 ### Stable release and compatibility review
 
-All public packages except Build Verification have graduated to independent 1.x
+All public packages except Build Verification and the initial Contract Bindings preview have graduated to independent 1.x
 release lines. Build Verification remains 0.x. Read
 `docs/getting-started/compatibility.md` and `_tools/releases/README.md` before
 changing public types, signer/class extension points, IDs, plugin lifecycle,

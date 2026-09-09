@@ -27,6 +27,19 @@ const colibriImports = (
   }));
 
 describe("dependency direction", () => {
+  it("keeps binding rendering independent of CLI, filesystem and source loading", async () => {
+    await assertRule(
+      projectFiles(`${CONFIG_DIRECTORY}/contract-bindings.json`)
+        .inPath(
+          "../../../contract-bindings/src/{generate,type-map,scaffold,types,error}.ts",
+        )
+        .shouldNot().dependOnFiles()
+        .inPath(
+          "../../../contract-bindings/src/{cli,cli-options,writer,source}.ts",
+        ),
+      "Portable binding rendering must not depend on I/O adapters",
+    );
+  });
   it("keeps Core execution layers pointing inward", async () => {
     const forbiddenDependencies = [
       {
