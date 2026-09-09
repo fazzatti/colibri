@@ -872,6 +872,14 @@ original error case as `name` and declaring enum as `category`, alongside the
 message and optional documentation. Matched errors expose those fields in
 `error.meta.data.match`; existing manual maps may omit them.
 
+`contract.getLedgerEntry({ key, durability })` reads contract data directly from
+RPC, supplying the client's contract ID automatically. Pass an encoded ScVal
+key; durability is `"persistent"` by default or `"temporary"`. It returns the
+same parsed entry, raw XDR and ledger metadata as
+`LedgerEntries.contractData()`. No spec or transaction setup is required.
+Missing entries retain the ledger helper's not-found error. Generated contract
+clients inherit this method.
+
 Contract-standard inspection deliberately keeps declaration and structure
 separate. `getSepClaims()` parses SEP-47 declarations from SEP-46 metadata;
 `analyzeInterface()` compares the SEP-48 specification with a versioned

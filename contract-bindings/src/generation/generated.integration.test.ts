@@ -82,7 +82,7 @@ describe("generated consumer boundary", () => {
         `${directory}/consumer.ts`,
         `
 import { Token, ContractMethods, type TokenInvocationResult } from "./index.ts";
-import { Contract, ColibriError, NetworkConfig, type InvokeContractOutput, Event, EventType } from "@colibri/core";
+import { Contract, ColibriError, NetworkConfig, type InvokeContractOutput, type ContractDataLedgerEntry, Event, EventType } from "@colibri/core";
 import { xdr, nativeToScVal } from "stellar-sdk";
 import { assertEquals, assertRejects } from "@std/assert";
 assertEquals(Object.hasOwn(ContractMethods, "Proto"), true);
@@ -90,6 +90,12 @@ assertEquals(ContractMethods.Proto, "__proto__");
 const token = new Token({ networkConfig: NetworkConfig.TestNet(), contractConfig: { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" } });
 function types() {
   const base: Contract = token;
+  const ledger: Promise<ContractDataLedgerEntry> = token.getLedgerEntry({ key: xdr.ScVal.scvSymbol("counter"), durability: "temporary" });
+  // @ts-expect-error The contract identity is already bound.
+  token.getLedgerEntry({ key: xdr.ScVal.scvSymbol("counter"), contractId: "C..." });
+  // @ts-expect-error Instance storage is not a contract-data durability.
+  token.getLedgerEntry({ key: xdr.ScVal.scvSymbol("counter"), durability: "instance" });
+  void ledger;
   const balance: Promise<bigint> = token.read({ method: "balance", methodArgs: { owner: "alice" } });
   const ping: Promise<null> = token.read({ method: ContractMethods.Ping });
   const enumBalance: Promise<bigint> = token.read({ method: ContractMethods.Balance, methodArgs: { owner: "alice" } });

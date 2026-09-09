@@ -57,7 +57,11 @@ import type {
   ContractErrorMatcherPluginConfig,
   KnownContractErrorMap,
 } from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
-import type { ContractCodeLedgerEntry } from "@/ledger-entries/types.ts";
+import type {
+  BuildContractDataLedgerKeyArgs,
+  ContractCodeLedgerEntry,
+  ContractDataLedgerEntry,
+} from "@/ledger-entries/types.ts";
 import { decodeLedgerEntryForKey } from "@/ledger-entries/decode.ts";
 import type { ResolvedContractExecutable } from "@/ledger-entries/types.ts";
 import { extractContractMetadata } from "@/contract/metadata/extract-contract-metadata.ts";
@@ -401,6 +405,35 @@ export class Contract {
   /** @internal */
   public getContractFootprint(): LedgerKeyLike {
     return new StellarContract(this.getContractId()).getFootprint();
+  }
+
+  /**
+   * Reads a contract-data ledger entry using this client's contract ID and RPC.
+   * No spec, simulation or signing is required. Durability defaults to persistent.
+   *
+   * @param args - Encoded ScVal key and optional persistent/temporary durability.
+   * @returns The existing ledger helper's decoded entry, raw XDR and ledger metadata.
+   * @throws When the contract has no ID, the entry is missing, or the ledger read fails.
+   * @example
+   * ```ts
+   * const entry = await contract.getLedgerEntry({
+   *   key: xdr.ScVal.scvSymbol("counter"),
+   *   durability: "persistent",
+   * });
+   * console.log(entry.value, entry.liveUntilLedgerSeq);
+   * ```
+   */
+  public async getLedgerEntry({
+    key,
+    durability,
+  }: Omit<BuildContractDataLedgerKeyArgs, "contractId">): Promise<
+    ContractDataLedgerEntry
+  > {
+    return await new LedgerEntries({ rpc: this.rpc }).contractData({
+      key,
+      durability,
+      contractId: this.getContractId(),
+    });
   }
 
   /** @internal */

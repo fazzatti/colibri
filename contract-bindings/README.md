@@ -121,6 +121,14 @@ heuristics are generated. `read()` simulates, while `invoke()` uses Core's
 transaction pipeline, preserving raw `returnValue` and metadata and adding a
 decoded `value`. That value is `undefined` when Core has no return value.
 
+Generated clients also inherit `getLedgerEntry({ key, durability })` from Core.
+Supply an encoded ScVal key and optional `"persistent"` (default) or
+`"temporary"` durability; the client uses its bound contract ID and RPC to
+return the existing contract-data entry with parsed values, raw XDR and ledger
+metadata. This direct read requires no spec or transaction configuration and
+preserves the ledger helper's missing-entry error. No storage schema is
+generated.
+
 The output includes a complete method map plus mapped input/output types. Native
 representations follow the installed SDK: large integers are `bigint`, bytes are
 `Uint8Array`, void outputs are `null`, missing Options decode to `null`, and

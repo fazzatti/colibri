@@ -210,6 +210,28 @@ available through both calls; choose simulation or submission deliberately.
 \`invoke()\` preserves Colibri's transaction metadata and raw \`returnValue\`, and
 adds the decoded \`value\`. That value is \`undefined\` if no return value is present.
 
+## Read contract data
+
+The inherited \`getLedgerEntry()\` uses this client's contract ID and RPC. Given
+an \`encodedKey\` ScVal in your contract's storage-key encoding:
+
+${
+    fence(
+      "ts",
+      `const entry = await client.getLedgerEntry({
+  key: encodedKey,
+  durability: "persistent",
+});
+console.log(entry.value, entry.liveUntilLedgerSeq);`,
+    )
+  }
+
+Durability defaults to \`"persistent"\`; \`"temporary"\` is also supported.
+This reads ledger data directly, without simulation or signing. It returns the
+existing Colibri contract-data entry, including parsed values, raw XDR and ledger
+metadata. Missing entries raise the existing ledger not-found error. No storage
+schema is inferred.
+
 ## Functions
 
 | Method | Input type | Output type |

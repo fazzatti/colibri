@@ -108,6 +108,13 @@ values, such as `GrantRole = "grant_role"`. Both `ContractMethods.GrantRole` and
 collisions fail generation. Alias this import when combining several generated
 clients in one module.
 
+The generated class inherits `getLedgerEntry({ key, durability })` from Core for
+direct contract-data reads. It supplies its contract ID and RPC automatically;
+provide an encoded ScVal key and persistent/temporary durability (persistent by
+default). It returns the existing ledger helper's parsed entry and raw metadata,
+without a generated storage schema. See
+[direct ledger reads](../core/contract/invocation.md#getledgerentry).
+
 ## Assemble errors and use events
 
 For a generated `Token` class, `TokenErrors` maps numeric codes to

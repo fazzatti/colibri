@@ -46479,6 +46479,73 @@
               "functionDef": {
                 "hasBody": true,
                 "isAsync": true,
+                "params": [
+                  {
+                    "kind": "object",
+                    "optional": false,
+                    "props": [
+                      {
+                        "key": "key",
+                        "kind": "assign",
+                        "value": null
+                      },
+                      {
+                        "key": "durability",
+                        "kind": "assign",
+                        "value": null
+                      }
+                    ],
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "Omit",
+                      "value": {
+                        "typeName": "Omit",
+                        "typeParams": [
+                          {
+                            "kind": "typeRef",
+                            "repr": "BuildContractDataLedgerKeyArgs",
+                            "value": {
+                              "typeName": "BuildContractDataLedgerKeyArgs"
+                            }
+                          },
+                          {
+                            "kind": "literal",
+                            "repr": "contractId",
+                            "value": {
+                              "kind": "string",
+                              "string": "contractId"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "typeRef",
+                  "repr": "Promise",
+                  "value": {
+                    "typeName": "Promise",
+                    "typeParams": [
+                      {
+                        "kind": "typeRef",
+                        "repr": "ContractDataLedgerEntry",
+                        "value": {
+                          "typeName": "ContractDataLedgerEntry"
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "kind": "method",
+              "name": "getLedgerEntry"
+            },
+            {
+              "accessibility": "public",
+              "functionDef": {
+                "hasBody": true,
+                "isAsync": true,
                 "params": [],
                 "returnType": {
                   "kind": "typeRef",
