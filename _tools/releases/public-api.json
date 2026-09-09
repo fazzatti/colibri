@@ -39606,6 +39606,74 @@
                         "repr": "string",
                         "value": "string"
                       }
+                    },
+                    {
+                      "kind": "identifier",
+                      "name": "validate",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "fnOrConstructor",
+                        "value": {
+                          "constructor": false,
+                          "params": [
+                            {
+                              "kind": "identifier",
+                              "name": "value",
+                              "optional": false,
+                              "tsType": {
+                                "kind": "keyword",
+                                "repr": "string",
+                                "value": "string"
+                              }
+                            }
+                          ],
+                          "tsType": {
+                            "kind": "union",
+                            "value": [
+                              {
+                                "kind": "literal",
+                                "repr": "true",
+                                "value": {
+                                  "boolean": true,
+                                  "kind": "boolean"
+                                }
+                              },
+                              {
+                                "kind": "keyword",
+                                "repr": "string",
+                                "value": "string"
+                              },
+                              {
+                                "kind": "typeRef",
+                                "repr": "Promise",
+                                "value": {
+                                  "typeName": "Promise",
+                                  "typeParams": [
+                                    {
+                                      "kind": "union",
+                                      "value": [
+                                        {
+                                          "kind": "literal",
+                                          "repr": "true",
+                                          "value": {
+                                            "boolean": true,
+                                            "kind": "boolean"
+                                          }
+                                        },
+                                        {
+                                          "kind": "keyword",
+                                          "repr": "string",
+                                          "value": "string"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
                     }
                   ],
                   "returnType": {

@@ -51,6 +51,17 @@ offers **Mainnet**, **Testnet**, **Futurenet**, and **Custom**; Custom asks for
 both the RPC URL and network passphrase. Output and JSR/npm presets also use
 menus. Supplied flags skip their corresponding questions.
 
+Each input is checked before advancing. An invalid answer shows a field-specific
+message and stays editable; for example, pasting a function name at the contract
+ID prompt does not advance to network selection. Contract IDs require a valid
+C-address checksum, and WASM hashes require exactly 64 hexadecimal characters.
+The CLI also checks readable input file paths, output directory paths, RPC URL
+syntax and HTTP opt-in, nonblank passphrases, and class/package names. These
+local checks do not contact RPC or prove that a contract exists on the chosen
+network. Invalid supplied flags fail before prompting or loading a source.
+Custom prompt adapters may use the optional validation callback; adapters that
+omit it receive validation feedback through `log` and are prompted again.
+
 The wizard does not ask for a class name. Soroban specs contain names for ABI
 members, but no contract name. For a local file, the CLI uses its filename in
 PascalCase (`my_token.wasm` → `MyToken`). Remote sources and filenames that

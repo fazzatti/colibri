@@ -1,7 +1,7 @@
 import type { Spec } from "@colibri/core";
 import { renderGuide } from "@/generation/guide.ts";
 import type { GenerateBindingsOptions } from "@/types.ts";
-import { BindingError, Code } from "@/error.ts";
+import { validatePackageName } from "@/generation/validation.ts";
 
 const json = (value: unknown): string => JSON.stringify(value, null, 2) + "\n";
 /** @internal Package scaffolding is created once and preserved during regeneration. */
@@ -13,15 +13,7 @@ export function packageScaffold(
   const guide = renderGuide(options, className, spec);
   if (options.output !== "package") return { "README.md": guide };
   const name = options.packageName;
-  if (
-    !name || !/^(?:@[a-z0-9][a-z0-9-]*\/)?[a-z0-9][a-z0-9-]*$/.test(name) ||
-    (options.target !== "npm" && !name.startsWith("@"))
-  ) {
-    throw new BindingError(
-      Code.INVALID_OPTIONS,
-      "Supply a valid package name (JSR requires @scope/name)",
-    );
-  }
+  validatePackageName(name, options.target ?? "jsr");
   const common = {
     "mod.ts":
       '/** Generated client exports. Add handwritten exports here.\n * @module */\nexport * from "./generated/index.ts";\n',

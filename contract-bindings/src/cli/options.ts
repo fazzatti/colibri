@@ -1,14 +1,16 @@
 import { NetworkConfig } from "@colibri/core";
 import { BindingError, Code } from "@/error.ts";
+import { validateCliValue } from "@/cli/validation.ts";
 
 /** CLI interaction interface for terminals or an application-provided prompt UI. */
 export type CliIO = {
   /** Whether missing values may be requested. */
   interactive: boolean;
-  /** Returns the answer, or null to cancel. */
+  /** Returns the answer, or null to cancel. Adapters may validate while editing. */
   prompt(
     message: string,
     defaultValue?: string,
+    validate?: (value: string) => true | string | Promise<true | string>,
   ): string | null | Promise<string | null>;
   /** Selects a labeled option. Prompt-only adapters may omit this callback. */
   select?(
@@ -16,7 +18,7 @@ export type CliIO = {
     options: readonly { name: string; value: string }[],
     defaultValue?: string,
   ): string | null | Promise<string | null>;
-  /** Displays progress and warnings. */
+  /** Displays progress, warnings and validation feedback for prompt-only adapters. */
   log(message: string): void;
 };
 /** Parsed string flags and boolean switches. */
@@ -89,26 +91,57 @@ async function answer(
   io: CliIO,
   fallback?: string,
 ): Promise<string> {
-  if (typeof flags[key] === "string") return flags[key] as string;
+  const validate = (value: string) => validateCliValue(key, value, flags);
+  if (typeof flags[key] === "string") {
+    await requireValid(key, flags[key] as string, flags);
+    return flags[key] as string;
+  }
   if (!io.interactive || flags["non-interactive"]) {
-    if (fallback !== undefined) return flags[key] = fallback;
+    if (fallback !== undefined) {
+      await requireValid(key, fallback, flags);
+      return flags[key] = fallback;
+    }
     throw new BindingError(
       Code.INVALID_OPTIONS,
       `Missing --${key}; use interactive mode or supply this flag`,
     );
   }
-  const value = await io.prompt(message, fallback);
-  if (value === null) {
-    throw new BindingError(Code.CANCELLED, "Generation cancelled");
+  return flags[key] = await promptValue(io, message, fallback, validate);
+}
+
+async function requireValid(
+  key: string,
+  value: string,
+  flags: CliFlags,
+): Promise<void> {
+  const valid = await validateCliValue(key, value, flags);
+  if (valid !== true) {
+    throw new BindingError(Code.INVALID_OPTIONS, `--${key}: ${valid}`);
   }
-  const resolved = value.trim() || fallback;
-  if (!resolved) {
-    throw new BindingError(
-      Code.INVALID_OPTIONS,
-      `A value for --${key} is required`,
+}
+
+async function promptValue(
+  io: CliIO,
+  message: string,
+  fallback: string | undefined,
+  validate: (value: string) => Promise<true | string>,
+): Promise<string> {
+  const normalize = (value: string) => value.trim() || fallback || "";
+  while (true) {
+    const value = await io.prompt(
+      message,
+      fallback,
+      (value) => validate(normalize(value)),
     );
+    if (value === null) {
+      throw new BindingError(Code.CANCELLED, "Generation cancelled");
+    }
+    const resolved = normalize(value);
+    // Prompt-only adapters may ignore the callback. Always enforce validation here too.
+    const valid = await validate(resolved);
+    if (valid === true) return resolved;
+    io.log(valid);
   }
-  return flags[key] = resolved;
 }
 
 async function choose(
@@ -127,12 +160,6 @@ async function choose(
         fallback,
       ),
   }, fallback);
-  if (!options.some((option) => option.value === value)) {
-    throw new BindingError(
-      Code.INVALID_OPTIONS,
-      `Choose --${key} ${options.map((option) => option.value).join("|")}`,
-    );
-  }
   return value;
 }
 
@@ -152,12 +179,16 @@ const NETWORKS = [
   { name: "Futurenet", value: "futurenet" },
   { name: "Custom — provide an RPC URL and passphrase", value: "custom" },
 ];
-/** Resolves missing CLI choices, preserving every explicit flag. */
+/** Validates supplied flags before prompting; invalid answers stay at their field. */
 export async function resolveCliOptions(
   flags: CliFlags,
   io: CliIO,
 ): Promise<CliFlags> {
   flags = { ...flags };
+  for (const [key, value] of Object.entries(flags)) {
+    if (typeof value === "string") await requireValid(key, value, flags);
+  }
+  validateCombinations(flags);
   if (!["wasm", "wasm-hash", "contract-id"].some((key) => flags[key])) {
     const kind = await choose(
       flags,
@@ -176,6 +207,7 @@ export async function resolveCliOptions(
       NETWORKS,
       io,
     );
+    validateCombinations(flags);
     if (flags.network === "custom") {
       await answer(flags, "rpc-url", "Input the RPC URL", io);
       await answer(
@@ -223,6 +255,23 @@ export async function resolveCliOptions(
   }
   await answer(flags, "out", "Input the output directory", io, "./bindings");
   return flags;
+}
+
+function validateCombinations(flags: CliFlags): void {
+  if (flags["package-name"] && flags.output === "files") {
+    throw new BindingError(
+      Code.INVALID_OPTIONS,
+      "--package-name requires --output package",
+    );
+  }
+  if (
+    flags["network-passphrase"] && flags.network && flags.network !== "custom"
+  ) {
+    throw new BindingError(
+      Code.INVALID_OPTIONS,
+      "--network-passphrase requires --network custom",
+    );
+  }
 }
 /** @internal Resolves a selected preset with explicit endpoint overrides. */
 export function cliNetwork(flags: CliFlags): NetworkConfig {

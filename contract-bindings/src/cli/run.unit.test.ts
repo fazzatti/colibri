@@ -8,6 +8,9 @@ import {
 } from "@/cli/options.ts";
 import { runCli } from "@/cli/run.ts";
 import { BindingError } from "@/error.ts";
+import { contractId } from "colibri-internal/tests/binding-fixtures.ts";
+
+const wasm = "_internal/tests/compiled-contracts/types_harness.wasm";
 
 const silent: CliIO = {
   interactive: false,
@@ -17,8 +20,78 @@ const silent: CliIO = {
   log: () => {},
 };
 describe("bindings CLI", () => {
+  it("re-prompts a mistyped contract ID before displaying the network menu", async () => {
+    const questions: string[] = [];
+    const feedback: string[] = [];
+    const answers = [
+      "decodeInvocationResult",
+      contractId.slice(0, -1) + "A",
+      ` ${contractId} `,
+    ];
+    const flags = await resolveCliOptions({
+      output: "files",
+      target: "jsr",
+      out: "./bindings",
+    }, {
+      interactive: true,
+      select: (message) => {
+        questions.push(message);
+        if (message === "Select the contract source") return "contract-id";
+        assertEquals(answers, []);
+        return "testnet";
+      },
+      prompt: (message) => {
+        questions.push(message);
+        return answers.shift() ?? null;
+      },
+      log: (message) => feedback.push(message),
+    });
+    assertEquals(flags["contract-id"], contractId);
+    assertEquals(questions, [
+      "Select the contract source",
+      "Input the contract ID",
+      "Input the contract ID",
+      "Input the contract ID",
+      "Select the network",
+    ]);
+    assertEquals(feedback.length, 2);
+    assert(feedback.every((message) => message.includes("checksum")));
+  });
+
+  it("rejects invalid flags before any prompts or output, even in interactive mode", async () => {
+    for (
+      const args of [
+        ["--contract-id", "decodeInvocationResult"],
+        ["--wasm-hash", "wrong"],
+        ["--contract-id", contractId, "--rpc-url", "wrong"],
+        ["--contract-id", contractId, "--class-name", "bad name"],
+      ]
+    ) {
+      const error = await assertRejects(
+        () => runCli(args, { ...silent, interactive: true }),
+        BindingError,
+      );
+      assertEquals(error.code, "CBG_001");
+    }
+  });
+
+  it("allows cancellation after invalid input and retries blank choices", async () => {
+    for (const invalid of ["", "typo"]) {
+      const answers = [invalid, null];
+      const feedback: string[] = [];
+      const error = await assertRejects(() =>
+        resolveCliOptions({}, {
+          interactive: true,
+          prompt: () => answers.shift() ?? null,
+          log: (message) => feedback.push(message),
+        }), BindingError);
+      assertEquals(error.code, "CBG_005");
+      assertEquals(feedback.length, 1);
+    }
+  });
+
   it("parses flags strictly and resolves automation defaults", async () => {
-    const flags = parseCliArgs(["--wasm=file.wasm", "--non-interactive"]);
+    const flags = parseCliArgs([`--wasm=${wasm}`, "--non-interactive"]);
     assertEquals((await resolveCliOptions(flags, silent)).target, "jsr");
     for (
       const args of [
@@ -36,18 +109,18 @@ describe("bindings CLI", () => {
       BindingError,
     );
     await assertRejects(
-      () => resolveCliOptions({ wasm: "x", output: "invalid" }, silent),
+      () => resolveCliOptions({ wasm, output: "invalid" }, silent),
       BindingError,
     );
     await assertRejects(
-      () => resolveCliOptions({ wasm: "x", "package-name": "x" }, silent),
+      () => resolveCliOptions({ wasm, "package-name": "x" }, silent),
       BindingError,
     );
   });
   it("prompts for missing choices while preserving supplied flags", async () => {
     const answers = [
       "wasm",
-      "file.wasm",
+      wasm,
       "package",
       "npm",
       "@example/token",
@@ -59,7 +132,7 @@ describe("bindings CLI", () => {
       log: () => {},
     };
     const flags = await resolveCliOptions({}, io);
-    assertEquals(flags.wasm, "file.wasm");
+    assertEquals(flags.wasm, wasm);
     assertEquals(flags.target, "npm");
     assertEquals(flags["class-name"], undefined);
     assertEquals(answers.length, 0);
@@ -69,16 +142,17 @@ describe("bindings CLI", () => {
       "cancelled",
     );
     await assertRejects(
-      () => resolveCliOptions({}, { ...io, prompt: () => "" }),
+      () => resolveCliOptions({}, { ...io, prompt: () => null }),
       BindingError,
     );
     await assertRejects(
-      () => resolveCliOptions({}, { ...io, prompt: () => "typo" }),
+      () => resolveCliOptions({}, { ...io, prompt: () => null }),
       BindingError,
     );
     const custom = await resolveCliOptions({
-      "contract-id": "x",
+      "contract-id": contractId,
       network: "custom",
+      "allow-http": true,
       output: "files",
       target: "jsr",
       out: "x",
@@ -122,11 +196,27 @@ describe("bindings CLI", () => {
         },
         prompt: (message, fallback) => {
           questions.push(message);
-          return fallback ?? "pasted value";
+          return fallback ??
+            (message.includes("WASM file")
+              ? wasm
+              : message.includes("contract ID")
+              ? contractId
+              : message.includes("WASM hash")
+              ? "ab".repeat(32)
+              : message.includes("RPC")
+              ? "https://rpc.example.com"
+              : "local");
         },
         log: () => {},
       });
-      assertEquals(resolved[source], "pasted value");
+      assertEquals(
+        resolved[source],
+        source === "wasm"
+          ? wasm
+          : source === "contract-id"
+          ? contractId
+          : "ab".repeat(32),
+      );
       assertEquals(questions[0], prompt);
       assertEquals(menus[0], ["wasm", "contract-id", "wasm-hash"]);
       if (source !== "wasm") {
@@ -150,7 +240,7 @@ describe("bindings CLI", () => {
       },
     };
     const supplied = {
-      wasm: "token.wasm",
+      wasm,
       output: "files",
       target: "npm",
       out: "out",
@@ -159,7 +249,7 @@ describe("bindings CLI", () => {
     assertEquals(await resolveCliOptions(supplied, io), supplied);
     assertEquals(
       (await resolveCliOptions(
-        { wasm: "token.wasm", "non-interactive": true },
+        { wasm, "non-interactive": true },
         io,
       )).output,
       "files",
@@ -173,7 +263,7 @@ describe("bindings CLI", () => {
       const resolved = await resolveCliOptions({
         ...supplied,
         wasm: false,
-        "contract-id": "C...",
+        "contract-id": contractId,
         network,
       }, io);
       assertEquals(resolved.network, network);

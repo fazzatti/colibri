@@ -37,6 +37,8 @@ Output: --output files|package --target jsr|npm --out DIRECTORY
 
 No flags: use arrow keys and Enter to select choices, then type or paste inputs.
 Partial flags: ask only for missing choices. Ctrl+C or Ctrl+D cancels the wizard.
+Invalid answers stay at their prompt for correction. Invalid flags fail before the wizard.
+Contract IDs require a valid C-address checksum; WASM hashes require 64 hexadecimal characters.
 Full flags: suitable for automation. A local Wasm source needs no network access.
 Generation never deploys a contract or submits a transaction.`;
 

@@ -35,8 +35,14 @@ plain HTTP requires `--allow-http`. Local Wasm parsing requires no network
 access after caching dependencies. `--help` describes every flag.
 
 Partial commands prompt only for missing choices in a terminal. In automation,
-missing required flags are errors. **Ctrl+C** or **Ctrl+D** cancels a prompt
-without writing output files.
+missing required flags are errors. Invalid supplied flags fail before the wizard
+or source loading. Each prompt validates its answer before advancing and lets
+you correct it in place. Contract IDs include checksum validation; WASM hashes
+must contain 64 hexadecimal characters. File/directory paths, RPC URL syntax and
+HTTP opt-in, nonblank passphrases, and class/package names are checked locally.
+These checks do not establish network reachability or on-chain contract
+existence. **Ctrl+C** or **Ctrl+D** cancels a prompt without writing output
+files.
 
 There is no class-name question: local `my_token.wasm` becomes `MyToken`.
 Soroban specs have no contract-name field, so remote sources use

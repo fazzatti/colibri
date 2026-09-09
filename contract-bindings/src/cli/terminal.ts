@@ -32,6 +32,7 @@ export function createTerminalIO(
       if (cause instanceof BindingError && cause.code === Code.CANCELLED) {
         return null;
       }
+      if (cause instanceof BindingError) throw cause;
       throw new BindingError(
         Code.INVALID_OPTIONS,
         "Could not read the terminal input",
@@ -44,12 +45,13 @@ export function createTerminalIO(
   }
   return {
     interactive: input.isTerminal() && output.isTerminal(),
-    prompt: (message, defaultValue) =>
+    prompt: (message, defaultValue, validate) =>
       ask(() =>
         Input.prompt({
           message,
           default: defaultValue,
           minLength: 1,
+          validate,
           reader,
           writer,
         })

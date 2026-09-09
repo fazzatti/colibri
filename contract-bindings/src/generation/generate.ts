@@ -1,7 +1,8 @@
 import { Spec } from "@colibri/core";
 import type { GenerateBindingsOptions, GeneratedBindings } from "@/types.ts";
 import { BindingError, Code } from "@/error.ts";
-import { identifier, TypeMap } from "@/generation/type-map.ts";
+import { TypeMap } from "@/generation/type-map.ts";
+import { validateClassName } from "@/generation/validation.ts";
 import { renderMethods } from "@/generation/methods.ts";
 import { renderEvents } from "@/generation/events.ts";
 export { GENERATED_MARKER } from "@/generation/constants.ts";
@@ -80,16 +81,7 @@ function validateOptions(
   options: GenerateBindingsOptions,
   className: string,
 ): void {
-  if (
-    !identifier(className) ||
-    ["Contract", "ColibriError", "Spec", "createContractErrorMatcherPlugin"]
-      .includes(className)
-  ) {
-    throw new BindingError(
-      Code.INVALID_OPTIONS,
-      "Choose a valid class name that does not shadow a runtime import",
-    );
-  }
+  validateClassName(className);
   if (
     options.target !== undefined && !["jsr", "npm"].includes(options.target)
   ) throw new BindingError(Code.INVALID_OPTIONS, "Unknown target preset");

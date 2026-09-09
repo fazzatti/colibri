@@ -2,6 +2,8 @@ import { assert, assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { createTerminalIO } from "@/cli/terminal.ts";
 import { BindingError } from "@/error.ts";
+import { validateCliValue } from "@/cli/validation.ts";
+import { contractId } from "colibri-internal/tests/binding-fixtures.ts";
 
 function terminal(chunks: (string | Error)[], tty = true) {
   const raw: boolean[] = [];
@@ -33,6 +35,37 @@ function terminal(chunks: (string | Error)[], tty = true) {
 }
 
 describe("bindings terminal prompts", () => {
+  it("keeps an invalid ID in the input editor until corrected or cancelled", async () => {
+    const invalid = "decodeInvocationResult";
+    const term = terminal([
+      invalid,
+      "\r",
+      "\x7f".repeat(invalid.length),
+      contractId,
+      "\r",
+    ]);
+    assertEquals(
+      await term.io.prompt(
+        "Input the contract ID",
+        undefined,
+        (value) => validateCliValue("contract-id", value, {}),
+      ),
+      contractId,
+    );
+    assert(term.text().includes("Invalid contract ID"));
+    assertEquals(term.raw.at(-1), false);
+    const cancelled = terminal([invalid, "\r", "\x03"]);
+    assertEquals(
+      await cancelled.io.prompt(
+        "Input the contract ID",
+        undefined,
+        (value) => validateCliValue("contract-id", value, {}),
+      ),
+      null,
+    );
+    assertEquals(cancelled.raw.at(-1), false);
+  });
+
   const options = [
     { name: "Mainnet", value: "mainnet" },
     { name: "Testnet", value: "testnet" },
