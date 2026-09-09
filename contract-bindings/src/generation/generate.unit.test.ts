@@ -9,6 +9,28 @@ import { doc, identifier, TypeMap, typeName } from "@/generation/type-map.ts";
 import { bindingSpec } from "colibri-internal/tests/binding-fixtures.ts";
 
 describe("bindings rendering", () => {
+  it("generates clients and package manifests with only Core as a runtime dependency", () => {
+    for (const target of ["jsr", "npm"] as const) {
+      const plan = generateBindings(bindingSpec(), {
+        className: "Token",
+        output: "package",
+        target,
+        packageName: "@example/token",
+      });
+      const source = Object.values(plan.files).join("\n");
+      assert(source.includes('import { Spec } from "@colibri/core"'));
+      assert(!source.includes("stellar-sdk"));
+      const manifest = JSON.parse(
+        plan.scaffold[target === "npm" ? "package.json" : "deno.json"],
+      );
+      assertEquals(
+        Object.keys(
+          target === "npm" ? manifest.dependencies : manifest.imports,
+        ),
+        ["@colibri/core"],
+      );
+    }
+  });
   it("renders deterministic clients with full method maps, events, specs and error configuration", () => {
     const spec = bindingSpec();
     const plan = generateBindings(spec, { className: "Token" });

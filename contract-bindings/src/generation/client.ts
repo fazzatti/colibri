@@ -3,7 +3,7 @@ import { GENERATED_MARKER } from "@/generation/constants.ts";
 import { quote } from "@/generation/type-map.ts";
 
 /** @internal A focused Contract subclass; constants and ABI types live in their own files. */
-export function renderClient(name: string, sdk: string): string {
+export function renderClient(name: string): string {
   return `${GENERATED_MARKER}
 /**
  * Typed Colibri client for ${name}.
@@ -15,7 +15,7 @@ import {
   type ContractId,
   createContractErrorMatcherPlugin,
 } from "@colibri/core";
-import { Spec } from ${quote(sdk)};
+import { Spec } from "@colibri/core";
 import { ${name}Errors, ${name}Spec } from "./constants.ts";
 import type {
   ${name}Call,

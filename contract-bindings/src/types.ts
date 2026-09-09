@@ -1,6 +1,13 @@
 import type { LoadedContractSnapshot, NetworkConfig } from "@colibri/core";
-import type { Spec } from "stellar-sdk/contract";
+import type { Spec } from "@colibri/core";
 import type { Server } from "stellar-sdk/rpc";
+
+/** @internal Native network configuration accepted without conversion. */
+type BindingNetwork = NetworkConfig;
+/** @internal Native RPC client accepted without conversion. */
+type BindingRpc = Server;
+/** @internal Native snapshot shape returned by Core. */
+type BindingSnapshot = LoadedContractSnapshot;
 
 /** Contract ABI source. Network access is only required for deployed sources. */
 export type BindingSource =
@@ -9,14 +16,14 @@ export type BindingSource =
   | {
     kind: "contract";
     contractId: string;
-    networkConfig: NetworkConfig;
-    rpc?: Server;
+    networkConfig: BindingNetwork;
+    rpc?: BindingRpc;
   }
   | {
     kind: "hash";
     wasmHash: string;
-    networkConfig: NetworkConfig;
-    rpc?: Server;
+    networkConfig: BindingNetwork;
+    rpc?: BindingRpc;
   };
 /** Immutable source identifiers; endpoint credentials are never generated into code. */
 export type BindingProvenance = {
@@ -27,7 +34,7 @@ export type BindingProvenance = {
   /** Resolved deployment id, when applicable. */
   contractId?: string;
   /** RPC observations; instance/code reads are not an atomic snapshot. */
-  snapshot?: LoadedContractSnapshot;
+  snapshot?: BindingSnapshot;
 };
 /** Loaded spec and its source identifiers. */
 export type LoadedBindingSource = { spec: Spec; provenance: BindingProvenance };

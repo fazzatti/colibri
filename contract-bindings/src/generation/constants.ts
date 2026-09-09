@@ -1,6 +1,6 @@
 import { literal } from "@/generation/literal.ts";
 import { extractContractErrorMapFromSpec } from "@colibri/core";
-import type { Spec } from "stellar-sdk/contract";
+import type { Spec } from "@colibri/core";
 import type { GenerateBindingsOptions } from "@/types.ts";
 import { property, quote } from "@/generation/type-map.ts";
 
@@ -11,7 +11,6 @@ export const GENERATED_MARKER =
 export function renderConstants(
   spec: Spec,
   className: string,
-  sdk: string,
   options: GenerateBindingsOptions,
 ): string {
   return `${GENERATED_MARKER}
@@ -20,7 +19,7 @@ export function renderConstants(
  * @module
  */
 import type { KnownContractErrorMap } from "@colibri/core";
-import { Spec } from ${quote(sdk)};
+import { Spec } from "@colibri/core";
 
 /** ABI method names. Choose read or invoke at the call site. */
 export const ${className}Methods = {

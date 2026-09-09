@@ -4,6 +4,11 @@ Generate a typed Colibri `Contract` subclass from a Soroban Wasm file, a
 deployed contract ID, or an uploaded Wasm hash. The package exports a portable
 rendering API and a Deno CLI with interactive prompts and automation flags.
 
+Generated clients import `Spec` and the native `Result` type from
+`@colibri/core`. JSR and npm scaffolds declare only Core as a runtime
+dependency. Core provides the Stellar SDK internally, so consumers do not need
+to add it just for the spec.
+
 This initial 0.1 preview requires Colibri Core 1.1 and Stellar SDK 17.0.1 or a
 compatible 17.x release. The CLI runs on Deno; generated packages target **JSR
 or npm**, independently of the runtime used to run the generator.
@@ -182,7 +187,7 @@ Wasm or network sources:
 
 ```ts
 import { generateBindings } from "@colibri/contract-bindings";
-import { Spec } from "stellar-sdk/contract";
+import { Spec } from "@colibri/core";
 import { xdr } from "stellar-sdk";
 
 const spec = new Spec([

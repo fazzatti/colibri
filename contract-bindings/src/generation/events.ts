@@ -2,7 +2,7 @@ import {
   contractEventBindings,
   extractContractEventsFromSpec,
 } from "@colibri/core";
-import type { Spec } from "stellar-sdk/contract";
+import type { Spec } from "@colibri/core";
 import {
   doc,
   indent,

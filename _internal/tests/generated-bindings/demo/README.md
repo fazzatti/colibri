@@ -16,11 +16,10 @@ contract's specification. The client extends `Contract` and provides typed
 
 ```sh
 deno add jsr:@colibri/core@^1.1.0
-deno add --alias stellar-sdk npm:@stellar/stellar-sdk@^17.0.1
 ```
 
-The JSR preset uses Colibri Core 1.1 and Stellar SDK 17. The generated source
-imports `@colibri/core` and `stellar-sdk/contract` from your Deno import map.
+The JSR preset uses Colibri Core 1.1; Core supplies the Stellar SDK dependency. The generated source
+imports only `@colibri/core` from your Deno import map.
 
 ## Create a client
 

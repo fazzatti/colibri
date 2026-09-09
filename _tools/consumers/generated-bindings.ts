@@ -20,6 +20,7 @@ for (const [path, content] of Object.entries({...plan.files, ...plan.scaffold}))
   await writeFile("generated-package/" + path, content);
 }
 const manifest = JSON.parse(await readFile("generated-package/package.json", "utf8"));
+assert.deepEqual(Object.keys(manifest.dependencies), ["@colibri/core"]);
 assert.equal(manifest.dependencies["@colibri/core"], "npm:@jsr/colibri__core@^1.1.0");
 // Core 1.1 has not been published yet. Substitute only its equivalent test artifact.
 manifest.dependencies["@colibri/core"] = ${
@@ -42,11 +43,10 @@ await writeFile("generated-package/package.json", JSON.stringify(manifest, null,
     `
 import { PingClient, PingClientSpec } from "./dist/mod.js";
 import { Contract, NetworkConfig } from "@colibri/core";
-import { xdr } from "@stellar/stellar-sdk";
 import { strict as assert } from "node:assert";
 const client = new PingClient({ networkConfig: NetworkConfig.TestNet(), contractConfig: { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" } });
 assert(client instanceof Contract);
-assert.equal(PingClientSpec.funcResToNative("ping", xdr.ScVal.scvVoid()), null);
+assert.equal(PingClientSpec.getFunc("ping").name.toString(), "ping");
 assert.equal(client.events.list().length, 0);
 console.log("Generated npm package: ESM imports, declarations, native SDK codec and Core identity passed.");
 `,

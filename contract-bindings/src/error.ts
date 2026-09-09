@@ -10,8 +10,10 @@ export enum Code {
   /** A submitted transaction succeeded but its return value could not be decoded. */
   RESULT_DECODE_FAILED = "CBG_006",
 }
+/** @internal Shared Core error base; constructor identity is preserved. */
+export class BindingErrorBase extends ColibriError<Code, { cause?: unknown }> {}
 /** Generator error preserving its cause and actionable context. */
-export class BindingError extends ColibriError<Code, { cause?: unknown }> {
+export class BindingError extends BindingErrorBase {
   /** Creates a failure without discarding the underlying SDK or filesystem error. */
   constructor(code: Code, message: string, cause?: unknown) {
     super({

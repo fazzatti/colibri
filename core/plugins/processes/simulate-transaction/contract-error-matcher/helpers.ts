@@ -1,4 +1,4 @@
-import { Spec } from "stellar-sdk/contract";
+import { Spec } from "@/contract/spec.ts";
 import type { BinaryData } from "@/common/types/index.ts";
 import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 import * as E from "@/plugins/processes/simulate-transaction/contract-error-matcher/error.ts";

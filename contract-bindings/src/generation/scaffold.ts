@@ -1,4 +1,4 @@
-import type { Spec } from "stellar-sdk/contract";
+import type { Spec } from "@colibri/core";
 import { renderGuide } from "@/generation/guide.ts";
 import type { GenerateBindingsOptions } from "@/types.ts";
 import { BindingError, Code } from "@/error.ts";
@@ -43,7 +43,6 @@ export function packageScaffold(
         },
         dependencies: {
           "@colibri/core": "npm:@jsr/colibri__core@^1.1.0",
-          "@stellar/stellar-sdk": "^17.0.1",
         },
         devDependencies: { typescript: "~5.9.3", "@types/node": "^22.0.0" },
         engines: { node: ">=22.12.0" },
@@ -74,7 +73,6 @@ export function packageScaffold(
       exports: "./mod.ts",
       imports: {
         "@colibri/core": "jsr:@colibri/core@^1.1.0",
-        "stellar-sdk": "npm:@stellar/stellar-sdk@^17.0.1",
       },
       tasks: { check: "deno check mod.ts", fmt: "deno fmt" },
       publish: {

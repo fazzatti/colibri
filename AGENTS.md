@@ -14,8 +14,8 @@ file is:
 Colibri is a Deno workspace that publishes multiple TypeScript-first Stellar and
 Soroban packages:
 
-- `contract-bindings/`: portable ABI rendering with Deno-only CLI/writer subpath,
-  typed Core clients and JSR/npm output presets.
+- `contract-bindings/`: portable ABI rendering with Deno-only CLI/writer
+  subpath, typed Core clients and JSR/npm output presets.
 - `core/`: the architectural center of the repo. It defines the shared error
   model, networks, accounts, signers, helpers, processes, steps, pipelines,
   plugins, contract clients, event tooling, ledger parsing, and utilities.
@@ -179,7 +179,7 @@ Repository architecture is executable under `_tools/architecture/`. Keep its
 ArchUnitTS rules aligned whenever adding a package, process, step, pipeline,
 entrypoint, or dependency boundary. `deno task test:architecture` checks:
 
-- package dependency direction and public-root-only cross-package imports
+- package dependency direction and public-entrypoint-only cross-package imports
 - Core and build-verification layer direction
 - circular dependencies, including explicit baselines for established cycles
 - process-to-step and pipeline physical topology
@@ -410,11 +410,12 @@ If you add more environment-sensitive tests, document them.
 
 ### Stable release and compatibility review
 
-All public packages except Build Verification and the initial Contract Bindings preview have graduated to independent 1.x
-release lines. Build Verification remains 0.x. Read
-`docs/getting-started/compatibility.md` and `_tools/releases/README.md` before
-changing public types, signer/class extension points, IDs, plugin lifecycle,
-errors, defaults, runtime support, or native Stellar SDK interoperability.
+All public packages except Build Verification and the initial Contract Bindings
+preview have graduated to independent 1.x release lines. Build Verification
+remains 0.x. Read `docs/getting-started/compatibility.md` and
+`_tools/releases/README.md` before changing public types, signer/class extension
+points, IDs, plugin lifecycle, errors, defaults, runtime support, or native
+Stellar SDK interoperability.
 
 - Record reviewed cumulative release intent in `_tools/releases/plan.json`.
   Calculate versions from fetched `origin/main`, not the current edited version.
@@ -425,10 +426,10 @@ errors, defaults, runtime support, or native Stellar SDK interoperability.
 - Review public declaration changes and update the API snapshot intentionally.
   Preserve `_tools/consumers/v1/` fixtures; do not edit away a regression.
 - Run native SDK/custom signer/plugin checks against supported minimum/current
-  integrations. Browser bundling is not browser execution, and dnt test artifacts
-  are not JSR's published distribution.
-- Keep the 100% implementation coverage target, existing Codecov policy, CRAP 15,
-  architecture, and full package integration checks. Do not count consumer
+  integrations. Browser bundling is not browser execution, and dnt test
+  artifacts are not JSR's published distribution.
+- Keep the 100% implementation coverage target, existing Codecov policy, CRAP
+  15, architecture, and full package integration checks. Do not count consumer
   fixtures as coverage padding.
 - Current-major compatibility is required. Older-major backports or adapters
   need a separate user decision; do not introduce a standing LTS policy.

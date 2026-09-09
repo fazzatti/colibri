@@ -10,7 +10,7 @@ import type {
   ContractEventRegistry,
   KnownContractErrorMap,
 } from "@colibri/core";
-import type { Result as StellarResult } from "stellar-sdk/contract";
+import type { Result as StellarResult } from "@colibri/core";
 import { DemoMethods } from "./constants.ts";
 
 /** Errors returned by the demonstration counter. */

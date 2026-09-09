@@ -71,7 +71,8 @@ export class MISSING_ARG extends SendTransactionError {
       code: Code.MISSING_ARG,
       message: `Missing required argument: ${argName}!`,
       input,
-      details: `The argument '${argName}' is required but was not provided in the input.`,
+      details:
+        `The argument '${argName}' is required but was not provided in the input.`,
     });
   }
 }
@@ -113,7 +114,8 @@ export class TIMEOUT_TOO_LOW extends SendTransactionError {
       code: Code.TIMEOUT_TOO_LOW,
       message: "Timeout too low!",
       input,
-      details: `The provided timeout (${timeoutInSeconds}s) is too low. It must be at least 1 second.`,
+      details:
+        `The provided timeout (${timeoutInSeconds}s) is too low. It must be at least 1 second.`,
     });
   }
 }
@@ -133,7 +135,8 @@ export class WAIT_INTERVAL_TOO_LOW extends SendTransactionError {
       code: Code.WAIT_INTERVAL_TOO_LOW,
       message: "Wait interval too low!",
       input,
-      details: `The provided wait interval (${waitIntervalInMs}ms) is too low. It must be at least 100ms.`,
+      details:
+        `The provided wait interval (${waitIntervalInMs}ms) is too low. It must be at least 100ms.`,
     });
   }
 }
@@ -153,7 +156,8 @@ export class DUPLICATE_TRANSACTION extends SendTransactionError {
       code: Code.DUPLICATE_TRANSACTION,
       message: "Duplicate transaction!",
       input,
-      details: `The transaction with ID (${txHash}) has already been submitted.`,
+      details:
+        `The transaction with ID (${txHash}) has already been submitted.`,
       diagnostic: {
         rootCause:
           "The RPC returned the 'DUPLICATE' status when the transaction was sent for processing.",
@@ -179,7 +183,8 @@ export class TRY_AGAIN_LATER extends SendTransactionError {
       code: Code.TRY_AGAIN_LATER,
       message: "Temporary issue, please try again later!",
       input,
-      details: `The transaction with ID (${txHash}) could not be processed at this time.`,
+      details:
+        `The transaction with ID (${txHash}) could not be processed at this time.`,
       diagnostic: {
         rootCause:
           "The RPC returned a 'TRY_AGAIN_LATER' status when the transaction was sent for processing.",
@@ -216,13 +221,14 @@ export class ERROR_STATUS extends SendTransactionError {
     input: SendTransactionInput,
     txHash: string,
     errorResult?: xdr.TransactionResult,
-    diagnosticEvents?: xdr.DiagnosticEvent[]
+    diagnosticEvents?: xdr.DiagnosticEvent[],
   ) {
     super({
       code: Code.ERROR_STATUS,
       message: "Transaction processing error!",
       input,
-      details: `The transaction with ID (${txHash}) encountered an error during processing.`,
+      details:
+        `The transaction with ID (${txHash}) encountered an error during processing.`,
       diagnostic: {
         rootCause:
           "The RPC returned an 'ERROR' status when the transaction was sent for processing.",
@@ -261,7 +267,8 @@ export class UNEXPECTED_STATUS extends SendTransactionError {
       code: Code.UNEXPECTED_STATUS,
       message: "Unexpected transaction status!",
       input,
-      details: `The transaction with ID (${txHash}) returned an unexpected status: ${status}.`,
+      details:
+        `The transaction with ID (${txHash}) returned an unexpected status: ${status}.`,
       diagnostic: {
         rootCause:
           "The RPC returned a status that is not recognized by the current implementation.",
@@ -288,7 +295,8 @@ export class FAILED_TO_GET_TRANSACTION_STATUS extends SendTransactionError {
       code: Code.FAILED_TO_GET_TRANSACTION_STATUS,
       message: "Failed to get transaction status!",
       input,
-      details: `The RPC request to get the status for transaction with ID (${txHash}) failed with error: ${error.message}.`,
+      details:
+        `The RPC request to get the status for transaction with ID (${txHash}) failed with error: ${error.message}.`,
       diagnostic: {
         rootCause:
           "The RPC request to fetch the transaction status encountered an error.",
@@ -327,7 +335,7 @@ export class TRANSACTION_FAILED extends SendTransactionError {
   constructor(
     input: SendTransactionInput,
     txHash: string,
-    response: Api.GetFailedTransactionResponse
+    response: Api.GetFailedTransactionResponse,
   ) {
     super({
       code: Code.TRANSACTION_FAILED,
@@ -375,7 +383,8 @@ export class TRANSACTION_NOT_FOUND extends SendTransactionError {
       code: Code.TRANSACTION_NOT_FOUND,
       message: "Transaction not found!",
       input,
-      details: `The transaction with ID (${txHash}) was not found on the network.`,
+      details:
+        `The transaction with ID (${txHash}) was not found on the network.`,
       diagnostic: {
         rootCause:
           "The transaction does not exist or has not been processed yet.",
@@ -390,15 +399,16 @@ export class TRANSACTION_NOT_FOUND extends SendTransactionError {
  * Send-transaction error constructors indexed by stable code.
  */
 export const ERROR_BY_CODE = {
-  [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
-  [Code.MISSING_ARG]: MISSING_ARG,
-  [Code.FAIL_TO_SEND_TRANSACTION]: FAIL_TO_SEND_TRANSACTION,
-  [Code.TIMEOUT_TOO_LOW]: TIMEOUT_TOO_LOW,
-  [Code.WAIT_INTERVAL_TOO_LOW]: WAIT_INTERVAL_TOO_LOW,
-  [Code.DUPLICATE_TRANSACTION]: DUPLICATE_TRANSACTION,
-  [Code.TRY_AGAIN_LATER]: TRY_AGAIN_LATER,
-  [Code.ERROR_STATUS]: ERROR_STATUS,
-  [Code.UNEXPECTED_STATUS]: UNEXPECTED_STATUS,
-  [Code.FAILED_TO_GET_TRANSACTION_STATUS]: FAILED_TO_GET_TRANSACTION_STATUS,
-  [Code.TRANSACTION_FAILED]: TRANSACTION_FAILED,
+  ["STX_000" as Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
+  ["STX_001" as Code.MISSING_ARG]: MISSING_ARG,
+  ["STX_002" as Code.FAIL_TO_SEND_TRANSACTION]: FAIL_TO_SEND_TRANSACTION,
+  ["STX_003" as Code.TIMEOUT_TOO_LOW]: TIMEOUT_TOO_LOW,
+  ["STX_004" as Code.WAIT_INTERVAL_TOO_LOW]: WAIT_INTERVAL_TOO_LOW,
+  ["STX_005" as Code.DUPLICATE_TRANSACTION]: DUPLICATE_TRANSACTION,
+  ["STX_006" as Code.TRY_AGAIN_LATER]: TRY_AGAIN_LATER,
+  ["STX_007" as Code.ERROR_STATUS]: ERROR_STATUS,
+  ["STX_008" as Code.UNEXPECTED_STATUS]: UNEXPECTED_STATUS,
+  ["STX_009" as Code.FAILED_TO_GET_TRANSACTION_STATUS]:
+    FAILED_TO_GET_TRANSACTION_STATUS,
+  ["STX_010" as Code.TRANSACTION_FAILED]: TRANSACTION_FAILED,
 };

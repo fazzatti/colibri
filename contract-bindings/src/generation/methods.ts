@@ -1,4 +1,4 @@
-import type { Spec } from "stellar-sdk/contract";
+import type { Spec } from "@colibri/core";
 import { BindingError, Code } from "@/error.ts";
 import {
   doc,

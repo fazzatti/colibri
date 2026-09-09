@@ -1,5 +1,5 @@
 import type { xdr } from "stellar-sdk";
-import type { Spec } from "stellar-sdk/contract";
+import type { Spec } from "@colibri/core";
 import { BindingError, Code } from "@/error.ts";
 
 const RESERVED = new Set(

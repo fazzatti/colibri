@@ -1,5 +1,5 @@
 import { Contract, extractContractSpec } from "@colibri/core";
-import { Spec } from "stellar-sdk/contract";
+import { Spec } from "@colibri/core";
 import type { BindingSource, LoadedBindingSource } from "@/types.ts";
 import { BindingError, Code } from "@/error.ts";
 

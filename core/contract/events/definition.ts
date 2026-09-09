@@ -1,5 +1,5 @@
 import { xdr } from "stellar-sdk";
-import type { Spec } from "stellar-sdk/contract";
+import type { Spec } from "@/contract/spec.ts";
 import { Event } from "@/event/event.ts";
 import { EventType } from "@/event/types.ts";
 import { EventFilter } from "@/event/event-filter/index.ts";
@@ -142,20 +142,24 @@ export class ContractEventDefinition<
       topics: [this.toTopicFilter(values)],
     });
   }
+  /** Selects the ordered indexed fields. */
   private topicParams(): xdr.ScSpecEventParamV0[] {
     return this.declaration.params.filter((param) =>
       param.location.name === "scSpecEventParamLocationTopicList"
     );
   }
+  /** Selects the ordered payload fields. */
   private dataParams(): xdr.ScSpecEventParamV0[] {
     return this.declaration.params.filter((param) =>
       param.location.name === "scSpecEventParamLocationData"
     );
   }
+  /** Validates a field before native decoding. */
   private decode(value: xdr.ScVal, type: xdr.ScSpecTypeDef): unknown {
     validateEventValue(this.spec, value, type);
     return this.spec.scValToNative(value, type);
   }
+  /** Decodes the declared payload format into named fields. */
   private decodeData(value: xdr.ScVal, fields: Record<string, unknown>): void {
     const params = this.dataParams();
     let values: xdr.ScVal[];

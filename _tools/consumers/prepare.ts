@@ -75,9 +75,8 @@ export async function prepareArtifacts(
         "npm",
         pkg.name.slice("@colibri/".length),
       );
-      const usesConvee = (await runtimeImports(resolve(source, pkg.root))).has(
-        "convee",
-      );
+      const packageImports = await runtimeImports(resolve(source, pkg.root));
+      const usesConvee = packageImports.has("convee");
       const mappings = {
         ...(usesConvee
           ? {
@@ -87,12 +86,23 @@ export async function prepareArtifacts(
             },
           }
           : {}),
-        ...(pkg.name === "@colibri/core" ? {} : {
-          [pathToFileURL(resolve(source, "core/mod.ts")).href]: {
-            name: "@colibri/core",
-            version: `file:${artifacts.get("@colibri/core")}`,
-          },
-        }),
+        ...(pkg.name === "@colibri/core" ? {} : Object.fromEntries(
+          Object.entries(
+            inventory.find((item) => item.name === "@colibri/core")!.exports,
+          )
+            .filter(([name]) =>
+              packageImports.has(
+                `@colibri/core${name === "." ? "" : name.slice(1)}`,
+              )
+            )
+            .map((
+              [name, entry],
+            ) => [pathToFileURL(resolve(source, "core", entry)).href, {
+              name: "@colibri/core",
+              version: `file:${artifacts.get("@colibri/core")}`,
+              ...(name === "." ? {} : { subPath: name.slice(2) }),
+            }]),
+        )),
       };
       await Deno.mkdir(outDir, { recursive: true });
       await Deno.writeTextFile(

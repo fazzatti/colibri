@@ -1,4 +1,4 @@
-import type { Spec } from "stellar-sdk/contract";
+import type { Spec } from "@/contract/spec.ts";
 import type { BinaryData } from "@/common/types/index.ts";
 import type { SepClaim } from "@/contract/metadata/types.ts";
 

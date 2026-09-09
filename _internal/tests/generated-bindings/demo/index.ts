@@ -9,7 +9,7 @@ import {
   type ContractId,
   createContractErrorMatcherPlugin,
 } from "@colibri/core";
-import { Spec } from "stellar-sdk/contract";
+import { Spec } from "@colibri/core";
 import { DemoErrors, DemoSpec } from "./constants.ts";
 import type {
   DemoCall,

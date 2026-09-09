@@ -55,7 +55,8 @@ export class INVALID_ED25519_PUBLIC_KEY extends NativeAccountError {
       code: Code.INVALID_ED25519_PUBLIC_KEY,
       message: "The provided ED25519 public key is invalid!",
       data: null,
-      details: `When validating the provided public key '${address}', it was found to not match the expected ED25519 format with the Strkey encoding.`,
+      details:
+        `When validating the provided public key '${address}', it was found to not match the expected ED25519 format with the Strkey encoding.`,
       diagnostic: {
         rootCause: "The public key is not properly formatted.",
         suggestion:
@@ -82,7 +83,8 @@ export class INVALID_MUXED_ID extends NativeAccountError {
       code: Code.INVALID_MUXED_ID,
       message: "The provided Muxed ID is invalid!",
       data: null,
-      details: `When validating the provided Muxed ID '${id}', it was found to not be a valid uint64 string.`,
+      details:
+        `When validating the provided Muxed ID '${id}', it was found to not be a valid uint64 string.`,
       diagnostic: {
         rootCause: "The Muxed ID is not a valid uint64 string.",
         suggestion:
@@ -121,7 +123,8 @@ export class INVALID_MUXED_ADDRESS_GENERATED extends NativeAccountError {
       code: Code.INVALID_MUXED_ADDRESS_GENERATED,
       message: "The Muxed Address generated is invalid!",
       data: null,
-      details: `Something went wrong when generating the Muxed Address with the provided id. Check the parameters used under the 'meta' section and make sure they are correct.`,
+      details:
+        `Something went wrong when generating the Muxed Address with the provided id. Check the parameters used under the 'meta' section and make sure they are correct.`,
     });
 
     this.meta = {
@@ -149,9 +152,11 @@ export class MISSING_MASTER_SIGNER extends NativeAccountError {
       code: Code.MISSING_MASTER_SIGNER,
       message: "The master signer is missing!",
       data: null,
-      details: `The master signer is required for this operation but is missing. Make sure to provide a valid master signer when creating the NativeAccount instance.`,
+      details:
+        `The master signer is required for this operation but is missing. Make sure to provide a valid master signer when creating the NativeAccount instance.`,
       diagnostic: {
-        rootCause: `The NativeAccount instance for ${address} was created without a master signer.`,
+        rootCause:
+          `The NativeAccount instance for ${address} was created without a master signer.`,
         suggestion:
           "Provide a valid master signer when creating the NativeAccount instance if you plan to perform operations that require it.",
       },
@@ -173,7 +178,8 @@ export class UNSUPPORTED_ADDRESS_TYPE extends NativeAccountError {
       code: Code.UNSUPPORTED_ADDRESS_TYPE,
       message: "The provided address type is unsupported!",
       data: null,
-      details: `The address '${address}' is of an unsupported type for NativeAccount. Only ED25519 public keys are supported.`,
+      details:
+        `The address '${address}' is of an unsupported type for NativeAccount. Only ED25519 public keys are supported.`,
       diagnostic: {
         rootCause: "The address type is not supported by NativeAccount.",
         suggestion:
@@ -188,9 +194,11 @@ export class UNSUPPORTED_ADDRESS_TYPE extends NativeAccountError {
  */
 export const ERROR_ACC_NAT = {
   // [Code.UNEXPECTED]: UNEXPECTED,
-  [Code.INVALID_ED25519_PUBLIC_KEY]: INVALID_ED25519_PUBLIC_KEY,
-  [Code.INVALID_MUXED_ID]: INVALID_MUXED_ID,
-  [Code.INVALID_MUXED_ADDRESS_GENERATED]: INVALID_MUXED_ADDRESS_GENERATED,
-  [Code.MISSING_MASTER_SIGNER]: MISSING_MASTER_SIGNER,
-  [Code.UNSUPPORTED_ADDRESS_TYPE]: UNSUPPORTED_ADDRESS_TYPE,
+  ["ACC_NAT_001" as Code.INVALID_ED25519_PUBLIC_KEY]:
+    INVALID_ED25519_PUBLIC_KEY,
+  ["ACC_NAT_002" as Code.INVALID_MUXED_ID]: INVALID_MUXED_ID,
+  ["ACC_NAT_003" as Code.INVALID_MUXED_ADDRESS_GENERATED]:
+    INVALID_MUXED_ADDRESS_GENERATED,
+  ["ACC_NAT_004" as Code.MISSING_MASTER_SIGNER]: MISSING_MASTER_SIGNER,
+  ["ACC_NAT_005" as Code.UNSUPPORTED_ADDRESS_TYPE]: UNSUPPORTED_ADDRESS_TYPE,
 };

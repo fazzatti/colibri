@@ -4,7 +4,7 @@
  * @module
  */
 import type { KnownContractErrorMap } from "@colibri/core";
-import { Spec } from "stellar-sdk/contract";
+import { Spec } from "@colibri/core";
 
 /** ABI method names. Choose read or invoke at the call site. */
 export const DemoMethods = {

@@ -44,8 +44,25 @@ Deno, Node, and bundlers.
 
 ## What Core helps you build
 
-The package root exposes the complete supported API. This map gives each family
-a small introduction before the later sections explain how the pieces work.
+The package root exposes the complete supported API. Core 1.1 also supports
+`@colibri/core/errors` and `@colibri/core/strkey` for lightweight browser
+consumers. These subpaths export the same implementations as the root,
+preserving constructor identity and `instanceof`. They avoid the root's
+contract, RPC and parser initialization.
+
+```ts
+import { ColibriError } from "@colibri/core/errors";
+import { StrKey } from "@colibri/core/strkey";
+```
+
+The root also exports the native `Spec` constructor and `Result` type. Existing
+Stellar SDK specs work unchanged with Core APIs. Generated clients can import
+these through Core and declare only Core as a runtime dependency; the Stellar
+SDK remains a dependency of Core. See the
+[browser import guide](../docs/getting-started/browser-bundles.md).
+
+This map gives each family a small introduction before the later sections
+explain how the pieces work.
 
 | Area                          | What it provides                                                                                                                              | Typical use                                                                                    |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
@@ -1294,10 +1311,11 @@ across applications built on Colibri.
 ## Spec-aware contract events
 
 `contract.events` exposes declarations from the loaded spec;
-`await contract.loadContractEventsFromWasm()` loads them from the configured source
-when needed. `extractContractEventsFromSpec` and `extractContractEventsFromWasm`
-also work independently. Registry definitions provide strict decoding and indexed
-filters; decoded `ContractEvent` objects retain ledger, transaction, and raw XDR
-metadata. Missing declarations do not imply that a contract emits no events.
-See [the guide](../docs/core/contract/events.md) and the
+`await contract.loadContractEventsFromWasm()` loads them from the configured
+source when needed. `extractContractEventsFromSpec` and
+`extractContractEventsFromWasm` also work independently. Registry definitions
+provide strict decoding and indexed filters; decoded `ContractEvent` objects
+retain ledger, transaction, and raw XDR metadata. Missing declarations do not
+imply that a contract emits no events. See
+[the guide](../docs/core/contract/events.md) and the
 [bindings generator](../contract-bindings/README.md).

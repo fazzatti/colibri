@@ -38867,32 +38867,7 @@
               ]
             }
           ],
-          "extends": "ColibriError",
-          "superTypeParams": [
-            {
-              "kind": "typeRef",
-              "repr": "Code",
-              "value": {
-                "typeName": "Code"
-              }
-            },
-            {
-              "kind": "typeLiteral",
-              "value": {
-                "properties": [
-                  {
-                    "name": "cause",
-                    "optional": true,
-                    "tsType": {
-                      "kind": "keyword",
-                      "repr": "unknown",
-                      "value": "unknown"
-                    }
-                  }
-                ]
-              }
-            }
-          ]
+          "extends": "BindingErrorBase"
         },
         "kind": "class"
       }
@@ -38951,9 +38926,9 @@
                   "optional": true,
                   "tsType": {
                     "kind": "typeRef",
-                    "repr": "LoadedContractSnapshot",
+                    "repr": "BindingSnapshot",
                     "value": {
-                      "typeName": "LoadedContractSnapshot"
+                      "typeName": "BindingSnapshot"
                     }
                   }
                 }
@@ -39054,9 +39029,9 @@
                       "name": "networkConfig",
                       "tsType": {
                         "kind": "typeRef",
-                        "repr": "NetworkConfig",
+                        "repr": "BindingNetwork",
                         "value": {
-                          "typeName": "NetworkConfig"
+                          "typeName": "BindingNetwork"
                         }
                       }
                     },
@@ -39065,9 +39040,9 @@
                       "optional": true,
                       "tsType": {
                         "kind": "typeRef",
-                        "repr": "Server",
+                        "repr": "BindingRpc",
                         "value": {
-                          "typeName": "Server"
+                          "typeName": "BindingRpc"
                         }
                       }
                     }
@@ -39101,9 +39076,9 @@
                       "name": "networkConfig",
                       "tsType": {
                         "kind": "typeRef",
-                        "repr": "NetworkConfig",
+                        "repr": "BindingNetwork",
                         "value": {
-                          "typeName": "NetworkConfig"
+                          "typeName": "BindingNetwork"
                         }
                       }
                     },
@@ -39112,9 +39087,9 @@
                       "optional": true,
                       "tsType": {
                         "kind": "typeRef",
-                        "repr": "Server",
+                        "repr": "BindingRpc",
                         "value": {
-                          "typeName": "Server"
+                          "typeName": "BindingRpc"
                         }
                       }
                     }
@@ -39125,6 +39100,82 @@
           }
         },
         "kind": "typeAlias"
+      }
+    ],
+    "Code": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "members": [
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "CBG_001",
+                "value": {
+                  "kind": "string",
+                  "string": "CBG_001"
+                }
+              },
+              "name": "INVALID_OPTIONS"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "CBG_002",
+                "value": {
+                  "kind": "string",
+                  "string": "CBG_002"
+                }
+              },
+              "name": "INVALID_SPEC"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "CBG_003",
+                "value": {
+                  "kind": "string",
+                  "string": "CBG_003"
+                }
+              },
+              "name": "SOURCE_FAILED"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "CBG_004",
+                "value": {
+                  "kind": "string",
+                  "string": "CBG_004"
+                }
+              },
+              "name": "OUTPUT_FAILED"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "CBG_005",
+                "value": {
+                  "kind": "string",
+                  "string": "CBG_005"
+                }
+              },
+              "name": "CANCELLED"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "CBG_006",
+                "value": {
+                  "kind": "string",
+                  "string": "CBG_006"
+                }
+              },
+              "name": "RESULT_DECODE_FAILED"
+            }
+          ]
+        },
+        "kind": "enum"
       }
     ],
     "generateBindings": [
@@ -39451,6 +39502,35 @@
           }
         },
         "kind": "typeAlias"
+      }
+    ],
+    "Spec": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "NativeSpec",
+            "value": {
+              "typeName": "NativeSpec"
+            }
+          }
+        },
+        "kind": "typeAlias"
+      },
+      {
+        "declarationKind": "export",
+        "def": {
+          "kind": "const",
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "SpecConstructor",
+            "value": {
+              "typeName": "SpecConstructor"
+            }
+          }
+        },
+        "kind": "variable"
       }
     ]
   },
@@ -47263,23 +47343,23 @@
               "properties": [
                 {
                   "computed": true,
-                  "name": "[Code.INVALID_SPEC]"
+                  "name": "[\"CEV_001\" as Code.INVALID_SPEC]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.UNKNOWN_EVENT]"
+                  "name": "[\"CEV_002\" as Code.UNKNOWN_EVENT]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.DECODE_FAILED]"
+                  "name": "[\"CEV_003\" as Code.DECODE_FAILED]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.INVALID_FILTER]"
+                  "name": "[\"CEV_004\" as Code.INVALID_FILTER]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.AMBIGUOUS_EVENT]"
+                  "name": "[\"CEV_005\" as Code.AMBIGUOUS_EVENT]"
                 }
               ]
             }
@@ -54593,15 +54673,15 @@
               "properties": [
                 {
                   "computed": true,
-                  "name": "[Code.UNEXPECTED_ERROR]"
+                  "name": "[\"PIPE_CLTX_000\" as Code.UNEXPECTED_ERROR]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.MISSING_ARG]"
+                  "name": "[\"PIPE_CLTX_001\" as Code.MISSING_ARG]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.MISSING_RPC_URL]"
+                  "name": "[\"PIPE_CLTX_002\" as Code.MISSING_RPC_URL]"
                 }
               ]
             }
@@ -54621,19 +54701,19 @@
               "properties": [
                 {
                   "computed": true,
-                  "name": "[Code.UNEXPECTED_ERROR]"
+                  "name": "[\"PIPE_INVC_000\" as Code.UNEXPECTED_ERROR]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.MISSING_ARG]"
+                  "name": "[\"PIPE_INVC_001\" as Code.MISSING_ARG]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.MISSING_RPC_URL]"
+                  "name": "[\"PIPE_INVC_002\" as Code.MISSING_RPC_URL]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.EXPECTED_INVOKE_HOST_FUNCTION_OPERATION]"
+                  "name": "[\"PIPE_INVC_003\" as Code.EXPECTED_INVOKE_HOST_FUNCTION_OPERATION]"
                 }
               ]
             }
@@ -54653,15 +54733,15 @@
               "properties": [
                 {
                   "computed": true,
-                  "name": "[Code.UNEXPECTED_ERROR]"
+                  "name": "[\"PIPE_RFC_000\" as Code.UNEXPECTED_ERROR]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.MISSING_ARG]"
+                  "name": "[\"PIPE_RFC_001\" as Code.MISSING_ARG]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.MISSING_RPC_URL]"
+                  "name": "[\"PIPE_RFC_002\" as Code.MISSING_RPC_URL]"
                 }
               ]
             }
@@ -54681,11 +54761,11 @@
               "properties": [
                 {
                   "computed": true,
-                  "name": "[Code.KNOWN_CONTRACT_ERROR_SIMULATION_FAILED]"
+                  "name": "[\"PLG_SIM_CEM_001\" as Code.KNOWN_CONTRACT_ERROR_SIMULATION_FAILED]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.DUPLICATE_CONTRACT_ERROR_CODE]"
+                  "name": "[\"PLG_SIM_CEM_002\" as Code.DUPLICATE_CONTRACT_ERROR_CODE]"
                 }
               ]
             }
@@ -72575,6 +72655,75 @@
         "kind": "typeAlias"
       }
     ],
+    "Result": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "NativeContractResult",
+            "value": {
+              "typeName": "NativeContractResult",
+              "typeParams": [
+                {
+                  "kind": "typeRef",
+                  "repr": "T",
+                  "value": {
+                    "typeName": "T"
+                  }
+                },
+                {
+                  "kind": "typeRef",
+                  "repr": "E",
+                  "value": {
+                    "typeName": "E"
+                  }
+                }
+              ]
+            }
+          },
+          "typeParams": [
+            {
+              "name": "T"
+            },
+            {
+              "constraint": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "message",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    }
+                  ]
+                }
+              },
+              "default": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "message",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    }
+                  ]
+                }
+              },
+              "name": "E"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
     "RPCConfig": [
       {
         "declarationKind": "export",
@@ -74319,43 +74468,43 @@
               "properties": [
                 {
                   "computed": true,
-                  "name": "[Code.CREATE_SELL_FAILED]"
+                  "name": "[\"SDEX_001\" as Code.CREATE_SELL_FAILED]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.UPDATE_SELL_FAILED]"
+                  "name": "[\"SDEX_002\" as Code.UPDATE_SELL_FAILED]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.CREATE_BUY_FAILED]"
+                  "name": "[\"SDEX_003\" as Code.CREATE_BUY_FAILED]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.UPDATE_BUY_FAILED]"
+                  "name": "[\"SDEX_004\" as Code.UPDATE_BUY_FAILED]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.CREATE_PASSIVE_FAILED]"
+                  "name": "[\"SDEX_005\" as Code.CREATE_PASSIVE_FAILED]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.OFFER_NOT_FOUND]"
+                  "name": "[\"SDEX_006\" as Code.OFFER_NOT_FOUND]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.INVALID_UPDATE_SELL_ID]"
+                  "name": "[\"SDEX_007\" as Code.INVALID_UPDATE_SELL_ID]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.INVALID_UPDATE_BUY_ID]"
+                  "name": "[\"SDEX_008\" as Code.INVALID_UPDATE_BUY_ID]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.UNSAFE_OFFER_ID]"
+                  "name": "[\"SDEX_009\" as Code.UNSAFE_OFFER_ID]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.READ_OFFER_FAILED]"
+                  "name": "[\"SDEX_010\" as Code.READ_OFFER_FAILED]"
                 }
               ]
             }
@@ -77972,6 +78121,35 @@
           }
         },
         "kind": "typeAlias"
+      }
+    ],
+    "Spec": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "NativeSpec",
+            "value": {
+              "typeName": "NativeSpec"
+            }
+          }
+        },
+        "kind": "typeAlias"
+      },
+      {
+        "declarationKind": "export",
+        "def": {
+          "kind": "const",
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "SpecConstructor",
+            "value": {
+              "typeName": "SpecConstructor"
+            }
+          }
+        },
+        "kind": "variable"
       }
     ],
     "SponsorshipErrors": [
@@ -81792,27 +81970,27 @@
               "properties": [
                 {
                   "computed": true,
-                  "name": "[Code.INVALID_DECIMAL]"
+                  "name": "[\"PRCE_001\" as Code.INVALID_DECIMAL]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.NON_POSITIVE_DECIMAL]"
+                  "name": "[\"PRCE_002\" as Code.NON_POSITIVE_DECIMAL]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.UNREPRESENTABLE_DECIMAL]"
+                  "name": "[\"PRCE_003\" as Code.UNREPRESENTABLE_DECIMAL]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.INVALID_RATIO]"
+                  "name": "[\"PRCE_004\" as Code.INVALID_RATIO]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.ZERO_PRICE_AMOUNT]"
+                  "name": "[\"PRCE_005\" as Code.ZERO_PRICE_AMOUNT]"
                 },
                 {
                   "computed": true,
-                  "name": "[Code.UNREPRESENTABLE_AMOUNTS]"
+                  "name": "[\"PRCE_006\" as Code.UNREPRESENTABLE_AMOUNTS]"
                 }
               ]
             }
@@ -86931,6 +87109,18 @@
             "value": {
               "properties": [
                 {
+                  "name": "authEntryToParams"
+                },
+                {
+                  "name": "paramsToAuthEntries"
+                },
+                {
+                  "name": "paramsToAuthEntry"
+                },
+                {
+                  "name": "paramsToInvocation"
+                },
+                {
                   "name": "getAddressTypeFromAuthEntry"
                 },
                 {
@@ -87068,23 +87258,23 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_ED25519_PUBLIC_KEY]"
+                    "name": "[\"ACC_NAT_001\" as Code.INVALID_ED25519_PUBLIC_KEY]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_MUXED_ID]"
+                    "name": "[\"ACC_NAT_002\" as Code.INVALID_MUXED_ID]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_MUXED_ADDRESS_GENERATED]"
+                    "name": "[\"ACC_NAT_003\" as Code.INVALID_MUXED_ADDRESS_GENERATED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_MASTER_SIGNER]"
+                    "name": "[\"ACC_NAT_004\" as Code.MISSING_MASTER_SIGNER]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNSUPPORTED_ADDRESS_TYPE]"
+                    "name": "[\"ACC_NAT_005\" as Code.UNSUPPORTED_ADDRESS_TYPE]"
                   }
                 ]
               }
@@ -87692,55 +87882,55 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_DATE]"
+                    "name": "[\"CBPR_001\" as Code.INVALID_DATE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_ABSOLUTE_TIME]"
+                    "name": "[\"CBPR_002\" as Code.INVALID_ABSOLUTE_TIME]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_RELATIVE_TIME]"
+                    "name": "[\"CBPR_003\" as Code.INVALID_RELATIVE_TIME]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_PREDICATE]"
+                    "name": "[\"CBPR_004\" as Code.INVALID_PREDICATE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.EXCESSIVE_DEPTH]"
+                    "name": "[\"CBPR_005\" as Code.EXCESSIVE_DEPTH]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_AND_ARITY]"
+                    "name": "[\"CBPR_006\" as Code.INVALID_AND_ARITY]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_OR_ARITY]"
+                    "name": "[\"CBPR_007\" as Code.INVALID_OR_ARITY]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.EMPTY_NOT]"
+                    "name": "[\"CBPR_008\" as Code.EMPTY_NOT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_ABSOLUTE_PREDICATE]"
+                    "name": "[\"CBPR_009\" as Code.INVALID_ABSOLUTE_PREDICATE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_RELATIVE_PREDICATE]"
+                    "name": "[\"CBPR_010\" as Code.INVALID_RELATIVE_PREDICATE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.EMPTY_ALL_OF]"
+                    "name": "[\"CBPR_011\" as Code.EMPTY_ALL_OF]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.EMPTY_ANY_OF]"
+                    "name": "[\"CBPR_012\" as Code.EMPTY_ANY_OF]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.EMPTY_TIME_WINDOW]"
+                    "name": "[\"CBPR_013\" as Code.EMPTY_TIME_WINDOW]"
                   }
                 ]
               }
@@ -88626,11 +88816,11 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE]"
+                    "name": "[\"AUTH_COT_001\" as Code.FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"AUTH_COT_000\" as Code.UNEXPECTED_ERROR]"
                   }
                 ]
               }
@@ -89431,83 +89621,83 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_ARG]"
+                    "name": "[\"CONTR_001\" as Code.MISSING_ARG]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_RPC_URL]"
+                    "name": "[\"CONTR_002\" as Code.MISSING_RPC_URL]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_CONTRACT_CONFIG]"
+                    "name": "[\"CONTR_003\" as Code.INVALID_CONTRACT_CONFIG]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_UPLOAD_WASM]"
+                    "name": "[\"CONTR_004\" as Code.FAILED_TO_UPLOAD_WASM]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_REQUIRED_PROPERTY]"
+                    "name": "[\"CONTR_005\" as Code.MISSING_REQUIRED_PROPERTY]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_SPEC_IN_WASM]"
+                    "name": "[\"CONTR_007\" as Code.MISSING_SPEC_IN_WASM]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_DEPLOY_CONTRACT]"
+                    "name": "[\"CONTR_008\" as Code.FAILED_TO_DEPLOY_CONTRACT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.PROPERTY_ALREADY_SET]"
+                    "name": "[\"CONTR_006\" as Code.PROPERTY_ALREADY_SET]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.CONTRACT_INSTANCE_NOT_FOUND]"
+                    "name": "[\"CONTR_009\" as Code.CONTRACT_INSTANCE_NOT_FOUND]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.CONTRACT_CODE_NOT_FOUND]"
+                    "name": "[\"CONTR_010\" as Code.CONTRACT_CODE_NOT_FOUND]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_CONTRACT_ID]"
+                    "name": "[\"CONTR_011\" as Code.INVALID_CONTRACT_ID]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED]"
+                    "name": "[\"CONTR_012\" as Code.CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.CONTRACT_CONFIG_SOURCES_CONFLICT]"
+                    "name": "[\"CONTR_013\" as Code.CONTRACT_CONFIG_SOURCES_CONFLICT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM]"
+                    "name": "[\"CONTR_014\" as Code.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NETWORK_EXECUTABLE_NOT_AVAILABLE]"
+                    "name": "[\"CONTR_015\" as Code.NETWORK_EXECUTABLE_NOT_AVAILABLE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_WASM_FOR_METADATA]"
+                    "name": "[\"CONTR_016\" as Code.INVALID_WASM_FOR_METADATA]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_DECODE_METADATA_SECTION]"
+                    "name": "[\"CONTR_017\" as Code.FAILED_TO_DECODE_METADATA_SECTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_SEP_IDENTIFIER]"
+                    "name": "[\"CONTR_018\" as Code.INVALID_SEP_IDENTIFIER]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_WASM_FOR_SPEC]"
+                    "name": "[\"CONTR_019\" as Code.INVALID_WASM_FOR_SPEC]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_DECODE_SPEC_SECTION]"
+                    "name": "[\"CONTR_020\" as Code.FAILED_TO_DECODE_SPEC_SECTION]"
                   }
                 ]
               }
@@ -90389,75 +90579,75 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_LEDGER_ENTRY]"
+                    "name": "[\"LDP_001\" as Code.INVALID_LEDGER_ENTRY]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_HEADER_XDR]"
+                    "name": "[\"LDP_002\" as Code.INVALID_HEADER_XDR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_METADATA_XDR]"
+                    "name": "[\"LDP_003\" as Code.INVALID_METADATA_XDR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNSUPPORTED_LEDGER_CLOSE_META_VERSION]"
+                    "name": "[\"LDP_004\" as Code.UNSUPPORTED_LEDGER_CLOSE_META_VERSION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_TRANSACTION_INDEX]"
+                    "name": "[\"LDP_005\" as Code.INVALID_TRANSACTION_INDEX]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_OPERATION_INDEX]"
+                    "name": "[\"LDP_006\" as Code.INVALID_OPERATION_INDEX]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNSUPPORTED_OPERATION_TYPE]"
+                    "name": "[\"LDP_007\" as Code.UNSUPPORTED_OPERATION_TYPE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_TRANSACTION_ENVELOPE]"
+                    "name": "[\"LDP_008\" as Code.MISSING_TRANSACTION_ENVELOPE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNSUPPORTED_ENVELOPE_TYPE]"
+                    "name": "[\"LDP_009\" as Code.UNSUPPORTED_ENVELOPE_TYPE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NATIVE_OPERATION_DECODE_FAILED]"
+                    "name": "[\"LDP_010\" as Code.NATIVE_OPERATION_DECODE_FAILED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_FEE_SOURCE_ENVELOPE]"
+                    "name": "[\"LDP_011\" as Code.MISSING_FEE_SOURCE_ENVELOPE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_NATIVE_ENVELOPE]"
+                    "name": "[\"LDP_012\" as Code.MISSING_NATIVE_ENVELOPE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NATIVE_ENVELOPE_DECODE_FAILED]"
+                    "name": "[\"LDP_013\" as Code.NATIVE_ENVELOPE_DECODE_FAILED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_NETWORK_PASSPHRASE]"
+                    "name": "[\"LDP_014\" as Code.INVALID_NETWORK_PASSPHRASE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.ENVELOPE_HASH_FAILED]"
+                    "name": "[\"LDP_015\" as Code.ENVELOPE_HASH_FAILED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.DUPLICATE_ENVELOPE_HASH]"
+                    "name": "[\"LDP_016\" as Code.DUPLICATE_ENVELOPE_HASH]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.RESULT_ENVELOPE_NOT_FOUND]"
+                    "name": "[\"LDP_017\" as Code.RESULT_ENVELOPE_NOT_FOUND]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNMATCHED_TRANSACTION_ENVELOPES]"
+                    "name": "[\"LDP_018\" as Code.UNMATCHED_TRANSACTION_ENVELOPES]"
                   }
                 ]
               }
@@ -91459,79 +91649,79 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_CONSTRUCTOR_ARGS]"
+                    "name": "[\"LDE_000\" as Code.INVALID_CONSTRUCTOR_ARGS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_RPC_URL]"
+                    "name": "[\"LDE_001\" as Code.MISSING_RPC_URL]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_ACCOUNT_ID]"
+                    "name": "[\"LDE_002\" as Code.INVALID_ACCOUNT_ID]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_OFFER_ID]"
+                    "name": "[\"LDE_014\" as Code.INVALID_OFFER_ID]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_CONTRACT_ID]"
+                    "name": "[\"LDE_003\" as Code.INVALID_CONTRACT_ID]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_CLAIMABLE_BALANCE_ID]"
+                    "name": "[\"LDE_004\" as Code.INVALID_CLAIMABLE_BALANCE_ID]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_LIQUIDITY_POOL_ID]"
+                    "name": "[\"LDE_005\" as Code.INVALID_LIQUIDITY_POOL_ID]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_HEX_HASH]"
+                    "name": "[\"LDE_006\" as Code.INVALID_HEX_HASH]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_CONFIG_SETTING_ID]"
+                    "name": "[\"LDE_007\" as Code.INVALID_CONFIG_SETTING_ID]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_LEDGER_KEY_HASH]"
+                    "name": "[\"LDE_008\" as Code.INVALID_LEDGER_KEY_HASH]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.LEDGER_ENTRY_NOT_FOUND]"
+                    "name": "[\"LDE_009\" as Code.LEDGER_ENTRY_NOT_FOUND]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_LEDGER_ENTRY_TYPE]"
+                    "name": "[\"LDE_010\" as Code.UNEXPECTED_LEDGER_ENTRY_TYPE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.CONTRACT_INSTANCE_HAS_NO_WASM_HASH]"
+                    "name": "[\"LDE_011\" as Code.CONTRACT_INSTANCE_HAS_NO_WASM_HASH]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNSUPPORTED_RPC_LEDGER_KEY]"
+                    "name": "[\"LDE_012\" as Code.UNSUPPORTED_RPC_LEDGER_KEY]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNSUPPORTED_XDR_VARIANT]"
+                    "name": "[\"LDE_013\" as Code.UNSUPPORTED_XDR_VARIANT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_EXTERNAL_REFERENCE]"
+                    "name": "[\"LDE_015\" as Code.INVALID_EXTERNAL_REFERENCE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.EXTERNAL_REFERENCE_OWNER_NOT_CONTRACT]"
+                    "name": "[\"LDE_016\" as Code.EXTERNAL_REFERENCE_OWNER_NOT_CONTRACT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.EXTERNAL_REFERENCE_ENTRY_NOT_FOUND]"
+                    "name": "[\"LDE_017\" as Code.EXTERNAL_REFERENCE_ENTRY_NOT_FOUND]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.EXTERNAL_REFERENCE_VALUE_INVALID]"
+                    "name": "[\"LDE_018\" as Code.EXTERNAL_REFERENCE_VALUE_INVALID]"
                   }
                 ]
               }
@@ -93496,35 +93686,35 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.FETCH_FAILED]"
+                    "name": "[\"SEP1_001\" as Code.FETCH_FAILED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_DOMAIN]"
+                    "name": "[\"SEP1_002\" as Code.INVALID_DOMAIN]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.PARSE_ERROR]"
+                    "name": "[\"SEP1_003\" as Code.PARSE_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FILE_TOO_LARGE]"
+                    "name": "[\"SEP1_004\" as Code.FILE_TOO_LARGE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_SIGNING_KEY]"
+                    "name": "[\"SEP1_005\" as Code.INVALID_SIGNING_KEY]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_URL]"
+                    "name": "[\"SEP1_006\" as Code.INVALID_URL]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.TIMEOUT]"
+                    "name": "[\"SEP1_007\" as Code.TIMEOUT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_ACCOUNT]"
+                    "name": "[\"SEP1_008\" as Code.INVALID_ACCOUNT]"
                   }
                 ]
               }
@@ -94602,19 +94792,19 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_DECIMAL]"
+                    "name": "[\"AMNT_001\" as Code.INVALID_DECIMAL]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.EXCESS_PRECISION]"
+                    "name": "[\"AMNT_002\" as Code.EXCESS_PRECISION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.DECIMAL_OVERFLOW]"
+                    "name": "[\"AMNT_003\" as Code.DECIMAL_OVERFLOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_UNITS]"
+                    "name": "[\"AMNT_004\" as Code.INVALID_UNITS]"
                   }
                 ]
               }
@@ -95187,95 +95377,95 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_ASSET]"
+                    "name": "[\"STAS_001\" as Code.INVALID_ASSET]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_RPC_URL]"
+                    "name": "[\"STAS_002\" as Code.MISSING_RPC_URL]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_RPC]"
+                    "name": "[\"STAS_003\" as Code.INVALID_RPC]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NATIVE_TRUSTLINE]"
+                    "name": "[\"STAS_004\" as Code.NATIVE_TRUSTLINE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.CHANGE_TRUST_FAILED]"
+                    "name": "[\"STAS_005\" as Code.CHANGE_TRUST_FAILED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.TRANSFER_FAILED]"
+                    "name": "[\"STAS_006\" as Code.TRANSFER_FAILED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NATIVE_TRUSTLINE_FLAGS]"
+                    "name": "[\"STAS_007\" as Code.NATIVE_TRUSTLINE_FLAGS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.TRUSTLINE_FLAGS_FAILED]"
+                    "name": "[\"STAS_008\" as Code.TRUSTLINE_FLAGS_FAILED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NATIVE_CLAWBACK]"
+                    "name": "[\"STAS_009\" as Code.NATIVE_CLAWBACK]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.CLAWBACK_FAILED]"
+                    "name": "[\"STAS_010\" as Code.CLAWBACK_FAILED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.READ_ISSUER_FAILED]"
+                    "name": "[\"STAS_011\" as Code.READ_ISSUER_FAILED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.READ_TRUSTLINE_FAILED]"
+                    "name": "[\"STAS_012\" as Code.READ_TRUSTLINE_FAILED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NATIVE_ASSET_CODE_MISMATCH]"
+                    "name": "[\"STAS_013\" as Code.NATIVE_ASSET_CODE_MISMATCH]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_CANONICAL_ASSET]"
+                    "name": "[\"STAS_014\" as Code.INVALID_CANONICAL_ASSET]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.ISSUER_BALANCE_UNDEFINED]"
+                    "name": "[\"STAS_015\" as Code.ISSUER_BALANCE_UNDEFINED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.BALANCE_TRUSTLINE_MISSING]"
+                    "name": "[\"STAS_016\" as Code.BALANCE_TRUSTLINE_MISSING]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.READ_BALANCE_FAILED]"
+                    "name": "[\"STAS_017\" as Code.READ_BALANCE_FAILED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.SAC_BINDING_FAILED]"
+                    "name": "[\"STAS_018\" as Code.SAC_BINDING_FAILED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NATIVE_MINT]"
+                    "name": "[\"STAS_019\" as Code.NATIVE_MINT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NATIVE_BURN]"
+                    "name": "[\"STAS_020\" as Code.NATIVE_BURN]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NATIVE_AUTHORIZATION]"
+                    "name": "[\"STAS_021\" as Code.NATIVE_AUTHORIZATION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.AUTHORIZATION_TRUSTLINE_MISSING]"
+                    "name": "[\"STAS_022\" as Code.AUTHORIZATION_TRUSTLINE_MISSING]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.CREATE_CLAIMABLE_BALANCE_FAILED]"
+                    "name": "[\"STAS_023\" as Code.CREATE_CLAIMABLE_BALANCE_FAILED]"
                   }
                 ]
               }
@@ -95993,19 +96183,19 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_ARG]"
+                    "name": "[\"SAC_001\" as Code.MISSING_ARG]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNMATCHED_CONTRACT_ID]"
+                    "name": "[\"SAC_003\" as Code.UNMATCHED_CONTRACT_ID]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_DEPLOY_CONTRACT]"
+                    "name": "[\"SAC_002\" as Code.FAILED_TO_DEPLOY_CONTRACT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_RETURN_VALUE]"
+                    "name": "[\"SAC_004\" as Code.MISSING_RETURN_VALUE]"
                   }
                 ]
               }
@@ -96628,83 +96818,83 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_RETURN_VALUE]"
+                    "name": "[\"SEP41_TOKEN_001\" as Code.MISSING_RETURN_VALUE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_ALLOWANCE_ARGUMENT_FROM]"
+                    "name": "[\"SEP41_TOKEN_002\" as Code.FAILED_TO_ENCODE_ALLOWANCE_ARGUMENT_FROM]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_ALLOWANCE_ARGUMENT_SPENDER]"
+                    "name": "[\"SEP41_TOKEN_003\" as Code.FAILED_TO_ENCODE_ALLOWANCE_ARGUMENT_SPENDER]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_FROM]"
+                    "name": "[\"SEP41_TOKEN_004\" as Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_FROM]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_SPENDER]"
+                    "name": "[\"SEP41_TOKEN_005\" as Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_SPENDER]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_AMOUNT]"
+                    "name": "[\"SEP41_TOKEN_006\" as Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_AMOUNT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_LIVE_UNTIL_LEDGER]"
+                    "name": "[\"SEP41_TOKEN_007\" as Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_LIVE_UNTIL_LEDGER]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_BALANCE_ARGUMENT_ID]"
+                    "name": "[\"SEP41_TOKEN_008\" as Code.FAILED_TO_ENCODE_BALANCE_ARGUMENT_ID]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_FROM]"
+                    "name": "[\"SEP41_TOKEN_009\" as Code.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_FROM]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_TO]"
+                    "name": "[\"SEP41_TOKEN_010\" as Code.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_TO]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_AMOUNT]"
+                    "name": "[\"SEP41_TOKEN_011\" as Code.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_AMOUNT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_SPENDER]"
+                    "name": "[\"SEP41_TOKEN_012\" as Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_SPENDER]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_FROM]"
+                    "name": "[\"SEP41_TOKEN_013\" as Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_FROM]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_TO]"
+                    "name": "[\"SEP41_TOKEN_014\" as Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_TO]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_AMOUNT]"
+                    "name": "[\"SEP41_TOKEN_015\" as Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_AMOUNT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_BURN_ARGUMENT_FROM]"
+                    "name": "[\"SEP41_TOKEN_016\" as Code.FAILED_TO_ENCODE_BURN_ARGUMENT_FROM]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_BURN_ARGUMENT_AMOUNT]"
+                    "name": "[\"SEP41_TOKEN_017\" as Code.FAILED_TO_ENCODE_BURN_ARGUMENT_AMOUNT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_SPENDER]"
+                    "name": "[\"SEP41_TOKEN_018\" as Code.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_SPENDER]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_FROM]"
+                    "name": "[\"SEP41_TOKEN_019\" as Code.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_FROM]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_AMOUNT]"
+                    "name": "[\"SEP41_TOKEN_020\" as Code.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_AMOUNT]"
                   }
                 ]
               }
@@ -98400,35 +98590,35 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_DECIMALS]"
+                    "name": "[\"HLP_UNT_01\" as Code.INVALID_DECIMALS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.EMPTY_VALUE]"
+                    "name": "[\"HLP_UNT_02\" as Code.EMPTY_VALUE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_DECIMAL_INPUT]"
+                    "name": "[\"HLP_UNT_03\" as Code.INVALID_DECIMAL_INPUT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.TOO_MANY_FRACTION_DIGITS]"
+                    "name": "[\"HLP_UNT_04\" as Code.TOO_MANY_FRACTION_DIGITS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NON_FINITE_NUMBER]"
+                    "name": "[\"HLP_UNT_05\" as Code.NON_FINITE_NUMBER]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_SCIENTIFIC_NOTATION]"
+                    "name": "[\"HLP_UNT_06\" as Code.INVALID_SCIENTIFIC_NOTATION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_SCIENTIFIC_EXPONENT]"
+                    "name": "[\"HLP_UNT_07\" as Code.INVALID_SCIENTIFIC_EXPONENT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_MAX_FRACTION_DIGITS]"
+                    "name": "[\"HLP_UNT_08\" as Code.INVALID_MAX_FRACTION_DIGITS]"
                   }
                 ]
               }
@@ -98932,11 +99122,11 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.EVENT_INDEX_OUT_OF_RANGE]"
+                    "name": "[\"EVI_001\" as Code.EVENT_INDEX_OUT_OF_RANGE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_EVENT_ID_FORMAT]"
+                    "name": "[\"EVI_002\" as Code.INVALID_EVENT_ID_FORMAT]"
                   }
                 ]
               }
@@ -99247,11 +99437,11 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.EVENT_HAS_NO_TOPICS]"
+                    "name": "[\"EVF_001\" as Code.EVENT_HAS_NO_TOPICS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_CHECK_FILTER_SEGMENT]"
+                    "name": "[\"EVF_002\" as Code.FAILED_TO_CHECK_FILTER_SEGMENT]"
                   }
                 ]
               }
@@ -99588,15 +99778,15 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_LEDGER_CLOSE_META_XDR]"
+                    "name": "[\"EVP_001\" as Code.INVALID_LEDGER_CLOSE_META_XDR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNSUPPORTED_LEDGER_CLOSE_META_VERSION]"
+                    "name": "[\"EVP_002\" as Code.UNSUPPORTED_LEDGER_CLOSE_META_VERSION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNSUPPORTED_TRANSACTION_META_VERSION]"
+                    "name": "[\"EVP_003\" as Code.UNSUPPORTED_TRANSACTION_META_VERSION]"
                   }
                 ]
               }
@@ -100176,75 +100366,75 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"ASM_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_ARG]"
+                    "name": "[\"ASM_001\" as Code.MISSING_ARG]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NOT_SMART_CONTRACT_TRANSACTION]"
+                    "name": "[\"ASM_002\" as Code.NOT_SMART_CONTRACT_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNSUPPORTED_OPERATION]"
+                    "name": "[\"ASM_003\" as Code.UNSUPPORTED_OPERATION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ASSEMBLE_TRANSACTION]"
+                    "name": "[\"ASM_004\" as Code.FAILED_TO_ASSEMBLE_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_BUILD_TRANSACTION]"
+                    "name": "[\"ASM_005\" as Code.FAILED_TO_BUILD_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_BUILD_SOROBAN_DATA]"
+                    "name": "[\"ASM_006\" as Code.FAILED_TO_BUILD_SOROBAN_DATA]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_TRANSACTION_FEE_CONFIGURATION]"
+                    "name": "[\"ASM_007\" as Code.INVALID_TRANSACTION_FEE_CONFIGURATION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_BASE_FEE]"
+                    "name": "[\"ASM_008\" as Code.INVALID_BASE_FEE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_INCLUSION_FEE]"
+                    "name": "[\"ASM_009\" as Code.INVALID_INCLUSION_FEE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_MAX_FEE]"
+                    "name": "[\"ASM_010\" as Code.INVALID_MAX_FEE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.BASE_FEE_TOO_LOW]"
+                    "name": "[\"ASM_011\" as Code.BASE_FEE_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INCLUSION_FEE_TOO_LOW]"
+                    "name": "[\"ASM_012\" as Code.INCLUSION_FEE_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MAX_FEE_TOO_LOW]"
+                    "name": "[\"ASM_013\" as Code.MAX_FEE_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.TRANSACTION_FEE_TOO_HIGH]"
+                    "name": "[\"ASM_014\" as Code.TRANSACTION_FEE_TOO_HIGH]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.TRANSACTION_FEE_BELOW_RESOURCE_FEE]"
+                    "name": "[\"ASM_015\" as Code.TRANSACTION_FEE_BELOW_RESOURCE_FEE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_RESOURCE_FEE]"
+                    "name": "[\"ASM_016\" as Code.INVALID_RESOURCE_FEE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.RESOURCE_FEE_BELOW_SIMULATED_MINIMUM]"
+                    "name": "[\"ASM_017\" as Code.RESOURCE_FEE_BELOW_SIMULATED_MINIMUM]"
                   }
                 ]
               }
@@ -101556,87 +101746,87 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"BTX_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_BASE_FEE]"
+                    "name": "[\"BTX_001\" as Code.INVALID_BASE_FEE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.BASE_FEE_TOO_LOW]"
+                    "name": "[\"BTX_002\" as Code.BASE_FEE_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.COULD_NOT_LOAD_SOURCE_ACCOUNT]"
+                    "name": "[\"BTX_003\" as Code.COULD_NOT_LOAD_SOURCE_ACCOUNT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.COULD_NOT_CREATE_TRANSACTION_BUILDER]"
+                    "name": "[\"BTX_004\" as Code.COULD_NOT_CREATE_TRANSACTION_BUILDER]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.COULD_NOT_SET_SOROBAN_DATA]"
+                    "name": "[\"BTX_005\" as Code.COULD_NOT_SET_SOROBAN_DATA]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.COULD_NOT_BUILD_TRANSACTION]"
+                    "name": "[\"BTX_006\" as Code.COULD_NOT_BUILD_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE]"
+                    "name": "[\"BTX_007\" as Code.COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.CONFLICTING_TIME_CONSTRAINTS]"
+                    "name": "[\"BTX_008\" as Code.CONFLICTING_TIME_CONSTRAINTS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_SET_PRECONDITIONS]"
+                    "name": "[\"BTX_009\" as Code.FAILED_TO_SET_PRECONDITIONS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NO_OPERATIONS_PROVIDED]"
+                    "name": "[\"BTX_010\" as Code.NO_OPERATIONS_PROVIDED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.RPC_REQUIRED_TO_LOAD_ACCOUNT]"
+                    "name": "[\"BTX_011\" as Code.RPC_REQUIRED_TO_LOAD_ACCOUNT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_TRANSACTION_FEE_CONFIGURATION]"
+                    "name": "[\"BTX_012\" as Code.INVALID_TRANSACTION_FEE_CONFIGURATION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_INCLUSION_FEE]"
+                    "name": "[\"BTX_013\" as Code.INVALID_INCLUSION_FEE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_MAX_FEE]"
+                    "name": "[\"BTX_014\" as Code.INVALID_MAX_FEE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INCLUSION_FEE_TOO_LOW]"
+                    "name": "[\"BTX_015\" as Code.INCLUSION_FEE_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MAX_FEE_TOO_LOW]"
+                    "name": "[\"BTX_016\" as Code.MAX_FEE_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.TRANSACTION_FEE_TOO_HIGH]"
+                    "name": "[\"BTX_017\" as Code.TRANSACTION_FEE_TOO_HIGH]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_MUXED_SOURCE]"
+                    "name": "[\"BTX_018\" as Code.INVALID_MUXED_SOURCE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_MUXED_SOURCE_RPC_SEQUENCE]"
+                    "name": "[\"BTX_019\" as Code.INVALID_MUXED_SOURCE_RPC_SEQUENCE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_MUXED_SOURCE_SEQUENCE]"
+                    "name": "[\"BTX_020\" as Code.INVALID_MUXED_SOURCE_SEQUENCE]"
                   }
                 ]
               }
@@ -102300,19 +102490,19 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"ESR_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_TRANSACTION_TYPE]"
+                    "name": "[\"ESR_001\" as Code.INVALID_TRANSACTION_TYPE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX]"
+                    "name": "[\"ESR_002\" as Code.FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION]"
+                    "name": "[\"ESR_003\" as Code.FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION]"
                   }
                 ]
               }
@@ -102667,47 +102857,47 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"STX_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_ARG]"
+                    "name": "[\"STX_001\" as Code.MISSING_ARG]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAIL_TO_SEND_TRANSACTION]"
+                    "name": "[\"STX_002\" as Code.FAIL_TO_SEND_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.TIMEOUT_TOO_LOW]"
+                    "name": "[\"STX_003\" as Code.TIMEOUT_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.WAIT_INTERVAL_TOO_LOW]"
+                    "name": "[\"STX_004\" as Code.WAIT_INTERVAL_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.DUPLICATE_TRANSACTION]"
+                    "name": "[\"STX_005\" as Code.DUPLICATE_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.TRY_AGAIN_LATER]"
+                    "name": "[\"STX_006\" as Code.TRY_AGAIN_LATER]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.ERROR_STATUS]"
+                    "name": "[\"STX_007\" as Code.ERROR_STATUS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_STATUS]"
+                    "name": "[\"STX_008\" as Code.UNEXPECTED_STATUS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_GET_TRANSACTION_STATUS]"
+                    "name": "[\"STX_009\" as Code.FAILED_TO_GET_TRANSACTION_STATUS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.TRANSACTION_FAILED]"
+                    "name": "[\"STX_010\" as Code.TRANSACTION_FAILED]"
                   }
                 ]
               }
@@ -103522,35 +103712,35 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"SAE_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_ARG]"
+                    "name": "[\"SAE_001\" as Code.MISSING_ARG]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.VALID_UNTIL_LEDGER_SEQ_TOO_LOW]"
+                    "name": "[\"SAE_002\" as Code.VALID_UNTIL_LEDGER_SEQ_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.VALID_FOR_LEDGERS_TOO_LOW]"
+                    "name": "[\"SAE_003\" as Code.VALID_FOR_LEDGERS_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.VALID_FOR_SECONDS_TOO_LOW]"
+                    "name": "[\"SAE_004\" as Code.VALID_FOR_SECONDS_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_FETCH_LATEST_LEDGER]"
+                    "name": "[\"SAE_005\" as Code.FAILED_TO_FETCH_LATEST_LEDGER]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_SIGNER]"
+                    "name": "[\"SAE_006\" as Code.MISSING_SIGNER]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_SIGN_AUTH_ENTRY]"
+                    "name": "[\"SAE_007\" as Code.FAILED_TO_SIGN_AUTH_ENTRY]"
                   }
                 ]
               }
@@ -104135,15 +104325,15 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"AFE_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_TRANSACTION]"
+                    "name": "[\"AFE_001\" as Code.MISSING_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_AUTHORIZED_OPERATION]"
+                    "name": "[\"AFE_002\" as Code.MISSING_AUTHORIZED_OPERATION]"
                   }
                 ]
               }
@@ -104356,19 +104546,19 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"EFS_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_TRANSACTION]"
+                    "name": "[\"EFS_001\" as Code.MISSING_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_RECORDING_SIMULATION]"
+                    "name": "[\"EFS_002\" as Code.MISSING_RECORDING_SIMULATION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_RPC]"
+                    "name": "[\"EFS_003\" as Code.MISSING_RPC]"
                   }
                 ]
               }
@@ -104788,63 +104978,63 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"SEN_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NO_REQUIREMENTS]"
+                    "name": "[\"SEN_001\" as Code.NO_REQUIREMENTS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NO_SIGNERS]"
+                    "name": "[\"SEN_002\" as Code.NO_SIGNERS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.SIGNER_NOT_FOUND]"
+                    "name": "[\"SEN_003\" as Code.SIGNER_NOT_FOUND]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_SIGN_TRANSACTION]"
+                    "name": "[\"SEN_004\" as Code.FAILED_TO_SIGN_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_GET_SIGNER_KEY]"
+                    "name": "[\"SEN_005\" as Code.FAILED_TO_GET_SIGNER_KEY]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.DUPLICATE_SIGNER_KEY]"
+                    "name": "[\"SEN_006\" as Code.DUPLICATE_SIGNER_KEY]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.EXTRA_SIGNER_NOT_FOUND]"
+                    "name": "[\"SEN_007\" as Code.EXTRA_SIGNER_NOT_FOUND]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNSUPPORTED_PRE_AUTH_EXTRA_SIGNER]"
+                    "name": "[\"SEN_008\" as Code.UNSUPPORTED_PRE_AUTH_EXTRA_SIGNER]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.AMBIGUOUS_ACCOUNT_SIGNERS]"
+                    "name": "[\"SEN_009\" as Code.AMBIGUOUS_ACCOUNT_SIGNERS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_CHECK_SIGNER_TARGET]"
+                    "name": "[\"SEN_010\" as Code.FAILED_TO_CHECK_SIGNER_TARGET]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_CHECK_PRE_AUTH_TRANSACTION]"
+                    "name": "[\"SEN_011\" as Code.FAILED_TO_CHECK_PRE_AUTH_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.PRE_AUTH_TRANSACTION_MISMATCH]"
+                    "name": "[\"SEN_012\" as Code.PRE_AUTH_TRANSACTION_MISMATCH]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_READ_EXTRA_SIGNERS]"
+                    "name": "[\"SEN_013\" as Code.FAILED_TO_READ_EXTRA_SIGNERS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_PARSE_SIGNED_TRANSACTION]"
+                    "name": "[\"SEN_014\" as Code.FAILED_TO_PARSE_SIGNED_TRANSACTION]"
                   }
                 ]
               }
@@ -105772,23 +105962,23 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"SIM_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.SIMULATION_FAILED]"
+                    "name": "[\"SIM_001\" as Code.SIMULATION_FAILED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.COULD_NOT_SIMULATE_TRANSACTION]"
+                    "name": "[\"SIM_002\" as Code.COULD_NOT_SIMULATE_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.SIMULATION_RESULT_NOT_VERIFIED]"
+                    "name": "[\"SIM_003\" as Code.SIMULATION_RESULT_NOT_VERIFIED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.CONTRACT_ERROR_SIMULATION_FAILED]"
+                    "name": "[\"SIM_004\" as Code.CONTRACT_ERROR_SIMULATION_FAILED]"
                   }
                 ]
               }
@@ -106303,27 +106493,27 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"WFB_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.ALREADY_FEE_BUMP]"
+                    "name": "[\"WFB_002\" as Code.ALREADY_FEE_BUMP]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NOT_A_TRANSACTION]"
+                    "name": "[\"WFB_003\" as Code.NOT_A_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_BUILD_FEE_BUMP]"
+                    "name": "[\"WFB_004\" as Code.FAILED_TO_BUILD_FEE_BUMP]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_ARG]"
+                    "name": "[\"WFB_001\" as Code.MISSING_ARG]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FEE_TOO_LOW]"
+                    "name": "[\"WFB_005\" as Code.FEE_TOO_LOW]"
                   }
                 ]
               }
@@ -106638,27 +106828,27 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"PCTO_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_TRANSACTION_RESULT]"
+                    "name": "[\"PCTO_001\" as Code.UNEXPECTED_TRANSACTION_RESULT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_INNER_TRANSACTION_RESULT]"
+                    "name": "[\"PCTO_002\" as Code.UNEXPECTED_INNER_TRANSACTION_RESULT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_OPERATION_RESULT]"
+                    "name": "[\"PCTO_003\" as Code.UNEXPECTED_OPERATION_RESULT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNSUPPORTED_OPERATION_OUTCOME]"
+                    "name": "[\"PCTO_004\" as Code.UNSUPPORTED_OPERATION_OUTCOME]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNSUCCESSFUL_OPERATION_OUTCOME]"
+                    "name": "[\"PCTO_005\" as Code.UNSUCCESSFUL_OPERATION_OUTCOME]"
                   }
                 ]
               }
@@ -107289,75 +107479,75 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"ASM_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_ARG]"
+                    "name": "[\"ASM_001\" as Code.MISSING_ARG]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NOT_SMART_CONTRACT_TRANSACTION]"
+                    "name": "[\"ASM_002\" as Code.NOT_SMART_CONTRACT_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNSUPPORTED_OPERATION]"
+                    "name": "[\"ASM_003\" as Code.UNSUPPORTED_OPERATION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ASSEMBLE_TRANSACTION]"
+                    "name": "[\"ASM_004\" as Code.FAILED_TO_ASSEMBLE_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_BUILD_TRANSACTION]"
+                    "name": "[\"ASM_005\" as Code.FAILED_TO_BUILD_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_BUILD_SOROBAN_DATA]"
+                    "name": "[\"ASM_006\" as Code.FAILED_TO_BUILD_SOROBAN_DATA]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_TRANSACTION_FEE_CONFIGURATION]"
+                    "name": "[\"ASM_007\" as Code.INVALID_TRANSACTION_FEE_CONFIGURATION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_BASE_FEE]"
+                    "name": "[\"ASM_008\" as Code.INVALID_BASE_FEE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_INCLUSION_FEE]"
+                    "name": "[\"ASM_009\" as Code.INVALID_INCLUSION_FEE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_MAX_FEE]"
+                    "name": "[\"ASM_010\" as Code.INVALID_MAX_FEE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.BASE_FEE_TOO_LOW]"
+                    "name": "[\"ASM_011\" as Code.BASE_FEE_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INCLUSION_FEE_TOO_LOW]"
+                    "name": "[\"ASM_012\" as Code.INCLUSION_FEE_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MAX_FEE_TOO_LOW]"
+                    "name": "[\"ASM_013\" as Code.MAX_FEE_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.TRANSACTION_FEE_TOO_HIGH]"
+                    "name": "[\"ASM_014\" as Code.TRANSACTION_FEE_TOO_HIGH]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.TRANSACTION_FEE_BELOW_RESOURCE_FEE]"
+                    "name": "[\"ASM_015\" as Code.TRANSACTION_FEE_BELOW_RESOURCE_FEE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_RESOURCE_FEE]"
+                    "name": "[\"ASM_016\" as Code.INVALID_RESOURCE_FEE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.RESOURCE_FEE_BELOW_SIMULATED_MINIMUM]"
+                    "name": "[\"ASM_017\" as Code.RESOURCE_FEE_BELOW_SIMULATED_MINIMUM]"
                   }
                 ]
               }
@@ -108669,87 +108859,87 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"BTX_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_BASE_FEE]"
+                    "name": "[\"BTX_001\" as Code.INVALID_BASE_FEE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.BASE_FEE_TOO_LOW]"
+                    "name": "[\"BTX_002\" as Code.BASE_FEE_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.COULD_NOT_LOAD_SOURCE_ACCOUNT]"
+                    "name": "[\"BTX_003\" as Code.COULD_NOT_LOAD_SOURCE_ACCOUNT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.COULD_NOT_CREATE_TRANSACTION_BUILDER]"
+                    "name": "[\"BTX_004\" as Code.COULD_NOT_CREATE_TRANSACTION_BUILDER]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.COULD_NOT_SET_SOROBAN_DATA]"
+                    "name": "[\"BTX_005\" as Code.COULD_NOT_SET_SOROBAN_DATA]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.COULD_NOT_BUILD_TRANSACTION]"
+                    "name": "[\"BTX_006\" as Code.COULD_NOT_BUILD_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE]"
+                    "name": "[\"BTX_007\" as Code.COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.CONFLICTING_TIME_CONSTRAINTS]"
+                    "name": "[\"BTX_008\" as Code.CONFLICTING_TIME_CONSTRAINTS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_SET_PRECONDITIONS]"
+                    "name": "[\"BTX_009\" as Code.FAILED_TO_SET_PRECONDITIONS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NO_OPERATIONS_PROVIDED]"
+                    "name": "[\"BTX_010\" as Code.NO_OPERATIONS_PROVIDED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.RPC_REQUIRED_TO_LOAD_ACCOUNT]"
+                    "name": "[\"BTX_011\" as Code.RPC_REQUIRED_TO_LOAD_ACCOUNT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_TRANSACTION_FEE_CONFIGURATION]"
+                    "name": "[\"BTX_012\" as Code.INVALID_TRANSACTION_FEE_CONFIGURATION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_INCLUSION_FEE]"
+                    "name": "[\"BTX_013\" as Code.INVALID_INCLUSION_FEE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_MAX_FEE]"
+                    "name": "[\"BTX_014\" as Code.INVALID_MAX_FEE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INCLUSION_FEE_TOO_LOW]"
+                    "name": "[\"BTX_015\" as Code.INCLUSION_FEE_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MAX_FEE_TOO_LOW]"
+                    "name": "[\"BTX_016\" as Code.MAX_FEE_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.TRANSACTION_FEE_TOO_HIGH]"
+                    "name": "[\"BTX_017\" as Code.TRANSACTION_FEE_TOO_HIGH]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_MUXED_SOURCE]"
+                    "name": "[\"BTX_018\" as Code.INVALID_MUXED_SOURCE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_MUXED_SOURCE_RPC_SEQUENCE]"
+                    "name": "[\"BTX_019\" as Code.INVALID_MUXED_SOURCE_RPC_SEQUENCE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_MUXED_SOURCE_SEQUENCE]"
+                    "name": "[\"BTX_020\" as Code.INVALID_MUXED_SOURCE_SEQUENCE]"
                   }
                 ]
               }
@@ -109413,19 +109603,19 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"ESR_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_TRANSACTION_TYPE]"
+                    "name": "[\"ESR_001\" as Code.INVALID_TRANSACTION_TYPE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX]"
+                    "name": "[\"ESR_002\" as Code.FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION]"
+                    "name": "[\"ESR_003\" as Code.FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION]"
                   }
                 ]
               }
@@ -109780,47 +109970,47 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"STX_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_ARG]"
+                    "name": "[\"STX_001\" as Code.MISSING_ARG]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAIL_TO_SEND_TRANSACTION]"
+                    "name": "[\"STX_002\" as Code.FAIL_TO_SEND_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.TIMEOUT_TOO_LOW]"
+                    "name": "[\"STX_003\" as Code.TIMEOUT_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.WAIT_INTERVAL_TOO_LOW]"
+                    "name": "[\"STX_004\" as Code.WAIT_INTERVAL_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.DUPLICATE_TRANSACTION]"
+                    "name": "[\"STX_005\" as Code.DUPLICATE_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.TRY_AGAIN_LATER]"
+                    "name": "[\"STX_006\" as Code.TRY_AGAIN_LATER]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.ERROR_STATUS]"
+                    "name": "[\"STX_007\" as Code.ERROR_STATUS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_STATUS]"
+                    "name": "[\"STX_008\" as Code.UNEXPECTED_STATUS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_GET_TRANSACTION_STATUS]"
+                    "name": "[\"STX_009\" as Code.FAILED_TO_GET_TRANSACTION_STATUS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.TRANSACTION_FAILED]"
+                    "name": "[\"STX_010\" as Code.TRANSACTION_FAILED]"
                   }
                 ]
               }
@@ -110635,35 +110825,35 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"SAE_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_ARG]"
+                    "name": "[\"SAE_001\" as Code.MISSING_ARG]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.VALID_UNTIL_LEDGER_SEQ_TOO_LOW]"
+                    "name": "[\"SAE_002\" as Code.VALID_UNTIL_LEDGER_SEQ_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.VALID_FOR_LEDGERS_TOO_LOW]"
+                    "name": "[\"SAE_003\" as Code.VALID_FOR_LEDGERS_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.VALID_FOR_SECONDS_TOO_LOW]"
+                    "name": "[\"SAE_004\" as Code.VALID_FOR_SECONDS_TOO_LOW]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_FETCH_LATEST_LEDGER]"
+                    "name": "[\"SAE_005\" as Code.FAILED_TO_FETCH_LATEST_LEDGER]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_SIGNER]"
+                    "name": "[\"SAE_006\" as Code.MISSING_SIGNER]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_SIGN_AUTH_ENTRY]"
+                    "name": "[\"SAE_007\" as Code.FAILED_TO_SIGN_AUTH_ENTRY]"
                   }
                 ]
               }
@@ -111248,15 +111438,15 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"AFE_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_TRANSACTION]"
+                    "name": "[\"AFE_001\" as Code.MISSING_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_AUTHORIZED_OPERATION]"
+                    "name": "[\"AFE_002\" as Code.MISSING_AUTHORIZED_OPERATION]"
                   }
                 ]
               }
@@ -111469,19 +111659,19 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"EFS_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_TRANSACTION]"
+                    "name": "[\"EFS_001\" as Code.MISSING_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_RECORDING_SIMULATION]"
+                    "name": "[\"EFS_002\" as Code.MISSING_RECORDING_SIMULATION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_RPC]"
+                    "name": "[\"EFS_003\" as Code.MISSING_RPC]"
                   }
                 ]
               }
@@ -111901,63 +112091,63 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"SEN_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NO_REQUIREMENTS]"
+                    "name": "[\"SEN_001\" as Code.NO_REQUIREMENTS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NO_SIGNERS]"
+                    "name": "[\"SEN_002\" as Code.NO_SIGNERS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.SIGNER_NOT_FOUND]"
+                    "name": "[\"SEN_003\" as Code.SIGNER_NOT_FOUND]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_SIGN_TRANSACTION]"
+                    "name": "[\"SEN_004\" as Code.FAILED_TO_SIGN_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_GET_SIGNER_KEY]"
+                    "name": "[\"SEN_005\" as Code.FAILED_TO_GET_SIGNER_KEY]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.DUPLICATE_SIGNER_KEY]"
+                    "name": "[\"SEN_006\" as Code.DUPLICATE_SIGNER_KEY]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.EXTRA_SIGNER_NOT_FOUND]"
+                    "name": "[\"SEN_007\" as Code.EXTRA_SIGNER_NOT_FOUND]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNSUPPORTED_PRE_AUTH_EXTRA_SIGNER]"
+                    "name": "[\"SEN_008\" as Code.UNSUPPORTED_PRE_AUTH_EXTRA_SIGNER]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.AMBIGUOUS_ACCOUNT_SIGNERS]"
+                    "name": "[\"SEN_009\" as Code.AMBIGUOUS_ACCOUNT_SIGNERS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_CHECK_SIGNER_TARGET]"
+                    "name": "[\"SEN_010\" as Code.FAILED_TO_CHECK_SIGNER_TARGET]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_CHECK_PRE_AUTH_TRANSACTION]"
+                    "name": "[\"SEN_011\" as Code.FAILED_TO_CHECK_PRE_AUTH_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.PRE_AUTH_TRANSACTION_MISMATCH]"
+                    "name": "[\"SEN_012\" as Code.PRE_AUTH_TRANSACTION_MISMATCH]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_READ_EXTRA_SIGNERS]"
+                    "name": "[\"SEN_013\" as Code.FAILED_TO_READ_EXTRA_SIGNERS]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_PARSE_SIGNED_TRANSACTION]"
+                    "name": "[\"SEN_014\" as Code.FAILED_TO_PARSE_SIGNED_TRANSACTION]"
                   }
                 ]
               }
@@ -112885,23 +113075,23 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"SIM_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.SIMULATION_FAILED]"
+                    "name": "[\"SIM_001\" as Code.SIMULATION_FAILED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.COULD_NOT_SIMULATE_TRANSACTION]"
+                    "name": "[\"SIM_002\" as Code.COULD_NOT_SIMULATE_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.SIMULATION_RESULT_NOT_VERIFIED]"
+                    "name": "[\"SIM_003\" as Code.SIMULATION_RESULT_NOT_VERIFIED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.CONTRACT_ERROR_SIMULATION_FAILED]"
+                    "name": "[\"SIM_004\" as Code.CONTRACT_ERROR_SIMULATION_FAILED]"
                   }
                 ]
               }
@@ -113416,27 +113606,27 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"WFB_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.ALREADY_FEE_BUMP]"
+                    "name": "[\"WFB_002\" as Code.ALREADY_FEE_BUMP]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.NOT_A_TRANSACTION]"
+                    "name": "[\"WFB_003\" as Code.NOT_A_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_BUILD_FEE_BUMP]"
+                    "name": "[\"WFB_004\" as Code.FAILED_TO_BUILD_FEE_BUMP]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.MISSING_ARG]"
+                    "name": "[\"WFB_001\" as Code.MISSING_ARG]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FEE_TOO_LOW]"
+                    "name": "[\"WFB_005\" as Code.FEE_TOO_LOW]"
                   }
                 ]
               }
@@ -113751,27 +113941,27 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_ERROR]"
+                    "name": "[\"PCTO_000\" as Code.UNEXPECTED_ERROR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_TRANSACTION_RESULT]"
+                    "name": "[\"PCTO_001\" as Code.UNEXPECTED_TRANSACTION_RESULT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_INNER_TRANSACTION_RESULT]"
+                    "name": "[\"PCTO_002\" as Code.UNEXPECTED_INNER_TRANSACTION_RESULT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNEXPECTED_OPERATION_RESULT]"
+                    "name": "[\"PCTO_003\" as Code.UNEXPECTED_OPERATION_RESULT]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNSUPPORTED_OPERATION_OUTCOME]"
+                    "name": "[\"PCTO_004\" as Code.UNSUPPORTED_OPERATION_OUTCOME]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.UNSUCCESSFUL_OPERATION_OUTCOME]"
+                    "name": "[\"PCTO_005\" as Code.UNSUCCESSFUL_OPERATION_OUTCOME]"
                   }
                 ]
               }
@@ -114276,15 +114466,15 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.DUPLICATE_NESTED_DELEGATE]"
+                    "name": "[\"SIG_DEL_001\" as Code.DUPLICATE_NESTED_DELEGATE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_BUILD_DELEGATED_ENTRY]"
+                    "name": "[\"SIG_DEL_002\" as Code.FAILED_TO_BUILD_DELEGATED_ENTRY]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_AUTHORIZE_DELEGATE]"
+                    "name": "[\"SIG_DEL_003\" as Code.FAILED_TO_AUTHORIZE_DELEGATE]"
                   }
                 ]
               }
@@ -114497,39 +114687,39 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_PREIMAGE_LENGTH]"
+                    "name": "[\"SIG_HSX_001\" as Code.INVALID_PREIMAGE_LENGTH]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.PREIMAGE_NOT_ACCESSIBLE]"
+                    "name": "[\"SIG_HSX_002\" as Code.PREIMAGE_NOT_ACCESSIBLE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.SIGNER_DESTROYED]"
+                    "name": "[\"SIG_HSX_003\" as Code.SIGNER_DESTROYED]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_GENERATE_PREIMAGE]"
+                    "name": "[\"SIG_HSX_004\" as Code.FAILED_TO_GENERATE_PREIMAGE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_DERIVE_HASH]"
+                    "name": "[\"SIG_HSX_005\" as Code.FAILED_TO_DERIVE_HASH]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_SIGNER_KEY]"
+                    "name": "[\"SIG_HSX_006\" as Code.FAILED_TO_ENCODE_SIGNER_KEY]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ADD_PREIMAGE_SIGNATURE]"
+                    "name": "[\"SIG_HSX_007\" as Code.FAILED_TO_ADD_PREIMAGE_SIGNATURE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_SERIALIZE_TRANSACTION]"
+                    "name": "[\"SIG_HSX_008\" as Code.FAILED_TO_SERIALIZE_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_NORMALIZE_PREIMAGE]"
+                    "name": "[\"SIG_HSX_009\" as Code.FAILED_TO_NORMALIZE_PREIMAGE]"
                   }
                 ]
               }
@@ -114957,27 +115147,27 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_TRANSACTION_HASH_LENGTH]"
+                    "name": "[\"SIG_PAT_001\" as Code.INVALID_TRANSACTION_HASH_LENGTH]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_HASH_TRANSACTION_DURING_CREATION]"
+                    "name": "[\"SIG_PAT_002\" as Code.FAILED_TO_HASH_TRANSACTION_DURING_CREATION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_DECODE_SIGNER_KEY]"
+                    "name": "[\"SIG_PAT_003\" as Code.FAILED_TO_DECODE_SIGNER_KEY]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_SIGNER_KEY]"
+                    "name": "[\"SIG_PAT_004\" as Code.FAILED_TO_ENCODE_SIGNER_KEY]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_HASH_TRANSACTION_DURING_AUTHORIZATION]"
+                    "name": "[\"SIG_PAT_005\" as Code.FAILED_TO_HASH_TRANSACTION_DURING_AUTHORIZATION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_NORMALIZE_TRANSACTION_HASH]"
+                    "name": "[\"SIG_PAT_006\" as Code.FAILED_TO_NORMALIZE_TRANSACTION_HASH]"
                   }
                 ]
               }
@@ -115410,51 +115600,51 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_PAYLOAD_LENGTH]"
+                    "name": "[\"SIG_SPL_001\" as Code.INVALID_PAYLOAD_LENGTH]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_GET_PUBLIC_KEY]"
+                    "name": "[\"SIG_SPL_002\" as Code.FAILED_TO_GET_PUBLIC_KEY]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_DECODE_PUBLIC_KEY]"
+                    "name": "[\"SIG_SPL_003\" as Code.FAILED_TO_DECODE_PUBLIC_KEY]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_HASH_TRANSACTION]"
+                    "name": "[\"SIG_SPL_004\" as Code.FAILED_TO_HASH_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_SIGN_PAYLOAD]"
+                    "name": "[\"SIG_SPL_005\" as Code.FAILED_TO_SIGN_PAYLOAD]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_BUILD_DECORATED_SIGNATURE]"
+                    "name": "[\"SIG_SPL_006\" as Code.FAILED_TO_BUILD_DECORATED_SIGNATURE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ADD_DECORATED_SIGNATURE]"
+                    "name": "[\"SIG_SPL_007\" as Code.FAILED_TO_ADD_DECORATED_SIGNATURE]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_SERIALIZE_TRANSACTION]"
+                    "name": "[\"SIG_SPL_008\" as Code.FAILED_TO_SERIALIZE_TRANSACTION]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_NORMALIZE_PAYLOAD]"
+                    "name": "[\"SIG_SPL_009\" as Code.FAILED_TO_NORMALIZE_PAYLOAD]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_BUILD_SIGNER_KEY_XDR]"
+                    "name": "[\"SIG_SPL_010\" as Code.FAILED_TO_BUILD_SIGNER_KEY_XDR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_ENCODE_SIGNER_KEY]"
+                    "name": "[\"SIG_SPL_011\" as Code.FAILED_TO_ENCODE_SIGNER_KEY]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.FAILED_TO_NORMALIZE_SIGNATURE]"
+                    "name": "[\"SIG_SPL_012\" as Code.FAILED_TO_NORMALIZE_SIGNATURE]"
                   }
                 ]
               }
@@ -116279,11 +116469,11 @@
                 "properties": [
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_SPONSOR]"
+                    "name": "[\"SPNS_001\" as Code.INVALID_SPONSOR]"
                   },
                   {
                     "computed": true,
-                    "name": "[Code.INVALID_SPONSORED_ACCOUNT]"
+                    "name": "[\"SPNS_002\" as Code.INVALID_SPONSORED_ACCOUNT]"
                   }
                 ]
               }
@@ -116365,6 +116555,1540 @@
         }
       ]
     }
+  },
+  "@colibri/core/errors": {
+    "BaseMeta": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "cause",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "unknown",
+                    "value": "unknown"
+                  }
+                },
+                {
+                  "name": "data",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "unknown",
+                    "value": "unknown"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ColibriError": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "constructors": [
+            {
+              "hasBody": true,
+              "name": "constructor",
+              "params": [
+                {
+                  "kind": "identifier",
+                  "name": "e",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "ColibriErrorShape",
+                    "value": {
+                      "typeName": "ColibriErrorShape",
+                      "typeParams": [
+                        {
+                          "kind": "typeRef",
+                          "repr": "C",
+                          "value": {
+                            "typeName": "C"
+                          }
+                        },
+                        {
+                          "kind": "typeRef",
+                          "repr": "M",
+                          "value": {
+                            "typeName": "M"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "extends": "Error",
+          "methods": [
+            {
+              "functionDef": {
+                "hasBody": true,
+                "params": [],
+                "returnType": {
+                  "kind": "typeRef",
+                  "repr": "Record",
+                  "value": {
+                    "typeName": "Record",
+                    "typeParams": [
+                      {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      },
+                      {
+                        "kind": "keyword",
+                        "repr": "unknown",
+                        "value": "unknown"
+                      }
+                    ]
+                  }
+                }
+              },
+              "kind": "method",
+              "name": "toJSON"
+            },
+            {
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "e",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "unknown",
+                      "value": "unknown"
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "typePredicate",
+                  "repr": "e is ColibriError",
+                  "value": {
+                    "param": {
+                      "name": "e",
+                      "type": "identifier"
+                    },
+                    "type": {
+                      "kind": "typeRef",
+                      "repr": "ColibriError",
+                      "value": {
+                        "typeName": "ColibriError",
+                        "typeParams": [
+                          {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          },
+                          {
+                            "kind": "typeRef",
+                            "repr": "BaseMeta",
+                            "value": {
+                              "typeName": "BaseMeta"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "isStatic": true,
+              "kind": "method",
+              "name": "is"
+            },
+            {
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "args",
+                    "optional": true,
+                    "tsType": {
+                      "kind": "typeLiteral",
+                      "value": {
+                        "properties": [
+                          {
+                            "name": "domain",
+                            "optional": true,
+                            "tsType": {
+                              "kind": "typeRef",
+                              "repr": "ErrorDomain",
+                              "value": {
+                                "typeName": "ErrorDomain"
+                              }
+                            }
+                          },
+                          {
+                            "name": "source",
+                            "optional": true,
+                            "tsType": {
+                              "kind": "keyword",
+                              "repr": "string",
+                              "value": "string"
+                            }
+                          },
+                          {
+                            "name": "code",
+                            "optional": true,
+                            "tsType": {
+                              "kind": "keyword",
+                              "repr": "string",
+                              "value": "string"
+                            }
+                          },
+                          {
+                            "name": "message",
+                            "optional": true,
+                            "tsType": {
+                              "kind": "keyword",
+                              "repr": "string",
+                              "value": "string"
+                            }
+                          },
+                          {
+                            "name": "details",
+                            "optional": true,
+                            "tsType": {
+                              "kind": "keyword",
+                              "repr": "string",
+                              "value": "string"
+                            }
+                          },
+                          {
+                            "name": "meta",
+                            "optional": true,
+                            "tsType": {
+                              "kind": "typeRef",
+                              "repr": "BaseMeta",
+                              "value": {
+                                "typeName": "BaseMeta"
+                              }
+                            }
+                          },
+                          {
+                            "name": "cause",
+                            "optional": true,
+                            "tsType": {
+                              "kind": "keyword",
+                              "repr": "unknown",
+                              "value": "unknown"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "typeRef",
+                  "repr": "ColibriError",
+                  "value": {
+                    "typeName": "ColibriError"
+                  }
+                }
+              },
+              "isStatic": true,
+              "kind": "method",
+              "name": "unexpected"
+            },
+            {
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "error",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "unknown",
+                      "value": "unknown"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "ctx",
+                    "optional": true,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "Partial",
+                      "value": {
+                        "typeName": "Partial",
+                        "typeParams": [
+                          {
+                            "kind": "typeRef",
+                            "repr": "ColibriErrorShape",
+                            "value": {
+                              "typeName": "ColibriErrorShape",
+                              "typeParams": [
+                                {
+                                  "kind": "keyword",
+                                  "repr": "string",
+                                  "value": "string"
+                                },
+                                {
+                                  "kind": "typeRef",
+                                  "repr": "BaseMeta",
+                                  "value": {
+                                    "typeName": "BaseMeta"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "typeRef",
+                  "repr": "ColibriError",
+                  "value": {
+                    "typeName": "ColibriError"
+                  }
+                }
+              },
+              "isStatic": true,
+              "kind": "method",
+              "name": "fromUnknown"
+            }
+          ],
+          "properties": [
+            {
+              "name": "domain",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ErrorDomain",
+                "value": {
+                  "typeName": "ErrorDomain"
+                }
+              }
+            },
+            {
+              "name": "code",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "C",
+                "value": {
+                  "typeName": "C"
+                }
+              }
+            },
+            {
+              "name": "source",
+              "readonly": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "details",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "diagnostic",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Diagnostic",
+                "value": {
+                  "typeName": "Diagnostic"
+                }
+              }
+            },
+            {
+              "name": "meta",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "M",
+                "value": {
+                  "typeName": "M"
+                }
+              }
+            }
+          ],
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              },
+              "default": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              },
+              "name": "C"
+            },
+            {
+              "constraint": {
+                "kind": "typeRef",
+                "repr": "BaseMeta",
+                "value": {
+                  "typeName": "BaseMeta"
+                }
+              },
+              "default": {
+                "kind": "typeRef",
+                "repr": "BaseMeta",
+                "value": {
+                  "typeName": "BaseMeta"
+                }
+              },
+              "name": "M"
+            }
+          ]
+        },
+        "kind": "class"
+      }
+    ],
+    "ColibriErrorShape": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "domain",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ErrorDomain",
+                "value": {
+                  "typeName": "ErrorDomain"
+                }
+              }
+            },
+            {
+              "name": "code",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Code",
+                "value": {
+                  "typeName": "Code"
+                }
+              }
+            },
+            {
+              "name": "message",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "source",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "details",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "diagnostic",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Diagnostic",
+                "value": {
+                  "typeName": "Diagnostic"
+                }
+              }
+            },
+            {
+              "name": "meta",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Meta",
+                "value": {
+                  "typeName": "Meta"
+                }
+              }
+            }
+          ],
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              },
+              "name": "Code"
+            },
+            {
+              "constraint": {
+                "kind": "typeRef",
+                "repr": "BaseMeta",
+                "value": {
+                  "typeName": "BaseMeta"
+                }
+              },
+              "name": "Meta"
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "Diagnostic": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "rootCause",
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                },
+                {
+                  "name": "suggestion",
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                },
+                {
+                  "name": "materials",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "array",
+                    "value": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ErrorDomain": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "literal",
+                "repr": "account",
+                "value": {
+                  "kind": "string",
+                  "string": "account"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "address",
+                "value": {
+                  "kind": "string",
+                  "string": "address"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "auth",
+                "value": {
+                  "kind": "string",
+                  "string": "auth"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "contract",
+                "value": {
+                  "kind": "string",
+                  "string": "contract"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "tools",
+                "value": {
+                  "kind": "string",
+                  "string": "tools"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "processes",
+                "value": {
+                  "kind": "string",
+                  "string": "processes"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "verifiers",
+                "value": {
+                  "kind": "string",
+                  "string": "verifiers"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "helpers",
+                "value": {
+                  "kind": "string",
+                  "string": "helpers"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "core",
+                "value": {
+                  "kind": "string",
+                  "string": "core"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "signer",
+                "value": {
+                  "kind": "string",
+                  "string": "signer"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "pipelines",
+                "value": {
+                  "kind": "string",
+                  "string": "pipelines"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "plugins",
+                "value": {
+                  "kind": "string",
+                  "string": "plugins"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "rpc",
+                "value": {
+                  "kind": "string",
+                  "string": "rpc"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "events",
+                "value": {
+                  "kind": "string",
+                  "string": "events"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "toid",
+                "value": {
+                  "kind": "string",
+                  "string": "toid"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "event-streamer",
+                "value": {
+                  "kind": "string",
+                  "string": "event-streamer"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "ledger-streamer",
+                "value": {
+                  "kind": "string",
+                  "string": "ledger-streamer"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "sep1",
+                "value": {
+                  "kind": "string",
+                  "string": "sep1"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "sep10",
+                "value": {
+                  "kind": "string",
+                  "string": "sep10"
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ]
+  },
+  "@colibri/core/strkey": {
+    "ClaimableBalanceId": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "B${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "B",
+                  "value": {
+                    "kind": "string",
+                    "string": "B"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ContractId": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "C${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "C",
+                  "value": {
+                    "kind": "string",
+                    "string": "C"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "Ed25519PublicKey": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "G${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "G",
+                  "value": {
+                    "kind": "string",
+                    "string": "G"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "Ed25519SecretKey": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "S${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "S",
+                  "value": {
+                    "kind": "string",
+                    "string": "S"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ExtraSignerKey": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "Exclude",
+            "value": {
+              "typeName": "Exclude",
+              "typeParams": [
+                {
+                  "kind": "typeRef",
+                  "repr": "SignerKey",
+                  "value": {
+                    "typeName": "SignerKey"
+                  }
+                },
+                {
+                  "kind": "typeRef",
+                  "repr": "PreAuthTx",
+                  "value": {
+                    "typeName": "PreAuthTx"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "LiquidityPoolId": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "L${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "L",
+                  "value": {
+                    "kind": "string",
+                    "string": "L"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "MuxedAddress": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "M${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "M",
+                  "value": {
+                    "kind": "string",
+                    "string": "M"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "PreAuthTx": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "T${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "T",
+                  "value": {
+                    "kind": "string",
+                    "string": "T"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "Sha256Hash": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "X${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "X",
+                  "value": {
+                    "kind": "string",
+                    "string": "X"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "SignedPayload": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "P${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "P",
+                  "value": {
+                    "kind": "string",
+                    "string": "P"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "SignerKey": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "Ed25519PublicKey",
+                "value": {
+                  "typeName": "Ed25519PublicKey"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "PreAuthTx",
+                "value": {
+                  "typeName": "PreAuthTx"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "Sha256Hash",
+                "value": {
+                  "typeName": "Sha256Hash"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "SignedPayload",
+                "value": {
+                  "typeName": "SignedPayload"
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "StrKey": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "kind": "const",
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "regex"
+                },
+                {
+                  "name": "getStrkeyTypeName"
+                },
+                {
+                  "name": "detectStrkeyType"
+                },
+                {
+                  "name": "isEd25519PublicKey"
+                },
+                {
+                  "name": "isEd25519SecretKey"
+                },
+                {
+                  "name": "isMuxedAddress"
+                },
+                {
+                  "name": "isPreAuthTx"
+                },
+                {
+                  "name": "isSha256Hash"
+                },
+                {
+                  "name": "isSignedPayload"
+                },
+                {
+                  "name": "isContractId"
+                },
+                {
+                  "name": "isLiquidityPoolId"
+                },
+                {
+                  "name": "isClaimableBalanceId"
+                },
+                {
+                  "name": "isValidEd25519PublicKey"
+                },
+                {
+                  "name": "isValidEd25519SecretSeed"
+                },
+                {
+                  "name": "isValidMuxedAddress"
+                },
+                {
+                  "name": "isValidSignedPayload"
+                },
+                {
+                  "name": "isValidContractId"
+                },
+                {
+                  "name": "isValidLiquidityPoolId"
+                },
+                {
+                  "name": "isValidClaimableBalanceId"
+                }
+              ]
+            }
+          }
+        },
+        "kind": "variable"
+      }
+    ],
+    "StrkeyName": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "members": [
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "ed25519PublicKey",
+                "value": {
+                  "kind": "string",
+                  "string": "ed25519PublicKey"
+                }
+              },
+              "name": "G"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "ed25519SecretKey",
+                "value": {
+                  "kind": "string",
+                  "string": "ed25519SecretKey"
+                }
+              },
+              "name": "S"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "med25519PublicKey",
+                "value": {
+                  "kind": "string",
+                  "string": "med25519PublicKey"
+                }
+              },
+              "name": "M"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "preAuthTx",
+                "value": {
+                  "kind": "string",
+                  "string": "preAuthTx"
+                }
+              },
+              "name": "T"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "sha256Hash",
+                "value": {
+                  "kind": "string",
+                  "string": "sha256Hash"
+                }
+              },
+              "name": "X"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "signedPayload",
+                "value": {
+                  "kind": "string",
+                  "string": "signedPayload"
+                }
+              },
+              "name": "P"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "contract",
+                "value": {
+                  "kind": "string",
+                  "string": "contract"
+                }
+              },
+              "name": "C"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "liquidityPool",
+                "value": {
+                  "kind": "string",
+                  "string": "liquidityPool"
+                }
+              },
+              "name": "L"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "claimableBalance",
+                "value": {
+                  "kind": "string",
+                  "string": "claimableBalance"
+                }
+              },
+              "name": "B"
+            }
+          ]
+        },
+        "kind": "enum"
+      }
+    ],
+    "StrkeyPrefix": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "members": [
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "G",
+                "value": {
+                  "kind": "string",
+                  "string": "G"
+                }
+              },
+              "name": "Ed25519PublicKey"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "S",
+                "value": {
+                  "kind": "string",
+                  "string": "S"
+                }
+              },
+              "name": "Ed25519SecretKey"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "M",
+                "value": {
+                  "kind": "string",
+                  "string": "M"
+                }
+              },
+              "name": "Med25519PublicKey"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "T",
+                "value": {
+                  "kind": "string",
+                  "string": "T"
+                }
+              },
+              "name": "PreAuthTx"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "X",
+                "value": {
+                  "kind": "string",
+                  "string": "X"
+                }
+              },
+              "name": "Sha256Hash"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "P",
+                "value": {
+                  "kind": "string",
+                  "string": "P"
+                }
+              },
+              "name": "SignedPayload"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "C",
+                "value": {
+                  "kind": "string",
+                  "string": "C"
+                }
+              },
+              "name": "ContractId"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "L",
+                "value": {
+                  "kind": "string",
+                  "string": "L"
+                }
+              },
+              "name": "LiquidityPoolId"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "B",
+                "value": {
+                  "kind": "string",
+                  "string": "B"
+                }
+              },
+              "name": "ClaimableBalanceId"
+            }
+          ]
+        },
+        "kind": "enum"
+      }
+    ],
+    "StrkeyType": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "computed": true,
+                  "name": "[StrkeyPrefix.ClaimableBalanceId]",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "ClaimableBalanceId",
+                    "value": {
+                      "typeName": "ClaimableBalanceId"
+                    }
+                  }
+                },
+                {
+                  "computed": true,
+                  "name": "[StrkeyPrefix.ContractId]",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "ContractId",
+                    "value": {
+                      "typeName": "ContractId"
+                    }
+                  }
+                },
+                {
+                  "computed": true,
+                  "name": "[StrkeyPrefix.Ed25519PublicKey]",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Ed25519PublicKey",
+                    "value": {
+                      "typeName": "Ed25519PublicKey"
+                    }
+                  }
+                },
+                {
+                  "computed": true,
+                  "name": "[StrkeyPrefix.Ed25519SecretKey]",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Ed25519SecretKey",
+                    "value": {
+                      "typeName": "Ed25519SecretKey"
+                    }
+                  }
+                },
+                {
+                  "computed": true,
+                  "name": "[StrkeyPrefix.Med25519PublicKey]",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "MuxedAddress",
+                    "value": {
+                      "typeName": "MuxedAddress"
+                    }
+                  }
+                },
+                {
+                  "computed": true,
+                  "name": "[StrkeyPrefix.SignedPayload]",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "SignedPayload",
+                    "value": {
+                      "typeName": "SignedPayload"
+                    }
+                  }
+                },
+                {
+                  "computed": true,
+                  "name": "[StrkeyPrefix.PreAuthTx]",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "PreAuthTx",
+                    "value": {
+                      "typeName": "PreAuthTx"
+                    }
+                  }
+                },
+                {
+                  "computed": true,
+                  "name": "[StrkeyPrefix.Sha256Hash]",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Sha256Hash",
+                    "value": {
+                      "typeName": "Sha256Hash"
+                    }
+                  }
+                },
+                {
+                  "computed": true,
+                  "name": "[StrkeyPrefix.LiquidityPoolId]",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "LiquidityPoolId",
+                    "value": {
+                      "typeName": "LiquidityPoolId"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ]
   },
   "@colibri/identicon": {
     "generateIdenticon": [
@@ -116950,6 +118674,326 @@
           ]
         },
         "kind": "interface"
+      }
+    ],
+    "identiconSvg": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "address",
+              "optional": false,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "kind": "assign",
+              "left": {
+                "kind": "identifier",
+                "name": "options",
+                "optional": false,
+                "tsType": {
+                  "kind": "typeRef",
+                  "repr": "IdenticonOptions",
+                  "value": {
+                    "typeName": "IdenticonOptions"
+                  }
+                }
+              },
+              "right": "[UNSUPPORTED]"
+            }
+          ],
+          "returnType": {
+            "kind": "keyword",
+            "repr": "string",
+            "value": "string"
+          }
+        },
+        "kind": "function"
+      }
+    ]
+  },
+  "@colibri/identicon/svg": {
+    "IdenticonCode": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "members": [
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "IDICON_001",
+                "value": {
+                  "kind": "string",
+                  "string": "IDICON_001"
+                }
+              },
+              "name": "INVALID_PUBLIC_KEY"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "IDICON_002",
+                "value": {
+                  "kind": "string",
+                  "string": "IDICON_002"
+                }
+              },
+              "name": "INVALID_OPTIONS"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "IDICON_003",
+                "value": {
+                  "kind": "string",
+                  "string": "IDICON_003"
+                }
+              },
+              "name": "INVALID_SIZE"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "IDICON_004",
+                "value": {
+                  "kind": "string",
+                  "string": "IDICON_004"
+                }
+              },
+              "name": "INVALID_PADDING"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "IDICON_005",
+                "value": {
+                  "kind": "string",
+                  "string": "IDICON_005"
+                }
+              },
+              "name": "INSUFFICIENT_DRAWING_AREA"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "IDICON_006",
+                "value": {
+                  "kind": "string",
+                  "string": "IDICON_006"
+                }
+              },
+              "name": "INVALID_SATURATION"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "IDICON_007",
+                "value": {
+                  "kind": "string",
+                  "string": "IDICON_007"
+                }
+              },
+              "name": "INVALID_VALUE"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "IDICON_008",
+                "value": {
+                  "kind": "string",
+                  "string": "IDICON_008"
+                }
+              },
+              "name": "INVALID_BACKGROUND"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "IDICON_009",
+                "value": {
+                  "kind": "string",
+                  "string": "IDICON_009"
+                }
+              },
+              "name": "INVALID_FORMAT"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "IDICON_010",
+                "value": {
+                  "kind": "string",
+                  "string": "IDICON_010"
+                }
+              },
+              "name": "PNG_ENCODING_FAILED"
+            }
+          ]
+        },
+        "kind": "enum"
+      }
+    ],
+    "IdenticonError": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "constructors": [
+            {
+              "hasBody": true,
+              "name": "constructor",
+              "params": [
+                {
+                  "kind": "identifier",
+                  "name": "code",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "IdenticonCode",
+                    "value": {
+                      "typeName": "IdenticonCode"
+                    }
+                  }
+                },
+                {
+                  "kind": "identifier",
+                  "name": "message",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                },
+                {
+                  "kind": "identifier",
+                  "name": "data",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "unknown",
+                    "value": "unknown"
+                  }
+                },
+                {
+                  "kind": "identifier",
+                  "name": "cause",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "unknown",
+                    "value": "unknown"
+                  }
+                }
+              ]
+            }
+          ],
+          "extends": "IdenticonErrorBase"
+        },
+        "kind": "class"
+      }
+    ],
+    "IdenticonOptions": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "size",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "padding",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "background",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "saturation",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "value",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "identiconSvg": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "address",
+              "optional": false,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "kind": "assign",
+              "left": {
+                "kind": "identifier",
+                "name": "options",
+                "optional": false,
+                "tsType": {
+                  "kind": "typeRef",
+                  "repr": "IdenticonOptions",
+                  "value": {
+                    "typeName": "IdenticonOptions"
+                  }
+                }
+              },
+              "right": "[UNSUPPORTED]"
+            }
+          ],
+          "returnType": {
+            "kind": "keyword",
+            "repr": "string",
+            "value": "string"
+          }
+        },
+        "kind": "function"
       }
     ]
   },

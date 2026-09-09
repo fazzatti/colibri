@@ -4,14 +4,22 @@
   "packages": {
     "@colibri/core": {
       "bump": "minor",
-      "reason": "Add spec-aware event definitions and registry access on Contract, and export the existing error-map extraction helper.",
-      "apiReview": "Additive event extraction, strict decoding and indexed filters. Preserve existing read/invoke pipelines and constructor plugin lifecycle. No additional mutable contract-error installer."
+      "reason": "Add spec-aware events, native Spec and Result exports, and supported lightweight errors/StrKey entrypoints. Reduce unnecessary registry and namespace initialization.",
+      "apiReview": "Additive event extraction, strict decoding and indexed filters. Preserve existing read/invoke pipelines and constructor plugin lifecycle. No additional mutable contract-error installer. Spec is the exact native SDK constructor and Result the native type; no wrappers. Granular imports share root implementations. Literal registry keys preserve stable codes; decorators, memoization and standards are unchanged."
     },
     "@colibri/contract-bindings": {
       "bump": "initial",
       "initialVersion": "0.1.0",
       "reason": "Initial preview of portable typed bindings generation and a Deno CLI with JSR and npm package presets.",
-      "apiReview": "New preview package. Emits constants.ts, types.ts and index.ts with spec-derived PascalCase names, named method inputs/outputs, typed generic read/invoke, errors and events using Core 1.1. Adds a contract-specific Markdown guide; no mutability inference. CLI choices use arrow-key menus; optional select callback preserves prompt-only adapters. Class-name prompts are removed in favor of filename defaults or ContractClient for remote sources. Provenance output is opt-in in CLI and programmatic generation."
+      "apiReview": "New preview package. Emits constants.ts, types.ts and index.ts with spec-derived PascalCase names, named method inputs/outputs, typed generic read/invoke, errors and events using Core 1.1. Adds a contract-specific Markdown guide; no mutability inference. CLI choices use arrow-key menus; optional select callback preserves prompt-only adapters. Class-name prompts are removed in favor of filename defaults or ContractClient for remote sources. Provenance output is opt-in in CLI and programmatic generation. Generated clients import Spec and Result from Core, with no direct Stellar SDK package dependency."
+    },
+    "@colibri/identicon": {
+      "bump": "minor",
+      "reason": "Add an SVG-only public renderer and subpath sharing the existing implementation, without PNG encoding dependencies.",
+      "apiReview": "Existing Identicon methods and output remain unchanged. The new identiconSvg function uses identical validation and rendering. Core error identity is shared through its supported errors subpath.",
+      "dependencies": {
+        "@colibri/core": "^1.1.0"
+      }
     }
   }
 }

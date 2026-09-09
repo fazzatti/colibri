@@ -25,11 +25,12 @@ export class NO_RETURN_VALUE extends SimulateToRetvalError {
       data: {
         simulation,
       },
-      details: `The simulation did not contain a return value. This is normally because the transaction did not contain a contract invocation operation.`,
+      details:
+        `The simulation did not contain a return value. This is normally because the transaction did not contain a contract invocation operation.`,
     });
   }
 }
 
 export const ERROR_PIPE_SIMTRV = {
-  [Code.NO_RETURN_VALUE]: NO_RETURN_VALUE,
+  ["PIPE_SIMTRV_001" as Code.NO_RETURN_VALUE]: NO_RETURN_VALUE,
 };

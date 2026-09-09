@@ -1,5 +1,5 @@
 /** Spec-aware event definitions shared by dynamic contracts and generated clients. */
-import { Spec } from "stellar-sdk/contract";
+import { Spec } from "@/contract/spec.ts";
 import type { BinaryData } from "@/common/types/index.ts";
 import type { Event } from "@/event/event.ts";
 import { extractContractSpec } from "@/contract/interface/extract-contract-spec.ts";

@@ -192,6 +192,22 @@ jobs:
         env:
           TYPESCRIPT_VERSION: "6.0.3"
         run: deno task check:consumers:npm "${{ runner.temp }}/consumers" --browsers
+      - name: Check production bundle budgets and dependency isolation
+        if: matrix.sdk == '17.0.1'
+        run: |
+          deno task test:bundle-tooling
+          deno task check:bundles "${{ runner.temp }}/bundles" "${{ runner.temp }}/consumers"
+      - name: Upload production bundle evidence
+        if: always() && matrix.sdk == '17.0.1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-browser-bundles
+          path: |
+            ${{ runner.temp }}/bundles/*.json
+            ${{ runner.temp }}/bundles/*.lock
+            ${{ runner.temp }}/bundles/deno/
+            ${{ runner.temp }}/bundles/rollup/
+            ${{ runner.temp }}/bundles/npm/package-lock.json
       - name: Test browser consumer failure diagnostics and cleanup
         run: deno task test:browser-runner
 

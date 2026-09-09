@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "@colibri/core": "jsr:@colibri/core@1.0.0",
+    "@stellar/stellar-sdk": "npm:@stellar/stellar-sdk@17.0.1"
+  }
+}

@@ -1,4 +1,4 @@
-import { Spec } from "stellar-sdk/contract";
+import { Spec } from "@colibri/core";
 import type { GenerateBindingsOptions, GeneratedBindings } from "@/types.ts";
 import { BindingError, Code } from "@/error.ts";
 import { identifier, TypeMap } from "@/generation/type-map.ts";
@@ -41,26 +41,21 @@ export function generateBindings(
     if (options.provenance) model.claim(`${className}Provenance`);
     const methods = renderMethods(spec, model, className);
     const events = renderEvents(spec, model, className);
-    const sdk = options.target === "npm"
-      ? "@stellar/stellar-sdk/contract"
-      : "stellar-sdk/contract";
     const prefix = options.output === "package" ? "generated/" : "";
     return {
       files: {
         [`${prefix}constants.ts`]: renderConstants(
           spec,
           className,
-          sdk,
           options,
         ),
         [`${prefix}types.ts`]: renderTypes(
           className,
-          sdk,
           model.declarations(),
           methods,
           events,
         ),
-        [`${prefix}index.ts`]: renderClient(className, sdk),
+        [`${prefix}index.ts`]: renderClient(className),
       },
       scaffold: packageScaffold(options, className, spec),
       warnings: [

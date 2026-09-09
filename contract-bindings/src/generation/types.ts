@@ -1,10 +1,8 @@
 import { GENERATED_MARKER } from "@/generation/constants.ts";
-import { quote } from "@/generation/type-map.ts";
 
 /** @internal The public method maps and client configuration remain easy to inspect. */
 export function renderTypes(
   className: string,
-  sdk: string,
   declarations: string,
   methods: string,
   events: string,
@@ -23,7 +21,7 @@ import type {
 } from "@colibri/core";
 ${
     methods.includes("StellarResult") || declarations.includes("StellarResult")
-      ? `import type { Result as StellarResult } from ${quote(sdk)};\n`
+      ? `import type { Result as StellarResult } from "@colibri/core";\n`
       : ""
   }import { ${className}Methods } from "./constants.ts";
 

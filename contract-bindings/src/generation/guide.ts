@@ -1,5 +1,5 @@
 import { contractEventBindings } from "@colibri/core";
-import type { Spec } from "stellar-sdk/contract";
+import type { Spec } from "@colibri/core";
 import type { xdr } from "stellar-sdk";
 import type { GenerateBindingsOptions } from "@/types.ts";
 import { property, quote, typeName } from "@/generation/type-map.ts";
@@ -27,12 +27,12 @@ function setupInstructions(packaged: boolean, npm: boolean): string {
   if (npm) {
     return packaged ? fence("sh", "npm install\nnpm run build") : fence(
       "sh",
-      "npm config set @jsr:registry https://npm.jsr.io --location project\nnpm install '@colibri/core@npm:@jsr/colibri__core@^1.1.0' '@stellar/stellar-sdk@^17.0.1'",
+      "npm config set @jsr:registry https://npm.jsr.io --location project\nnpm install '@colibri/core@npm:@jsr/colibri__core@^1.1.0'",
     );
   }
   return packaged ? fence("sh", "deno task check") : fence(
     "sh",
-    "deno add jsr:@colibri/core@^1.1.0\ndeno add --alias stellar-sdk npm:@stellar/stellar-sdk@^17.0.1",
+    "deno add jsr:@colibri/core@^1.1.0",
   );
 }
 function eventGuide(spec: Spec): string {
@@ -168,8 +168,8 @@ ${setup}
 
 ${
     npm
-      ? "The npm preset uses Stellar SDK 17 and Colibri through JSR's npm registry.\nKeep the project `.npmrc` when installing dependencies in CI. Node 22.12 or\nnewer is required. Package builds emit JavaScript and declarations into `dist/`."
-      : "The JSR preset uses Colibri Core 1.1 and Stellar SDK 17. The generated source\nimports `@colibri/core` and `stellar-sdk/contract` from your Deno import map."
+      ? "The npm preset uses Colibri through JSR's npm registry.\nKeep the project `.npmrc` when installing dependencies in CI. Node 22.12 or\nnewer is required. Package builds emit JavaScript and declarations into `dist/`."
+      : "The JSR preset uses Colibri Core 1.1; Core supplies the Stellar SDK dependency. The generated source\nimports only `@colibri/core` from your Deno import map."
   }
 
 ## Create a client

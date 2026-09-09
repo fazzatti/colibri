@@ -26,7 +26,7 @@ export type Sep1ErrorShape<Code extends string, DataType = unknown> = {
  */
 export abstract class Sep1Error<
   C extends string = Code,
-  DataType = unknown
+  DataType = unknown,
 > extends ColibriError<C, Meta<DataType>> {
   /** Error source identifier for SEP-1 failures. */
   override readonly source = "@colibri/core/sep1";
@@ -91,7 +91,7 @@ export class FETCH_FAILED extends Sep1Error<
     domain: string,
     cause?: Error,
     statusCode?: number,
-    statusText?: string
+    statusText?: string,
   ) {
     super({
       code: Code.FETCH_FAILED,
@@ -199,7 +199,8 @@ export class FILE_TOO_LARGE extends Sep1Error<
     super({
       code: Code.FILE_TOO_LARGE,
       message: `stellar.toml from '${domain}' exceeds maximum size`,
-      details: `The file size is ${size} bytes, which exceeds the maximum allowed size of ${maxSize} bytes (100KB) as per SEP-1 specification.`,
+      details:
+        `The file size is ${size} bytes, which exceeds the maximum allowed size of ${maxSize} bytes (100KB) as per SEP-1 specification.`,
       diagnostic: {
         rootCause: "File size exceeds SEP-1 limit",
         suggestion:
@@ -231,7 +232,8 @@ export class INVALID_SIGNING_KEY extends Sep1Error<
     super({
       code: Code.INVALID_SIGNING_KEY,
       message: `Invalid signing key in field '${field}'`,
-      details: `The value '${value}' is not a valid Stellar Ed25519 public key (G...). Signing keys must be valid Stellar public keys.`,
+      details:
+        `The value '${value}' is not a valid Stellar Ed25519 public key (G...). Signing keys must be valid Stellar public keys.`,
       diagnostic: {
         rootCause: "Signing key format is invalid",
         suggestion:
@@ -264,7 +266,7 @@ export class INVALID_URL extends Sep1Error<
     field: string,
     value: string,
     domain?: string,
-    requireHttps = true
+    requireHttps = true,
   ) {
     super({
       code: Code.INVALID_URL,
@@ -303,7 +305,8 @@ export class TIMEOUT extends Sep1Error<
     super({
       code: Code.TIMEOUT,
       message: `Request to fetch stellar.toml from '${domain}' timed out`,
-      details: `The request did not complete within ${timeoutMs}ms. The server may be slow or unreachable.`,
+      details:
+        `The request did not complete within ${timeoutMs}ms. The server may be slow or unreachable.`,
       diagnostic: {
         rootCause: "Network request timeout",
         suggestion:
@@ -335,7 +338,8 @@ export class INVALID_ACCOUNT extends Sep1Error<
     super({
       code: Code.INVALID_ACCOUNT,
       message: `Invalid account in field '${field}'${location}`,
-      details: `The value '${value}' is not a valid Stellar account address (G...).`,
+      details:
+        `The value '${value}' is not a valid Stellar account address (G...).`,
       diagnostic: {
         rootCause: "Account address format is invalid",
         suggestion:
@@ -353,12 +357,12 @@ export class INVALID_ACCOUNT extends Sep1Error<
  * SEP-1 error constructors indexed by stable error code.
  */
 export const ERROR_SEP1 = {
-  [Code.FETCH_FAILED]: FETCH_FAILED,
-  [Code.INVALID_DOMAIN]: INVALID_DOMAIN,
-  [Code.PARSE_ERROR]: PARSE_ERROR,
-  [Code.FILE_TOO_LARGE]: FILE_TOO_LARGE,
-  [Code.INVALID_SIGNING_KEY]: INVALID_SIGNING_KEY,
-  [Code.INVALID_URL]: INVALID_URL,
-  [Code.TIMEOUT]: TIMEOUT,
-  [Code.INVALID_ACCOUNT]: INVALID_ACCOUNT,
+  ["SEP1_001" as Code.FETCH_FAILED]: FETCH_FAILED,
+  ["SEP1_002" as Code.INVALID_DOMAIN]: INVALID_DOMAIN,
+  ["SEP1_003" as Code.PARSE_ERROR]: PARSE_ERROR,
+  ["SEP1_004" as Code.FILE_TOO_LARGE]: FILE_TOO_LARGE,
+  ["SEP1_005" as Code.INVALID_SIGNING_KEY]: INVALID_SIGNING_KEY,
+  ["SEP1_006" as Code.INVALID_URL]: INVALID_URL,
+  ["SEP1_007" as Code.TIMEOUT]: TIMEOUT,
+  ["SEP1_008" as Code.INVALID_ACCOUNT]: INVALID_ACCOUNT,
 };

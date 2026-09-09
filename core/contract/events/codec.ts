@@ -1,5 +1,5 @@
 import type { xdr } from "stellar-sdk";
-import type { Spec } from "stellar-sdk/contract";
+import type { Spec } from "@/contract/spec.ts";
 import * as E from "@/contract/events/error.ts";
 
 const PRIMITIVES: Readonly<Record<string, string>> = {

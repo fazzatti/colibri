@@ -22,6 +22,7 @@
  * @module
  */
 export { Identicon } from "@/identicon.ts";
+export { identiconSvg } from "@/svg.ts";
 export { generateIdenticon } from "@/core/generate.ts";
 export { IdenticonCode, IdenticonError } from "@/error/index.ts";
 export type {

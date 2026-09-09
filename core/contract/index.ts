@@ -6,7 +6,7 @@ import {
   xdr,
 } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
-import type { Spec } from "stellar-sdk/contract";
+import type { Spec } from "@/contract/spec.ts";
 import {
   createInvokeContractPipeline,
   type InvokeContractPipeline,
