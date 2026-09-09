@@ -106,17 +106,24 @@ client.read({ method: ContractMethods.Ping, methodArgs: { value: 1 } });
 void [literal, member, category, manual, current, decoded, echo, key];
 `,
   );
+  await Deno.writeTextFile(
+    resolve(output, "tsconfig.consumer.json"),
+    JSON.stringify({
+      compilerOptions: {
+        noEmit: true,
+        strict: true,
+        skipLibCheck: true,
+        module: "nodenext",
+        target: "ES2023",
+      },
+      files: ["consumer.ts"],
+    }),
+  );
   await command("npx", [
     "--no-install",
     "tsc",
-    "consumer.ts",
-    "--noEmit",
-    "--strict",
-    "--skipLibCheck",
-    "--module",
-    "nodenext",
-    "--target",
-    "ES2023",
+    "--project",
+    "tsconfig.consumer.json",
   ], output);
   await command("npm", ["pack", "--ignore-scripts"], output);
 }
