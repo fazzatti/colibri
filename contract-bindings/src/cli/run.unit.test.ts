@@ -113,7 +113,7 @@ describe("bindings CLI", () => {
         directory,
         "--non-interactive",
       ], silent);
-      assert(result?.written.includes("bindings.ts"));
+      assert(result?.written.includes("index.ts"));
       await assertRejects(
         () => runCli(["--wasm", `${directory}/absent.wasm`], silent),
         BindingError,

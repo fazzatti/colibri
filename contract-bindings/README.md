@@ -40,7 +40,8 @@ lists every flag.
 
 ## Files or packages
 
-- `--output files` produces `bindings.ts` and an initial `README.bindings.md`.
+- `--output files` produces `constants.ts`, `types.ts`, `index.ts`, and a
+  formatted `README.md` with setup instructions and examples from the spec.
   Configure the imports in your host project. The default `--target jsr` uses
   `@colibri/core` and `stellar-sdk/contract`; the npm preset uses
   `@stellar/stellar-sdk/contract`.
@@ -103,13 +104,18 @@ the codec. Top-level function `Result` outputs use the SDK
 Unsupported native SDK types, including nested Result encodings, fail generation
 explicitly.
 
-UDT export names include a stable declaration index to avoid collisions. Some
-Wasm files contain duplicate dependency type names; references follow the SDK's
-first-declaration lookup, while every declaration receives a distinct alias.
+Contract types use their spec names in PascalCase, such as `CounterSummary`.
+Function arguments and results receive names such as `GetCountInput` and
+`GetCountOutput`. An additional `CounterSummaryInput` is emitted only when the
+SDK accepts a different input shape (for example, nested Maps or Options).
+Fields and union tags retain their ABI spelling. Repeated original type names
+use the first declaration, matching the SDK, with a generation warning. Distinct
+names that collide after casing cause an explicit error; they are never
+numbered.
 
 ## Errors and events
 
-For a `Token` class, `TokenABIErrors` is the numeric error map in Colibri's
+For a `Token` class, `TokenErrors` is the numeric error map in Colibri's
 `KnownContractErrorMap` format. The constructor installs it once, scoped to the
 contract ID when one exists; otherwise it matches root-invocation errors only.
 Prepare custom messages ahead of construction:
@@ -119,7 +125,7 @@ const token = new Token({
   networkConfig,
   contractConfig: { contractId },
   errors: {
-    ...TokenABIErrors,
+    ...TokenErrors,
     7: { message: "Not authorized", details: "Ask the token administrator." },
   },
 });
@@ -167,7 +173,7 @@ const spec = new Spec([
   ),
 ]);
 const plan = generateBindings(spec, { className: "PingClient" });
-console.log(plan.files["bindings.ts"]);
+console.log(plan.files["index.ts"]);
 ```
 
 `loadBindingSource` accepts `{ kind: "wasm", wasm }`, `{ kind: "spec", spec }`,

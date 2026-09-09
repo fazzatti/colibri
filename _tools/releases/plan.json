@@ -11,7 +11,7 @@
       "bump": "initial",
       "initialVersion": "0.1.0",
       "reason": "Initial preview of portable typed bindings generation and a Deno CLI with JSR and npm package presets.",
-      "apiReview": "New preview package. Emits typed generic read/invoke clients, embedded specs, errors and event registries using Core 1.1."
+      "apiReview": "New preview package. Emits constants.ts, types.ts and index.ts with spec-derived PascalCase names, named method inputs/outputs, typed generic read/invoke, errors and events using Core 1.1. Adds a contract-specific Markdown guide; no mutability inference."
     }
   }
 }

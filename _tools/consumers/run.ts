@@ -67,7 +67,7 @@ import { Spec } from "@stellar/stellar-sdk/contract";
 import { xdr } from "@stellar/stellar-sdk";
 const spec = new Spec([xdr.ScSpecEntry.scSpecEntryFunctionV0(new xdr.ScSpecFunctionV0({ name: "ping", doc: "Ping", inputs: [], outputs: [] }))]);
 const plan = generateBindings(spec, {className: "PingClient"});
-if (!plan.files["bindings.ts"].includes("class PingClient extends Contract")) throw new Error("Portable bindings rendering failed");
+if (!plan.files["index.ts"].includes("class PingClient extends Contract")) throw new Error("Portable bindings rendering failed");
 `,
     );
     await command("npx", [

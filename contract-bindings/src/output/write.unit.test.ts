@@ -21,13 +21,17 @@ describe("bindings output", () => {
         "Already exists",
       );
       const result = await writeBindings(plan, { directory, force: true });
-      assertEquals(result.written, ["generated/bindings.ts"]);
+      assertEquals(result.written, [
+        "generated/constants.ts",
+        "generated/types.ts",
+        "generated/index.ts",
+      ]);
       assertEquals(
         await Deno.readTextFile(`${directory}/mod.ts`),
         "// my setup\n",
       );
       await Deno.writeTextFile(
-        `${directory}/generated/bindings.ts`,
+        `${directory}/generated/index.ts`,
         "// handwritten\n",
       );
       await assertRejects(
@@ -75,7 +79,7 @@ describe("output failure boundaries", () => {
         BindingError,
         "Duplicate",
       );
-      await Deno.mkdir(`${directory}/bindings.ts`);
+      await Deno.mkdir(`${directory}/index.ts`);
       await assertRejects(
         () =>
           writeBindings(generateBindings(bindingSpec()), {

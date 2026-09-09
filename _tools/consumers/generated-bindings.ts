@@ -40,13 +40,13 @@ await writeFile("generated-package/package.json", JSON.stringify(manifest, null,
   await Deno.writeTextFile(
     resolve(output, "smoke.mjs"),
     `
-import { PingClient, createPingClientABISpec } from "./dist/mod.js";
+import { PingClient, PingClientSpec } from "./dist/mod.js";
 import { Contract, NetworkConfig } from "@colibri/core";
 import { xdr } from "@stellar/stellar-sdk";
 import { strict as assert } from "node:assert";
 const client = new PingClient({ networkConfig: NetworkConfig.TestNet(), contractConfig: { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" } });
 assert(client instanceof Contract);
-assert.equal(createPingClientABISpec().funcResToNative("ping", xdr.ScVal.scvVoid()), null);
+assert.equal(PingClientSpec.funcResToNative("ping", xdr.ScVal.scvVoid()), null);
 assert.equal(client.events.list().length, 0);
 console.log("Generated npm package: ESM imports, declarations, native SDK codec and Core identity passed.");
 `,

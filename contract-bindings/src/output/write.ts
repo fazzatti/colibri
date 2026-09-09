@@ -1,6 +1,6 @@
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import type { GeneratedBindings } from "@/types.ts";
-import { GENERATED_MARKER } from "@/generation/generate.ts";
+import { GENERATED_MARKER } from "@/generation/constants.ts";
 import { BindingError, Code } from "@/error.ts";
 
 /** Options for writing a rendered plan; scaffold files are always preserved. */

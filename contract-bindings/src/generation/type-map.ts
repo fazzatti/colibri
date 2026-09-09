@@ -12,10 +12,25 @@ export function identifier(value: string): boolean {
 }
 /** @internal Escape untrusted ABI docs, including comment terminators. */
 export function doc(value: string, fallback: string): string {
-  return `/** ${
-    (value.trim() || fallback).replaceAll("*/", "* /").replaceAll("\r", "")
-      .replaceAll("\n", "\n * ")
-  } */`;
+  const text = (value.trim() || fallback).replaceAll("*/", "* /").replaceAll(
+    "\r",
+    "",
+  );
+  if (!text.includes("\n") && text.length <= 70) return `/** ${text} */`;
+  const lines = text.split("\n").flatMap((line) => {
+    const words = line.trim().split(/\s+/);
+    const wrapped: string[] = [""];
+    for (const word of words) {
+      const last = wrapped.length - 1;
+      if (wrapped[last] && wrapped[last].length + word.length + 1 > 74) {
+        wrapped.push(word);
+      } else wrapped[last] += (wrapped[last] ? " " : "") + word;
+    }
+    return wrapped;
+  });
+  return `/**\n${
+    lines.map((line) => ` *${line ? " " + line : ""}`).join("\n")
+  }\n */`;
 }
 /** @internal */
 export const quote = (value: string): string =>
@@ -23,7 +38,7 @@ export const quote = (value: string): string =>
     "\u2029",
     "\\u2029",
   );
-type Direction = "Input" | "Output";
+export type Direction = "Input" | "Output";
 const SIMPLE: Readonly<Record<string, string>> = {
   scSpecTypeVal: "unknown",
   scSpecTypeBool: "boolean",
@@ -45,20 +60,116 @@ const SIMPLE: Readonly<Record<string, string>> = {
   scSpecTypeAddress: "string",
   scSpecTypeMuxedAddress: "string",
 };
-/** @internal Direction-aware native codec types, with collision-safe UDT aliases. */
+/** @internal JavaScript type casing; ABI field names and union tags stay unchanged. */
+export function typeName(value: string): string {
+  const name = value.split(/[^A-Za-z0-9$]+/).filter(Boolean)
+    .map((part) => part[0].toUpperCase() + part.slice(1)).join("");
+  if (!identifier(name)) {
+    throw new BindingError(
+      Code.INVALID_SPEC,
+      `Cannot name a TypeScript type after ${value}`,
+    );
+  }
+  return name;
+}
+/** @internal Indents multiline declarations without invoking a formatter or runtime I/O. */
+export const indent = (value: string, spaces = 2): string =>
+  value.split("\n").map((line) => line ? " ".repeat(spaces) + line : line).join(
+    "\n",
+  );
+/** @internal Use ordinary properties when possible, preserving all original ABI names. */
+export const property = (value: string): string =>
+  value === "__proto__"
+    ? `[${quote(value)}]`
+    : /^[A-Za-z_$][\w$]*$/.test(value)
+    ? value
+    : quote(value);
+
+/** @internal Direction-aware SDK types named after the ABI declarations. */
 export class TypeMap {
   readonly names = new Map<string, string>();
   readonly aliases = new Map<xdr.ScSpecEntry, string>();
+  readonly inputVariants = new Set<string>();
+  readonly warnings: string[] = [];
+  private readonly claimed = new Set([
+    "Array",
+    "Map",
+    "Record",
+    "Uint8Array",
+    "Promise",
+    "Pick",
+    "Parameters",
+    "ReturnType",
+    "Awaited",
+    "Partial",
+    "Contract",
+    "ContractConstructorArgs",
+    "ContractEventDefinition",
+    "ContractEventRegistry",
+    "StellarResult",
+  ]);
   constructor(readonly spec: Spec) {
     for (const entry of spec.entries) {
       if (!entry.type.startsWith("scSpecEntryUdt")) continue;
       const name = entry.value.name.toString();
-      const alias = `Type${this.aliases.size + 1}_${
-        name.replace(/[^A-Za-z0-9_$]/g, "_")
-      }`;
+      if (this.names.has(name)) {
+        this.warnings.push(
+          `Repeated ABI type ${name}: using the first declaration, matching the Stellar SDK lookup.`,
+        );
+        continue;
+      }
+      const alias = typeName(name);
+      this.claim(alias);
       this.aliases.set(entry, alias);
-      // Match the SDK's first-declaration lookup; preserve later declarations under distinct aliases.
-      if (!this.names.has(name)) this.names.set(name, alias);
+      this.names.set(name, alias);
+    }
+    // Propagate input differences through nested and recursive user types.
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const [entry, alias] of this.aliases) {
+        const types = entry.type === "scSpecEntryUdtStructV0"
+          ? entry.value.fields.map((field) => field.type)
+          : entry.type === "scSpecEntryUdtUnionV0"
+          ? entry.value.cases.flatMap((item) =>
+            item.type === "scSpecUdtUnionCaseTupleV0" ? item.value.type : []
+          )
+          : [];
+        if (
+          !this.inputVariants.has(alias) &&
+          types.some((type) => this.differs(type))
+        ) {
+          this.inputVariants.add(alias);
+          changed = true;
+        }
+      }
+    }
+    for (const alias of this.inputVariants) this.claim(`${alias}Input`);
+  }
+  claim(name: string): void {
+    if (this.claimed.has(name)) {
+      throw new BindingError(
+        Code.INVALID_SPEC,
+        `TypeScript name collision: ${name}. Rename the conflicting ABI declaration or client class.`,
+      );
+    }
+    this.claimed.add(name);
+  }
+  private differs(type: xdr.ScSpecTypeDef): boolean {
+    switch (type.type) {
+      case "scSpecTypeOption":
+      case "scSpecTypeMap":
+        return true;
+      case "scSpecTypeVec":
+        return this.differs(type.value.elementType);
+      case "scSpecTypeTuple":
+        return type.value.valueTypes.some((item) => this.differs(item));
+      case "scSpecTypeUdt":
+        return this.inputVariants.has(
+          this.names.get(type.value.name.toString()) ?? "",
+        );
+      default:
+        return false;
     }
   }
   type(
@@ -85,19 +196,13 @@ export class TypeMap {
           ? `Map<${pair}> | Array<[${pair}]>`
           : `Array<[${pair}]>`;
       }
-      case "scSpecTypeUdt": {
-        const name = this.names.get(type.value.name.toString());
-        if (!name) {
-          throw new BindingError(
-            Code.INVALID_SPEC,
-            `Unknown user type ${type.value.name}`,
-          );
-        }
-        return `${name}${direction}`;
-      }
+      case "scSpecTypeUdt":
+        return this.userType(type.value.name.toString(), direction);
       case "scSpecTypeResult":
         if (functionResult && direction === "Output") {
-          return `Result<${nested(type.value.okType)}, { message: string }>`;
+          return `StellarResult<${
+            nested(type.value.okType)
+          }, { message: string }>`;
         }
         throw new BindingError(
           Code.INVALID_SPEC,
@@ -110,6 +215,17 @@ export class TypeMap {
         );
     }
   }
+  private userType(wireName: string, direction: Direction): string {
+    const name = this.names.get(wireName);
+    if (!name) {
+      throw new BindingError(
+        Code.INVALID_SPEC,
+        `Unknown user type ${wireName}`,
+      );
+    }
+    return name +
+      (direction === "Input" && this.inputVariants.has(name) ? "Input" : "");
+  }
   fields(
     fields: readonly {
       name: { toString(): string };
@@ -120,55 +236,77 @@ export class TypeMap {
   ): string {
     return fields.length
       ? `{\n${
-        fields.map((field) =>
-          `${doc(field.doc.toString(), "ABI field.")}\n${
-            quote(field.name.toString())
-          }: ${this.type(field.type, direction)};`
-        ).join("\n")
+        indent(
+          fields.map((field) =>
+            [
+              field.doc.toString().trim() ? doc(field.doc.toString(), "") : "",
+              `${property(field.name.toString())}: ${
+                this.type(field.type, direction)
+              };`,
+            ].filter(Boolean).join("\n")
+          ).join("\n"),
+        )
       }\n}`
       : "Record<string, never>";
   }
-  declarations(): string {
-    return this.spec.entries.flatMap((entry) => {
-      if (
-        entry.type === "scSpecEntryFunctionV0" ||
-        entry.type === "scSpecEntryEventV0"
-      ) return [];
-      return (["Input", "Output"] as const).map((direction) => {
-        let value: string;
-        switch (entry.type) {
-          case "scSpecEntryUdtStructV0":
-            value = entry.value.fields.some((field) =>
-                /^\d+$/.test(field.name.toString())
+  private value(entry: xdr.ScSpecEntry, direction: Direction): string {
+    if (entry.type === "scSpecEntryUdtStructV0") {
+      return entry.value.fields.some((field) =>
+          /^\d+$/.test(field.name.toString())
+        )
+        ? `[${
+          entry.value.fields.map((field) => this.type(field.type, direction))
+            .join(", ")
+        }]`
+        : this.fields(entry.value.fields, direction);
+    }
+    if (entry.type === "scSpecEntryUdtUnionV0") {
+      return entry.value.cases.map((item) =>
+        `  | {\n    tag: ${quote(item.value.name.toString())};${
+          item.type === "scSpecUdtUnionCaseTupleV0"
+            ? `\n    values: [${
+              item.value.type.map((type) => this.type(type, direction)).join(
+                ", ",
               )
-              ? `[${
-                entry.value.fields.map((field) =>
-                  this.type(field.type, direction)
-                ).join(", ")
-              }]`
-              : this.fields(entry.value.fields, direction);
-            break;
-          case "scSpecEntryUdtUnionV0":
-            value = entry.value.cases.map((item) =>
-              `{ tag: ${quote(item.value.name.toString())}${
-                item.type === "scSpecUdtUnionCaseTupleV0"
-                  ? `; values: [${
-                    item.value.type.map((type) => this.type(type, direction))
-                      .join(", ")
-                  }]`
-                  : ""
-              } }`
-            ).join(" | ") || "never";
-            break;
-          default:
-            value = entry.value.cases.map((item) =>
-              item.value
-            ).join(" | ") || "never";
-        }
-        return `${
-          doc(entry.value.doc.toString(), "Native ABI user type.")
-        }\nexport type ${this.aliases.get(entry)}${direction} = ${value};`;
-      });
+            }];`
+            : ""
+        }\n  }`
+      ).join("\n") || "never";
+    }
+    throw new BindingError(Code.INVALID_SPEC, "Expected a struct or union");
+  }
+  declarations(): string {
+    return [...this.aliases].flatMap(([entry, name]) => {
+      const documentation = doc(
+        entry.value.doc.toString(),
+        `The ${entry.value.name} type declared by the contract.`,
+      );
+      if (
+        entry.type === "scSpecEntryUdtEnumV0" ||
+        entry.type === "scSpecEntryUdtErrorEnumV0"
+      ) {
+        return `${documentation}\nexport enum ${name} {\n${
+          indent(
+            entry.value.cases.map((item) =>
+              `${
+                item.doc.toString() ? doc(item.doc.toString(), "") + "\n" : ""
+              }${property(item.name.toString())} = ${item.value},`
+            ).join("\n"),
+          )
+        }\n}`;
+      }
+      const value = this.value(entry, "Output");
+      const declaration = `${documentation}\nexport type ${name} =${
+        value.startsWith("  |") ? "\n" : " "
+      }${value};`;
+      return this.inputVariants.has(name)
+        ? [
+          declaration,
+          `${
+            doc(`Input accepted for ${name}; decoded values use ${name}.`, "")
+          }\nexport type ${name}Input = ${this.value(entry, "Input")};`,
+        ]
+        : [declaration];
     }).join("\n\n");
   }
 }

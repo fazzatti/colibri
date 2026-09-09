@@ -38,18 +38,20 @@ missing required flags are errors. Canceling a prompt makes no output changes.
 
 ## Use files, JSR, or npm
 
-`--output files` emits the bindings and a companion README for an existing
-project. Configure imports in that project: the JSR preset uses `@colibri/core`
-and `stellar-sdk`; the npm preset uses `@colibri/core` and
-`@stellar/stellar-sdk`.
+`--output files` emits `constants.ts` (method names, spec, errors), `types.ts`
+(named inputs/outputs and mapped types), `index.ts` (the client and exports),
+and a formatted `README.md` for an existing project. Configure imports in that
+project: the JSR preset uses `@colibri/core` and `stellar-sdk`; the npm preset
+uses `@colibri/core` and `@stellar/stellar-sdk`.
 
-`--output package --target jsr` creates TypeScript exports and a `deno.json`.
-Run `deno task check` in the output directory. `--target npm` creates a
-`package.json`, TypeScript build configuration, `.npmrc`, and ESM exports. Run
-`npm install` and `npm run build`; JavaScript and declarations appear in
-`dist/`. The SDK requires Node 22.12 or newer. The npm package shares Core
-through an alias of `@jsr/colibri__core`, using `https://npm.jsr.io` for the
-`@jsr` scope. Carry that registry configuration into consuming projects and CI.
+`--output package --target jsr` places the three source files in `generated/`,
+with a `mod.ts` entrypoint and a `deno.json`. Run `deno task check` in the
+output directory. `--target npm` creates a `package.json`, TypeScript build
+configuration, `.npmrc`, and ESM exports. Run `npm install` and `npm run build`;
+JavaScript and declarations appear in `dist/`. The SDK requires Node 22.12 or
+newer. The npm package shares Core through an alias of `@jsr/colibri__core`,
+using `https://npm.jsr.io` for the `@jsr` scope. Carry that registry
+configuration into consuming projects and CI.
 
 Review the package name, version, license, and publication settings before
 publishing. Neither mode installs dependencies or publishes automatically.
@@ -81,13 +83,16 @@ Result uses the SDK Result wrapper with `{ message: string }` errors;
 transaction failures may also throw Core errors. Unsupported SDK encodings such
 as nested Result fail generation explicitly.
 
-Exported UDT aliases include declaration indexes to avoid collisions. Duplicate
-UDT names in dependency specs retain distinct exports; references use the first
-declaration, matching SDK lookup.
+Types retain their spec names in PascalCase, such as `CounterSummary`. Functions
+have named `GetCountInput`/`GetCountOutput` types and appear in the client
+method map. An additional input variant is emitted only for SDK input shapes
+that differ from decoded output. Repeated original names use the first SDK
+declaration with a warning. Casing collisions fail explicitly instead of
+introducing numerical type prefixes.
 
 ## Assemble errors and use events
 
-For a generated `Token` class, `TokenABIErrors` maps numeric codes to
+For a generated `Token` class, `TokenErrors` maps numeric codes to
 `{ message, details? }`. Supply a prepared `errors` object in the constructor to
 customize messages. Automatic matching is installed once, scoped to the contract
 ID when present, or to root-invocation errors before an ID is available. Use
@@ -155,6 +160,6 @@ and [CLI API](https://jsr.io/@colibri/contract-bindings/doc/cli).
 
 If invoke succeeds but decoding its result fails, the generated client throws
 Core `ColibriError` code `CBG_006`, retaining the successful transaction result
-in `meta.data.result` and the codec failure as its cause. Inspect that result and
-the embedded ABI before deciding the next action; resubmitting would create
+in `meta.data.result` and the codec failure as its cause. Inspect that result
+and the embedded ABI before deciding the next action; resubmitting would create
 another transaction.

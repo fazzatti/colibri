@@ -1,6 +1,9 @@
-import { assertEquals } from "@std/assert";
+import { xdr } from "stellar-sdk";
+import { Spec } from "stellar-sdk/contract";
+import { assert, assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { extractContractSpec } from "@colibri/core";
+import { loadBindingSource } from "@/source/load.ts";
 import { generateBindings } from "@/generation/generate.ts";
 import { writeBindings } from "@/output/write.ts";
 import { bindingSpec } from "colibri-internal/tests/binding-fixtures.ts";
@@ -48,7 +51,7 @@ describe("generated consumer boundary", () => {
         "--config",
         rootConfig,
         ...["fungible_token_contract", "types_harness", "errors_contract"].map(
-          (name) => `${directory}/${name}/bindings.ts`,
+          (name) => `${directory}/${name}/index.ts`,
         ),
       ]);
     } finally {
@@ -59,16 +62,31 @@ describe("generated consumer boundary", () => {
     const directory = await Deno.makeTempDir();
     try {
       await writeBindings(
-        generateBindings(bindingSpec(), { className: "Token" }),
+        generateBindings(
+          new Spec([
+            ...bindingSpec().entries,
+            xdr.ScSpecEntry.scSpecEntryFunctionV0(
+              new xdr.ScSpecFunctionV0({
+                name: "__proto__",
+                doc: "An ordinary ABI method, not an object prototype.",
+                inputs: [],
+                outputs: [],
+              }),
+            ),
+          ]),
+          { className: "Token" },
+        ),
         { directory },
       );
       await Deno.writeTextFile(
         `${directory}/consumer.ts`,
         `
-import { Token, type TokenABIInvocationResult } from "./bindings.ts";
+import { Token, TokenMethods, type TokenInvocationResult } from "./index.ts";
 import { Contract, ColibriError, NetworkConfig, type InvokeContractOutput, Event, EventType } from "@colibri/core";
 import { xdr, nativeToScVal } from "stellar-sdk";
 import { assertEquals, assertRejects } from "@std/assert";
+assertEquals(Object.hasOwn(TokenMethods, "__proto__"), true);
+assertEquals(TokenMethods.__proto__, "__proto__");
 const token = new Token({ networkConfig: NetworkConfig.TestNet(), contractConfig: { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" } });
 function types() {
   const base: Contract = token;
@@ -97,7 +115,7 @@ try {
   assertEquals(await token.read({ method: "ping" }), null);
   const raw = { hash: "abc", ledger: 1, createdAt: 2, returnValue: nativeToScVal(42n, {type:"i128"}), response: {} } as InvokeContractOutput;
   Contract.prototype.invoke = async () => raw;
-  const result: TokenABIInvocationResult<bigint> = await token.invoke({ method: "balance", methodArgs: { owner: "alice" }, config: { source: "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF", fee: "100", timeout: 10, signers: [] } });
+  const result: TokenInvocationResult<bigint> = await token.invoke({ method: "balance", methodArgs: { owner: "alice" }, config: { source: "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF", fee: "100", timeout: 10, signers: [] } });
   assertEquals(result.value, 42n);
   assertEquals(result.returnValue, raw.returnValue);
   assertEquals(result.hash, "abc");
@@ -124,5 +142,64 @@ try {
     } finally {
       await Deno.remove(directory, { recursive: true });
     }
+  });
+  it("keeps the reviewable dummy client and guide current, formatted and type-correct", async () => {
+    const loaded = await loadBindingSource({
+      kind: "wasm",
+      wasm: await Deno.readFile(
+        "_internal/tests/compiled-contracts/bindings_demo_contract.wasm",
+      ),
+    });
+    const plan = generateBindings(loaded.spec, {
+      className: "Demo",
+      provenance: loaded.provenance,
+    });
+    assertEquals(plan.warnings, []);
+    assertEquals(loaded.spec.events().map((event) => event.name.toString()), [
+      "CountChanged",
+    ]);
+    const folder = "_internal/tests/generated-bindings/demo";
+    for (
+      const [name, content] of Object.entries({
+        ...plan.files,
+        ...plan.scaffold,
+      })
+    ) {
+      assertEquals(
+        await Deno.readTextFile(`${folder}/${name}`),
+        content,
+        `Review and refresh ${name}`,
+      );
+    }
+    const types = plan.files["types.ts"];
+    for (
+      const name of [
+        "CounterSummary",
+        "CounterStatus",
+        "CounterError",
+        "GetCountInput",
+        "GetCountOutput",
+        "EchoSummaryInput",
+        "CountChanged",
+        "CountChangedTopics",
+      ]
+    ) {
+      assert(
+        types.includes(`export type ${name} `) ||
+          types.includes(`export enum ${name} `),
+        name,
+      );
+    }
+    assert(!/Type\d+_/.test(types));
+    assert(!types.includes("CounterSummaryOutput"));
+    assert(plan.scaffold["README.md"].includes("```ts"));
+    await deno([
+      "fmt",
+      "--check",
+      ...["constants.ts", "types.ts", "index.ts"].map((name) =>
+        `${folder}/${name}`
+      ),
+    ]);
+    await deno(["check", "--config", rootConfig, `${folder}/index.ts`]);
   });
 });

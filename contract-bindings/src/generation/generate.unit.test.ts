@@ -5,7 +5,7 @@ import { Spec } from "stellar-sdk/contract";
 import { extractContractSpec } from "@colibri/core";
 import { generateBindings } from "@/generation/generate.ts";
 import { BindingError } from "@/error.ts";
-import { doc, identifier, TypeMap } from "@/generation/type-map.ts";
+import { doc, identifier, TypeMap, typeName } from "@/generation/type-map.ts";
 import { bindingSpec } from "colibri-internal/tests/binding-fixtures.ts";
 
 describe("bindings rendering", () => {
@@ -13,22 +13,22 @@ describe("bindings rendering", () => {
     const spec = bindingSpec();
     const plan = generateBindings(spec, { className: "Token" });
     assertEquals(generateBindings(spec, { className: "Token" }), plan);
-    const source = plan.files["bindings.ts"];
+    const source = Object.values(plan.files).join("\n");
     for (
       const text of [
         "extends Contract",
-        "TokenABIMethods",
-        "TokenABIInputs",
-        "TokenABIOutputs",
-        "TokenABIErrors",
-        "TokenABIProvenance",
-        "TokenABIEvents",
-        'readonly "Transfer"',
+        "TokenMethodMap",
+        "TokenInputs",
+        "TokenOutputs",
+        "TokenErrors",
+        "TokenProvenance",
+        "TokenEvents",
+        "readonly Transfer",
         "override async read",
         "override async invoke",
         "result.returnValue",
         "contractConfig.plugins",
-        '"amount": bigint',
+        "amount: bigint",
       ]
     ) assert(source.includes(text), text);
     assert(!source.includes("async balance("));
@@ -41,7 +41,11 @@ describe("bindings rendering", () => {
         target,
         packageName: "@example/token",
       });
-      assertEquals(Object.keys(plan.files), ["generated/bindings.ts"]);
+      assertEquals(Object.keys(plan.files), [
+        "generated/constants.ts",
+        "generated/types.ts",
+        "generated/index.ts",
+      ]);
       assert(plan.scaffold["mod.ts"]);
       const manifest = JSON.parse(
         plan.scaffold[target === "npm" ? "package.json" : "deno.json"],
@@ -82,11 +86,19 @@ describe("bindings rendering", () => {
         await Deno.readFile(`_internal/tests/compiled-contracts/${name}.wasm`),
       );
       const plan = generateBindings(spec);
-      assert(plan.files["bindings.ts"].includes("createContractClientABISpec"));
+      assert(
+        Object.values(plan.files).join("\n").includes("ContractClientSpec"),
+      );
       if (name === "errors_contract") {
-        assert(plan.files["bindings.ts"].includes("TwoHundredSixtyFive"));
+        assert(
+          Object.values(plan.files).join("\n").includes("TwoHundredSixtyFive"),
+        );
       }
-      assertEquals(plan.warnings.length, 1);
+      assert(
+        plan.warnings.some((warning) =>
+          warning.includes("No event declarations")
+        ),
+      );
     }
   });
   it("matches the codec's direction-specific containers and result wrapper", () => {
@@ -113,7 +125,7 @@ describe("bindings rendering", () => {
     );
     assertEquals(
       map.type(result, "Output", true),
-      "Result<number, { message: string }>",
+      "StellarResult<number, { message: string }>",
     );
     assertThrows(() => map.type(result, "Input"), BindingError);
     assertThrows(
@@ -139,5 +151,48 @@ describe("bindings rendering", () => {
       () => generateBindings(new Spec([...spec.entries, spec.entries[0]])),
       BindingError,
     );
+  });
+  it("uses PascalCase ABI names and propagates only necessary input variants", () => {
+    assertEquals(typeName("counter_summary"), "CounterSummary");
+    assertEquals(typeName("get_count"), "GetCount");
+    const entry = (name: string, type: xdr.ScSpecTypeDef) =>
+      xdr.ScSpecEntry.scSpecEntryUdtStructV0(
+        new xdr.ScSpecUdtStructV0({
+          name,
+          lib: "",
+          doc: "Named contract type.",
+          fields: [
+            new xdr.ScSpecUdtStructFieldV0({ name: "value", doc: "", type }),
+          ],
+        }),
+      );
+    const group = entry(
+      "group",
+      xdr.ScSpecTypeDef.scSpecTypeOption(
+        new xdr.ScSpecTypeOption({
+          valueType: xdr.ScSpecTypeDef.scSpecTypeU32(),
+        }),
+      ),
+    );
+    const envelope = entry(
+      "envelope",
+      xdr.ScSpecTypeDef.scSpecTypeUdt(new xdr.ScSpecTypeUdt({ name: "group" })),
+    );
+    const model = new TypeMap(new Spec([envelope, group]));
+    assert(model.declarations().includes("export type Group ="));
+    assert(model.declarations().includes("export type GroupInput ="));
+    assert(model.declarations().includes("export type EnvelopeInput ="));
+    assert(!model.declarations().includes("GroupOutput"));
+    assertThrows(
+      () =>
+        new TypeMap(
+          new Spec([group, entry("Group", xdr.ScSpecTypeDef.scSpecTypeU32())]),
+        ),
+      BindingError,
+      "collision",
+    );
+    const repeated = new TypeMap(new Spec([group, group]));
+    assertEquals(repeated.aliases.size, 1);
+    assertEquals(repeated.warnings.length, 1);
   });
 });

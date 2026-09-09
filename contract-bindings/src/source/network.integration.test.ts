@@ -2,6 +2,7 @@ import { assert, assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import {
   Contract,
+  Event,
   initializeWithFriendbot,
   KNOWN_CONTRACT_ERROR_SIMULATION_FAILED,
   LocalSigner,
@@ -50,7 +51,7 @@ describe(
           const [fixture, name] of [["types_harness", "Harness"], [
             "errors_contract",
             "Errors",
-          ]]
+          ], ["bindings_demo_contract", "Demo"]]
         ) {
           const loaded = await loadBindingSource({
             kind: "wasm",
@@ -63,7 +64,7 @@ describe(
             { directory: `${directory}/${name}` },
           );
           const exports = await import(
-            pathToFileURL(`${directory}/${name}/bindings.ts`).href
+            pathToFileURL(`${directory}/${name}/index.ts`).href
           );
           const upload = new Contract({
             networkConfig,
@@ -95,7 +96,7 @@ describe(
             ...(name === "Errors"
               ? {
                 errors: {
-                  ...exports.ErrorsABIErrors,
+                  ...exports.ErrorsErrors,
                   265: { message: "Prepared custom message" },
                 },
               }
@@ -133,10 +134,54 @@ describe(
                 "--out",
                 `${directory}/cli-${sourceArgs[0]}`,
               ], { interactive: false, prompt: () => null, log: () => {} });
-              assert(written?.written.includes("bindings.ts"));
+              assert(written?.written.includes("index.ts"));
             }
             assertEquals(await client.read({ method: "void" }), null);
             assertEquals(client.events.list().length, 0);
+          } else if (name === "Demo") {
+            assertEquals(await client.read({ method: "get_count" }), 0);
+            const output = await client.invoke({
+              method: "increment",
+              methodArgs: { by: 3 },
+              config,
+            });
+            assertEquals(output.value.unwrap(), 3);
+            assertEquals(await client.read({ method: "summary" }), {
+              count: 3,
+              status: 1,
+            });
+            const filter = client.events.CountChanged.toEventFilter({
+              action: "increment",
+            });
+            const events = await client.rpc.getEvents({
+              startLedger: output.ledger,
+              filters: [filter.toRawEventFilter()],
+            });
+            assertEquals(events.events.length, 1);
+            const decoded = client.events.CountChanged.fromEvent(
+              Event.fromEventResponse(events.events[0]),
+            );
+            assertEquals(decoded.fields, {
+              action: "increment",
+              old_count: 0,
+              new_count: 3,
+            });
+            const custom = new exports.Demo({
+              networkConfig,
+              contractConfig: { contractId },
+              errors: {
+                ...exports.DemoErrors,
+                1: { message: "Choose a positive increment" },
+              },
+            });
+            const failure = await assertRejects(
+              () => custom.read({ method: "increment", methodArgs: { by: 0 } }),
+              KNOWN_CONTRACT_ERROR_SIMULATION_FAILED,
+            );
+            assertEquals(
+              failure.message,
+              "Contract error: Choose a positive increment",
+            );
           } else {
             const failure = await assertRejects(() =>
               client.read({
