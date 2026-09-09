@@ -2,7 +2,7 @@ import { literal } from "@/generation/literal.ts";
 import { extractContractErrorMapFromSpec } from "@colibri/core";
 import type { Spec } from "@colibri/core";
 import type { GenerateBindingsOptions } from "@/types.ts";
-import { property, quote } from "@/generation/type-map.ts";
+import { quote, typeName } from "@/generation/type-map.ts";
 
 /** @internal Shared source marker used by the renderer and regeneration guard. */
 export const GENERATED_MARKER =
@@ -22,13 +22,15 @@ import type { KnownContractErrorMap } from "@colibri/core";
 import { Spec } from "@colibri/core";
 
 /** ABI method names. Choose read or invoke at the call site. */
-export const ${className}Methods = {
+export enum ContractMethods {
 ${
     spec.funcs().map((method) =>
-      `  ${property(method.name.toString())}: ${quote(method.name.toString())},`
+      `  ${typeName(method.name.toString())} = ${
+        quote(method.name.toString())
+      },`
     ).join("\n")
   }
-} as const;
+}
 
 /** The contract specification embedded at generation time. */
 export const ${className}Spec: Spec = new Spec([
@@ -36,9 +38,9 @@ ${spec.entries.map((entry) => `  ${quote(entry.toXdr("base64"))},`).join("\n")}
 ]);
 
 /** Clone and customize these messages before constructing the client. */
-export const ${className}Errors: KnownContractErrorMap = ${
+export const ${className}Errors = ${
     literal(extractContractErrorMapFromSpec(spec))
-  };
+  } as const satisfies KnownContractErrorMap;
 ${
     options.provenance
       ? `

@@ -14,7 +14,7 @@ import type { ContractConfig } from "@/contract/types.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { NetworkType } from "@/network/types.ts";
 import { Address, Operation, xdr } from "stellar-sdk";
-import type { Spec } from "stellar-sdk/contract";
+import { Spec } from "stellar-sdk/contract";
 import type { Api } from "stellar-sdk/rpc";
 import type { ContractId } from "@/strkeys/types.ts";
 import {
@@ -746,7 +746,11 @@ describe("Contract", () => {
         networkConfig,
         contractConfig: {
           wasmHash: "mockHash",
-          spec: { errorCases: () => [] } as unknown as Spec,
+          spec: new Spec(
+            ERRORS_CONTRACT_SPEC.entries.filter((entry) =>
+              entry.type !== "scSpecEntryUdtErrorEnumV0"
+            ),
+          ),
         },
         rpc: mockRpc,
       });

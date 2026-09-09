@@ -20,10 +20,10 @@ export function generateBindings(
     validateOptions(options, className);
     const spec = new Spec(input.entries.map((entry) => entry.toXdr("base64")));
     const model = new TypeMap(spec);
+    model.claim("ContractMethods");
     for (
       const suffix of [
         "",
-        "Methods",
         "Spec",
         "Errors",
         "MethodMap",

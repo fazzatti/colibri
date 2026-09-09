@@ -28,7 +28,7 @@ For npm builds, import the generated client from your package's built entrypoint
 
 ```ts
 import { NetworkConfig } from "@colibri/core";
-import { Demo, DemoMethods } from "./index.ts";
+import { Demo, ContractMethods } from "./index.ts";
 
 const client = new Demo({
   networkConfig: NetworkConfig.TestNet(),
@@ -43,7 +43,7 @@ It does not submit a transaction. Adjust the sample arguments for your deploymen
 
 ```ts
 const value = await client.read({
-  method: DemoMethods["summary"],
+  method: ContractMethods.Summary,
 });
 console.log(value);
 ```
@@ -56,7 +56,7 @@ available as `transactionConfig`.
 
 ```ts
 const result = await client.invoke({
-  method: DemoMethods["increment"],
+  method: ContractMethods.Increment,
   methodArgs: { by: 1 },
   config: transactionConfig,
 });
@@ -79,21 +79,27 @@ adds the decoded `value`. That value is `undefined` if no return value is presen
 | `increment` | `IncrementInput` | `IncrementOutput` |
 | `echo_summary` | `EchoSummaryInput` | `EchoSummaryOutput` |
 
-Use `DemoMethods` for method constants and `DemoMethodMap` for correlated
+Use `ContractMethods` for PascalCase method constants and `DemoMethodMap` for correlated
 inputs and outputs. ABI type names use PascalCase. Field names and union tags
 retain their on-chain spelling so they remain compatible with the SDK codec.
 
 ## Contract errors
 
 `DemoErrors` contains the numeric contract error map. The client installs
-it once during construction. Customize messages before creating a client:
+it once during construction. Each entry retains the spec case name as `name`
+and its declaring error enum as `category`, alongside `message` and optional
+`details`. Error-only enums are not duplicated in `types.ts`. Customize messages
+before creating a client, preserving the original metadata:
 
 ```ts
 import { DemoErrors } from "./index.ts";
 
 const errors = {
   ...DemoErrors,
-  1: { message: "A message tailored to your application." },
+  1: {
+    ...DemoErrors[1],
+    message: "A message tailored to your application.",
+  },
 };
 
 const customized = new Demo({
@@ -106,6 +112,7 @@ const customized = new Demo({
 Automatic matching uses the configured contract ID. Without an ID, it matches
 errors from the root invocation. Pass `errors: false` if you provide your own
 matcher through `contractConfig.plugins`; other configured plugins are preserved.
+Matched errors expose `name` and `category` in `error.meta.data.match`.
 
 If decoding fails after a transaction succeeds, `CBG_006` retains the successful
 transaction in `error.meta.data.result`. Inspect it before retrying; do not

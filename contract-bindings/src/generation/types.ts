@@ -18,13 +18,11 @@ import type {
   ContractEventDefinition,
   ContractEventRegistry,
   KnownContractErrorMap,
-} from "@colibri/core";
-${
+} from "@colibri/core";${
     methods.includes("StellarResult") || declarations.includes("StellarResult")
-      ? `import type { Result as StellarResult } from "@colibri/core";\n`
+      ? `\nimport type { Result as StellarResult } from "@colibri/core";`
       : ""
-  }import { ${className}Methods } from "./constants.ts";
-
+  }
 ${declarations ? declarations + "\n\n" : ""}${methods}
 
 /** Method names mapped to their native arguments. */

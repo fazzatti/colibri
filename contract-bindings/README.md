@@ -132,6 +132,20 @@ the codec. Top-level function `Result` outputs use the SDK
 Unsupported native SDK types, including nested Result encodings, fail generation
 explicitly.
 
+`ContractMethods` is a string enum shared by the generated files. Its members
+use PascalCase while their values retain the exact ABI spelling:
+
+```ts
+export enum ContractMethods {
+  GrantRole = "grant_role",
+  HasRole = "has_role",
+}
+```
+
+Calls accept both `ContractMethods.GrantRole` and the literal `"grant_role"`,
+with the same argument and result checking. Import it alongside your generated
+client; alias the import when using multiple clients in one module.
+
 Contract types use their spec names in PascalCase, such as `CounterSummary`.
 Function arguments and results receive names such as `GetCountInput` and
 `GetCountOutput`. An additional `CounterSummaryInput` is emitted only when the
@@ -148,20 +162,33 @@ For a `Token` class, `TokenErrors` is the numeric error map in Colibri's
 contract ID when one exists; otherwise it matches root-invocation errors only.
 Prepare custom messages ahead of construction:
 
+Each generated error contains its original case `name`, declaring error enum
+`category`, display `message`, and optional documentation in `details`. Category
+preserves the spec enum name without inferring a business classification.
+Separate runtime error enums are omitted. An error enum referenced by another
+ABI type is retained only as a numeric union type, with no runtime object.
+
 ```ts
 const token = new Token({
   networkConfig,
   contractConfig: { contractId },
   errors: {
     ...TokenErrors,
-    7: { message: "Not authorized", details: "Ask the token administrator." },
+    7: {
+      ...TokenErrors[7],
+      message: "Not authorized",
+      details: "Ask the token administrator.",
+    },
   },
 });
 ```
 
 Use `errors: false` when installing your own matcher through
 `contractConfig.plugins`. Additional plugins retain Core's existing constructor
-semantics. There is no new mutable error installation method.
+semantics. There is no new mutable error installation method. Matched failures
+expose the preserved fields through `error.meta.data.match.name` and
+`error.meta.data.match.category`. Manual maps may omit these fields; Core's spec
+and WASM extraction helpers populate them.
 
 Declared events use Core's reusable `ContractEventDefinition`:
 

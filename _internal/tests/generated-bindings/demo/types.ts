@@ -11,16 +11,6 @@ import type {
   KnownContractErrorMap,
 } from "@colibri/core";
 import type { Result as StellarResult } from "@colibri/core";
-import { DemoMethods } from "./constants.ts";
-
-/** Errors returned by the demonstration counter. */
-export enum CounterError {
-  /** The increment must be greater than zero. */
-  InvalidIncrement = 1,
-  /** The counter cannot exceed 100. */
-  LimitExceeded = 2,
-}
-
 /** Status of the demonstration counter. */
 export enum CounterStatus {
   Empty = 0,
@@ -63,19 +53,19 @@ export type EchoSummaryOutput = CounterSummary;
 
 /** Every ABI method is available through both read and invoke. */
 export type DemoMethodMap = {
-  [DemoMethods.summary]: {
+  summary: {
     input: SummaryInput;
     output: SummaryOutput;
   };
-  [DemoMethods.get_count]: {
+  get_count: {
     input: GetCountInput;
     output: GetCountOutput;
   };
-  [DemoMethods.increment]: {
+  increment: {
     input: IncrementInput;
     output: IncrementOutput;
   };
-  [DemoMethods.echo_summary]: {
+  echo_summary: {
     input: EchoSummaryInput;
     output: EchoSummaryOutput;
   };

@@ -867,7 +867,10 @@ constructor arguments when the contract spec declares them.
 Contract error metadata is opt-in: `loadContractErrorsFromWasm()` extracts the
 contract's error map and installs the matcher on both owned pipelines. This can
 turn a numeric simulation failure into a typed error with the contract's message
-without changing the on-chain result.
+without changing the on-chain result. Spec and WASM extraction preserve the
+original error case as `name` and declaring enum as `category`, alongside the
+message and optional documentation. Matched errors expose those fields in
+`error.meta.data.match`; existing manual maps may omit them.
 
 Contract-standard inspection deliberately keeps declaration and structure
 separate. `getSepClaims()` parses SEP-47 declarations from SEP-46 metadata;

@@ -7,6 +7,23 @@ export const contractId = StrKey.encodeContract(
 ) as `C${string}`;
 export const symbol = (value: string) => xdr.ScVal.scvSymbol(value);
 export const amount = () => nativeToScVal(42n, { type: "i128" });
+export function errorEntry(
+  name = "AccessError",
+  code = 1,
+  caseName = "Unauthorized",
+  doc = "Missing role.",
+): xdr.ScSpecEntry {
+  return xdr.ScSpecEntry.scSpecEntryUdtErrorEnumV0(
+    new xdr.ScSpecUdtErrorEnumV0({
+      name,
+      lib: "",
+      doc: "Errors declared by the contract.",
+      cases: [
+        new xdr.ScSpecUdtErrorEnumCaseV0({ name: caseName, value: code, doc }),
+      ],
+    }),
+  );
+}
 export function eventEntry(
   format = xdr.ScSpecEventDataFormat.scSpecEventDataFormatMap,
   name = "Transfer",

@@ -7,12 +7,12 @@ import type { KnownContractErrorMap } from "@colibri/core";
 import { Spec } from "@colibri/core";
 
 /** ABI method names. Choose read or invoke at the call site. */
-export const DemoMethods = {
-  summary: "summary",
-  get_count: "get_count",
-  increment: "increment",
-  echo_summary: "echo_summary",
-} as const;
+export enum ContractMethods {
+  Summary = "summary",
+  GetCount = "get_count",
+  Increment = "increment",
+  EchoSummary = "echo_summary",
+}
 
 /** The contract specification embedded at generation time. */
 export const DemoSpec: Spec = new Spec([
@@ -27,13 +27,17 @@ export const DemoSpec: Spec = new Spec([
 ]);
 
 /** Clone and customize these messages before constructing the client. */
-export const DemoErrors: KnownContractErrorMap = {
+export const DemoErrors = {
   "1": {
+    "name": "InvalidIncrement",
+    "category": "CounterError",
     "message": "InvalidIncrement",
     "details": "The increment must be greater than zero.",
   },
   "2": {
+    "name": "LimitExceeded",
+    "category": "CounterError",
     "message": "LimitExceeded",
     "details": "The counter cannot exceed 100.",
   },
-};
+} as const satisfies KnownContractErrorMap;

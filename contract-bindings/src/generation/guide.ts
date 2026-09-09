@@ -120,9 +120,9 @@ export function renderGuide(
   const call = method
     ? fence(
       "ts",
-      `const value = await client.read({\n  method: ${name}Methods[${
-        quote(method)
-      }],${args}\n});\nconsole.log(value);`,
+      `const value = await client.read({\n  method: ContractMethods.${
+        typeName(method)
+      },${args}\n});\nconsole.log(value);`,
     )
     : "Select a method from the function table and provide its typed arguments.";
   const invoke = methods.find((method) =>
@@ -133,7 +133,7 @@ export function renderGuide(
     ? fence(
       "ts",
       `const result = await client.invoke({
-  method: ${name}Methods[${quote(invoke.name.toString())}],${
+  method: ContractMethods.${typeName(invoke.name.toString())},${
         invoke.inputs.length
           ? `\n  methodArgs: { ${
             invoke.inputs.map((field) =>
@@ -181,7 +181,7 @@ ${
     fence(
       "ts",
       `import { NetworkConfig } from "@colibri/core";
-import { ${name}, ${name}Methods } from ${quote(entry)};
+import { ${name}, ContractMethods } from ${quote(entry)};
 
 const client = new ${name}({
   networkConfig: NetworkConfig.TestNet(),
@@ -222,14 +222,17 @@ ${
     ).join("\n")
   }
 
-Use \`${name}Methods\` for method constants and \`${name}MethodMap\` for correlated
+Use \`ContractMethods\` for PascalCase method constants and \`${name}MethodMap\` for correlated
 inputs and outputs. ABI type names use PascalCase. Field names and union tags
 retain their on-chain spelling so they remain compatible with the SDK codec.
 
 ## Contract errors
 
 \`${name}Errors\` contains the numeric contract error map. The client installs
-it once during construction. Customize messages before creating a client:
+it once during construction. Each entry retains the spec case name as \`name\`
+and its declaring error enum as \`category\`, alongside \`message\` and optional
+\`details\`. Error-only enums are not duplicated in \`types.ts\`. Customize messages
+before creating a client, preserving the original metadata:
 
 ${
     fence(
@@ -239,7 +242,10 @@ ${
 const errors = {
   ...${name}Errors,${
         errorCode !== undefined
-          ? `\n  ${errorCode}: { message: "A message tailored to your application." },`
+          ? `\n  ${errorCode}: {
+    ...${name}Errors[${errorCode}],
+    message: "A message tailored to your application.",
+  },`
           : "\n  // Add application-specific error descriptions here."
       }
 };
@@ -255,6 +261,7 @@ const customized = new ${name}({
 Automatic matching uses the configured contract ID. Without an ID, it matches
 errors from the root invocation. Pass \`errors: false\` if you provide your own
 matcher through \`contractConfig.plugins\`; other configured plugins are preserved.
+Matched errors expose \`name\` and \`category\` in \`error.meta.data.match\`.
 
 If decoding fails after a transaction succeeds, \`CBG_006\` retains the successful
 transaction in \`error.meta.data.result\`. Inspect it before retrying; do not

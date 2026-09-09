@@ -61371,6 +61371,24 @@
             "value": {
               "properties": [
                 {
+                  "name": "name",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                },
+                {
+                  "name": "category",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                },
+                {
                   "name": "message",
                   "tsType": {
                     "kind": "keyword",
@@ -61446,6 +61464,24 @@
                     "kind": "keyword",
                     "repr": "number",
                     "value": "number"
+                  }
+                },
+                {
+                  "name": "name",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                },
+                {
+                  "name": "category",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
                   }
                 },
                 {

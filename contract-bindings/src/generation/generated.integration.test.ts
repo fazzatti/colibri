@@ -81,17 +81,21 @@ describe("generated consumer boundary", () => {
       await Deno.writeTextFile(
         `${directory}/consumer.ts`,
         `
-import { Token, TokenMethods, type TokenInvocationResult } from "./index.ts";
+import { Token, ContractMethods, type TokenInvocationResult } from "./index.ts";
 import { Contract, ColibriError, NetworkConfig, type InvokeContractOutput, Event, EventType } from "@colibri/core";
 import { xdr, nativeToScVal } from "stellar-sdk";
 import { assertEquals, assertRejects } from "@std/assert";
-assertEquals(Object.hasOwn(TokenMethods, "__proto__"), true);
-assertEquals(TokenMethods.__proto__, "__proto__");
+assertEquals(Object.hasOwn(ContractMethods, "Proto"), true);
+assertEquals(ContractMethods.Proto, "__proto__");
 const token = new Token({ networkConfig: NetworkConfig.TestNet(), contractConfig: { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" } });
 function types() {
   const base: Contract = token;
   const balance: Promise<bigint> = token.read({ method: "balance", methodArgs: { owner: "alice" } });
-  const ping: Promise<null> = token.read({ method: "ping" });
+  const ping: Promise<null> = token.read({ method: ContractMethods.Ping });
+  const enumBalance: Promise<bigint> = token.read({ method: ContractMethods.Balance, methodArgs: { owner: "alice" } });
+  // @ts-expect-error Enum values retain correlated argument checking.
+  token.read({ method: ContractMethods.Balance, methodArgs: { owner: 1 } });
+  void enumBalance;
   // @ts-expect-error Invalid ABI method.
   token.read({ method: "absent" });
   // @ts-expect-error Required method arguments.
@@ -111,7 +115,7 @@ void types;
 const read = Contract.prototype.read, invoke = Contract.prototype.invoke;
 try {
   Contract.prototype.read = async args => args.method === "ping" ? null : 42n;
-  assertEquals(await token.read({ method: "balance", methodArgs: { owner: "alice" } }), 42n);
+  assertEquals(await token.read({ method: ContractMethods.Balance, methodArgs: { owner: "alice" } }), 42n);
   assertEquals(await token.read({ method: "ping" }), null);
   const raw = { hash: "abc", ledger: 1, createdAt: 2, returnValue: nativeToScVal(42n, {type:"i128"}), response: {} } as InvokeContractOutput;
   Contract.prototype.invoke = async () => raw;
@@ -175,7 +179,6 @@ try {
       const name of [
         "CounterSummary",
         "CounterStatus",
-        "CounterError",
         "GetCountInput",
         "GetCountOutput",
         "EchoSummaryInput",

@@ -91,6 +91,7 @@ export class TypeMap {
   readonly aliases = new Map<xdr.ScSpecEntry, string>();
   readonly inputVariants = new Set<string>();
   readonly warnings: string[] = [];
+  private readonly referencedTypes = new Set<string>();
   private readonly claimed = new Set([
     "Array",
     "Map",
@@ -223,6 +224,7 @@ export class TypeMap {
         `Unknown user type ${wireName}`,
       );
     }
+    this.referencedTypes.add(name);
     return name +
       (direction === "Input" && this.inputVariants.has(name) ? "Input" : "");
   }
@@ -276,15 +278,13 @@ export class TypeMap {
     throw new BindingError(Code.INVALID_SPEC, "Expected a struct or union");
   }
   declarations(): string {
-    return [...this.aliases].flatMap(([entry, name]) => {
+    const declarations = [...this.aliases].flatMap(([entry, name]) => {
+      if (entry.type === "scSpecEntryUdtErrorEnumV0") return [];
       const documentation = doc(
         entry.value.doc.toString(),
         `The ${entry.value.name} type declared by the contract.`,
       );
-      if (
-        entry.type === "scSpecEntryUdtEnumV0" ||
-        entry.type === "scSpecEntryUdtErrorEnumV0"
-      ) {
+      if (entry.type === "scSpecEntryUdtEnumV0") {
         return `${documentation}\nexport enum ${name} {\n${
           indent(
             entry.value.cases.map((item) =>
@@ -307,6 +307,18 @@ export class TypeMap {
           }\nexport type ${name}Input = ${this.value(entry, "Input")};`,
         ]
         : [declaration];
-    }).join("\n\n");
+    });
+    // Preserve ABI references without creating another runtime error registry.
+    const errors = [...this.aliases].flatMap(([entry, name]) => {
+      if (
+        entry.type !== "scSpecEntryUdtErrorEnumV0" ||
+        !this.referencedTypes.has(name)
+      ) return [];
+      return `${doc(entry.value.doc.toString(), `Codes declared by ${name}.`)}
+export type ${name} = ${
+        entry.value.cases.map((item) => item.value).join(" | ") || "never"
+      };`;
+    });
+    return [...errors, ...declarations].join("\n\n");
   }
 }

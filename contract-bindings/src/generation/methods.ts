@@ -47,13 +47,7 @@ export type ${input} = ${model.fields(method.inputs, "Input")};
 export type ${output} = ${
       method.outputs[0] ? model.type(method.outputs[0], "Output", true) : "null"
     };`);
-    // TypeScript treats prototype lookups specially in computed type keys.
-    const access = name === "__proto__"
-      ? JSON.stringify(name)
-      : property(name) === name
-      ? `${className}Methods.${name}`
-      : `${className}Methods[${JSON.stringify(name)}]`;
-    entries.push(`[${access}]: {
+    entries.push(`${property(name)}: {
   input: ${input};
   output: ${output};
 };`);

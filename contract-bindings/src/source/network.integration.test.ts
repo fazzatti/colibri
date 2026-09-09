@@ -97,7 +97,10 @@ describe(
               ? {
                 errors: {
                   ...exports.ErrorsErrors,
-                  265: { message: "Prepared custom message" },
+                  265: {
+                    ...exports.ErrorsErrors[265],
+                    message: "Prepared custom message",
+                  },
                 },
               }
               : {}),
@@ -141,7 +144,7 @@ describe(
           } else if (name === "Demo") {
             assertEquals(await client.read({ method: "get_count" }), 0);
             const output = await client.invoke({
-              method: "increment",
+              method: exports.ContractMethods.Increment,
               methodArgs: { by: 3 },
               config,
             });
@@ -171,7 +174,10 @@ describe(
               contractConfig: { contractId },
               errors: {
                 ...exports.DemoErrors,
-                1: { message: "Choose a positive increment" },
+                1: {
+                  ...exports.DemoErrors[1],
+                  message: "Choose a positive increment",
+                },
               },
             });
             const failure = await assertRejects(
@@ -182,6 +188,8 @@ describe(
               failure.message,
               "Contract error: Choose a positive increment",
             );
+            assertEquals(failure.meta.data.match.name, "InvalidIncrement");
+            assertEquals(failure.meta.data.match.category, "CounterError");
           } else {
             const failure = await assertRejects(() =>
               client.read({

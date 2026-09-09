@@ -53,8 +53,8 @@ source identity and RPC observations. In the programmatic API, passing
 `--output files` emits `constants.ts` (method names, spec, errors), `types.ts`
 (named inputs/outputs and mapped types), `index.ts` (the client and exports),
 and a formatted `README.md` for an existing project. Configure imports in that
-project: the JSR preset uses `@colibri/core` and `stellar-sdk`; the npm preset
-uses `@colibri/core` and `@stellar/stellar-sdk`.
+project: both presets import only `@colibri/core`; Core supplies the Stellar SDK
+dependency and spec codec.
 
 `--output package --target jsr` places the three source files in `generated/`,
 with a `mod.ts` entrypoint and a `deno.json`. Run `deno task check` in the
@@ -102,14 +102,27 @@ that differ from decoded output. Repeated original names use the first SDK
 declaration with a warning. Casing collisions fail explicitly instead of
 introducing numerical type prefixes.
 
+`ContractMethods` exposes PascalCase enum members with the exact ABI strings as
+values, such as `GrantRole = "grant_role"`. Both `ContractMethods.GrantRole` and
+`"grant_role"` retain correlated argument and return types in calls. Casing
+collisions fail generation. Alias this import when combining several generated
+clients in one module.
+
 ## Assemble errors and use events
 
 For a generated `Token` class, `TokenErrors` maps numeric codes to
-`{ message, details? }`. Supply a prepared `errors` object in the constructor to
-customize messages. Automatic matching is installed once, scoped to the contract
-ID when present, or to root-invocation errors before an ID is available. Use
-`errors: false` when supplying your own matcher through
+`{ name, category, message, details? }`. The case name and declaring error enum
+come directly from the spec, while message and details can be customized.
+Separate error enums are omitted; a numeric type alias remains only if another
+ABI declaration references that error type. Supply a prepared `errors` object in
+the constructor to customize messages. Automatic matching is installed once,
+scoped to the contract ID when present, or to root-invocation errors before an
+ID is available. Use `errors: false` when supplying your own matcher through
 `contractConfig.plugins`. Other constructor plugins keep their Core semantics.
+Spread the original entry when customizing a message to retain its metadata.
+Matched errors surface `name` and `category` in `error.meta.data.match`. Core's
+spec/WASM helpers and `Contract.loadContractErrorsFromWasm()` preserve these
+fields too; manually supplied maps may omit them.
 
 `token.events.Transfer` is a Core event definition when that name is declared in
 the ABI. Its `toTopicFilter` and `toEventFilter` accept only indexed fields.

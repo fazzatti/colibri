@@ -10,7 +10,8 @@ import type { KnownContractErrorMap } from "@/plugins/processes/simulate-transac
  * The returned map is directly usable with
  * `createContractErrorMatcherPlugin(...)`. Each error enum case is mapped by
  * numeric code, its enum case name becomes the human-facing message, and a
- * non-empty case doc string becomes the optional details field.
+ * non-empty case doc string becomes the optional details field. The original
+ * case name and declaring error enum name are retained as name and category.
  *
  * @param spec - Contract specification containing error enum cases.
  * @returns Error-code map suitable for the contract-error matcher plugin.
@@ -24,21 +25,27 @@ import type { KnownContractErrorMap } from "@/plugins/processes/simulate-transac
 export function extractContractErrorMapFromSpec(
   spec: Spec,
 ): KnownContractErrorMap {
-  const errors: Record<number, { details?: string; message: string }> = {};
+  const errors: Record<number, KnownContractErrorMap[number]> = {};
 
-  for (const errorCase of spec.errorCases()) {
-    const code = errorCase.value;
+  for (const entry of spec.entries) {
+    if (entry.type !== "scSpecEntryUdtErrorEnumV0") continue;
+    const category = entry.value.name.toString();
+    for (const errorCase of entry.value.cases) {
+      const code = errorCase.value;
 
-    if (errors[code]) {
-      throw new E.DUPLICATE_CONTRACT_ERROR_CODE(code);
+      if (errors[code]) {
+        throw new E.DUPLICATE_CONTRACT_ERROR_CODE(code);
+      }
+
+      const details = errorCase.doc.toString().trim();
+
+      errors[code] = {
+        name: errorCase.name.toString(),
+        category,
+        message: errorCase.name.toString(),
+        ...(details ? { details } : {}),
+      };
     }
-
-    const details = errorCase.doc.toString().trim();
-
-    errors[code] = {
-      message: errorCase.name.toString(),
-      ...(details ? { details } : {}),
-    };
   }
 
   return errors;

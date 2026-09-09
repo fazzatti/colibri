@@ -6,9 +6,87 @@ import { extractContractSpec } from "@colibri/core";
 import { generateBindings } from "@/generation/generate.ts";
 import { BindingError } from "@/error.ts";
 import { doc, identifier, TypeMap, typeName } from "@/generation/type-map.ts";
-import { bindingSpec } from "colibri-internal/tests/binding-fixtures.ts";
+import {
+  bindingSpec,
+  errorEntry,
+} from "colibri-internal/tests/binding-fixtures.ts";
 
 describe("bindings rendering", () => {
+  it("uses PascalCase enum members with exact ABI values and rejects casing collisions", () => {
+    const method = (name: string) =>
+      xdr.ScSpecEntry.scSpecEntryFunctionV0(
+        new xdr.ScSpecFunctionV0({ name, doc: "", inputs: [], outputs: [] }),
+      );
+    const plan = generateBindings(
+      new Spec([
+        method("grant_role"),
+        method("__constructor"),
+        method("__proto__"),
+      ]),
+    );
+    assert(plan.files["constants.ts"].includes("export enum ContractMethods"));
+    assert(plan.files["constants.ts"].includes('GrantRole = "grant_role"'));
+    assert(
+      plan.files["constants.ts"].includes('Constructor = "__constructor"'),
+    );
+    assert(plan.files["constants.ts"].includes('Proto = "__proto__"'));
+    assert(!plan.files["constants.ts"].includes("ContractClientMethods"));
+    assertThrows(
+      () =>
+        generateBindings(
+          new Spec([
+            method("grant_role"),
+            method("GrantRole"),
+          ]),
+        ),
+      BindingError,
+      "collision",
+    );
+    assertThrows(
+      () => generateBindings(bindingSpec(), { className: "ContractMethods" }),
+      BindingError,
+      "collision",
+    );
+  });
+  it("emits error metadata without duplicate enums, preserving types used by the ABI", () => {
+    const entries = [errorEntry("access_error"), errorEntry("UnusedError", 2)];
+    const unused = generateBindings(new Spec(entries));
+    assert(!unused.files["types.ts"].includes("AccessError"));
+    assert(!unused.files["types.ts"].includes("UnusedError"));
+    assert(unused.files["constants.ts"].includes('"category": "access_error"'));
+    assert(unused.files["constants.ts"].includes('"name": "Unauthorized"'));
+    assert(
+      unused.files["constants.ts"].includes(
+        "as const satisfies KnownContractErrorMap",
+      ),
+    );
+    const udt = xdr.ScSpecTypeDef.scSpecTypeUdt(
+      new xdr.ScSpecTypeUdt({ name: "access_error" }),
+    );
+    const used = generateBindings(
+      new Spec([
+        ...entries,
+        xdr.ScSpecEntry.scSpecEntryFunctionV0(
+          new xdr.ScSpecFunctionV0({
+            name: "echo_error",
+            doc: "",
+            inputs: [
+              new xdr.ScSpecFunctionInputV0({
+                name: "error",
+                doc: "",
+                type: udt,
+              }),
+            ],
+            outputs: [udt],
+          }),
+        ),
+      ]),
+    );
+    assert(used.files["types.ts"].includes("export type AccessError = 1;"));
+    assert(used.files["types.ts"].includes("error: AccessError"));
+    assert(!used.files["types.ts"].includes("export enum AccessError"));
+    assert(!used.files["types.ts"].includes("UnusedError"));
+  });
   it("generates clients and package manifests with only Core as a runtime dependency", () => {
     for (const target of ["jsr", "npm"] as const) {
       const plan = generateBindings(bindingSpec(), {

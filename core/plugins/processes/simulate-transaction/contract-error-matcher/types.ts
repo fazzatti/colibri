@@ -12,9 +12,14 @@ import type { ContractId } from "@/strkeys/types.ts";
  * `{ 1: { message: "Unauthorized" } }`. Colibri uses this message when the
  * matcher plugin recognizes the corresponding contract error code. When
  * available, `details` can carry the contract error's documentation string and
- * is surfaced in the known-error diagnostic.
+ * is surfaced in the known-error diagnostic. Optional name and category retain
+ * the spec case and enum names independently of the display message.
  */
 export type KnownContractErrorDefinition = {
+  /** Original error case name, when available from the spec or manual mapping. */
+  name?: string;
+  /** Declaring error enum name from the spec, or a manually assigned category. */
+  category?: string;
   /** Message shown when this known contract error is recognized. */
   message: string;
   /** Optional detailed explanation for the known error. */
@@ -145,11 +150,16 @@ export type ContractErrorMatcherPluginConfig =
  * The selected match is exposed through
  * `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED.meta.data.match`, while the original
  * `CONTRACT_ERROR_SIMULATION_FAILED` remains available as `meta.cause`. When a
- * known-error definition includes `details`, the selected match carries it too.
+ * known-error definition includes `details`, `name` or `category`, the selected
+ * match carries those fields too.
  */
 export type KnownContractErrorMatch = {
   /** Numeric contract error code. */
   code: number;
+  /** Original error case name, independent of its configured display message. */
+  name?: string;
+  /** Declaring error enum name or the category supplied in the mapping. */
+  category?: string;
   /** Human-facing message configured for the code. */
   message: string;
   /** Optional detailed explanation configured for the code. */

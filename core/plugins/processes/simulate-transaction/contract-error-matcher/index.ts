@@ -108,6 +108,8 @@ const getKnownContractErrorMatch = (
 
       return {
         code: candidate.code,
+        name: knownError.name,
+        category: knownError.category,
         message: knownError.message,
         details: knownError.details,
         contractId: candidate.contractId,
