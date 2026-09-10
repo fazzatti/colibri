@@ -1,5 +1,6 @@
 import { ColibriError } from "@/error/index.ts";
 import type { Diagnostic } from "@/error/types.ts";
+import type { InvokeContractOutput } from "@/pipelines/invoke-contract/types.ts";
 
 /**
  * Metadata stored on contract errors.
@@ -81,6 +82,7 @@ export enum Code {
   INVALID_SEP_IDENTIFIER = "CONTR_018",
   INVALID_WASM_FOR_SPEC = "CONTR_019",
   FAILED_TO_DECODE_SPEC_SECTION = "CONTR_020",
+  FAILED_TO_DECODE_INVOCATION_RESULT = "CONTR_021",
 }
 
 // Currently unused, reserving
@@ -441,6 +443,34 @@ export class FAILED_TO_DECODE_SPEC_SECTION extends ContractError<Code> {
   }
 }
 
+/** Raised when a successful transaction's return value cannot be decoded. */
+export class FAILED_TO_DECODE_INVOCATION_RESULT extends ColibriError<
+  Code.FAILED_TO_DECODE_INVOCATION_RESULT,
+  { cause: unknown; data: { method: string; result: InvokeContractOutput } }
+> {
+  /** Original decoding failure and successful transaction context. */
+  override readonly meta: {
+    cause: unknown;
+    data: { method: string; result: InvokeContractOutput };
+  };
+
+  /** Preserves the successful transaction and the original decoding failure. */
+  constructor(method: string, result: InvokeContractOutput, cause: unknown) {
+    const meta = { cause, data: { method, result } };
+    super({
+      domain: "contract",
+      source: "@colibri/contract",
+      code: Code.FAILED_TO_DECODE_INVOCATION_RESULT,
+      message: "Failed to decode contract result",
+      details:
+        "The transaction succeeded but its return value could not be decoded with the loaded spec. " +
+        "Inspect meta.data.result and update the spec or regenerate the bindings if the ABI changed.",
+      meta,
+    });
+    this.meta = meta;
+  }
+}
+
 /**
  * Raised when a contract id does not match the expected format.
  */
@@ -498,26 +528,33 @@ export class CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED
  */
 export const ERROR_CONTR = {
   // [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
-  [Code.MISSING_ARG]: MISSING_ARG,
-  [Code.MISSING_RPC_URL]: MISSING_RPC_URL,
-  [Code.INVALID_CONTRACT_CONFIG]: INVALID_CONTRACT_CONFIG,
-  [Code.FAILED_TO_UPLOAD_WASM]: FAILED_TO_UPLOAD_WASM,
-  [Code.MISSING_REQUIRED_PROPERTY]: MISSING_REQUIRED_PROPERTY,
-  [Code.MISSING_SPEC_IN_WASM]: MISSING_SPEC_IN_WASM,
-  [Code.FAILED_TO_DEPLOY_CONTRACT]: FAILED_TO_DEPLOY_CONTRACT,
-  [Code.PROPERTY_ALREADY_SET]: PROPERTY_ALREADY_SET,
-  [Code.CONTRACT_INSTANCE_NOT_FOUND]: CONTRACT_INSTANCE_NOT_FOUND,
-  [Code.CONTRACT_CODE_NOT_FOUND]: CONTRACT_CODE_NOT_FOUND,
-  [Code.INVALID_CONTRACT_ID]: INVALID_CONTRACT_ID,
-  [Code.CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED]:
+  ["CONTR_001" as Code.MISSING_ARG]: MISSING_ARG,
+  ["CONTR_002" as Code.MISSING_RPC_URL]: MISSING_RPC_URL,
+  ["CONTR_003" as Code.INVALID_CONTRACT_CONFIG]: INVALID_CONTRACT_CONFIG,
+  ["CONTR_004" as Code.FAILED_TO_UPLOAD_WASM]: FAILED_TO_UPLOAD_WASM,
+  ["CONTR_005" as Code.MISSING_REQUIRED_PROPERTY]: MISSING_REQUIRED_PROPERTY,
+  ["CONTR_007" as Code.MISSING_SPEC_IN_WASM]: MISSING_SPEC_IN_WASM,
+  ["CONTR_008" as Code.FAILED_TO_DEPLOY_CONTRACT]: FAILED_TO_DEPLOY_CONTRACT,
+  ["CONTR_006" as Code.PROPERTY_ALREADY_SET]: PROPERTY_ALREADY_SET,
+  ["CONTR_009" as Code.CONTRACT_INSTANCE_NOT_FOUND]:
+    CONTRACT_INSTANCE_NOT_FOUND,
+  ["CONTR_010" as Code.CONTRACT_CODE_NOT_FOUND]: CONTRACT_CODE_NOT_FOUND,
+  ["CONTR_011" as Code.INVALID_CONTRACT_ID]: INVALID_CONTRACT_ID,
+  ["CONTR_012" as Code.CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED]:
     CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED,
-  [Code.CONTRACT_CONFIG_SOURCES_CONFLICT]: CONTRACT_CONFIG_SOURCES_CONFLICT,
-  [Code.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM]:
+  ["CONTR_013" as Code.CONTRACT_CONFIG_SOURCES_CONFLICT]:
+    CONTRACT_CONFIG_SOURCES_CONFLICT,
+  ["CONTR_014" as Code.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM]:
     STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM,
-  [Code.NETWORK_EXECUTABLE_NOT_AVAILABLE]: NETWORK_EXECUTABLE_NOT_AVAILABLE,
-  [Code.INVALID_WASM_FOR_METADATA]: INVALID_WASM_FOR_METADATA,
-  [Code.FAILED_TO_DECODE_METADATA_SECTION]: FAILED_TO_DECODE_METADATA_SECTION,
-  [Code.INVALID_SEP_IDENTIFIER]: INVALID_SEP_IDENTIFIER,
-  [Code.INVALID_WASM_FOR_SPEC]: INVALID_WASM_FOR_SPEC,
-  [Code.FAILED_TO_DECODE_SPEC_SECTION]: FAILED_TO_DECODE_SPEC_SECTION,
+  ["CONTR_015" as Code.NETWORK_EXECUTABLE_NOT_AVAILABLE]:
+    NETWORK_EXECUTABLE_NOT_AVAILABLE,
+  ["CONTR_016" as Code.INVALID_WASM_FOR_METADATA]: INVALID_WASM_FOR_METADATA,
+  ["CONTR_017" as Code.FAILED_TO_DECODE_METADATA_SECTION]:
+    FAILED_TO_DECODE_METADATA_SECTION,
+  ["CONTR_018" as Code.INVALID_SEP_IDENTIFIER]: INVALID_SEP_IDENTIFIER,
+  ["CONTR_019" as Code.INVALID_WASM_FOR_SPEC]: INVALID_WASM_FOR_SPEC,
+  ["CONTR_020" as Code.FAILED_TO_DECODE_SPEC_SECTION]:
+    FAILED_TO_DECODE_SPEC_SECTION,
+  ["CONTR_021" as Code.FAILED_TO_DECODE_INVOCATION_RESULT]:
+    FAILED_TO_DECODE_INVOCATION_RESULT,
 };

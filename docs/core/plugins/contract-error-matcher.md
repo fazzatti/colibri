@@ -9,8 +9,9 @@ simulation responses into known, human-readable Colibri errors.
 Soroban RPC surfaces contract failures as numeric codes such as
 `Error(Contract, #265)`. Those codes are useful, but applications usually need
 to map them back to a contract-specific enum or binding-generated message. When
-contract error specs include documentation comments, Colibri can also carry
-those docs as optional error details.
+contract error specs include documentation comments, Colibri also carries those
+docs as optional error details. The original case `name` and declaring error
+enum `category` remain available independently of a customized message.
 
 The matcher plugin does that mapping at the simulation boundary:
 
@@ -115,7 +116,10 @@ const matcher = createContractErrorMatcherPlugin(errors);
 
 The extracted map uses the contract error enum case name as `message`. If an
 error enum case has a non-empty doc string in the compiled spec, that text is
-included as `details`.
+included as `details`. It also preserves the original case name as `name` and
+declaring enum name as `category`. `extractContractErrorMapFromSpec(...)` and
+`Contract.loadContractErrorsFromWasm(...)` use the same extraction. Category is
+the exact enum name, not an inferred business classification.
 
 For a contract error enum like:
 
@@ -131,10 +135,58 @@ the extracted map has the same structure accepted by the plugin:
 ```ts
 const errors = {
   1: {
+    name: "Unauthorized",
+    category: "Error",
     message: "Unauthorized",
     details: "The caller is not authorized to run this operation.",
   },
 };
+```
+
+Manual maps may omit `name` and `category`, or provide their own values. Both
+fields are carried into `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED.meta.data.match`
+for every matching strategy. Matching still uses numeric codes and the selected
+contract/invocation scope; categories do not resolve duplicate numeric codes in
+a spec. Extraction rejects those duplicates.
+
+Use the public `ContractErrorMap` type for these mappings.
+`KnownContractErrorMap` remains a deprecated alias with the same shape, so
+existing consumers can migrate their type imports without changing map values.
+
+This complete example loads metadata and prepares a customized matcher without
+submitting a transaction. Supply your own `contract.wasm`:
+
+<!-- deno-check -->
+
+```ts
+import {
+  type ContractErrorMap,
+  createContractErrorMatcherPlugin,
+  extractContractErrorMapFromWasm,
+  KNOWN_CONTRACT_ERROR_SIMULATION_FAILED,
+} from "@colibri/core";
+
+const errors: ContractErrorMap = extractContractErrorMapFromWasm(
+  await Deno.readFile("./contract.wasm"),
+);
+const first = Object.entries(errors)[0];
+if (first) {
+  const [code, definition] = first;
+  const plugin = createContractErrorMatcherPlugin({
+    ...errors,
+    [code]: { ...definition, message: "Please check the operation's inputs." },
+  });
+  console.log(plugin.id, definition.name, definition.category);
+}
+
+// Use this handler around your application's invocation.
+function reportFailure(error: unknown): void {
+  if (error instanceof KNOWN_CONTRACT_ERROR_SIMULATION_FAILED) {
+    const { code, name, category, message } = error.meta.data.match;
+    console.log({ code, name, category, message });
+  }
+}
+void reportFailure;
 ```
 
 For constructor-time plugin setup, use `contractConfig.plugins` and choose the

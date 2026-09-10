@@ -37,14 +37,16 @@ export class UNEXPECTED_ERROR extends ClassicOperationThresholdError {
       data: {
         operation,
       },
-      details: `An unexpected error occurred while processing the operation: ${operation.type}.`,
+      details:
+        `An unexpected error occurred while processing the operation: ${operation.type}.`,
       cause,
     });
   }
 }
 
 /** Raised when the source account cannot be resolved to a signer target. */
-export class FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE extends ClassicOperationThresholdError {
+export class FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE
+  extends ClassicOperationThresholdError {
   /**
    * Creates the error.
    *
@@ -59,7 +61,8 @@ export class FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE extends ClassicOperationThres
       data: {
         operation,
       },
-      details: `When processing the signer requirement for an operation, it was not possible to identify the source account '${source}'. This is verified to identify the underlying G-Address or set as 'source-account' when none is defined.`,
+      details:
+        `When processing the signer requirement for an operation, it was not possible to identify the source account '${source}'. This is verified to identify the underlying G-Address or set as 'source-account' when none is defined.`,
       cause,
     });
   }
@@ -67,7 +70,7 @@ export class FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE extends ClassicOperationThres
 
 /** Classic-operation-threshold error constructors indexed by stable code. */
 export const ERROR_AUTH_COT = {
-  [Code.FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE]:
+  ["AUTH_COT_001" as Code.FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE]:
     FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE,
-  [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
+  ["AUTH_COT_000" as Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
 };

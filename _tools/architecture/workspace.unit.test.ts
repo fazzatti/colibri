@@ -114,6 +114,7 @@ describe("workspace structure", () => {
     assertEquals(root.workspace, [
       "./core",
       "./build-verification",
+      "./contract-bindings",
       "./identicon",
       "./rpc-streamer",
       "./webauth",

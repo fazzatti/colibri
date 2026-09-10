@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "baseUrl": "../../..",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["contract-bindings/src/*"],
+      "@colibri/core": ["core/mod.ts"],
+      "colibri-internal/*": ["_internal/*"]
+    },
+    "skipLibCheck": true
+  },
+  "include": ["../../../contract-bindings/**/*.ts"],
+  "exclude": ["../../../contract-bindings/**/*.test.ts"]
+}

@@ -2,6 +2,7 @@
   "workspace": [
     "./core",
     "./build-verification",
+    "./contract-bindings",
     "./identicon",
     "./rpc-streamer",
     "./webauth",
@@ -11,7 +12,9 @@
   "nodeModulesDir": "auto",
   "minimumDependencyAge": {
     "age": "P1D",
-    "exclude": ["jsr:@fifo/convee"]
+    "exclude": [
+      "jsr:@fifo/convee"
+    ]
   },
   "imports": {
     "jsr:@colibri/core": "./core",
@@ -32,7 +35,8 @@
     "@std/expect": "jsr:@std/expect@^1.0.0",
     "archunit": "npm:archunit@2.4.0",
     "crap4ts-tool": "npm:@alperlabs/crap4ts@0.2.1",
-    "resvg-test": "npm:@resvg/resvg-js@2.6.2"
+    "resvg-test": "npm:@resvg/resvg-js@2.6.2",
+    "jsr:@colibri/contract-bindings": "./contract-bindings"
   },
   "tasks": {
     "release:init": "deno run -A _tools/releases/cli.ts init",
@@ -41,9 +45,11 @@
     "release:check": "deno run -A _tools/releases/cli.ts check",
     "release:api:update": "deno run -A _tools/releases/api.ts --update",
     "release:api:check": "deno run -A _tools/releases/api.ts",
-    "check:release-tooling": "deno check _tools/releases/cli.ts _tools/releases/api.ts _tools/consumers/check.ts _tools/consumers/deno.ts _tools/consumers/dependencies.ts _tools/consumers/prepare.ts _tools/consumers/published.ts _tools/consumers/run.ts",
+    "check:release-tooling": "deno check _tools/consumers/ci/index.ts _tools/releases/cli.ts _tools/releases/api.ts _tools/consumers/check.ts _tools/consumers/deno.ts _tools/consumers/dependencies.ts _tools/consumers/prepare.ts _tools/consumers/published.ts _tools/consumers/run.ts",
     "test:releases": "deno test -A --clean _tools/releases",
     "test:browser-runner": "deno test -A --clean _tools/consumers/browser-fixture.integration.test.ts",
+    "check:consumers:ci": "deno run -A _tools/consumers/ci/index.ts",
+    "test:compatibility-runner": "deno test -A --check --clean _tools/consumers/ci",
     "check:consumers": "deno run -A _tools/consumers/check.ts",
     "check:consumers:deno": "deno run -A _tools/consumers/deno.ts",
     "check:consumers:dependencies": "deno run -A _tools/consumers/dependencies.ts",
@@ -59,6 +65,10 @@
     "check:slow-types": "deno publish --dry-run --allow-dirty",
     "check:package-versions": "deno test --allow-read --clean build-verification/src/core/evidence/package-version.unit.test.ts",
     "check:crap": "deno run --allow-read --allow-env _tools/check-crap.ts",
+    "build:bindings-example": "deno run -A _tools/generate-bindings-example.ts",
+    "check:bindings-example": "deno run -A _tools/generate-bindings-example.ts --check",
+    "build:bindings-fixture": "deno run -A _tools/build-bindings-fixture.ts",
+    "check:bindings-fixture": "deno run -A _tools/build-bindings-fixture.ts --check",
     "build:webauth-fixtures": "deno run -A _tools/build-webauth-fixtures.ts",
     "check:webauth-fixtures": "deno run -A _tools/build-webauth-fixtures.ts --check",
     "build:delegated-auth-fixtures": "deno run -A _tools/build-delegated-auth-fixtures.ts",
@@ -74,16 +84,27 @@
     "test:integration": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.unit.test.ts' --coverage=coverage",
     "test:lint-rules": "deno test --clean _tools/lint",
     "test:architecture": "deno test --allow-read --allow-write --allow-env --allow-sys=cpus --clean _tools/architecture",
-    "test:file": "deno test -A --parallel --clean --ignore='_*/'"
+    "test:file": "deno test -A --parallel --clean --ignore='_*/'",
+    "check:bundles": "deno run -A _tools/bundles/check.ts",
+    "test:bundle-tooling": "deno test -A _tools/bundles/metrics.unit.test.ts"
   },
   "lint": {
-    "plugins": ["./_tools/lint/no-relative-imports.ts"],
+    "plugins": [
+      "./_tools/lint/no-relative-imports.ts"
+    ],
     "rules": {
-      "exclude": ["explicit-function-return-type"]
+      "exclude": [
+        "explicit-function-return-type"
+      ]
     }
   },
   "compilerOptions": {
     "skipLibCheck": true
   },
-  "exclude": ["node_modules", "_*", "dist", "coverage"]
+  "exclude": [
+    "node_modules",
+    "_*",
+    "dist",
+    "coverage"
+  ]
 }

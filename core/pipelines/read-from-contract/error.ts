@@ -28,7 +28,8 @@ export class MISSING_ARG extends ReadFromContractError {
     super({
       code: Code.MISSING_ARG,
       message: `Missing required argument: ${argName}`,
-      details: `The argument '${argName}' is required but was not provided in the pipeline creation.`,
+      details:
+        `The argument '${argName}' is required but was not provided in the pipeline creation.`,
       cause: undefined,
     });
   }
@@ -39,7 +40,8 @@ export class MISSING_RPC_URL extends ReadFromContractError {
     super({
       code: Code.MISSING_RPC_URL,
       message: "Missing RPC URL in network configuration",
-      details: `The argument 'rpcUrl' is required in the provided 'networkConfig'.`,
+      details:
+        `The argument 'rpcUrl' is required in the provided 'networkConfig'.`,
       diagnostic: {
         suggestion:
           "Either provide a 'rpc' instance or a valid 'rpcUrl' in the 'networkConfig'.",
@@ -52,7 +54,7 @@ export class MISSING_RPC_URL extends ReadFromContractError {
 }
 /** Read-from-contract pipeline error constructors indexed by stable code. */
 export const ERROR_PIPE_RFC = {
-  [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
-  [Code.MISSING_ARG]: MISSING_ARG,
-  [Code.MISSING_RPC_URL]: MISSING_RPC_URL,
+  ["PIPE_RFC_000" as Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
+  ["PIPE_RFC_001" as Code.MISSING_ARG]: MISSING_ARG,
+  ["PIPE_RFC_002" as Code.MISSING_RPC_URL]: MISSING_RPC_URL,
 };

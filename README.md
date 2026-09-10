@@ -451,3 +451,10 @@ fence so CI type-checks them without executing external effects.
 ## License
 
 MIT License. See [LICENSE](./LICENSE).
+
+## Contract bindings
+
+Generate typed contract clients from Wasm, a Wasm hash, or a contract ID with
+[`@colibri/contract-bindings`](./contract-bindings/README.md). The Deno CLI supports
+prompts and flags, source files or JSR/npm packages, embedded specs, constructor
+error maps, and typed Core event definitions.

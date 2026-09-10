@@ -1,8 +1,8 @@
-import { Spec } from "stellar-sdk/contract";
+import { Spec } from "@/contract/spec.ts";
 import type { BinaryData } from "@/common/types/index.ts";
 import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 import * as E from "@/plugins/processes/simulate-transaction/contract-error-matcher/error.ts";
-import type { KnownContractErrorMap } from "@/plugins/processes/simulate-transaction/contract-error-matcher/types.ts";
+import type { ContractErrorMap } from "@/plugins/processes/simulate-transaction/contract-error-matcher/types.ts";
 
 /**
  * Extracts known contract-error codes from a contract specification.
@@ -10,7 +10,8 @@ import type { KnownContractErrorMap } from "@/plugins/processes/simulate-transac
  * The returned map is directly usable with
  * `createContractErrorMatcherPlugin(...)`. Each error enum case is mapped by
  * numeric code, its enum case name becomes the human-facing message, and a
- * non-empty case doc string becomes the optional details field.
+ * non-empty case doc string becomes the optional details field. The original
+ * case name and declaring error enum name are retained as name and category.
  *
  * @param spec - Contract specification containing error enum cases.
  * @returns Error-code map suitable for the contract-error matcher plugin.
@@ -23,22 +24,28 @@ import type { KnownContractErrorMap } from "@/plugins/processes/simulate-transac
  */
 export function extractContractErrorMapFromSpec(
   spec: Spec,
-): KnownContractErrorMap {
-  const errors: Record<number, { details?: string; message: string }> = {};
+): ContractErrorMap {
+  const errors: Record<number, ContractErrorMap[number]> = {};
 
-  for (const errorCase of spec.errorCases()) {
-    const code = errorCase.value;
+  for (const entry of spec.entries) {
+    if (entry.type !== "scSpecEntryUdtErrorEnumV0") continue;
+    const category = entry.value.name.toString();
+    for (const errorCase of entry.value.cases) {
+      const code = errorCase.value;
 
-    if (errors[code]) {
-      throw new E.DUPLICATE_CONTRACT_ERROR_CODE(code);
+      if (errors[code]) {
+        throw new E.DUPLICATE_CONTRACT_ERROR_CODE(code);
+      }
+
+      const details = errorCase.doc.toString().trim();
+
+      errors[code] = {
+        name: errorCase.name.toString(),
+        category,
+        message: errorCase.name.toString(),
+        ...(details ? { details } : {}),
+      };
     }
-
-    const details = errorCase.doc.toString().trim();
-
-    errors[code] = {
-      message: errorCase.name.toString(),
-      ...(details ? { details } : {}),
-    };
   }
 
   return errors;
@@ -64,6 +71,6 @@ export function extractContractErrorMapFromSpec(
  */
 export function extractContractErrorMapFromWasm(
   wasm: BinaryData,
-): KnownContractErrorMap {
+): ContractErrorMap {
   return extractContractErrorMapFromSpec(Spec.fromWasm(toUint8Array(wasm)));
 }

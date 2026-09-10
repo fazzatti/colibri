@@ -1,4 +1,4 @@
-/** Local equivalent of the separately scheduled CI compatibility jobs. */
+/** Local source, packaging and runtime checks for one SDK selection. */
 import { prepareArtifacts } from "./prepare.ts";
 import { runArtifacts } from "./run.ts";
 import { checkDenoConsumer } from "./deno.ts";

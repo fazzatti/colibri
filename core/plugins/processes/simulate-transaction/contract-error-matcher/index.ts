@@ -108,6 +108,8 @@ const getKnownContractErrorMatch = (
 
       return {
         code: candidate.code,
+        name: knownError.name,
+        category: knownError.category,
         message: knownError.message,
         details: knownError.details,
         contractId: candidate.contractId,
@@ -136,5 +138,8 @@ const matchesStrategy = (
 
 export { ERROR_PLG_SIM_CEM } from "@/plugins/processes/simulate-transaction/contract-error-matcher/error.ts";
 export * from "@/plugins/processes/simulate-transaction/contract-error-matcher/error.ts";
-export { extractContractErrorMapFromWasm } from "@/plugins/processes/simulate-transaction/contract-error-matcher/helpers.ts";
+export {
+  extractContractErrorMapFromSpec,
+  extractContractErrorMapFromWasm,
+} from "@/plugins/processes/simulate-transaction/contract-error-matcher/helpers.ts";
 export type * from "@/plugins/processes/simulate-transaction/contract-error-matcher/types.ts";

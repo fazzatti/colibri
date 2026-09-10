@@ -9,6 +9,7 @@ exact current signatures.
 
 | Package                            | Developer guide                                     | Full API                                                       |
 | ---------------------------------- | --------------------------------------------------- | -------------------------------------------------------------- |
+| `@colibri/contract-bindings` | [Binding generation](../packages/contract-bindings.md) | [Symbols](https://jsr.io/@colibri/contract-bindings/doc) |
 | `@colibri/core`                    | [Core](../core/overview.md)                         | [Symbols](https://jsr.io/@colibri/core/doc)                    |
 | `@colibri/rpc-streamer`            | [Streaming](../packages/rpc-streamer.md)            | [Symbols](https://jsr.io/@colibri/rpc-streamer/doc)            |
 | `@colibri/webauth`                 | [WebAuth](../packages/webauth.md)                   | [Symbols](https://jsr.io/@colibri/webauth/doc)                 |
@@ -19,7 +20,7 @@ exact current signatures.
 | `@colibri/plugin-channel-accounts` | [Channels](../packages/plugins/channel-accounts.md) | [Symbols](https://jsr.io/@colibri/plugin-channel-accounts/doc) |
 | `@colibri/test-tooling`            | [Quickstart](../packages/test-tooling.md)           | [Symbols](https://jsr.io/@colibri/test-tooling/doc)            |
 
-Build Verification also exports `/core`, `/docker`, and `/cli`. All other listed
+Build Verification also exports `/core`, `/docker`, and `/cli`. Contract Bindings also exports its Deno-only `/cli`. All other listed
 packages expose their supported surface at the package root. Internal file
 paths, `@/`, `colibri-internal/`, and `_tools/` are repository conventions, not
 public consumer imports.

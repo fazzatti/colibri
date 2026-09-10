@@ -54,6 +54,12 @@ only `AuthEntrySigner`. `HashXSigner` and `Ed25519SignedPayloadSigner` implement
 `EnvelopeSigner`. `PreAuthorizedTransactionSigner` verifies a transaction hash
 without adding a decorated signature.
 
+A native Stellar SDK signing `Keypair` can be adapted explicitly with
+`LocalSigner.fromKeypair(keypair)`. The result implements the same signer
+capabilities described above; `Signer` and `TransactionConfig` remain unchanged.
+See [the Keypair factory](local-signer.md#from-a-stellar-sdk-keypair) for targets
+and ownership.
+
 ## Using Signers
 
 Pass every signer through the same `TransactionConfig.signers` list:

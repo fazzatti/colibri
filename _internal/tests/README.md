@@ -2,6 +2,17 @@
 
 This directory is not part of any published Colibri package.
 
+## WebAuth Quickstart diagnostics
+
+Run the local lifecycle suite with `COLIBRI_TEST_QUICKSTART_DIAGNOSTICS=1` to
+include Quickstart service logs and the actual Docker image ID in test output.
+CI enables this and uploads `webauth-quickstart-diagnostics` even when the suite
+fails, before container cleanup can erase the evidence. The suite currently
+uses the mutable `nightly-next` tag for its protocol 28 fixtures; compare image
+IDs and the service versions in these logs when investigating intermittent RPC
+failures. Challenge-recording errors include the RPC's simulation ledger.
+Diagnostics do not retry challenges or relax any authentication assertions.
+
 ## Mainnet archive integrations
 
 The CAP-67 and RPC Streamer integration suites read real Mainnet events and

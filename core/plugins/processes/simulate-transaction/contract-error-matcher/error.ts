@@ -14,7 +14,8 @@ export enum Code {
  * Metadata carried when the matcher recognizes a known contract error.
  *
  * The selected match describes the code, configured message, emitting contract,
- * invocation level, and matcher entry that produced the match.
+ * invocation level, and matcher entry that produced the match. Optional name
+ * and category identify the original spec case and declaring error enum.
  */
 export type KnownContractErrorSimulationFailedMeta = {
   /** Known-error match selected by the plugin. */
@@ -107,7 +108,8 @@ export class DUPLICATE_CONTRACT_ERROR_CODE
  * Contract-error matcher plugin error constructors indexed by stable code.
  */
 export const ERROR_PLG_SIM_CEM = {
-  [Code.KNOWN_CONTRACT_ERROR_SIMULATION_FAILED]:
+  ["PLG_SIM_CEM_001" as Code.KNOWN_CONTRACT_ERROR_SIMULATION_FAILED]:
     KNOWN_CONTRACT_ERROR_SIMULATION_FAILED,
-  [Code.DUPLICATE_CONTRACT_ERROR_CODE]: DUPLICATE_CONTRACT_ERROR_CODE,
+  ["PLG_SIM_CEM_002" as Code.DUPLICATE_CONTRACT_ERROR_CODE]:
+    DUPLICATE_CONTRACT_ERROR_CODE,
 };

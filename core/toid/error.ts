@@ -50,7 +50,8 @@ export class LEDGER_OUT_OF_RANGE extends TOIDError {
   constructor(ledgerSequence: number) {
     super({
       code: Code.LEDGER_OUT_OF_RANGE,
-      message: `Ledger sequence out of range: ${ledgerSequence} (max 2,147,483,647)`,
+      message:
+        `Ledger sequence out of range: ${ledgerSequence} (max 2,147,483,647)`,
       details:
         "The provided ledger sequence exceeds the maximum allowed value for TOID generation.",
       data: { ledgerSequence },
@@ -62,7 +63,8 @@ export class TX_ORDER_OUT_OF_RANGE extends TOIDError {
   constructor(transactionOrder: number) {
     super({
       code: Code.TX_ORDER_OUT_OF_RANGE,
-      message: `Transaction order out of range: ${transactionOrder} (1-1,048,575)`,
+      message:
+        `Transaction order out of range: ${transactionOrder} (1-1,048,575)`,
       details:
         "The provided transaction application order exceeds the maximum allowed value for TOID generation.",
       data: { transactionOrder },
@@ -95,8 +97,8 @@ export class INVALID_TOID extends TOIDError {
 }
 
 export const ERROR_TOID = {
-  [Code.LEDGER_OUT_OF_RANGE]: LEDGER_OUT_OF_RANGE,
-  [Code.TX_ORDER_OUT_OF_RANGE]: TX_ORDER_OUT_OF_RANGE,
-  [Code.OP_INDEX_OUT_OF_RANGE]: OP_INDEX_OUT_OF_RANGE,
-  [Code.INVALID_TOID]: INVALID_TOID,
+  ["TOID_001" as Code.LEDGER_OUT_OF_RANGE]: LEDGER_OUT_OF_RANGE,
+  ["TOID_002" as Code.TX_ORDER_OUT_OF_RANGE]: TX_ORDER_OUT_OF_RANGE,
+  ["TOID_003" as Code.OP_INDEX_OUT_OF_RANGE]: OP_INDEX_OUT_OF_RANGE,
+  ["TOID_004" as Code.INVALID_TOID]: INVALID_TOID,
 };

@@ -14,6 +14,8 @@ export const dockerPackages = new Set([
   "@colibri/test-tooling",
   "@colibri/build-verification",
 ]);
+/** Runtime-specific subpaths are checked by Deno, not packaged as Node artifacts. */
+export const denoOnlyEntrypoints = new Set(["@colibri/contract-bindings/cli"]);
 export const playwrightVersion = "1.61.0";
 
 export async function command(
@@ -105,6 +107,8 @@ export async function configureSource(
     "@std/toml": current.imports["@std/toml"],
     crypto: current.imports.crypto,
     "stellar-sdk": `npm:@stellar/stellar-sdk@${sdk}`,
+    "stellar-sdk/base": `npm:@stellar/stellar-sdk@${sdk}/base`,
+    "stellar-sdk/xdr": `npm:@stellar/stellar-sdk@${sdk}/xdr`,
     "stellar-sdk/rpc": `npm:@stellar/stellar-sdk@${sdk}/rpc`,
     "stellar-sdk/contract": `npm:@stellar/stellar-sdk@${sdk}/contract`,
     convee: current.imports.convee,
@@ -144,6 +148,8 @@ export async function configureSource(
     }
     // The SDK selection must also override Identicon's package-level alias.
     scoped["stellar-sdk"] = `npm:@stellar/stellar-sdk@${sdk}`;
+    scoped["stellar-sdk/base"] = `npm:@stellar/stellar-sdk@${sdk}/base`;
+    scoped["stellar-sdk/xdr"] = `npm:@stellar/stellar-sdk@${sdk}/xdr`;
     scoped["stellar-sdk/rpc"] = `npm:@stellar/stellar-sdk@${sdk}/rpc`;
     scoped["stellar-sdk/contract"] = `npm:@stellar/stellar-sdk@${sdk}/contract`;
     // Plain import maps do not provide deno.json's package-subpath expansion
@@ -182,5 +188,9 @@ export async function prepareSource(
   }
   await configureSource(source, inventory, sdk);
   await copyRuntime(fixtureRoot, resolve(source, "fixtures"));
+  await Deno.copyFile(
+    resolve(import.meta.dirname!, "keypair-signer.ts"),
+    resolve(source, "fixtures/keypair-signer.ts"),
+  );
   return inventory;
 }

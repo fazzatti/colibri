@@ -10,7 +10,11 @@ import {
 } from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
 import { extractContractErrorMapFromSpec } from "@/plugins/processes/simulate-transaction/contract-error-matcher/helpers.ts";
 import * as E from "@/plugins/processes/simulate-transaction/contract-error-matcher/error.ts";
-import type { Spec } from "stellar-sdk/contract";
+import { Spec } from "stellar-sdk/contract";
+import {
+  bindingSpec,
+  errorEntry,
+} from "colibri-internal/tests/binding-fixtures.ts";
 
 describe("contract error matcher helpers", () => {
   it("extracts the error map from a contract spec", () => {
@@ -40,24 +44,32 @@ describe("contract error matcher helpers", () => {
   });
 
   it("throws when a spec declares duplicate error codes", () => {
-    const spec = {
-      errorCases: () => [
-        {
-          value: () => 1,
-          name: () => ({ toString: () => "One" }),
-          doc: () => ({ toString: () => "" }),
-        },
-        {
-          value: () => 1,
-          name: () => ({ toString: () => "DuplicateOne" }),
-          doc: () => ({ toString: () => "" }),
-        },
-      ],
-    } as unknown as Spec;
+    const spec = new Spec([
+      errorEntry("AccessError"),
+      errorEntry("TokenError"),
+    ]);
 
     assertThrows(
       () => extractContractErrorMapFromSpec(spec),
       E.DUPLICATE_CONTRACT_ERROR_CODE,
     );
+  });
+
+  it("preserves each declaring enum and case name without inventing categories", () => {
+    const spec = new Spec([
+      ...bindingSpec().entries,
+      errorEntry("access_error", 10, "NotAllowed", "  Requires a role.  "),
+      errorEntry("TokenError", 20, "NotAllowed", ""),
+    ]);
+    assertEquals(extractContractErrorMapFromSpec(spec), {
+      10: {
+        name: "NotAllowed",
+        category: "access_error",
+        message: "NotAllowed",
+        details: "Requires a role.",
+      },
+      20: { name: "NotAllowed", category: "TokenError", message: "NotAllowed" },
+    });
+    assertEquals(extractContractErrorMapFromSpec(bindingSpec()), {});
   });
 });

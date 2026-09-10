@@ -107,6 +107,7 @@ export class FAILED_TO_CHECK_FILTER_SEGMENT extends EventFilterError {
 
 /** Event-filter error constructors indexed by stable code. */
 export const ERROR_EVF = {
-  [Code.EVENT_HAS_NO_TOPICS]: EVENT_HAS_NO_TOPICS,
-  [Code.FAILED_TO_CHECK_FILTER_SEGMENT]: FAILED_TO_CHECK_FILTER_SEGMENT,
+  ["EVF_001" as Code.EVENT_HAS_NO_TOPICS]: EVENT_HAS_NO_TOPICS,
+  ["EVF_002" as Code.FAILED_TO_CHECK_FILTER_SEGMENT]:
+    FAILED_TO_CHECK_FILTER_SEGMENT,
 };

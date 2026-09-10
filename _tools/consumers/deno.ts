@@ -16,9 +16,10 @@ export async function checkDenoConsumer(sdk: string): Promise<void> {
       ),
       "fixtures/smoke.ts",
       "fixtures/extensions.ts",
+      "fixtures/keypair-signer.ts",
     ], temporary);
     await checkResolvedSdk(temporary, sdk);
-    for (const fixture of ["smoke.ts", "extensions.ts"]) {
+    for (const fixture of ["smoke.ts", "extensions.ts", "keypair-signer.ts"]) {
       await command(Deno.execPath(), [
         "run",
         "-A",

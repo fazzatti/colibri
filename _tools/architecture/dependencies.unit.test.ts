@@ -1,3 +1,5 @@
+import { readPackageInventory } from "../package-inventory.ts";
+import { root } from "../consumers/environment.ts";
 import { describe, it } from "@std/testing/bdd";
 import { projectFiles } from "archunit";
 import {
@@ -27,6 +29,19 @@ const colibriImports = (
   }));
 
 describe("dependency direction", () => {
+  it("keeps binding rendering independent of CLI, filesystem and source loading", async () => {
+    await assertRule(
+      projectFiles(`${CONFIG_DIRECTORY}/contract-bindings.json`)
+        .inPath(
+          "../../../contract-bindings/src/{generation/**/*.ts,types.ts,error.ts}",
+        )
+        .shouldNot().dependOnFiles()
+        .inPath(
+          "../../../contract-bindings/src/{cli,output,source}/**/*.ts",
+        ),
+      "Portable binding rendering must not depend on I/O adapters",
+    );
+  });
   it("keeps Core execution layers pointing inward", async () => {
     const forbiddenDependencies = [
       {
@@ -127,7 +142,9 @@ describe("dependency direction", () => {
     }
   });
 
-  it("uses only package roots when consuming another Colibri package", async () => {
+  it("uses only declared public entrypoints when consuming another Colibri package", async () => {
+    const inventory = await readPackageInventory(root);
+    const exports = new Map(inventory.map((pkg) => [pkg.name, pkg.exports]));
     for (const architecture of PACKAGE_ARCHITECTURES) {
       await assertRule(
         projectFiles(architecture.config)
@@ -138,9 +155,12 @@ describe("dependency direction", () => {
               colibriImports(
                 sourceWithoutComments(architectureFileContent(file)),
               ).every((
-                { subpath },
-              ) => !subpath),
-            "Cross-package imports must use the package's public root",
+                { packageName, subpath },
+              ) =>
+                (subpath ? `.${subpath}` : ".") in
+                  (exports.get(packageName) ?? {})
+              ),
+            "Cross-package imports must use a declared public entrypoint",
           ),
         `${architecture.name} must not deep-import another package`,
       );

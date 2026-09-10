@@ -49,6 +49,10 @@ catalog.
   — 1 codes.
 - [build-verification/cli](build-verification-cli.md) — 28 codes.
 
+## @colibri/contract-bindings
+
+- [contract-bindings](contract-bindings.md) — 5 codes.
+
 ## @colibri/core
 
 - [core/account/native](core-account-native.md) — 5 codes.
@@ -75,7 +79,8 @@ catalog.
 - [core/common/helpers/transaction](core-common-helpers-transaction.md) — 2
   codes.
 - [core/common/helpers/xdr](core-common-helpers-xdr.md) — 19 codes.
-- [core/contract](core-contract.md) — 21 codes.
+- [core/contract](core-contract.md) — 22 codes.
+- [core/contract/events](core-contract-events.md) — 5 codes.
 - [core/event](core-event.md) — 13 codes.
 - [core/event/event-filter](core-event-event-filter.md) — 2 codes.
 - [core/event/event-id](core-event-event-id.md) — 2 codes.
@@ -118,10 +123,11 @@ catalog.
 - [core/sep1](core-sep1.md) — 8 codes.
 - [core/signer/delegated](core-signer-delegated.md) — 3 codes.
 - [core/signer/hash-x](core-signer-hash-x.md) — 9 codes.
-- [core/signer/local](core-signer-local.md) — 6 codes.
+- [core/signer/local](core-signer-local.md) — 8 codes.
 - [core/signer/pre-authorized-transaction](core-signer-pre-authorized-transaction.md)
   — 6 codes.
 - [core/signer/signed-payload](core-signer-signed-payload.md) — 12 codes.
+- [core/soroban-types](core-soroban-types.md) — 3 codes.
 - [core/sponsorship](core-sponsorship.md) — 2 codes.
 - [core/toid](core-toid.md) — 4 codes.
 - [core/tools/friendbot](core-tools-friendbot.md) — 3 codes.

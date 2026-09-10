@@ -81,7 +81,8 @@ export class UNSUPPORTED_LEDGER_CLOSE_META_VERSION extends EventParsingError {
     super({
       code: Code.UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
       message: "Unsupported LedgerCloseMeta version",
-      details: `The provided LedgerCloseMeta version ${version} is not supported.`,
+      details:
+        `The provided LedgerCloseMeta version ${version} is not supported.`,
       data: { version },
     });
   }
@@ -103,9 +104,10 @@ export class UNSUPPORTED_TRANSACTION_META_VERSION extends EventParsingError {
 
 /** Event-parsing error constructors indexed by stable code. */
 export const ERROR_EVP = {
-  [Code.INVALID_LEDGER_CLOSE_META_XDR]: INVALID_LEDGER_CLOSE_META_XDR,
-  [Code.UNSUPPORTED_LEDGER_CLOSE_META_VERSION]:
+  ["EVP_001" as Code.INVALID_LEDGER_CLOSE_META_XDR]:
+    INVALID_LEDGER_CLOSE_META_XDR,
+  ["EVP_002" as Code.UNSUPPORTED_LEDGER_CLOSE_META_VERSION]:
     UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
-  [Code.UNSUPPORTED_TRANSACTION_META_VERSION]:
+  ["EVP_003" as Code.UNSUPPORTED_TRANSACTION_META_VERSION]:
     UNSUPPORTED_TRANSACTION_META_VERSION,
 };

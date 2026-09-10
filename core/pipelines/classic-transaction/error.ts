@@ -56,7 +56,7 @@ export class MISSING_RPC_URL extends ClassicTransactionError {
 
 /** Classic transaction pipeline error constructors indexed by stable code. */
 export const ERROR_PIPE_CLTX = {
-  [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
-  [Code.MISSING_ARG]: MISSING_ARG,
-  [Code.MISSING_RPC_URL]: MISSING_RPC_URL,
+  ["PIPE_CLTX_000" as Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
+  ["PIPE_CLTX_001" as Code.MISSING_ARG]: MISSING_ARG,
+  ["PIPE_CLTX_002" as Code.MISSING_RPC_URL]: MISSING_RPC_URL,
 };

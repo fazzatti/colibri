@@ -49,7 +49,10 @@ function symbolMap(symbols: Symbol[]): Record<string, Json> {
       symbol,
     ): [string, Json] => [
       symbol.name,
-      normalizeDeclaration(symbol.declarations as unknown as Json),
+      normalizeDeclaration(
+        symbol.declarations as unknown as Json,
+        pathToFileURL(repositoryRoot + "/").href,
+      ),
     ])
       .sort(([a], [b]) => a.localeCompare(b)),
   );

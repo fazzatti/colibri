@@ -31,6 +31,18 @@ const result = await contract.invoke({
 });
 ```
 
+`Contract.invoke()` returns the processed transaction, including its raw
+`returnValue`. Generated bindings also expose a typed `value`, decoded by Core
+through an internal subclass helper. The helper is protected and is not part of
+the public instance API. `invokeRaw()` continues to return the raw result.
+
+If this decoding fails after a successful transaction, Core raises `CONTR_021`.
+The error retains the original result in `meta.data.result`, the method name in
+`meta.data.method`, and the original failure in `meta.cause`. Inspect that
+result and the loaded spec before deciding the next action; decoding does not
+retry or resubmit the transaction. An absent return value becomes `undefined`,
+while an encoded Soroban void result becomes `null`.
+
 ### `read()`
 
 Use this for read-only methods:
@@ -47,6 +59,48 @@ const balance = await contract.read({
 ### `invokeRaw()` / `readRaw()`
 
 Use the raw variants when you already have encoded ScVal arguments.
+
+### `getLedgerEntry()`
+
+Read a stored contract-data entry directly through the client's RPC connection.
+The client supplies its contract ID; you supply the encoded ScVal key and
+`"persistent"` or `"temporary"` durability. Persistent is the default. No spec,
+source account, signer or simulation is needed. Generated clients inherit this
+method from `Contract`.
+
+This complete Deno example takes a Testnet contract ID and a symbol key as its
+two arguments. For other key shapes, supply the corresponding encoded ScVal:
+
+<!-- deno-check -->
+
+```ts
+import { Contract, type ContractId, NetworkConfig } from "@colibri/core";
+import { xdr } from "stellar-sdk";
+
+const [contractId, keyName] = Deno.args;
+if (!contractId || !keyName) {
+  throw new Error("Provide a contract ID and a symbol key.");
+}
+const contract = new Contract({
+  networkConfig: NetworkConfig.TestNet(),
+  contractConfig: { contractId: contractId as ContractId },
+});
+const entry = await contract.getLedgerEntry({
+  key: xdr.ScVal.scvSymbol(keyName),
+  durability: "persistent",
+});
+console.log(entry.value, entry.lastModifiedLedgerSeq, entry.liveUntilLedgerSeq);
+console.log(entry.valueScVal);
+```
+
+The result and failure behavior are those of `LedgerEntries.contractData()`:
+parsed key/value data, raw XDR and ledger metadata, with
+`LEDGER_ENTRY_NOT_FOUND` when the entry is absent. A client without a deployed
+contract ID raises `MISSING_REQUIRED_PROPERTY` before contacting RPC. The method
+does not infer a storage schema or run a getter's default/computed behavior.
+Instance storage is a map inside the shared instance entry, rather than a third
+contract-data durability; use `LedgerEntries.contractInstance()` for that path.
+See [contract data](../ledger-entries/contracts.md).
 
 ## Using Pipeline Factories Directly
 

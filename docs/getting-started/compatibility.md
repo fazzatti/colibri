@@ -66,6 +66,10 @@ documents npm alias/deduplication limitations and recommends pnpm where
 duplicate installations are a concern. See
 [JSR npm compatibility](https://jsr.io/docs/npm-compatibility).
 
+Contract Bindings starts at 0.1 as a preview. Its portable root API supports
+Deno/Node tooling; its `/cli` entrypoint is Deno-only. Generated JSR and npm
+clients use Core 1.1 or later in the current major.
+
 ## Supported and tested integrations
 
 | Surface                             | Compatibility boundary and CI checks                                                      |
@@ -90,7 +94,11 @@ on the provider's availability, protocol support, and browser CORS policy.
 CI validates a reviewed release plan and normalized public declaration changes
 early. Preserved 1.0 consumers compile and execute against candidate packages,
 including native SDK objects, custom signers, subclassing, plugins, and typed
-errors. Separate jobs exercise Deno, installed npm artifacts, and real browsers.
+errors. A single `compatibility` check groups the Deno, installed npm, browser and
+released-Core scenarios into named steps, with individual logs and a complete
+results table. Minimum and latest-compatible SDK selections are resolved once;
+identical resolved versions share one matrix, while distinct versions both run
+all supported combinations. Failed or missing results fail the check.
 
 Dependent packages are also checked against the oldest available Core release
 accepted by their range. Conversely, the earliest still-compatible dependent

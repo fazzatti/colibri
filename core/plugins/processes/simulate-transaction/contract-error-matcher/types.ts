@@ -12,9 +12,14 @@ import type { ContractId } from "@/strkeys/types.ts";
  * `{ 1: { message: "Unauthorized" } }`. Colibri uses this message when the
  * matcher plugin recognizes the corresponding contract error code. When
  * available, `details` can carry the contract error's documentation string and
- * is surfaced in the known-error diagnostic.
+ * is surfaced in the known-error diagnostic. Optional name and category retain
+ * the spec case and enum names independently of the display message.
  */
 export type KnownContractErrorDefinition = {
+  /** Original error case name, when available from the spec or manual mapping. */
+  name?: string;
+  /** Declaring error enum name from the spec, or a manually assigned category. */
+  category?: string;
   /** Message shown when this known contract error is recognized. */
   message: string;
   /** Optional detailed explanation for the known error. */
@@ -28,9 +33,15 @@ export type KnownContractErrorDefinition = {
  * plain map can match the error code surfaced by RPC regardless of which
  * contract emitted the corresponding diagnostic event.
  */
-export type KnownContractErrorMap = Readonly<
+export type ContractErrorMap = Readonly<
   Record<number, KnownContractErrorDefinition>
 >;
+
+/**
+ * Compatibility alias for the contract error-code map.
+ * @deprecated Use {@link ContractErrorMap} instead.
+ */
+export type KnownContractErrorMap = ContractErrorMap;
 
 /**
  * Matching strategy used by a known contract-error matcher entry.
@@ -55,7 +66,7 @@ export type AnyContractErrorMatcher = {
   /** Strategy discriminator. */
   strategy: "any";
   /** Error-code map used by this matcher. */
-  errors: KnownContractErrorMap;
+  errors: ContractErrorMap;
 };
 
 /**
@@ -71,7 +82,7 @@ export type ContractIdContractErrorMatcher = {
   /** Contract id that must have emitted the error. */
   contractId: ContractId;
   /** Error-code map used by this matcher. */
-  errors: KnownContractErrorMap;
+  errors: ContractErrorMap;
 };
 
 /**
@@ -87,7 +98,7 @@ export type IssuedFromContractErrorMatcher = {
   /** Invocation level that must have emitted the error. */
   issuedFrom: ParsedSimulationErrorIssuer;
   /** Error-code map used by this matcher. */
-  errors: KnownContractErrorMap;
+  errors: ContractErrorMap;
 };
 
 /**
@@ -136,7 +147,7 @@ export type ContractErrorMatcher =
  * ```
  */
 export type ContractErrorMatcherPluginConfig =
-  | KnownContractErrorMap
+  | ContractErrorMap
   | readonly ContractErrorMatcher[];
 
 /**
@@ -145,11 +156,16 @@ export type ContractErrorMatcherPluginConfig =
  * The selected match is exposed through
  * `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED.meta.data.match`, while the original
  * `CONTRACT_ERROR_SIMULATION_FAILED` remains available as `meta.cause`. When a
- * known-error definition includes `details`, the selected match carries it too.
+ * known-error definition includes `details`, `name` or `category`, the selected
+ * match carries those fields too.
  */
 export type KnownContractErrorMatch = {
   /** Numeric contract error code. */
   code: number;
+  /** Original error case name, independent of its configured display message. */
+  name?: string;
+  /** Declaring error enum name or the category supplied in the mapping. */
+  category?: string;
   /** Human-facing message configured for the code. */
   message: string;
   /** Optional detailed explanation configured for the code. */

@@ -1,6 +1,6 @@
 import type { NetworkConfig } from "@/network/index.ts";
 import type { BinaryData } from "@/common/types/index.ts";
-import type { Spec } from "stellar-sdk/contract";
+import type { Spec } from "@/contract/spec.ts";
 import type { Server } from "stellar-sdk/rpc";
 import type { InvokeContractPipeline } from "@/pipelines/invoke-contract/index.ts";
 import type { ReadFromContractPipeline } from "@/pipelines/read-from-contract/index.ts";

@@ -1,4 +1,9 @@
-import * as authEntries from "@/common/helpers/xdr/auth-entries.ts";
+import {
+  authEntryToParams,
+  paramsToAuthEntries,
+  paramsToAuthEntry,
+  paramsToInvocation,
+} from "@/common/helpers/xdr/auth-entries.ts";
 import { getAddressTypeFromAuthEntry } from "@/common/helpers/xdr/get-address-type-from-auth-entry.ts";
 import { getAddressSignerFromAuthEntry } from "@/common/helpers/xdr/get-address-signer-from-auth-entry.ts";
 import { getAddressCredentialsFromAuthEntry } from "@/common/helpers/xdr/get-address-credentials-from-auth-entry.ts";
@@ -10,7 +15,10 @@ import { parseErrorResult } from "@/common/helpers/xdr/parse-error-result.ts";
 
 /** Aggregated XDR helper namespace. */
 export const xdr = {
-  ...authEntries,
+  authEntryToParams,
+  paramsToAuthEntries,
+  paramsToAuthEntry,
+  paramsToInvocation,
   getAddressTypeFromAuthEntry,
   getAddressSignerFromAuthEntry,
   getAddressCredentialsFromAuthEntry,
