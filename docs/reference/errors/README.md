@@ -123,7 +123,7 @@ catalog.
 - [core/sep1](core-sep1.md) — 8 codes.
 - [core/signer/delegated](core-signer-delegated.md) — 3 codes.
 - [core/signer/hash-x](core-signer-hash-x.md) — 9 codes.
-- [core/signer/local](core-signer-local.md) — 6 codes.
+- [core/signer/local](core-signer-local.md) — 8 codes.
 - [core/signer/pre-authorized-transaction](core-signer-pre-authorized-transaction.md)
   — 6 codes.
 - [core/signer/signed-payload](core-signer-signed-payload.md) — 12 codes.

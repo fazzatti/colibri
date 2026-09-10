@@ -43,6 +43,11 @@ attaches/removes a targeted Convee plugin, and checks stable error identity/code
 and fee/sequence semantics. No RPC submission or mocked protocol behavior is
 involved in these offline consumers.
 
+`keypair-signer.ts` adapts native keypairs explicitly for signing through callable Core
+steps, verifies envelope signatures and exact native Soroban authorization XDR,
+and checks public-only keypair errors and caller ownership after disposal. It runs in the isolated Deno, installed
+Node, and browser lanes.
+
 Do not rewrite these consumers to make a later breaking candidate pass. Add new
 fixtures for newly introduced APIs; discuss intentional major changes
 explicitly.

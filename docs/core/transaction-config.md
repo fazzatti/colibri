@@ -114,6 +114,35 @@ signing process narrows each value with `isEnvelopeSigner(...)`,
 `isPreAuthTransactionSigner(...)`, or `isAuthEntrySigner(...)` before invoking
 the capability.
 
+Native Stellar SDK keypairs can be adapted with `LocalSigner.fromKeypair()`.
+The configuration still contains `Signer[]`; raw Keypair objects are not accepted.
+This complete, offline example constructs a configuration using the convenience:
+
+<!-- deno-check -->
+
+```ts
+import { LocalSigner, type TransactionConfig } from "@colibri/core";
+import { Keypair } from "npm:@stellar/stellar-sdk@^17.0.1";
+
+const keypair = Keypair.random();
+const signer = LocalSigner.fromKeypair(keypair, true);
+const config: TransactionConfig = {
+  source: signer.publicKey(),
+  fee: "100",
+  timeout: 30,
+  signers: [signer],
+};
+console.log(config.source);
+signer.destroy();
+```
+
+The signer targets only its own G-address by default. Configure other targets
+explicitly, with the required on-chain authority and contract authorization
+encoding. The adapter borrows the keypair without extracting its secret;
+`destroy()` invalidates the signer but leaves the original Keypair usable.
+See [LocalSigner](signer/local-signer.md#from-a-stellar-sdk-keypair) for ownership,
+secret visibility and failure behavior.
+
 `extraSigners` writes Stellar's exact signer-key precondition into the
 transaction. Colibri later matches each key through `signer.signerKey()`. `T...`
 pre-authorized transaction keys are excluded because they cannot contain their

@@ -24,6 +24,7 @@ describe("bindings output", () => {
       assertEquals(result.written, [
         "generated/constants.ts",
         "generated/types.ts",
+        "generated/colibri.ts",
         "generated/index.ts",
       ]);
       assertEquals(

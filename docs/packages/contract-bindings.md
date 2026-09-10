@@ -59,7 +59,7 @@ source identity and RPC observations. In the programmatic API, passing
 
 `--output files` emits `constants.ts` (method names, spec, errors), `types.ts`
 (named inputs/outputs and mapped types), `index.ts` (the client and exports),
-and a formatted `README.md` for an existing project. Configure imports in that
+`colibri.ts` (Core conveniences), and a formatted `README.md` for an existing project. Configure imports in that
 project: both presets import only `@colibri/core`; Core supplies the Stellar SDK
 dependency and spec codec.
 
@@ -67,7 +67,7 @@ The generated `types.ts` is organized into labeled sections: methods and their
 inputs/outputs/maps, contract-declared types when present, events, and client
 configuration. Error maps use Core's `ContractErrorMap` type.
 
-`--output package --target jsr` places the three source files in `generated/`,
+`--output package --target jsr` places the four source files in `generated/`,
 with a `mod.ts` entrypoint and a `deno.json`. Run `deno task check` in the
 output directory. `--target npm` creates a `package.json`, TypeScript build
 configuration, `.npmrc`, and ESM exports. Run `npm install` and `npm run build`;
@@ -84,6 +84,47 @@ handwritten setup are preserved, including customized dependency versions. Place
 custom subclasses or assembly functions outside `generated/`. Writes are atomic
 per file; a disk failure can leave only part of a multi-file plan written.
 Resolve the failure and rerun.
+
+## Import Colibri conveniences
+
+Generated `colibri.ts` re-exports `NetworkConfig`, `LocalSigner`, `SorobanType`,
+`ColibriError`, and common signer, transaction and contract types. These are the
+original Core implementations. They are also available from the client
+entrypoint unless an ABI declaration uses the same name; ABI names take
+precedence. The dedicated module always exposes the conveniences.
+
+This fragment assumes file output for a class named `Token`:
+
+```ts
+import { Token } from "./index.ts";
+import { LocalSigner, NetworkConfig, type TransactionConfig } from "./colibri.ts";
+
+const signer = LocalSigner.generateRandom();
+const client = new Token({
+  networkConfig: NetworkConfig.TestNet(),
+  contractConfig: { contractId: "C..." },
+});
+const config: TransactionConfig = {
+  source: signer.publicKey(),
+  fee: "100",
+  timeout: 30,
+  signers: [signer],
+};
+```
+
+To use an existing native Stellar SDK Keypair, call
+`LocalSigner.fromKeypair(keypair)` and put the returned signer in `config.signers`.
+It targets only its own G-address by default. Other accounts or custom contract
+authorization require explicit targets and the appropriate authority/encoding.
+The factory borrows the keypair; destroying the adapter leaves the original key
+unchanged. Public-only keypairs are rejected. Transaction configuration still
+accepts Colibri signers, and existing callers need no changes.
+
+New package scaffolds expose the same module at `@example/token/colibri`.
+Regeneration preserves existing manifests, so add that subpath manually if
+upgrading an older package scaffold. Reexports do not remove Core's runtime
+dependency; generated packages declare it for consumers. Applications need a
+direct Stellar SDK dependency only when they import and use that SDK themselves.
 
 ## Understand the generated types
 

@@ -47,7 +47,7 @@ export async function runArtifacts(
       "@colibri/core",
       "@jsr/fifo__convee",
     ], consumer);
-    for (const file of ["smoke.ts", "extensions.ts"]) {
+    for (const file of ["smoke.ts", "extensions.ts", "keypair-signer.ts"]) {
       const fixture = await Deno.readTextFile(
         resolve(artifacts, "fixtures", file),
       );
@@ -88,6 +88,7 @@ if (!plan.files["index.ts"].includes("class PingClient extends Contract")) throw
       "smoke.ts",
       "extensions.ts",
       "bindings-smoke.ts",
+      "keypair-signer.ts",
       "--outDir",
       "out",
       "--module",
@@ -100,10 +101,11 @@ if (!plan.files["index.ts"].includes("class PingClient extends Contract")) throw
     await command("node", ["out/smoke.js"], consumer);
     await command("node", ["out/extensions.js"], consumer);
     await command("node", ["out/bindings-smoke.js"], consumer);
+    await command("node", ["out/keypair-signer.js"], consumer);
     if (browsers) {
       await Deno.writeTextFile(
         resolve(consumer, "browser-entry.ts"),
-        'import "./smoke.ts";\nimport "./extensions.ts";\nimport "./bindings-smoke.ts";\n(globalThis as unknown as { colibriPassed: boolean }).colibriPassed = true;\n',
+        'import "./smoke.ts";\nimport "./extensions.ts";\nimport "./bindings-smoke.ts";\nimport "./keypair-signer.ts";\n(globalThis as unknown as { colibriPassed: boolean }).colibriPassed = true;\n',
       );
       await command("npx", [
         "--no-install",

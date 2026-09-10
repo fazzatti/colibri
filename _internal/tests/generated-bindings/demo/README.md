@@ -11,6 +11,7 @@ a property with typed `.read()` and `.invoke()` calls.
 | [constants.ts](constants.ts) | Method names, embedded spec, and error messages. |
 | [types.ts](types.ts) | Sections for methods and their inputs/outputs/maps, contract types, events, and client configuration. |
 | [index.ts](index.ts) | Client class and exports for the generated API. |
+| [colibri.ts](colibri.ts) | Core configuration helpers and signer/transaction types. |
 
 ## Setup
 
@@ -27,14 +28,33 @@ Replace the deployment ID with your contract's address, and select its network.
 For npm builds, import the generated client from your package's built entrypoint.
 
 ```ts
-import { NetworkConfig } from "@colibri/core";
 import { Demo } from "./index.ts";
+import { NetworkConfig } from "./colibri.ts";
 
 const client = new Demo({
   networkConfig: NetworkConfig.TestNet(),
   contractConfig: { contractId: "C..." },
 });
 ```
+
+## Colibri conveniences
+
+The generated `colibri.ts` module re-exports `NetworkConfig`, `LocalSigner`,
+`SorobanType`, `ColibriError`, and common signer, contract and transaction types.
+The client entrypoint also re-exports them unless an ABI declaration has the
+same name. In that case, import the convenience directly from `colibri.ts`
+(or the published package's `/colibri` entrypoint). ABI names take precedence.
+These are the original Core exports, so constructor identity is preserved.
+Core remains a runtime dependency. Existing package manifests are preserved
+on regeneration; add the `/colibri` export manually when upgrading an older scaffold.
+
+Use `LocalSigner.fromKeypair(keypair)` to adapt an existing native Stellar SDK
+signing keypair, then pass that signer in `config.signers`. It targets only its
+own G-address by default; other accounts or custom contract authorization need
+explicit targets and the appropriate authority/encoding. Public-only keypairs
+are rejected. The factory borrows the keypair without extracting its secret;
+destroying the adapter leaves the original keypair unchanged. Transaction
+configuration and signing pipelines continue to accept Colibri signers.
 
 ## Read a result
 
@@ -81,7 +101,7 @@ Generated declarations use `SorobanType.U32`, `SorobanType.Symbol`, and other
 Soroban names. Method inputs use `SorobanType.Input` and accept ordinary values
 or validated wrappers; decoded outputs remain ordinary JavaScript values.
 
-Import `SorobanType` from `@colibri/core`. For example,
+Import `SorobanType` from the generated `colibri.ts` module. For example,
 `SorobanType.U32.from(7)` checks the integer range and
 `SorobanType.Symbol.from("ADMIN")` checks the symbol alphabet and length.
 Wrappers expose `.value`, `.toScVal()` and `.toXdr("base64")`.

@@ -88,6 +88,7 @@ export const property = (value: string): string =>
 /** @internal Direction-aware SDK types named after the ABI declarations. */
 export class TypeMap {
   readonly imports = new Set<string>();
+  readonly declared = new Set<string>();
   readonly names = new Map<string, string>();
   readonly aliases = new Map<xdr.ScSpecEntry, string>();
   readonly argsNames = new Map<string, string>();
@@ -152,6 +153,7 @@ export class TypeMap {
       );
     }
     this.claimed.add(name);
+    this.declared.add(name);
   }
   private imported(name: string): string {
     this.imports.add(name);

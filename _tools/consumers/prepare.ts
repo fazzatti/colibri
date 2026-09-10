@@ -160,6 +160,10 @@ export async function prepareArtifacts(
       artifacts.set(pkg.name, target);
     }
     await copyRuntime(fixtureRoot, resolve(destination, "fixtures"));
+    await Deno.copyFile(
+      resolve(import.meta.dirname!, "keypair-signer.ts"),
+      resolve(destination, "fixtures/keypair-signer.ts"),
+    );
     await writeJson(resolve(destination, "manifest.json"), {
       sdk,
       convee: config.imports.convee,
@@ -178,6 +182,7 @@ export async function prepareArtifacts(
       ),
       "fixtures/smoke.ts",
       "fixtures/extensions.ts",
+      "fixtures/keypair-signer.ts",
     ], source);
     console.log(`Prepared portable consumer artifacts in ${destination}`);
   } finally {

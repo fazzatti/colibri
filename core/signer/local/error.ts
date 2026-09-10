@@ -1,5 +1,6 @@
 import { SignerError } from "@/signer/error.ts";
 
+/** Stable codes for LocalSigner configuration, lifecycle and signing errors. */
 export enum Code {
   CANNOT_REMOVE_MASTER_TARGET = "SIG_LOC_001",
   SECRET_NOT_ACCESSIBLE = "SIG_LOC_002",
@@ -7,14 +8,21 @@ export enum Code {
   MESSAGE_SIGNER_DESTROYED = "SIG_LOC_004",
   MESSAGE_SIGNING_FAILED = "SIG_LOC_005",
   MESSAGE_VERIFICATION_FAILED = "SIG_LOC_006",
+  KEYPAIR_CANNOT_SIGN = "SIG_LOC_007",
+  KEYPAIR_ADAPTATION_FAILED = "SIG_LOC_008",
 }
+/** Metadata supported by LocalSigner errors. */
 export type MetaData = unknown;
 
+/** Base class for LocalSigner errors. */
 export abstract class LocalSignerError extends SignerError<Code, MetaData> {
+  /** Module that produced the error. */
   override readonly source = "@colibri/core/signer/local";
 }
 
+/** The signer's own account cannot be removed from its targets. */
 export class CANNOT_REMOVE_MASTER_TARGET extends LocalSignerError {
+  /** Creates the corresponding LocalSigner error without retaining key material. */
   constructor() {
     super({
       code: Code.CANNOT_REMOVE_MASTER_TARGET,
@@ -32,7 +40,9 @@ export class CANNOT_REMOVE_MASTER_TARGET extends LocalSignerError {
   }
 }
 
+/** Secret access was explicitly disabled for this signer. */
 export class SECRET_NOT_ACCESSIBLE extends LocalSignerError {
+  /** Creates the corresponding LocalSigner error without retaining key material. */
   constructor() {
     super({
       code: Code.SECRET_NOT_ACCESSIBLE,
@@ -49,7 +59,9 @@ export class SECRET_NOT_ACCESSIBLE extends LocalSignerError {
   }
 }
 
+/** Signing was attempted after the signer was destroyed. */
 export class SIGNER_DESTROYED extends LocalSignerError {
+  /** Creates the corresponding LocalSigner error without retaining key material. */
   constructor() {
     super({
       code: Code.SIGNER_DESTROYED,
@@ -108,6 +120,35 @@ export class MESSAGE_VERIFICATION_FAILED extends LocalSignerError {
   }
 }
 
+/** A public-only keypair cannot create a signing LocalSigner. */
+export class KEYPAIR_CANNOT_SIGN extends LocalSignerError {
+  /** Reports the missing signing capability without retaining the keypair. */
+  constructor() {
+    super({
+      code: Code.KEYPAIR_CANNOT_SIGN,
+      message: "The keypair does not contain a signing key",
+      details:
+        "Pass a native Stellar SDK keypair that can sign to LocalSigner.fromKeypair().",
+      data: null,
+    });
+  }
+}
+
+/** A native keypair could not be adapted to a LocalSigner. */
+export class KEYPAIR_ADAPTATION_FAILED extends LocalSignerError {
+  /** Retains the cause without copying the supplied keypair into metadata. */
+  constructor(cause: Error) {
+    super({
+      code: Code.KEYPAIR_ADAPTATION_FAILED,
+      message: "Failed to create a LocalSigner from the keypair",
+      details: "Provide a valid native Stellar SDK signing Keypair.",
+      cause,
+      data: null,
+    });
+  }
+}
+
+/** Error constructors indexed by their stable code. */
 export const ERROR_SIG_LOC = {
   ["SIG_LOC_001" as Code.CANNOT_REMOVE_MASTER_TARGET]:
     CANNOT_REMOVE_MASTER_TARGET,
@@ -117,4 +158,6 @@ export const ERROR_SIG_LOC = {
   ["SIG_LOC_005" as Code.MESSAGE_SIGNING_FAILED]: MESSAGE_SIGNING_FAILED,
   ["SIG_LOC_006" as Code.MESSAGE_VERIFICATION_FAILED]:
     MESSAGE_VERIFICATION_FAILED,
+  ["SIG_LOC_007" as Code.KEYPAIR_CANNOT_SIGN]: KEYPAIR_CANNOT_SIGN,
+  ["SIG_LOC_008" as Code.KEYPAIR_ADAPTATION_FAILED]: KEYPAIR_ADAPTATION_FAILED,
 };

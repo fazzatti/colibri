@@ -1,3 +1,4 @@
+import { renderConvenienceExports } from "@/generation/conveniences.ts";
 import { GENERATED_MARKER } from "@/generation/constants.ts";
 import {
   type MethodBinding,
@@ -8,6 +9,7 @@ import {
 export function renderClient(
   name: string,
   bindings: readonly MethodBinding[],
+  declarations: ReadonlySet<string>,
 ): string {
   return `${GENERATED_MARKER}
 /**
@@ -35,6 +37,7 @@ import type {
 
 export * from "./constants.ts";
 export * from "./types.ts";
+${renderConvenienceExports(declarations)}
 
 /** Simulate or invoke any function declared in the embedded contract spec. */
 export class ${name} extends Contract {

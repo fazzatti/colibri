@@ -32,6 +32,46 @@ async function deno(args: string[]): Promise<void> {
   );
 }
 describe("generated consumer boundary", () => {
+  it("keeps colliding ABI names and exposes original Core conveniences separately", async () => {
+    const directory = await Deno.makeTempDir();
+    try {
+      await writeBindings(
+        generateBindings(
+          new Spec([
+            struct("NetworkConfig", {}),
+            func("signer", {}),
+          ]),
+          { className: "LocalSigner" },
+        ),
+        { directory },
+      );
+      await Deno.writeTextFile(
+        `${directory}/consumer.ts`,
+        `
+import { LocalSigner as Client, NetworkConfig as AbiConfig, type SignerInput as AbiInput, SorobanType } from "./index.ts";
+import { NetworkConfig, LocalSigner, type Signer, type TransactionConfig } from "./colibri.ts";
+import * as Core from "@colibri/core";
+import { Keypair } from "stellar-sdk";
+import { assertStrictEquals } from "@std/assert";
+assertStrictEquals(NetworkConfig, Core.NetworkConfig);
+assertStrictEquals(LocalSigner, Core.LocalSigner);
+assertStrictEquals(SorobanType, Core.SorobanType);
+const input: AbiInput = {};
+const declared: AbiConfig = {};
+const native = Keypair.random();
+const signers: Signer[] = [LocalSigner.fromKeypair(native), LocalSigner.generateRandom()];
+const config: TransactionConfig = { source: native.publicKey() as TransactionConfig["source"], fee: "100", timeout: 30, signers };
+const client = new Client({ networkConfig: NetworkConfig.TestNet(), contractConfig: { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" } });
+function types() { return client.signer.invoke({ config }); }
+void [input, declared, types];
+`,
+      );
+      await deno(["check", "--config", rootConfig, `${directory}/consumer.ts`]);
+      await deno(["run", "--config", rootConfig, `${directory}/consumer.ts`]);
+    } finally {
+      await Deno.remove(directory, { recursive: true });
+    }
+  });
   it("type-checks real token, error and full native type fixtures", async () => {
     const directory = await Deno.makeTempDir();
     try {

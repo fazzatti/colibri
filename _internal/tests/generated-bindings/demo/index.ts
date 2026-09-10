@@ -23,6 +23,23 @@ import type {
 
 export * from "./constants.ts";
 export * from "./types.ts";
+export {
+  ColibriError,
+  LocalSigner,
+  NetworkConfig,
+  SorobanType,
+} from "./colibri.ts";
+export type {
+  AuthEntrySigner,
+  ContractConfig,
+  ContractConstructorArgs,
+  ContractId,
+  Ed25519PublicKey,
+  EnvelopeSigner,
+  KeypairSigner,
+  Signer,
+  TransactionConfig,
+} from "./colibri.ts";
 
 /** Simulate or invoke any function declared in the embedded contract spec. */
 export class Demo extends Contract {

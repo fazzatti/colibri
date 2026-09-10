@@ -27,8 +27,25 @@ export type TransactionConfig = {
   /** Native Stellar SDK memo, forwarded unchanged to the transaction builder. */
   memo?: Memo;
   /**
-   * Signers used to authorize transaction envelopes and Soroban authorization
-   * entries.
+   * Colibri signers used to authorize transaction envelopes and Soroban auth
+   * entries. Adapt a native Stellar SDK Keypair explicitly with
+   * LocalSigner.fromKeypair(keypair); raw keypairs are not accepted here.
+   *
+   * The resulting signer targets only its own G-address by default. Configure
+   * other targets explicitly, with the required on-chain authority and contract
+   * authorization encoding. The factory borrows the keypair without extracting
+   * its secret; destroying the signer leaves the caller-owned keypair unchanged.
+   *
+   * @example Adapt an application-provided Stellar SDK keypair.
+   * ```ts
+   * const signer = LocalSigner.fromKeypair(keypair, true);
+   * const config: TransactionConfig = {
+   *   source: signer.publicKey(),
+   *   fee: "100",
+   *   timeout: 30,
+   *   signers: [signer],
+   * };
+   * ```
    */
   signers: Signer[];
   /**

@@ -79,7 +79,7 @@ deno run --allow-read --allow-write jsr:@colibri/contract-bindings/cli \
 
 ## Files or packages
 
-- `--output files` produces `constants.ts`, `types.ts`, `index.ts`, and a
+- `--output files` produces `constants.ts`, `types.ts`, `index.ts`, `colibri.ts`, and a
   formatted `README.md` with setup instructions and examples from the spec.
   Configure the imports in your host project. Both presets import only
   `@colibri/core`, which supplies the Stellar SDK dependency and spec codec.
@@ -238,6 +238,47 @@ nonmatch. Registry `parse` rejects ambiguous matches; select a definition by
 name and occurrence in that case. `events.bindings` maps original names to safe
 properties when names collide with registry methods. No event declarations does
 not mean no events are emitted.
+
+## Import Colibri conveniences
+
+Generated `colibri.ts` re-exports `NetworkConfig`, `LocalSigner`, `SorobanType`,
+`ColibriError`, and common signer, transaction and contract types. These are the
+original Core implementations. They are also available from the client
+entrypoint unless an ABI declaration uses the same name; ABI names take
+precedence. The dedicated module always exposes the conveniences.
+
+This fragment assumes file output for a class named `Token`:
+
+```ts
+import { Token } from "./index.ts";
+import { LocalSigner, NetworkConfig, type TransactionConfig } from "./colibri.ts";
+
+const signer = LocalSigner.generateRandom();
+const client = new Token({
+  networkConfig: NetworkConfig.TestNet(),
+  contractConfig: { contractId: "C..." },
+});
+const config: TransactionConfig = {
+  source: signer.publicKey(),
+  fee: "100",
+  timeout: 30,
+  signers: [signer],
+};
+```
+
+To use an existing native Stellar SDK Keypair, call
+`LocalSigner.fromKeypair(keypair)` and put the returned signer in `config.signers`.
+It targets only its own G-address by default. Other accounts or custom contract
+authorization require explicit targets and the appropriate authority/encoding.
+The factory borrows the keypair; destroying the adapter leaves the original key
+unchanged. Public-only keypairs are rejected. Transaction configuration still
+accepts Colibri signers, and existing callers need no changes.
+
+New package scaffolds expose the same module at `@example/token/colibri`.
+Regeneration preserves existing manifests, so add that subpath manually if
+upgrading an older package scaffold. Reexports do not remove Core's runtime
+dependency; generated packages declare it for consumers. Applications need a
+direct Stellar SDK dependency only when they import and use that SDK themselves.
 
 ## Programmatic API
 

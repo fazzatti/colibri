@@ -235,6 +235,7 @@ describe("bindings rendering", () => {
       assertEquals(Object.keys(plan.files), [
         "generated/constants.ts",
         "generated/types.ts",
+        "generated/colibri.ts",
         "generated/index.ts",
       ]);
       assert(plan.scaffold["mod.ts"]);

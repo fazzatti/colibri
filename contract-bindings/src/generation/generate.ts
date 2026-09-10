@@ -1,3 +1,4 @@
+import { renderConveniences } from "@/generation/conveniences.ts";
 import { Spec } from "@colibri/core";
 import type { GenerateBindingsOptions, GeneratedBindings } from "@/types.ts";
 import { BindingError, Code } from "@/error.ts";
@@ -60,7 +61,12 @@ export function generateBindings(
           events,
           model.imports,
         ),
-        [`${prefix}index.ts`]: renderClient(className, bindings),
+        [`${prefix}colibri.ts`]: renderConveniences(),
+        [`${prefix}index.ts`]: renderClient(
+          className,
+          bindings,
+          model.declared,
+        ),
       },
       scaffold: packageScaffold(options, className, spec),
       warnings: [

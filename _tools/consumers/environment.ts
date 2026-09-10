@@ -188,5 +188,9 @@ export async function prepareSource(
   }
   await configureSource(source, inventory, sdk);
   await copyRuntime(fixtureRoot, resolve(source, "fixtures"));
+  await Deno.copyFile(
+    resolve(import.meta.dirname!, "keypair-signer.ts"),
+    resolve(source, "fixtures/keypair-signer.ts"),
+  );
   return inventory;
 }

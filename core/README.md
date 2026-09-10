@@ -20,6 +20,13 @@ public types and typed error model.
   <img src="https://jsr.io/badges/@colibri/core/total-downloads" alt="JSR total downloads for @colibri/core" />
 </a>
 
+Applications holding a native Stellar SDK Keypair can use
+`LocalSigner.fromKeypair(keypair)` and pass the returned signer through the
+existing transaction configuration. The factory borrows the keypair; destroying
+the signer leaves the original keypair unchanged. See the
+[LocalSigner API](https://jsr.io/@colibri/core/doc/~/LocalSigner)
+for targeting and lifecycle details.
+
 ## Installation
 
 Colibri Core is published on [JSR](https://jsr.io/@colibri/core) and ships

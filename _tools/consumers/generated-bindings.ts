@@ -61,8 +61,13 @@ await writeFile("generated-package/package.json", JSON.stringify(manifest, null,
     resolve(output, "smoke.mjs"),
     `
 import { PingClient, PingClientSpec, PingClientErrors, ContractMethods, Config, RbacStorage } from "./dist/mod.js";
-import { Contract, NetworkConfig, extractContractErrorMapFromSpec, SorobanType, SorobanValueError } from "@colibri/core";
+import { NetworkConfig, LocalSigner, SorobanType } from "@example/generated-ping/colibri";
+import { NetworkConfig as RootNetworkConfig } from "@example/generated-ping";
+import { Contract, NetworkConfig as CoreNetworkConfig, LocalSigner as CoreLocalSigner, extractContractErrorMapFromSpec, SorobanValueError } from "@colibri/core";
 import { strict as assert } from "node:assert";
+assert.equal(NetworkConfig, CoreNetworkConfig);
+assert.equal(NetworkConfig, RootNetworkConfig);
+assert.equal(LocalSigner, CoreLocalSigner);
 const client = new PingClient({ networkConfig: NetworkConfig.TestNet(), contractConfig: { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" } });
 assert(client instanceof Contract);
 assert.equal(PingClientSpec.getFunc("ping").name.toString(), "ping");
@@ -104,8 +109,15 @@ console.log("Generated npm package: ESM imports, declarations, custom factories,
     resolve(output, "consumer.ts"),
     `
 import { PingClient, ContractMethods, PingClientErrors, Config, RbacStorage, type PingClientInvocation, type PingClientInvocationResult } from "./dist/mod.js";
-import { SorobanType, type ContractErrorMap, type KnownContractErrorMap } from "@colibri/core";
+import { SorobanType, LocalSigner, type Signer, type TransactionConfig } from "@example/generated-ping/colibri";
+import type { ContractErrorMap, KnownContractErrorMap } from "@colibri/core";
+import { Keypair } from "@stellar/stellar-sdk";
 declare const client: PingClient;
+const native = Keypair.random();
+const signers: Signer[] = [LocalSigner.fromKeypair(native), LocalSigner.generateRandom()];
+const config: TransactionConfig = { source: native.publicKey() as TransactionConfig["source"], fee: "100", timeout: 30, signers };
+const nativeInvocation = client.ping.invoke({ config });
+void nativeInvocation;
 const literal: Promise<null> = client.read({ method: "ping" });
 const member: Promise<null> = client.read({ method: ContractMethods.Ping });
 const category: "PingError" = PingClientErrors[1].category;

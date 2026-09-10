@@ -61860,6 +61860,21 @@
         "kind": "function"
       }
     ],
+    "Keypair": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "NativeKeypair",
+            "value": {
+              "typeName": "NativeKeypair"
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
     "KeypairSigner": [
       {
         "declarationKind": "export",
@@ -64722,14 +64737,26 @@
               "params": [
                 {
                   "kind": "identifier",
-                  "name": "secret",
+                  "name": "source",
                   "optional": false,
                   "tsType": {
-                    "kind": "typeRef",
-                    "repr": "Ed25519SecretKey",
-                    "value": {
-                      "typeName": "Ed25519SecretKey"
-                    }
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "typeRef",
+                        "repr": "Ed25519SecretKey",
+                        "value": {
+                          "typeName": "Ed25519SecretKey"
+                        }
+                      },
+                      {
+                        "kind": "typeRef",
+                        "repr": "Keypair",
+                        "value": {
+                          "typeName": "Keypair"
+                        }
+                      }
+                    ]
                   }
                 },
                 {
@@ -64801,6 +64828,49 @@
               "isStatic": true,
               "kind": "method",
               "name": "fromSecret"
+            },
+            {
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "keypair",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "Keypair",
+                      "value": {
+                        "typeName": "Keypair"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "assign",
+                    "left": {
+                      "kind": "identifier",
+                      "name": "hideSecret",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "boolean",
+                        "value": "boolean"
+                      }
+                    },
+                    "right": "false"
+                  }
+                ],
+                "returnType": {
+                  "kind": "typeRef",
+                  "repr": "LocalSigner",
+                  "value": {
+                    "typeName": "LocalSigner"
+                  }
+                }
+              },
+              "isStatic": true,
+              "kind": "method",
+              "name": "fromKeypair"
             },
             {
               "functionDef": {
@@ -65399,6 +65469,20 @@
           ]
         },
         "kind": "class"
+      }
+    ],
+    "LocalSignerErrors": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "kind": "const",
+          "tsType": {
+            "kind": "typeQuery",
+            "repr": "E",
+            "value": "E"
+          }
+        },
+        "kind": "variable"
       }
     ],
     "MainNetConfig": [
@@ -124602,6 +124686,372 @@
               }
             ],
             "extends": "ParseClassicTransactionOutcomeError"
+          },
+          "kind": "class"
+        }
+      ]
+    },
+    "LocalSignerErrors::members": {
+      "CANNOT_REMOVE_MASTER_TARGET": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": []
+              }
+            ],
+            "extends": "LocalSignerError"
+          },
+          "kind": "class"
+        }
+      ],
+      "Code": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "members": [
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "SIG_LOC_001",
+                  "value": {
+                    "kind": "string",
+                    "string": "SIG_LOC_001"
+                  }
+                },
+                "name": "CANNOT_REMOVE_MASTER_TARGET"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "SIG_LOC_002",
+                  "value": {
+                    "kind": "string",
+                    "string": "SIG_LOC_002"
+                  }
+                },
+                "name": "SECRET_NOT_ACCESSIBLE"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "SIG_LOC_003",
+                  "value": {
+                    "kind": "string",
+                    "string": "SIG_LOC_003"
+                  }
+                },
+                "name": "SIGNER_DESTROYED"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "SIG_LOC_004",
+                  "value": {
+                    "kind": "string",
+                    "string": "SIG_LOC_004"
+                  }
+                },
+                "name": "MESSAGE_SIGNER_DESTROYED"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "SIG_LOC_005",
+                  "value": {
+                    "kind": "string",
+                    "string": "SIG_LOC_005"
+                  }
+                },
+                "name": "MESSAGE_SIGNING_FAILED"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "SIG_LOC_006",
+                  "value": {
+                    "kind": "string",
+                    "string": "SIG_LOC_006"
+                  }
+                },
+                "name": "MESSAGE_VERIFICATION_FAILED"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "SIG_LOC_007",
+                  "value": {
+                    "kind": "string",
+                    "string": "SIG_LOC_007"
+                  }
+                },
+                "name": "KEYPAIR_CANNOT_SIGN"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "SIG_LOC_008",
+                  "value": {
+                    "kind": "string",
+                    "string": "SIG_LOC_008"
+                  }
+                },
+                "name": "KEYPAIR_ADAPTATION_FAILED"
+              }
+            ]
+          },
+          "kind": "enum"
+        }
+      ],
+      "ERROR_SIG_LOC": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "kind": "const",
+            "tsType": {
+              "kind": "typeLiteral",
+              "value": {
+                "properties": [
+                  {
+                    "computed": true,
+                    "name": "[\"SIG_LOC_001\" as Code.CANNOT_REMOVE_MASTER_TARGET]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"SIG_LOC_002\" as Code.SECRET_NOT_ACCESSIBLE]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"SIG_LOC_003\" as Code.SIGNER_DESTROYED]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"SIG_LOC_004\" as Code.MESSAGE_SIGNER_DESTROYED]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"SIG_LOC_005\" as Code.MESSAGE_SIGNING_FAILED]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"SIG_LOC_006\" as Code.MESSAGE_VERIFICATION_FAILED]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"SIG_LOC_007\" as Code.KEYPAIR_CANNOT_SIGN]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"SIG_LOC_008\" as Code.KEYPAIR_ADAPTATION_FAILED]"
+                  }
+                ]
+              }
+            }
+          },
+          "kind": "variable"
+        }
+      ],
+      "KEYPAIR_ADAPTATION_FAILED": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "cause",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "Error",
+                      "value": {
+                        "typeName": "Error"
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "LocalSignerError"
+          },
+          "kind": "class"
+        }
+      ],
+      "KEYPAIR_CANNOT_SIGN": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": []
+              }
+            ],
+            "extends": "LocalSignerError"
+          },
+          "kind": "class"
+        }
+      ],
+      "LocalSignerError": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "extends": "SignerError",
+            "isAbstract": true,
+            "properties": [
+              {
+                "isOverride": true,
+                "name": "source",
+                "readonly": true,
+                "tsType": {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                }
+              }
+            ],
+            "superTypeParams": [
+              {
+                "kind": "typeRef",
+                "repr": "Code",
+                "value": {
+                  "typeName": "Code"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "MetaData",
+                "value": {
+                  "typeName": "MetaData"
+                }
+              }
+            ]
+          },
+          "kind": "class"
+        }
+      ],
+      "MESSAGE_SIGNER_DESTROYED": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": []
+              }
+            ],
+            "extends": "LocalSignerError"
+          },
+          "kind": "class"
+        }
+      ],
+      "MESSAGE_SIGNING_FAILED": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "cause",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "Error",
+                      "value": {
+                        "typeName": "Error"
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "LocalSignerError"
+          },
+          "kind": "class"
+        }
+      ],
+      "MESSAGE_VERIFICATION_FAILED": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "cause",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "Error",
+                      "value": {
+                        "typeName": "Error"
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "LocalSignerError"
+          },
+          "kind": "class"
+        }
+      ],
+      "MetaData": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "tsType": {
+              "kind": "keyword",
+              "repr": "unknown",
+              "value": "unknown"
+            }
+          },
+          "kind": "typeAlias"
+        }
+      ],
+      "SECRET_NOT_ACCESSIBLE": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": []
+              }
+            ],
+            "extends": "LocalSignerError"
+          },
+          "kind": "class"
+        }
+      ],
+      "SIGNER_DESTROYED": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": []
+              }
+            ],
+            "extends": "LocalSignerError"
           },
           "kind": "class"
         }
