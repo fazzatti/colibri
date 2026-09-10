@@ -1,3 +1,10 @@
+import type { ScValLike } from "@/common/types/external.ts";
+import {
+  decodeSorobanResult,
+  encodeSorobanArguments,
+  toContractScVal,
+} from "@/contract/encoding/index.ts";
+import { ContractEventRegistry } from "@/contract/events/index.ts";
 import {
   Address,
   Contract as StellarContract,
@@ -5,7 +12,7 @@ import {
   xdr,
 } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
-import type { Spec } from "stellar-sdk/contract";
+import type { Spec } from "@/contract/spec.ts";
 import {
   createInvokeContractPipeline,
   type InvokeContractPipeline,
@@ -41,7 +48,6 @@ import type {
   BinaryData,
   ExternalExecutableRef,
   LedgerKeyLike,
-  ScValLike,
   SorobanAuthorizationEntryLike,
 } from "@/common/types/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
@@ -53,10 +59,14 @@ import {
 } from "@/ledger-entries/index.ts";
 import type { ReadFromContractOutput } from "@/pipelines/read-from-contract/types.ts";
 import type {
+  ContractErrorMap,
   ContractErrorMatcherPluginConfig,
-  KnownContractErrorMap,
 } from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
-import type { ContractCodeLedgerEntry } from "@/ledger-entries/types.ts";
+import type {
+  BuildContractDataLedgerKeyArgs,
+  ContractCodeLedgerEntry,
+  ContractDataLedgerEntry,
+} from "@/ledger-entries/types.ts";
 import { decodeLedgerEntryForKey } from "@/ledger-entries/decode.ts";
 import type { ResolvedContractExecutable } from "@/ledger-entries/types.ts";
 import { extractContractMetadata } from "@/contract/metadata/extract-contract-metadata.ts";
@@ -79,6 +89,7 @@ import type {
 } from "@/contract/metadata/types.ts";
 
 export * from "@/contract/interface/index.ts";
+export * from "@/contract/events/index.ts";
 export * from "@/contract/metadata/index.ts";
 
 type PipelinePluginIdentity = {
@@ -116,6 +127,32 @@ export class Contract {
   /** @internal */
   protected externalRef?: ExternalExecutableRef;
   private loadedSnapshot?: LoadedContractSnapshot;
+  private eventRegistry?: ContractEventRegistry;
+  private eventSpec?: Spec;
+
+  /** Declared events from the loaded spec. Does not fetch; load a spec first. */
+  public get events(): ContractEventRegistry {
+    const spec = this.getSpec();
+    if (
+      !this.eventRegistry || this.eventSpec !== spec ||
+      this.eventRegistry.contractId !== this.contractId
+    ) {
+      this.eventRegistry = new ContractEventRegistry(spec, {
+        contractId: this.contractId,
+      });
+      this.eventSpec = spec;
+    }
+    return this.eventRegistry;
+  }
+
+  /** Loads the spec if necessary, then returns its declared event registry. */
+  public async loadContractEventsFromWasm(): Promise<ContractEventRegistry> {
+    if (!this.spec) {
+      if (this.wasm) await this.loadSpecFromWasm();
+      else await this.loadSpecFromNetwork();
+    }
+    return this.events;
+  }
 
   /**
    * Creates a contract client bound to the provided network and contract configuration.
@@ -258,7 +295,7 @@ export class Contract {
   /** @internal */
   private createContractErrorMatcherConfig(
     args: LoadContractErrorsFromWasmArgs,
-    errors: KnownContractErrorMap,
+    errors: ContractErrorMap,
   ): ContractErrorMatcherPluginConfig {
     if (args.strategy === "any") return errors;
 
@@ -375,6 +412,35 @@ export class Contract {
     return new StellarContract(this.getContractId()).getFootprint();
   }
 
+  /**
+   * Reads a contract-data ledger entry using this client's contract ID and RPC.
+   * No spec, simulation or signing is required. Durability defaults to persistent.
+   *
+   * @param args - Encoded ScVal key and optional persistent/temporary durability.
+   * @returns The existing ledger helper's decoded entry, raw XDR and ledger metadata.
+   * @throws When the contract has no ID, the entry is missing, or the ledger read fails.
+   * @example
+   * ```ts
+   * const entry = await contract.getLedgerEntry({
+   *   key: xdr.ScVal.scvSymbol("counter"),
+   *   durability: "persistent",
+   * });
+   * console.log(entry.value, entry.liveUntilLedgerSeq);
+   * ```
+   */
+  public async getLedgerEntry({
+    key,
+    durability,
+  }: Omit<BuildContractDataLedgerKeyArgs, "contractId">): Promise<
+    ContractDataLedgerEntry
+  > {
+    return await new LedgerEntries({ rpc: this.rpc }).contractData({
+      key,
+      durability,
+      contractId: this.getContractId(),
+    });
+  }
+
   /** @internal */
   public async getContractCodeLedgerEntry(): Promise<Api.LedgerEntryResult> {
     const { code } = await this.getNetworkContractCode();
@@ -465,7 +531,11 @@ export class Contract {
 
     try {
       const encodedArgs = constructorArgs
-        ? this.getSpec().funcArgsToScVals("__constructor", constructorArgs)
+        ? encodeSorobanArguments(
+          this.getSpec(),
+          "__constructor",
+          constructorArgs as object,
+        )
         : undefined;
 
       const common = {
@@ -566,7 +636,7 @@ export class Contract {
    */
   public async loadContractErrorsFromWasm(
     args: LoadContractErrorsFromWasmArgs,
-  ): Promise<KnownContractErrorMap> {
+  ): Promise<ContractErrorMap> {
     this.assertNoContractErrorMatcherPlugin();
 
     if (!this.spec) {
@@ -669,7 +739,7 @@ export class Contract {
     const contractId = this.getContractId();
 
     const encodedArgs = methodArgs
-      ? this.getSpec().funcArgsToScVals(method, methodArgs)
+      ? encodeSorobanArguments(this.getSpec(), method, methodArgs)
       : undefined;
 
     const operation = Operation.invokeContractFunction({
@@ -679,7 +749,7 @@ export class Contract {
     });
 
     const scValOutput = await this.readPipe.run({ operations: [operation] });
-    return this.getSpec().funcResToNative(method, scValOutput);
+    return decodeSorobanResult(this.getSpec(), method, scValOutput);
   }
 
   /**
@@ -708,7 +778,7 @@ export class Contract {
     const contractId = this.getContractId();
 
     const encodedArgs = methodArgs
-      ? this.getSpec().funcArgsToScVals(method, methodArgs)
+      ? encodeSorobanArguments(this.getSpec(), method, methodArgs)
       : undefined;
 
     const operation = Operation.invokeContractFunction({
@@ -719,6 +789,30 @@ export class Contract {
     });
 
     return await this.invokePipe.run({ config, operations: [operation] });
+  }
+
+  /**
+   * Adds the spec-decoded value to a successful invocation for typed subclasses.
+   * Decoding never resubmits the transaction. Failures retain the original result.
+   * @internal
+   */
+  protected decodeInvocationResult<Value>(
+    method: string,
+    result: InvokeContractOutput,
+  ): InvokeContractOutput & { value: Value | undefined } {
+    let value: Value | undefined;
+    try {
+      value = result.returnValue === undefined
+        ? undefined
+        : decodeSorobanResult(
+          this.getSpec(),
+          method,
+          result.returnValue,
+        ) as Value;
+    } catch (cause) {
+      throw new E.FAILED_TO_DECODE_INVOCATION_RESULT(method, result, cause);
+    }
+    return { ...result, value };
   }
 
   /**
@@ -753,6 +847,7 @@ export class Contract {
 
     const operation = Operation.invokeContractFunction({
       ...operationArgs,
+      args: operationArgs.args.map(toContractScVal),
       contract: contractId,
     });
 
@@ -782,7 +877,7 @@ export class Contract {
     const operation = Operation.invokeContractFunction({
       function: method,
       contract: contractId,
-      args: (methodArgs as xdr.ScVal[] | undefined) || [],
+      args: methodArgs?.map(toContractScVal) || [],
     });
 
     return await this.readPipe.run({ operations: [operation] });

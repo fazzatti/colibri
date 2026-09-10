@@ -20,6 +20,13 @@ public types and typed error model.
   <img src="https://jsr.io/badges/@colibri/core/total-downloads" alt="JSR total downloads for @colibri/core" />
 </a>
 
+Applications holding a native Stellar SDK Keypair can use
+`LocalSigner.fromKeypair(keypair)` and pass the returned signer through the
+existing transaction configuration. The factory borrows the keypair; destroying
+the signer leaves the original keypair unchanged. See the
+[LocalSigner API](https://jsr.io/@colibri/core/doc/~/LocalSigner)
+for targeting and lifecycle details.
+
 ## Installation
 
 Colibri Core is published on [JSR](https://jsr.io/@colibri/core) and ships
@@ -44,8 +51,25 @@ Deno, Node, and bundlers.
 
 ## What Core helps you build
 
-The package root exposes the complete supported API. This map gives each family
-a small introduction before the later sections explain how the pieces work.
+The package root exposes the complete supported API. Core 1.1 also supports
+`@colibri/core/errors` and `@colibri/core/strkey` for lightweight browser
+consumers. These subpaths export the same implementations as the root,
+preserving constructor identity and `instanceof`. They avoid the root's
+contract, RPC and parser initialization.
+
+```ts
+import { ColibriError } from "@colibri/core/errors";
+import { StrKey } from "@colibri/core/strkey";
+```
+
+The root also exports the native `Spec` constructor and `Result` type. Existing
+Stellar SDK specs work unchanged with Core APIs. Generated clients can import
+these through Core and declare only Core as a runtime dependency; the Stellar
+SDK remains a dependency of Core. See the
+[browser import guide](../docs/getting-started/browser-bundles.md).
+
+This map gives each family a small introduction before the later sections
+explain how the pieces work.
 
 | Area                          | What it provides                                                                                                                              | Typical use                                                                                    |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
@@ -850,7 +874,21 @@ constructor arguments when the contract spec declares them.
 Contract error metadata is opt-in: `loadContractErrorsFromWasm()` extracts the
 contract's error map and installs the matcher on both owned pipelines. This can
 turn a numeric simulation failure into a typed error with the contract's message
-without changing the on-chain result.
+without changing the on-chain result. Spec and WASM extraction preserve the
+original error case as `name` and declaring enum as `category`, alongside the
+message and optional documentation. Matched errors expose those fields in
+`error.meta.data.match`; existing manual maps may omit them.
+
+Use `ContractErrorMap` to type generated or handwritten error maps.
+`KnownContractErrorMap` remains a deprecated alias for existing imports.
+
+`contract.getLedgerEntry({ key, durability })` reads contract data directly from
+RPC, supplying the client's contract ID automatically. Pass an encoded ScVal
+key; durability is `"persistent"` by default or `"temporary"`. It returns the
+same parsed entry, raw XDR and ledger metadata as
+`LedgerEntries.contractData()`. No spec or transaction setup is required.
+Missing entries retain the ledger helper's not-found error. Generated contract
+clients inherit this method.
 
 Contract-standard inspection deliberately keeps declaration and structure
 separate. `getSepClaims()` parses SEP-47 declarations from SEP-46 metadata;
@@ -1290,3 +1328,42 @@ import { NetworkConfig, type TransactionConfig } from "jsr:@colibri/core";
 
 By centralizing validation and typing, these modules reduce duplicated logic
 across applications built on Colibri.
+
+## Spec-aware contract events
+
+`contract.events` exposes declarations from the loaded spec;
+`await contract.loadContractEventsFromWasm()` loads them from the configured
+source when needed. `extractContractEventsFromSpec` and
+`extractContractEventsFromWasm` also work independently. Registry definitions
+provide strict decoding and indexed filters; decoded `ContractEvent` objects
+retain ledger, transaction, and raw XDR metadata. Both decoding and filters
+accept G-, C-, and M-addresses for `MuxedAddress` fields; ordinary `Address`
+fields accept G- and C-addresses only. Missing declarations do not
+imply that a contract emits no events. See
+[the guide](../docs/core/contract/events.md) and the
+[bindings generator](../contract-bindings/README.md).
+
+## Soroban types and validated values
+
+`SorobanType` groups descriptive types and runtime codecs. For example,
+`SorobanType.U32` describes an ordinary number and `SorobanType.U32.from(7)`
+validates and wraps it. `SorobanType.Input.U32` accepts raw or validated inputs.
+Wrappers expose `.value`, `.toScVal()` and `.toXdr()` and snapshot mutable data.
+
+These parts have distinct roles: types describe accepted and decoded values,
+codecs validate and convert them, and value instances hold immutable snapshots.
+A codec can be reused for many values without a contract or network connection.
+
+Generated custom types use `SorobanType.Custom` schemas with struct or tuple
+fields, or enum variants with tagged/u32 encoding. Colibri derives the input
+shapes and variant boilerplate. Generated factories reuse the contract spec;
+numeric enums preserve their exact codes. Containers and recursive custom values
+compose without changing ordinary decoded outputs.
+
+Import `SorobanType` from `@colibri/core`, or use
+`import * as SorobanType from "@colibri/core/values"` for lightweight browser
+consumers. Direct namespace imports let Deno discard unused codecs. Use
+`.toScVal()` with native raw-call interfaces and direct Stellar SDK calls.
+Native Spec identity and existing pipelines remain unchanged. See
+[the complete type guide](../docs/core/contract/values.md) for schemas, units,
+errors, enum ordering, custom factories and wire values.

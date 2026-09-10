@@ -82,6 +82,13 @@ export const PACKAGE_ARCHITECTURES: readonly PackageArchitecture[] = [
     source: "../../../test-tooling/**/*.ts",
     allowedColibriDependencies: [],
   },
+  {
+    name: "@colibri/contract-bindings",
+    root: "contract-bindings",
+    config: `${CONFIG_DIRECTORY}/contract-bindings.json`,
+    source: "../../../contract-bindings/**/*.ts",
+    allowedColibriDependencies: ["@colibri/core"],
+  },
 ];
 
 export const assertRule = async (

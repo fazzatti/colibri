@@ -29,6 +29,12 @@ console.log(data.key);
 console.log(data.value);
 ```
 
+When you already have a `Contract` client, use
+`contract.getLedgerEntry({ key, durability })` to supply its contract ID and RPC
+automatically. It returns the same contract-data entry and keeps the helper's
+persistent default and missing-entry error. Generated clients inherit it too.
+See the [complete contract example](../contract/invocation.md#getledgerentry).
+
 ## Contract Code Lookup
 
 `contractCode(...)` supports two lookup styles:

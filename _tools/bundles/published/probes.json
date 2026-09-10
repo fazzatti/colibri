@@ -1,0 +1,7 @@
+{
+  "empty-colibri-import": "import \"@colibri/core\";\nexport const value = 1;\n",
+  "colibri-error-root": "export { ColibriError } from \"@colibri/core\";\n",
+  "strkey-root": "export { StrKey } from \"@colibri/core\";\n",
+  "colibri-error-leaf": "export { ColibriError } from \"https://jsr.io/@colibri/core/1.0.0/error/index.ts\";\n",
+  "strkey-leaf": "export { StrKey } from \"https://jsr.io/@colibri/core/1.0.0/strkeys/index.ts\";\n"
+}

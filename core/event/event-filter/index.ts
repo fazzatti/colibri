@@ -1,7 +1,7 @@
 import type { EventType } from "@/event/types.ts";
 import type {
-  TopicFilter,
   EventFilterConstructorArgs,
+  TopicFilter,
 } from "@/event/event-filter/types.ts";
 import type { BoundedArray } from "@/common/helpers/bounded-array.ts";
 import type { RpcEventFilterLike, ScValLike } from "@/common/types/index.ts";
@@ -107,6 +107,7 @@ const eventTopicsMatchFilterTopic = (
   topicFilter: TopicFilter,
   eventTopics: ScValLike[],
 ): boolean => {
+  if (eventTopics.length === 0 && topicFilter[0] === "**") return true;
   assert(eventTopics.length > 0, new E.EVENT_HAS_NO_TOPICS());
 
   for (let i = 0; i < eventTopics.length; i++) {
@@ -120,8 +121,9 @@ const eventTopicsMatchFilterTopic = (
 
     try {
       // Checks for the exact segment value
-      if (filterSegment.toXdr("base64") === eventSegment.toXdr("base64"))
+      if (filterSegment.toXdr("base64") === eventSegment.toXdr("base64")) {
         continue; // Matched this segment, continue to next
+      }
     } catch (e) {
       throw new E.FAILED_TO_CHECK_FILTER_SEGMENT(
         filterSegment,
@@ -133,5 +135,6 @@ const eventTopicsMatchFilterTopic = (
   }
 
   // All event segments matched, check if filter has remaining non-wildcard segments
-  return topicFilter.length <= eventTopics.length;
+  return topicFilter.length <= eventTopics.length ||
+    topicFilter[eventTopics.length] === "**";
 };

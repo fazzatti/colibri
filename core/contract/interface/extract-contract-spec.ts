@@ -1,5 +1,5 @@
 import type { xdr } from "stellar-sdk";
-import { Spec } from "stellar-sdk/contract";
+import { Spec } from "@/contract/spec.ts";
 import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 import { processSpecEntryStream } from "@/common/helpers/wasm.ts";
 import type { BinaryData } from "@/common/types/index.ts";

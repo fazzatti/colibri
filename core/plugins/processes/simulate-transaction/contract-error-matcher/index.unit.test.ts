@@ -23,9 +23,11 @@ import {
   CONTRACT_ERROR_MATCHER_PLUGIN_ID,
   CONTRACT_ERROR_MATCHER_PLUGIN_TARGET,
   createContractErrorMatcherPlugin,
+  extractContractErrorMapFromSpec,
 } from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
 import * as PLUGIN_ERRORS from "@/plugins/processes/simulate-transaction/contract-error-matcher/error.ts";
 import type { ContractId } from "@/strkeys/types.ts";
+import { ERRORS_CONTRACT_SPEC } from "colibri-internal/tests/specs/errors-contract.ts";
 
 const ROOT_CONTRACT_ID = Address.contract(Buffer.alloc(32, 1))
   .toString() as ContractId;
@@ -111,6 +113,33 @@ const createFailingSimulationPipe = (error: Error) =>
   ], { id: "ContractErrorMatcherPluginTestPipe" as const });
 
 describe("createContractErrorMatcherPlugin", () => {
+  it("surfaces extracted spec metadata through every matching strategy", async () => {
+    const errors = extractContractErrorMapFromSpec(ERRORS_CONTRACT_SPEC);
+    const matchers = [
+      { strategy: "any", errors },
+      { strategy: "contract-id", contractId: ROOT_CONTRACT_ID, errors },
+      { strategy: "issued-from", issuedFrom: "root-invocation", errors },
+    ] as const;
+    for (const matcher of matchers) {
+      const original = createContractSimulationError([
+        createStackItem({ code: 265 }),
+      ]);
+      const result = await createContractErrorMatcherPlugin([matcher]).error(
+        original,
+        [createInput()],
+      );
+      assert(
+        result instanceof PLUGIN_ERRORS.KNOWN_CONTRACT_ERROR_SIMULATION_FAILED,
+      );
+      assertEquals(result.meta.data.match.name, "TwoHundredSixtyFive");
+      assertEquals(result.meta.data.match.category, "Error");
+      assertEquals(result.meta.data.match.strategy, matcher.strategy);
+      assertEquals(
+        JSON.parse(JSON.stringify(result.meta.data)).match.category,
+        "Error",
+      );
+    }
+  });
   it("targets the simulate-transaction step with a stable plugin id", () => {
     const plugin = createContractErrorMatcherPlugin({
       265: { message: "Known token error" },
@@ -130,6 +159,8 @@ describe("createContractErrorMatcherPlugin", () => {
     testPipe.use(
       createContractErrorMatcherPlugin({
         265: {
+          name: "Unauthorized",
+          category: "AccessControlError",
           message: "Known token error",
           details: "The known token error details from the contract spec.",
         },
@@ -149,6 +180,8 @@ describe("createContractErrorMatcherPlugin", () => {
     assertEquals(error.meta.cause, originalError);
     assertEquals(error.meta.data.match.code, 265);
     assertEquals(error.meta.data.match.message, "Known token error");
+    assertEquals(error.meta.data.match.name, "Unauthorized");
+    assertEquals(error.meta.data.match.category, "AccessControlError");
     assertEquals(
       error.meta.data.match.details,
       "The known token error details from the contract spec.",
@@ -216,6 +249,8 @@ describe("createContractErrorMatcherPlugin", () => {
     assertEquals(error.meta.cause, originalError);
     assertEquals(error.meta.data.match.code, 265);
     assertEquals(error.meta.data.match.message, "Surfaced rethrow error");
+    assertEquals(error.meta.data.match.name, undefined);
+    assertEquals(error.meta.data.match.category, undefined);
     assertEquals(error.meta.data.match.details, undefined);
     assertEquals(error.meta.data.match.contractId, ROOT_CONTRACT_ID);
     assertEquals(error.meta.data.match.issuedFrom, "root-invocation");

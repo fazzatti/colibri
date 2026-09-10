@@ -14,6 +14,27 @@ Colibri use case that applies the same algorithm to contract ID bytes.[^contract
 Everything is generated locally. There is no account lookup, network request,
 Canvas, or DOM dependency. PNG output is a `Uint8Array`, not a Node `Buffer`.
 
+## SVG-only rendering
+
+For browser applications that only render SVG, use the supported subpath:
+
+```ts
+import { identiconSvg } from "@colibri/identicon/svg";
+
+const svg = identiconSvg(
+  "GALAXYVOIDAOPZTDLHILAJQKCVVFMD4IKLXLSZV5YHO7VY74IWZILUTO",
+  { size: 224, padding: 14 },
+);
+```
+
+This produces exactly the same markup and validation errors as
+`new Identicon(address).toSvg(options)`, using the shared renderer without PNG
+encoding dependencies. `identiconSvg` is also exported from the package root for
+convenience. Use the `/svg` subpath when excluding all PNG module initialization
+matters. The existing class retains its SVG, synchronous PNG and data URL
+methods. The new API requires Identicon 1.1 and Core 1.1; its errors share
+Core's `ColibriError` constructor across root and granular imports.
+
 ## Installation
 
 ```sh

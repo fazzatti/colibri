@@ -74,9 +74,17 @@ export async function packageStates(
   return await Promise.all(inventory.map(async (pkg) => {
     const path = `${pkg.root}/deno.json`;
     const current = JSON.parse(await Deno.readTextFile(resolve(root, path)));
-    const previous = JSON.parse(
-      await git(root, "show", `${plan.base}:${path}`),
+    const tracked = await git(
+      root,
+      "ls-tree",
+      "--name-only",
+      plan.base,
+      "--",
+      path,
     );
+    const previous = tracked
+      ? JSON.parse(await git(root, "show", `${plan.base}:${path}`))
+      : { version: null };
     const used = await runtimeImports(resolve(root, pkg.root));
     const aliases = new Set([
       ...Object.keys(currentRoot.imports),

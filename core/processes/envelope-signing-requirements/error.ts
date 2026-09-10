@@ -69,7 +69,8 @@ export class INVALID_TRANSACTION_TYPE extends EnvelopeSigningRequirementsError {
 /**
  * Raised when fee-bump signing requirements cannot be processed.
  */
-export class FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX extends EnvelopeSigningRequirementsError {
+export class FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX
+  extends EnvelopeSigningRequirementsError {
   /**
    * Creates a fee-bump requirements processing error.
    *
@@ -92,7 +93,8 @@ export class FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX extends EnvelopeSign
 /**
  * Raised when standard transaction signing requirements cannot be processed.
  */
-export class FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION extends EnvelopeSigningRequirementsError {
+export class FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION
+  extends EnvelopeSigningRequirementsError {
   /**
    * Creates a transaction requirements processing error.
    *
@@ -115,10 +117,10 @@ export class FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION extends EnvelopeSign
  * Envelope-signing-requirements error constructors indexed by stable code.
  */
 export const ERROR_BY_CODE = {
-  [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
-  [Code.INVALID_TRANSACTION_TYPE]: INVALID_TRANSACTION_TYPE,
-  [Code.FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX]:
+  ["ESR_000" as Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
+  ["ESR_001" as Code.INVALID_TRANSACTION_TYPE]: INVALID_TRANSACTION_TYPE,
+  ["ESR_002" as Code.FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX]:
     FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX,
-  [Code.FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION]:
+  ["ESR_003" as Code.FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION]:
     FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION,
 };

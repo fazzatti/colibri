@@ -66,7 +66,8 @@ export class EVENT_INDEX_OUT_OF_RANGE extends EventIDError {
     super({
       code: Code.EVENT_INDEX_OUT_OF_RANGE,
       message: "Event index out of range",
-      details: `The provided event index ${eventIndex} is out of the valid range  (1-9,999,999,999).`,
+      details:
+        `The provided event index ${eventIndex} is out of the valid range  (1-9,999,999,999).`,
       data: { eventIndex },
     });
   }
@@ -83,7 +84,8 @@ export class INVALID_EVENT_ID_FORMAT extends EventIDError {
     super({
       code: Code.INVALID_EVENT_ID_FORMAT,
       message: "Invalid Event ID format",
-      details: `The provided Event ID ${eventId} does not match the expected format.`,
+      details:
+        `The provided Event ID ${eventId} does not match the expected format.`,
       data: { eventId },
     });
   }
@@ -91,6 +93,6 @@ export class INVALID_EVENT_ID_FORMAT extends EventIDError {
 
 /** Event-id error constructors indexed by stable code. */
 export const ERROR_EVI = {
-  [Code.EVENT_INDEX_OUT_OF_RANGE]: EVENT_INDEX_OUT_OF_RANGE,
-  [Code.INVALID_EVENT_ID_FORMAT]: INVALID_EVENT_ID_FORMAT,
+  ["EVI_001" as Code.EVENT_INDEX_OUT_OF_RANGE]: EVENT_INDEX_OUT_OF_RANGE,
+  ["EVI_002" as Code.INVALID_EVENT_ID_FORMAT]: INVALID_EVENT_ID_FORMAT,
 };

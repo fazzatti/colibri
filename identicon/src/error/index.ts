@@ -1,4 +1,4 @@
-import { ColibriError } from "@colibri/core";
+import { ColibriError } from "@colibri/core/errors";
 
 /** Stable, occurrence-specific identicon failure codes. */
 export enum IdenticonCode {

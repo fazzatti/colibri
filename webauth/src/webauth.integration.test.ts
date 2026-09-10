@@ -98,10 +98,13 @@ describe(
   "WebAuth Quickstart lifecycle",
   disableSanitizeConfig,
   () => {
+    const diagnostics =
+      Deno.env.get("COLIBRI_TEST_QUICKSTART_DIAGNOSTICS") === "1";
     const ledger = new StellarTestLedger({
       containerName: "colibri-webauth-integration",
       containerImageVersion: "nightly-next",
-      logLevel: "silent",
+      logLevel: diagnostics ? "debug" : "silent",
+      emitContainerLogs: diagnostics,
     });
     const admin = NativeAccount.fromMasterSigner(
       LocalSigner.generateRandom(),
@@ -119,7 +122,17 @@ describe(
     let client: WebAuthClient;
 
     beforeAll(async () => {
-      await ledger.start();
+      const container = await ledger.start();
+      if (diagnostics) {
+        const info = await container.inspect();
+        // The nightly tag is mutable; record the image actually used by this run.
+        console.info("WebAuth Quickstart image", {
+          containerId: info.Id,
+          imageId: info.Image,
+          image: info.Config.Image,
+          platform: info.Platform,
+        });
+      }
       const details = await ledger.getNetworkDetails();
       network = NetworkConfig.CustomNet(details);
       rpcServer = new rpc.Server(details.rpcUrl, { allowHttp: true });

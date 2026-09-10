@@ -1,3 +1,4 @@
+import type { SorobanScValInput } from "@/soroban-types/values/value.ts";
 import type { xdr } from "stellar-sdk";
 import type {
   BinaryData,
@@ -111,7 +112,7 @@ export type BuildLiquidityPoolLedgerKeyArgs = {
  */
 export type BuildContractDataLedgerKeyArgs = {
   contractId: ContractId;
-  key: ScValLike;
+  key: SorobanScValInput;
   durability?: ContractDataDurabilityName;
 };
 

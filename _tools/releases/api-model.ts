@@ -6,13 +6,24 @@ export type ApiSnapshot = Record<string, Record<string, Json>>;
 const incidental = new Set(["location", "jsDoc", "resolution", "module_doc"]);
 
 /** Keep signatures, generic parameters, literals, visibility, and overload order. */
-export function normalizeDeclaration(value: Json): Json {
-  if (Array.isArray(value)) return value.map(normalizeDeclaration);
+export function normalizeDeclaration(value: Json, rootUrl?: string): Json {
+  if (Array.isArray(value)) {
+    return value.map((entry) => normalizeDeclaration(entry, rootUrl));
+  }
   if (value === null || typeof value !== "object") return value;
   return Object.fromEntries(
     Object.keys(value).sort().filter((key) => !incidental.has(key)).map((
       key,
-    ) => [key, normalizeDeclaration(value[key])]),
+    ) => {
+      const entry = value[key];
+      // Namespace re-exports contain reference targets as well as locations.
+      // Retain each target and offset, but make its checkout URL portable.
+      if (
+        key === "filename" && typeof entry === "string" && rootUrl &&
+        entry.startsWith(rootUrl)
+      ) return [key, entry.slice(rootUrl.length)];
+      return [key, normalizeDeclaration(entry, rootUrl)];
+    }),
   );
 }
 

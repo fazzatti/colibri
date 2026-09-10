@@ -1,4 +1,8 @@
-import { authorizeEntry, Keypair, type xdr } from "stellar-sdk";
+import {
+  authorizeEntry,
+  Keypair as NativeKeypair,
+  type xdr,
+} from "stellar-sdk";
 import type {
   BinaryData,
   SignableTransaction,
@@ -16,15 +20,19 @@ import { assert } from "@/common/assert/assert.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
 import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 
+/** @internal Exact native SDK type, retained for JSR declaration generation. */
+export type Keypair = NativeKeypair;
+
 /**
  * LocalSigner
  *
  * A signer that holds an Ed25519 keypair **only inside a constructor-scoped closure**.
- * No secret material is stored on `this`. The public key is accessible; the secret never is.
+ * No secret material is stored on `this`. Secret access is controlled by `hideSecret`.
  *
  * Security notes:
  * - The secret `Keypair` instance is captured by arrow functions assigned in the constructor.
- * - `destroy()` best-effort zeroizes internal buffers (`_secretSeed`, `_secretKey`) and nulls the handle.
+ * - `destroy()` best-effort zeroizes owned keys and nulls the handle. Borrowed
+ *   keypairs from `fromKeypair()` remain under caller ownership.
  * - Also implements `[Symbol.dispose]()` so you can use TS 5.2 `using` to auto-clean on scope exit.
  */
 export class LocalSigner implements LocalSignerType {
@@ -113,22 +121,26 @@ export class LocalSigner implements LocalSignerType {
   verifySignature: (data: BinaryData, signature: BinaryData) => boolean;
 
   /**
-   * Best-effort zeroization and invalidation of the internal keypair handle.
+   * Invalidates this signer. Best-effort zeroizes owned keypairs; borrowed
+   * keypairs supplied to `fromKeypair()` are not modified.
    * Safe to call multiple times (idempotent).
    */
   destroy: () => void;
 
   /**
-   * Creates a `LocalSigner` by decoding an Ed25519 secret seed.
-   * @param secret Ed25519 secret seed (S... decoded to bytes in your caller types)
+   * Creates a `LocalSigner` from an owned secret seed or a borrowed keypair.
+   * @param source Ed25519 secret seed or caller-owned native SDK keypair.
    *
    * Implementation detail:
    * - `kp` (the secret keypair) exists **only** in this closure.
    * - Methods below close over `kp`; no secret is placed on `this`.
    */
-  private constructor(secret: Ed25519SecretKey, hideSecret = false) {
-    // Secret lives ONLY in this local, closed over by methods.
-    let kp: Keypair | null = Keypair.fromSecret(secret);
+  private constructor(source: Ed25519SecretKey | Keypair, hideSecret = false) {
+    const ownsKeypair = typeof source === "string";
+    // The keypair lives only in this closure; borrowed keys retain caller ownership.
+    let kp: Keypair | null = typeof source === "string"
+      ? NativeKeypair.fromSecret(source)
+      : source;
 
     // Public methods close over `kp` to access secret material as needed.
     this.secretKey = hideSecret
@@ -164,13 +176,13 @@ export class LocalSigner implements LocalSignerType {
       data: BinaryData,
       signature: BinaryData,
     ): boolean => {
-      const keypair = Keypair.fromPublicKey(this.publicKey());
+      const keypair = NativeKeypair.fromPublicKey(this.publicKey());
       return keypair.verify(toUint8Array(data), toUint8Array(signature));
     };
 
     this.verifyMessage = (message, signature): boolean => {
       try {
-        return Keypair.fromPublicKey(this.publicKey()).verifyMessage(
+        return NativeKeypair.fromPublicKey(this.publicKey()).verifyMessage(
           message,
           signature,
         );
@@ -205,11 +217,14 @@ export class LocalSigner implements LocalSignerType {
 
     this.destroy = () => {
       if (!isDefined(kp)) return; // already destroyed
-      // Best-effort zeroization of internal buffers used by stellar-base Keypair.
-      const seed = (kp as unknown as { _secretSeed?: Uint8Array })._secretSeed;
-      if (seed?.fill) seed.fill(0);
-      const sk = (kp as unknown as { _secretKey?: Uint8Array })._secretKey;
-      if (sk?.fill) sk.fill(0);
+      if (ownsKeypair) {
+        // Best-effort zeroization applies only to keys created by this signer.
+        const seed =
+          (kp as unknown as { _secretSeed?: Uint8Array })._secretSeed;
+        if (seed?.fill) seed.fill(0);
+        const sk = (kp as unknown as { _secretKey?: Uint8Array })._secretKey;
+        if (sk?.fill) sk.fill(0);
+      }
       kp = null; // drop reference so GC can reclaim
     };
   }
@@ -223,12 +238,53 @@ export class LocalSigner implements LocalSignerType {
   }
 
   /**
+   * Adapts a native Stellar SDK signing keypair to the existing LocalSigner API.
+   * This is an explicit convenience: TransactionConfig.signers still accepts
+   * Colibri signers, so pass the returned signer rather than the raw keypair.
+   *
+   * Borrows the keypair without extracting or copying its secret. The default
+   * target is only keypair.publicKey(); use addTarget() deliberately for other
+   * addresses with the required on-chain authority and authorization encoding.
+   * Existing target selection and signing processes remain unchanged.
+   *
+   * destroy() and Symbol.dispose invalidate this signer without modifying the
+   * caller-owned keypair. The caller remains responsible for that key's lifecycle.
+   * hideSecret controls this signer's secretKey() method only; it does not hide
+   * the original keypair. As with fromSecret(), it defaults to false.
+   *
+   * @param keypair - Native SDK keypair containing a signing key.
+   * @param hideSecret - Prevent secret access through the returned signer.
+   * @returns A LocalSigner using the supplied keypair.
+   * @throws {E.KEYPAIR_CANNOT_SIGN} If the keypair is public-only.
+   * @throws {E.KEYPAIR_ADAPTATION_FAILED} If the native keypair cannot be adapted.
+   * @example Adapt an application-provided Stellar SDK keypair.
+   * ```ts
+   * const signer = LocalSigner.fromKeypair(keypair, true);
+   * const config: TransactionConfig = {
+   *   source: signer.publicKey(),
+   *   fee: "100",
+   *   timeout: 30,
+   *   signers: [signer],
+   * };
+   * ```
+   */
+  static fromKeypair(keypair: Keypair, hideSecret = false): LocalSigner {
+    try {
+      assert(keypair.canSign(), new E.KEYPAIR_CANNOT_SIGN());
+      return new LocalSigner(keypair, hideSecret);
+    } catch (cause) {
+      if (cause instanceof E.LocalSignerError) throw cause;
+      throw new E.KEYPAIR_ADAPTATION_FAILED(cause as Error);
+    }
+  }
+
+  /**
    * Factory: build a LocalSigner with a newly generated random key.
    * Use for throwaway/testing flows; persist the seed externally if needed.
    */
   static generateRandom(hideSecret = false): LocalSigner {
     return new LocalSigner(
-      Keypair.random().secret() as Ed25519SecretKey,
+      NativeKeypair.random().secret() as Ed25519SecretKey,
       hideSecret,
     );
   }
@@ -283,3 +339,6 @@ export class LocalSigner implements LocalSignerType {
     this.destroy();
   }
 }
+
+/** Error constructors emitted by LocalSigner, including Keypair adaptation failures. */
+export const LocalSignerErrors: typeof E = E;

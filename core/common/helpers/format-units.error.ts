@@ -152,7 +152,8 @@ export class TOO_MANY_FRACTION_DIGITS extends FormatUnitsError {
   constructor(value: unknown, decimals: number, fractionalDigits: number) {
     super({
       code: Code.TOO_MANY_FRACTION_DIGITS,
-      message: `Too many fractional digits: got ${fractionalDigits}, max is ${decimals}`,
+      message:
+        `Too many fractional digits: got ${fractionalDigits}, max is ${decimals}`,
       data: { value, decimals, fractionalDigits },
       details:
         "The input has more fractional digits than the asset supports. Pass excessFraction='truncate' to drop extra digits, or reduce precision.",
@@ -232,7 +233,8 @@ export class INVALID_MAX_FRACTION_DIGITS extends FormatUnitsError {
   constructor(maxFractionDigits: number) {
     super({
       code: Code.INVALID_MAX_FRACTION_DIGITS,
-      message: `maxFractionDigits must be a non-negative integer; got ${maxFractionDigits}`,
+      message:
+        `maxFractionDigits must be a non-negative integer; got ${maxFractionDigits}`,
       data: { maxFractionDigits },
       details:
         "maxFractionDigits controls how many fractional digits are kept when formatting. It must be an integer >= 0.",
@@ -244,12 +246,15 @@ export class INVALID_MAX_FRACTION_DIGITS extends FormatUnitsError {
  * Format-units helper errors indexed by stable code.
  */
 export const ERROR_HLP_UNT = {
-  [Code.INVALID_DECIMALS]: INVALID_DECIMALS,
-  [Code.EMPTY_VALUE]: EMPTY_VALUE,
-  [Code.INVALID_DECIMAL_INPUT]: INVALID_DECIMAL_INPUT,
-  [Code.TOO_MANY_FRACTION_DIGITS]: TOO_MANY_FRACTION_DIGITS,
-  [Code.NON_FINITE_NUMBER]: NON_FINITE_NUMBER,
-  [Code.INVALID_SCIENTIFIC_NOTATION]: INVALID_SCIENTIFIC_NOTATION,
-  [Code.INVALID_SCIENTIFIC_EXPONENT]: INVALID_SCIENTIFIC_EXPONENT,
-  [Code.INVALID_MAX_FRACTION_DIGITS]: INVALID_MAX_FRACTION_DIGITS,
+  ["HLP_UNT_01" as Code.INVALID_DECIMALS]: INVALID_DECIMALS,
+  ["HLP_UNT_02" as Code.EMPTY_VALUE]: EMPTY_VALUE,
+  ["HLP_UNT_03" as Code.INVALID_DECIMAL_INPUT]: INVALID_DECIMAL_INPUT,
+  ["HLP_UNT_04" as Code.TOO_MANY_FRACTION_DIGITS]: TOO_MANY_FRACTION_DIGITS,
+  ["HLP_UNT_05" as Code.NON_FINITE_NUMBER]: NON_FINITE_NUMBER,
+  ["HLP_UNT_06" as Code.INVALID_SCIENTIFIC_NOTATION]:
+    INVALID_SCIENTIFIC_NOTATION,
+  ["HLP_UNT_07" as Code.INVALID_SCIENTIFIC_EXPONENT]:
+    INVALID_SCIENTIFIC_EXPONENT,
+  ["HLP_UNT_08" as Code.INVALID_MAX_FRACTION_DIGITS]:
+    INVALID_MAX_FRACTION_DIGITS,
 };

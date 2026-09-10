@@ -1,38 +1,20 @@
 /** Build portable pre-publication npm test artifacts once per SDK selection. */
 import { build } from "jsr:@deno/dnt@0.43.2";
-import { compare, parse } from "jsr:@std/semver@1.0.5";
+import { resolveSdk } from "./sdk.ts";
+export { resolveSdk } from "./sdk.ts";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { accepts } from "../releases/model.ts";
 import { colibriDependencies, runtimeImports } from "../releases/repository.ts";
 import {
   command,
   copyRuntime,
+  denoOnlyEntrypoints,
   dockerPackages,
   fixtureRoot,
   prepareSource,
   root,
   writeJson,
 } from "./environment.ts";
-
-export async function resolveSdk(selection: string): Promise<string> {
-  const result = await new Deno.Command("npm", {
-    args: ["view", `@stellar/stellar-sdk@${selection}`, "version", "--json"],
-  }).output();
-  if (!result.success) {
-    throw new Error(
-      `CONSUMER_SDK_LOOKUP: ${new TextDecoder().decode(result.stderr)}`,
-    );
-  }
-  const data = JSON.parse(new TextDecoder().decode(result.stdout));
-  const versions: string[] = typeof data === "string" ? [data] : data;
-  const sdk = versions.sort((a, b) => compare(parse(a), parse(b))).at(-1)!;
-  if (!accepts(sdk, ">=17.0.1 <18")) {
-    throw new Error(`CONSUMER_SDK_UNSUPPORTED: ${sdk}`);
-  }
-  console.log(`Selected native Stellar SDK ${sdk} from ${selection}`);
-  return sdk;
-}
 
 export async function prepareArtifacts(
   destination: string,
@@ -74,9 +56,8 @@ export async function prepareArtifacts(
         "npm",
         pkg.name.slice("@colibri/".length),
       );
-      const usesConvee = (await runtimeImports(resolve(source, pkg.root))).has(
-        "convee",
-      );
+      const packageImports = await runtimeImports(resolve(source, pkg.root));
+      const usesConvee = packageImports.has("convee");
       const mappings = {
         ...(usesConvee
           ? {
@@ -86,12 +67,23 @@ export async function prepareArtifacts(
             },
           }
           : {}),
-        ...(pkg.name === "@colibri/core" ? {} : {
-          [pathToFileURL(resolve(source, "core/mod.ts")).href]: {
-            name: "@colibri/core",
-            version: `file:${artifacts.get("@colibri/core")}`,
-          },
-        }),
+        ...(pkg.name === "@colibri/core" ? {} : Object.fromEntries(
+          Object.entries(
+            inventory.find((item) => item.name === "@colibri/core")!.exports,
+          )
+            .filter(([name]) =>
+              packageImports.has(
+                `@colibri/core${name === "." ? "" : name.slice(1)}`,
+              )
+            )
+            .map((
+              [name, entry],
+            ) => [pathToFileURL(resolve(source, "core", entry)).href, {
+              name: "@colibri/core",
+              version: `file:${artifacts.get("@colibri/core")}`,
+              ...(name === "." ? {} : { subPath: name.slice(2) }),
+            }]),
+        )),
       };
       await Deno.mkdir(outDir, { recursive: true });
       await Deno.writeTextFile(
@@ -101,7 +93,11 @@ export async function prepareArtifacts(
       await build({
         cwd: source,
         importMap: resolve(source, "imports.json"),
-        entryPoints: Object.entries(pkg.exports).map(([name, path]) => ({
+        entryPoints: Object.entries(pkg.exports).filter(([name]) =>
+          !denoOnlyEntrypoints.has(
+            `${pkg.name}${name === "." ? "" : name.slice(1)}`,
+          )
+        ).map(([name, path]) => ({
           name,
           path: resolve(source, pkg.root, path),
         })),
@@ -145,6 +141,10 @@ export async function prepareArtifacts(
       artifacts.set(pkg.name, target);
     }
     await copyRuntime(fixtureRoot, resolve(destination, "fixtures"));
+    await Deno.copyFile(
+      resolve(import.meta.dirname!, "keypair-signer.ts"),
+      resolve(destination, "fixtures/keypair-signer.ts"),
+    );
     await writeJson(resolve(destination, "manifest.json"), {
       sdk,
       convee: config.imports.convee,
@@ -163,6 +163,7 @@ export async function prepareArtifacts(
       ),
       "fixtures/smoke.ts",
       "fixtures/extensions.ts",
+      "fixtures/keypair-signer.ts",
     ], source);
     console.log(`Prepared portable consumer artifacts in ${destination}`);
   } finally {

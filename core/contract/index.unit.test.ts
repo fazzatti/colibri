@@ -14,7 +14,7 @@ import type { ContractConfig } from "@/contract/types.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { NetworkType } from "@/network/types.ts";
 import { Address, Operation, xdr } from "stellar-sdk";
-import type { Spec } from "stellar-sdk/contract";
+import { Spec } from "stellar-sdk/contract";
 import type { Api } from "stellar-sdk/rpc";
 import type { ContractId } from "@/strkeys/types.ts";
 import {
@@ -493,6 +493,21 @@ describe("Contract", () => {
       );
     });
 
+    it("loads event declarations from network WASM when the client has only its hash", async () => {
+      const wasm = await loadWasmFile(
+        "./_internal/tests/compiled-contracts/bindings_demo_contract.wasm",
+      );
+      const hash = await sha256Hex(wasm);
+      const client = new Contract({
+        networkConfig,
+        contractConfig: { wasmHash: hash },
+        rpc: rpcWithLedgerEntries([contractCodeEntry(hash, wasm)]),
+      });
+      await client.loadContractEventsFromWasm();
+      assertEquals([...client.getWasm()], [...wasm]);
+      assertEquals(client.events.get("CountChanged").name, "CountChanged");
+    });
+
     it("loads current network specs from direct and external executables", async () => {
       const wasm = await loadWasmFile(
         "./_internal/tests/compiled-contracts/errors_contract.wasm",
@@ -746,7 +761,11 @@ describe("Contract", () => {
         networkConfig,
         contractConfig: {
           wasmHash: "mockHash",
-          spec: { errorCases: () => [] } as unknown as Spec,
+          spec: new Spec(
+            ERRORS_CONTRACT_SPEC.entries.filter((entry) =>
+              entry.type !== "scSpecEntryUdtErrorEnumV0"
+            ),
+          ),
         },
         rpc: mockRpc,
       });
@@ -813,13 +832,26 @@ describe("Contract", () => {
     it("reads from a contract without method arguments", async () => {
       let encodedArgsCallCount = 0;
       const readResult = { ok: true };
-      const spec = {
-        funcArgsToScVals: () => {
-          encodedArgsCallCount++;
-          return [];
-        },
-        funcResToNative: (_method: string, result: unknown) => result,
-      } as unknown as Spec;
+      const spec = new Spec([
+        xdr.ScSpecEntry.scSpecEntryFunctionV0(
+          new xdr.ScSpecFunctionV0({
+            name: "hello",
+            doc: "",
+            inputs: [],
+            outputs: [],
+          }),
+        ),
+      ]);
+      using encode = stub(spec, "funcArgsToScVals", () => {
+        encodedArgsCallCount++;
+        return [];
+      });
+      using decode = stub(
+        spec,
+        "funcResToNative",
+        (_method: string, result: unknown) => result,
+      );
+      void [encode, decode];
       const contract = new Contract({
         networkConfig,
         contractConfig: {

@@ -65,6 +65,7 @@ jobs:
           }
 
           # Check core package
+          check_package "contract-bindings" "contract-bindings"
           check_package "core" "core"
 
           # Check rpc-streamer package
