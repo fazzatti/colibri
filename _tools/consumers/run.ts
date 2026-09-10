@@ -1,4 +1,5 @@
 /** Execute installed artifacts with the selected real Node/TypeScript/browser runtime. */
+import { consumerFiles } from "./fixtures.ts";
 import { checkGeneratedBindings } from "./generated-bindings.ts";
 import { resolve } from "node:path";
 import { command, playwrightVersion, writeJson } from "./environment.ts";
@@ -6,6 +7,7 @@ import { command, playwrightVersion, writeJson } from "./environment.ts";
 export async function runArtifacts(
   artifacts: string,
   browsers = false,
+  declarations = false,
 ): Promise<void> {
   const manifest = JSON.parse(
     await Deno.readTextFile(resolve(artifacts, "manifest.json")),
@@ -31,8 +33,10 @@ export async function runArtifacts(
       "--ignore-scripts",
       "--no-audit",
       "--no-fund",
-      ...manifest.packages.map((pkg: { archive: string }) =>
-        resolve(artifacts, pkg.archive)
+      ...manifest.packages.map((
+        pkg: { archive: string; declarationsArchive: string },
+      ) =>
+        resolve(artifacts, declarations ? pkg.declarationsArchive : pkg.archive)
       ),
       `@stellar/stellar-sdk@${manifest.sdk}`,
       `typescript@${typescript}`,
@@ -47,7 +51,7 @@ export async function runArtifacts(
       "@colibri/core",
       "@jsr/fifo__convee",
     ], consumer);
-    for (const file of ["smoke.ts", "extensions.ts", "keypair-signer.ts"]) {
+    for (const file of consumerFiles) {
       const fixture = await Deno.readTextFile(
         resolve(artifacts, "fixtures", file),
       );
@@ -59,36 +63,10 @@ export async function runArtifacts(
         ),
       );
     }
-    await Deno.writeTextFile(
-      resolve(consumer, "bindings-smoke.ts"),
-      `
-import { generateBindings } from "@colibri/contract-bindings";
-import { Spec } from "@stellar/stellar-sdk/contract";
-import { xdr } from "@stellar/stellar-sdk";
-import { SorobanSymbol, SorobanString, SorobanU32, SorobanVec, SorobanBytesN, SorobanValueError } from "@colibri/core/values";
-import { SorobanSymbol as RootSymbol, type SorobanVecInput, type SorobanStringInput } from "@colibri/core";
-if (RootSymbol !== SorobanSymbol) throw new Error("Value constructor identity changed");
-const value = new SorobanSymbol("ADMIN");
-if (SorobanSymbol.type.fromXdr(value.toXdr("base64")).value !== "ADMIN") throw new Error("Value encoding changed");
-const text: SorobanVecInput<SorobanStringInput, string> = new SorobanVec([new SorobanString("hello")], SorobanString.type);
-const fixed = new SorobanBytesN(new Uint8Array(32), 32);
-const length: 32 = fixed.value.length;
-if (length !== 32 || !text) throw new Error("Value type mismatch");
-let rejected = false;
-try { new SorobanU32(-1); } catch (error) { rejected = error instanceof SorobanValueError && error.code === "SV_001"; }
-if (!rejected) throw new Error("Value validation missing");
-const spec = new Spec([xdr.ScSpecEntry.scSpecEntryFunctionV0(new xdr.ScSpecFunctionV0({ name: "ping", doc: "Ping", inputs: [], outputs: [] }))]);
-const plan = generateBindings(spec, {className: "PingClient"});
-if (!plan.files["index.ts"].includes("class PingClient extends Contract")) throw new Error("Portable bindings rendering failed");
-`,
-    );
     await command("npx", [
       "--no-install",
       "tsc",
-      "smoke.ts",
-      "extensions.ts",
-      "bindings-smoke.ts",
-      "keypair-signer.ts",
+      ...consumerFiles,
       "--outDir",
       "out",
       "--module",
@@ -98,14 +76,14 @@ if (!plan.files["index.ts"].includes("class PingClient extends Contract")) throw
       "--strict",
       "--skipLibCheck",
     ], consumer);
-    await command("node", ["out/smoke.js"], consumer);
-    await command("node", ["out/extensions.js"], consumer);
-    await command("node", ["out/bindings-smoke.js"], consumer);
-    await command("node", ["out/keypair-signer.js"], consumer);
+    for (const file of consumerFiles) {
+      await command("node", [`out/${file.replace(/\.ts$/, ".js")}`], consumer);
+    }
     if (browsers) {
       await Deno.writeTextFile(
         resolve(consumer, "browser-entry.ts"),
-        'import "./smoke.ts";\nimport "./extensions.ts";\nimport "./bindings-smoke.ts";\nimport "./keypair-signer.ts";\n(globalThis as unknown as { colibriPassed: boolean }).colibriPassed = true;\n',
+        consumerFiles.map((file) => `import "./${file}";`).join("\n") +
+          "\n(globalThis as unknown as { colibriPassed: boolean }).colibriPassed = true;\n",
       );
       await command("npx", [
         "--no-install",
@@ -137,10 +115,18 @@ if (!plan.files["index.ts"].includes("class PingClient extends Contract")) throw
       const core = manifest.packages.find((pkg: { name: string }) =>
         pkg.name === "@colibri/core"
       );
-      await checkGeneratedBindings(consumer, resolve(artifacts, core.archive));
+      await checkGeneratedBindings(
+        consumer,
+        resolve(
+          artifacts,
+          declarations ? core.declarationsArchive : core.archive,
+        ),
+      );
     }
     console.log(
-      `Installed artifact consumer passed with SDK ${manifest.sdk} / TypeScript ${typescript}${
+      `Installed ${
+        declarations ? "JSR declarations" : "dnt"
+      } artifact consumer passed with SDK ${manifest.sdk} / TypeScript ${typescript}${
         browsers ? " / Chromium, Firefox, WebKit" : ""
       }.`,
     );
@@ -153,5 +139,6 @@ if (import.meta.main) {
   await runArtifacts(
     resolve(Deno.args[0] ?? "_artifacts/consumers"),
     Deno.args.includes("--browsers"),
+    Deno.args.includes("--jsr-declarations"),
   );
 }

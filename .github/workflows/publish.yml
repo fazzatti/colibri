@@ -96,6 +96,20 @@ jobs:
           echo "tags_to_create=$TAGS_TO_CREATE" >> $GITHUB_OUTPUT
           echo "Tags to create: $TAGS_TO_CREATE"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Setup pinned declaration emitter toolchain
+        run: rustup toolchain install 1.96.0 --profile minimal --no-self-update
+
+      - name: Validate npm declarations before publication
+        env:
+          RUSTUP_TOOLCHAIN: 1.96.0
+        run: |
+          deno task prepare:consumers "$RUNNER_TEMP/publish-consumers"
+          deno task check:consumers:npm "$RUNNER_TEMP/publish-consumers" --jsr-declarations
+
       - name: Publish package
         run: deno publish
 
@@ -131,9 +145,14 @@ jobs:
             fi
           done
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-
       - name: Check actual published JSR distributions
-        run: deno task check:consumers:published
+        run: deno task check:consumers:published --evidence "$RUNNER_TEMP/published-evidence"
+
+      - name: Upload published distribution evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: published-distribution
+          path: ${{ runner.temp }}/published-evidence
+          if-no-files-found: ignore
+          retention-days: 7

@@ -2,16 +2,16 @@
 
 These fixtures test installed/public APIs, not repository-private paths. They
 are additional compatibility evidence and do not contribute package coverage.
-Use Deno 2.9.6 for preparation, with a supported Node runtime and npm available.
-`deno task check:consumers --browsers` runs the local source, packaging, Node,
-and browser path. CI runs one `compatibility` job with named steps for
-preparation, released Core, Deno, Node/TypeScript, browsers and bundle checks. The final `test` gate requires
-that job to pass.
+Use Deno 2.9.6 and Rust 1.96.0 for preparation, with a supported Node runtime
+and npm available. `deno task check:consumers --browsers` runs the local source,
+packaging, Node, and browser path. CI runs one `compatibility` job with named
+steps for preparation, released Core, Deno, Node/TypeScript, browsers and bundle
+checks. The final `test` gate requires that job to pass.
 
 | Task                                         | Evidence                                                                                                                                    |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `check:consumers:deno`                       | All public entrypoints and preserved consumers on Deno 2.7.11/2.9.6                                                                      |
-| `prepare:consumers <directory>`              | Portable dnt ESM/declaration tarballs, prepared once per selected SDK                                                                       |
+| `check:consumers:deno`                       | All public entrypoints and preserved consumers on Deno 2.7.11/2.9.6                                                                         |
+| `prepare:consumers <directory>`              | Portable dnt tarballs plus a second set with JSR fast-check declarations, prepared once per selected SDK                                    |
 | `check:consumers:npm <directory>`            | Installed artifacts compiled with TS 5.9.3/6.0.3 and executed on Node 22.12.0, patched 22.x, or 24.x                                        |
 | `check:consumers:npm <directory> --browsers` | The same consumer bundled without Node polyfills and executed in real Chromium, Firefox, and WebKit                                         |
 | `check:consumers:dependencies`               | Candidate dependent packages with minimum available compatible Core release trees, and compatible historical dependents with candidate Core |
@@ -39,8 +39,9 @@ compatibility job after browser installation and checks.
 records both selections in `plan.json`. Identical resolved versions share a
 single set of artifacts and scenarios. When the compatible range resolves a
 newer version, both versions receive the complete matrix automatically: six
-Node/TypeScript combinations, two Deno runtimes, all three browsers, preparation,
-and released-Core checks. Production bundle baselines remain pinned to 17.0.1.
+Node/TypeScript combinations, two Deno runtimes, all three browsers,
+preparation, and released-Core checks. Production bundle baselines remain pinned
+to 17.0.1.
 
 Each named phase runs with the runtime installed by its workflow step. The
 runner verifies the actual Deno/Node version before executing it. Examples:
@@ -52,9 +53,9 @@ deno task check:consumers:ci node-24 /tmp/colibri-compatibility
 ```
 
 Use a fresh directory for a new plan. Run Node phases with Deno 2.9.6 and the
-requested Node version on PATH. Deno phases use their exact named runtime.
-Other phases are `dependencies`, `deno-2.7.11`, `deno-2.9.6`, `node-22.12.0`,
-`node-22`, `browsers`, `bundles`, and `browser-runner`.
+requested Node version on PATH. Deno phases use their exact named runtime. Other
+phases are `jsr-declarations`, `dependencies`, `deno-2.7.11`, `deno-2.9.6`,
+`node-22.12.0`, `node-22`, `browsers`, `bundles`, and `browser-runner`.
 
 `check:consumers:ci summary <directory>` produces a table of every expected
 scenario, its result and duration. It fails for failed, missing or invalid
@@ -68,7 +69,8 @@ subprocess failures, continued execution and incomplete-result detection.
 
 This trades separate runners for sequential runtime phases, reducing checkout,
 installation and artifact-transfer duplication. Package tests, coverage and CRAP
-still run independently. Consumer fixtures remain outside implementation coverage.
+still run independently. Consumer fixtures remain outside implementation
+coverage.
 
 ## Preserved consumers
 
@@ -81,10 +83,10 @@ attaches/removes a targeted Convee plugin, and checks stable error identity/code
 and fee/sequence semantics. No RPC submission or mocked protocol behavior is
 involved in these offline consumers.
 
-`keypair-signer.ts` adapts native keypairs explicitly for signing through callable Core
-steps, verifies envelope signatures and exact native Soroban authorization XDR,
-and checks public-only keypair errors and caller ownership after disposal. It runs in the isolated Deno, installed
-Node, and browser lanes.
+`keypair-signer.ts` adapts native keypairs explicitly for signing through
+callable Core steps, verifies envelope signatures and exact native Soroban
+authorization XDR, and checks public-only keypair errors and caller ownership
+after disposal. It runs in the isolated Deno, installed Node, and browser lanes.
 
 Do not rewrite these consumers to make a later breaking candidate pass. Add new
 fixtures for newly introduced APIs; discuss intentional major changes
@@ -113,13 +115,59 @@ package tags once published. Missing/failing required release trees are errors,
 not a reason to silently use current source. These source-tree checks
 complement, but do not replace, registry distribution checks.
 
+## Pre-publication declaration checks
+
+`prepare:consumers` builds two sets of artifacts. The original dnt artifacts
+exercise TypeScript compiler output. The `jsr-declarations-*` archives retain
+that runtime JavaScript but replace **all** declarations with output from
+`deno_graph` 0.111.0 and `deno_ast` 0.53.2, pinned with Cargo.lock. Missing JSR
+output never falls back to dnt declarations. No test artifact is published.
+
+The small Rust emitter uses the same fast-check declaration engine used by
+[JSR's npm emitter](https://github.com/jsr-io/jsr/blob/main/api/src/npm/emit.rs).
+Deno resolves the candidate graph; the harness rewrites package imports for
+installed consumers without changing emitted types. `CARGO_TARGET_DIR` can
+relocate its build cache. CI pins Rust 1.96.0 and caches the build.
+
+```sh
+deno task test:declarations
+deno task prepare:consumers /tmp/colibri-consumers
+deno task check:consumers:npm /tmp/colibri-consumers --jsr-declarations
+```
+
+The `jsr-declarations` phase compiles these artifacts with both supported
+TypeScript versions on Node 24 and executes all consumers, including a generated
+bindings package. This is a named phase in the existing compatibility job.
+Publishing repeats the candidate declaration check before `deno publish`.
+
+`strkey.ts` checks all 18 encode/decode helpers through both public entrypoints,
+exact SDK parameters and branded outputs, rejection of invalid inputs, shared
+runtime identity and native encoding/decoding round trips. The harness
+regression test verifies the pinned engine reproduces dropped spread members and
+that an explicit public annotation fixes the compile failure. An `any`
+substitution must also fail the consumer test.
+
+`manifest.json` records the generator versions. `declaration-diagnostics.json`
+retains the engine's nonfatal declaration diagnostics, as JSR may emit
+incomplete or `any` types for some inferred expressions. Graph and fast-check
+failures abort preparation; installed consumer type assertions are the
+compatibility gate. This does not establish exact hosted tarball parity or
+completeness of every public type. Engine upgrades require reviewing the
+regression and consumer tests. The actual registry check remains necessary
+because JSR's hosted transformer and npm tarball revision can differ from the
+pinned local engine.
+
 ## Distribution and runtime limits
 
 dnt tarballs are CI artifacts only, never published packages. They are reused
 locally within the compatibility job, never uploaded to JSR/npm. The publish
 workflow runs a separate check against real JSR modules and JSR-generated npm
-tarballs after publication. To validate that tool using an already published
-baseline, run `check:consumers:published --versions-from-ref origin/main`.
+tarballs after publication, using the same five consumer fixtures. It retains
+`package-lock.json` (resolved URLs and integrity hashes) and installed package
+versions/JSR revisions before compilation, including on a compile failure. Use
+`--evidence <directory>` to select the artifact destination. To validate that
+tool using an already published baseline, run
+`check:consumers:published --versions-from-ref origin/main`.
 
 The npm registry check imports canonical `@jsr/colibri__…` package names to
 avoid alias-induced duplicate installations. Applications using aliases should
@@ -134,6 +182,7 @@ validate Docker/network execution. Browser-capable classification is explicit in
 Contract Bindings adds a portable renderer and a Deno-only `/cli` subpath. The
 CLI is checked in the Deno source lane and excluded from npm artifacts. Node
 lanes also generate an npm client package, install dependencies, compile
-ESM/declarations, execute a native SDK/Core identity check, and pack it. Until
-Core 1.1 is published, that generated package substitutes the pre-publication
-Core test tarball for the otherwise unchanged JSR npm alias.
+ESM/declarations, execute a native SDK/Core identity check, and pack it. The
+generated package substitutes the candidate Core test tarball for the otherwise
+unchanged JSR npm alias, so it checks the proposed release rather than an
+already published Core version.

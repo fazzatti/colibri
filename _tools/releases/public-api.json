@@ -94092,61 +94092,1242 @@
             "value": {
               "properties": [
                 {
-                  "name": "regex"
+                  "name": "encodeContract",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "ContractId",
+                        "value": {
+                          "typeName": "ContractId"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "getStrkeyTypeName"
+                  "name": "decodeContract",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "detectStrkeyType"
+                  "name": "encodePreAuthTx",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "PreAuthTx",
+                        "value": {
+                          "typeName": "PreAuthTx"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isEd25519PublicKey"
+                  "name": "decodePreAuthTx",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isEd25519SecretKey"
+                  "name": "encodeSha256Hash",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Sha256Hash",
+                        "value": {
+                          "typeName": "Sha256Hash"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isMuxedAddress"
+                  "name": "decodeSha256Hash",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isPreAuthTx"
+                  "name": "encodeSignedPayload",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "SignedPayload",
+                        "value": {
+                          "typeName": "SignedPayload"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isSha256Hash"
+                  "name": "decodeSignedPayload",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isSignedPayload"
+                  "name": "encodeLiquidityPool",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "LiquidityPoolId",
+                        "value": {
+                          "typeName": "LiquidityPoolId"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isContractId"
+                  "name": "decodeLiquidityPool",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isLiquidityPoolId"
+                  "name": "encodeClaimableBalance",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "ClaimableBalanceId",
+                        "value": {
+                          "typeName": "ClaimableBalanceId"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isClaimableBalanceId"
+                  "name": "decodeClaimableBalance",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isValidEd25519PublicKey"
+                  "name": "encodeEd25519PublicKey",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Ed25519PublicKey",
+                        "value": {
+                          "typeName": "Ed25519PublicKey"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isValidEd25519SecretSeed"
+                  "name": "decodeEd25519PublicKey",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isValidMuxedAddress"
+                  "name": "encodeEd25519SecretSeed",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Ed25519SecretKey",
+                        "value": {
+                          "typeName": "Ed25519SecretKey"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isValidSignedPayload"
+                  "name": "decodeEd25519SecretSeed",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isValidContractId"
+                  "name": "encodeMed25519PublicKey",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "MuxedAddress",
+                        "value": {
+                          "typeName": "MuxedAddress"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isValidLiquidityPoolId"
+                  "name": "decodeMed25519PublicKey",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isValidClaimableBalanceId"
+                  "name": "regex",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Record",
+                    "value": {
+                      "typeName": "Record",
+                      "typeParams": [
+                        {
+                          "kind": "typeRef",
+                          "repr": "StrkeyPrefix",
+                          "value": {
+                            "typeName": "StrkeyPrefix"
+                          }
+                        },
+                        {
+                          "kind": "typeRef",
+                          "repr": "RegExp",
+                          "value": {
+                            "typeName": "RegExp"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "getStrkeyTypeName",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "prefix",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "union",
+                            "value": [
+                              {
+                                "kind": "typeRef",
+                                "repr": "StrkeyPrefix",
+                                "value": {
+                                  "typeName": "StrkeyPrefix"
+                                }
+                              },
+                              {
+                                "kind": "typeOperator",
+                                "value": {
+                                  "operator": "keyof",
+                                  "tsType": {
+                                    "kind": "typeQuery",
+                                    "repr": "StrkeyPrefix",
+                                    "value": "StrkeyPrefix"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "detectStrkeyType",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "strkey",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "union",
+                        "value": [
+                          {
+                            "kind": "typeRef",
+                            "repr": "StrkeyName",
+                            "value": {
+                              "typeName": "StrkeyName"
+                            }
+                          },
+                          {
+                            "kind": "keyword",
+                            "repr": "null",
+                            "value": "null"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isEd25519PublicKey",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is Ed25519PublicKey",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "Ed25519PublicKey",
+                            "value": {
+                              "typeName": "Ed25519PublicKey"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isEd25519SecretKey",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is Ed25519SecretKey",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "Ed25519SecretKey",
+                            "value": {
+                              "typeName": "Ed25519SecretKey"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isMuxedAddress",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is MuxedAddress",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "MuxedAddress",
+                            "value": {
+                              "typeName": "MuxedAddress"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isPreAuthTx",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is PreAuthTx",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "PreAuthTx",
+                            "value": {
+                              "typeName": "PreAuthTx"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isSha256Hash",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is Sha256Hash",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "Sha256Hash",
+                            "value": {
+                              "typeName": "Sha256Hash"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isSignedPayload",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is SignedPayload",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "SignedPayload",
+                            "value": {
+                              "typeName": "SignedPayload"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isContractId",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is ContractId",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "ContractId",
+                            "value": {
+                              "typeName": "ContractId"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isLiquidityPoolId",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is LiquidityPoolId",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "LiquidityPoolId",
+                            "value": {
+                              "typeName": "LiquidityPoolId"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isClaimableBalanceId",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is ClaimableBalanceId",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "ClaimableBalanceId",
+                            "value": {
+                              "typeName": "ClaimableBalanceId"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isValidEd25519PublicKey",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is Ed25519PublicKey",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "Ed25519PublicKey",
+                            "value": {
+                              "typeName": "Ed25519PublicKey"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isValidEd25519SecretSeed",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is Ed25519SecretKey",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "Ed25519SecretKey",
+                            "value": {
+                              "typeName": "Ed25519SecretKey"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isValidMuxedAddress",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is MuxedAddress",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "MuxedAddress",
+                            "value": {
+                              "typeName": "MuxedAddress"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isValidSignedPayload",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is SignedPayload",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "SignedPayload",
+                            "value": {
+                              "typeName": "SignedPayload"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isValidContractId",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is ContractId",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "ContractId",
+                            "value": {
+                              "typeName": "ContractId"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isValidLiquidityPoolId",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is LiquidityPoolId",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "LiquidityPoolId",
+                            "value": {
+                              "typeName": "LiquidityPoolId"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isValidClaimableBalanceId",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is ClaimableBalanceId",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "ClaimableBalanceId",
+                            "value": {
+                              "typeName": "ClaimableBalanceId"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               ]
             }
@@ -128456,61 +129637,1242 @@
             "value": {
               "properties": [
                 {
-                  "name": "regex"
+                  "name": "encodeContract",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "ContractId",
+                        "value": {
+                          "typeName": "ContractId"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "getStrkeyTypeName"
+                  "name": "decodeContract",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "detectStrkeyType"
+                  "name": "encodePreAuthTx",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "PreAuthTx",
+                        "value": {
+                          "typeName": "PreAuthTx"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isEd25519PublicKey"
+                  "name": "decodePreAuthTx",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isEd25519SecretKey"
+                  "name": "encodeSha256Hash",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Sha256Hash",
+                        "value": {
+                          "typeName": "Sha256Hash"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isMuxedAddress"
+                  "name": "decodeSha256Hash",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isPreAuthTx"
+                  "name": "encodeSignedPayload",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "SignedPayload",
+                        "value": {
+                          "typeName": "SignedPayload"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isSha256Hash"
+                  "name": "decodeSignedPayload",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isSignedPayload"
+                  "name": "encodeLiquidityPool",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "LiquidityPoolId",
+                        "value": {
+                          "typeName": "LiquidityPoolId"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isContractId"
+                  "name": "decodeLiquidityPool",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isLiquidityPoolId"
+                  "name": "encodeClaimableBalance",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "ClaimableBalanceId",
+                        "value": {
+                          "typeName": "ClaimableBalanceId"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isClaimableBalanceId"
+                  "name": "decodeClaimableBalance",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isValidEd25519PublicKey"
+                  "name": "encodeEd25519PublicKey",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Ed25519PublicKey",
+                        "value": {
+                          "typeName": "Ed25519PublicKey"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isValidEd25519SecretSeed"
+                  "name": "decodeEd25519PublicKey",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isValidMuxedAddress"
+                  "name": "encodeEd25519SecretSeed",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Ed25519SecretKey",
+                        "value": {
+                          "typeName": "Ed25519SecretKey"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isValidSignedPayload"
+                  "name": "decodeEd25519SecretSeed",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isValidContractId"
+                  "name": "encodeMed25519PublicKey",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "MuxedAddress",
+                        "value": {
+                          "typeName": "MuxedAddress"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isValidLiquidityPoolId"
+                  "name": "decodeMed25519PublicKey",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "data",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      }
+                    }
+                  }
                 },
                 {
-                  "name": "isValidClaimableBalanceId"
+                  "name": "regex",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Record",
+                    "value": {
+                      "typeName": "Record",
+                      "typeParams": [
+                        {
+                          "kind": "typeRef",
+                          "repr": "StrkeyPrefix",
+                          "value": {
+                            "typeName": "StrkeyPrefix"
+                          }
+                        },
+                        {
+                          "kind": "typeRef",
+                          "repr": "RegExp",
+                          "value": {
+                            "typeName": "RegExp"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "getStrkeyTypeName",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "prefix",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "union",
+                            "value": [
+                              {
+                                "kind": "typeRef",
+                                "repr": "StrkeyPrefix",
+                                "value": {
+                                  "typeName": "StrkeyPrefix"
+                                }
+                              },
+                              {
+                                "kind": "typeOperator",
+                                "value": {
+                                  "operator": "keyof",
+                                  "tsType": {
+                                    "kind": "typeQuery",
+                                    "repr": "StrkeyPrefix",
+                                    "value": "StrkeyPrefix"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "detectStrkeyType",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "strkey",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "union",
+                        "value": [
+                          {
+                            "kind": "typeRef",
+                            "repr": "StrkeyName",
+                            "value": {
+                              "typeName": "StrkeyName"
+                            }
+                          },
+                          {
+                            "kind": "keyword",
+                            "repr": "null",
+                            "value": "null"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isEd25519PublicKey",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is Ed25519PublicKey",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "Ed25519PublicKey",
+                            "value": {
+                              "typeName": "Ed25519PublicKey"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isEd25519SecretKey",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is Ed25519SecretKey",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "Ed25519SecretKey",
+                            "value": {
+                              "typeName": "Ed25519SecretKey"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isMuxedAddress",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is MuxedAddress",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "MuxedAddress",
+                            "value": {
+                              "typeName": "MuxedAddress"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isPreAuthTx",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is PreAuthTx",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "PreAuthTx",
+                            "value": {
+                              "typeName": "PreAuthTx"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isSha256Hash",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is Sha256Hash",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "Sha256Hash",
+                            "value": {
+                              "typeName": "Sha256Hash"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isSignedPayload",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is SignedPayload",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "SignedPayload",
+                            "value": {
+                              "typeName": "SignedPayload"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isContractId",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is ContractId",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "ContractId",
+                            "value": {
+                              "typeName": "ContractId"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isLiquidityPoolId",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is LiquidityPoolId",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "LiquidityPoolId",
+                            "value": {
+                              "typeName": "LiquidityPoolId"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isClaimableBalanceId",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is ClaimableBalanceId",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "ClaimableBalanceId",
+                            "value": {
+                              "typeName": "ClaimableBalanceId"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isValidEd25519PublicKey",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is Ed25519PublicKey",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "Ed25519PublicKey",
+                            "value": {
+                              "typeName": "Ed25519PublicKey"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isValidEd25519SecretSeed",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is Ed25519SecretKey",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "Ed25519SecretKey",
+                            "value": {
+                              "typeName": "Ed25519SecretKey"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isValidMuxedAddress",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is MuxedAddress",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "MuxedAddress",
+                            "value": {
+                              "typeName": "MuxedAddress"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isValidSignedPayload",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is SignedPayload",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "SignedPayload",
+                            "value": {
+                              "typeName": "SignedPayload"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isValidContractId",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is ContractId",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "ContractId",
+                            "value": {
+                              "typeName": "ContractId"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isValidLiquidityPoolId",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is LiquidityPoolId",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "LiquidityPoolId",
+                            "value": {
+                              "typeName": "LiquidityPoolId"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "isValidClaimableBalanceId",
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "value",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typePredicate",
+                        "repr": "value is ClaimableBalanceId",
+                        "value": {
+                          "param": {
+                            "name": "value",
+                            "type": "identifier"
+                          },
+                          "type": {
+                            "kind": "typeRef",
+                            "repr": "ClaimableBalanceId",
+                            "value": {
+                              "typeName": "ClaimableBalanceId"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               ]
             }

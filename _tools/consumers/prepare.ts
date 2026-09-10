@@ -1,4 +1,7 @@
 /** Build portable pre-publication npm test artifacts once per SDK selection. */
+import { consumerFiles, copyConsumerFixtures } from "./fixtures.ts";
+import { emitDeclarations } from "./declarations/index.ts";
+import { replaceDeclarations } from "./declarations/package.ts";
 import { build } from "jsr:@deno/dnt@0.43.2";
 import { resolveSdk } from "./sdk.ts";
 export { resolveSdk } from "./sdk.ts";
@@ -7,10 +10,8 @@ import { pathToFileURL } from "node:url";
 import { colibriDependencies, runtimeImports } from "../releases/repository.ts";
 import {
   command,
-  copyRuntime,
   denoOnlyEntrypoints,
   dockerPackages,
-  fixtureRoot,
   prepareSource,
   root,
   writeJson,
@@ -49,7 +50,13 @@ export async function prepareArtifacts(
     ).sort((a, b) =>
       Number(b.name === "@colibri/core") - Number(a.name === "@colibri/core")
     );
+    const declarations = await emitDeclarations(source, inventory);
+    await Deno.copyFile(
+      resolve(source, "declaration-diagnostics.json"),
+      resolve(destination, "declaration-diagnostics.json"),
+    );
     const artifacts = new Map<string, string>();
+    const declarationArtifacts = new Map<string, string>();
     for (const pkg of browserPackages) {
       const outDir = resolve(
         temporary,
@@ -139,19 +146,27 @@ export async function prepareArtifacts(
       const target = resolve(destination, filename);
       await Deno.copyFile(resolve(outDir, filename), target);
       artifacts.set(pkg.name, target);
+      await replaceDeclarations(outDir, pkg.root, declarations);
+      await command("npm", ["pack", "--ignore-scripts", "--quiet"], outDir);
+      const declarationTarget = resolve(
+        destination,
+        `jsr-declarations-${filename}`,
+      );
+      await Deno.copyFile(resolve(outDir, filename), declarationTarget);
+      declarationArtifacts.set(pkg.name, declarationTarget);
     }
-    await copyRuntime(fixtureRoot, resolve(destination, "fixtures"));
-    await Deno.copyFile(
-      resolve(import.meta.dirname!, "keypair-signer.ts"),
-      resolve(destination, "fixtures/keypair-signer.ts"),
-    );
+    await copyConsumerFixtures(resolve(destination, "fixtures"));
     await writeJson(resolve(destination, "manifest.json"), {
+      declarations: { denoGraph: "0.111.0", denoAst: "0.53.2" },
       sdk,
       convee: config.imports.convee,
       packages: browserPackages.map((pkg) => ({
         name: pkg.name,
         version: pkg.version,
         archive: artifacts.get(pkg.name)!.split("/").at(-1),
+        declarationsArchive: declarationArtifacts.get(pkg.name)!.split("/").at(
+          -1,
+        ),
       })),
     });
     await command(Deno.execPath(), [
@@ -161,9 +176,7 @@ export async function prepareArtifacts(
       ...inventory.flatMap((pkg) =>
         Object.values(pkg.exports).map((entry) => `${pkg.root}/${entry}`)
       ),
-      "fixtures/smoke.ts",
-      "fixtures/extensions.ts",
-      "fixtures/keypair-signer.ts",
+      ...consumerFiles.map((name) => `fixtures/${name}`),
     ], source);
     console.log(`Prepared portable consumer artifacts in ${destination}`);
   } finally {
