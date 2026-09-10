@@ -67,6 +67,10 @@ members, but no contract name. For a local file, the CLI uses its filename in
 PascalCase (`my_token.wasm` → `MyToken`). Remote sources and filenames that
 cannot form a valid client name use `ContractClient`. Override either with
 `--class-name Token`; the completion message shows the chosen class name.
+Explicit names must be valid TypeScript class identifiers and must not shadow
+names used by the generated client, such as `Object`, `Promise`, or `ContractId`.
+Invalid overrides fail before any source is loaded; unusable filename defaults
+fall back to `ContractClient`.
 
 Source provenance is **omitted by default**. Add `--include-provenance` when you
 want a `TokenProvenance` export (for a `Token` class) in `constants.ts`,

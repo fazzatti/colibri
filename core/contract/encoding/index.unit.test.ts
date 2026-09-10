@@ -29,7 +29,9 @@ import { createSorobanType } from "@/soroban-types/codecs/custom.ts";
 import { buildContractDataLedgerKey } from "@/ledger-entries/keys.ts";
 import {
   func,
+  option,
   udt,
+  union,
   valueSpec,
 } from "colibri-internal/tests/soroban-values-fixtures.ts";
 import { bindingSpec } from "colibri-internal/tests/binding-fixtures.ts";
@@ -64,6 +66,71 @@ function capturePipe(
 }
 
 describe("Soroban value boundaries", () => {
+  it("encodes and decodes errors nested in optional maps, tuples and custom enums", () => {
+    const error = xdr.ScSpecTypeDef.scSpecTypeError();
+    const tuple = xdr.ScSpecTypeDef.scSpecTypeTuple(
+      new xdr.ScSpecTypeTuple({
+        valueTypes: [udt("AccessError"), udt("Choice")],
+      }),
+    );
+    const valueType = option(xdr.ScSpecTypeDef.scSpecTypeMap(
+      new xdr.ScSpecTypeMap({
+        keyType: xdr.ScSpecTypeDef.scSpecTypeSymbol(),
+        valueType: tuple,
+      }),
+    ));
+    const spec = new Spec([
+      ...valueSpec().entries,
+      union("Choice", { Empty: null, Failure: [error] }),
+      func("nested_error", { value: valueType }, [valueType]),
+    ]);
+    const value = new Map([
+      ["ADMIN", [1, {
+        tag: "Failure",
+        values: [{ type: "sceContract", code: 7 }],
+      }]],
+    ]);
+    const expected = xdr.ScVal.scvMap([
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvSymbol("ADMIN"),
+        val: xdr.ScVal.scvVec([
+          xdr.ScVal.scvU32(1),
+          xdr.ScVal.scvVec([
+            xdr.ScVal.scvSymbol("Failure"),
+            xdr.ScVal.scvError(xdr.ScError.sceContract(7)),
+          ]),
+        ]),
+      }),
+    ]);
+    assertEquals(encodeSorobanArguments(spec, "nested_error", { value }), [
+      expected,
+    ]);
+    assertEquals(decodeSorobanResult(spec, "nested_error", expected), [
+      ...value,
+    ]);
+    assertEquals(
+      encodeSorobanArguments(spec, "nested_error", { value: undefined }),
+      [xdr.ScVal.scvVoid()],
+    );
+    const invalid = new Map([["ADMIN", [999, { tag: "Empty" }]]]);
+    assertThrows(
+      () => encodeSorobanArguments(spec, "nested_error", { value: invalid }),
+      SorobanValueError,
+    );
+  });
+  it("retains native encoding for recursive ordinary custom types", () => {
+    const spec = new Spec([
+      ...valueSpec().entries,
+      func("node", { node: udt("Node") }, [udt("Node")]),
+    ]);
+    const node = { value: 1, next: { value: 2, next: undefined } };
+    const encoded = encodeSorobanArguments(spec, "node", { node });
+    assertEquals(encoded, spec.funcArgsToScVals("node", { node }));
+    assertEquals(decodeSorobanResult(spec, "node", encoded[0]), {
+      value: 1,
+      next: { value: 2, next: null },
+    });
+  });
   it("keeps raw calls on the native spec path and validates wrapped ABI identity", () => {
     const spec = bindingSpec();
     using native = stub(

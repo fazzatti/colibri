@@ -55,6 +55,11 @@ incompatible native values before the SDK decoder runs. Values follow the SDK's
 native codec representations. Types the SDK cannot decode produce a typed
 decoding failure.
 
+Indexed filters apply the same field validation as decoding. Soroban
+`MuxedAddress` fields accept regular account (G), contract (C), and multiplexed
+account (M) addresses. Ordinary `Address` fields accept G and C addresses and
+reject M addresses in both filters and decoded occurrences.
+
 No event declarations does not imply that the contract never emits events.
 Historical events require the ABI that emitted them; refreshing a registry does
 not migrate old payloads or track contract upgrades automatically.

@@ -259,6 +259,23 @@ describe("bindings rendering", () => {
         "Spec",
         "ContractErrorMap",
         "Token;alert(1)",
+        "unknown",
+        "any",
+        "never",
+        "boolean",
+        "bigint",
+        "intrinsic",
+        "number",
+        "object",
+        "string",
+        "symbol",
+        "undefined",
+        "Object",
+        "ContractId",
+        "Promise",
+        "Map",
+        "Array",
+        "Record",
       ]
     ) {
       assertThrows(

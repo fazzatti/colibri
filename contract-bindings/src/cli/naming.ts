@@ -1,4 +1,5 @@
 import { typeName } from "@/generation/type-map.ts";
+import { validateClassName } from "@/generation/validation.ts";
 
 /** @internal The spec has no contract name; a local filename supplies a useful default. */
 export function defaultClassName(wasmPath?: string): string {
@@ -6,9 +7,8 @@ export function defaultClassName(wasmPath?: string): string {
   const stem = wasmPath.split(/[\\/]/).at(-1)!.replace(/\.wasm$/i, "");
   try {
     const name = typeName(stem);
-    return ["Contract", "Spec", "ColibriError"].includes(name)
-      ? "ContractClient"
-      : name;
+    validateClassName(name);
+    return name;
   } catch {
     return "ContractClient";
   }

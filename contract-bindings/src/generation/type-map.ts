@@ -1,9 +1,10 @@
 import type { xdr } from "stellar-sdk";
 import type { Spec } from "@colibri/core";
 import { BindingError, Code } from "@/error.ts";
+import { TEMPLATE_TYPE_NAMES } from "@/generation/names.ts";
 
 const RESERVED = new Set(
-  "await break case catch class const continue debugger default delete do else enum export extends false finally for function if import in instanceof interface let new null package private protected public return static super switch this throw true try typeof var void while with yield implements constructor eval arguments"
+  "await break case catch class const continue debugger default delete do else enum export extends false finally for function if import in instanceof interface let new null package private protected public return static super switch this throw true try typeof var void while with yield implements constructor eval arguments any bigint boolean intrinsic never number object string symbol undefined unknown"
     .split(" "),
 );
 /** @internal */
@@ -95,25 +96,7 @@ export class TypeMap {
   readonly customTypes = new Set<string>();
   readonly warnings: string[] = [];
   private readonly referencedTypes = new Set<string>();
-  private readonly claimed = new Set([
-    "SorobanType",
-    "Array",
-    "Map",
-    "Record",
-    "Uint8Array",
-    "Promise",
-    "Pick",
-    "Parameters",
-    "ReturnType",
-    "Awaited",
-    "Partial",
-    "Contract",
-    "ContractConstructorArgs",
-    "ContractErrorMap",
-    "ContractEventDefinition",
-    "ContractEventRegistry",
-    "StellarResult",
-  ]);
+  private readonly claimed = new Set(TEMPLATE_TYPE_NAMES);
   constructor(readonly spec: Spec) {
     for (const entry of spec.entries) {
       if (!entry.type.startsWith("scSpecEntryUdt")) continue;

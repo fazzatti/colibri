@@ -1336,7 +1336,9 @@ across applications built on Colibri.
 source when needed. `extractContractEventsFromSpec` and
 `extractContractEventsFromWasm` also work independently. Registry definitions
 provide strict decoding and indexed filters; decoded `ContractEvent` objects
-retain ledger, transaction, and raw XDR metadata. Missing declarations do not
+retain ledger, transaction, and raw XDR metadata. Both decoding and filters
+accept G-, C-, and M-addresses for `MuxedAddress` fields; ordinary `Address`
+fields accept G- and C-addresses only. Missing declarations do not
 imply that a contract emits no events. See
 [the guide](../docs/core/contract/events.md) and the
 [bindings generator](../contract-bindings/README.md).

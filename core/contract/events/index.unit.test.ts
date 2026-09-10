@@ -7,7 +7,7 @@ import {
 } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Spec } from "stellar-sdk/contract";
-import { xdr } from "stellar-sdk";
+import { Address, StrKey, xdr } from "stellar-sdk";
 import {
   ContractEvent,
   contractEventBindings,
@@ -57,6 +57,58 @@ function event(
 }
 describe("spec-aware contract events", () => {
   for (
+    const [name, type] of [
+      ["Address", xdr.ScSpecTypeDef.scSpecTypeAddress()],
+      ["MuxedAddress", xdr.ScSpecTypeDef.scSpecTypeMuxedAddress()],
+    ] as const
+  ) {
+    it(`decodes and filters the supported ${name} address variants`, () => {
+      const entry = eventEntry();
+      assert(entry.type === "scSpecEntryEventV0");
+      const declaration = new xdr.ScSpecEventV0({
+        ...entry.value,
+        params: entry.value.params.map((param) =>
+          new xdr.ScSpecEventParamV0({ ...param, type })
+        ),
+      });
+      const definition = new ContractEventDefinition(
+        new Spec([xdr.ScSpecEntry.scSpecEntryEventV0(declaration)]),
+        declaration,
+      );
+      const account = StrKey.encodeEd25519PublicKey(new Uint8Array(32));
+      const muxed = StrKey.encodeMed25519PublicKey(
+        Uint8Array.from([...new Uint8Array(39), 7]),
+      );
+      for (const address of [account, contractId, muxed]) {
+        const value = new Address(address).toScVal();
+        const occurrence = event(
+          xdr.ScVal.scvMap([
+            new xdr.ScMapEntry({ key: symbol("amount"), val: value }),
+          ]),
+          [symbol("transfer"), value],
+        );
+        if (name === "Address" && address === muxed) {
+          assertThrows(() => definition.fromEvent(occurrence), E.DECODE_FAILED);
+          assertEquals(definition.tryFromEvent(occurrence), undefined);
+          assertThrows(
+            () => definition.toEventFilter({ owner: address }),
+            E.INVALID_FILTER,
+          );
+        } else {
+          assertEquals(definition.fromEvent(occurrence).fields, {
+            owner: address,
+            amount: address,
+          });
+          assert(
+            definition.toEventFilter({ owner: address }).matchesTopics(
+              occurrence.scvalTopics,
+            ),
+          );
+        }
+      }
+    });
+  }
+  for (
     const [format, value] of [
       [
         xdr.ScSpecEventDataFormat.scSpecEventDataFormatMap,
@@ -98,6 +150,14 @@ describe("spec-aware contract events", () => {
         E.INVALID_FILTER,
       );
       assertEquals(definition.toTopicFilter()[1], "*");
+      if (format === xdr.ScSpecEventDataFormat.scSpecEventDataFormatVec) {
+        for (const invalid of [amount(), xdr.ScVal.scvVec([])]) {
+          assertThrows(
+            () => definition.fromEvent(event(invalid)),
+            E.DECODE_FAILED,
+          );
+        }
+      }
       assertThrows(
         () => definition.toTopicFilter({ amount: 1 }),
         E.INVALID_FILTER,
@@ -145,6 +205,9 @@ describe("spec-aware contract events", () => {
     for (
       const invalid of [
         event(xdr.ScVal.scvMap([])),
+        event(xdr.ScVal.scvMap([
+          new xdr.ScMapEntry({ key: symbol("wrong_field"), val: amount() }),
+        ])),
         event(
           xdr.ScVal.scvMap([
             new xdr.ScMapEntry({
@@ -227,6 +290,18 @@ describe("spec-aware contract events", () => {
     const entry = eventEntry();
     assert(entry.type === "scSpecEntryEventV0");
     const params = entry.value.params;
+    assertThrows(
+      () =>
+        new ContractEventDefinition(
+          new Spec([entry]),
+          new xdr.ScSpecEventV0({
+            ...entry.value,
+            prefixTopics: ["one", "two", "three", "four"],
+          }),
+        ),
+      E.INVALID_SPEC,
+      "too many topics",
+    );
     assertThrows(
       () =>
         new ContractEventDefinition(

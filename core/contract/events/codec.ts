@@ -45,6 +45,8 @@ function validatePrimitive(value: xdr.ScVal, type: xdr.ScSpecTypeDef): boolean {
   if (actual !== PRIMITIVES[kind]) {
     throw new E.INVALID_SPEC(`expected ${kind}, received ${actual}`);
   }
+  // Soroban MuxedAddress also accepts ordinary account and contract addresses.
+  // Only an Address declaration excludes multiplexed accounts.
   if (
     kind === "scSpecTypeAddress" && value.type === "scvAddress" &&
     value.value.type === "scAddressTypeMuxedAccount"

@@ -23,6 +23,11 @@ describe("bindings CLI class names", () => {
         "contract.wasm",
         "spec.wasm",
         "ColibriError.wasm",
+        "object.wasm",
+        "promise.wasm",
+        "map.wasm",
+        "contract-id.wasm",
+        "soroban-type.wasm",
       ]
     ) {
       assertEquals(defaultClassName(path), "ContractClient");

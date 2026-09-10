@@ -8,6 +8,7 @@ import { generateBindings } from "@/generation/generate.ts";
 import { writeBindings } from "@/output/write.ts";
 import {
   func,
+  option,
   struct,
   udt,
   valueSpec,
@@ -32,6 +33,102 @@ async function deno(args: string[]): Promise<void> {
   );
 }
 describe("generated consumer boundary", () => {
+  it("preserves optional composed input and output types in generated consumers", async () => {
+    const directory = await Deno.makeTempDir();
+    const value = option(xdr.ScSpecTypeDef.scSpecTypeTuple(
+      new xdr.ScSpecTypeTuple({
+        valueTypes: [
+          xdr.ScSpecTypeDef.scSpecTypeVec(
+            new xdr.ScSpecTypeVec({
+              elementType: xdr.ScSpecTypeDef.scSpecTypeU32(),
+            }),
+          ),
+          xdr.ScSpecTypeDef.scSpecTypeBytesN(
+            new xdr.ScSpecTypeBytesN({ n: 4 }),
+          ),
+        ],
+      }),
+    ));
+    try {
+      await writeBindings(
+        generateBindings(new Spec([func("complex", { value }, [value])])),
+        {
+          directory,
+        },
+      );
+      await Deno.writeTextFile(
+        `${directory}/consumer.ts`,
+        `
+import { ContractClientSpec, SorobanType, type ComplexInput, type ComplexOutput } from "./index.ts";
+import { encodeSorobanArguments, decodeSorobanResult } from "@colibri/core";
+import { assertEquals } from "@std/assert";
+const bytes = new Uint8Array([1, 2, 3, 4]);
+const input: ComplexInput = { value: [[1, SorobanType.U32.from(2)], bytes] };
+const raw: ComplexInput = { value: [[1, 2], bytes] };
+const wrapped = encodeSorobanArguments(ContractClientSpec, "complex", input);
+assertEquals(wrapped, encodeSorobanArguments(ContractClientSpec, "complex", raw));
+const output = decodeSorobanResult(ContractClientSpec, "complex", wrapped[0]) as ComplexOutput;
+const expected: ComplexOutput = [[1, 2], bytes];
+assertEquals(output, expected);
+const absent: ComplexInput = { value: undefined };
+assertEquals(decodeSorobanResult(ContractClientSpec, "complex", encodeSorobanArguments(ContractClientSpec, "complex", absent)[0]), null);
+function types() {
+  // @ts-expect-error Vector members retain their ABI integer type.
+  const invalid: ComplexInput = { value: [["wrong"], bytes] };
+  // @ts-expect-error Decoded integers are raw values, not wrappers.
+  const invalidOutput: ComplexOutput = [[SorobanType.U32.from(2)], bytes];
+  void [invalid, invalidOutput];
+}
+void types;
+`,
+      );
+      await deno([
+        "run",
+        "--check",
+        "--config",
+        rootConfig,
+        `${directory}/consumer.ts`,
+      ]);
+    } finally {
+      await Deno.remove(directory, { recursive: true });
+    }
+  });
+  it("compiles and constructs valid names adjacent to reserved template names", async () => {
+    const directory = await Deno.makeTempDir();
+    try {
+      const names = ["Omit", "ObjectClient", "$Token", "_Token"];
+      for (const className of names) {
+        await writeBindings(generateBindings(bindingSpec(), { className }), {
+          directory: `${directory}/${className}`,
+        });
+      }
+      await Deno.writeTextFile(
+        `${directory}/consumer.ts`,
+        `
+${
+          names.map((name) => `import { ${name} } from "./${name}/index.ts";`)
+            .join("\n")
+        }
+import { Contract, NetworkConfig } from "@colibri/core";
+import { assertInstanceOf, assertStrictEquals } from "@std/assert";
+for (const Client of [${names.join(", ")}]) {
+  const client = new Client({ networkConfig: NetworkConfig.TestNet(), contractConfig: { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" } });
+  assertInstanceOf(client, Contract);
+  assertStrictEquals(client.constructor, Client);
+}
+`,
+      );
+      await deno([
+        "run",
+        "--check",
+        "--config",
+        rootConfig,
+        `${directory}/consumer.ts`,
+      ]);
+    } finally {
+      await Deno.remove(directory, { recursive: true });
+    }
+  });
   it("keeps constructor-only specs usable for deployment without callable methods", async () => {
     const directory = await Deno.makeTempDir();
     try {

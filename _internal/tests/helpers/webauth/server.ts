@@ -309,7 +309,7 @@ export function startTestWebAuthServer(
     );
     if (Api.isSimulationError(recording) || !recording.result) {
       throw new TypeError(
-        `Could not record SEP-45 authorization: ${
+        `Could not record SEP-45 authorization at ledger ${recording.latestLedger}: ${
           Api.isSimulationError(recording)
             ? recording.error
             : "missing simulation result"

@@ -1,22 +1,15 @@
 import { BindingError, Code } from "@/error.ts";
 import { identifier } from "@/generation/type-map.ts";
+import { TEMPLATE_CLASS_NAMES } from "@/generation/names.ts";
 
 /** @internal Shared by the renderer and CLI before loading a source. */
 export function validateClassName(name: string): void {
   if (
-    !identifier(name) ||
-    [
-      "Contract",
-      "ColibriError",
-      "Spec",
-      "createContractErrorMatcherPlugin",
-      "ContractMethods",
-    ]
-      .includes(name)
+    !identifier(name) || TEMPLATE_CLASS_NAMES.has(name)
   ) {
     throw new BindingError(
       Code.INVALID_OPTIONS,
-      "Choose a valid class name without a runtime import or generated declaration collision",
+      "Choose a valid class name without a TypeScript keyword or generated name collision",
     );
   }
 }

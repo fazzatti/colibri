@@ -49,6 +49,10 @@ There is no class-name question: local `my_token.wasm` becomes `MyToken`.
 Soroban specs have no contract-name field, so remote sources use
 `ContractClient`, as do filenames that cannot form a valid client name. Use
 `--class-name Token` to override the default.
+Overrides must be valid TypeScript class identifiers without collisions with
+generated imports or globals such as `ContractId`, `Object`, and `Promise`.
+Invalid overrides fail before source loading; unusable filename defaults fall
+back to `ContractClient`.
 
 Provenance is omitted by default. Add `--include-provenance` to emit a
 `TokenProvenance` constant (when the class is `Token`) containing available

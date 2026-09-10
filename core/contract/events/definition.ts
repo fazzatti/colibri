@@ -147,9 +147,19 @@ export class ContractEventDefinition<
       if (topics.length === 0) {
         return ["**"];
       }
-      return topics.map((value) =>
-        value === "*" ? "*" : xdr.ScVal.fromXdr(value, "base64")
-      ) as TopicFilter;
+      return topics.map((value, index) => {
+        if (value === "*") {
+          return "*";
+        }
+        const topic = xdr.ScVal.fromXdr(value, "base64");
+        const param = params[index - this.declaration.prefixTopics.length];
+        // Native SDK encoding can accept values outside the declared ABI type.
+        // Apply the same checks used when decoding indexed event fields.
+        if (param) {
+          this.decode(topic, param.type);
+        }
+        return topic;
+      }) as TopicFilter;
     } catch (cause) {
       if (cause instanceof E.INVALID_FILTER) throw cause;
       throw new E.INVALID_FILTER(this.name, cause);

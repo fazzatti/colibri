@@ -73,6 +73,15 @@ describe("CLI field validation", () => {
         "Spec",
         "bad name",
         "class",
+        "unknown",
+        "any",
+        "never",
+        "Object",
+        "ContractId",
+        "Promise",
+        "Map",
+        "Array",
+        "Record",
       ]
     ) {
       assert(

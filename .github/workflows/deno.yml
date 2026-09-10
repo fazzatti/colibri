@@ -277,10 +277,22 @@ jobs:
           deno-version: 2.7.11
 
       - name: Run ${{ matrix.package }} tests
-        run: >-
-          deno test -A --clean ${{ matrix.test_flags }}
-          --coverage=coverage/${{ matrix.package }} --coverage-raw-data-only
-          ${{ matrix.path }}
+        env:
+          COLIBRI_TEST_QUICKSTART_DIAGNOSTICS: ${{ matrix.package == 'webauth' && '1' || '' }}
+        run: |
+          set -o pipefail
+          deno test -A --clean ${{ matrix.test_flags }} \
+            --coverage=coverage/${{ matrix.package }} --coverage-raw-data-only \
+            ${{ matrix.path }} 2>&1 | tee "${{ runner.temp }}/package-tests.log"
+
+      - name: Upload WebAuth Quickstart diagnostics
+        if: always() && matrix.package == 'webauth'
+        uses: actions/upload-artifact@v4
+        with:
+          name: webauth-quickstart-diagnostics
+          path: ${{ runner.temp }}/package-tests.log
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Upload ${{ matrix.package }} coverage profile
         uses: actions/upload-artifact@v4

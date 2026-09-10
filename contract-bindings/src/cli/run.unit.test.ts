@@ -65,6 +65,8 @@ describe("bindings CLI", () => {
         ["--wasm-hash", "wrong"],
         ["--contract-id", contractId, "--rpc-url", "wrong"],
         ["--contract-id", contractId, "--class-name", "bad name"],
+        ...["unknown", "any", "never", "Object", "Promise", "ContractId"]
+          .map((name) => ["--contract-id", contractId, "--class-name", name]),
       ]
     ) {
       const error = await assertRejects(
