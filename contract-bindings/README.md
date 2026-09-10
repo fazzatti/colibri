@@ -126,7 +126,7 @@ const result = await token.transfer.invoke({
 console.log(result.value, result.returnValue, result.hash);
 ```
 
-The ABI cannot safely identify reads versus writes. Every function gets a
+The ABI cannot safely identify reads versus writes. Every callable function gets a
 property with both `.read()` and `.invoke()`; you choose which to call. Pass the
 method's argument object directly to `.read()`. Invocations take a single object
 with `methodArgs`, `config`, and optional `auth`, matching the generic
@@ -139,12 +139,21 @@ value.
 
 The generic `token.read({ method, methodArgs })` and
 `token.invoke({ method, methodArgs, config, auth })` calls remain available.
-Properties keep their exact ABI spelling, such as `token.grant_role.read(...)`.
-If a name collides with a client member or JavaScript hook, the generator
-appends `Method`: an ABI function `read` becomes `token.readMethod.read()`. The
-suffix repeats if needed to avoid another ABI name. Generation warnings and the
-generated README's function table report the exact property. The original ABI
-method name is always sent to Core.
+Properties use camelCase, such as `token.grantRole.read(...)` for `grant_role`.
+Acronyms follow the same convention: `get_URL` becomes `getUrl`. If a name
+collides after casing or with a client member or JavaScript hook, the generator
+appends `Method`: an ABI function `read` becomes `token.readMethod.read()`.
+The suffix repeats if needed to avoid another property, with normalized
+collisions resolved in spec order. Warnings report collisions; ordinary casing
+changes do not produce warnings. The generated README's function table lists
+each mapping. Generic method keys and the ABI names sent to Core stay unchanged.
+
+Soroban calls `__constructor` during deployment. It is excluded from convenience
+properties, `ContractMethods`, and the callable method maps. The complete spec
+and its `ConstructorInput` arguments remain available for deployment tooling.
+That type describes the on-chain constructor's arguments, separately from the
+generated class's configuration type. No ordinary `.read()` or `.invoke()`
+helper is generated for deployment constructors.
 
 Generated clients also inherit `getLedgerEntry({ key, durability })` from Core.
 Supply an encoded ScVal key and optional `"persistent"` (default) or

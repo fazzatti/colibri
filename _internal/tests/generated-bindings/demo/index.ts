@@ -41,7 +41,7 @@ export type {
   TransactionConfig,
 } from "./colibri.ts";
 
-/** Simulate or invoke any function declared in the embedded contract spec. */
+/** Simulate or invoke callable functions declared in the embedded contract spec. */
 export class Demo extends Contract {
   /** Read a structured summary with a named status enum. */
   readonly summary: DemoMethod<"summary"> = {
@@ -55,7 +55,7 @@ export class Demo extends Contract {
   };
 
   /** Read the current count, initially zero. */
-  readonly get_count: DemoMethod<"get_count"> = {
+  readonly getCount: DemoMethod<"get_count"> = {
     read: (methodArgs) =>
       this.read({ method: ContractMethods.GetCount, methodArgs }),
     invoke: (args) =>
@@ -77,7 +77,7 @@ export class Demo extends Contract {
   };
 
   /** Return a summary unchanged to exercise named input and output types. */
-  readonly echo_summary: DemoMethod<"echo_summary"> = {
+  readonly echoSummary: DemoMethod<"echo_summary"> = {
     read: (methodArgs) =>
       this.read({ method: ContractMethods.EchoSummary, methodArgs }),
     invoke: (args) =>

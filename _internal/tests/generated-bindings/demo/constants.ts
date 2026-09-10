@@ -6,7 +6,7 @@
 import type { ContractErrorMap } from "@colibri/core";
 import { Spec } from "@colibri/core";
 
-/** ABI method names. Choose read or invoke at the call site. */
+/** Callable ABI method names. The deployment constructor remains in the spec. */
 export enum ContractMethods {
   Summary = "summary",
   GetCount = "get_count",

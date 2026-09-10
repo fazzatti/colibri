@@ -136,7 +136,7 @@ export function renderGuide(
         sampleArguments(example)
       });\nconsole.log(value);`,
     )
-    : "Select a method from the function table and provide its typed arguments.";
+    : "Consult the function table for callable methods and their typed arguments.";
   const invoke = methods.find((method) =>
     method.inputs.length &&
     method.inputs.every((field) => sample(field.type) !== undefined)
@@ -155,7 +155,7 @@ export function renderGuide(
 console.log(result.hash);
 console.log(result.value);`,
     )
-    : "Pass a method, its arguments, and your transaction configuration to `client.invoke()`.";
+    : "For callable functions, pass the method, its arguments, and transaction configuration to `client.invoke()`.";
   const error = spec.entries.find((entry) =>
     entry.type === "scSpecEntryUdtErrorEnumV0"
   );
@@ -166,8 +166,8 @@ console.log(result.value);`,
   return `# ${name} contract client
 
 Typed [Colibri](https://jsr.io/@colibri/core) bindings generated from this
-contract's specification. The client extends \`Contract\` and gives each function
-a property with typed \`.read()\` and \`.invoke()\` calls.
+contract's specification. The client extends \`Contract\` and gives each callable
+function a property with typed \`.read()\` and \`.invoke()\` calls.
 
 ${fileGuide(options)}## Setup
 
@@ -233,8 +233,8 @@ available as \`transactionConfig\`.
 
 ${invokeExample}
 
-The spec does not classify functions as reads or writes. Every function is
-available through both calls; choose simulation or submission deliberately.
+The spec does not classify functions as reads or writes. Every callable function
+is available through both calls; choose simulation or submission deliberately.
 \`invoke()\` preserves Colibri's transaction metadata and raw \`returnValue\`, and
 adds the decoded \`value\`. That value is \`undefined\` if no return value is present.
 
@@ -312,10 +312,17 @@ Use \`ContractMethods\` for PascalCase method constants and \`${name}MethodMap\`
 inputs and outputs. ABI type names use PascalCase. Field names and union tags
 retain their on-chain spelling so they remain compatible with the SDK codec.
 
-Client properties retain ABI spelling, including underscores. Names that collide
-with existing client members or JavaScript hooks receive a \`Method\` suffix;
-it is repeated if necessary to avoid another name. The table shows the exact
-property. The ABI name passed to Colibri never changes.
+Client properties use camelCase: \`grant_role\` becomes \`client.grantRole\`.
+Names that collide after casing or with existing client members or JavaScript
+hooks receive a \`Method\` suffix, repeated if necessary to avoid another name.
+The table shows the exact
+property. Normalized collisions are resolved in spec order. The ABI name passed
+to Colibri, generic method keys, argument fields and union tags never change.
+${
+    spec.funcs().some((method) => method.name.toString() === "__constructor")
+      ? "\nSoroban calls `__constructor` during deployment. It is excluded from client\nproperties, `ContractMethods`, and the callable method maps. The full embedded\nspec and `ConstructorInput` deployment arguments are retained. This input type\nis separate from the client class configuration type.\n"
+      : ""
+  }
 
 ## Contract errors
 

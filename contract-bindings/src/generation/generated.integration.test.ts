@@ -32,6 +32,55 @@ async function deno(args: string[]): Promise<void> {
   );
 }
 describe("generated consumer boundary", () => {
+  it("keeps constructor-only specs usable for deployment without callable methods", async () => {
+    const directory = await Deno.makeTempDir();
+    try {
+      await writeBindings(
+        generateBindings(
+          new Spec([
+            func("__constructor", {
+              initial_count: xdr.ScSpecTypeDef.scSpecTypeU32(),
+            }),
+          ]),
+        ),
+        { directory },
+      );
+      await Deno.writeTextFile(
+        `${directory}/consumer.ts`,
+        `
+import { ContractClient, ContractClientSpec, ContractMethods, type ConstructorInput, type ContractClientMethodMap, NetworkConfig, SorobanType } from "./index.ts";
+import { encodeSorobanArguments } from "@colibri/core";
+import { assertEquals, assertStrictEquals } from "@std/assert";
+const client = new ContractClient({ errors: false, networkConfig: NetworkConfig.TestNet(), contractConfig: { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" } });
+const input: ConstructorInput = { initial_count: SorobanType.U32.from(7) };
+const args = encodeSorobanArguments(ContractClientSpec, "__constructor", input);
+assertEquals(SorobanType.U32.fromScVal(args[0]).value, 7);
+assertEquals(ContractMethods, {});
+assertEquals(Object.hasOwn(client, "__constructor"), false);
+assertStrictEquals(client.constructor, ContractClient);
+function types() {
+  // @ts-expect-error Deployment arguments preserve their ABI type.
+  const bad: ConstructorInput = { initial_count: "seven" };
+  // @ts-expect-error Constructor-only contracts have no callable methods.
+  const method: keyof ContractClientMethodMap = "__constructor";
+  // @ts-expect-error No ordinary read call for the deployment constructor.
+  client.read({ method: "__constructor", methodArgs: input });
+  void [bad, method];
+}
+void types;
+`,
+      );
+      await deno([
+        "run",
+        "--check",
+        "--config",
+        rootConfig,
+        `${directory}/consumer.ts`,
+      ]);
+    } finally {
+      await Deno.remove(directory, { recursive: true });
+    }
+  });
   it("keeps colliding ABI names and exposes original Core conveniences separately", async () => {
     const directory = await Deno.makeTempDir();
     try {

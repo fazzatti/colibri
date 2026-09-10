@@ -21,10 +21,10 @@ describe("generated method clients", () => {
           "rpc",
           "getSpec",
           "require",
-          "constructor",
           "__proto__",
           "then",
           "grant_role",
+          "__constructor",
         ].map(
           (name) => func(name, {}),
         ),
@@ -35,7 +35,7 @@ describe("generated method clients", () => {
       await Deno.writeTextFile(
         `${directory}/consumer.ts`,
         `
-import { Token, type TokenMethod, type TokenInvocation, type TokenInvocationResult } from "./index.ts";
+import { Token, TokenSpec, ContractMethods, type ConstructorInput, type TokenMethodMap, type TokenMethod, type TokenInvocation, type TokenInvocationResult } from "./index.ts";
 import { Contract, ColibriError, NetworkConfig, SorobanType, type InvokeContractOutput } from "@colibri/core";
 import { xdr, nativeToScVal } from "stellar-sdk";
 import { assertEquals, assertRejects, assertStrictEquals } from "@std/assert";
@@ -48,6 +48,21 @@ const options: TokenInvocation = {
 };
 const input = { owner: SorobanType.Symbol.from("alice") };
 function types() {
+  const constructorInput: ConstructorInput = {};
+  // @ts-expect-error Deployment constructor is not an ordinary method.
+  token.__constructor.read();
+  // @ts-expect-error Normalized constructor must not replace the JS constructor.
+  token.constructor.read();
+  // @ts-expect-error Generic reads exclude the deployment constructor too.
+  token.read({ method: "__constructor", methodArgs: constructorInput });
+  // @ts-expect-error Generic invocations cannot call deployment constructors.
+  token.invoke({ method: "__constructor", methodArgs: constructorInput, ...options });
+  // @ts-expect-error Callable method constants exclude deployment constructors.
+  ContractMethods.Constructor;
+  // @ts-expect-error Callable maps exclude deployment constructors.
+  const constructorMethod: keyof TokenMethodMap = "__constructor";
+  // @ts-expect-error Convenience properties use camelCase.
+  token.grant_role.read();
   const helpers: TokenMethod<"balance"> = token.balance;
   const read: Promise<bigint> = helpers.read(input);
   const invoke: Promise<TokenInvocationResult<bigint>> = helpers.invoke({ methodArgs: input, ...options });
@@ -81,7 +96,7 @@ function types() {
   const wrong: Promise<string> = read;
   // @ts-expect-error No undeclared method.
   token.missing.read();
-  void [read, invoke, ping, pingInvoke, wrong];
+  void [read, invoke, ping, pingInvoke, wrong, constructorMethod];
 }
 void types;
 const read = Contract.prototype.read, invoke = Contract.prototype.invoke;
@@ -103,14 +118,17 @@ try {
     [token.readMethodMethod, "read"], [token.readMethod, "readMethod"],
     [token.invokeMethod, "invoke"], [token.eventsMethod, "events"],
     [token.rpcMethod, "rpc"], [token.getSpecMethod, "getSpec"],
-    [token.requireMethod, "require"], [token.constructorMethod, "constructor"],
-    [token.__proto__Method, "__proto__"], [token.thenMethod, "then"],
-    [token.grant_role, "grant_role"],
+    [token.requireMethod, "require"],
+    [token.proto, "__proto__"], [token.thenMethod, "then"],
+    [token.grantRole, "grant_role"],
   ] as const) {
     assertEquals(await helper.read(), null);
     assertEquals(calls.at(-1)!.method, method);
   }
   assertEquals(Object.getPrototypeOf(token), Token.prototype);
+  assertStrictEquals(token.constructor, Token);
+  assertEquals(Object.hasOwn(token, "__constructor"), false);
+  assertEquals(TokenSpec.getFunc("__constructor").name.toString(), "__constructor");
   assertEquals(token.getSpec().funcs().length, ${spec.funcs().length});
   assertEquals(token.events.Transfer.name, "Transfer");
   assertEquals(await Promise.resolve(token), token);
@@ -138,6 +156,8 @@ try {
   assertStrictEquals((failure.meta?.data as { result: InvokeContractOutput }).result, invalid);
   assertEquals(submissions, before + 1);
   Contract.prototype.invoke = async function(args) { submitted = args; return { ...raw, returnValue: xdr.ScVal.scvVoid() }; };
+  assertEquals((await token.grantRole.invoke(options)).value, null);
+  assertEquals(submitted!.method, "grant_role");
   assertEquals((await token.ping.invoke({ ...options, method: "balance" } as TokenInvocation)).value, null);
   assertEquals(submitted!.method, "ping");
   assertEquals(submitted!.methodArgs, undefined);

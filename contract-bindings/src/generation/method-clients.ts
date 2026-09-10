@@ -1,4 +1,5 @@
 import { Contract, type Spec } from "@colibri/core";
+import { callableMethods } from "@/generation/methods.ts";
 import {
   doc,
   indent,
@@ -12,6 +13,7 @@ export type MethodBinding = {
   method: ReturnType<Spec["funcs"]>[number];
   name: string;
   property: string;
+  collision: boolean;
 };
 
 /** @internal Instance fields do not appear on Contract.prototype. */
@@ -34,7 +36,18 @@ const INSTANCE_MEMBERS = [
   "toJSON",
 ];
 
-/** @internal Preserve ABI spelling without replacing Contract members or object hooks. */
+/** @internal Normalize word separators and acronym boundaries for JavaScript properties. */
+export function methodName(value: string): string {
+  return value.replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2")
+    .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+    .split(/[^A-Za-z0-9$]+/).filter(Boolean)
+    .map((part, index) => {
+      const word = part.toLowerCase();
+      return index ? word[0].toUpperCase() + word.slice(1) : word;
+    }).join("");
+}
+
+/** @internal CamelCase helpers preserve ABI dispatch and protect existing client members. */
 export function methodBindings(spec: Spec): MethodBinding[] {
   const reserved = new Set(INSTANCE_MEMBERS);
   for (
@@ -46,19 +59,22 @@ export function methodBindings(spec: Spec): MethodBinding[] {
       reserved.add(name);
     }
   }
-  const methods = spec.funcs();
+  const methods = callableMethods(spec);
   const occupied = new Set([
     ...reserved,
-    ...methods.map((m) => m.name.toString()),
+    ...methods.map((m) => methodName(m.name.toString())),
   ]);
+  const assigned = new Set(reserved);
   return methods.map((method) => {
     const name = method.name.toString();
-    let member = name;
-    if (reserved.has(member)) {
+    const preferred = methodName(name);
+    let member = preferred;
+    if (assigned.has(member)) {
       do member += "Method"; while (occupied.has(member));
     }
     occupied.add(member);
-    return { method, name, property: member };
+    assigned.add(member);
+    return { method, name, property: member, collision: member !== preferred };
   });
 }
 

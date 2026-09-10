@@ -49,7 +49,7 @@ export type EchoSummaryInput = {
 /** Decoded return value of echo_summary. */
 export type EchoSummaryOutput = CounterSummary;
 
-/** Every ABI method is available through both read and invoke. */
+/** Callable ABI methods available through read and invoke; excludes __constructor. */
 export type DemoMethodMap = {
   summary: {
     input: SummaryInput;

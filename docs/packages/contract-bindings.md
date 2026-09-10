@@ -128,7 +128,7 @@ direct Stellar SDK dependency only when they import and use that SDK themselves.
 
 ## Understand the generated types
 
-Every ABI method has a property with **both** `.read()` and `.invoke()`. The ABI
+Every callable ABI method has a property with **both** `.read()` and `.invoke()`. The ABI
 does not say which functions write state; choose simulation with `.read()`, or
 transaction submission through Core's pipeline with `.invoke()`.
 
@@ -153,11 +153,20 @@ when destructured. They delegate to the existing generic `client.read()` and
 `client.invoke()` methods, which remain available with their existing call
 shape.
 
-Property names keep their ABI spelling, including underscores. When a name
-collides with a client member or JavaScript hook, the generator appends `Method`
-until the name is unused. For example, an ABI function `read` is exposed as
-`client.readMethod.read()`. Warnings and the generated README's function table
-show the mapping; the ABI method name passed to Core is unchanged.
+Property names use camelCase: `grant_role` becomes `client.grantRole`, and
+`get_URL` becomes `client.getUrl`. Names that collide after casing or with a
+client member or JavaScript hook receive a `Method` suffix until unused. For
+example, an ABI function `read` is exposed as `client.readMethod.read()`.
+Normalized collisions are resolved in spec order. Warnings report collisions;
+ordinary casing changes are expected. The generated README's function table
+shows every mapping. Generic method keys, argument fields, and the ABI method
+names sent to Core stay unchanged.
+
+Soroban runs `__constructor` during deployment, so generated clients omit it
+from convenience properties, `ContractMethods`, and their callable method maps.
+The embedded spec retains its declaration, and `ConstructorInput` describes its
+deployment arguments. This is separate from the JavaScript client constructor's
+configuration type. The generated class keeps its normal JavaScript constructor.
 
 Method names remain correlated with their arguments and outputs. No-argument
 functions can omit `methodArgs`. Invoke keeps Core's raw `returnValue`, hash,

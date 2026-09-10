@@ -89,7 +89,7 @@ describe("bindings rendering", () => {
     assert(plan.files["constants.ts"].includes("export enum ContractMethods"));
     assert(plan.files["constants.ts"].includes('GrantRole = "grant_role"'));
     assert(
-      plan.files["constants.ts"].includes('Constructor = "__constructor"'),
+      !plan.files["constants.ts"].includes('Constructor = "__constructor"'),
     );
     assert(plan.files["constants.ts"].includes('Proto = "__proto__"'));
     assert(!plan.files["constants.ts"].includes("ContractClientMethods"));

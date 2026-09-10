@@ -1,8 +1,8 @@
 # Demo contract client
 
 Typed [Colibri](https://jsr.io/@colibri/core) bindings generated from this
-contract's specification. The client extends `Contract` and gives each function
-a property with typed `.read()` and `.invoke()` calls.
+contract's specification. The client extends `Contract` and gives each callable
+function a property with typed `.read()` and `.invoke()` calls.
 
 ## Files
 
@@ -82,8 +82,8 @@ console.log(result.hash);
 console.log(result.value);
 ```
 
-The spec does not classify functions as reads or writes. Every function is
-available through both calls; choose simulation or submission deliberately.
+The spec does not classify functions as reads or writes. Every callable function
+is available through both calls; choose simulation or submission deliberately.
 `invoke()` preserves Colibri's transaction metadata and raw `returnValue`, and
 adds the decoded `value`. That value is `undefined` if no return value is present.
 
@@ -147,18 +147,21 @@ schema is inferred.
 | ABI method | Client property | Input type | Output type |
 | --- | --- | --- | --- |
 | `summary` | `client.summary` | `SummaryInput` | `SummaryOutput` |
-| `get_count` | `client.get_count` | `GetCountInput` | `GetCountOutput` |
+| `get_count` | `client.getCount` | `GetCountInput` | `GetCountOutput` |
 | `increment` | `client.increment` | `IncrementInput` | `IncrementOutput` |
-| `echo_summary` | `client.echo_summary` | `EchoSummaryInput` | `EchoSummaryOutput` |
+| `echo_summary` | `client.echoSummary` | `EchoSummaryInput` | `EchoSummaryOutput` |
 
 Use `ContractMethods` for PascalCase method constants and `DemoMethodMap` for correlated
 inputs and outputs. ABI type names use PascalCase. Field names and union tags
 retain their on-chain spelling so they remain compatible with the SDK codec.
 
-Client properties retain ABI spelling, including underscores. Names that collide
-with existing client members or JavaScript hooks receive a `Method` suffix;
-it is repeated if necessary to avoid another name. The table shows the exact
-property. The ABI name passed to Colibri never changes.
+Client properties use camelCase: `grant_role` becomes `client.grantRole`.
+Names that collide after casing or with existing client members or JavaScript
+hooks receive a `Method` suffix, repeated if necessary to avoid another name.
+The table shows the exact
+property. Normalized collisions are resolved in spec order. The ABI name passed
+to Colibri, generic method keys, argument fields and union tags never change.
+
 
 ## Contract errors
 

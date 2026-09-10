@@ -39,7 +39,7 @@ export * from "./constants.ts";
 export * from "./types.ts";
 ${renderConvenienceExports(declarations)}
 
-/** Simulate or invoke any function declared in the embedded contract spec. */
+/** Simulate or invoke callable functions declared in the embedded contract spec. */
 export class ${name} extends Contract {
 ${bindings.map((binding) => renderMethodClient(binding, name)).join("\n\n")}${
     bindings.length ? "\n\n" : ""

@@ -8,6 +8,13 @@ import {
   typeName,
 } from "@/generation/type-map.ts";
 
+/** @internal Constructors run during deployment, outside ordinary contract calls. */
+export function callableMethods(spec: Spec): ReturnType<Spec["funcs"]> {
+  return spec.funcs().filter((method) =>
+    method.name.toString() !== "__constructor"
+  );
+}
+
 /** @internal Render named function inputs/outputs and their correlated method map. */
 export function renderMethods(
   spec: Spec,
@@ -39,6 +46,18 @@ export function renderMethods(
     const input = `${typeName(name)}Input`;
     const output = `${typeName(name)}Output`;
     model.claim(input);
+    if (name === "__constructor") {
+      declarations.push(
+        `${
+          doc(
+            method.doc.toString(),
+            "Arguments passed to __constructor during deployment.",
+          )
+        }
+export type ${input} = ${model.fields(method.inputs, "Input")};`,
+      );
+      continue;
+    }
     model.claim(output);
     let result = method.outputs[0]
       ? model.type(method.outputs[0], "Output", true)
@@ -64,7 +83,7 @@ export type ${output} = ${result};`);
   }
   return `${declarations.join("\n\n")}
 
-/** Every ABI method is available through both read and invoke. */
+/** Callable ABI methods available through read and invoke; excludes __constructor. */
 export type ${className}MethodMap = {
 ${indent(entries.join("\n"))}
 };`;

@@ -71,11 +71,11 @@ export function generateBindings(
       scaffold: packageScaffold(options, className, spec),
       warnings: [
         ...model.warnings,
-        ...bindings.filter((binding) => binding.name !== binding.property).map(
+        ...bindings.filter((binding) => binding.collision).map(
           (binding) =>
             `ABI method ${
               JSON.stringify(binding.name)
-            } uses client.${binding.property} to avoid a client member collision.`,
+            } uses client.${binding.property} to avoid a naming collision.`,
         ),
         ...(spec.events().length ? [] : [
           "No event declarations in this spec. The contract may still emit events.",

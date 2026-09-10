@@ -3,6 +3,7 @@ import { extractContractErrorMapFromSpec } from "@colibri/core";
 import type { Spec } from "@colibri/core";
 import type { GenerateBindingsOptions } from "@/types.ts";
 import { quote, typeName } from "@/generation/type-map.ts";
+import { callableMethods } from "@/generation/methods.ts";
 
 /** @internal Shared source marker used by the renderer and regeneration guard. */
 export const GENERATED_MARKER =
@@ -21,10 +22,10 @@ export function renderConstants(
 import type { ContractErrorMap } from "@colibri/core";
 import { Spec } from "@colibri/core";
 
-/** ABI method names. Choose read or invoke at the call site. */
+/** Callable ABI method names. The deployment constructor remains in the spec. */
 export enum ContractMethods {
 ${
-    spec.funcs().map((method) =>
+    callableMethods(spec).map((method) =>
       `  ${typeName(method.name.toString())} = ${
         quote(method.name.toString())
       },`
