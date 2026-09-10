@@ -17,10 +17,13 @@ describe(
   "SDEX native exchange workflows on Quickstart",
   disableSanitizeConfig,
   () => {
+    const diagnostics =
+      Deno.env.get("COLIBRI_TEST_QUICKSTART_DIAGNOSTICS") === "1";
     const ledger = new StellarTestLedger({
       containerName: `colibri-sdex-${crypto.randomUUID()}`,
       containerImageVersion: "testing",
-      logLevel: "silent",
+      logLevel: diagnostics ? "debug" : "silent",
+      emitContainerLogs: diagnostics,
     });
     const issuer = LocalSigner.generateRandom();
     const maker = LocalSigner.generateRandom();
@@ -68,7 +71,17 @@ describe(
     };
 
     beforeAll(async () => {
-      await ledger.start();
+      const container = await ledger.start();
+      if (diagnostics) {
+        const info = await container.inspect();
+        // The testing tag is mutable; retain the image used by this run.
+        console.info("SDEX Quickstart image", {
+          containerId: info.Id,
+          imageId: info.Image,
+          image: info.Config.Image,
+          platform: info.Platform,
+        });
+      }
       networkConfig = NetworkConfig.CustomNet(
         await ledger.getNetworkConfiguration(),
       );
@@ -114,8 +127,18 @@ describe(
       });
     });
     afterAll(async () => {
-      await ledger.stop();
-      await ledger.destroy();
+      try {
+        if (diagnostics) {
+          const info = await ledger.getContainer().inspect();
+          console.info("SDEX Quickstart final state", info.State);
+        }
+      } finally {
+        try {
+          await ledger.stop();
+        } finally {
+          await ledger.destroy();
+        }
+      }
     });
 
     it("creates, reads, updates, and cancels a standing sell offer with confirmed exact prices", async () => {

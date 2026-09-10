@@ -2,16 +2,20 @@
 
 This directory is not part of any published Colibri package.
 
-## WebAuth Quickstart diagnostics
+## Quickstart diagnostics
 
-Run the local lifecycle suite with `COLIBRI_TEST_QUICKSTART_DIAGNOSTICS=1` to
-include Quickstart service logs and the actual Docker image ID in test output.
-CI enables this and uploads `webauth-quickstart-diagnostics` even when the suite
-fails, before container cleanup can erase the evidence. The suite currently
-uses the mutable `nightly-next` tag for its protocol 28 fixtures; compare image
-IDs and the service versions in these logs when investigating intermittent RPC
-failures. Challenge-recording errors include the RPC's simulation ledger.
-Diagnostics do not retry challenges or relax any authentication assertions.
+Run the WebAuth lifecycle or Core SDEX suite with
+`COLIBRI_TEST_QUICKSTART_DIAGNOSTICS=1` to include Quickstart service logs and
+the actual Docker image ID in test output. CI enables this and uploads
+`webauth-quickstart-diagnostics` and `core-quickstart-diagnostics` even when
+their suites fail, before container cleanup can erase the evidence. SDEX also
+records the final container state before stopping it, including the exit status
+and Docker's OOM flag. The WebAuth suite currently uses the mutable
+`nightly-next` tag for its protocol 28 fixtures; compare image IDs and the
+service versions in these logs when investigating intermittent RPC failures.
+Challenge-recording errors include the RPC's simulation ledger. SDEX uses the
+mutable `testing` tag. Diagnostics do not retry transactions or challenges, or
+relax any assertions.
 
 ## Mainnet archive integrations
 
