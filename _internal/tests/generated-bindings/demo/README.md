@@ -1,8 +1,8 @@
 # Demo contract client
 
 Typed [Colibri](https://jsr.io/@colibri/core) bindings generated from this
-contract's specification. The client extends `Contract` and provides typed
-`read()` and `invoke()` calls for the functions listed below.
+contract's specification. The client extends `Contract` and gives each function
+a property with typed `.read()` and `.invoke()` calls.
 
 ## Files
 
@@ -28,7 +28,7 @@ For npm builds, import the generated client from your package's built entrypoint
 
 ```ts
 import { NetworkConfig } from "@colibri/core";
-import { Demo, ContractMethods } from "./index.ts";
+import { Demo } from "./index.ts";
 
 const client = new Demo({
   networkConfig: NetworkConfig.TestNet(),
@@ -42,9 +42,7 @@ const client = new Demo({
 It does not submit a transaction. Adjust the sample arguments for your deployment.
 
 ```ts
-const value = await client.read({
-  method: ContractMethods.Summary,
-});
+const value = await client.summary.read();
 console.log(value);
 ```
 
@@ -55,9 +53,7 @@ fee, timeout, and signers. The example below assumes that configuration is
 available as `transactionConfig`.
 
 ```ts
-const result = await client.invoke({
-  method: ContractMethods.Increment,
-  methodArgs: { by: 1 },
+const result = await client.increment.invoke({ by: 1 }, {
   config: transactionConfig,
 });
 
@@ -69,6 +65,12 @@ The spec does not classify functions as reads or writes. Every function is
 available through both calls; choose simulation or submission deliberately.
 `invoke()` preserves Colibri's transaction metadata and raw `returnValue`, and
 adds the decoded `value`. That value is `undefined` if no return value is present.
+
+Pass the function's argument object directly to `.read(args)` or
+`.invoke(args, { config, auth })`. Argument-free functions use `.read()`
+and `.invoke({ config, auth })`. The helpers remain bound to this client
+when destructured. Existing generic `client.read({ method, methodArgs })`
+and `client.invoke({ method, methodArgs, config, auth })` calls remain available.
 
 ## Soroban types and validated inputs
 
@@ -119,16 +121,21 @@ schema is inferred.
 
 ## Functions
 
-| Method | Input type | Output type |
-| --- | --- | --- |
-| `summary` | `SummaryInput` | `SummaryOutput` |
-| `get_count` | `GetCountInput` | `GetCountOutput` |
-| `increment` | `IncrementInput` | `IncrementOutput` |
-| `echo_summary` | `EchoSummaryInput` | `EchoSummaryOutput` |
+| ABI method | Client property | Input type | Output type |
+| --- | --- | --- | --- |
+| `summary` | `client.summary` | `SummaryInput` | `SummaryOutput` |
+| `get_count` | `client.get_count` | `GetCountInput` | `GetCountOutput` |
+| `increment` | `client.increment` | `IncrementInput` | `IncrementOutput` |
+| `echo_summary` | `client.echo_summary` | `EchoSummaryInput` | `EchoSummaryOutput` |
 
 Use `ContractMethods` for PascalCase method constants and `DemoMethodMap` for correlated
 inputs and outputs. ABI type names use PascalCase. Field names and union tags
 retain their on-chain spelling so they remain compatible with the SDK codec.
+
+Client properties retain ABI spelling, including underscores. Names that collide
+with existing client members or JavaScript hooks receive a `Method` suffix;
+it is repeated if necessary to avoid another name. The table shows the exact
+property. The ABI name passed to Colibri never changes.
 
 ## Contract errors
 

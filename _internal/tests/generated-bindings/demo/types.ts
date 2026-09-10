@@ -101,6 +101,22 @@ export type DemoInvocationResult<Value> =
   & Awaited<ReturnType<Contract["invoke"]>>
   & { value: Value | undefined };
 
+/** Bound read/invoke helpers for one ABI method, with its exact input and output. */
+export type DemoMethod<Method extends keyof DemoMethodMap> = {
+  /** Simulate without submitting; argument-free methods can omit the input. */
+  readonly read: (
+    ...args: DemoInputs[Method] extends Record<string, never>
+      ? [methodArgs?: DemoInputs[Method]]
+      : [methodArgs: DemoInputs[Method]]
+  ) => Promise<DemoOutputs[Method]>;
+  /** Submit with transaction settings; argument-free methods take only options. */
+  readonly invoke: (
+    ...args: DemoInputs[Method] extends Record<string, never>
+      ? [options: DemoInvocation]
+      : [methodArgs: DemoInputs[Method], options: DemoInvocation]
+  ) => Promise<DemoInvocationResult<DemoOutputs[Method]>>;
+};
+
 // -----------------------------------------------------------------------------
 // Contract types
 // -----------------------------------------------------------------------------

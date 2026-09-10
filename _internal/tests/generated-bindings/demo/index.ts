@@ -9,13 +9,14 @@ import {
   createContractErrorMatcherPlugin,
 } from "@colibri/core";
 import { Spec } from "@colibri/core";
-import { DemoErrors, DemoSpec } from "./constants.ts";
+import { ContractMethods, DemoErrors, DemoSpec } from "./constants.ts";
 import type {
   DemoCall,
   DemoConstructorArgs,
   DemoEvents,
   DemoInvocation,
   DemoInvocationResult,
+  DemoMethod,
   DemoMethodMap,
   DemoOutputs,
 } from "./types.ts";
@@ -25,6 +26,54 @@ export * from "./types.ts";
 
 /** Simulate or invoke any function declared in the embedded contract spec. */
 export class Demo extends Contract {
+  /** Read a structured summary with a named status enum. */
+  readonly summary: DemoMethod<"summary"> = {
+    read: (methodArgs) =>
+      this.read({ method: ContractMethods.Summary, methodArgs }),
+    invoke: (options) =>
+      this.invoke({
+        ...options,
+        method: ContractMethods.Summary,
+        methodArgs: {},
+      }),
+  };
+
+  /** Read the current count, initially zero. */
+  readonly get_count: DemoMethod<"get_count"> = {
+    read: (methodArgs) =>
+      this.read({ method: ContractMethods.GetCount, methodArgs }),
+    invoke: (options) =>
+      this.invoke({
+        ...options,
+        method: ContractMethods.GetCount,
+        methodArgs: {},
+      }),
+  };
+
+  /** Increase the count by a positive amount, up to a maximum of 100. */
+  readonly increment: DemoMethod<"increment"> = {
+    read: (methodArgs) =>
+      this.read({ method: ContractMethods.Increment, methodArgs }),
+    invoke: (methodArgs, options) =>
+      this.invoke({
+        ...options,
+        method: ContractMethods.Increment,
+        methodArgs,
+      }),
+  };
+
+  /** Return a summary unchanged to exercise named input and output types. */
+  readonly echo_summary: DemoMethod<"echo_summary"> = {
+    read: (methodArgs) =>
+      this.read({ method: ContractMethods.EchoSummary, methodArgs }),
+    invoke: (methodArgs, options) =>
+      this.invoke({
+        ...options,
+        method: ContractMethods.EchoSummary,
+        methodArgs,
+      }),
+  };
+
   /** Install a fresh spec and the prepared error map alongside existing plugins. */
   constructor({ errors = DemoErrors, ...args }: DemoConstructorArgs) {
     const contractId = args.contractConfig.contractId as ContractId | undefined;

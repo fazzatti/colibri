@@ -1,8 +1,9 @@
 # Generate a Colibri contract client
 
 `@colibri/contract-bindings` turns a Soroban contract spec into a `Contract`
-subclass with typed `read` and `invoke`, embedded spec entries, a Colibri error
-map, and typed event definitions. Its initial 0.1 release requires Core 1.1.
+subclass with typed per-method `.read()` and `.invoke()` helpers, embedded spec
+entries, a Colibri error map, and typed event definitions. Its initial 0.1
+release requires Core 1.1.
 
 ## Choose a source and output
 
@@ -86,10 +87,34 @@ Resolve the failure and rerun.
 
 ## Understand the generated types
 
-Every ABI method is available through **both** `read` and `invoke`. The ABI does
-not say which functions write state, so the generator does not infer mutability
-or add individual method wrappers. Choose simulation with `read`, or transaction
-submission through Core's pipeline with `invoke`.
+Every ABI method has a property with **both** `.read()` and `.invoke()`. The ABI
+does not say which functions write state; choose simulation with `.read()`, or
+transaction submission through Core's pipeline with `.invoke()`.
+
+This fragment assumes your generated `Token` class declares `balance` and
+`transfer`, and that the addresses and transaction configuration are supplied by
+your application:
+
+```ts
+const balance = await token.balance.read({ account: address });
+const result = await token.transfer.invoke(
+  { from: address, to: recipient, amount: 100n },
+  { config: transactionConfig },
+);
+console.log(balance, result.value, result.hash);
+```
+
+Argument-free functions use `.read()` and `.invoke({ config })`. Invocations
+accept optional `auth` alongside `config`. Helpers remain bound to their client
+when destructured. They delegate to the existing generic `client.read()` and
+`client.invoke()` methods, which remain available with their existing call
+shape.
+
+Property names keep their ABI spelling, including underscores. When a name
+collides with a client member or JavaScript hook, the generator appends `Method`
+until the name is unused. For example, an ABI function `read` is exposed as
+`client.readMethod.read()`. Warnings and the generated README's function table
+show the mapping; the ABI method name passed to Core is unchanged.
 
 Method names remain correlated with their arguments and outputs. No-argument
 functions can omit `methodArgs`. Invoke keeps Core's raw `returnValue`, hash,

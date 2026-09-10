@@ -118,23 +118,31 @@ const token = new Token({
   networkConfig,
   contractConfig: { contractId },
 });
-const balance = await token.read({
-  method: "balance",
-  methodArgs: { account: address },
-}); // bigint
-const result = await token.invoke({
-  method: "transfer",
-  methodArgs: { from: address, to: recipient, amount: 100n },
-  config: transactionConfig,
-});
+const balance = await token.balance.read({ account: address }); // bigint
+const result = await token.transfer.invoke(
+  { from: address, to: recipient, amount: 100n },
+  { config: transactionConfig },
+);
 console.log(result.value, result.returnValue, result.hash);
 ```
 
-The ABI cannot safely identify reads versus writes. Every function is available
-through both typed entry points; no individual method wrappers or mutability
-heuristics are generated. `read()` simulates, while `invoke()` uses Core's
+The ABI cannot safely identify reads versus writes. Every function gets a
+property with both `.read()` and `.invoke()`; you choose which to call. Pass the
+method's argument object directly. Invocations also require a second object with
+`config` and optional `auth`. Argument-free methods use `.read()` and
+`.invoke({ config })`, without an empty argument object. Helpers retain the
+client when destructured. `read()` simulates, while `invoke()` uses Core's
 transaction pipeline, preserving raw `returnValue` and metadata and adding a
 decoded `value`. That value is `undefined` when Core has no return value.
+
+The generic `token.read({ method, methodArgs })` and
+`token.invoke({ method, methodArgs, config, auth })` calls remain available.
+Properties keep their exact ABI spelling, such as `token.grant_role.read(...)`.
+If a name collides with a client member or JavaScript hook, the generator
+appends `Method`: an ABI function `read` becomes `token.readMethod.read()`. The
+suffix repeats if needed to avoid another ABI name. Generation warnings and the
+generated README's function table report the exact property. The original ABI
+method name is always sent to Core.
 
 Generated clients also inherit `getLedgerEntry({ key, durability })` from Core.
 Supply an encoded ScVal key and optional `"persistent"` (default) or

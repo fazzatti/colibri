@@ -3,6 +3,7 @@ import type { Spec } from "@colibri/core";
 import type { xdr } from "stellar-sdk";
 import type { GenerateBindingsOptions } from "@/types.ts";
 import { property, quote, typeName } from "@/generation/type-map.ts";
+import { methodBindings } from "@/generation/method-clients.ts";
 
 const fence = (language: string, source: string): string =>
   `\`\`\`${language}\n${source}\n\`\`\``;
@@ -22,6 +23,20 @@ const SAMPLES: Readonly<Record<string, string>> = {
 };
 function sample(type: xdr.ScSpecTypeDef): string | undefined {
   return SAMPLES[type.type];
+}
+function sampleArguments(method: ReturnType<Spec["funcs"]>[number]): string {
+  return method.inputs.length
+    ? `{ ${
+      method.inputs.map((field) =>
+        `${property(field.name.toString())}: ${sample(field.type)}`
+      ).join(", ")
+    } }`
+    : "";
+}
+function clientAccess(member: string): string {
+  return /^[A-Za-z_$][\w$]*$/.test(member)
+    ? `client.${member}`
+    : `client[${quote(member)}]`;
 }
 function setupInstructions(packaged: boolean, npm: boolean): string {
   if (npm) {
@@ -101,6 +116,9 @@ export function renderGuide(
   const packaged = options.output === "package";
   const npm = options.target === "npm";
   const entry = packaged ? "./mod.ts" : "./index.ts";
+  const bindings = methodBindings(spec);
+  const member = (name: string) =>
+    clientAccess(bindings.find((binding) => binding.name === name)!.property);
   const methods = spec.funcs().filter((method) =>
     !method.name.toString().startsWith("__")
   );
@@ -109,20 +127,13 @@ export function renderGuide(
       method.inputs.every((field) => sample(field.type) !== undefined)
     );
   const method = example?.name.toString();
-  const args = example?.inputs.length
-    ? `\n  methodArgs: { ${
-      example.inputs.map((field) =>
-        `${property(field.name.toString())}: ${sample(field.type)}`
-      ).join(", ")
-    } },`
-    : "";
   const setup = setupInstructions(packaged, npm);
-  const call = method
+  const call = method && example
     ? fence(
       "ts",
-      `const value = await client.read({\n  method: ContractMethods.${
-        typeName(method)
-      },${args}\n});\nconsole.log(value);`,
+      `const value = await ${member(method)}.read(${
+        sampleArguments(example)
+      });\nconsole.log(value);`,
     )
     : "Select a method from the function table and provide its typed arguments.";
   const invoke = methods.find((method) =>
@@ -132,16 +143,9 @@ export function renderGuide(
   const invokeExample = invoke
     ? fence(
       "ts",
-      `const result = await client.invoke({
-  method: ContractMethods.${typeName(invoke.name.toString())},${
-        invoke.inputs.length
-          ? `\n  methodArgs: { ${
-            invoke.inputs.map((field) =>
-              `${property(field.name.toString())}: ${sample(field.type)}`
-            ).join(", ")
-          } },`
-          : ""
-      }
+      `const result = await ${member(invoke.name.toString())}.invoke(${
+        sampleArguments(invoke)
+      }${invoke.inputs.length ? ", " : ""}{
   config: transactionConfig,
 });
 
@@ -159,8 +163,8 @@ console.log(result.value);`,
   return `# ${name} contract client
 
 Typed [Colibri](https://jsr.io/@colibri/core) bindings generated from this
-contract's specification. The client extends \`Contract\` and provides typed
-\`read()\` and \`invoke()\` calls for the functions listed below.
+contract's specification. The client extends \`Contract\` and gives each function
+a property with typed \`.read()\` and \`.invoke()\` calls.
 
 ${fileGuide(options)}## Setup
 
@@ -181,7 +185,7 @@ ${
     fence(
       "ts",
       `import { NetworkConfig } from "@colibri/core";
-import { ${name}, ContractMethods } from ${quote(entry)};
+import { ${name} } from ${quote(entry)};
 
 const client = new ${name}({
   networkConfig: NetworkConfig.TestNet(),
@@ -209,6 +213,12 @@ The spec does not classify functions as reads or writes. Every function is
 available through both calls; choose simulation or submission deliberately.
 \`invoke()\` preserves Colibri's transaction metadata and raw \`returnValue\`, and
 adds the decoded \`value\`. That value is \`undefined\` if no return value is present.
+
+Pass the function's argument object directly to \`.read(args)\` or
+\`.invoke(args, { config, auth })\`. Argument-free functions use \`.read()\`
+and \`.invoke({ config, auth })\`. The helpers remain bound to this client
+when destructured. Existing generic \`client.read({ method, methodArgs })\`
+and \`client.invoke({ method, methodArgs, config, auth })\` calls remain available.
 
 ## Soroban types and validated inputs
 
@@ -262,19 +272,24 @@ schema is inferred.
 
 ## Functions
 
-| Method | Input type | Output type |
-| --- | --- | --- |
+| ABI method | Client property | Input type | Output type |
+| --- | --- | --- | --- |
 ${
-    methods.map((method) =>
-      `| \`${method.name}\` | \`${
-        typeName(method.name.toString())
-      }Input\` | \`${typeName(method.name.toString())}Output\` |`
+    bindings.map((binding) =>
+      `| \`${binding.name}\` | \`${clientAccess(binding.property)}\` | \`${
+        typeName(binding.name)
+      }Input\` | \`${typeName(binding.name)}Output\` |`
     ).join("\n")
   }
 
 Use \`ContractMethods\` for PascalCase method constants and \`${name}MethodMap\` for correlated
 inputs and outputs. ABI type names use PascalCase. Field names and union tags
 retain their on-chain spelling so they remain compatible with the SDK codec.
+
+Client properties retain ABI spelling, including underscores. Names that collide
+with existing client members or JavaScript hooks receive a \`Method\` suffix;
+it is repeated if necessary to avoid another name. The table shows the exact
+property. The ABI name passed to Colibri never changes.
 
 ## Contract errors
 

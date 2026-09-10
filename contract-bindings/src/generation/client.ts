@@ -1,7 +1,14 @@
 import { GENERATED_MARKER } from "@/generation/constants.ts";
+import {
+  type MethodBinding,
+  renderMethodClient,
+} from "@/generation/method-clients.ts";
 
 /** @internal A focused Contract subclass; constants and ABI types live in their own files. */
-export function renderClient(name: string): string {
+export function renderClient(
+  name: string,
+  bindings: readonly MethodBinding[],
+): string {
   return `${GENERATED_MARKER}
 /**
  * Typed Colibri client for ${name}.
@@ -13,14 +20,16 @@ import {
   createContractErrorMatcherPlugin,
 } from "@colibri/core";
 import { Spec } from "@colibri/core";
-import { ${name}Errors, ${name}Spec } from "./constants.ts";
+import { ${
+    bindings.length ? "ContractMethods, " : ""
+  }${name}Errors, ${name}Spec } from "./constants.ts";
 import type {
   ${name}Call,
   ${name}ConstructorArgs,
   ${name}Events,
   ${name}Invocation,
   ${name}InvocationResult,
-  ${name}MethodMap,
+  ${bindings.length ? `${name}Method,\n  ` : ""}${name}MethodMap,
   ${name}Outputs,
 } from "./types.ts";
 
@@ -29,7 +38,9 @@ export * from "./types.ts";
 
 /** Simulate or invoke any function declared in the embedded contract spec. */
 export class ${name} extends Contract {
-  /** Install a fresh spec and the prepared error map alongside existing plugins. */
+${bindings.map((binding) => renderMethodClient(binding, name)).join("\n\n")}${
+    bindings.length ? "\n\n" : ""
+  }  /** Install a fresh spec and the prepared error map alongside existing plugins. */
   constructor({ errors = ${name}Errors, ...args }: ${name}ConstructorArgs) {
     const contractId = args.contractConfig.contractId as ContractId | undefined;
     const matcher = errors === false || Object.keys(errors).length === 0

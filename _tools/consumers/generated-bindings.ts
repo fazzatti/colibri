@@ -75,6 +75,27 @@ assert.deepEqual(Config.fromScVal(config.toScVal()).value, { count: 7, role: "AD
 assert.deepEqual(RbacStorage.ExistingRoles().value, { tag: "ExistingRoles" });
 assert.deepEqual(RbacStorage.RoleIndexToAccount(SorobanType.Symbol.from("ADMIN"), 7).value, { tag: "RoleIndexToAccount", values: ["ADMIN", 7] });
 assert.throws(() => Config.from({ count: -1, role: "ADMIN" }), SorobanValueError);
+const read = Contract.prototype.read, invoke = Contract.prototype.invoke;
+try {
+  Contract.prototype.read = async ({ method }) => method === "ping" ? null : config.value;
+  const { read: readEcho } = client.echo;
+  assert.deepEqual(await readEcho({ config }), config.value);
+  assert.equal(await client.ping.read(), null);
+  const transactionConfig = { source: "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF", fee: "100", timeout: 10, signers: [] };
+  let submitted;
+  Contract.prototype.invoke = async (args) => {
+    submitted = args;
+    return { hash: "abc", ledger: 1, createdAt: 2, returnValue: config.toScVal(), response: {} };
+  };
+  const result = await client.echo.invoke({ config }, { config: transactionConfig });
+  assert.equal(submitted.method, "echo");
+  assert.equal(submitted.config, transactionConfig);
+  assert.deepEqual(result.value, config.value);
+  assert.equal(result.hash, "abc");
+} finally {
+  Contract.prototype.read = read;
+  Contract.prototype.invoke = invoke;
+}
 console.log("Generated npm package: ESM imports, declarations, custom factories, native SDK codec and Core identity passed.");
 `,
   );
@@ -82,7 +103,7 @@ console.log("Generated npm package: ESM imports, declarations, custom factories,
   await Deno.writeTextFile(
     resolve(output, "consumer.ts"),
     `
-import { PingClient, ContractMethods, PingClientErrors, Config, RbacStorage } from "./dist/mod.js";
+import { PingClient, ContractMethods, PingClientErrors, Config, RbacStorage, type PingClientInvocation, type PingClientInvocationResult } from "./dist/mod.js";
 import { SorobanType, type ContractErrorMap, type KnownContractErrorMap } from "@colibri/core";
 declare const client: PingClient;
 const literal: Promise<null> = client.read({ method: "ping" });
@@ -94,6 +115,16 @@ const current: ContractErrorMap = previous;
 const wrapped = Config.from({ count: SorobanType.U32.from(7), role: "ADMIN" });
 const decoded: Config = wrapped.value;
 const echo: Promise<Config> = client.read({ method: "echo", methodArgs: { config: wrapped } });
+declare const options: PingClientInvocation;
+const direct: Promise<Config> = client.echo.read({ config: wrapped });
+const submitted: Promise<PingClientInvocationResult<Config>> = client.echo.invoke({ config: wrapped }, options);
+const ping: Promise<PingClientInvocationResult<null>> = client.ping.invoke(options);
+// @ts-expect-error Required method arguments.
+client.echo.read();
+// @ts-expect-error Invoke requires transaction configuration.
+client.echo.invoke({ config: wrapped });
+// @ts-expect-error No-argument invokes take only options.
+client.ping.invoke({}, options);
 const key: RbacStorage = RbacStorage.RoleIndexToAccount(SorobanType.Symbol.from("ADMIN"), 7).value;
 // @ts-expect-error Struct fields retain their native or wrapped scalar type.
 Config.from({ count: "wrong", role: "ADMIN" });
@@ -103,7 +134,7 @@ RbacStorage.RoleIndexToAccount("ADMIN");
 client.read({ method: "absent" });
 // @ts-expect-error Ping has no arguments.
 client.read({ method: ContractMethods.Ping, methodArgs: { value: 1 } });
-void [literal, member, category, manual, current, decoded, echo, key];
+void [literal, member, category, manual, current, decoded, echo, direct, submitted, ping, key];
 `,
   );
   await Deno.writeTextFile(

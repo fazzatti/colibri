@@ -75,6 +75,22 @@ export type ${className}InvocationResult<Value> =
   & Awaited<ReturnType<Contract["invoke"]>>
   & { value: Value | undefined };
 
+/** Bound read/invoke helpers for one ABI method, with its exact input and output. */
+export type ${className}Method<Method extends keyof ${className}MethodMap> = {
+  /** Simulate without submitting; argument-free methods can omit the input. */
+  readonly read: (
+    ...args: ${className}Inputs[Method] extends Record<string, never>
+      ? [methodArgs?: ${className}Inputs[Method]]
+      : [methodArgs: ${className}Inputs[Method]]
+  ) => Promise<${className}Outputs[Method]>;
+  /** Submit with transaction settings; argument-free methods take only options. */
+  readonly invoke: (
+    ...args: ${className}Inputs[Method] extends Record<string, never>
+      ? [options: ${className}Invocation]
+      : [methodArgs: ${className}Inputs[Method], options: ${className}Invocation]
+  ) => Promise<${className}InvocationResult<${className}Outputs[Method]>>;
+};
+
 ${
     declarations
       ? `// -----------------------------------------------------------------------------

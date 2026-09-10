@@ -106,12 +106,14 @@ const contractId = client.getContractId() as ContractId;
 assertEquals(buildContractDataLedgerKey({ contractId, key }).toXdr("base64"), buildContractDataLedgerKey({ contractId, key: key.toScVal() }).toXdr("base64"));
 function checkTypes() {
   const custom: Promise<ConfigNative> = client.read({ method: "config", methodArgs: methodInput });
+  const directCustom: Promise<ConfigNative> = client.config.read(methodInput);
   // @ts-expect-error Factory arguments are a custom value, not the method's argument object.
   const wrong: ConfigInput = configArgs;
-  void [custom, wrong];
+  void [custom, directCustom, wrong];
   const text: Promise<string[]> = client.read({ method: "texts", methodArgs: { values: new SorobanVec([new SorobanString("hello")], SorobanString.type) } });
   const old: Promise<ConfigNative> = client.read({ method: "echo", methodArgs: { config: plain } });
   const added: Promise<ConfigNative> = client.read({ method: "echo", methodArgs: { config } });
+  const directAdded: Promise<ConfigNative> = client.echo.read({ config });
   const mixed: Promise<ConfigNative> = client.read({ method: "echo", methodArgs: { config: { role: SorobanType.Symbol.from("ADMIN"), count: 7, key } } });
   // @ts-expect-error A String helper is not a Symbol helper.
   RbacStorage.RoleIndexToAccount(new SorobanString("ADMIN"), 7);
@@ -121,7 +123,7 @@ function checkTypes() {
   RbacStorage.Missing();
   // @ts-expect-error Outputs remain plain values.
   const invalid: { count: SorobanU32 } = plain;
-  void [old, added, mixed, invalid, text];
+  void [old, added, directAdded, mixed, invalid, text];
 }
 void checkTypes;
 `,

@@ -9,6 +9,7 @@ export { GENERATED_MARKER } from "@/generation/constants.ts";
 import { renderConstants } from "@/generation/constants.ts";
 import { renderTypes } from "@/generation/types.ts";
 import { renderClient } from "@/generation/client.ts";
+import { methodBindings } from "@/generation/method-clients.ts";
 import { packageScaffold } from "@/generation/scaffold.ts";
 
 /** Renders constants, named ABI types, a client, and setup guidance without I/O. */
@@ -28,6 +29,7 @@ export function generateBindings(
         "Spec",
         "Errors",
         "MethodMap",
+        "Method",
         "Inputs",
         "Outputs",
         "Call",
@@ -41,6 +43,7 @@ export function generateBindings(
     }
     if (options.provenance) model.claim(`${className}Provenance`);
     const methods = renderMethods(spec, model, className);
+    const bindings = methodBindings(spec);
     const events = renderEvents(spec, model, className);
     const prefix = options.output === "package" ? "generated/" : "";
     return {
@@ -57,11 +60,17 @@ export function generateBindings(
           events,
           model.imports,
         ),
-        [`${prefix}index.ts`]: renderClient(className),
+        [`${prefix}index.ts`]: renderClient(className, bindings),
       },
       scaffold: packageScaffold(options, className, spec),
       warnings: [
         ...model.warnings,
+        ...bindings.filter((binding) => binding.name !== binding.property).map(
+          (binding) =>
+            `ABI method ${
+              JSON.stringify(binding.name)
+            } uses client.${binding.property} to avoid a client member collision.`,
+        ),
         ...(spec.events().length ? [] : [
           "No event declarations in this spec. The contract may still emit events.",
         ]),
