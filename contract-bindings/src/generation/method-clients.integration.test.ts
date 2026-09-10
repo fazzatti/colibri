@@ -50,7 +50,7 @@ const input = { owner: SorobanType.Symbol.from("alice") };
 function types() {
   const helpers: TokenMethod<"balance"> = token.balance;
   const read: Promise<bigint> = helpers.read(input);
-  const invoke: Promise<TokenInvocationResult<bigint>> = helpers.invoke(input, options);
+  const invoke: Promise<TokenInvocationResult<bigint>> = helpers.invoke({ methodArgs: input, ...options });
   const ping: Promise<null> = token.ping.read();
   const pingInvoke: Promise<TokenInvocationResult<null>> = token.ping.invoke(options);
   // @ts-expect-error Required ABI arguments.
@@ -60,13 +60,23 @@ function types() {
   // @ts-expect-error No other method's input is accepted.
   token.ping.read({ owner: "alice" });
   // @ts-expect-error Invocation settings are required.
-  token.balance.invoke(input);
+  token.balance.invoke({ methodArgs: input });
   // @ts-expect-error The config field is required.
-  token.balance.invoke(input, {});
-  // @ts-expect-error Argument-free invokes take only their settings.
+  token.balance.invoke({ ...options, methodArgs: input, config: undefined });
+  // @ts-expect-error Required method arguments cannot be omitted.
+  token.balance.invoke(options);
+  // @ts-expect-error Argument values remain typed inside methodArgs.
+  token.balance.invoke({ ...options, methodArgs: { owner: 7 } });
+  // @ts-expect-error Method arguments are not flattened into transaction settings.
+  token.balance.invoke({ ...options, owner: "alice" });
+  // @ts-expect-error Invoke takes a single object, never separate arguments/settings.
+  token.balance.invoke(input, options);
+  // @ts-expect-error Argument-free methods reject unrelated fields.
+  token.ping.invoke({ ...options, methodArgs: { owner: "alice" } });
+  // @ts-expect-error Argument-free invokes also take one object.
   token.ping.invoke({}, options);
   // @ts-expect-error The ABI method is fixed by the property.
-  token.balance.invoke(input, { ...options, method: "ping" });
+  token.balance.invoke({ ...options, methodArgs: input, method: "ping" });
   // @ts-expect-error Output retains its ABI type.
   const wrong: Promise<string> = read;
   // @ts-expect-error No undeclared method.
@@ -108,33 +118,36 @@ try {
   let submitted: Parameters<Contract["invoke"]>[0] | undefined;
   let submissions = 0;
   Contract.prototype.invoke = async function(args) { submissions++; submitted = args; return raw; };
-  const result = await detachedInvoke(input, options);
+  const result = await detachedInvoke({ methodArgs: input, ...options });
   assertEquals(submitted, { ...options, method: "balance", methodArgs: input });
   assertStrictEquals(submitted!.config, options.config);
   assertStrictEquals(submitted!.auth, options.auth);
+  assertStrictEquals<object | undefined>(submitted!.methodArgs, input);
   assertEquals(result.value, 42n);
   assertEquals(result.hash, raw.hash);
   assertStrictEquals(result.returnValue, raw.returnValue);
-  const poisoned = { ...options, method: "ping", methodArgs: { owner: "wrong" } };
-  await token.balance.invoke(input, poisoned);
+  const poisoned = { ...options, method: "ping", methodArgs: input };
+  await token.balance.invoke(poisoned);
   assertEquals(submitted!.method, "balance");
   assertEquals(submitted!.methodArgs, input);
   const invalid = { ...raw, returnValue: xdr.ScVal.scvString("wrong ABI") };
   Contract.prototype.invoke = async () => { submissions++; return invalid; };
   const before = submissions;
-  const failure = await assertRejects(() => token.balance.invoke(input, options), ColibriError);
+  const failure = await assertRejects(() => token.balance.invoke({ methodArgs: input, ...options }), ColibriError);
   assertEquals(failure.code, "CONTR_021");
   assertStrictEquals((failure.meta?.data as { result: InvokeContractOutput }).result, invalid);
   assertEquals(submissions, before + 1);
   Contract.prototype.invoke = async function(args) { submitted = args; return { ...raw, returnValue: xdr.ScVal.scvVoid() }; };
-  assertEquals((await token.ping.invoke(poisoned)).value, null);
+  assertEquals((await token.ping.invoke({ ...options, method: "balance" } as TokenInvocation)).value, null);
   assertEquals(submitted!.method, "ping");
+  assertEquals(submitted!.methodArgs, undefined);
+  assertEquals((await token.ping.invoke({ ...options, methodArgs: {} })).value, null);
   assertEquals(submitted!.methodArgs, {});
   Contract.prototype.invoke = async () => ({ ...raw, returnValue: undefined });
   assertEquals((await token.ping.invoke(options)).value, undefined);
   const pipelineFailure = new Error("pipeline failure");
   Contract.prototype.invoke = () => Promise.reject(pipelineFailure);
-  assertEquals(await assertRejects(() => token.balance.invoke(input, options)), pipelineFailure);
+  assertEquals(await assertRejects(() => token.balance.invoke({ methodArgs: input, ...options })), pipelineFailure);
 } finally {
   Contract.prototype.read = read;
   Contract.prototype.invoke = invoke;

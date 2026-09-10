@@ -68,18 +68,15 @@ export function renderMethodClient(
   client: string,
 ): string {
   const { method, name, property: member } = binding;
-  const invokeArgs = method.inputs.length ? "methodArgs, options" : "options";
-  const args = method.inputs.length ? "methodArgs" : "methodArgs: {}";
   const methodId = `ContractMethods.${typeName(name)}`;
   return indent(`${doc(method.doc.toString(), `Simulate or invoke ${name}.`)}
 readonly ${property(member)}: ${client}Method<${quote(name)}> = {
   read: (methodArgs) =>
     this.read({ method: ${methodId}, methodArgs }),
-  invoke: (${invokeArgs}) =>
+  invoke: (args) =>
     this.invoke({
-      ...options,
+      ...args,
       method: ${methodId},
-      ${args},
     }),
 };`);
 }

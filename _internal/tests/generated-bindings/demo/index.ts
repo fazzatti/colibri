@@ -30,11 +30,10 @@ export class Demo extends Contract {
   readonly summary: DemoMethod<"summary"> = {
     read: (methodArgs) =>
       this.read({ method: ContractMethods.Summary, methodArgs }),
-    invoke: (options) =>
+    invoke: (args) =>
       this.invoke({
-        ...options,
+        ...args,
         method: ContractMethods.Summary,
-        methodArgs: {},
       }),
   };
 
@@ -42,11 +41,10 @@ export class Demo extends Contract {
   readonly get_count: DemoMethod<"get_count"> = {
     read: (methodArgs) =>
       this.read({ method: ContractMethods.GetCount, methodArgs }),
-    invoke: (options) =>
+    invoke: (args) =>
       this.invoke({
-        ...options,
+        ...args,
         method: ContractMethods.GetCount,
-        methodArgs: {},
       }),
   };
 
@@ -54,11 +52,10 @@ export class Demo extends Contract {
   readonly increment: DemoMethod<"increment"> = {
     read: (methodArgs) =>
       this.read({ method: ContractMethods.Increment, methodArgs }),
-    invoke: (methodArgs, options) =>
+    invoke: (args) =>
       this.invoke({
-        ...options,
+        ...args,
         method: ContractMethods.Increment,
-        methodArgs,
       }),
   };
 
@@ -66,11 +63,10 @@ export class Demo extends Contract {
   readonly echo_summary: DemoMethod<"echo_summary"> = {
     read: (methodArgs) =>
       this.read({ method: ContractMethods.EchoSummary, methodArgs }),
-    invoke: (methodArgs, options) =>
+    invoke: (args) =>
       this.invoke({
-        ...options,
+        ...args,
         method: ContractMethods.EchoSummary,
-        methodArgs,
       }),
   };
 

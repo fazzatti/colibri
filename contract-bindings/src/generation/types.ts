@@ -83,11 +83,9 @@ export type ${className}Method<Method extends keyof ${className}MethodMap> = {
       ? [methodArgs?: ${className}Inputs[Method]]
       : [methodArgs: ${className}Inputs[Method]]
   ) => Promise<${className}Outputs[Method]>;
-  /** Submit with transaction settings; argument-free methods take only options. */
+  /** Submit with the generic invocation object, omitting only the fixed method. */
   readonly invoke: (
-    ...args: ${className}Inputs[Method] extends Record<string, never>
-      ? [options: ${className}Invocation]
-      : [methodArgs: ${className}Inputs[Method], options: ${className}Invocation]
+    args: Omit<${className}Call<Method>, "method"> & ${className}Invocation,
   ) => Promise<${className}InvocationResult<${className}Outputs[Method]>>;
 };
 

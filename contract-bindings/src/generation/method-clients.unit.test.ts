@@ -45,7 +45,7 @@ describe("method client generation", () => {
     assert(plan.scaffold["README.md"].includes("client.ping.read()"));
     assert(
       plan.scaffold["README.md"].includes(
-        'client.balance.invoke({ owner: "example" }, {',
+        'methodArgs: { owner: "example" },',
       ),
     );
   });

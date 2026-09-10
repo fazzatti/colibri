@@ -53,7 +53,8 @@ fee, timeout, and signers. The example below assumes that configuration is
 available as `transactionConfig`.
 
 ```ts
-const result = await client.increment.invoke({ by: 1 }, {
+const result = await client.increment.invoke({
+  methodArgs: { by: 1 },
   config: transactionConfig,
 });
 
@@ -66,9 +67,11 @@ available through both calls; choose simulation or submission deliberately.
 `invoke()` preserves Colibri's transaction metadata and raw `returnValue`, and
 adds the decoded `value`. That value is `undefined` if no return value is present.
 
-Pass the function's argument object directly to `.read(args)` or
-`.invoke(args, { config, auth })`. Argument-free functions use `.read()`
-and `.invoke({ config, auth })`. The helpers remain bound to this client
+Pass the function's argument object directly to `.read(args)`. Invocations take
+one object: `.invoke({ methodArgs, config, auth })`, matching the generic call
+with only `method` supplied by the helper. Argument-free functions use `.read()`
+and can omit `methodArgs` from `.invoke({ config, auth })`.
+The helpers remain bound to this client
 when destructured. Existing generic `client.read({ method, methodArgs })`
 and `client.invoke({ method, methodArgs, config, auth })` calls remain available.
 

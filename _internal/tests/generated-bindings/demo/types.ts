@@ -109,11 +109,9 @@ export type DemoMethod<Method extends keyof DemoMethodMap> = {
       ? [methodArgs?: DemoInputs[Method]]
       : [methodArgs: DemoInputs[Method]]
   ) => Promise<DemoOutputs[Method]>;
-  /** Submit with transaction settings; argument-free methods take only options. */
+  /** Submit with the generic invocation object, omitting only the fixed method. */
   readonly invoke: (
-    ...args: DemoInputs[Method] extends Record<string, never>
-      ? [options: DemoInvocation]
-      : [methodArgs: DemoInputs[Method], options: DemoInvocation]
+    args: Omit<DemoCall<Method>, "method"> & DemoInvocation,
   ) => Promise<DemoInvocationResult<DemoOutputs[Method]>>;
 };
 

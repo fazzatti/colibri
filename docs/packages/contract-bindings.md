@@ -97,15 +97,17 @@ your application:
 
 ```ts
 const balance = await token.balance.read({ account: address });
-const result = await token.transfer.invoke(
-  { from: address, to: recipient, amount: 100n },
-  { config: transactionConfig },
-);
+const result = await token.transfer.invoke({
+  methodArgs: { from: address, to: recipient, amount: 100n },
+  config: transactionConfig,
+});
 console.log(balance, result.value, result.hash);
 ```
 
-Argument-free functions use `.read()` and `.invoke({ config })`. Invocations
-accept optional `auth` alongside `config`. Helpers remain bound to their client
+Reads accept the method's argument object directly. Invocations take one object
+with `methodArgs`, `config`, and optional `auth`, just like generic `invoke`
+without `method`. Argument-free functions use `.read()` and can omit
+`methodArgs` from `.invoke({ config })`. Helpers remain bound to their client
 when destructured. They delegate to the existing generic `client.read()` and
 `client.invoke()` methods, which remain available with their existing call
 shape.

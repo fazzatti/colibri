@@ -119,21 +119,23 @@ const token = new Token({
   contractConfig: { contractId },
 });
 const balance = await token.balance.read({ account: address }); // bigint
-const result = await token.transfer.invoke(
-  { from: address, to: recipient, amount: 100n },
-  { config: transactionConfig },
-);
+const result = await token.transfer.invoke({
+  methodArgs: { from: address, to: recipient, amount: 100n },
+  config: transactionConfig,
+});
 console.log(result.value, result.returnValue, result.hash);
 ```
 
 The ABI cannot safely identify reads versus writes. Every function gets a
 property with both `.read()` and `.invoke()`; you choose which to call. Pass the
-method's argument object directly. Invocations also require a second object with
-`config` and optional `auth`. Argument-free methods use `.read()` and
-`.invoke({ config })`, without an empty argument object. Helpers retain the
-client when destructured. `read()` simulates, while `invoke()` uses Core's
-transaction pipeline, preserving raw `returnValue` and metadata and adding a
-decoded `value`. That value is `undefined` when Core has no return value.
+method's argument object directly to `.read()`. Invocations take a single object
+with `methodArgs`, `config`, and optional `auth`, matching the generic
+invocation with only `method` supplied by the helper. Argument-free methods use
+`.read()` and `.invoke({ config })`; their `methodArgs` can be omitted. Helpers
+retain the client when destructured. `read()` simulates, while `invoke()` uses
+Core's transaction pipeline, preserving raw `returnValue` and metadata and
+adding a decoded `value`. That value is `undefined` when Core has no return
+value.
 
 The generic `token.read({ method, methodArgs })` and
 `token.invoke({ method, methodArgs, config, auth })` calls remain available.

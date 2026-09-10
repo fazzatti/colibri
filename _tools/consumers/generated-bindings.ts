@@ -87,7 +87,7 @@ try {
     submitted = args;
     return { hash: "abc", ledger: 1, createdAt: 2, returnValue: config.toScVal(), response: {} };
   };
-  const result = await client.echo.invoke({ config }, { config: transactionConfig });
+  const result = await client.echo.invoke({ methodArgs: { config }, config: transactionConfig });
   assert.equal(submitted.method, "echo");
   assert.equal(submitted.config, transactionConfig);
   assert.deepEqual(result.value, config.value);
@@ -117,13 +117,17 @@ const decoded: Config = wrapped.value;
 const echo: Promise<Config> = client.read({ method: "echo", methodArgs: { config: wrapped } });
 declare const options: PingClientInvocation;
 const direct: Promise<Config> = client.echo.read({ config: wrapped });
-const submitted: Promise<PingClientInvocationResult<Config>> = client.echo.invoke({ config: wrapped }, options);
+const submitted: Promise<PingClientInvocationResult<Config>> = client.echo.invoke({ methodArgs: { config: wrapped }, ...options });
 const ping: Promise<PingClientInvocationResult<null>> = client.ping.invoke(options);
 // @ts-expect-error Required method arguments.
 client.echo.read();
 // @ts-expect-error Invoke requires transaction configuration.
-client.echo.invoke({ config: wrapped });
-// @ts-expect-error No-argument invokes take only options.
+client.echo.invoke({ methodArgs: { config: wrapped } });
+// @ts-expect-error Method arguments remain required.
+client.echo.invoke(options);
+// @ts-expect-error The previous split-argument form is unsupported.
+client.echo.invoke({ config: wrapped }, options);
+// @ts-expect-error No-argument invokes take one object.
 client.ping.invoke({}, options);
 const key: RbacStorage = RbacStorage.RoleIndexToAccount(SorobanType.Symbol.from("ADMIN"), 7).value;
 // @ts-expect-error Struct fields retain their native or wrapped scalar type.
