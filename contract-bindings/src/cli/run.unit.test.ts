@@ -75,6 +75,34 @@ describe("bindings CLI", () => {
     }
   });
 
+  it("rejects incompatible valid flags before asking for a source", async () => {
+    const cases = [
+      {
+        args: ["--output", "files", "--package-name", "@example/token"],
+        message: "--package-name requires --output package",
+      },
+      ...["mainnet", "testnet", "futurenet"].map((network) => ({
+        args: ["--network", network, "--network-passphrase", "Custom network"],
+        message: "--network-passphrase requires --network custom",
+      })),
+    ];
+    const io: CliIO = {
+      ...silent,
+      interactive: true,
+      select: () => {
+        throw new Error("Unexpected menu before flag validation");
+      },
+    };
+    for (const { args, message } of cases) {
+      const error = await assertRejects(
+        () => runCli(args, io),
+        BindingError,
+        message,
+      );
+      assertEquals(error.code, "CBG_001");
+    }
+  });
+
   it("allows cancellation after invalid input and retries blank choices", async () => {
     for (const invalid of ["", "typo"]) {
       const answers = [invalid, null];
