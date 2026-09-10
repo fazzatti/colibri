@@ -1,9 +1,9 @@
 /** Build portable pre-publication npm test artifacts once per SDK selection. */
 import { build } from "jsr:@deno/dnt@0.43.2";
-import { compare, parse } from "jsr:@std/semver@1.0.5";
+import { resolveSdk } from "./sdk.ts";
+export { resolveSdk } from "./sdk.ts";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { accepts } from "../releases/model.ts";
 import { colibriDependencies, runtimeImports } from "../releases/repository.ts";
 import {
   command,
@@ -15,25 +15,6 @@ import {
   root,
   writeJson,
 } from "./environment.ts";
-
-export async function resolveSdk(selection: string): Promise<string> {
-  const result = await new Deno.Command("npm", {
-    args: ["view", `@stellar/stellar-sdk@${selection}`, "version", "--json"],
-  }).output();
-  if (!result.success) {
-    throw new Error(
-      `CONSUMER_SDK_LOOKUP: ${new TextDecoder().decode(result.stderr)}`,
-    );
-  }
-  const data = JSON.parse(new TextDecoder().decode(result.stdout));
-  const versions: string[] = typeof data === "string" ? [data] : data;
-  const sdk = versions.sort((a, b) => compare(parse(a), parse(b))).at(-1)!;
-  if (!accepts(sdk, ">=17.0.1 <18")) {
-    throw new Error(`CONSUMER_SDK_UNSUPPORTED: ${sdk}`);
-  }
-  console.log(`Selected native Stellar SDK ${sdk} from ${selection}`);
-  return sdk;
-}
 
 export async function prepareArtifacts(
   destination: string,

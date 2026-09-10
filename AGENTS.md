@@ -120,12 +120,15 @@ GitHub Actions behavior matters when changing structure or versions:
   exports through `_tools/package-inventory.ts`, including subpath exports. CRAP
   and documentation inventories use the same package discovery. Do not add a new
   hard-coded entrypoint list.
-- Required consumer jobs check isolated Deno package trees and install temporary
-  npm test artifacts on Node 22.12 (minimum SDK) and Node 24 (supported SDK
-  range). They type-check native SDK interop, execute a smoke consumer, and
-  bundle the browser-capable packages. These test artifacts are never published
+- The required `compatibility` job checks isolated Deno package trees and installs
+  temporary npm test artifacts on Node 22.12 (minimum SDK) and Node 24 (supported
+  SDK range). It type-checks native SDK interop, executes a smoke consumer, and
+  bundles the browser-capable packages. These test artifacts are never published
   and are not claimed to be JSR's own generated tarballs. See
-  `_tools/consumers/README.md`.
+  `_tools/consumers/README.md`. Runtime/compiler combinations are named steps in
+  one job, with per-case logs and a complete summary. Resolve minimum and current
+  SDK selections once; deduplicate only identical resolved versions. Failed or
+  missing scenarios must fail the job and the final `test` gate.
 - Quality uploads a syntax-level constructor/throw/catch inventory alongside the
   complete stable error-code reference. Review unknown and passthrough
   boundaries deliberately; do not conflate caller-owned errors with missing SDK
