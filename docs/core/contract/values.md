@@ -148,8 +148,12 @@ export type Summary = SorobanType.Custom<{
   fields: { status: Status; keys: SorobanType.Vec<RbacStorage> };
 }>;
 
-export type SummaryInput = SorobanType.Input.Custom<Summary>;
+export type SummaryArgs = SorobanType.Input.Custom<Summary>;
 ```
+
+`SummaryArgs` describes values accepted by `Summary.from(...)`, including raw or
+validated fields and a validated whole value. Method argument types retain the
+`MethodInput` suffix and reuse these `Args` aliases for custom fields.
 
 `kind: "tuple"` uses a positional `fields` tuple. Tagged enums use Void for a
 payload-free case or a tuple for its fields, including `[]` for a tuple case

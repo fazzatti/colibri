@@ -6,7 +6,12 @@ import { extractContractSpec } from "@colibri/core";
 import { loadBindingSource } from "@/source/load.ts";
 import { generateBindings } from "@/generation/generate.ts";
 import { writeBindings } from "@/output/write.ts";
-import { valueSpec } from "colibri-internal/tests/soroban-values-fixtures.ts";
+import {
+  func,
+  struct,
+  udt,
+  valueSpec,
+} from "colibri-internal/tests/soroban-values-fixtures.ts";
 import { bindingSpec } from "colibri-internal/tests/binding-fixtures.ts";
 import { fileURLToPath } from "node:url";
 
@@ -63,20 +68,35 @@ describe("generated consumer boundary", () => {
     const directory = await Deno.makeTempDir();
     try {
       await writeBindings(
-        generateBindings(valueSpec(), { className: "ValuesClient" }),
+        generateBindings(
+          new Spec([
+            ...valueSpec().entries,
+            func("config", { config: udt("Config") }, [udt("Config")]),
+            struct("RbacStorageArgs", {
+              value: xdr.ScSpecTypeDef.scSpecTypeU32(),
+            }),
+          ]),
+          { className: "ValuesClient" },
+        ),
         { directory },
       );
       await Deno.writeTextFile(
         `${directory}/consumer.ts`,
         `
-import { ValuesClient, RbacStorage, Config, type Config as ConfigNative } from "./index.ts";
+import { ValuesClient, RbacStorage, Config, type Config as ConfigNative, type ConfigArgs, type ConfigInput, type RbacStorageValueArgs, type RbacStorageArgs } from "./index.ts";
 import { SorobanType, SorobanU32, SorobanString, SorobanVec, NetworkConfig, encodeSorobanArguments, buildContractDataLedgerKey, type ContractId } from "@colibri/core";
 import { assertEquals } from "@std/assert";
 const key = RbacStorage.RoleIndexToAccount(SorobanType.Symbol.from("ADMIN"), SorobanType.U32.from(7));
 assertEquals(key.value, { tag: "RoleIndexToAccount", values: ["ADMIN", 7] });
 assertEquals(RbacStorage.ExistingRoles().value, { tag: "ExistingRoles" });
-const config = Config.from({ role: "ADMIN", count: SorobanType.U32.from(7), key });
+const keyArgs: RbacStorageValueArgs = key;
+const declaredType: RbacStorageArgs = { value: 7 };
+const configArgs: ConfigArgs = { role: "ADMIN", count: SorobanType.U32.from(7), key: keyArgs };
+const config = Config.from(configArgs);
 const plain: ConfigNative = config.value;
+const methodInput: ConfigInput = { config };
+const rawArgs: ConfigArgs = plain;
+assertEquals(Config.from(rawArgs).value.count, declaredType.value);
 const client = new ValuesClient({ errors: false, networkConfig: NetworkConfig.TestNet(), contractConfig: { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" } });
 const raw = encodeSorobanArguments(client.getSpec(), "echo", { config: plain });
 const wrapped = encodeSorobanArguments(client.getSpec(), "echo", { config });
@@ -85,6 +105,10 @@ assertEquals(Config.fromXdr(config.toXdr("base64")).value, plain);
 const contractId = client.getContractId() as ContractId;
 assertEquals(buildContractDataLedgerKey({ contractId, key }).toXdr("base64"), buildContractDataLedgerKey({ contractId, key: key.toScVal() }).toXdr("base64"));
 function checkTypes() {
+  const custom: Promise<ConfigNative> = client.read({ method: "config", methodArgs: methodInput });
+  // @ts-expect-error Factory arguments are a custom value, not the method's argument object.
+  const wrong: ConfigInput = configArgs;
+  void [custom, wrong];
   const text: Promise<string[]> = client.read({ method: "texts", methodArgs: { values: new SorobanVec([new SorobanString("hello")], SorobanString.type) } });
   const old: Promise<ConfigNative> = client.read({ method: "echo", methodArgs: { config: plain } });
   const added: Promise<ConfigNative> = client.read({ method: "echo", methodArgs: { config } });
@@ -267,6 +291,8 @@ try {
       const name of [
         "CounterSummary",
         "CounterStatus",
+        "CounterSummaryArgs",
+        "CounterStatusArgs",
         "GetCountInput",
         "GetCountOutput",
         "EchoSummaryInput",

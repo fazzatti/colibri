@@ -43,7 +43,7 @@ export type IncrementOutput = StellarResult<
 
 /** Return a summary unchanged to exercise named input and output types. */
 export type EchoSummaryInput = {
-  summary: CounterSummaryInput;
+  summary: CounterSummaryArgs;
 };
 
 /** Decoded return value of echo_summary. */
@@ -115,8 +115,8 @@ export type CounterStatus = SorobanType.Custom<{
   };
 }>;
 
-/** Raw or validated inputs derived from the CounterStatus declaration. */
-export type CounterStatusInput = SorobanType.Input.Custom<CounterStatus>;
+/** Raw or validated values accepted by the CounterStatus factory. */
+export type CounterStatusArgs = SorobanType.Input.Custom<CounterStatus>;
 
 /** Validate, encode and decode CounterStatus using its contract declaration. */
 export const CounterStatus: SorobanType.Factory<CounterStatus> = SorobanType
@@ -134,8 +134,8 @@ export type CounterSummary = SorobanType.Custom<{
   };
 }>;
 
-/** Raw or validated inputs derived from the CounterSummary declaration. */
-export type CounterSummaryInput = SorobanType.Input.Custom<CounterSummary>;
+/** Raw or validated values accepted by the CounterSummary factory. */
+export type CounterSummaryArgs = SorobanType.Input.Custom<CounterSummary>;
 
 /** Validate, encode and decode CounterSummary using its contract declaration. */
 export const CounterSummary: SorobanType.Factory<CounterSummary> = SorobanType

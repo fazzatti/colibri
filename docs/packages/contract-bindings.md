@@ -213,6 +213,8 @@ Newly generated inputs accept raw values and
 `SorobanType.U32` retain plain result shapes. Custom types use
 `SorobanType.Custom` schemas, with struct/tuple fields or tagged/u32 enum
 variants. Matching factories reuse the embedded spec. Numeric codes and
-validation live on one factory. A custom input alias uses `ValueInput` if
-`Input` would collide with a method's input name. The constants and error-map
-layout is unchanged.
+validation live on one factory. Each custom declaration has a `NameArgs` alias
+for the values accepted by its factory, while method arguments retain their
+`MethodInput` names. Method input fields reuse the custom `NameArgs` aliases. If
+`NameArgs` collides with a contract type, the factory alias uses
+`NameValueArgs`. The constants and error-map layout is unchanged.

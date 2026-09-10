@@ -47,7 +47,7 @@ describe("bindings rendering", () => {
         "ExistingRoles: SorobanType.Void;",
         "EmptyTuple: [];",
         "RoleIndexToAccount: [SorobanType.Symbol, SorobanType.U32];",
-        "export type RbacStorageInput = SorobanType.Input.Custom<RbacStorage>;",
+        "export type RbacStorageArgs = SorobanType.Input.Custom<RbacStorage>;",
         'kind: "tuple";\n  fields: [SorobanType.Symbol, SorobanType.U32];',
         "next: SorobanType.Option<Node>;",
         'encoding: "u32";',
@@ -363,7 +363,7 @@ describe("bindings rendering", () => {
       BindingError,
     );
   });
-  it("uses PascalCase ABI names and propagates only necessary input variants", () => {
+  it("uses PascalCase ABI names and derives custom factory arguments", () => {
     assertEquals(typeName("counter_summary"), "CounterSummary");
     assertEquals(typeName("get_count"), "GetCount");
     const entry = (name: string, type: xdr.ScSpecTypeDef) =>
@@ -394,11 +394,11 @@ describe("bindings rendering", () => {
       model.declarations("ContractClient").includes("export type Group ="),
     );
     assert(
-      model.declarations("ContractClient").includes("export type GroupInput ="),
+      model.declarations("ContractClient").includes("export type GroupArgs ="),
     );
     assert(
       model.declarations("ContractClient").includes(
-        "export type EnvelopeInput =",
+        "export type EnvelopeArgs =",
       ),
     );
     assert(!model.declarations("ContractClient").includes("GroupOutput"));

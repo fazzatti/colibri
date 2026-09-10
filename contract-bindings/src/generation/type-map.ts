@@ -90,8 +90,8 @@ export class TypeMap {
   readonly imports = new Set<string>();
   readonly names = new Map<string, string>();
   readonly aliases = new Map<xdr.ScSpecEntry, string>();
-  readonly inputNames = new Map<string, string>();
-  readonly inputVariants = new Set<string>();
+  readonly argsNames = new Map<string, string>();
+  readonly customTypes = new Set<string>();
   readonly warnings: string[] = [];
   private readonly referencedTypes = new Set<string>();
   private readonly claimed = new Set([
@@ -133,23 +133,15 @@ export class TypeMap {
         entry.type === "scSpecEntryUdtStructV0" ||
         entry.type === "scSpecEntryUdtUnionV0" ||
         entry.type === "scSpecEntryUdtEnumV0"
-      ) this.inputVariants.add(alias);
+      ) this.customTypes.add(alias);
     }
-    const methodNames = new Set(
-      spec.funcs().flatMap((
-        method,
-      ) => [
-        typeName(method.name.toString()) + "Input",
-        typeName(method.name.toString()) + "Output",
-      ]),
-    );
-    for (const alias of this.inputVariants) {
-      const candidate = `${alias}Input`;
-      const name = methodNames.has(candidate) || this.claimed.has(candidate)
-        ? `${alias}ValueInput`
+    for (const alias of this.customTypes) {
+      const candidate = `${alias}Args`;
+      const name = this.claimed.has(candidate)
+        ? `${alias}ValueArgs`
         : candidate;
       this.claim(name);
-      this.inputNames.set(alias, name);
+      this.argsNames.set(alias, name);
     }
   }
   claim(name: string): void {
@@ -273,8 +265,8 @@ export class TypeMap {
     }
     this.referencedTypes.add(name);
     if (direction === "Output") return name;
-    return this.inputVariants.has(name)
-      ? this.inputNames.get(name)!
+    return this.customTypes.has(name)
+      ? this.argsNames.get(name)!
       : `SorobanType.Input.Value<${name}>`;
   }
   fields(
@@ -385,8 +377,8 @@ ${indent(cases.join("\n"), 4)}
       }
 export type ${name} = SorobanType.Custom<${schema}>;
 
-/** Raw or validated inputs derived from the ${name} declaration. */
-export type ${this.inputNames.get(name)} = SorobanType.Input.Custom<${name}>;
+/** Raw or validated values accepted by the ${name} factory. */
+export type ${this.argsNames.get(name)} = SorobanType.Input.Custom<${name}>;
 
 /** Validate, encode and decode ${name} using its contract declaration. */
 export const ${name}: SorobanType.Factory<${name}> = SorobanType

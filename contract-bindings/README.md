@@ -171,12 +171,12 @@ client; alias the import when using multiple clients in one module.
 
 Contract types use their spec names in PascalCase, such as `CounterSummary`.
 Function arguments and results receive names such as `GetCountInput` and
-`GetCountOutput`. An additional `CounterSummaryInput` is emitted only when the
-SDK accepts a different input shape (for example, nested Maps or Options).
-Fields and union tags retain their ABI spelling. Repeated original type names
-use the first declaration, matching the SDK, with a generation warning. Distinct
-names that collide after casing cause an explicit error; they are never
-numbered.
+`GetCountOutput`. Each custom declaration also receives a factory argument
+alias, such as `CounterSummaryArgs`, accepting raw values or validated wrappers.
+Method input fields reuse these aliases when they accept a custom type. Fields
+and union tags retain their ABI spelling. Repeated original type names use the
+first declaration, matching the SDK, with a generation warning. Distinct names
+that collide after casing cause an explicit error; they are never numbered.
 
 ## Errors and events
 
@@ -292,8 +292,9 @@ codes and validation on one factory, such as `Status.Active` and
 `Status.from(Status.Active)`. All factories provide `.type`, `.fromScVal()` and
 `.fromXdr()`. Referenced error types reuse the categorized error map.
 
-A custom input alias uses `NameValueInput` if `NameInput` would collide with a
-method input. Use generated storage-key wrappers with
+A factory argument alias uses `NameValueArgs` if `NameArgs` would collide with a
+contract type. Method inputs retain their `MethodInput` names. Use generated
+storage-key wrappers with
 `client.getLedgerEntry({ key, durability: "persistent" })`; durability and
 stored value types remain caller-owned. See
 [Soroban types](../docs/core/contract/values.md) for complete examples,

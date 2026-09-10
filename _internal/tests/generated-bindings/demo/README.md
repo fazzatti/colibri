@@ -93,8 +93,10 @@ Factories also provide `.fromScVal()`, `.fromXdr()` and a reusable `.type`
 codec. Numeric codes are never renumbered; map keys are ordered according to
 Soroban's comparison rules. Referenced error codes reuse the existing error map.
 
-If a custom input name collides with a method input, it uses `NameValueInput`;
-its spec-derived output name stays unchanged.
+Each custom declaration has a `NameArgs` alias for the raw or validated values
+accepted by its factory. Method arguments keep `MethodInput` names and reuse
+these aliases for custom fields. If `NameArgs` collides with a contract type,
+the factory alias uses `NameValueArgs`; the contract type keeps its spec name.
 
 ## Read contract data
 
