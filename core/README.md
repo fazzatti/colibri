@@ -1341,6 +1341,10 @@ imply that a contract emits no events. See
 validates and wraps it. `SorobanType.Input.U32` accepts raw or validated inputs.
 Wrappers expose `.value`, `.toScVal()` and `.toXdr()` and snapshot mutable data.
 
+These parts have distinct roles: types describe accepted and decoded values,
+codecs validate and convert them, and value instances hold immutable snapshots.
+A codec can be reused for many values without a contract or network connection.
+
 Generated custom types use `SorobanType.Custom` schemas with struct or tuple
 fields, or enum variants with tagged/u32 encoding. Colibri derives the input
 shapes and variant boilerplate. Generated factories reuse the contract spec;

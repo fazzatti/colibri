@@ -1,11 +1,14 @@
 import { assertEquals, assertNotStrictEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Address, StrKey, xdr, XdrLargeInt } from "stellar-sdk";
-import * as V from "@/values/primitives.ts";
-import { type SorobanValue, toSorobanScVal } from "@/values/value.ts";
-import { Code, SorobanValueError } from "@/values/error.ts";
-import * as S from "@/values/system.ts";
-import { sorobanTypeFromSpec } from "@/values/spec.ts";
+import * as V from "@/soroban-types/values/primitives.ts";
+import {
+  type SorobanValue,
+  toSorobanScVal,
+} from "@/soroban-types/values/value.ts";
+import { Code, SorobanValueError } from "@/soroban-types/error.ts";
+import * as S from "@/soroban-types/values/system.ts";
+import { sorobanTypeFromSpec } from "@/soroban-types/codecs/custom.ts";
 
 describe("validated Soroban primitives", () => {
   for (const signed of [false, true]) {

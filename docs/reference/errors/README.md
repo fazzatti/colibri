@@ -127,10 +127,10 @@ catalog.
 - [core/signer/pre-authorized-transaction](core-signer-pre-authorized-transaction.md)
   — 6 codes.
 - [core/signer/signed-payload](core-signer-signed-payload.md) — 12 codes.
+- [core/soroban-types](core-soroban-types.md) — 3 codes.
 - [core/sponsorship](core-sponsorship.md) — 2 codes.
 - [core/toid](core-toid.md) — 4 codes.
 - [core/tools/friendbot](core-tools-friendbot.md) — 3 codes.
-- [core/values](core-values.md) — 3 codes.
 
 ## @colibri/identicon
 

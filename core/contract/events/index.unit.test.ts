@@ -20,7 +20,7 @@ import {
   SorobanError,
   SorobanString,
   SorobanSymbol,
-} from "@/values/primitives.ts";
+} from "@/soroban-types/values/primitives.ts";
 import * as E from "@/contract/events/error.ts";
 import { validateEventValue } from "@/contract/events/codec.ts";
 import { Contract } from "@/contract/index.ts";

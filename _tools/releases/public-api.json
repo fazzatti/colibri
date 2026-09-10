@@ -84301,2626 +84301,6 @@
                 {
                   "declarationKind": "export",
                   "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "keyword",
-                          "repr": "boolean",
-                          "value": "boolean"
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "scalar",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "scalar"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "input",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanBoolInput",
-                                        "value": {
-                                          "typeName": "SorobanBoolInput"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "keyword",
-                                        "repr": "boolean",
-                                        "value": "boolean"
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanBool.type",
-                      "value": "SorobanBool.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Bool"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "keyword",
-                          "repr": "number",
-                          "value": "number"
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "scalar",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "scalar"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "input",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanU32Input",
-                                        "value": {
-                                          "typeName": "SorobanU32Input"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "keyword",
-                                        "repr": "number",
-                                        "value": "number"
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanU32.type",
-                      "value": "SorobanU32.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "U32"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "keyword",
-                          "repr": "number",
-                          "value": "number"
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "scalar",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "scalar"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "input",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanI32Input",
-                                        "value": {
-                                          "typeName": "SorobanI32Input"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "keyword",
-                                        "repr": "number",
-                                        "value": "number"
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanI32.type",
-                      "value": "SorobanI32.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "I32"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "keyword",
-                          "repr": "bigint",
-                          "value": "bigint"
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "scalar",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "scalar"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "input",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanU64Input",
-                                        "value": {
-                                          "typeName": "SorobanU64Input"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "keyword",
-                                        "repr": "bigint",
-                                        "value": "bigint"
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanU64.type",
-                      "value": "SorobanU64.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "U64"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "keyword",
-                          "repr": "bigint",
-                          "value": "bigint"
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "scalar",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "scalar"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "input",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanI64Input",
-                                        "value": {
-                                          "typeName": "SorobanI64Input"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "keyword",
-                                        "repr": "bigint",
-                                        "value": "bigint"
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanI64.type",
-                      "value": "SorobanI64.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "I64"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "keyword",
-                          "repr": "bigint",
-                          "value": "bigint"
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "scalar",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "scalar"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "input",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanU128Input",
-                                        "value": {
-                                          "typeName": "SorobanU128Input"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "keyword",
-                                        "repr": "bigint",
-                                        "value": "bigint"
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanU128.type",
-                      "value": "SorobanU128.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "U128"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "keyword",
-                          "repr": "bigint",
-                          "value": "bigint"
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "scalar",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "scalar"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "input",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanI128Input",
-                                        "value": {
-                                          "typeName": "SorobanI128Input"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "keyword",
-                                        "repr": "bigint",
-                                        "value": "bigint"
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanI128.type",
-                      "value": "SorobanI128.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "I128"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "keyword",
-                          "repr": "bigint",
-                          "value": "bigint"
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "scalar",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "scalar"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "input",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanU256Input",
-                                        "value": {
-                                          "typeName": "SorobanU256Input"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "keyword",
-                                        "repr": "bigint",
-                                        "value": "bigint"
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanU256.type",
-                      "value": "SorobanU256.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "U256"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "keyword",
-                          "repr": "bigint",
-                          "value": "bigint"
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "scalar",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "scalar"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "input",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanI256Input",
-                                        "value": {
-                                          "typeName": "SorobanI256Input"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "keyword",
-                                        "repr": "bigint",
-                                        "value": "bigint"
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanI256.type",
-                      "value": "SorobanI256.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "I256"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "keyword",
-                          "repr": "bigint",
-                          "value": "bigint"
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "scalar",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "scalar"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "input",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanTimepointInput",
-                                        "value": {
-                                          "typeName": "SorobanTimepointInput"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "keyword",
-                                        "repr": "bigint",
-                                        "value": "bigint"
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanTimepoint.type",
-                      "value": "SorobanTimepoint.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Timepoint"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "keyword",
-                          "repr": "bigint",
-                          "value": "bigint"
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "scalar",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "scalar"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "input",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanDurationInput",
-                                        "value": {
-                                          "typeName": "SorobanDurationInput"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "keyword",
-                                        "repr": "bigint",
-                                        "value": "bigint"
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanDuration.type",
-                      "value": "SorobanDuration.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Duration"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "keyword",
-                          "repr": "string",
-                          "value": "string"
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "scalar",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "scalar"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "input",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanSymbolInput",
-                                        "value": {
-                                          "typeName": "SorobanSymbolInput"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "keyword",
-                                        "repr": "string",
-                                        "value": "string"
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanSymbol.type",
-                      "value": "SorobanSymbol.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Symbol"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "keyword",
-                          "repr": "string",
-                          "value": "string"
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "scalar",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "scalar"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "input",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanStringInput",
-                                        "value": {
-                                          "typeName": "SorobanStringInput"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "keyword",
-                                        "repr": "string",
-                                        "value": "string"
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanString.type",
-                      "value": "SorobanString.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "String"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "typeRef",
-                          "repr": "Uint8Array",
-                          "value": {
-                            "typeName": "Uint8Array"
-                          }
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "scalar",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "scalar"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "input",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanBytesInput",
-                                        "value": {
-                                          "typeName": "SorobanBytesInput"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "Uint8Array",
-                                        "value": {
-                                          "typeName": "Uint8Array"
-                                        }
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanBytes.type",
-                      "value": "SorobanBytes.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Bytes"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "keyword",
-                          "repr": "string",
-                          "value": "string"
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "scalar",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "scalar"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "input",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanAddressInput",
-                                        "value": {
-                                          "typeName": "SorobanAddressInput"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "keyword",
-                                        "repr": "string",
-                                        "value": "string"
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanAddress.type",
-                      "value": "SorobanAddress.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Address"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "keyword",
-                          "repr": "string",
-                          "value": "string"
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "scalar",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "scalar"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "input",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanMuxedAddressInput",
-                                        "value": {
-                                          "typeName": "SorobanMuxedAddressInput"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "keyword",
-                                        "repr": "string",
-                                        "value": "string"
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanMuxedAddress.type",
-                      "value": "SorobanMuxedAddress.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "MuxedAddress"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "typeRef",
-                          "repr": "SorobanErrorValue",
-                          "value": {
-                            "typeName": "SorobanErrorValue"
-                          }
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "scalar",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "scalar"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "input",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanErrorInput",
-                                        "value": {
-                                          "typeName": "SorobanErrorInput"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanErrorValue",
-                                        "value": {
-                                          "typeName": "SorobanErrorValue"
-                                        }
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanError.type",
-                      "value": "SorobanError.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Error"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "keyword",
-                      "repr": "unknown",
-                      "value": "unknown"
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanVal.type",
-                      "value": "SorobanVal.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Val"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "keyword",
-                      "repr": "null",
-                      "value": "null"
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanVoid.type",
-                      "value": "SorobanVoid.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Void"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "array",
-                          "value": {
-                            "kind": "typeRef",
-                            "repr": "T",
-                            "value": {
-                              "typeName": "T"
-                            }
-                          }
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "vec",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "vec"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "element",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "T",
-                                        "value": {
-                                          "typeName": "T"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "array",
-                                        "value": {
-                                          "kind": "typeRef",
-                                          "repr": "T",
-                                          "value": {
-                                            "typeName": "T"
-                                          }
-                                        }
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    },
-                    "typeParams": [
-                      {
-                        "name": "T"
-                      }
-                    ]
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanVec.type",
-                      "value": "SorobanVec.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Vec"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "typeRef",
-                          "repr": "Array",
-                          "value": {
-                            "typeName": "Array",
-                            "typeParams": [
-                              {
-                                "kind": "tuple",
-                                "value": [
-                                  {
-                                    "kind": "typeRef",
-                                    "repr": "K",
-                                    "value": {
-                                      "typeName": "K"
-                                    }
-                                  },
-                                  {
-                                    "kind": "typeRef",
-                                    "repr": "V",
-                                    "value": {
-                                      "typeName": "V"
-                                    }
-                                  }
-                                ]
-                              }
-                            ]
-                          }
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "map",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "map"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "key",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "K",
-                                        "value": {
-                                          "typeName": "K"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "value",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "V",
-                                        "value": {
-                                          "typeName": "V"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "Array",
-                                        "value": {
-                                          "typeName": "Array",
-                                          "typeParams": [
-                                            {
-                                              "kind": "tuple",
-                                              "value": [
-                                                {
-                                                  "kind": "typeRef",
-                                                  "repr": "K",
-                                                  "value": {
-                                                    "typeName": "K"
-                                                  }
-                                                },
-                                                {
-                                                  "kind": "typeRef",
-                                                  "repr": "V",
-                                                  "value": {
-                                                    "typeName": "V"
-                                                  }
-                                                }
-                                              ]
-                                            }
-                                          ]
-                                        }
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    },
-                    "typeParams": [
-                      {
-                        "name": "K"
-                      },
-                      {
-                        "name": "V"
-                      }
-                    ]
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanMap.type",
-                      "value": "SorobanMap.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Map"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "mapped",
-                          "value": {
-                            "readonly": "-",
-                            "tsType": {
-                              "kind": "indexedAccess",
-                              "value": {
-                                "indexType": {
-                                  "kind": "typeRef",
-                                  "repr": "K",
-                                  "value": {
-                                    "typeName": "K"
-                                  }
-                                },
-                                "objType": {
-                                  "kind": "typeRef",
-                                  "repr": "T",
-                                  "value": {
-                                    "typeName": "T"
-                                  }
-                                }
-                              }
-                            },
-                            "typeParam": {
-                              "constraint": {
-                                "kind": "typeOperator",
-                                "value": {
-                                  "operator": "keyof",
-                                  "tsType": {
-                                    "kind": "typeRef",
-                                    "repr": "T",
-                                    "value": {
-                                      "typeName": "T"
-                                    }
-                                  }
-                                }
-                              },
-                              "name": "K"
-                            }
-                          }
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "tuple-value",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "tuple-value"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "fields",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "T",
-                                        "value": {
-                                          "typeName": "T"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "T",
-                                        "value": {
-                                          "typeName": "T"
-                                        }
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    },
-                    "typeParams": [
-                      {
-                        "constraint": {
-                          "kind": "typeOperator",
-                          "value": {
-                            "operator": "readonly",
-                            "tsType": {
-                              "kind": "array",
-                              "value": {
-                                "kind": "keyword",
-                                "repr": "unknown",
-                                "value": "unknown"
-                              }
-                            }
-                          }
-                        },
-                        "name": "T"
-                      }
-                    ]
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanTuple.type",
-                      "value": "SorobanTuple.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Tuple"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "typeRef",
-                      "repr": "Optional",
-                      "value": {
-                        "typeName": "Optional",
-                        "typeParams": [
-                          {
-                            "kind": "typeRef",
-                            "repr": "T",
-                            "value": {
-                              "typeName": "T"
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    "typeParams": [
-                      {
-                        "name": "T"
-                      }
-                    ]
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanOption.type",
-                      "value": "SorobanOption.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Option"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "typeRef",
-                          "repr": "SorobanResultValue",
-                          "value": {
-                            "typeName": "SorobanResultValue",
-                            "typeParams": [
-                              {
-                                "kind": "typeRef",
-                                "repr": "T",
-                                "value": {
-                                  "typeName": "T"
-                                }
-                              },
-                              {
-                                "kind": "typeRef",
-                                "repr": "E",
-                                "value": {
-                                  "typeName": "E"
-                                }
-                              }
-                            ]
-                          }
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "result",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "result"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "ok",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "T",
-                                        "value": {
-                                          "typeName": "T"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "error",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "E",
-                                        "value": {
-                                          "typeName": "E"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "SorobanResultValue",
-                                        "value": {
-                                          "typeName": "SorobanResultValue",
-                                          "typeParams": [
-                                            {
-                                              "kind": "typeRef",
-                                              "repr": "T",
-                                              "value": {
-                                                "typeName": "T"
-                                              }
-                                            },
-                                            {
-                                              "kind": "typeRef",
-                                              "repr": "E",
-                                              "value": {
-                                                "typeName": "E"
-                                              }
-                                            }
-                                          ]
-                                        }
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    },
-                    "typeParams": [
-                      {
-                        "name": "T"
-                      },
-                      {
-                        "name": "E"
-                      }
-                    ]
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanResult.type",
-                      "value": "SorobanResult.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Result"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "typeRef",
-                          "repr": "Uint8Array",
-                          "value": {
-                            "typeName": "Uint8Array"
-                          }
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeLiteral",
-                                "value": {
-                                  "properties": [
-                                    {
-                                      "name": "kind",
-                                      "tsType": {
-                                        "kind": "literal",
-                                        "repr": "bytesN",
-                                        "value": {
-                                          "kind": "string",
-                                          "string": "bytesN"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "size",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "N",
-                                        "value": {
-                                          "typeName": "N"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "name": "output",
-                                      "tsType": {
-                                        "kind": "typeRef",
-                                        "repr": "Uint8Array",
-                                        "value": {
-                                          "typeName": "Uint8Array"
-                                        }
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    },
-                    "typeParams": [
-                      {
-                        "constraint": {
-                          "kind": "keyword",
-                          "repr": "number",
-                          "value": "number"
-                        },
-                        "name": "N"
-                      }
-                    ]
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanBytesN.type",
-                      "value": "SorobanBytesN.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "BytesN"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "typeRef",
-                      "repr": "SorobanTypeOutput",
-                      "value": {
-                        "typeName": "SorobanTypeOutput",
-                        "typeParams": [
-                          {
-                            "kind": "typeQuery",
-                            "repr": "SorobanContractInstance.type",
-                            "value": "SorobanContractInstance.type"
-                          }
-                        ]
-                      }
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanContractInstance.type",
-                      "value": "SorobanContractInstance.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "ContractInstance"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "keyword",
-                      "repr": "null",
-                      "value": "null"
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanLedgerKeyContractInstance.type",
-                      "value": "SorobanLedgerKeyContractInstance.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "LedgerKeyContractInstance"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "keyword",
-                      "repr": "bigint",
-                      "value": "bigint"
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanLedgerKeyNonce.type",
-                      "value": "SorobanLedgerKeyNonce.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "LedgerKeyNonce"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "union",
-                      "value": [
-                        {
-                          "kind": "keyword",
-                          "repr": "string",
-                          "value": "string"
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Uint8Array",
-                          "value": {
-                            "typeName": "Uint8Array"
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanExecutableTag.type",
-                      "value": "SorobanExecutableTag.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "ExecutableTag"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "intersection",
-                      "value": [
-                        {
-                          "kind": "typeRef",
-                          "repr": "CustomValue",
-                          "value": {
-                            "typeName": "CustomValue",
-                            "typeParams": [
-                              {
-                                "kind": "typeRef",
-                                "repr": "S",
-                                "value": {
-                                  "typeName": "S"
-                                }
-                              }
-                            ]
-                          }
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Shape",
-                          "value": {
-                            "typeName": "Shape",
-                            "typeParams": [
-                              {
-                                "kind": "typeRef",
-                                "repr": "S",
-                                "value": {
-                                  "typeName": "S"
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    },
-                    "typeParams": [
-                      {
-                        "constraint": {
-                          "kind": "typeRef",
-                          "repr": "CustomSchema",
-                          "value": {
-                            "typeName": "CustomSchema"
-                          }
-                        },
-                        "name": "S"
-                      }
-                    ]
-                  },
-                  "kind": "typeAlias"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeLiteral",
-                      "value": {
-                        "methods": [
-                          {
-                            "kind": "method",
-                            "name": "fromSpec",
-                            "params": [
-                              {
-                                "kind": "identifier",
-                                "name": "spec",
-                                "optional": false,
-                                "tsType": {
-                                  "kind": "fnOrConstructor",
-                                  "value": {
-                                    "constructor": false,
-                                    "params": [],
-                                    "tsType": {
-                                      "kind": "typeRef",
-                                      "repr": "Pick",
-                                      "value": {
-                                        "typeName": "Pick",
-                                        "typeParams": [
-                                          {
-                                            "kind": "typeRef",
-                                            "repr": "Spec",
-                                            "value": {
-                                              "typeName": "Spec"
-                                            }
-                                          },
-                                          {
-                                            "kind": "literal",
-                                            "repr": "entries",
-                                            "value": {
-                                              "kind": "string",
-                                              "string": "entries"
-                                            }
-                                          }
-                                        ]
-                                      }
-                                    }
-                                  }
-                                }
-                              },
-                              {
-                                "kind": "identifier",
-                                "name": "name",
-                                "optional": false,
-                                "tsType": {
-                                  "kind": "keyword",
-                                  "repr": "string",
-                                  "value": "string"
-                                }
-                              }
-                            ],
-                            "returnType": {
-                              "kind": "typeRef",
-                              "repr": "Factory",
-                              "value": {
-                                "typeName": "Factory",
-                                "typeParams": [
-                                  {
-                                    "kind": "typeRef",
-                                    "repr": "T",
-                                    "value": {
-                                      "typeName": "T"
-                                    }
-                                  }
-                                ]
-                              }
-                            },
-                            "typeParams": [
-                              {
-                                "name": "T"
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Custom"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "tsType": {
-                      "kind": "conditional",
-                      "value": {
-                        "checkType": {
-                          "kind": "tuple",
-                          "value": [
-                            {
-                              "kind": "typeRef",
-                              "repr": "SchemaOf",
-                              "value": {
-                                "typeName": "SchemaOf",
-                                "typeParams": [
-                                  {
-                                    "kind": "typeRef",
-                                    "repr": "T",
-                                    "value": {
-                                      "typeName": "T"
-                                    }
-                                  }
-                                ]
-                              }
-                            }
-                          ]
-                        },
-                        "extendsType": {
-                          "kind": "tuple",
-                          "value": [
-                            {
-                              "kind": "keyword",
-                              "repr": "never",
-                              "value": "never"
-                            }
-                          ]
-                        },
-                        "falseType": {
-                          "kind": "conditional",
-                          "value": {
-                            "checkType": {
-                              "kind": "typeRef",
-                              "repr": "SchemaOf",
-                              "value": {
-                                "typeName": "SchemaOf",
-                                "typeParams": [
-                                  {
-                                    "kind": "typeRef",
-                                    "repr": "T",
-                                    "value": {
-                                      "typeName": "T"
-                                    }
-                                  }
-                                ]
-                              }
-                            },
-                            "extendsType": {
-                              "kind": "typeLiteral",
-                              "value": {
-                                "properties": [
-                                  {
-                                    "name": "kind",
-                                    "tsType": {
-                                      "kind": "literal",
-                                      "repr": "enum",
-                                      "value": {
-                                        "kind": "string",
-                                        "string": "enum"
-                                      }
-                                    }
-                                  },
-                                  {
-                                    "name": "encoding",
-                                    "tsType": {
-                                      "kind": "literal",
-                                      "repr": "tagged",
-                                      "value": {
-                                        "kind": "string",
-                                        "string": "tagged"
-                                      }
-                                    }
-                                  }
-                                ]
-                              }
-                            },
-                            "falseType": {
-                              "kind": "conditional",
-                              "value": {
-                                "checkType": {
-                                  "kind": "typeRef",
-                                  "repr": "SchemaOf",
-                                  "value": {
-                                    "typeName": "SchemaOf",
-                                    "typeParams": [
-                                      {
-                                        "kind": "typeRef",
-                                        "repr": "T",
-                                        "value": {
-                                          "typeName": "T"
-                                        }
-                                      }
-                                    ]
-                                  }
-                                },
-                                "extendsType": {
-                                  "kind": "typeLiteral",
-                                  "value": {
-                                    "properties": [
-                                      {
-                                        "name": "kind",
-                                        "tsType": {
-                                          "kind": "literal",
-                                          "repr": "enum",
-                                          "value": {
-                                            "kind": "string",
-                                            "string": "enum"
-                                          }
-                                        }
-                                      },
-                                      {
-                                        "name": "encoding",
-                                        "tsType": {
-                                          "kind": "literal",
-                                          "repr": "u32",
-                                          "value": {
-                                            "kind": "string",
-                                            "string": "u32"
-                                          }
-                                        }
-                                      },
-                                      {
-                                        "name": "variants",
-                                        "tsType": {
-                                          "kind": "infer",
-                                          "value": {
-                                            "typeParam": {
-                                              "name": "V"
-                                            }
-                                          }
-                                        }
-                                      }
-                                    ]
-                                  }
-                                },
-                                "falseType": {
-                                  "kind": "typeRef",
-                                  "repr": "SorobanFactory",
-                                  "value": {
-                                    "typeName": "SorobanFactory",
-                                    "typeParams": [
-                                      {
-                                        "kind": "typeRef",
-                                        "repr": "Input.Value",
-                                        "value": {
-                                          "typeName": "Input.Value",
-                                          "typeParams": [
-                                            {
-                                              "kind": "typeRef",
-                                              "repr": "T",
-                                              "value": {
-                                                "typeName": "T"
-                                              }
-                                            }
-                                          ]
-                                        }
-                                      },
-                                      {
-                                        "kind": "typeRef",
-                                        "repr": "T",
-                                        "value": {
-                                          "typeName": "T"
-                                        }
-                                      }
-                                    ]
-                                  }
-                                },
-                                "trueType": {
-                                  "kind": "intersection",
-                                  "value": [
-                                    {
-                                      "kind": "typeRef",
-                                      "repr": "SorobanFactory",
-                                      "value": {
-                                        "typeName": "SorobanFactory",
-                                        "typeParams": [
-                                          {
-                                            "kind": "typeRef",
-                                            "repr": "Input.Value",
-                                            "value": {
-                                              "typeName": "Input.Value",
-                                              "typeParams": [
-                                                {
-                                                  "kind": "typeRef",
-                                                  "repr": "T",
-                                                  "value": {
-                                                    "typeName": "T"
-                                                  }
-                                                }
-                                              ]
-                                            }
-                                          },
-                                          {
-                                            "kind": "typeRef",
-                                            "repr": "T",
-                                            "value": {
-                                              "typeName": "T"
-                                            }
-                                          }
-                                        ]
-                                      }
-                                    },
-                                    {
-                                      "kind": "typeRef",
-                                      "repr": "Readonly",
-                                      "value": {
-                                        "typeName": "Readonly",
-                                        "typeParams": [
-                                          {
-                                            "kind": "typeRef",
-                                            "repr": "V",
-                                            "value": {
-                                              "typeName": "V"
-                                            }
-                                          }
-                                        ]
-                                      }
-                                    }
-                                  ]
-                                }
-                              }
-                            },
-                            "trueType": {
-                              "kind": "typeRef",
-                              "repr": "SorobanUnionFactory",
-                              "value": {
-                                "typeName": "SorobanUnionFactory",
-                                "typeParams": [
-                                  {
-                                    "kind": "typeRef",
-                                    "repr": "Input.Value",
-                                    "value": {
-                                      "typeName": "Input.Value",
-                                      "typeParams": [
-                                        {
-                                          "kind": "typeRef",
-                                          "repr": "T",
-                                          "value": {
-                                            "typeName": "T"
-                                          }
-                                        }
-                                      ]
-                                    }
-                                  },
-                                  {
-                                    "kind": "typeRef",
-                                    "repr": "T",
-                                    "value": {
-                                      "typeName": "T"
-                                    }
-                                  }
-                                ]
-                              }
-                            }
-                          }
-                        },
-                        "trueType": {
-                          "kind": "typeRef",
-                          "repr": "SorobanFactory",
-                          "value": {
-                            "typeName": "SorobanFactory",
-                            "typeParams": [
-                              {
-                                "kind": "typeRef",
-                                "repr": "Input.Value",
-                                "value": {
-                                  "typeName": "Input.Value",
-                                  "typeParams": [
-                                    {
-                                      "kind": "typeRef",
-                                      "repr": "T",
-                                      "value": {
-                                        "typeName": "T"
-                                      }
-                                    }
-                                  ]
-                                }
-                              },
-                              {
-                                "kind": "typeRef",
-                                "repr": "T",
-                                "value": {
-                                  "typeName": "T"
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      }
-                    },
-                    "typeParams": [
-                      {
-                        "name": "T"
-                      }
-                    ]
-                  },
-                  "kind": "typeAlias"
-                }
-              ],
-              "name": "Factory"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
                     "elements": [
                       {
                         "declarations": [
@@ -134703,9 +132083,9 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 454,
+                      "byteIndex": 505,
                       "col": 0,
-                      "filename": "core/values/types/input.ts",
+                      "filename": "core/soroban-types/types/inputs.ts",
                       "line": 19
                     }
                   },
@@ -134720,9 +132100,9 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 557,
+                      "byteIndex": 608,
                       "col": 0,
-                      "filename": "core/values/types/input.ts",
+                      "filename": "core/soroban-types/types/inputs.ts",
                       "line": 21
                     }
                   },
@@ -134737,9 +132117,9 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 681,
+                      "byteIndex": 732,
                       "col": 0,
-                      "filename": "core/values/types/input.ts",
+                      "filename": "core/soroban-types/types/inputs.ts",
                       "line": 23
                     }
                   },
@@ -134754,9 +132134,9 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 788,
+                      "byteIndex": 839,
                       "col": 0,
-                      "filename": "core/values/types/input.ts",
+                      "filename": "core/soroban-types/types/inputs.ts",
                       "line": 25
                     }
                   },
@@ -134771,9 +132151,9 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 921,
+                      "byteIndex": 972,
                       "col": 0,
-                      "filename": "core/values/types/input.ts",
+                      "filename": "core/soroban-types/types/inputs.ts",
                       "line": 27
                     }
                   },
@@ -134788,9 +132168,9 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 1195,
+                      "byteIndex": 1246,
                       "col": 0,
-                      "filename": "core/values/types/input.ts",
+                      "filename": "core/soroban-types/types/inputs.ts",
                       "line": 34
                     }
                   },
@@ -134805,9 +132185,9 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 1333,
+                      "byteIndex": 1384,
                       "col": 0,
-                      "filename": "core/values/types/input.ts",
+                      "filename": "core/soroban-types/types/inputs.ts",
                       "line": 37
                     }
                   },
@@ -134822,9 +132202,9 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 1732,
+                      "byteIndex": 1783,
                       "col": 0,
-                      "filename": "core/values/types/input.ts",
+                      "filename": "core/soroban-types/types/inputs.ts",
                       "line": 46
                     }
                   },
@@ -134839,9 +132219,9 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 1839,
+                      "byteIndex": 1890,
                       "col": 0,
-                      "filename": "core/values/types/input.ts",
+                      "filename": "core/soroban-types/types/inputs.ts",
                       "line": 49
                     }
                   },
@@ -134856,9 +132236,9 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 1975,
+                      "byteIndex": 2026,
                       "col": 0,
-                      "filename": "core/values/types/input.ts",
+                      "filename": "core/soroban-types/types/inputs.ts",
                       "line": 52
                     }
                   },
@@ -134873,9 +132253,9 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 2662,
+                      "byteIndex": 2713,
                       "col": 0,
-                      "filename": "core/values/types/input.ts",
+                      "filename": "core/soroban-types/types/inputs.ts",
                       "line": 66
                     }
                   },
@@ -142150,10 +139530,537 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 393,
+                      "byteIndex": 814,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 21
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "Address"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 825,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 22
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "Bool"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 833,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 23
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "Bytes"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 842,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 24
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "Duration"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 854,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 25
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "Error"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 863,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 26
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "I128"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 871,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 27
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "I256"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 879,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 28
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "I32"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 886,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 29
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "I64"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 893,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 30
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "MuxedAddress"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 909,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 31
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "String"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 919,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 32
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "Symbol"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 929,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 33
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "Timepoint"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 942,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 34
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "U128"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 950,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 35
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "U256"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 958,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 36
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "U32"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 965,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 37
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "U64"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 972,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 38
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "Val"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 979,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 39
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "Void"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 1042,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 42
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "BytesN"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 1052,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 43
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "Map"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 1059,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 44
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "Option"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 1069,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 45
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "Result"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 1079,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 46
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "Tuple"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 1088,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 47
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "Vec"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 1149,
                       "col": 9,
-                      "filename": "core/values/types/index.ts",
-                      "line": 7
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 49
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "Custom"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 1212,
+                      "col": 14,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 50
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "Factory"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 1273,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 52
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "ContractInstance"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 1293,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 53
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "ExecutableTag"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 1310,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 54
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "LedgerKeyContractInstance"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 1339,
+                      "col": 2,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 55
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "LedgerKeyNonce"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 1406,
+                      "col": 9,
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 57
                     }
                   },
                   "kind": "reference"
@@ -142167,10 +140074,10 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 403,
+                      "byteIndex": 1416,
                       "col": 19,
-                      "filename": "core/values/types/index.ts",
-                      "line": 7
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 57
                     }
                   },
                   "kind": "reference"
@@ -142184,10 +140091,10 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 459,
+                      "byteIndex": 1480,
                       "col": 2,
-                      "filename": "core/values/types/index.ts",
-                      "line": 9
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 59
                     }
                   },
                   "kind": "reference"
@@ -142201,10 +140108,10 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 475,
+                      "byteIndex": 1496,
                       "col": 2,
-                      "filename": "core/values/types/index.ts",
-                      "line": 10
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 60
                     }
                   },
                   "kind": "reference"
@@ -142218,10 +140125,10 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 490,
+                      "byteIndex": 1511,
                       "col": 2,
-                      "filename": "core/values/types/index.ts",
-                      "line": 11
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 61
                     }
                   },
                   "kind": "reference"
@@ -142235,10 +140142,10 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 502,
+                      "byteIndex": 1523,
                       "col": 2,
-                      "filename": "core/values/types/index.ts",
-                      "line": 12
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 62
                     }
                   },
                   "kind": "reference"
@@ -142252,10 +140159,10 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 516,
+                      "byteIndex": 1537,
                       "col": 2,
-                      "filename": "core/values/types/index.ts",
-                      "line": 13
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 63
                     }
                   },
                   "kind": "reference"
@@ -142269,10 +140176,10 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 528,
+                      "byteIndex": 1549,
                       "col": 2,
-                      "filename": "core/values/types/index.ts",
-                      "line": 14
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 64
                     }
                   },
                   "kind": "reference"
@@ -142286,10 +140193,10 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 578,
+                      "byteIndex": 1742,
                       "col": 9,
-                      "filename": "core/values/types/index.ts",
-                      "line": 16
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 68
                     }
                   },
                   "kind": "reference"
@@ -142303,978 +140210,16 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 716,
+                      "byteIndex": 1894,
                       "col": 0,
-                      "filename": "core/values/types/index.ts",
-                      "line": 19
+                      "filename": "core/soroban-types/types/index.ts",
+                      "line": 71
                     }
                   },
                   "kind": "reference"
                 }
               ],
               "name": "ErrorCode"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 1101,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 45
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanBool.type",
-                      "value": "SorobanBool.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Bool"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 1444,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 52
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanU32.type",
-                      "value": "SorobanU32.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "U32"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 1779,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 59
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanI32.type",
-                      "value": "SorobanI32.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "I32"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 2114,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 66
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanU64.type",
-                      "value": "SorobanU64.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "U64"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 2449,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 73
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanI64.type",
-                      "value": "SorobanI64.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "I64"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 2785,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 80
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanU128.type",
-                      "value": "SorobanU128.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "U128"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 3127,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 87
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanI128.type",
-                      "value": "SorobanI128.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "I128"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 3469,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 94
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanU256.type",
-                      "value": "SorobanU256.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "U256"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 3811,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 101
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanI256.type",
-                      "value": "SorobanI256.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "I256"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 4158,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 108
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanTimepoint.type",
-                      "value": "SorobanTimepoint.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Timepoint"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 4534,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 115
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanDuration.type",
-                      "value": "SorobanDuration.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Duration"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 4902,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 122
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanSymbol.type",
-                      "value": "SorobanSymbol.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Symbol"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 5258,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 129
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanString.type",
-                      "value": "SorobanString.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "String"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 5613,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 136
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanBytes.type",
-                      "value": "SorobanBytes.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Bytes"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 5972,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 143
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanAddress.type",
-                      "value": "SorobanAddress.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Address"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 6340,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 150
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanMuxedAddress.type",
-                      "value": "SorobanMuxedAddress.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "MuxedAddress"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 6731,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 157
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanError.type",
-                      "value": "SorobanError.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Error"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 7112,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 166
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanVal.type",
-                      "value": "SorobanVal.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Val"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 7360,
-                      "col": 0,
-                      "filename": "core/values/types/scalars.ts",
-                      "line": 171
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanVoid.type",
-                      "value": "SorobanVoid.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Void"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 533,
-                      "col": 0,
-                      "filename": "core/values/types/collections.ts",
-                      "line": 14
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanVec.type",
-                      "value": "SorobanVec.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Vec"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 819,
-                      "col": 0,
-                      "filename": "core/values/types/collections.ts",
-                      "line": 19
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanMap.type",
-                      "value": "SorobanMap.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Map"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 1142,
-                      "col": 0,
-                      "filename": "core/values/types/collections.ts",
-                      "line": 26
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanTuple.type",
-                      "value": "SorobanTuple.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Tuple"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 1508,
-                      "col": 0,
-                      "filename": "core/values/types/collections.ts",
-                      "line": 33
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanOption.type",
-                      "value": "SorobanOption.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Option"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 1768,
-                      "col": 0,
-                      "filename": "core/values/types/collections.ts",
-                      "line": 38
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanResult.type",
-                      "value": "SorobanResult.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Result"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 2142,
-                      "col": 0,
-                      "filename": "core/values/types/collections.ts",
-                      "line": 47
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanBytesN.type",
-                      "value": "SorobanBytesN.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "BytesN"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 427,
-                      "col": 0,
-                      "filename": "core/values/types/system.ts",
-                      "line": 11
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanContractInstance.type",
-                      "value": "SorobanContractInstance.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "ContractInstance"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 772,
-                      "col": 0,
-                      "filename": "core/values/types/system.ts",
-                      "line": 18
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanLedgerKeyContractInstance.type",
-                      "value": "SorobanLedgerKeyContractInstance.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "LedgerKeyContractInstance"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 1086,
-                      "col": 0,
-                      "filename": "core/values/types/system.ts",
-                      "line": 24
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanLedgerKeyNonce.type",
-                      "value": "SorobanLedgerKeyNonce.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "LedgerKeyNonce"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 1332,
-                      "col": 0,
-                      "filename": "core/values/types/system.ts",
-                      "line": 29
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeQuery",
-                      "repr": "SorobanExecutableTag.type",
-                      "value": "SorobanExecutableTag.type"
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "ExecutableTag"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 553,
-                      "col": 0,
-                      "filename": "core/values/types/custom.ts",
-                      "line": 15
-                    }
-                  },
-                  "kind": "reference"
-                },
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "kind": "const",
-                    "tsType": {
-                      "kind": "typeLiteral",
-                      "value": {
-                        "methods": [
-                          {
-                            "kind": "method",
-                            "name": "fromSpec",
-                            "params": [
-                              {
-                                "kind": "identifier",
-                                "name": "spec",
-                                "optional": false,
-                                "tsType": {
-                                  "kind": "fnOrConstructor",
-                                  "value": {
-                                    "constructor": false,
-                                    "params": [],
-                                    "tsType": {
-                                      "kind": "typeRef",
-                                      "repr": "Pick",
-                                      "value": {
-                                        "typeName": "Pick",
-                                        "typeParams": [
-                                          {
-                                            "kind": "typeRef",
-                                            "repr": "Spec",
-                                            "value": {
-                                              "typeName": "Spec"
-                                            }
-                                          },
-                                          {
-                                            "kind": "literal",
-                                            "repr": "entries",
-                                            "value": {
-                                              "kind": "string",
-                                              "string": "entries"
-                                            }
-                                          }
-                                        ]
-                                      }
-                                    }
-                                  }
-                                }
-                              },
-                              {
-                                "kind": "identifier",
-                                "name": "name",
-                                "optional": false,
-                                "tsType": {
-                                  "kind": "keyword",
-                                  "repr": "string",
-                                  "value": "string"
-                                }
-                              }
-                            ],
-                            "returnType": {
-                              "kind": "typeRef",
-                              "repr": "Factory",
-                              "value": {
-                                "typeName": "Factory",
-                                "typeParams": [
-                                  {
-                                    "kind": "typeRef",
-                                    "repr": "T",
-                                    "value": {
-                                      "typeName": "T"
-                                    }
-                                  }
-                                ]
-                              }
-                            },
-                            "typeParams": [
-                              {
-                                "name": "T"
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    }
-                  },
-                  "kind": "variable"
-                }
-              ],
-              "name": "Custom"
-            },
-            {
-              "declarations": [
-                {
-                  "declarationKind": "export",
-                  "def": {
-                    "target": {
-                      "byteIndex": 713,
-                      "col": 0,
-                      "filename": "core/values/types/custom.ts",
-                      "line": 18
-                    }
-                  },
-                  "kind": "reference"
-                }
-              ],
-              "name": "Factory"
             },
             {
               "declarations": [
@@ -143288,9 +140233,9 @@
                             "declarationKind": "export",
                             "def": {
                               "target": {
-                                "byteIndex": 454,
+                                "byteIndex": 505,
                                 "col": 0,
-                                "filename": "core/values/types/input.ts",
+                                "filename": "core/soroban-types/types/inputs.ts",
                                 "line": 19
                               }
                             },
@@ -143305,9 +140250,9 @@
                             "declarationKind": "export",
                             "def": {
                               "target": {
-                                "byteIndex": 557,
+                                "byteIndex": 608,
                                 "col": 0,
-                                "filename": "core/values/types/input.ts",
+                                "filename": "core/soroban-types/types/inputs.ts",
                                 "line": 21
                               }
                             },
@@ -143322,9 +140267,9 @@
                             "declarationKind": "export",
                             "def": {
                               "target": {
-                                "byteIndex": 681,
+                                "byteIndex": 732,
                                 "col": 0,
-                                "filename": "core/values/types/input.ts",
+                                "filename": "core/soroban-types/types/inputs.ts",
                                 "line": 23
                               }
                             },
@@ -143339,9 +140284,9 @@
                             "declarationKind": "export",
                             "def": {
                               "target": {
-                                "byteIndex": 788,
+                                "byteIndex": 839,
                                 "col": 0,
-                                "filename": "core/values/types/input.ts",
+                                "filename": "core/soroban-types/types/inputs.ts",
                                 "line": 25
                               }
                             },
@@ -143356,9 +140301,9 @@
                             "declarationKind": "export",
                             "def": {
                               "target": {
-                                "byteIndex": 921,
+                                "byteIndex": 972,
                                 "col": 0,
-                                "filename": "core/values/types/input.ts",
+                                "filename": "core/soroban-types/types/inputs.ts",
                                 "line": 27
                               }
                             },
@@ -143373,9 +140318,9 @@
                             "declarationKind": "export",
                             "def": {
                               "target": {
-                                "byteIndex": 1195,
+                                "byteIndex": 1246,
                                 "col": 0,
-                                "filename": "core/values/types/input.ts",
+                                "filename": "core/soroban-types/types/inputs.ts",
                                 "line": 34
                               }
                             },
@@ -143390,9 +140335,9 @@
                             "declarationKind": "export",
                             "def": {
                               "target": {
-                                "byteIndex": 1333,
+                                "byteIndex": 1384,
                                 "col": 0,
-                                "filename": "core/values/types/input.ts",
+                                "filename": "core/soroban-types/types/inputs.ts",
                                 "line": 37
                               }
                             },
@@ -143439,9 +140384,9 @@
                             "declarationKind": "export",
                             "def": {
                               "target": {
-                                "byteIndex": 1839,
+                                "byteIndex": 1890,
                                 "col": 0,
-                                "filename": "core/values/types/input.ts",
+                                "filename": "core/soroban-types/types/inputs.ts",
                                 "line": 49
                               }
                             },
@@ -143456,9 +140401,9 @@
                             "declarationKind": "export",
                             "def": {
                               "target": {
-                                "byteIndex": 1975,
+                                "byteIndex": 2026,
                                 "col": 0,
-                                "filename": "core/values/types/input.ts",
+                                "filename": "core/soroban-types/types/inputs.ts",
                                 "line": 52
                               }
                             },
@@ -143473,9 +140418,9 @@
                             "declarationKind": "export",
                             "def": {
                               "target": {
-                                "byteIndex": 2662,
+                                "byteIndex": 2713,
                                 "col": 0,
-                                "filename": "core/values/types/input.ts",
+                                "filename": "core/soroban-types/types/inputs.ts",
                                 "line": 66
                               }
                             },
@@ -146575,10 +143520,10 @@
         "declarationKind": "export",
         "def": {
           "target": {
-            "byteIndex": 3683,
+            "byteIndex": 480,
             "col": 0,
-            "filename": "core/values/value.ts",
-            "line": 113
+            "filename": "core/soroban-types/values/value.ts",
+            "line": 12
           }
         },
         "kind": "reference"

@@ -1,13 +1,16 @@
-/** @internal Exact native spec-type descriptor. */
-type NativeSpecType = xdr.ScSpecTypeDef;
-import { canonicalMap, requireOrderedMap } from "@/values/ordering.ts";
-import { contractValType } from "@/values/generic.ts";
+import {
+  canonicalMap,
+  requireOrderedMap,
+} from "@/soroban-types/codecs/ordering.ts";
+import { contractValType } from "@/soroban-types/codecs/generic.ts";
 import * as xdr from "stellar-sdk/xdr";
 import type { Spec } from "@/contract/spec.ts";
-/** @internal Native SDK schema accepted without introducing a second constructor. */
-type NativeSpec = Spec;
-import { Code, requireValue, SorobanValueError } from "@/values/error.ts";
-import { SorobanCodec } from "@/values/value.ts";
+import {
+  Code,
+  requireValue,
+  SorobanValueError,
+} from "@/soroban-types/error.ts";
+import { SorobanCodec } from "@/soroban-types/codecs/codec.ts";
 import {
   addressType,
   boolType,
@@ -19,14 +22,19 @@ import {
   stringType,
   symbolType,
   voidType,
-} from "@/values/scalars.ts";
+} from "@/soroban-types/codecs/primitives.ts";
 import {
   mapType,
   optionType,
   resultType,
   tupleType,
   vectorType,
-} from "@/values/containers.ts";
+} from "@/soroban-types/codecs/collections.ts";
+
+/** @internal Exact native spec-type descriptor. */
+type NativeSpecType = xdr.ScSpecTypeDef;
+/** @internal Native SDK schema accepted without introducing a second constructor. */
+type NativeSpec = Spec;
 
 const SCALARS: Readonly<
   Record<string, (() => SorobanCodec<unknown, unknown>) | undefined>

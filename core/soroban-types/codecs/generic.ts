@@ -1,8 +1,12 @@
-import { canonicalMap, requireOrderedMap } from "@/values/ordering.ts";
+import {
+  canonicalMap,
+  requireOrderedMap,
+} from "@/soroban-types/codecs/ordering.ts";
 import { nativeToScVal } from "stellar-sdk/base";
 import * as xdr from "stellar-sdk/xdr";
-import { requireValue } from "@/values/error.ts";
-import { SorobanCodec, SorobanValue } from "@/values/value.ts";
+import { requireValue } from "@/soroban-types/error.ts";
+import { SorobanCodec } from "@/soroban-types/codecs/codec.ts";
+import { SorobanValue } from "@/soroban-types/values/value.ts";
 
 /** @internal Verifies contract-usable values; system-only variants remain available via SorobanVal. */
 export function requireContractValue(value: xdr.ScVal): void {

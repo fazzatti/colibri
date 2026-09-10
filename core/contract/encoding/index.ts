@@ -1,17 +1,38 @@
+/**
+ * Contract function arguments and results at the Soroban encoding boundary.
+ *
+ * Use a loaded contract spec to encode named method arguments or decode a result.
+ * Ordinary supported arguments retain native SDK encoding. Wrapped or extended
+ * values use the Soroban codecs, preserving plain decoded results and native
+ * Result objects. This module performs no signing, submission or RPC requests.
+ *
+ * @example
+ * ```ts
+ * import { encodeSorobanArguments, Spec } from "@colibri/core";
+ * import { xdr } from "@stellar/stellar-sdk";
+ * const spec = new Spec([xdr.ScSpecEntry.scSpecEntryFunctionV0(
+ *   new xdr.ScSpecFunctionV0({ name: "ping", doc: "", inputs: [], outputs: [] }),
+ * )]);
+ * console.log(encodeSorobanArguments(spec, "ping", {}));
+ * ```
+ *
+ * @module
+ */
 import type { ScValLike } from "@/common/types/external.ts";
 import type * as xdr from "stellar-sdk/xdr";
 import { Ok } from "stellar-sdk/contract";
 import type { Spec } from "@/contract/spec.ts";
-/** @internal Native SDK schema accepted without introducing a second constructor. */
-type NativeSpec = Spec;
-import { requireValue } from "@/values/error.ts";
-import { SpecTypes } from "@/values/spec.ts";
+import { requireValue } from "@/soroban-types/error.ts";
+import { SpecTypes } from "@/soroban-types/codecs/custom.ts";
 import {
   type SorobanScValInput,
   SorobanValue,
   toSorobanScVal,
-} from "@/values/value.ts";
-import { requireContractValue } from "@/values/generic.ts";
+} from "@/soroban-types/values/value.ts";
+import { requireContractValue } from "@/soroban-types/codecs/generic.ts";
+
+/** @internal Native SDK schema accepted without introducing a second constructor. */
+type NativeSpec = Spec;
 
 /** @internal Finds explicit wrappers without treating arbitrary toScVal methods as trusted. */
 export function containsSorobanValue(

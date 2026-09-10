@@ -1,20 +1,20 @@
-import type { SorobanValue } from "@/values/value.ts";
+import type { SorobanValue } from "@/soroban-types/values/value.ts";
 import type {
   CustomSchema,
   CustomValue,
   OptionalOf,
   SchemaOf,
-} from "@/values/types/shape.ts";
+} from "@/soroban-types/types/schema.ts";
 import type {
   SorobanBytesNInput,
   SorobanVoidInput,
-} from "@/values/primitives.ts";
+} from "@/soroban-types/values/primitives.ts";
 import type {
   SorobanMapInput,
   SorobanOptionInput,
   SorobanResultInput,
   SorobanVecInput,
-} from "@/values/containers.ts";
+} from "@/soroban-types/values/collections.ts";
 
 /** Ordinary or validated vector, with correlated decoded element type. */
 export type Vec<I, O = I> = SorobanVecInput<I, O>;
@@ -94,7 +94,7 @@ export type {
   SorobanU64Input as U64,
   SorobanValInput as Val,
   SorobanVoidInput as Void,
-} from "@/values/primitives.ts";
+} from "@/soroban-types/values/primitives.ts";
 
 // Preserve an empty ESM namespace when transpilers erase the type declarations.
 export {};

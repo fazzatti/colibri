@@ -1,9 +1,11 @@
-/** @internal Exact native error discriminant names. */
-type NativeErrorType = xdr.ScError["type"];
 import { Address, scValToBigInt, XdrLargeInt } from "stellar-sdk/base";
 import * as xdr from "stellar-sdk/xdr";
-import { SorobanCodec, SorobanValue } from "@/values/value.ts";
-import { requireValue } from "@/values/error.ts";
+import { SorobanCodec } from "@/soroban-types/codecs/codec.ts";
+import { SorobanValue } from "@/soroban-types/values/value.ts";
+import { requireValue } from "@/soroban-types/error.ts";
+
+/** @internal Exact native error discriminant names. */
+type NativeErrorType = xdr.ScError["type"];
 
 /** Native representation of a contract or host error value. */
 export type SorobanErrorValue = { type: NativeErrorType; code: number };

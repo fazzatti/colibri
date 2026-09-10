@@ -2,11 +2,11 @@
  * Validated Soroban values without Colibri's RPC, pipeline or client initialization.
  * @module
  */
-export * from "@/values/index.ts";
+export * from "@/soroban-types/index.ts";
 /** Direct declarations support namespace imports without a forwarded runtime object. */
-export * from "@/values/types/index.ts";
+export * from "@/soroban-types/types/index.ts";
 /** Named namespace convenience; direct namespace imports enable finer tree shaking. */
-export * as SorobanType from "@/values/types/index.ts";
+export * as SorobanType from "@/soroban-types/types/index.ts";
 
 export type { ScValLike } from "@/common/types/external.ts";
 
@@ -28,4 +28,9 @@ export type {
   Tuple as TupleInput,
   Value as InputOf,
   Vec as VecInput,
-} from "@/values/types/input.ts";
+} from "@/soroban-types/types/inputs.ts";
+
+export {
+  decodeSorobanResult,
+  encodeSorobanArguments,
+} from "@/contract/encoding/index.ts";

@@ -1,7 +1,7 @@
 // Reading these owned readonly static fields has no side effects.
 // Pure wrappers let bundlers discard aliases that the consumer does not use.
-import type { SorobanErrorValue } from "@/values/scalars.ts";
-import type { Shape } from "@/values/types/shape.ts";
+import type { SorobanErrorValue } from "@/soroban-types/codecs/primitives.ts";
+import type { Shape } from "@/soroban-types/types/schema.ts";
 import {
   SorobanAddress,
   SorobanBool,
@@ -22,7 +22,7 @@ import {
   SorobanU64,
   SorobanVal,
   SorobanVoid,
-} from "@/values/primitives.ts";
+} from "@/soroban-types/values/primitives.ts";
 import type {
   SorobanAddressInput,
   SorobanBoolInput,
@@ -41,7 +41,7 @@ import type {
   SorobanU256Input,
   SorobanU32Input,
   SorobanU64Input,
-} from "@/values/primitives.ts";
+} from "@/soroban-types/values/primitives.ts";
 /** Ordinary Bool representation with erased metadata for composed input types. */
 export type Bool =
   & boolean

@@ -10,8 +10,8 @@ import * as E from "@/contract/events/error.ts";
 import {
   containsSorobanValue,
   needsExtendedCodec,
-} from "@/values/arguments.ts";
-import { sorobanTypeFromSpec } from "@/values/spec.ts";
+} from "@/contract/encoding/index.ts";
+import { sorobanTypeFromSpec } from "@/soroban-types/codecs/custom.ts";
 
 /** A decoded occurrence retaining all Colibri event metadata and raw XDR. */
 export class ContractEvent<Data extends object = Record<string, unknown>>

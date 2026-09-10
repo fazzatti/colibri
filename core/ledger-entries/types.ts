@@ -1,4 +1,4 @@
-import type { SorobanScValInput } from "@/values/value.ts";
+import type { SorobanScValInput } from "@/soroban-types/values/value.ts";
 import type { xdr } from "stellar-sdk";
 import type {
   BinaryData,

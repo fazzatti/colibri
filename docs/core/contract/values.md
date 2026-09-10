@@ -5,6 +5,23 @@ validation. Contract calls continue to accept ordinary JavaScript values, and
 results remain ordinary values. A type annotation describes the ABI meaning;
 calling `.from()` checks the value and gives you encoding utilities.
 
+The API has three complementary parts: **types** describe ordinary values and
+accepted inputs, **codecs** hold reusable validation and conversion rules, and
+**values** hold immutable validated snapshots. `SorobanType.U32` is a type in an
+annotation and a codec at runtime; `SorobanType.U32.from(7)` creates a value.
+
+<!-- deno-check -->
+
+```ts
+import * as SorobanType from "@colibri/core/values";
+
+const raw: SorobanType.U32 = 7;
+const codec = SorobanType.U32;
+const validated = codec.from(raw);
+const restored: SorobanType.U32 = codec.decode(validated.toScVal());
+console.log(validated.value, restored);
+```
+
 Install `jsr:@colibri/core@^1.1.0`. Save a complete example below as `values.ts`
 and run `deno run values.ts`; these examples need no RPC or signer. Import
 `SorobanType` from the Core root, or use

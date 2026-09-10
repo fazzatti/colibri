@@ -1,5 +1,5 @@
 import type * as xdr from "stellar-sdk/xdr";
-import { requireValue } from "@/values/error.ts";
+import { requireValue } from "@/soroban-types/error.ts";
 
 // Compare decoded XDR fields, not serialized bytes: length prefixes and signed
 // integer encodings do not have Soroban's content-wise ordering (CAP-46-01).

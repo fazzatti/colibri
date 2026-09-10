@@ -2,15 +2,19 @@ import type { Spec } from "@/contract/spec.ts";
 import {
   createSorobanFactory,
   createSorobanUnion,
-} from "@/values/factories.ts";
+} from "@/soroban-types/codecs/factories.ts";
 import type {
   SorobanFactory,
   SorobanUnionFactory,
-} from "@/values/factories.ts";
-import type * as Input from "@/values/types/input.ts";
-import type { SchemaOf } from "@/values/types/shape.ts";
-import { Code, SorobanValueError } from "@/values/error.ts";
-import type { CustomSchema, CustomValue, Shape } from "@/values/types/shape.ts";
+} from "@/soroban-types/codecs/factories.ts";
+import type * as Input from "@/soroban-types/types/inputs.ts";
+import type { SchemaOf } from "@/soroban-types/types/schema.ts";
+import { Code, SorobanValueError } from "@/soroban-types/error.ts";
+import type {
+  CustomSchema,
+  CustomValue,
+  Shape,
+} from "@/soroban-types/types/schema.ts";
 
 /** A custom declaration expressed with Soroban fields or enum variants. */
 export type Custom<S extends CustomSchema> = CustomValue<S> & Shape<S>;

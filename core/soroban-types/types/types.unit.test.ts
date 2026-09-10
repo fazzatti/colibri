@@ -1,7 +1,7 @@
 import { describe, it } from "@std/testing/bdd";
 import { assertEquals, assertThrows } from "@std/assert";
-import * as SorobanType from "@/values/types/index.ts";
-import { SorobanValueError } from "@/values/error.ts";
+import * as SorobanType from "@/soroban-types/types/index.ts";
+import { SorobanValueError } from "@/soroban-types/error.ts";
 import { Spec } from "@/contract/spec.ts";
 import * as xdr from "stellar-sdk/xdr";
 import { valueSpec } from "colibri-internal/tests/soroban-values-fixtures.ts";

@@ -1,4 +1,4 @@
-import { toSorobanScVal } from "@/values/value.ts";
+import { toSorobanScVal } from "@/soroban-types/values/value.ts";
 import { Address, hash, Keypair, xdr } from "stellar-sdk";
 import type { BinaryData, LedgerKeyLike } from "@/common/types/index.ts";
 import { toUint8Array } from "@/common/helpers/internal-bytes.ts";

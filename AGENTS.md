@@ -461,6 +461,16 @@ Keep these invariants:
   not invent a parallel state-passing mechanism.
 - plugin attachment points are intentional and stable.
 
+Soroban helpers live in `core/soroban-types/`, organized into `values/`
+(validated instances), `codecs/` (runtime validation and XDR conversion), and
+`types/` (the `SorobanType` namespace and input derivation). Each directory has
+an explicitly exported `index.ts` with module documentation and an example. Keep
+codec rules separate from value wrapper classes. Contract argument/result
+integration belongs in `core/contract/encoding/`; the Soroban implementation
+must not initialize contract clients or pipelines. Type-only value/codec
+references are allowed; runtime dependency cycles are not. The public
+`@colibri/core/values` entrypoint remains supported.
+
 If you change `core/`, consider ripple effects on all dependent packages.
 
 ### `webauth/`

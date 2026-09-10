@@ -8,21 +8,24 @@ import {
   SorobanString,
   SorobanSymbol,
   SorobanU32,
-} from "@/values/primitives.ts";
+} from "@/soroban-types/values/primitives.ts";
 import {
   SorobanMap,
   SorobanOption,
   SorobanResult,
   SorobanTuple,
   SorobanVec,
-} from "@/values/containers.ts";
-import { createSorobanType, sorobanTypeFromSpec } from "@/values/spec.ts";
+} from "@/soroban-types/values/collections.ts";
+import {
+  createSorobanType,
+  sorobanTypeFromSpec,
+} from "@/soroban-types/codecs/custom.ts";
 import {
   createSorobanFactory,
   createSorobanUnion,
-} from "@/values/factories.ts";
-import { SorobanValueError } from "@/values/error.ts";
-import type { SorobanValue } from "@/values/value.ts";
+} from "@/soroban-types/codecs/factories.ts";
+import { SorobanValueError } from "@/soroban-types/error.ts";
+import type { SorobanValue } from "@/soroban-types/values/value.ts";
 import {
   func,
   option,

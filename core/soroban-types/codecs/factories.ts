@@ -1,10 +1,12 @@
 import type { ScValLike } from "@/common/types/external.ts";
 import type { Spec } from "@/contract/spec.ts";
+import { Code, SorobanValueError } from "@/soroban-types/error.ts";
+import { createSorobanType } from "@/soroban-types/codecs/custom.ts";
+import type { SorobanCodec } from "@/soroban-types/codecs/codec.ts";
+import type { SorobanValue } from "@/soroban-types/values/value.ts";
+
 /** @internal Native SDK schema accepted without introducing a second constructor. */
 type NativeSpec = Spec;
-import { Code, SorobanValueError } from "@/values/error.ts";
-import { createSorobanType } from "@/values/spec.ts";
-import type { SorobanCodec, SorobanValue } from "@/values/value.ts";
 
 /** Lazy, spec-backed factory used by generated custom types. */
 export interface SorobanFactory<Input, Output = Input> {

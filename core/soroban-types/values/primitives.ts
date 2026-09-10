@@ -1,5 +1,6 @@
 import type { ScValLike } from "@/common/types/external.ts";
-import { type SorobanCodec, SorobanValue } from "@/values/value.ts";
+import type { SorobanCodec } from "@/soroban-types/codecs/codec.ts";
+import { SorobanValue } from "@/soroban-types/values/value.ts";
 import {
   addressType,
   boolType,
@@ -11,8 +12,8 @@ import {
   symbolType,
   valType,
   voidType,
-} from "@/values/scalars.ts";
-import type { SorobanErrorValue } from "@/values/scalars.ts";
+} from "@/soroban-types/codecs/primitives.ts";
+import type { SorobanErrorValue } from "@/soroban-types/codecs/primitives.ts";
 
 /** Ordinary or validated Bool accepted by contract inputs. */
 export type SorobanBoolInput = boolean | SorobanBool;

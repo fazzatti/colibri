@@ -5,8 +5,8 @@ import {
   SorobanExecutableTag,
   SorobanLedgerKeyContractInstance,
   SorobanLedgerKeyNonce,
-} from "@/values/system.ts";
-import type { SorobanTypeOutput } from "@/values/containers.ts";
+} from "@/soroban-types/values/system.ts";
+import type { SorobanTypeOutput } from "@/soroban-types/values/collections.ts";
 
 /** Complete contract-instance payload, for ledger inspection. */
 export type ContractInstance = SorobanTypeOutput<

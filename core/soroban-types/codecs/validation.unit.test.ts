@@ -8,22 +8,22 @@ import {
   SorobanSymbol,
   SorobanU32,
   SorobanVal,
-} from "@/values/primitives.ts";
+} from "@/soroban-types/values/primitives.ts";
 import {
   SorobanMap,
   SorobanResult,
   SorobanTuple,
   SorobanVec,
-} from "@/values/containers.ts";
+} from "@/soroban-types/values/collections.ts";
 import {
   canonicalMap,
   compareScVals,
   requireOrderedMap,
-} from "@/values/ordering.ts";
-import { contractValType } from "@/values/generic.ts";
-import { createSorobanUnion } from "@/values/factories.ts";
-import { SorobanValueError } from "@/values/error.ts";
-import { SorobanCodec } from "@/values/value.ts";
+} from "@/soroban-types/codecs/ordering.ts";
+import { contractValType } from "@/soroban-types/codecs/generic.ts";
+import { createSorobanUnion } from "@/soroban-types/codecs/factories.ts";
+import { SorobanValueError } from "@/soroban-types/error.ts";
+import { SorobanCodec } from "@/soroban-types/codecs/codec.ts";
 import { union } from "colibri-internal/tests/soroban-values-fixtures.ts";
 
 describe("Soroban schema validation", () => {

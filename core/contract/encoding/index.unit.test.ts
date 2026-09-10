@@ -16,16 +16,16 @@ import {
   SorobanSymbol,
   SorobanU32,
   SorobanVal,
-} from "@/values/primitives.ts";
-import { SorobanLedgerKeyNonce } from "@/values/system.ts";
-import { SorobanValueError } from "@/values/error.ts";
+} from "@/soroban-types/values/primitives.ts";
+import { SorobanLedgerKeyNonce } from "@/soroban-types/values/system.ts";
+import { SorobanValueError } from "@/soroban-types/error.ts";
 import {
   containsSorobanValue,
   decodeSorobanResult,
   encodeSorobanArguments,
   toContractScVal,
-} from "@/values/arguments.ts";
-import { createSorobanType } from "@/values/spec.ts";
+} from "@/contract/encoding/index.ts";
+import { createSorobanType } from "@/soroban-types/codecs/custom.ts";
 import { buildContractDataLedgerKey } from "@/ledger-entries/keys.ts";
 import {
   func,

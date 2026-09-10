@@ -6,10 +6,10 @@ import {
   SorobanResult,
   SorobanTuple,
   SorobanVec,
-} from "@/values/containers.ts";
-import { SorobanBytesN } from "@/values/primitives.ts";
-import type { Optional, Shape } from "@/values/types/shape.ts";
-import type { SorobanResultValue } from "@/values/containers.ts";
+} from "@/soroban-types/values/collections.ts";
+import { SorobanBytesN } from "@/soroban-types/values/primitives.ts";
+import type { Optional, Shape } from "@/soroban-types/types/schema.ts";
+import type { SorobanResultValue } from "@/soroban-types/values/collections.ts";
 
 /** Decoded vector whose element type remains available for input derivation. */
 export type Vec<T> = T[] & Shape<{ kind: "vec"; element: T; output: T[] }>;

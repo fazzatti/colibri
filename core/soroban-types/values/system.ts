@@ -1,9 +1,15 @@
+import type * as xdr from "stellar-sdk/xdr";
+import type { SorobanCodec } from "@/soroban-types/codecs/codec.ts";
+import { SorobanValue } from "@/soroban-types/values/value.ts";
+import {
+  contractInstanceType,
+  executableTagType,
+  ledgerKeyContractInstanceType,
+  ledgerKeyNonceType,
+} from "@/soroban-types/codecs/system.ts";
+
 /** @internal Canonical native representation, preserving SDK interoperability. */
 type NativeContractInstance = xdr.ScContractInstance;
-import * as xdr from "stellar-sdk/xdr";
-import { SorobanCodec, SorobanValue } from "@/values/value.ts";
-import { largeIntegerType, requireTag } from "@/values/scalars.ts";
-import { requireValue } from "@/values/error.ts";
 
 /** Lossless contract-instance value for ledger inspection, not ordinary arguments. */
 export class SorobanContractInstance
@@ -17,22 +23,7 @@ export class SorobanContractInstance
     NativeContractInstance,
     NativeContractInstance,
     "contractInstance"
-  > = /* @__PURE__ */ new SorobanCodec(
-    "contractInstance",
-    "contractInstance",
-    (value) => {
-      requireValue(
-        value instanceof xdr.ScContractInstance,
-        "contractInstance",
-        "expected native ScContractInstance",
-      );
-      return xdr.ScVal.scvContractInstance(value);
-    },
-    (value) => {
-      requireTag(value, "scvContractInstance");
-      return value.instance;
-    },
-  );
+  > = /* @__PURE__ */ contractInstanceType();
 }
 
 /** Reserved contract-instance ledger key. */
@@ -44,22 +35,7 @@ export class SorobanLedgerKeyContractInstance
   }
   /** Codec for the payload-free system key. */
   static readonly type: SorobanCodec<null, null, "ledgerKeyContractInstance"> =
-    /* @__PURE__ */ new SorobanCodec(
-      "ledgerKeyContractInstance",
-      "ledgerKeyContractInstance",
-      (value) => {
-        requireValue(
-          value === null,
-          "ledgerKeyContractInstance",
-          "expected no payload",
-        );
-        return xdr.ScVal.scvLedgerKeyContractInstance();
-      },
-      (value) => {
-        requireTag(value, "scvLedgerKeyContractInstance");
-        return null;
-      },
-    );
+    /* @__PURE__ */ ledgerKeyContractInstanceType();
 }
 
 /** Reserved nonce ledger key, retaining the signed 64-bit nonce. */
@@ -71,20 +47,7 @@ export class SorobanLedgerKeyNonce
   }
   /** Codec for the complete nonce key. */
   static readonly type: SorobanCodec<bigint, bigint, "ledgerKeyNonce"> =
-    /* @__PURE__ */ new SorobanCodec(
-      "ledgerKeyNonce",
-      "ledgerKeyNonce",
-      (value) => {
-        const nonce = largeIntegerType("i64").decode(
-          largeIntegerType("i64").encodeUnknown(value),
-        );
-        return xdr.ScVal.scvLedgerKeyNonce(new xdr.ScNonceKey({ nonce }));
-      },
-      (value) => {
-        requireTag(value, "scvLedgerKeyNonce");
-        return value.nonceKey.nonce;
-      },
-    );
+    /* @__PURE__ */ ledgerKeyNonceType();
 }
 
 /** System executable tag; arbitrary wire bytes remain lossless. */
@@ -99,20 +62,5 @@ export class SorobanExecutableTag
     string | Uint8Array,
     string | Uint8Array,
     "executableTag"
-  > = /* @__PURE__ */ new SorobanCodec(
-    "executableTag",
-    "executableTag",
-    (value) => {
-      requireValue(
-        typeof value === "string" || value instanceof Uint8Array,
-        "executableTag",
-        "expected text or bytes",
-      );
-      return xdr.ScVal.scvExecutableTag(value);
-    },
-    (value) => {
-      requireTag(value, "scvExecutableTag");
-      return value.executableTag.asStringOrBytes();
-    },
-  );
+  > = /* @__PURE__ */ executableTagType();
 }

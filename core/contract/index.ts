@@ -3,7 +3,7 @@ import {
   decodeSorobanResult,
   encodeSorobanArguments,
   toContractScVal,
-} from "@/values/arguments.ts";
+} from "@/contract/encoding/index.ts";
 import { ContractEventRegistry } from "@/contract/events/index.ts";
 import {
   Address,
