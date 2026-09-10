@@ -36,6 +36,18 @@ import {
 } from "colibri-internal/tests/soroban-values-fixtures.ts";
 
 describe("Soroban composed and custom values", () => {
+  it("accepts prototype-free records with the same validation and encoding as ordinary structs", () => {
+    const spec = new Spec([
+      struct("Counter", { count: xdr.ScSpecTypeDef.scSpecTypeU32() }),
+    ]);
+    const type = createSorobanType<{ count: number }>(spec, "Counter");
+    const record = Object.assign(Object.create(null), { count: 7 });
+    assertEquals(type.from(record).value, { count: 7 });
+    assertEquals(
+      type.from(record).toXdr("base64"),
+      type.from({ count: 7 }).toXdr("base64"),
+    );
+  });
   it("validates nested vectors/maps/options/tuples including empty containers", () => {
     const vector = new SorobanVec([1, new SorobanU32(2)], SorobanU32.type);
     assertEquals(vector.value, [1, 2]);

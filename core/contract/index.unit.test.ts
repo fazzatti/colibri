@@ -493,6 +493,21 @@ describe("Contract", () => {
       );
     });
 
+    it("loads event declarations from network WASM when the client has only its hash", async () => {
+      const wasm = await loadWasmFile(
+        "./_internal/tests/compiled-contracts/bindings_demo_contract.wasm",
+      );
+      const hash = await sha256Hex(wasm);
+      const client = new Contract({
+        networkConfig,
+        contractConfig: { wasmHash: hash },
+        rpc: rpcWithLedgerEntries([contractCodeEntry(hash, wasm)]),
+      });
+      await client.loadContractEventsFromWasm();
+      assertEquals([...client.getWasm()], [...wasm]);
+      assertEquals(client.events.get("CountChanged").name, "CountChanged");
+    });
+
     it("loads current network specs from direct and external executables", async () => {
       const wasm = await loadWasmFile(
         "./_internal/tests/compiled-contracts/errors_contract.wasm",

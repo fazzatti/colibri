@@ -86,12 +86,20 @@ export const property = (value: string): string =>
     ? value
     : quote(value);
 
+type CustomEntry = Extract<xdr.ScSpecEntry, {
+  type:
+    | "scSpecEntryUdtStructV0"
+    | "scSpecEntryUdtUnionV0"
+    | "scSpecEntryUdtEnumV0"
+    | "scSpecEntryUdtErrorEnumV0";
+}>;
+
 /** @internal Direction-aware SDK types named after the ABI declarations. */
 export class TypeMap {
   readonly imports = new Set<string>();
   readonly declared = new Set<string>();
   readonly names = new Map<string, string>();
-  readonly aliases = new Map<xdr.ScSpecEntry, string>();
+  readonly aliases = new Map<CustomEntry, string>();
   readonly argsNames = new Map<string, string>();
   readonly customTypes = new Set<string>();
   readonly warnings: string[] = [];
@@ -99,7 +107,12 @@ export class TypeMap {
   private readonly claimed = new Set(TEMPLATE_TYPE_NAMES);
   constructor(readonly spec: Spec) {
     for (const entry of spec.entries) {
-      if (!entry.type.startsWith("scSpecEntryUdt")) continue;
+      if (
+        entry.type !== "scSpecEntryUdtStructV0" &&
+        entry.type !== "scSpecEntryUdtUnionV0" &&
+        entry.type !== "scSpecEntryUdtEnumV0" &&
+        entry.type !== "scSpecEntryUdtErrorEnumV0"
+      ) continue;
       const name = entry.value.name.toString();
       if (this.names.has(name)) {
         this.warnings.push(
@@ -277,7 +290,9 @@ export class TypeMap {
       }\n}`
       : "Record<string, never>";
   }
-  private schema(entry: xdr.ScSpecEntry): string {
+  private schema(
+    entry: Exclude<CustomEntry, { type: "scSpecEntryUdtErrorEnumV0" }>,
+  ): string {
     if (entry.type === "scSpecEntryUdtStructV0") {
       if (
         entry.value.fields.some((field) => /^\d+$/.test(field.name.toString()))
@@ -323,31 +338,28 @@ ${indent(cases.join("\n"), 4)}
   };
 }`;
     }
-    if (entry.type === "scSpecEntryUdtEnumV0") {
-      const cases = entry.value.cases.map((item) => {
-        if (
-          ["type", "from", "fromScVal", "fromXdr"].includes(
-            item.name.toString(),
-          )
-        ) {
-          throw new BindingError(
-            Code.INVALID_SPEC,
-            `Enum variant conflicts with factory member ${item.name}`,
-          );
-        }
-        return `${
-          item.doc.toString() ? doc(item.doc.toString(), "") + "\n" : ""
-        }${property(item.name.toString())}: ${item.value};`;
-      });
-      return `{
+    const cases = entry.value.cases.map((item) => {
+      if (
+        ["type", "from", "fromScVal", "fromXdr"].includes(
+          item.name.toString(),
+        )
+      ) {
+        throw new BindingError(
+          Code.INVALID_SPEC,
+          `Enum variant conflicts with factory member ${item.name}`,
+        );
+      }
+      return `${
+        item.doc.toString() ? doc(item.doc.toString(), "") + "\n" : ""
+      }${property(item.name.toString())}: ${item.value};`;
+    });
+    return `{
   kind: "enum";
   encoding: "u32";
   variants: {
 ${indent(cases.join("\n"), 4)}
   };
 }`;
-    }
-    throw new BindingError(Code.INVALID_SPEC, "Expected a custom declaration");
   }
   declarations(className: string): string {
     const declarations = [...this.aliases].flatMap(([entry, name]) => {

@@ -1,3 +1,4 @@
+import { stub } from "@std/testing/mock";
 import { assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { writeBindings } from "@/output/write.ts";
@@ -67,6 +68,48 @@ describe("bindings output", () => {
 });
 
 describe("output failure boundaries", () => {
+  it("preserves filesystem access errors during preflight without writing files", async () => {
+    const cause = new Deno.errors.PermissionDenied("Cannot inspect output");
+    using _stat = stub(Deno, "lstat", () => Promise.reject(cause));
+    const error = await assertRejects(
+      () =>
+        writeBindings({
+          files: { "index.ts": "export {};" },
+          scaffold: {},
+          warnings: [],
+        }, { directory: "/unavailable" }),
+      BindingError,
+      "Could not write",
+    );
+    assertEquals(error.meta?.cause, cause);
+  });
+  it("removes temporary files when an atomic rename fails, preserving the destination", async () => {
+    const directory = await Deno.makeTempDir();
+    try {
+      const plan = generateBindings(bindingSpec());
+      await writeBindings(plan, { directory });
+      const original = await Deno.readTextFile(`${directory}/constants.ts`);
+      const cause = new Deno.errors.PermissionDenied("Destination is locked");
+      using _rename = stub(Deno, "rename", () => Promise.reject(cause));
+      const error = await assertRejects(
+        () => writeBindings(plan, { directory, force: true }),
+        BindingError,
+      );
+      assertEquals(error.meta?.cause, cause);
+      assertEquals(
+        await Deno.readTextFile(`${directory}/constants.ts`),
+        original,
+      );
+      assertEquals(
+        Array.from(Deno.readDirSync(directory)).filter((item) =>
+          item.name.startsWith(".colibri-")
+        ),
+        [],
+      );
+    } finally {
+      await Deno.remove(directory, { recursive: true });
+    }
+  });
   it("rejects duplicate paths, directory collisions and a symlink destination", async () => {
     const directory = await Deno.makeTempDir();
     try {

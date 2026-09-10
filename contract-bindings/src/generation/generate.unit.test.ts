@@ -1,3 +1,7 @@
+import { renderMethods } from "@/generation/methods.ts";
+import { func } from "colibri-internal/tests/soroban-values-fixtures.ts";
+import { eventEntry } from "colibri-internal/tests/binding-fixtures.ts";
+import type { GenerateBindingsOptions } from "@/types.ts";
 import { assert, assertEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { xdr } from "stellar-sdk";
@@ -33,6 +37,94 @@ const numericEnum = (cases: Record<string, number>): xdr.ScSpecEntry =>
   );
 
 describe("bindings rendering", () => {
+  it("rejects malformed function signatures at the serialization and rendering boundaries", () => {
+    const u32 = xdr.ScSpecTypeDef.scSpecTypeU32();
+    const spec = new Spec([func("invalid", {}, [u32, u32])]);
+    const error = assertThrows(
+      () => generateBindings(spec),
+      BindingError,
+      "Could not generate",
+    );
+    assertEquals(error.code, "CBG_002");
+    assert(error.meta?.cause instanceof Error);
+    assertThrows(
+      () => renderMethods(spec, new TypeMap(spec), "Client"),
+      BindingError,
+      "multiple function outputs",
+    );
+    const input = new xdr.ScSpecFunctionInputV0({
+      name: "amount",
+      doc: "",
+      type: u32,
+    });
+    const duplicate = new Spec([
+      xdr.ScSpecEntry.scSpecEntryFunctionV0(
+        new xdr.ScSpecFunctionV0({
+          name: "transfer",
+          doc: "",
+          inputs: [input, input],
+          outputs: [],
+        }),
+      ),
+    ]);
+    assertThrows(
+      () => generateBindings(duplicate),
+      BindingError,
+      "Duplicate inputs in transfer",
+    );
+  });
+  it("rejects unknown presets supplied by JavaScript consumers", () => {
+    for (const options of [{ target: "browser" }, { output: "archive" }]) {
+      const error = assertThrows(
+        () =>
+          generateBindings(bindingSpec(), options as GenerateBindingsOptions),
+        BindingError,
+        "Unknown",
+      );
+      assertEquals(error.code, "CBG_001");
+    }
+  });
+  it("preserves documentation paragraphs and documents standalone npm files and multiple events", () => {
+    assertEquals(
+      doc("First paragraph.\n\nSecond paragraph.", ""),
+      "/**\n * First paragraph.\n *\n * Second paragraph.\n */",
+    );
+    const entry = eventEntry(undefined, "Undocumented");
+    assert(entry.type === "scSpecEntryEventV0");
+    const undocumented = xdr.ScSpecEntry.scSpecEntryEventV0(
+      new xdr.ScSpecEventV0({ ...entry.value, doc: "" }),
+    );
+    const plan = generateBindings(
+      new Spec([...bindingSpec().entries, undocumented]),
+      { output: "files", target: "npm" },
+    );
+    const guide = plan.scaffold["README.md"];
+    assert(guide.includes("npm config set @jsr:registry"));
+    assert(guide.includes("declares 2 events"));
+    assert(guide.includes("**Undocumented**: Contract event."));
+  });
+  it("distinguishes nested Result values from function results and rejects unsupported descriptors", () => {
+    const result = xdr.ScSpecTypeDef.scSpecTypeResult(
+      new xdr.ScSpecTypeResult({
+        okType: xdr.ScSpecTypeDef.scSpecTypeU32(),
+        errorType: xdr.ScSpecTypeDef.scSpecTypeError(),
+      }),
+    );
+    const model = new TypeMap(bindingSpec());
+    assertEquals(
+      model.type(result, "Output"),
+      "SorobanType.Result<SorobanType.U32, SorobanType.Error>",
+    );
+    assertThrows(
+      () =>
+        model.type(
+          { type: "futureType" } as unknown as xdr.ScSpecTypeDef,
+          "Output",
+        ),
+      BindingError,
+      "Unsupported",
+    );
+  });
   it("renders custom schemas without expanding variants or duplicating input fields", () => {
     const source = generateBindings(
       new Spec([

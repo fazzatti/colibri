@@ -56,6 +56,49 @@ function event(
   });
 }
 describe("spec-aware contract events", () => {
+  it("preserves unexpected errors from an extended event decoder", () => {
+    const cause = new Error("Custom decoder failed");
+    class ExtendedDefinition extends ContractEventDefinition {
+      override fromEvent(_event: Event): ContractEvent {
+        throw cause;
+      }
+    }
+    const declaration = bindingSpec().events()[0];
+    const definition = new ExtendedDefinition(bindingSpec(), declaration);
+    assertStrictEquals(
+      assertThrows(() => definition.tryFromEvent(event())),
+      cause,
+    );
+  });
+  it("assigns a stable fallback key to an unnamed event declaration", () => {
+    const spec = new Spec([eventEntry(undefined, "")]);
+    assertEquals(contractEventBindings(spec).map((binding) => binding.key), [
+      "event",
+    ]);
+    assertEquals(new ContractEventRegistry(spec).get("").name, "");
+  });
+  it("rejects unsupported event field descriptors and payload formats", () => {
+    const spec = bindingSpec();
+    assertThrows(
+      () =>
+        validateEventValue(spec, symbol("value"), {
+          type: "futureType",
+        } as unknown as xdr.ScSpecTypeDef),
+      E.INVALID_SPEC,
+      "unsupported type",
+    );
+    const declaration = new xdr.ScSpecEventV0({
+      ...spec.events()[0],
+      dataFormat: {
+        name: "futureFormat",
+      } as unknown as xdr.ScSpecEventDataFormat,
+    });
+    const error = assertThrows(
+      () => new ContractEventDefinition(spec, declaration).fromEvent(event()),
+      E.DECODE_FAILED,
+    );
+    assertInstanceOf(error.meta?.cause, E.INVALID_SPEC);
+  });
   for (
     const [name, type] of [
       ["Address", xdr.ScSpecTypeDef.scSpecTypeAddress()],

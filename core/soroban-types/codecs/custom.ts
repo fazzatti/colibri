@@ -35,6 +35,14 @@ import {
 type NativeSpecType = xdr.ScSpecTypeDef;
 /** @internal Native SDK schema accepted without introducing a second constructor. */
 type NativeSpec = Spec;
+/** @internal Only validated custom declarations enter the custom codec switches. */
+type CustomEntry = Extract<xdr.ScSpecEntry, {
+  type:
+    | "scSpecEntryUdtStructV0"
+    | "scSpecEntryUdtUnionV0"
+    | "scSpecEntryUdtEnumV0"
+    | "scSpecEntryUdtErrorEnumV0";
+}>;
 
 const SCALARS: Readonly<
   Record<string, (() => SorobanCodec<unknown, unknown>) | undefined>
@@ -62,16 +70,20 @@ const SCALARS: Readonly<
 
 /** @internal A copied spec inventory sufficient to encode custom types without RPC or pipelines. */
 export class SpecTypes {
-  readonly #entries: readonly xdr.ScSpecEntry[];
+  readonly #entries: readonly CustomEntry[];
   constructor(spec: Pick<NativeSpec, "entries">) {
     this.#entries = spec.entries.map((entry) =>
       xdr.ScSpecEntry.fromXdr(entry.toXdr())
+    ).filter((entry): entry is CustomEntry =>
+      entry.type === "scSpecEntryUdtStructV0" ||
+      entry.type === "scSpecEntryUdtUnionV0" ||
+      entry.type === "scSpecEntryUdtEnumV0" ||
+      entry.type === "scSpecEntryUdtErrorEnumV0"
     );
   }
 
-  private entry(name: string): xdr.ScSpecEntry {
+  private entry(name: string): CustomEntry {
     const entry = this.#entries.find((entry) =>
-      entry.type.startsWith("scSpecEntryUdt") && "name" in entry.value &&
       entry.value.name.toString() === name
     );
     if (!entry) {
@@ -195,16 +207,10 @@ export class SpecTypes {
           entry.type,
           entry.value.cases.map((item) => [item.name.toString(), item.value]),
         ];
-      default:
-        throw new SorobanValueError(
-          Code.INVALID_SCHEMA,
-          name,
-          "expected custom type declaration",
-        );
     }
   }
 
-  private encodeCustom(entry: xdr.ScSpecEntry, value: unknown): xdr.ScVal {
+  private encodeCustom(entry: CustomEntry, value: unknown): xdr.ScVal {
     switch (entry.type) {
       case "scSpecEntryUdtStructV0":
         return this.encodeStruct(entry.value, value);
@@ -218,16 +224,10 @@ export class SpecTypes {
           "unknown enum code",
         );
         return integerType("u32").encodeUnknown(value);
-      default:
-        throw new SorobanValueError(
-          Code.INVALID_SCHEMA,
-          "custom",
-          "expected custom declaration",
-        );
     }
   }
 
-  private decodeCustom(entry: xdr.ScSpecEntry, value: xdr.ScVal): unknown {
+  private decodeCustom(entry: CustomEntry, value: xdr.ScVal): unknown {
     switch (entry.type) {
       case "scSpecEntryUdtStructV0":
         return this.decodeStruct(entry.value, value);
@@ -243,12 +243,6 @@ export class SpecTypes {
         );
         return decoded;
       }
-      default:
-        throw new SorobanValueError(
-          Code.INVALID_SCHEMA,
-          "custom",
-          "expected custom declaration",
-        );
     }
   }
 

@@ -26,22 +26,25 @@ export function createTerminalIO(
   };
   const writer = { writeSync: (data: Uint8Array) => output.writeSync(data) };
   async function ask(action: () => Promise<string>): Promise<string | null> {
+    let answer: string | null;
     try {
-      return await action();
+      answer = await action();
     } catch (cause) {
       if (cause instanceof BindingError && cause.code === Code.CANCELLED) {
-        return null;
+        answer = null;
+      } else {
+        if (cause instanceof BindingError) throw cause;
+        throw new BindingError(
+          Code.INVALID_OPTIONS,
+          "Could not read the terminal input",
+          cause,
+        );
       }
-      if (cause instanceof BindingError) throw cause;
-      throw new BindingError(
-        Code.INVALID_OPTIONS,
-        "Could not read the terminal input",
-        cause,
-      );
     } finally {
-      // Restore cooked mode even if reading throws or the input stream closes.
+      // Restore cooked mode before returning an answer or propagating a failure.
       if (input.isTerminal()) input.setRaw(false);
     }
+    return answer;
   }
   return {
     interactive: input.isTerminal() && output.isTerminal(),

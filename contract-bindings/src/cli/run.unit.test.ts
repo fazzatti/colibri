@@ -1,3 +1,4 @@
+import { stub } from "@std/testing/mock";
 import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import {
@@ -20,6 +21,44 @@ const silent: CliIO = {
   log: () => {},
 };
 describe("bindings CLI", () => {
+  it("prints help through the default terminal without prompting", async () => {
+    let output = "";
+    using _write = stub(Deno.stdout, "writeSync", (data) => {
+      output += new TextDecoder().decode(data);
+      return data.length;
+    });
+    assertEquals(await runCli(["--help"]), undefined);
+    assert(output.includes("Colibri contract bindings"));
+    assert(output.includes("--wasm FILE"));
+  });
+  it("reports a WASM that disappears after validation without creating output", async () => {
+    const directory = await Deno.makeTempDir();
+    try {
+      const cause = new Deno.errors.NotFound("WASM removed after validation");
+      using _read = stub(Deno, "readFile", () => Promise.reject(cause));
+      const error = await assertRejects(
+        () =>
+          runCli([
+            "--wasm",
+            wasm,
+            "--output",
+            "files",
+            "--target",
+            "jsr",
+            "--out",
+            `${directory}/output`,
+            "--non-interactive",
+          ], silent),
+        BindingError,
+        "Could not read the Wasm file",
+      );
+      assertEquals(error.code, "CBG_003");
+      assertEquals(error.meta?.cause, cause);
+      assertEquals(Array.from(Deno.readDirSync(directory)), []);
+    } finally {
+      await Deno.remove(directory, { recursive: true });
+    }
+  });
   it("re-prompts a mistyped contract ID before displaying the network menu", async () => {
     const questions: string[] = [];
     const feedback: string[] = [];

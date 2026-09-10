@@ -1,3 +1,4 @@
+import { Address, StrKey } from "stellar-sdk";
 import { assert, assertEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import * as xdr from "stellar-sdk/xdr";
@@ -27,6 +28,62 @@ import { SorobanCodec } from "@/soroban-types/codecs/codec.ts";
 import { union } from "colibri-internal/tests/soroban-values-fixtures.ts";
 
 describe("Soroban schema validation", () => {
+  it("orders optional wire containers consistently in both directions", () => {
+    for (
+      const [absent, empty] of [
+        [xdr.ScVal.scvVec(null), xdr.ScVal.scvVec([])],
+        [xdr.ScVal.scvMap(null), xdr.ScVal.scvMap([])],
+      ]
+    ) {
+      assertEquals(compareScVals(absent, empty), -1);
+      assertEquals(compareScVals(empty, absent), 1);
+      assertEquals(compareScVals(absent, absent), 0);
+    }
+  });
+  it("rejects ledger-only address kinds inside generic contract arguments", () => {
+    const type = contractValType();
+    const hash = new Uint8Array(32);
+    for (
+      const address of [
+        xdr.ScAddress.scAddressTypeLiquidityPool(new xdr.PoolId(hash)),
+        xdr.ScAddress.scAddressTypeClaimableBalance(
+          xdr.ClaimableBalanceId.claimableBalanceIdTypeV0(hash),
+        ),
+      ]
+    ) {
+      const value = xdr.ScVal.scvAddress(address);
+      assertThrows(
+        () => type.from(new SorobanVal(value)),
+        SorobanValueError,
+        "unsupported contract address kind",
+      );
+      assertThrows(
+        () => type.fromScVal(value),
+        SorobanValueError,
+        "unsupported contract address kind",
+      );
+    }
+  });
+  it("preserves account, contract and muxed addresses in generic contract values", () => {
+    const type = contractValType();
+    for (
+      const address of [
+        StrKey.encodeEd25519PublicKey(new Uint8Array(32)),
+        StrKey.encodeContract(new Uint8Array(32)),
+        StrKey.encodeMed25519PublicKey(new Uint8Array(40)),
+      ]
+    ) {
+      const scval = new Address(address).toScVal();
+      assertEquals(
+        type.from(new SorobanVal(scval)).toXdr("base64"),
+        scval.toXdr("base64"),
+      );
+      assertEquals(
+        type.fromScVal(scval).toXdr("base64"),
+        scval.toXdr("base64"),
+      );
+    }
+  });
   it("orders map keys by signed numeric and lexicographic value, without length prefixes", () => {
     const input = [1n, -(2n ** 255n), 0n, -1n, 2n ** 200n];
     const values = new SorobanMap(

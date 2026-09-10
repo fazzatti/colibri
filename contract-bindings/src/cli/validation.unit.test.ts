@@ -6,6 +6,29 @@ import { BindingError } from "@/error.ts";
 import { contractId } from "colibri-internal/tests/binding-fixtures.ts";
 
 describe("CLI field validation", () => {
+  it("stops checking missing output parents at the filesystem root", async () => {
+    const paths: string[] = [];
+    using _stat = stub(Deno, "stat", (path) => {
+      paths.push(String(path));
+      return Promise.reject(new Deno.errors.NotFound("Volume unavailable"));
+    });
+    assertEquals(
+      await validateCliValue("out", "/missing/output", {}),
+      "Cannot access the output directory; check the path and permissions",
+    );
+    assertEquals(paths, ["/missing/output", "/missing", "/"]);
+  });
+  it("does not turn an unexpected configuration failure into naming feedback", async () => {
+    const cause = new Error("Configuration provider failed");
+    const error = await assertRejects(() =>
+      validateCliValue("package-name", "@example/token", {
+        get target(): string {
+          throw cause;
+        },
+      })
+    );
+    assertEquals(error, cause);
+  });
   it("checks contract checksums, hash length, menu values and nonblank text", async () => {
     for (
       const [key, value] of [

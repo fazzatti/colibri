@@ -4,6 +4,30 @@ import { WebAuthCode, WebAuthError } from "@/error.ts";
 import { WebAuthTransport } from "@/transport.ts";
 
 describe("WebAuth response body boundary", () => {
+  it("classifies fetch aborts without mistaking other DOM errors for timeouts", async () => {
+    for (
+      const [name, code] of [["AbortError", WebAuthCode.TIMEOUT], [
+        "NetworkError",
+        WebAuthCode.TRANSPORT,
+      ]]
+    ) {
+      const cause = new DOMException("Fetch rejected", name);
+      const transport = new WebAuthTransport({
+        fetch: () => Promise.reject(cause),
+      });
+      const error = await assertRejects(
+        () =>
+          transport.get(
+            "https://auth.example.com",
+            new URLSearchParams(),
+            "sep10",
+          ),
+        WebAuthError,
+      );
+      assertEquals(error.code, code);
+      assertEquals(error.meta?.cause, cause);
+    }
+  });
   for (const protocol of ["sep10", "sep45"] as const) {
     it(`keeps the ${protocol} deadline active after receiving headers`, async () => {
       let cancelled = false;

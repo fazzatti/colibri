@@ -1,3 +1,4 @@
+import { Code } from "@/error.ts";
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { createTerminalIO } from "@/cli/terminal.ts";
@@ -35,6 +36,25 @@ function terminal(chunks: (string | Error)[], tty = true) {
 }
 
 describe("bindings terminal prompts", () => {
+  it("preserves validation failures and avoids changing raw mode on a nonterminal", async () => {
+    for (const tty of [true, false]) {
+      const cause = new BindingError(
+        Code.INVALID_OPTIONS,
+        "Validation unavailable",
+      );
+      const term = terminal(["answer", "\r"], tty);
+      const error = await assertRejects(
+        () =>
+          Promise.resolve(term.io.prompt("Input", undefined, () => {
+            throw cause;
+          })),
+        BindingError,
+      );
+      assertEquals(error, cause);
+      if (tty) assertEquals(term.raw.at(-1), false);
+      else assertEquals(term.raw, []);
+    }
+  });
   it("keeps an invalid ID in the input editor until corrected or cancelled", async () => {
     const invalid = "decodeInvocationResult";
     const term = terminal([

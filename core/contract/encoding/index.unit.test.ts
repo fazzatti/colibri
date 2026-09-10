@@ -66,6 +66,22 @@ function capturePipe(
 }
 
 describe("Soroban value boundaries", () => {
+  it("encodes validated and ordinary arguments together in ABI order", () => {
+    const spec = new Spec([func("mixed", {
+      role: xdr.ScSpecTypeDef.scSpecTypeSymbol(),
+      count: xdr.ScSpecTypeDef.scSpecTypeU32(),
+    }, [])]);
+    assertEquals(
+      encodeSorobanArguments(spec, "mixed", {
+        count: 7,
+        role: new SorobanSymbol("ADMIN"),
+      }).map((value) => value.toXdr("base64")),
+      [
+        xdr.ScVal.scvSymbol("ADMIN"),
+        xdr.ScVal.scvU32(7),
+      ].map((value) => value.toXdr("base64")),
+    );
+  });
   it("encodes and decodes errors nested in optional maps, tuples and custom enums", () => {
     const error = xdr.ScSpecTypeDef.scSpecTypeError();
     const tuple = xdr.ScSpecTypeDef.scSpecTypeTuple(

@@ -34,9 +34,8 @@ function sampleArguments(method: ReturnType<Spec["funcs"]>[number]): string {
     : "";
 }
 function clientAccess(member: string): string {
-  return /^[A-Za-z_$][\w$]*$/.test(member)
-    ? `client.${member}`
-    : `client[${quote(member)}]`;
+  // Generation validates method identifiers before rendering this guide.
+  return `client.${member}`;
 }
 function setupInstructions(packaged: boolean, npm: boolean): string {
   if (npm) {
