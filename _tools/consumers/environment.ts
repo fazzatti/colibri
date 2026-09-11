@@ -1,4 +1,6 @@
 /** Isolated source graphs for consumer testing, with explicit dependency selection. */
+import { copyConsumerFixtures } from "./fixtures.ts";
+export { fixtureRoot } from "./fixtures.ts";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
@@ -9,7 +11,6 @@ import { runtimeImports } from "../releases/repository.ts";
 import { accepts } from "../releases/model.ts";
 
 export const root = resolve(import.meta.dirname!, "../..");
-export const fixtureRoot = resolve(import.meta.dirname!, "v1");
 export const dockerPackages = new Set([
   "@colibri/test-tooling",
   "@colibri/build-verification",
@@ -187,10 +188,6 @@ export async function prepareSource(
     await copyRuntime(resolve(root, pkg.root), resolve(source, pkg.root));
   }
   await configureSource(source, inventory, sdk);
-  await copyRuntime(fixtureRoot, resolve(source, "fixtures"));
-  await Deno.copyFile(
-    resolve(import.meta.dirname!, "keypair-signer.ts"),
-    resolve(source, "fixtures/keypair-signer.ts"),
-  );
+  await copyConsumerFixtures(resolve(source, "fixtures"));
   return inventory;
 }

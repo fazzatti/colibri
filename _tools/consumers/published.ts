@@ -1,14 +1,9 @@
 /** Validate actual JSR modules and registry-generated npm tarballs after publication. */
+import { consumerFiles, copyConsumerFixtures } from "./fixtures.ts";
 import { resolve } from "node:path";
 import { readPackageInventory } from "../package-inventory.ts";
 import { git } from "../releases/repository.ts";
-import {
-  command,
-  dockerPackages,
-  fixtureRoot,
-  root,
-  writeJson,
-} from "./environment.ts";
+import { command, dockerPackages, root, writeJson } from "./environment.ts";
 
 const inventory = await readPackageInventory(root);
 const refIndex = Deno.args.indexOf("--versions-from-ref");
@@ -49,9 +44,7 @@ try {
     },
     compilerOptions: { skipLibCheck: true },
   });
-  for (const name of ["smoke.ts", "extensions.ts"]) {
-    await Deno.copyFile(resolve(fixtureRoot, name), resolve(temporary, name));
-  }
+  await copyConsumerFixtures(temporary);
   await command(Deno.execPath(), [
     "check",
     "--config",
@@ -61,10 +54,9 @@ try {
         `jsr:${pkg.name}@${pkg.version}${entry === "." ? "" : entry.slice(1)}`
       )
     ),
-    "smoke.ts",
-    "extensions.ts",
+    ...consumerFiles,
   ], temporary);
-  for (const name of ["smoke.ts", "extensions.ts"]) {
+  for (const name of consumerFiles) {
     await command(
       Deno.execPath(),
       ["run", "-A", "--config", "deno.json", name],
@@ -102,10 +94,40 @@ try {
     "--no-audit",
     "--no-fund",
   ], npm);
-  for (const name of ["smoke.ts", "extensions.ts"]) {
-    let source = await Deno.readTextFile(resolve(fixtureRoot, name));
+  const evidenceIndex = Deno.args.indexOf("--evidence");
+  const evidence = resolve(
+    evidenceIndex === -1
+      ? "_artifacts/published"
+      : Deno.args[evidenceIndex + 1],
+  );
+  await Deno.mkdir(evidence, { recursive: true });
+  await Deno.copyFile(
+    resolve(npm, "package-lock.json"),
+    resolve(evidence, "package-lock.json"),
+  );
+  await writeJson(
+    resolve(evidence, "packages.json"),
+    await Promise.all(
+      Object.keys(dependencies).filter((name) => name.startsWith("@jsr/")).map(
+        async (name) => {
+          const manifest = JSON.parse(
+            await Deno.readTextFile(
+              resolve(npm, "node_modules", name, "package.json"),
+            ),
+          );
+          return {
+            name,
+            version: manifest.version,
+            revision: manifest._jsr_revision,
+          };
+        },
+      ),
+    ),
+  );
+  for (const name of consumerFiles) {
+    let source = await Deno.readTextFile(resolve(temporary, name));
     for (const pkg of inventory) {
-      source = source.replaceAll(`"${pkg.name}"`, `"${npmName(pkg.name)}"`);
+      source = source.replaceAll(`"${pkg.name}`, `"${npmName(pkg.name)}`);
     }
     source = source.replaceAll('"stellar-sdk', '"@stellar/stellar-sdk')
       .replaceAll('"convee"', '"@jsr/fifo__convee"');
@@ -114,8 +136,7 @@ try {
   await command("npx", [
     "--no-install",
     "tsc",
-    "smoke.ts",
-    "extensions.ts",
+    ...consumerFiles,
     "--outDir",
     "out",
     "--module",
@@ -125,7 +146,9 @@ try {
     "--strict",
     "--skipLibCheck",
   ], npm);
-  for (const name of ["smoke.js", "extensions.js"]) {
+  for (
+    const name of consumerFiles.map((name) => name.replace(/\.ts$/, ".js"))
+  ) {
     await command("node", [`out/${name}`], npm);
   }
   await command("npm", [
