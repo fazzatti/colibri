@@ -15,7 +15,7 @@ import type {
   Sha256Hash,
   SignedPayload,
 } from "@/strkeys/types.ts";
-import { StrkeyPrefix, StrkeyName } from "@/strkeys/types.ts";
+import { StrkeyName, StrkeyPrefix } from "@/strkeys/types.ts";
 
 const StrkeyRegex: Record<StrkeyPrefix, RegExp> = {} as Record<
   StrkeyPrefix,
@@ -33,7 +33,7 @@ StrkeyRegex[StrkeyPrefix.LiquidityPoolId] = regex.liquidityPool;
 StrkeyRegex[StrkeyPrefix.ClaimableBalanceId] = regex.claimableBalance;
 
 function getStrkeyTypeName(
-  prefix: StrkeyPrefix | keyof typeof StrkeyPrefix
+  prefix: StrkeyPrefix | keyof typeof StrkeyPrefix,
 ): string {
   return StrkeyName[prefix as keyof typeof StrkeyName];
 }
@@ -200,40 +200,92 @@ function isValidClaimableBalanceId(value: string): value is ClaimableBalanceId {
 }
 
 const stellarSdkStr = {
-  encodeContract: ((...args: Parameters<typeof StellarSdkStrKey.encodeContract>) =>
-    StellarSdkStrKey.encodeContract(...args) as ContractId),
+  encodeContract: (
+    ...args: Parameters<typeof StellarSdkStrKey.encodeContract>
+  ) => StellarSdkStrKey.encodeContract(...args) as ContractId,
   decodeContract: StellarSdkStrKey.decodeContract,
-  encodePreAuthTx: ((...args: Parameters<typeof StellarSdkStrKey.encodePreAuthTx>) =>
-    StellarSdkStrKey.encodePreAuthTx(...args) as PreAuthTx),
+  encodePreAuthTx: (
+    ...args: Parameters<typeof StellarSdkStrKey.encodePreAuthTx>
+  ) => StellarSdkStrKey.encodePreAuthTx(...args) as PreAuthTx,
   decodePreAuthTx: StellarSdkStrKey.decodePreAuthTx,
-  encodeSha256Hash: ((...args: Parameters<typeof StellarSdkStrKey.encodeSha256Hash>) =>
-    StellarSdkStrKey.encodeSha256Hash(...args) as Sha256Hash),
+  encodeSha256Hash: (
+    ...args: Parameters<typeof StellarSdkStrKey.encodeSha256Hash>
+  ) => StellarSdkStrKey.encodeSha256Hash(...args) as Sha256Hash,
   decodeSha256Hash: StellarSdkStrKey.decodeSha256Hash,
-  encodeSignedPayload: ((...args: Parameters<typeof StellarSdkStrKey.encodeSignedPayload>) =>
-    StellarSdkStrKey.encodeSignedPayload(...args) as SignedPayload),
+  encodeSignedPayload: (
+    ...args: Parameters<typeof StellarSdkStrKey.encodeSignedPayload>
+  ) => StellarSdkStrKey.encodeSignedPayload(...args) as SignedPayload,
   decodeSignedPayload: StellarSdkStrKey.decodeSignedPayload,
-  encodeLiquidityPool: ((...args: Parameters<typeof StellarSdkStrKey.encodeLiquidityPool>) =>
-    StellarSdkStrKey.encodeLiquidityPool(...args) as LiquidityPoolId),
+  encodeLiquidityPool: (
+    ...args: Parameters<typeof StellarSdkStrKey.encodeLiquidityPool>
+  ) => StellarSdkStrKey.encodeLiquidityPool(...args) as LiquidityPoolId,
   decodeLiquidityPool: StellarSdkStrKey.decodeLiquidityPool,
-  encodeClaimableBalance: ((...args: Parameters<typeof StellarSdkStrKey.encodeClaimableBalance>) =>
-    StellarSdkStrKey.encodeClaimableBalance(...args) as ClaimableBalanceId),
+  encodeClaimableBalance: (
+    ...args: Parameters<typeof StellarSdkStrKey.encodeClaimableBalance>
+  ) => StellarSdkStrKey.encodeClaimableBalance(...args) as ClaimableBalanceId,
   decodeClaimableBalance: StellarSdkStrKey.decodeClaimableBalance,
-  encodeEd25519PublicKey: ((
+  encodeEd25519PublicKey: (
     ...args: Parameters<typeof StellarSdkStrKey.encodeEd25519PublicKey>
-  ) => StellarSdkStrKey.encodeEd25519PublicKey(...args) as Ed25519PublicKey),
+  ) => StellarSdkStrKey.encodeEd25519PublicKey(...args) as Ed25519PublicKey,
   decodeEd25519PublicKey: StellarSdkStrKey.decodeEd25519PublicKey,
-  encodeEd25519SecretSeed: ((
+  encodeEd25519SecretSeed: (
     ...args: Parameters<typeof StellarSdkStrKey.encodeEd25519SecretSeed>
-  ) => StellarSdkStrKey.encodeEd25519SecretSeed(...args) as Ed25519SecretKey),
+  ) => StellarSdkStrKey.encodeEd25519SecretSeed(...args) as Ed25519SecretKey,
   decodeEd25519SecretSeed: StellarSdkStrKey.decodeEd25519SecretSeed,
-  encodeMed25519PublicKey: ((
+  encodeMed25519PublicKey: (
     ...args: Parameters<typeof StellarSdkStrKey.encodeMed25519PublicKey>
-  ) => StellarSdkStrKey.encodeMed25519PublicKey(...args) as MuxedAddress),
+  ) => StellarSdkStrKey.encodeMed25519PublicKey(...args) as MuxedAddress,
   decodeMed25519PublicKey: StellarSdkStrKey.decodeMed25519PublicKey,
 };
 
-/** StrKey validation, detection, and encoding helpers. */
-export const StrKey = {
+/**
+ * StrKey validation, detection, and encoding helpers.
+ *
+ * Encoding preserves Colibri's address-prefix types and the Stellar SDK's input
+ * types. The explicit public shape also preserves every helper in JSR-generated
+ * npm declarations; inferring this object from its spread loses those members.
+ */
+export const StrKey: {
+  encodeContract: (data: Uint8Array) => ContractId;
+  decodeContract: (data: string) => Uint8Array;
+  encodePreAuthTx: (data: Uint8Array) => PreAuthTx;
+  decodePreAuthTx: (data: string) => Uint8Array;
+  encodeSha256Hash: (data: Uint8Array) => Sha256Hash;
+  decodeSha256Hash: (data: string) => Uint8Array;
+  encodeSignedPayload: (data: Uint8Array) => SignedPayload;
+  decodeSignedPayload: (data: string) => Uint8Array;
+  encodeLiquidityPool: (data: Uint8Array) => LiquidityPoolId;
+  decodeLiquidityPool: (data: string) => Uint8Array;
+  encodeClaimableBalance: (data: Uint8Array) => ClaimableBalanceId;
+  decodeClaimableBalance: (data: string) => Uint8Array;
+  encodeEd25519PublicKey: (data: Uint8Array) => Ed25519PublicKey;
+  decodeEd25519PublicKey: (data: string) => Uint8Array;
+  encodeEd25519SecretSeed: (data: Uint8Array) => Ed25519SecretKey;
+  decodeEd25519SecretSeed: (data: string) => Uint8Array;
+  encodeMed25519PublicKey: (data: Uint8Array) => MuxedAddress;
+  decodeMed25519PublicKey: (data: string) => Uint8Array;
+  regex: Record<StrkeyPrefix, RegExp>;
+  getStrkeyTypeName: (
+    prefix: StrkeyPrefix | keyof typeof StrkeyPrefix,
+  ) => string;
+  detectStrkeyType: (strkey: string) => StrkeyName | null;
+  isEd25519PublicKey: (value: string) => value is Ed25519PublicKey;
+  isEd25519SecretKey: (value: string) => value is Ed25519SecretKey;
+  isMuxedAddress: (value: string) => value is MuxedAddress;
+  isPreAuthTx: (value: string) => value is PreAuthTx;
+  isSha256Hash: (value: string) => value is Sha256Hash;
+  isSignedPayload: (value: string) => value is SignedPayload;
+  isContractId: (value: string) => value is ContractId;
+  isLiquidityPoolId: (value: string) => value is LiquidityPoolId;
+  isClaimableBalanceId: (value: string) => value is ClaimableBalanceId;
+  isValidEd25519PublicKey: (value: string) => value is Ed25519PublicKey;
+  isValidEd25519SecretSeed: (value: string) => value is Ed25519SecretKey;
+  isValidMuxedAddress: (value: string) => value is MuxedAddress;
+  isValidSignedPayload: (value: string) => value is SignedPayload;
+  isValidContractId: (value: string) => value is ContractId;
+  isValidLiquidityPoolId: (value: string) => value is LiquidityPoolId;
+  isValidClaimableBalanceId: (value: string) => value is ClaimableBalanceId;
+} = {
   ...stellarSdkStr, // Re-exporting from stellar-sdk for full validation
 
   regex: StrkeyRegex,

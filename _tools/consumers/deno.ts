@@ -1,4 +1,5 @@
 /** Run the preserved consumers on Deno without workspace package substitution. */
+import { consumerFiles } from "./fixtures.ts";
 import { checkResolvedSdk, command, prepareSource } from "./environment.ts";
 
 export async function checkDenoConsumer(sdk: string): Promise<void> {
@@ -14,12 +15,10 @@ export async function checkDenoConsumer(sdk: string): Promise<void> {
       ...inventory.flatMap((pkg) =>
         Object.values(pkg.exports).map((entry) => `${pkg.root}/${entry}`)
       ),
-      "fixtures/smoke.ts",
-      "fixtures/extensions.ts",
-      "fixtures/keypair-signer.ts",
+      ...consumerFiles.map((name) => `fixtures/${name}`),
     ], temporary);
     await checkResolvedSdk(temporary, sdk);
-    for (const fixture of ["smoke.ts", "extensions.ts", "keypair-signer.ts"]) {
+    for (const fixture of consumerFiles) {
       await command(Deno.execPath(), [
         "run",
         "-A",

@@ -3,6 +3,30 @@
 StrKeys encode Stellar keys and identifiers with a type prefix. Core adds
 branded TypeScript types and two distinct levels of validation.
 
+## Encoding and decoding
+
+Both `@colibri/core` and the lightweight `@colibri/core/strkey` entrypoint
+expose the same `StrKey` object. Its encode/decode helpers preserve the Stellar
+SDK's accepted arguments. Encoders return the corresponding Colibri prefix type;
+decoders return the SDK's byte representation.
+
+<!-- deno-check -->
+
+```ts
+import { StrKey } from "@colibri/core/strkey";
+import type { ContractId } from "@colibri/core";
+
+const bytes = new Uint8Array(32);
+const contractId: ContractId = StrKey.encodeContract(bytes);
+const decoded = StrKey.decodeContract(contractId);
+console.log(contractId, decoded.length);
+```
+
+For npm TypeScript consumers, use Core **1.1.1 or later**: this restores the
+encoding/decoding declarations omitted from the 1.1.0 npm distribution. Runtime
+encoding behavior is unchanged. See the
+[StrKey API](https://jsr.io/@colibri/core/doc/strkey) for all helpers.
+
 ## Format guards versus checksum validation
 
 | Purpose                     | Examples                                                                                      | What it establishes                                      |

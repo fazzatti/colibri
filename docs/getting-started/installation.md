@@ -37,7 +37,7 @@ This will add imports similar to:
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^1.1.0",
+    "@colibri/core": "jsr:@colibri/core@^1.1.1",
     "@colibri/webauth": "jsr:@colibri/webauth@^1.0.0",
     "@colibri/build-verification": "jsr:@colibri/build-verification@^0.4.5",
     "@colibri/identicon": "jsr:@colibri/identicon@^1.1.0",

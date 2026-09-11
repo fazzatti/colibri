@@ -101,6 +101,9 @@ jobs:
     name: compatibility
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      RUSTUP_TOOLCHAIN: 1.96.0
+      CARGO_TARGET_DIR: ${{ github.workspace }}/target/declarations
     steps:
       - name: Set compatibility output directory
         run: echo "COMPATIBILITY_DIR=$RUNNER_TEMP/compatibility" >> "$GITHUB_ENV"
@@ -118,6 +121,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
+      - name: Setup pinned declaration emitter toolchain
+        run: rustup toolchain install 1.96.0 --profile minimal --no-self-update
+      - name: Cache declaration emitter
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/declarations
+          key: declarations-${{ runner.os }}-rust-1.96.0-${{ hashFiles('_tools/consumers/declarations/emitter/Cargo.lock') }}
+      - name: Test declaration regression harness
+        run: deno task test:declarations
       - name: Test compatibility reporting and failure propagation
         run: deno task test:compatibility-runner
       - name: Resolve minimum and latest compatible SDK versions
@@ -128,6 +143,9 @@ jobs:
       - name: Prepare reusable npm artifacts
         if: ${{ !cancelled() && steps.plan.outcome == 'success' }}
         run: deno task check:consumers:ci prepare "$COMPATIBILITY_DIR"
+      - name: Check JSR-generated declarations with both TypeScript versions
+        if: ${{ !cancelled() && steps.plan.outcome == 'success' }}
+        run: deno task check:consumers:ci jsr-declarations "$COMPATIBILITY_DIR"
       - name: Check released Core dependency ranges
         if: ${{ !cancelled() && steps.plan.outcome == 'success' }}
         run: deno task check:consumers:ci dependencies "$COMPATIBILITY_DIR"
@@ -184,6 +202,8 @@ jobs:
           path: |
             ${{ runner.temp }}/compatibility/plan.json
             ${{ runner.temp }}/compatibility/summary.md
+            ${{ runner.temp }}/compatibility/sdk-*/manifest.json
+            ${{ runner.temp }}/compatibility/sdk-*/declaration-diagnostics.json
             ${{ runner.temp }}/compatibility/results/
             ${{ runner.temp }}/compatibility/logs/
           if-no-files-found: warn
@@ -248,18 +268,18 @@ jobs:
 
       - name: Run ${{ matrix.package }} tests
         env:
-          COLIBRI_TEST_QUICKSTART_DIAGNOSTICS: ${{ matrix.package == 'webauth' && '1' || '' }}
+          COLIBRI_TEST_QUICKSTART_DIAGNOSTICS: ${{ (matrix.package == 'webauth' || matrix.package == 'core') && '1' || '' }}
         run: |
           set -o pipefail
           deno test -A --clean ${{ matrix.test_flags }} \
             --coverage=coverage/${{ matrix.package }} --coverage-raw-data-only \
             ${{ matrix.path }} 2>&1 | tee "${{ runner.temp }}/package-tests.log"
 
-      - name: Upload WebAuth Quickstart diagnostics
-        if: always() && matrix.package == 'webauth'
+      - name: Upload ${{ matrix.package }} Quickstart diagnostics
+        if: always() && (matrix.package == 'webauth' || matrix.package == 'core')
         uses: actions/upload-artifact@v4
         with:
-          name: webauth-quickstart-diagnostics
+          name: ${{ matrix.package }}-quickstart-diagnostics
           path: ${{ runner.temp }}/package-tests.log
           if-no-files-found: warn
           retention-days: 7

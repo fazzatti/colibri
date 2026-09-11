@@ -75,6 +75,16 @@ export function compatibilityChecks(
       sdk,
       node: "24",
     });
+    for (const typescript of typescriptVersions) {
+      add({
+        phase: "jsr-declarations",
+        label: `JSR declarations / SDK ${sdk} / TS ${typescript}`,
+        args: ["check:consumers:npm", artifacts, "--jsr-declarations"],
+        sdk,
+        typescript,
+        node: "24",
+      });
+    }
     add({
       phase: "dependencies",
       label: `Released Core ranges / SDK ${sdk}`,

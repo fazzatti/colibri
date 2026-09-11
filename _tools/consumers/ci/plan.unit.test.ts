@@ -11,7 +11,7 @@ describe("consolidated compatibility plan", () => {
   it("deduplicates identical resolutions without losing runtime or compiler combinations", () => {
     const checks = compatibilityChecks(sameSdk, "/tmp/compatibility");
     assertEquals(sdkTargets(sameSdk), ["17.0.1"]);
-    assertEquals(checks.length, 14);
+    assertEquals(checks.length, 16);
     assertEquals(new Set(checks.map((check) => check.id)).size, checks.length);
     assertEquals(
       checks.filter((check) => check.phase.startsWith("node-")).map((
@@ -41,13 +41,19 @@ describe("consolidated compatibility plan", () => {
       1,
     );
     assertEquals(checks.filter((check) => check.phase === "prepare").length, 1);
+    assertEquals(
+      checks.filter((check) => check.phase === "jsr-declarations").map((
+        check,
+      ) => check.env.TYPESCRIPT_VERSION),
+      ["5.9.3", "6.0.3"],
+    );
   });
   it("keeps the complete second matrix when the compatible SDK resolves newer", () => {
     const checks = compatibilityChecks([sameSdk[0], {
       selection: "^17.0.1",
       version: "17.1.0",
     }], "/tmp/compatibility");
-    assertEquals(checks.length, 25);
+    assertEquals(checks.length, 29);
     for (const sdk of ["17.0.1", "17.1.0"]) {
       assertEquals(
         checks.filter((check) =>

@@ -45,6 +45,11 @@ deno add jsr:@colibri/core
 npx jsr add @colibri/core
 ```
 
+For npm TypeScript consumers using `StrKey.encode*` or `StrKey.decode*`, use
+Core 1.1.1 or later. See the
+[StrKey guide](https://fifo-docs.gitbook.io/colibri/core/strkeys) for encoding,
+decoding and validation.
+
 After installation, import from the package root (`jsr:@colibri/core`).
 Published exports are declared in `core/deno.json`, ensuring compatibility with
 Deno, Node, and bundlers.
