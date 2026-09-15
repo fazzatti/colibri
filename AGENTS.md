@@ -481,6 +481,22 @@ references are allowed; runtime dependency cycles are not. The public
 
 If you change `core/`, consider ripple effects on all dependent packages.
 
+### `react/`
+
+Keep `mod.ts` as the only root TypeScript file. Put every additional public
+entrypoint in its feature directory under `src/`, and map the stable package
+subpath to that directory's `index.ts` in `deno.json`. Group implementations and
+unit tests by context: provider/config/connection, queries, RPC, accounts,
+assets, contracts, transactions, wallets/signers, discovery, WebAuth/sessions,
+events and identicons. Cross-feature application tests belong in `src/tests/`.
+Do not recreate flat lists of feature files at the package root or `src/`.
+
+The README includes the public API, inputs/results/lifetimes and idiomatic TSX
+examples. Mark complete snippets with `<!-- deno-check -->`. The checker uses a
+package README's dependency scope; GitBook examples can select the same scope
+with `<!-- deno-check @colibri/react -->`. TSX is syntax-checked and complete
+examples are type-checked alongside ordinary TypeScript examples.
+
 ### `webauth/`
 
 Keep the split between:

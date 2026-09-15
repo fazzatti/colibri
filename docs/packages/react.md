@@ -23,37 +23,44 @@ that JSR emits npm peer dependencies. Check `npm ls react @tanstack/react-query`
 
 ## Start with a balance
 
-<!-- deno-check -->
+<!-- deno-check @colibri/react -->
 
-```ts
-import { createElement } from "npm:react@^19.1.1";
-import {
-  QueryClient,
-  QueryClientProvider,
-} from "npm:@tanstack/react-query@^5.87.4";
+```tsx
+import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NetworkConfig } from "@colibri/core/network";
 import { ColibriProvider, createColibriConfig } from "@colibri/react";
 import { useBalance } from "@colibri/react/assets";
 
-const config = createColibriConfig({ network: NetworkConfig.TestNet() });
-const queryClient = new QueryClient();
+type AccountProps = { address: `G${string}` };
 
-function Balance({ address }: { address: `G${string}` }) {
+function Balance({ address }: AccountProps) {
   const balance = useBalance({ kind: "xlm" }, address);
-  if (balance.isPending) return createElement("p", null, "Loading balance…");
-  if (balance.isError) return createElement("p", null, balance.error.message);
-  return createElement("p", null, `${balance.data.raw} stroops`);
+
+  if (balance.isPending) return <p>Loading balance…</p>;
+  if (balance.isError) return <p role="alert">{balance.error.message}</p>;
+
+  return (
+    <section aria-label="Stellar account balance">
+      <h1>Testnet balance</h1>
+      <p>{balance.data.raw.toString()} stroops</p>
+      <button onClick={() => void balance.refetch()}>Refresh</button>
+    </section>
+  );
 }
 
-export function App({ address }: { address: `G${string}` }) {
-  return createElement(
-    QueryClientProvider,
-    { client: queryClient },
-    createElement(
-      ColibriProvider,
-      { config },
-      createElement(Balance, { address }),
-    ),
+export function App({ address }: AccountProps) {
+  const [config] = useState(() =>
+    createColibriConfig({ network: NetworkConfig.TestNet() })
+  );
+  const [queryClient] = useState(() => new QueryClient());
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ColibriProvider config={config}>
+        <Balance address={address} />
+      </ColibriProvider>
+    </QueryClientProvider>
   );
 }
 ```
@@ -75,7 +82,7 @@ exports are erased from JavaScript.
 | `/rpc`                        | `useRpc`, `useLatestLedger`, `useTransaction`, `useWaitForTransaction`                                                                     |
 | `/accounts`                   | `useAccount`, `useTrustline`, `useLedgerEntries`                                                                                           |
 | `/assets`                     | `useBalance`, `useTokenMetadata`                                                                                                           |
-| `/contracts`                  | `useContract`, contract read/invoke hooks and their inferred types                                                                         |
+| `/contracts`                  | `useContract` and its full client type                                                                                                     |
 | `/contracts/read`             | `useContractRead`, `useContractReadSpec`, `contractReadQueryOptions`                                                                       |
 | `/contracts/invoke`           | `useContractInvoke`                                                                                                                        |
 | `/transactions/classic`       | `useClassicTransaction`                                                                                                                    |

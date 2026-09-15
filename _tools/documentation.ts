@@ -4,8 +4,8 @@ import { dirname, relative, resolve } from "node:path";
 import { readPackageInventory } from "./package-inventory.ts";
 
 const root = resolve(import.meta.dirname!, "..");
-const packages = (await readPackageInventory(root)).map((pkg) => pkg.root)
-  .sort();
+const inventory = await readPackageInventory(root);
+const packages = inventory.map((pkg) => pkg.root).sort();
 const write = Deno.args.includes("--write");
 const failures: string[] = [];
 
@@ -264,19 +264,32 @@ for (const file of docs) {
   }
   anchors.set(file, ids);
 }
+const readmes = (await Promise.all(packages.map(async (pkg) => {
+  const path = resolve(root, pkg, "README.md");
+  return await Deno.stat(path).then(() => path).catch(() => undefined);
+}))).filter((path): path is string => path !== undefined);
+const exampleDocuments = [...docs, ...readmes];
 let snippetCount = 0;
-for (const file of docs) {
+for (const file of exampleDocuments) {
   if (file.endsWith("AGENTS.md")) continue;
   const content = await Deno.readTextFile(file);
   for (
-    const match of content.matchAll(/```(?:ts|typescript)\n([\s\S]*?)```/g)
+    const match of content.matchAll(/```(ts|typescript|tsx)\n([\s\S]*?)```/g)
   ) {
+    // Existing README API sketches may use incomplete TypeScript signatures.
+    // Check complete marked examples and every TSX fragment; GitBook keeps its
+    // existing all-TypeScript syntax check.
+    if (
+      readmes.includes(file) && match[1] !== "tsx" &&
+      !/<!-- deno-check(?: [^\s]+)? -->\s*$/.test(content.slice(0, match.index))
+    ) continue;
     snippetCount++;
     const ast = ts.createSourceFile(
       file,
-      match[1],
+      match[2],
       ts.ScriptTarget.Latest,
       true,
+      match[1] === "tsx" ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
     );
     const diagnostics =
       (ast as ts.SourceFile & { parseDiagnostics: readonly ts.Diagnostic[] })
@@ -288,6 +301,10 @@ for (const file of docs) {
       );
     }
   }
+}
+for (const file of docs) {
+  if (file.endsWith("AGENTS.md")) continue;
+  const content = await Deno.readTextFile(file);
   const prose = content.replace(/```[\s\S]*?```/g, "");
   for (const match of prose.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)) {
     const target = match[1].replace(/^<|>$/g, "");
@@ -340,30 +357,58 @@ for (const pkg of packages) {
   }
 }
 console.log(
-  `${codes.length} declared error codes in ${groups.size} contexts; ${docs.length} Markdown files and ${snippetCount} TypeScript snippets checked.`,
+  `${codes.length} declared error codes in ${groups.size} contexts; ${exampleDocuments.length} Markdown files and ${snippetCount} TypeScript snippets checked.`,
 );
 if (Deno.args.includes("--examples")) {
-  const directory = await Deno.makeTempDir({
-    dir: resolve(root, "_tools"),
-    prefix: ".docs-check-",
-  });
+  const directories = new Map<string, string>();
   try {
     const examples: string[] = [];
-    for (const path of docs) {
+    for (const path of exampleDocuments) {
       const content = await Deno.readTextFile(path);
       let index = 0;
       for (
         const match of content.matchAll(
-          /<!-- deno-check -->\s*```(?:ts|typescript)\n([\s\S]*?)```/g,
+          /<!-- deno-check(?: ([^\s]+))? -->\s*```(ts|typescript|tsx)\n([\s\S]*?)```/g,
         )
       ) {
+        const pkg = match[1]
+          ? inventory.find((pkg) => pkg.name === match[1])
+          : inventory.find((pkg) =>
+            path === resolve(root, pkg.root, "README.md")
+          );
+        if (match[1] && !pkg) {
+          failures.push(`Unknown example package: ${match[1]}`);
+          continue;
+        }
+        // Extract inside the package scope so examples use its real dependency
+        // aliases. Ordinary GitBook examples keep the workspace's root scope.
+        const parent = resolve(root, pkg?.root ?? "_tools");
+        let directory = directories.get(parent);
+        if (!directory) {
+          directory = await Deno.makeTempDir({
+            dir: parent,
+            prefix: ".docs-check-",
+          });
+          directories.set(parent, directory);
+        }
+        const extension = match[2] === "tsx" ? "tsx" : "ts";
         const file = resolve(
           directory,
           `${
-            relative(resolve(root, "docs"), path).replaceAll("/", "-")
-          }-${++index}.ts`,
+            relative(root, path).replaceAll("/", "-")
+          }-${++index}.${extension}`,
         );
-        await Deno.writeTextFile(file, match[1] + "\nexport {};\n");
+        let preamble = "";
+        if (extension === "tsx" && pkg) {
+          const manifest = JSON.parse(
+            await Deno.readTextFile(resolve(parent, "deno.json")),
+          );
+          if (manifest.imports?.react && manifest.imports?.["@types/react"]) {
+            preamble =
+              "/** @jsxImportSource react */\n/** @jsxImportSourceTypes @types/react */\n";
+          }
+        }
+        await Deno.writeTextFile(file, preamble + match[3] + "\nexport {};\n");
         examples.push(file);
       }
     }
@@ -383,7 +428,9 @@ if (Deno.args.includes("--examples")) {
         );}
     }
   } finally {
-    await Deno.remove(directory, { recursive: true });
+    for (const directory of directories.values()) {
+      await Deno.remove(directory, { recursive: true });
+    }
   }
 }
 if (failures.length) {

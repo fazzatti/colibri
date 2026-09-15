@@ -1,23 +1,24 @@
 /**
- * Headless React configuration and connection state for Stellar.
+ * Shared, bounded contract event subscriptions.
  * @module
  */
-export * from "@/context/config.ts";
-export * from "@/context/provider.ts";
-export * from "@/context/connection.ts";
-export * from "@/errors/index.ts";
+export * from "@/events/subscription.ts";
 
 // Shared type exports are erased from the runtime bundle.
 export type {
+  ColibriConfig,
+  WalletConnection,
+  WalletConnector,
+} from "@/context/config.ts";
+export type {
   AuthEntrySigner,
-  BaseMeta,
-  ColibriError,
   ContractId,
   CustomNetworkConfig,
-  Diagnostic,
   Ed25519PublicKey,
   EnvelopeSigner,
-  ErrorDomain,
+  Event,
+  EventFilter,
+  EventId,
   ExtraSignerKey,
   FutureNetConfig,
   HorizonConfig,
@@ -37,3 +38,4 @@ export type {
   TestNetConfig,
   TransactionXDRBase64,
 } from "@colibri/core";
+export type { StreamerOptions } from "@colibri/rpc-streamer";

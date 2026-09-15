@@ -1,6 +1,6 @@
-import type { ColibriConfig } from "@/config.ts";
+import type { ColibriConfig } from "@/context/config.ts";
 import type { ContractIdentity } from "@/contracts/types.ts";
-import { ColibriReactError, ReactCode } from "@/error.ts";
+import { ColibriReactError, ReactCode } from "@/errors/index.ts";
 /** Include the embedded interface so upgraded/reconfigured clients cannot reuse incompatible decoded data. */
 export function contractIdentity(
   config: ColibriConfig,

@@ -1,23 +1,22 @@
 /**
- * Headless React configuration and connection state for Stellar.
+ * React signers integration.
  * @module
  */
-export * from "@/context/config.ts";
-export * from "@/context/provider.ts";
-export * from "@/context/connection.ts";
-export * from "@/errors/index.ts";
+export * from "@/signers/hooks.ts";
 
 // Shared type exports are erased from the runtime bundle.
 export type {
+  ColibriConfig,
+  WalletConnection,
+  WalletConnector,
+} from "@/context/config.ts";
+export type { MutationControls } from "@/query/options.ts";
+export type {
   AuthEntrySigner,
-  BaseMeta,
-  ColibriError,
   ContractId,
   CustomNetworkConfig,
-  Diagnostic,
   Ed25519PublicKey,
   EnvelopeSigner,
-  ErrorDomain,
   ExtraSignerKey,
   FutureNetConfig,
   HorizonConfig,

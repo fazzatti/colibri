@@ -227,3 +227,84 @@ describe("GitBook documentation validation", () => {
     });
   });
 });
+
+describe("React documentation examples", () => {
+  it("type-checks README TSX in its package dependency scope", async () => {
+    await withFixture(async ({ write, run }) => {
+      await write(
+        "core/deno.json",
+        JSON.stringify({
+          name: "@colibri/core",
+          version: "1.0.0",
+          exports: "./mod.ts",
+          imports: { "fixture-value": "./value.ts" },
+        }),
+      );
+      await write("core/value.ts", "export const value = 1;\n");
+      const example = [
+        "# Example",
+        "",
+        "<!-- deno-check -->",
+        "```tsx",
+        "/** @jsx h */",
+        'import { value } from "fixture-value";',
+        "declare function h(...args: unknown[]): unknown;",
+        "declare global { namespace JSX { interface Element {} interface IntrinsicElements { p: { children?: number } } } }",
+        "function Count({ value }: { value: number }) { return <p>{value}</p>; }",
+        "const view = <Count value={value} />;",
+        "```",
+        "",
+      ].join("\n");
+      await write("core/README.md", example);
+      const valid = await run("--examples");
+      assertEquals(valid.code, 0, valid.output);
+      assertStringIncludes(
+        valid.output,
+        "2 complete documentation examples type-checked",
+      );
+      await write(
+        "core/README.md",
+        example.replace("value={value}", 'value="wrong"'),
+      );
+      const invalid = await run("--examples");
+      assertEquals(invalid.code, 1);
+      assertStringIncludes(
+        invalid.output,
+        "Documentation examples do not type-check",
+      );
+    });
+  });
+
+  it("checks TSX syntax in README fragments", async () => {
+    await withFixture(async ({ write, run }) => {
+      await write(
+        "core/README.md",
+        "# Example\n\n```tsx\nconst view = <p>broken</div>;\n```\n",
+      );
+      const result = await run();
+      assertEquals(result.code, 1);
+      assertStringIncludes(result.output, "Invalid TypeScript snippet");
+    });
+  });
+
+  it("accepts explicit package scopes and rejects unknown ones", async () => {
+    await withFixture(async ({ write, run }) => {
+      await write(
+        "docs/README.md",
+        "# Example\n\n<!-- deno-check @colibri/core -->\n```ts\nimport { example } from '@colibri/core'; const value: boolean = example;\n```\n",
+      );
+      const valid = await run("--examples");
+      assertEquals(valid.code, 0, valid.output);
+      await write(
+        "docs/README.md",
+        "# Example\n\n<!-- deno-check @colibri/absent -->\n```tsx\nconst value = 1;\n```\n",
+      );
+      const invalid = await run("--examples");
+      assertEquals(invalid.code, 1);
+      assertStringIncludes(
+        invalid.output,
+        "Unknown example package: @colibri/absent",
+      );
+    });
+  });
+});
