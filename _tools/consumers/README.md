@@ -200,3 +200,17 @@ maps public subpaths and pins every direct SDK dependency to the selected test
 lane. This avoids duplicate SDK private types while preserving the declared
 Colibri ranges in the temporary artifacts. `COLIBRI_CONSUMER_KEEP_SOURCE=1`
 retains the disposable source tree for diagnostics; the default removes it.
+
+## Wallet ecosystem compatibility
+
+`deno task check:wallets` resolves the minimum and newest compatible Freighter
+6.x / Wallets Kit 2.x versions declared by React and type-checks the public
+adapters against their actual SDK exports in isolated package graphs. Identical
+resolved lanes are checked once. Failures propagate to workspace quality CI.
+
+`wallets.ts` also runs in installed declaration consumers. In real browsers it
+initializes the actual Kit SDK with an offline fixture module, verifies an
+envelope signature and account/module events, and releases the connection. This
+exercises upstream SDK machinery, not a live extension or wallet service.
+Adapter-only bundle probes forbid retained vendor runtimes, Preact and wallet
+UI.

@@ -76,26 +76,28 @@ Import runtime features from their documented subpaths. The root contains only
 configuration, provider, connection hooks and integration errors. Shared type
 exports are erased from JavaScript.
 
-| Import after `@colibri/react` | APIs                                                                                                                                       |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| root                          | `createColibriConfig`, `ColibriProvider`, `useColibriConfig`, `useConnection`, `useConnect`, `useReconnect`, `useDisconnect`, `useNetwork` |
-| `/rpc`                        | `useRpc`, `useLatestLedger`, `useTransaction`, `useWaitForTransaction`                                                                     |
-| `/accounts`                   | `useAccount`, `useTrustline`, `useLedgerEntries`                                                                                           |
-| `/assets`                     | `useBalance`, `useTokenMetadata`                                                                                                           |
-| `/contracts`                  | `useContract` and its full client type                                                                                                     |
-| `/contracts/read`             | `useContractRead`, `useContractReadSpec`, `contractReadQueryOptions`                                                                       |
-| `/contracts/invoke`           | `useContractInvoke`                                                                                                                        |
-| `/transactions/classic`       | `useClassicTransaction`                                                                                                                    |
-| `/transactions/soroban`       | `useSorobanTransaction`                                                                                                                    |
-| `/transactions/simulate`      | `useSimulateSorobanTransaction`                                                                                                            |
-| `/query`                      | `colibriQueryKey`, `colibriQueryOptions`, `queryValue`, query/mutation controls                                                            |
-| `/events`                     | `createContractEvents`, `useContractEvents`                                                                                                |
-| `/webauth`                    | `useWebAuthClient`, `useWebAuth`, `useSession`, session factory                                                                            |
-| `/session`                    | Framework-independent `createWebAuthSession`, `WebAuthSession`                                                                             |
-| `/sep1`                       | `useStellarToml`                                                                                                                           |
-| `/signers`                    | `useSigners`, `useSignMessage`, explicit connection guards                                                                                 |
-| `/wallets`                    | `createFreighterConnector`, `createWalletConnector`, `createWalletEnvelopeSigner`                                                          |
-| `/identicon`                  | `useIdenticon`, unstyled `AccountIdenticon`                                                                                                |
+| Import after `@colibri/react`    | APIs                                                                                                                                       |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| root                             | `createColibriConfig`, `ColibriProvider`, `useColibriConfig`, `useConnection`, `useConnect`, `useReconnect`, `useDisconnect`, `useNetwork` |
+| `/rpc`                           | `useRpc`, `useLatestLedger`, `useTransaction`, `useWaitForTransaction`                                                                     |
+| `/accounts`                      | `useAccount`, `useTrustline`, `useLedgerEntries`                                                                                           |
+| `/assets`                        | `useBalance`, `useTokenMetadata`                                                                                                           |
+| `/contracts`                     | `useContract` and its full client type                                                                                                     |
+| `/contracts/read`                | `useContractRead`, `useContractReadSpec`, `contractReadQueryOptions`                                                                       |
+| `/contracts/invoke`              | `useContractInvoke`                                                                                                                        |
+| `/transactions/classic`          | `useClassicTransaction`                                                                                                                    |
+| `/transactions/soroban`          | `useSorobanTransaction`                                                                                                                    |
+| `/transactions/simulate`         | `useSimulateSorobanTransaction`                                                                                                            |
+| `/query`                         | `colibriQueryKey`, `colibriQueryOptions`, `queryValue`, query/mutation controls                                                            |
+| `/events`                        | `createContractEvents`, `useContractEvents`                                                                                                |
+| `/webauth`                       | `useWebAuthClient`, `useWebAuth`, `useSession`, session factory                                                                            |
+| `/session`                       | Framework-independent `createWebAuthSession`, `WebAuthSession`                                                                             |
+| `/sep1`                          | `useStellarToml`                                                                                                                           |
+| `/ecosystem/stellar-wallets-kit` | `createStellarWalletsKitConnector`                                                                                                         |
+| `/ecosystem/freighter`           | `createFreighterConnector`                                                                                                                 |
+| `/signers`                       | `useSigners`, `useSignMessage`, explicit connection guards                                                                                 |
+| `/wallets`                       | `createWalletConnector`, `createWalletEnvelopeSigner`                                                                                      |
+| `/identicon`                     | `useIdenticon`, unstyled `AccountIdenticon`                                                                                                |
 
 ## Contracts and transactions
 
@@ -204,3 +206,7 @@ mutation results; handle `connect()` rejection at the user-action boundary.
 - [Contract and pipeline recipes](react/contracts-and-transactions.md)
 - [Browser imports and measurements](../getting-started/browser-bundles.md)
 - [All React API modules](https://jsr.io/@colibri/react/doc)
+
+Ecosystem conveniences have separate imports:
+[Wallets Kit and Freighter](react/wallets-and-sessions.md). SDK types are
+upstream-derived; the application loads and initializes wallet runtimes.

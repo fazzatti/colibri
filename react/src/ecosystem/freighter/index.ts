@@ -1,10 +1,12 @@
 /**
- * React wallets integration.
+ * Optional Freighter integration; inject the application's SDK instance.
  * @module
  */
-export * from "@/wallets/adapter.ts";
-
-// Shared type exports are erased from the runtime bundle.
+export {
+  createFreighterConnector,
+  type FreighterConnectorOptions,
+} from "@/ecosystem/freighter/connector.ts";
+export type { FreighterApi } from "@/ecosystem/freighter/types.ts";
 export type { WalletConnection, WalletConnector } from "@/context/config.ts";
 export type {
   AuthEntrySigner,
@@ -20,4 +22,4 @@ export type {
   Signer,
   SignerKey,
   TransactionXDRBase64,
-} from "@colibri/core";
+} from "@/wallets/index.ts";

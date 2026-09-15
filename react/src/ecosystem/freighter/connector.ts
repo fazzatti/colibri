@@ -5,20 +5,7 @@ import {
   createWalletConnector,
   createWalletEnvelopeSigner,
 } from "@/wallets/adapter.ts";
-/** Minimal Freighter API accepted by the optional injected adapter. */
-export interface FreighterApi {
-  /** User-initiated permission request. */
-  requestAccess(): Promise<{ address: string; error?: unknown }>;
-  /** Non-prompting account lookup. */
-  getAddress(): Promise<{ address: string; error?: unknown }>;
-  /** Actual wallet network lookup. */
-  getNetworkDetails(): Promise<{ networkPassphrase: string; error?: unknown }>;
-  /** Complete signed transaction envelope. */
-  signTransaction(
-    xdr: string,
-    options: { networkPassphrase: string; address: string },
-  ): Promise<{ signedTxXdr: string; signerAddress: string; error?: unknown }>;
-}
+import type { FreighterApi } from "@/ecosystem/freighter/types.ts";
 /** Configuration for the optional Freighter envelope adapter. */
 export interface FreighterConnectorOptions {
   /** Connector identifier, defaults to freighter. */

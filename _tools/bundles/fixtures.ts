@@ -1,5 +1,11 @@
 /** Public consumer probes: no private imports or tree-shaking overrides. */
 export const entries: Record<string, string> = {
+  "react-wallets":
+    'export {createWalletConnector,createWalletEnvelopeSigner} from "@colibri/react/wallets";',
+  "react-freighter":
+    'export {createFreighterConnector} from "@colibri/react/ecosystem/freighter";',
+  "react-wallets-kit":
+    'export {createStellarWalletsKitConnector} from "@colibri/react/ecosystem/stellar-wallets-kit";',
   "react-provider":
     'export {ColibriProvider,createColibriConfig,useConnection,useNetwork} from "@colibri/react";',
   "react-query":
@@ -56,6 +62,9 @@ export function verify(address) {
 
 /** Independent budgets for each consumer, in raw bytes and gzip level 9 bytes. */
 export const budgets: Record<string, readonly [number, number]> = {
+  "react-wallets": [4000, 2000],
+  "react-freighter": [24000, 10000],
+  "react-wallets-kit": [27000, 11000],
   "react-provider": [22000, 8000],
   "react-query": [4000, 2000],
   "react-read": [880000, 200000],
@@ -82,9 +91,25 @@ export function forbiddenDependencies(name: string): RegExp[] {
   const heavy =
     /(?:stellar[-+]xdr|@stellar[+/]js-xdr|convee|\/(?:contract|rpc|xdr|ledger-parser|processes|pipelines)\/|\/(?:transaction|xdr)[^/]*\.[cm]?[jt]s)/;
   if (
-    ["react-provider", "react-query", "react-invoke", "react-identicon"]
+    [
+      "react-provider",
+      "react-query",
+      "react-invoke",
+      "react-identicon",
+      "react-wallets",
+      "react-freighter",
+      "react-wallets-kit",
+    ]
       .includes(name)
-  ) return [png, heavy, /\/(?:webauth|rpc-streamer)\//];
+  ) {
+    return [
+      png,
+      heavy,
+      /\/(?:webauth|rpc-streamer)\//,
+      /(?:node_modules\/(?:\.deno\/)?|npm:)(?:@creit\.tech[+/]stellar-wallets-kit|@stellar[+/]freighter-api|preact|twind)(?:[/@]|$)/,
+      /(?:node_modules\/(?:\.deno\/)?|npm:)@(?:preact|twind)[+/]/,
+    ];
+  }
   if (["core-read", "react-read"].includes(name)) {
     return [
       png,

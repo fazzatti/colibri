@@ -29,6 +29,15 @@ const colibriImports = (
   }));
 
 describe("dependency direction", () => {
+  it("keeps general React wallet state independent of ecosystem adapters", async () => {
+    await assertRule(
+      projectFiles(`${CONFIG_DIRECTORY}/react.json`)
+        .inPath("../../../react/src/{context,wallets,signers}/**/*.ts")
+        .shouldNot().dependOnFiles()
+        .inPath("../../../react/src/ecosystem/**/*.ts"),
+      "General wallet contracts must not depend on ecosystem integrations",
+    );
+  });
   it("keeps binding rendering independent of CLI, filesystem and source loading", async () => {
     await assertRule(
       projectFiles(`${CONFIG_DIRECTORY}/contract-bindings.json`)

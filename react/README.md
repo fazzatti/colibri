@@ -41,8 +41,9 @@ across the app and its libraries. JSR's npm packages use ordinary dependencies;
 check `npm ls react @tanstack/react-query` when adding Colibri to an existing
 app.
 
-Wallet SDKs are supplied by your application. Install the wallet you choose; the
-generic connector and injected Freighter adapter do not install one for you.
+Your application loads its chosen wallet SDK and initializes its modules. The
+ecosystem adapters use upstream type dependencies but do not import or
+initialize wallet runtimes. All integrations remain in this React package.
 
 ## Quick start
 
@@ -106,26 +107,28 @@ The root exports configuration, connection hooks and errors. Import other
 features from their public subpaths; this lets bundlers discard unused runtime
 code. Subpaths are part of the same package.
 
-| Import                                 | Runtime API                                                                                                                                                                                   |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@colibri/react`                       | `ColibriConfig`, `createColibriConfig`, `ColibriProvider`, `useColibriConfig`, `useConnection`, `useConnect`, `useReconnect`, `useDisconnect`, `useNetwork`, `ColibriReactError`, `ReactCode` |
-| `@colibri/react/rpc`                   | `useRpc`, `useLatestLedger`, `useTransaction`, `useWaitForTransaction`                                                                                                                        |
-| `@colibri/react/accounts`              | `useLedgerEntries`, `useAccount`, `useTrustline`                                                                                                                                              |
-| `@colibri/react/assets`                | `useBalance`, `useTokenMetadata`                                                                                                                                                              |
-| `@colibri/react/contracts`             | `useContract`                                                                                                                                                                                 |
-| `@colibri/react/contracts/read`        | `useContractRead`, `useContractReadSpec`, `contractReadQueryOptions`                                                                                                                          |
-| `@colibri/react/contracts/invoke`      | `useContractInvoke`                                                                                                                                                                           |
-| `@colibri/react/transactions/classic`  | `useClassicTransaction`                                                                                                                                                                       |
-| `@colibri/react/transactions/soroban`  | `useSorobanTransaction`                                                                                                                                                                       |
-| `@colibri/react/transactions/simulate` | `useSimulateSorobanTransaction`                                                                                                                                                               |
-| `@colibri/react/wallets`               | `createWalletConnector`, `createWalletEnvelopeSigner`, `createFreighterConnector`                                                                                                             |
-| `@colibri/react/signers`               | `useSigners`, `useSignMessage`, `guardedSigners`, `assertConnection`                                                                                                                          |
-| `@colibri/react/sep1`                  | `useStellarToml`                                                                                                                                                                              |
-| `@colibri/react/webauth`               | `useWebAuthClient`, `useWebAuth`, `useSession`, `createWebAuthSession`, `WebAuthSession`                                                                                                      |
-| `@colibri/react/session`               | `createWebAuthSession`, `WebAuthSession` (framework-independent)                                                                                                                              |
-| `@colibri/react/events`                | `createContractEvents`, `ContractEventsSubscription`, `useContractEvents`                                                                                                                     |
-| `@colibri/react/identicon`             | `useIdenticon`, `AccountIdenticon`                                                                                                                                                            |
-| `@colibri/react/query`                 | `colibriQueryKey`, `colibriQueryOptions`, `queryValue`                                                                                                                                        |
+| Import                                         | Runtime API                                                                                                                                                                                   |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@colibri/react`                               | `ColibriConfig`, `createColibriConfig`, `ColibriProvider`, `useColibriConfig`, `useConnection`, `useConnect`, `useReconnect`, `useDisconnect`, `useNetwork`, `ColibriReactError`, `ReactCode` |
+| `@colibri/react/rpc`                           | `useRpc`, `useLatestLedger`, `useTransaction`, `useWaitForTransaction`                                                                                                                        |
+| `@colibri/react/accounts`                      | `useLedgerEntries`, `useAccount`, `useTrustline`                                                                                                                                              |
+| `@colibri/react/assets`                        | `useBalance`, `useTokenMetadata`                                                                                                                                                              |
+| `@colibri/react/contracts`                     | `useContract`                                                                                                                                                                                 |
+| `@colibri/react/contracts/read`                | `useContractRead`, `useContractReadSpec`, `contractReadQueryOptions`                                                                                                                          |
+| `@colibri/react/contracts/invoke`              | `useContractInvoke`                                                                                                                                                                           |
+| `@colibri/react/transactions/classic`          | `useClassicTransaction`                                                                                                                                                                       |
+| `@colibri/react/transactions/soroban`          | `useSorobanTransaction`                                                                                                                                                                       |
+| `@colibri/react/transactions/simulate`         | `useSimulateSorobanTransaction`                                                                                                                                                               |
+| `@colibri/react/wallets`                       | `createWalletConnector`, `createWalletEnvelopeSigner`                                                                                                                                         |
+| `@colibri/react/ecosystem/stellar-wallets-kit` | `createStellarWalletsKitConnector`                                                                                                                                                            |
+| `@colibri/react/ecosystem/freighter`           | `createFreighterConnector`                                                                                                                                                                    |
+| `@colibri/react/signers`                       | `useSigners`, `useSignMessage`, `guardedSigners`, `assertConnection`                                                                                                                          |
+| `@colibri/react/sep1`                          | `useStellarToml`                                                                                                                                                                              |
+| `@colibri/react/webauth`                       | `useWebAuthClient`, `useWebAuth`, `useSession`, `createWebAuthSession`, `WebAuthSession`                                                                                                      |
+| `@colibri/react/session`                       | `createWebAuthSession`, `WebAuthSession` (framework-independent)                                                                                                                              |
+| `@colibri/react/events`                        | `createContractEvents`, `ContractEventsSubscription`, `useContractEvents`                                                                                                                     |
+| `@colibri/react/identicon`                     | `useIdenticon`, `AccountIdenticon`                                                                                                                                                            |
+| `@colibri/react/query`                         | `colibriQueryKey`, `colibriQueryOptions`, `queryValue`                                                                                                                                        |
 
 Query hooks return TanStack `UseQueryResult`: inspect `data`, `error`,
 `isPending`, `isError`, `isFetching`, and call `refetch()` when needed. Mutation
@@ -415,11 +418,38 @@ References: [Classic](https://jsr.io/@colibri/react/doc/transactions/classic),
   Core `EnvelopeSigner`. Supply the actual `publicKey`, `networkPassphrase`,
   optional controlled `accounts`, and
   `signTransaction(xdr, networkPassphrase): Promise<string>`.
-- `createFreighterConnector(api, options?)` accepts an injected `FreighterApi`
-  with `requestAccess`, `getAddress`, `getNetworkDetails` and `signTransaction`.
-  Options are `id` (default `freighter`) and `pollIntervalMs` (default 2,000).
-  It adapts envelope signing and polls authorized account/network state;
-  disconnect removes the poller. Other capabilities must be supplied explicitly.
+
+### Ecosystem adapters
+
+Import `createStellarWalletsKitConnector` from
+`@colibri/react/ecosystem/stellar-wallets-kit`. Pass the application's
+initialized Wallets Kit and required
+`capabilities({ module, address, networkPassphrase })`. The callback returns
+`{ envelope?, signers?, messageSigner? }`: only explicitly selected capabilities
+are exposed. `envelope: true` adapts Kit transaction signing for a G-address.
+Other Core signers and SEP-53 message signers are application supplied. Optional
+`id` defaults to `stellar-wallets-kit`; `connect` can supply custom UI in place
+of the Kit's `authModal()`.
+
+The application chooses wallet modules and initializes the Kit in the browser.
+State events update account/network data; module changes and Kit disconnect
+invalidate the connection. An explicit Connect is required after a module switch
+because Kit can retain an earlier wallet's cached address. Silent reconnect uses
+cached Kit identity without opening UI. Envelope signing checks
+account/module/network around the request; Colibri pipelines own submission.
+
+For direct Freighter, import `createFreighterConnector(api, options?)` from
+`@colibri/react/ecosystem/freighter`. `id` defaults to `freighter` and
+`pollIntervalMs` to 2,000. It provides envelope signing and observes authorized
+account/network state; cleanup stops polling. Auth-entry and message
+capabilities require their own explicit adapters.
+
+Both SDK interfaces are derived from published upstream types: Wallets Kit 2.6+
+within 2.x and Freighter API 6.0.1+ within 6.x. The adapters do not import SDK
+runtimes; the app supplies them. Their type/install dependencies belong to the
+existing React package. General helpers remain separate under `/wallets`. See
+the
+[complete WalletApp.tsx and configuration recipes](https://github.com/fazzatti/colibri/blob/dev/docs/packages/react/wallets-and-sessions.md).
 
 ### Signing — `@colibri/react/signers`
 
@@ -438,7 +468,9 @@ Core signers supplied by the application retain their ordinary Core behavior.
 
 See
 [wallet recipes](https://github.com/fazzatti/colibri/blob/dev/docs/packages/react/wallets-and-sessions.md),
-[wallet API](https://jsr.io/@colibri/react/doc/wallets) and
+[generic wallet API](https://jsr.io/@colibri/react/doc/wallets),
+[Wallets Kit API](https://jsr.io/@colibri/react/doc/ecosystem/stellar-wallets-kit),
+[Freighter API](https://jsr.io/@colibri/react/doc/ecosystem/freighter) and
 [signer API](https://jsr.io/@colibri/react/doc/signers).
 
 ## Discovery, authentication and sessions

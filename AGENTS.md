@@ -489,7 +489,12 @@ subpath to that directory's `index.ts` in `deno.json`. Group implementations and
 unit tests by context: provider/config/connection, queries, RPC, accounts,
 assets, contracts, transactions, wallets/signers, discovery, WebAuth/sessions,
 events and identicons. Cross-feature application tests belong in `src/tests/`.
-Do not recreate flat lists of feature files at the package root or `src/`.
+Do not recreate flat lists of feature files at the package root or `src/`. Keep
+vendor-specific adapters under `src/ecosystem/<vendor>/` with their own public
+entrypoints. General wallet/provider code must not import ecosystem adapters.
+Derive vendor API types from supported upstream SDKs; keep their runtime
+initialization and wallet/module selection application-owned. Run
+`check:wallets` and installed browser consumers after adapter changes.
 
 The README includes the public API, inputs/results/lifetimes and idiomatic TSX
 examples. Mark complete snippets with `<!-- deno-check -->`. The checker uses a

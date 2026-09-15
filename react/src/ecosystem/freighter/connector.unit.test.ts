@@ -2,7 +2,7 @@ import { assertEquals, assertRejects, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Account, TransactionBuilder } from "stellar-sdk/base";
 import { type EnvelopeSigner, LocalSigner, NetworkConfig } from "@colibri/core";
-import { createFreighterConnector } from "@/wallets/freighter.ts";
+import { createFreighterConnector } from "@/ecosystem/freighter/connector.ts";
 import { ColibriReactError } from "@/errors/index.ts";
 const network = NetworkConfig.TestNet();
 const key = LocalSigner.generateRandom();
@@ -27,7 +27,11 @@ describe("Freighter connector", () => {
         return Promise.resolve({ address: current });
       },
       getNetworkDetails: () =>
-        Promise.resolve({ networkPassphrase: network.networkPassphrase }),
+        Promise.resolve({
+          networkPassphrase: network.networkPassphrase,
+          network: "TESTNET",
+          networkUrl: "https://horizon-testnet.stellar.org",
+        }),
       signTransaction: () =>
         Promise.resolve({
           signedTxXdr: transaction.toXDR(),
@@ -70,7 +74,12 @@ describe("Freighter connector", () => {
         Promise.resolve({ address: current, error: failure }),
       getAddress: () => Promise.resolve({ address: current, error: failure }),
       getNetworkDetails: () =>
-        Promise.resolve({ networkPassphrase: passphrase, error: failure }),
+        Promise.resolve({
+          networkPassphrase: passphrase,
+          network: "TESTNET",
+          networkUrl: "https://horizon-testnet.stellar.org",
+          error: failure,
+        }),
       signTransaction: () =>
         Promise.resolve({
           signedTxXdr: transaction.toXDR(),

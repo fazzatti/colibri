@@ -275137,52 +275137,6 @@
         "kind": "typeAlias"
       }
     ],
-    "createFreighterConnector": [
-      {
-        "declarationKind": "export",
-        "def": {
-          "hasBody": true,
-          "params": [
-            {
-              "kind": "identifier",
-              "name": "api",
-              "optional": false,
-              "tsType": {
-                "kind": "typeRef",
-                "repr": "FreighterApi",
-                "value": {
-                  "typeName": "FreighterApi"
-                }
-              }
-            },
-            {
-              "kind": "assign",
-              "left": {
-                "kind": "identifier",
-                "name": "options",
-                "optional": false,
-                "tsType": {
-                  "kind": "typeRef",
-                  "repr": "FreighterConnectorOptions",
-                  "value": {
-                    "typeName": "FreighterConnectorOptions"
-                  }
-                }
-              },
-              "right": "[UNSUPPORTED]"
-            }
-          ],
-          "returnType": {
-            "kind": "typeRef",
-            "repr": "WalletConnector",
-            "value": {
-              "typeName": "WalletConnector"
-            }
-          }
-        },
-        "kind": "function"
-      }
-    ],
     "createWalletConnector": [
       {
         "declarationKind": "export",
@@ -275417,243 +275371,6 @@
           }
         },
         "kind": "typeAlias"
-      }
-    ],
-    "FreighterApi": [
-      {
-        "declarationKind": "export",
-        "def": {
-          "methods": [
-            {
-              "kind": "method",
-              "name": "requestAccess",
-              "params": [],
-              "returnType": {
-                "kind": "typeRef",
-                "repr": "Promise",
-                "value": {
-                  "typeName": "Promise",
-                  "typeParams": [
-                    {
-                      "kind": "typeLiteral",
-                      "value": {
-                        "properties": [
-                          {
-                            "name": "address",
-                            "tsType": {
-                              "kind": "keyword",
-                              "repr": "string",
-                              "value": "string"
-                            }
-                          },
-                          {
-                            "name": "error",
-                            "optional": true,
-                            "tsType": {
-                              "kind": "keyword",
-                              "repr": "unknown",
-                              "value": "unknown"
-                            }
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              }
-            },
-            {
-              "kind": "method",
-              "name": "getAddress",
-              "params": [],
-              "returnType": {
-                "kind": "typeRef",
-                "repr": "Promise",
-                "value": {
-                  "typeName": "Promise",
-                  "typeParams": [
-                    {
-                      "kind": "typeLiteral",
-                      "value": {
-                        "properties": [
-                          {
-                            "name": "address",
-                            "tsType": {
-                              "kind": "keyword",
-                              "repr": "string",
-                              "value": "string"
-                            }
-                          },
-                          {
-                            "name": "error",
-                            "optional": true,
-                            "tsType": {
-                              "kind": "keyword",
-                              "repr": "unknown",
-                              "value": "unknown"
-                            }
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              }
-            },
-            {
-              "kind": "method",
-              "name": "getNetworkDetails",
-              "params": [],
-              "returnType": {
-                "kind": "typeRef",
-                "repr": "Promise",
-                "value": {
-                  "typeName": "Promise",
-                  "typeParams": [
-                    {
-                      "kind": "typeLiteral",
-                      "value": {
-                        "properties": [
-                          {
-                            "name": "networkPassphrase",
-                            "tsType": {
-                              "kind": "keyword",
-                              "repr": "string",
-                              "value": "string"
-                            }
-                          },
-                          {
-                            "name": "error",
-                            "optional": true,
-                            "tsType": {
-                              "kind": "keyword",
-                              "repr": "unknown",
-                              "value": "unknown"
-                            }
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              }
-            },
-            {
-              "kind": "method",
-              "name": "signTransaction",
-              "params": [
-                {
-                  "kind": "identifier",
-                  "name": "xdr",
-                  "optional": false,
-                  "tsType": {
-                    "kind": "keyword",
-                    "repr": "string",
-                    "value": "string"
-                  }
-                },
-                {
-                  "kind": "identifier",
-                  "name": "options",
-                  "optional": false,
-                  "tsType": {
-                    "kind": "typeLiteral",
-                    "value": {
-                      "properties": [
-                        {
-                          "name": "networkPassphrase",
-                          "tsType": {
-                            "kind": "keyword",
-                            "repr": "string",
-                            "value": "string"
-                          }
-                        },
-                        {
-                          "name": "address",
-                          "tsType": {
-                            "kind": "keyword",
-                            "repr": "string",
-                            "value": "string"
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
-              ],
-              "returnType": {
-                "kind": "typeRef",
-                "repr": "Promise",
-                "value": {
-                  "typeName": "Promise",
-                  "typeParams": [
-                    {
-                      "kind": "typeLiteral",
-                      "value": {
-                        "properties": [
-                          {
-                            "name": "signedTxXdr",
-                            "tsType": {
-                              "kind": "keyword",
-                              "repr": "string",
-                              "value": "string"
-                            }
-                          },
-                          {
-                            "name": "signerAddress",
-                            "tsType": {
-                              "kind": "keyword",
-                              "repr": "string",
-                              "value": "string"
-                            }
-                          },
-                          {
-                            "name": "error",
-                            "optional": true,
-                            "tsType": {
-                              "kind": "keyword",
-                              "repr": "unknown",
-                              "value": "unknown"
-                            }
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          ]
-        },
-        "kind": "interface"
-      }
-    ],
-    "FreighterConnectorOptions": [
-      {
-        "declarationKind": "export",
-        "def": {
-          "properties": [
-            {
-              "name": "id",
-              "optional": true,
-              "tsType": {
-                "kind": "keyword",
-                "repr": "string",
-                "value": "string"
-              }
-            },
-            {
-              "name": "pollIntervalMs",
-              "optional": true,
-              "tsType": {
-                "kind": "keyword",
-                "repr": "number",
-                "value": "number"
-              }
-            }
-          ]
-        },
-        "kind": "interface"
       }
     ],
     "MessageSigner": [
@@ -282836,6 +282553,2339 @@
           ]
         },
         "kind": "class"
+      }
+    ]
+  },
+  "@colibri/react/ecosystem/freighter": {
+    "AuthEntrySigner": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "methods": [
+                {
+                  "kind": "method",
+                  "name": "signSorobanAuthEntry",
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "authEntry",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "SorobanAuthorizationEntryLike",
+                        "value": {
+                          "typeName": "SorobanAuthorizationEntryLike"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "identifier",
+                      "name": "validUntilLedgerSeq",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    },
+                    {
+                      "kind": "identifier",
+                      "name": "networkPassphrase",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    },
+                    {
+                      "kind": "identifier",
+                      "name": "forAddress",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "union",
+                        "value": [
+                          {
+                            "kind": "typeRef",
+                            "repr": "Ed25519PublicKey",
+                            "value": {
+                              "typeName": "Ed25519PublicKey"
+                            }
+                          },
+                          {
+                            "kind": "typeRef",
+                            "repr": "ContractId",
+                            "value": {
+                              "typeName": "ContractId"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "typeRef",
+                    "repr": "Promise",
+                    "value": {
+                      "typeName": "Promise",
+                      "typeParams": [
+                        {
+                          "kind": "typeRef",
+                          "repr": "SorobanAuthorizationEntryLike",
+                          "value": {
+                            "typeName": "SorobanAuthorizationEntryLike"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "kind": "method",
+                  "name": "signsFor",
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "target",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "union",
+                        "value": [
+                          {
+                            "kind": "typeRef",
+                            "repr": "Ed25519PublicKey",
+                            "value": {
+                              "typeName": "Ed25519PublicKey"
+                            }
+                          },
+                          {
+                            "kind": "typeRef",
+                            "repr": "ContractId",
+                            "value": {
+                              "typeName": "ContractId"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "keyword",
+                    "repr": "boolean",
+                    "value": "boolean"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ContractId": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "C${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "C",
+                  "value": {
+                    "kind": "string",
+                    "string": "C"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "createFreighterConnector": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "api",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "FreighterApi",
+                "value": {
+                  "typeName": "FreighterApi"
+                }
+              }
+            },
+            {
+              "kind": "assign",
+              "left": {
+                "kind": "identifier",
+                "name": "options",
+                "optional": false,
+                "tsType": {
+                  "kind": "typeRef",
+                  "repr": "FreighterConnectorOptions",
+                  "value": {
+                    "typeName": "FreighterConnectorOptions"
+                  }
+                }
+              },
+              "right": "[UNSUPPORTED]"
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "WalletConnector",
+            "value": {
+              "typeName": "WalletConnector"
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "Ed25519PublicKey": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "G${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "G",
+                  "value": {
+                    "kind": "string",
+                    "string": "G"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "EnvelopeSigner": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "methods": [
+                {
+                  "kind": "method",
+                  "name": "signerKey",
+                  "params": [],
+                  "returnType": {
+                    "kind": "typeRef",
+                    "repr": "ExtraSignerKey",
+                    "value": {
+                      "typeName": "ExtraSignerKey"
+                    }
+                  }
+                },
+                {
+                  "kind": "method",
+                  "name": "signTransaction",
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "tx",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "SignableTransaction",
+                        "value": {
+                          "typeName": "SignableTransaction"
+                        }
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "typeRef",
+                        "repr": "Promise",
+                        "value": {
+                          "typeName": "Promise",
+                          "typeParams": [
+                            {
+                              "kind": "typeRef",
+                              "repr": "TransactionXDRBase64",
+                              "value": {
+                                "typeName": "TransactionXDRBase64"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "kind": "typeRef",
+                        "repr": "TransactionXDRBase64",
+                        "value": {
+                          "typeName": "TransactionXDRBase64"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "method",
+                  "name": "signsFor",
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "target",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "union",
+                        "value": [
+                          {
+                            "kind": "typeRef",
+                            "repr": "Ed25519PublicKey",
+                            "value": {
+                              "typeName": "Ed25519PublicKey"
+                            }
+                          },
+                          {
+                            "kind": "typeRef",
+                            "repr": "ContractId",
+                            "value": {
+                              "typeName": "ContractId"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "keyword",
+                    "repr": "boolean",
+                    "value": "boolean"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ExtraSignerKey": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "Exclude",
+            "value": {
+              "typeName": "Exclude",
+              "typeParams": [
+                {
+                  "kind": "typeRef",
+                  "repr": "SignerKey",
+                  "value": {
+                    "typeName": "SignerKey"
+                  }
+                },
+                {
+                  "kind": "typeRef",
+                  "repr": "PreAuthTx",
+                  "value": {
+                    "typeName": "PreAuthTx"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "FreighterApi": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "Pick",
+            "value": {
+              "typeName": "Pick",
+              "typeParams": [
+                {
+                  "kind": "typeQuery",
+                  "repr": "Freighter",
+                  "value": "Freighter"
+                },
+                {
+                  "kind": "union",
+                  "value": [
+                    {
+                      "kind": "literal",
+                      "repr": "requestAccess",
+                      "value": {
+                        "kind": "string",
+                        "string": "requestAccess"
+                      }
+                    },
+                    {
+                      "kind": "literal",
+                      "repr": "getAddress",
+                      "value": {
+                        "kind": "string",
+                        "string": "getAddress"
+                      }
+                    },
+                    {
+                      "kind": "literal",
+                      "repr": "getNetworkDetails",
+                      "value": {
+                        "kind": "string",
+                        "string": "getNetworkDetails"
+                      }
+                    },
+                    {
+                      "kind": "literal",
+                      "repr": "signTransaction",
+                      "value": {
+                        "kind": "string",
+                        "string": "signTransaction"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "FreighterConnectorOptions": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "id",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "pollIntervalMs",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "MessageSigner": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "methods": [
+                {
+                  "kind": "method",
+                  "name": "publicKey",
+                  "params": [],
+                  "returnType": {
+                    "kind": "typeRef",
+                    "repr": "Ed25519PublicKey",
+                    "value": {
+                      "typeName": "Ed25519PublicKey"
+                    }
+                  }
+                },
+                {
+                  "kind": "method",
+                  "name": "signMessage",
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "message",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "union",
+                        "value": [
+                          {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          },
+                          {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      },
+                      {
+                        "kind": "typeRef",
+                        "repr": "Promise",
+                        "value": {
+                          "typeName": "Promise",
+                          "typeParams": [
+                            {
+                              "kind": "typeRef",
+                              "repr": "Uint8Array",
+                              "value": {
+                                "typeName": "Uint8Array"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "PreAuthTransactionSigner": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "methods": [
+                {
+                  "kind": "method",
+                  "name": "signerKey",
+                  "params": [],
+                  "returnType": {
+                    "kind": "typeRef",
+                    "repr": "PreAuthTx",
+                    "value": {
+                      "typeName": "PreAuthTx"
+                    }
+                  }
+                },
+                {
+                  "kind": "method",
+                  "name": "authorizesTransaction",
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "tx",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "SignableTransaction",
+                        "value": {
+                          "typeName": "SignableTransaction"
+                        }
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "typeRef",
+                        "repr": "Promise",
+                        "value": {
+                          "typeName": "Promise",
+                          "typeParams": [
+                            {
+                              "kind": "keyword",
+                              "repr": "boolean",
+                              "value": "boolean"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "kind": "keyword",
+                        "repr": "boolean",
+                        "value": "boolean"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "method",
+                  "name": "signsFor",
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "target",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "union",
+                        "value": [
+                          {
+                            "kind": "typeRef",
+                            "repr": "Ed25519PublicKey",
+                            "value": {
+                              "typeName": "Ed25519PublicKey"
+                            }
+                          },
+                          {
+                            "kind": "typeRef",
+                            "repr": "ContractId",
+                            "value": {
+                              "typeName": "ContractId"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "keyword",
+                    "repr": "boolean",
+                    "value": "boolean"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "PreAuthTx": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "T${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "T",
+                  "value": {
+                    "kind": "string",
+                    "string": "T"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "Sha256Hash": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "X${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "X",
+                  "value": {
+                    "kind": "string",
+                    "string": "X"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "SignedPayload": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "P${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "P",
+                  "value": {
+                    "kind": "string",
+                    "string": "P"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "Signer": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "EnvelopeSigner",
+                "value": {
+                  "typeName": "EnvelopeSigner"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "PreAuthTransactionSigner",
+                "value": {
+                  "typeName": "PreAuthTransactionSigner"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "AuthEntrySigner",
+                "value": {
+                  "typeName": "AuthEntrySigner"
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "SignerKey": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "Ed25519PublicKey",
+                "value": {
+                  "typeName": "Ed25519PublicKey"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "PreAuthTx",
+                "value": {
+                  "typeName": "PreAuthTx"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "Sha256Hash",
+                "value": {
+                  "typeName": "Sha256Hash"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "SignedPayload",
+                "value": {
+                  "typeName": "SignedPayload"
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "TransactionXDRBase64": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "keyword",
+            "repr": "string",
+            "value": "string"
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "WalletConnection": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "address",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "networkPassphrase",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "signers",
+              "tsType": {
+                "kind": "typeOperator",
+                "value": {
+                  "operator": "readonly",
+                  "tsType": {
+                    "kind": "array",
+                    "value": {
+                      "kind": "typeRef",
+                      "repr": "Signer",
+                      "value": {
+                        "typeName": "Signer"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "messageSigner",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "MessageSigner",
+                "value": {
+                  "typeName": "MessageSigner"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "WalletConnector": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "methods": [
+            {
+              "kind": "method",
+              "name": "connect",
+              "params": [],
+              "returnType": {
+                "kind": "typeRef",
+                "repr": "Promise",
+                "value": {
+                  "typeName": "Promise",
+                  "typeParams": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "WalletConnection",
+                      "value": {
+                        "typeName": "WalletConnection"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "reconnect",
+              "optional": true,
+              "params": [],
+              "returnType": {
+                "kind": "typeRef",
+                "repr": "Promise",
+                "value": {
+                  "typeName": "Promise",
+                  "typeParams": [
+                    {
+                      "kind": "union",
+                      "value": [
+                        {
+                          "kind": "typeRef",
+                          "repr": "WalletConnection",
+                          "value": {
+                            "typeName": "WalletConnection"
+                          }
+                        },
+                        {
+                          "kind": "keyword",
+                          "repr": "null",
+                          "value": "null"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "disconnect",
+              "optional": true,
+              "params": [],
+              "returnType": {
+                "kind": "typeRef",
+                "repr": "Promise",
+                "value": {
+                  "typeName": "Promise",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "void",
+                      "value": "void"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "subscribe",
+              "optional": true,
+              "params": [
+                {
+                  "kind": "identifier",
+                  "name": "listener",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "connection",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "union",
+                            "value": [
+                              {
+                                "kind": "typeRef",
+                                "repr": "WalletConnection",
+                                "value": {
+                                  "typeName": "WalletConnection"
+                                }
+                              },
+                              {
+                                "kind": "keyword",
+                                "repr": "null",
+                                "value": "null"
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "void",
+                        "value": "void"
+                      }
+                    }
+                  }
+                }
+              ],
+              "returnType": {
+                "kind": "fnOrConstructor",
+                "value": {
+                  "constructor": false,
+                  "params": [],
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "void",
+                    "value": "void"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": [
+            {
+              "name": "id",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ]
+  },
+  "@colibri/react/ecosystem/stellar-wallets-kit": {
+    "AuthEntrySigner": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "methods": [
+                {
+                  "kind": "method",
+                  "name": "signSorobanAuthEntry",
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "authEntry",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "SorobanAuthorizationEntryLike",
+                        "value": {
+                          "typeName": "SorobanAuthorizationEntryLike"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "identifier",
+                      "name": "validUntilLedgerSeq",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    },
+                    {
+                      "kind": "identifier",
+                      "name": "networkPassphrase",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    },
+                    {
+                      "kind": "identifier",
+                      "name": "forAddress",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "union",
+                        "value": [
+                          {
+                            "kind": "typeRef",
+                            "repr": "Ed25519PublicKey",
+                            "value": {
+                              "typeName": "Ed25519PublicKey"
+                            }
+                          },
+                          {
+                            "kind": "typeRef",
+                            "repr": "ContractId",
+                            "value": {
+                              "typeName": "ContractId"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "typeRef",
+                    "repr": "Promise",
+                    "value": {
+                      "typeName": "Promise",
+                      "typeParams": [
+                        {
+                          "kind": "typeRef",
+                          "repr": "SorobanAuthorizationEntryLike",
+                          "value": {
+                            "typeName": "SorobanAuthorizationEntryLike"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "kind": "method",
+                  "name": "signsFor",
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "target",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "union",
+                        "value": [
+                          {
+                            "kind": "typeRef",
+                            "repr": "Ed25519PublicKey",
+                            "value": {
+                              "typeName": "Ed25519PublicKey"
+                            }
+                          },
+                          {
+                            "kind": "typeRef",
+                            "repr": "ContractId",
+                            "value": {
+                              "typeName": "ContractId"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "keyword",
+                    "repr": "boolean",
+                    "value": "boolean"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ContractId": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "C${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "C",
+                  "value": {
+                    "kind": "string",
+                    "string": "C"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "createStellarWalletsKitConnector": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "kit",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "StellarWalletsKitApi",
+                "value": {
+                  "typeName": "StellarWalletsKitApi"
+                }
+              }
+            },
+            {
+              "kind": "identifier",
+              "name": "options",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "StellarWalletsKitConnectorOptions",
+                "value": {
+                  "typeName": "StellarWalletsKitConnectorOptions"
+                }
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "WalletConnector",
+            "value": {
+              "typeName": "WalletConnector"
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "Ed25519PublicKey": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "G${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "G",
+                  "value": {
+                    "kind": "string",
+                    "string": "G"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "EnvelopeSigner": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "methods": [
+                {
+                  "kind": "method",
+                  "name": "signerKey",
+                  "params": [],
+                  "returnType": {
+                    "kind": "typeRef",
+                    "repr": "ExtraSignerKey",
+                    "value": {
+                      "typeName": "ExtraSignerKey"
+                    }
+                  }
+                },
+                {
+                  "kind": "method",
+                  "name": "signTransaction",
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "tx",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "SignableTransaction",
+                        "value": {
+                          "typeName": "SignableTransaction"
+                        }
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "typeRef",
+                        "repr": "Promise",
+                        "value": {
+                          "typeName": "Promise",
+                          "typeParams": [
+                            {
+                              "kind": "typeRef",
+                              "repr": "TransactionXDRBase64",
+                              "value": {
+                                "typeName": "TransactionXDRBase64"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "kind": "typeRef",
+                        "repr": "TransactionXDRBase64",
+                        "value": {
+                          "typeName": "TransactionXDRBase64"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "method",
+                  "name": "signsFor",
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "target",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "union",
+                        "value": [
+                          {
+                            "kind": "typeRef",
+                            "repr": "Ed25519PublicKey",
+                            "value": {
+                              "typeName": "Ed25519PublicKey"
+                            }
+                          },
+                          {
+                            "kind": "typeRef",
+                            "repr": "ContractId",
+                            "value": {
+                              "typeName": "ContractId"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "keyword",
+                    "repr": "boolean",
+                    "value": "boolean"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ExtraSignerKey": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "Exclude",
+            "value": {
+              "typeName": "Exclude",
+              "typeParams": [
+                {
+                  "kind": "typeRef",
+                  "repr": "SignerKey",
+                  "value": {
+                    "typeName": "SignerKey"
+                  }
+                },
+                {
+                  "kind": "typeRef",
+                  "repr": "PreAuthTx",
+                  "value": {
+                    "typeName": "PreAuthTx"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "MessageSigner": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "methods": [
+                {
+                  "kind": "method",
+                  "name": "publicKey",
+                  "params": [],
+                  "returnType": {
+                    "kind": "typeRef",
+                    "repr": "Ed25519PublicKey",
+                    "value": {
+                      "typeName": "Ed25519PublicKey"
+                    }
+                  }
+                },
+                {
+                  "kind": "method",
+                  "name": "signMessage",
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "message",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "union",
+                        "value": [
+                          {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          },
+                          {
+                            "kind": "typeRef",
+                            "repr": "Uint8Array",
+                            "value": {
+                              "typeName": "Uint8Array"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "typeRef",
+                        "repr": "Uint8Array",
+                        "value": {
+                          "typeName": "Uint8Array"
+                        }
+                      },
+                      {
+                        "kind": "typeRef",
+                        "repr": "Promise",
+                        "value": {
+                          "typeName": "Promise",
+                          "typeParams": [
+                            {
+                              "kind": "typeRef",
+                              "repr": "Uint8Array",
+                              "value": {
+                                "typeName": "Uint8Array"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "PreAuthTransactionSigner": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "methods": [
+                {
+                  "kind": "method",
+                  "name": "signerKey",
+                  "params": [],
+                  "returnType": {
+                    "kind": "typeRef",
+                    "repr": "PreAuthTx",
+                    "value": {
+                      "typeName": "PreAuthTx"
+                    }
+                  }
+                },
+                {
+                  "kind": "method",
+                  "name": "authorizesTransaction",
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "tx",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "SignableTransaction",
+                        "value": {
+                          "typeName": "SignableTransaction"
+                        }
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "typeRef",
+                        "repr": "Promise",
+                        "value": {
+                          "typeName": "Promise",
+                          "typeParams": [
+                            {
+                              "kind": "keyword",
+                              "repr": "boolean",
+                              "value": "boolean"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "kind": "keyword",
+                        "repr": "boolean",
+                        "value": "boolean"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "method",
+                  "name": "signsFor",
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "target",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "union",
+                        "value": [
+                          {
+                            "kind": "typeRef",
+                            "repr": "Ed25519PublicKey",
+                            "value": {
+                              "typeName": "Ed25519PublicKey"
+                            }
+                          },
+                          {
+                            "kind": "typeRef",
+                            "repr": "ContractId",
+                            "value": {
+                              "typeName": "ContractId"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "keyword",
+                    "repr": "boolean",
+                    "value": "boolean"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "PreAuthTx": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "T${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "T",
+                  "value": {
+                    "kind": "string",
+                    "string": "T"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "Sha256Hash": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "X${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "X",
+                  "value": {
+                    "kind": "string",
+                    "string": "X"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "SignedPayload": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "P${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "P",
+                  "value": {
+                    "kind": "string",
+                    "string": "P"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "Signer": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "EnvelopeSigner",
+                "value": {
+                  "typeName": "EnvelopeSigner"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "PreAuthTransactionSigner",
+                "value": {
+                  "typeName": "PreAuthTransactionSigner"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "AuthEntrySigner",
+                "value": {
+                  "typeName": "AuthEntrySigner"
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "SignerKey": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "Ed25519PublicKey",
+                "value": {
+                  "typeName": "Ed25519PublicKey"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "PreAuthTx",
+                "value": {
+                  "typeName": "PreAuthTx"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "Sha256Hash",
+                "value": {
+                  "typeName": "Sha256Hash"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "SignedPayload",
+                "value": {
+                  "typeName": "SignedPayload"
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "StellarWalletsKitApi": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "Pick",
+            "value": {
+              "typeName": "Pick",
+              "typeParams": [
+                {
+                  "kind": "indexedAccess",
+                  "value": {
+                    "indexType": {
+                      "kind": "literal",
+                      "repr": "StellarWalletsKit",
+                      "value": {
+                        "kind": "string",
+                        "string": "StellarWalletsKit"
+                      }
+                    },
+                    "objType": {
+                      "kind": "parenthesized",
+                      "value": {
+                        "kind": "typeQuery",
+                        "repr": "Kit",
+                        "value": "Kit"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "union",
+                  "value": [
+                    {
+                      "kind": "literal",
+                      "repr": "authModal",
+                      "value": {
+                        "kind": "string",
+                        "string": "authModal"
+                      }
+                    },
+                    {
+                      "kind": "literal",
+                      "repr": "getAddress",
+                      "value": {
+                        "kind": "string",
+                        "string": "getAddress"
+                      }
+                    },
+                    {
+                      "kind": "literal",
+                      "repr": "getNetwork",
+                      "value": {
+                        "kind": "string",
+                        "string": "getNetwork"
+                      }
+                    },
+                    {
+                      "kind": "literal",
+                      "repr": "signTransaction",
+                      "value": {
+                        "kind": "string",
+                        "string": "signTransaction"
+                      }
+                    },
+                    {
+                      "kind": "literal",
+                      "repr": "selectedModule",
+                      "value": {
+                        "kind": "string",
+                        "string": "selectedModule"
+                      }
+                    },
+                    {
+                      "kind": "literal",
+                      "repr": "disconnect",
+                      "value": {
+                        "kind": "string",
+                        "string": "disconnect"
+                      }
+                    },
+                    {
+                      "kind": "literal",
+                      "repr": "on",
+                      "value": {
+                        "kind": "string",
+                        "string": "on"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "StellarWalletsKitConnectorOptions": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "methods": [
+            {
+              "kind": "method",
+              "name": "capabilities",
+              "params": [
+                {
+                  "kind": "identifier",
+                  "name": "account",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "WalletsKitAccount",
+                    "value": {
+                      "typeName": "WalletsKitAccount"
+                    }
+                  }
+                }
+              ],
+              "returnType": {
+                "kind": "typeRef",
+                "repr": "WalletsKitCapabilities",
+                "value": {
+                  "typeName": "WalletsKitCapabilities"
+                }
+              }
+            }
+          ],
+          "properties": [
+            {
+              "name": "id",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "connect",
+              "optional": true,
+              "tsType": {
+                "kind": "fnOrConstructor",
+                "value": {
+                  "constructor": false,
+                  "params": [],
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "ReturnType",
+                    "value": {
+                      "typeName": "ReturnType",
+                      "typeParams": [
+                        {
+                          "kind": "indexedAccess",
+                          "value": {
+                            "indexType": {
+                              "kind": "literal",
+                              "repr": "authModal",
+                              "value": {
+                                "kind": "string",
+                                "string": "authModal"
+                              }
+                            },
+                            "objType": {
+                              "kind": "typeRef",
+                              "repr": "StellarWalletsKitApi",
+                              "value": {
+                                "typeName": "StellarWalletsKitApi"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "TransactionXDRBase64": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "keyword",
+            "repr": "string",
+            "value": "string"
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "WalletConnection": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "address",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "networkPassphrase",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "signers",
+              "tsType": {
+                "kind": "typeOperator",
+                "value": {
+                  "operator": "readonly",
+                  "tsType": {
+                    "kind": "array",
+                    "value": {
+                      "kind": "typeRef",
+                      "repr": "Signer",
+                      "value": {
+                        "typeName": "Signer"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "messageSigner",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "MessageSigner",
+                "value": {
+                  "typeName": "MessageSigner"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "WalletConnector": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "methods": [
+            {
+              "kind": "method",
+              "name": "connect",
+              "params": [],
+              "returnType": {
+                "kind": "typeRef",
+                "repr": "Promise",
+                "value": {
+                  "typeName": "Promise",
+                  "typeParams": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "WalletConnection",
+                      "value": {
+                        "typeName": "WalletConnection"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "reconnect",
+              "optional": true,
+              "params": [],
+              "returnType": {
+                "kind": "typeRef",
+                "repr": "Promise",
+                "value": {
+                  "typeName": "Promise",
+                  "typeParams": [
+                    {
+                      "kind": "union",
+                      "value": [
+                        {
+                          "kind": "typeRef",
+                          "repr": "WalletConnection",
+                          "value": {
+                            "typeName": "WalletConnection"
+                          }
+                        },
+                        {
+                          "kind": "keyword",
+                          "repr": "null",
+                          "value": "null"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "disconnect",
+              "optional": true,
+              "params": [],
+              "returnType": {
+                "kind": "typeRef",
+                "repr": "Promise",
+                "value": {
+                  "typeName": "Promise",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "void",
+                      "value": "void"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "subscribe",
+              "optional": true,
+              "params": [
+                {
+                  "kind": "identifier",
+                  "name": "listener",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "connection",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "union",
+                            "value": [
+                              {
+                                "kind": "typeRef",
+                                "repr": "WalletConnection",
+                                "value": {
+                                  "typeName": "WalletConnection"
+                                }
+                              },
+                              {
+                                "kind": "keyword",
+                                "repr": "null",
+                                "value": "null"
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "void",
+                        "value": "void"
+                      }
+                    }
+                  }
+                }
+              ],
+              "returnType": {
+                "kind": "fnOrConstructor",
+                "value": {
+                  "constructor": false,
+                  "params": [],
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "void",
+                    "value": "void"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": [
+            {
+              "name": "id",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "WalletsKitAccount": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "address",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "networkPassphrase",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "module",
+              "tsType": {
+                "kind": "indexedAccess",
+                "value": {
+                  "indexType": {
+                    "kind": "literal",
+                    "repr": "selectedModule",
+                    "value": {
+                      "kind": "string",
+                      "string": "selectedModule"
+                    }
+                  },
+                  "objType": {
+                    "kind": "typeRef",
+                    "repr": "StellarWalletsKitApi",
+                    "value": {
+                      "typeName": "StellarWalletsKitApi"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "WalletsKitCapabilities": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "envelope",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "boolean",
+                "value": "boolean"
+              }
+            },
+            {
+              "name": "signers",
+              "optional": true,
+              "tsType": {
+                "kind": "typeOperator",
+                "value": {
+                  "operator": "readonly",
+                  "tsType": {
+                    "kind": "array",
+                    "value": {
+                      "kind": "typeRef",
+                      "repr": "Signer",
+                      "value": {
+                        "typeName": "Signer"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "messageSigner",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "MessageSigner",
+                "value": {
+                  "typeName": "MessageSigner"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
       }
     ]
   },

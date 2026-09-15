@@ -92,6 +92,9 @@ jobs:
       - name: Check publishable type surfaces
         run: deno task check:slow-types
 
+      - name: Check upstream wallet SDK compatibility
+        run: deno task check:wallets
+
       - name: Check GitBook documentation and examples
         run: |
           deno task test:docs
