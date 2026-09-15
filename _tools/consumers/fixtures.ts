@@ -9,6 +9,7 @@ export const consumerFiles = [
   "strkey.ts",
   "bindings-smoke.ts",
   "react-smoke.ts",
+  "react-browser.ts",
   "wallets.ts",
 ] as const;
 

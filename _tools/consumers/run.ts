@@ -103,7 +103,13 @@ export async function runArtifacts(
         "firefox",
         "webkit",
       ], consumer);
-      for (const file of ["browser.mjs", "browser-fixture.mjs"]) {
+      for (
+        const file of [
+          "browser.mjs",
+          "browser-fixture.mjs",
+          "react-browser.mjs",
+        ]
+      ) {
         await Deno.copyFile(
           resolve(import.meta.dirname!, file),
           resolve(consumer, file),

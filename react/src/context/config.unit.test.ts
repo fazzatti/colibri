@@ -13,6 +13,36 @@ const connection: WalletConnection = {
   signers: [],
 };
 describe("connection and cache isolation", () => {
+  it("unsubscribes the prior wallet when switching directly to another connector", async () => {
+    let cleanup = 0;
+    let stale!: (value: WalletConnection | null) => void;
+    const config = createColibriConfig({
+      network,
+      connectors: [
+        {
+          id: "first",
+          connect: () => Promise.resolve(connection),
+          subscribe: (listener) => {
+            stale = listener;
+            return () => {
+              cleanup++;
+            };
+          },
+        },
+        {
+          id: "second",
+          connect: () =>
+            Promise.resolve({ ...connection, address: "G-second" }),
+        },
+      ],
+    });
+    await config.connect("first");
+    await config.connect("second");
+    assertEquals(cleanup, 1);
+    stale(connection);
+    assertEquals(config.getSnapshot().connection?.address, "G-second");
+    config.destroy();
+  });
   it("starts disconnected and snapshots network configuration", () => {
     const original = NetworkConfig.CustomNet({ networkPassphrase: "custom" });
     const config = createColibriConfig({ network: original });
@@ -79,6 +109,8 @@ describe("connection and cache isolation", () => {
     await config.disconnect();
     assertEquals(cleaned, 1);
     assertEquals(disconnected, 1);
+    listener(connection);
+    assertEquals(config.getSnapshot().status, "disconnected");
     config.destroy();
   });
   it("keeps local state disconnected even when wallet cleanup rejects", async () => {
@@ -97,6 +129,13 @@ describe("connection and cache isolation", () => {
     config.destroy();
   });
   it("reports invalid connectors, duplicate ids, and wrong networks", async () => {
+    assertThrows(
+      () =>
+        createColibriConfig({
+          network: NetworkConfig.CustomNet({ networkPassphrase: "" }),
+        }),
+      ColibriReactError,
+    );
     const connector = {
       id: "wallet",
       connect: () =>

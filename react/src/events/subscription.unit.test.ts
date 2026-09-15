@@ -27,6 +27,20 @@ const event = (index: number) =>
   });
 const tick = () => new Promise((resolve) => setTimeout(resolve, 5));
 describe("shared event subscriptions", () => {
+  it("does not start a deferred streamer after immediate unmount", async () => {
+    const config = createColibriConfig({ network: NetworkConfig.TestNet() });
+    using factory = stub(RPCStreamer, "event", () => {
+      throw new Error("Unmounted stream must never start");
+    });
+    const events = createContractEvents(config);
+    const stop = events.subscribe(() => {});
+    stop();
+    await tick();
+    assertEquals(factory.calls.length, 0);
+    assertEquals(events.getSnapshot().status, "idle");
+    events.destroy();
+    config.destroy();
+  });
   it("shares one streamer, bounds and deduplicates events, ignores late callbacks", async () => {
     const config = createColibriConfig({ network: NetworkConfig.TestNet() });
     let deliver!: (event: Event) => void;
