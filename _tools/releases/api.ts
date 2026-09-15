@@ -1,5 +1,5 @@
 /** Generate declarations using one pinned compiler, independent of runtime lanes. */
-import { dirname, resolve } from "node:path";
+import { resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { readPackageInventory } from "../package-inventory.ts";
 import {
@@ -10,7 +10,7 @@ import {
   normalizeDeclaration,
 } from "./api-model.ts";
 import { readPlan } from "./model.ts";
-import { generateDocumentation } from "./documentation.ts";
+import { declarationImport, generateDocumentation } from "./documentation.ts";
 import { git, planPath, repositoryRoot } from "./repository.ts";
 
 const update = Deno.args.includes("--update");
@@ -65,11 +65,14 @@ try {
   }
   const baselinePath = "_tools/releases/public-api.json";
   const packages = await readPackageInventory(repositoryRoot);
+  const scopes = await Promise.all(packages.map(async (pkg) => ({
+    directory: resolve(repositoryRoot, pkg.root),
+    imports: JSON.parse(
+      await Deno.readTextFile(resolve(repositoryRoot, pkg.root, "deno.json")),
+    ).imports ?? {},
+  })));
   const current: ApiSnapshot = {};
   for (const pkg of packages) {
-    const manifest = JSON.parse(
-      await Deno.readTextFile(resolve(repositoryRoot, pkg.root, "deno.json")),
-    );
     for (const [name, path] of Object.entries(pkg.exports)) {
       const absolute = resolve(repositoryRoot, pkg.root, path);
       const symbols = await loadSymbols(absolute);
@@ -90,27 +93,7 @@ try {
             `import\\s+\\*\\s+as\\s+${type.value}\\s+from\\s+["']([^"']+)["']`,
           ).exec(source)?.[1];
           if (!imported) continue;
-          let target = imported.startsWith(".")
-            ? resolve(dirname(filename), imported)
-            : undefined;
-          for (
-            const [alias, value] of Object.entries(manifest.imports ?? {}) as [
-              string,
-              string,
-            ][]
-          ) {
-            if (
-              alias.endsWith("/") && value.startsWith(".") &&
-              imported.startsWith(alias)
-            ) {
-              target = resolve(
-                repositoryRoot,
-                pkg.root,
-                value,
-                imported.slice(alias.length),
-              );
-            }
-          }
+          const target = declarationImport(filename, imported, scopes);
           if (target) {
             current[entrypoint][`${symbol.name}::members`] = symbolMap(
               await loadSymbols(target),

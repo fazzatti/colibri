@@ -162,11 +162,11 @@ pinned local engine.
 dnt tarballs are CI artifacts only, never published packages. They are reused
 locally within the compatibility job, never uploaded to JSR/npm. The publish
 workflow runs a separate check against real JSR modules and JSR-generated npm
-tarballs after publication, using the same five consumer fixtures. It retains
-`package-lock.json` (resolved URLs and integrity hashes) and installed package
-versions/JSR revisions before compilation, including on a compile failure. Use
-`--evidence <directory>` to select the artifact destination. To validate that
-tool using an already published baseline, run
+tarballs after publication, using the same consumer fixture inventory. It
+retains `package-lock.json` (resolved URLs and integrity hashes) and installed
+package versions/JSR revisions before compilation, including on a compile
+failure. Use `--evidence <directory>` to select the artifact destination. To
+validate that tool using an already published baseline, run
 `check:consumers:published --versions-from-ref origin/main`.
 
 The npm registry check imports canonical `@jsr/colibri__…` package names to
@@ -186,3 +186,17 @@ ESM/declarations, execute a native SDK/Core identity check, and pack it. The
 generated package substitutes the candidate Core test tarball for the otherwise
 unchanged JSR npm alias, so it checks the proposed release rather than an
 already published Core version.
+
+## React consumers
+
+`react-smoke.ts` uses the public React entrypoints with an application-owned
+QueryClient. It verifies a disconnected SSR snapshot, shared cached bigint data,
+client hydration into the connected state without recoverable errors, and an SVG
+identicon. Node runs its SSR/cache branch; all three real browsers also run
+hydration. The wallet is an injected fixture and makes no external prompts.
+
+Artifact preparation orders packages by their declared Colibri dependencies,
+maps public subpaths and pins every direct SDK dependency to the selected test
+lane. This avoids duplicate SDK private types while preserving the declared
+Colibri ranges in the temporary artifacts. `COLIBRI_CONSUMER_KEEP_SOURCE=1`
+retains the disposable source tree for diagnostics; the default removes it.

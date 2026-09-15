@@ -19,6 +19,10 @@ Soroban packages:
 - `core/`: the architectural center of the repo. It defines the shared error
   model, networks, accounts, signers, helpers, processes, steps, pipelines,
   plugins, contract clients, event tooling, ledger parsing, and utilities.
+- `react/`: headless React bindings, TanStack Query integration, explicit wallet
+  capabilities and memory-only WebAuth sessions. Keep feature runtime imports
+  behind public subpaths; never silently sign, reconnect, retry submissions or
+  persist credentials.
 - `webauth/`: a unified SEP-10 and SEP-45 web-auth client package built on top
   of Colibri core.
 - `identicon/`: local, reference-compatible SEP-33 generation and SVG/PNG
@@ -120,15 +124,15 @@ GitHub Actions behavior matters when changing structure or versions:
   exports through `_tools/package-inventory.ts`, including subpath exports. CRAP
   and documentation inventories use the same package discovery. Do not add a new
   hard-coded entrypoint list.
-- The required `compatibility` job checks isolated Deno package trees and installs
-  temporary npm test artifacts on Node 22.12 (minimum SDK) and Node 24 (supported
-  SDK range). It type-checks native SDK interop, executes a smoke consumer, and
-  bundles the browser-capable packages. These test artifacts are never published
-  and are not claimed to be JSR's own generated tarballs. See
+- The required `compatibility` job checks isolated Deno package trees and
+  installs temporary npm test artifacts on Node 22.12 (minimum SDK) and Node 24
+  (supported SDK range). It type-checks native SDK interop, executes a smoke
+  consumer, and bundles the browser-capable packages. These test artifacts are
+  never published and are not claimed to be JSR's own generated tarballs. See
   `_tools/consumers/README.md`. Runtime/compiler combinations are named steps in
-  one job, with per-case logs and a complete summary. Resolve minimum and current
-  SDK selections once; deduplicate only identical resolved versions. Failed or
-  missing scenarios must fail the job and the final `test` gate.
+  one job, with per-case logs and a complete summary. Resolve minimum and
+  current SDK selections once; deduplicate only identical resolved versions.
+  Failed or missing scenarios must fail the job and the final `test` gate.
 - Quality uploads a syntax-level constructor/throw/catch inventory alongside the
   complete stable error-code reference. Review unknown and passthrough
   boundaries deliberately; do not conflate caller-owned errors with missing SDK
@@ -158,6 +162,7 @@ Current package version sources:
 
 - `contract-bindings/deno.json`
 - `core/deno.json`
+- `react/deno.json`
 - `build-verification/deno.json`
 - `identicon/deno.json`
 - `webauth/deno.json`
@@ -568,6 +573,7 @@ There are also custom lint rules in:
 The enum rule is currently wired into:
 
 - `core/deno.json`
+- `react/deno.json`
 - `test-tooling/deno.json`
 
 It requires enums with more than 50 members to live alone in their file. If you

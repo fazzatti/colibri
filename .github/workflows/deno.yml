@@ -236,6 +236,9 @@ jobs:
           - package: contract-bindings
             path: contract-bindings
             test_flags: --parallel
+          - package: react
+            path: react
+            test_flags: --parallel
           - package: identicon
             path: identicon
             test_flags: --parallel
@@ -268,7 +271,7 @@ jobs:
 
       - name: Run ${{ matrix.package }} tests
         env:
-          COLIBRI_TEST_QUICKSTART_DIAGNOSTICS: ${{ (matrix.package == 'webauth' || matrix.package == 'core') && '1' || '' }}
+          COLIBRI_TEST_QUICKSTART_DIAGNOSTICS: ${{ (matrix.package == 'webauth' || matrix.package == 'core' || matrix.package == 'react') && '1' || '' }}
         run: |
           set -o pipefail
           deno test -A --clean ${{ matrix.test_flags }} \
@@ -276,7 +279,7 @@ jobs:
             ${{ matrix.path }} 2>&1 | tee "${{ runner.temp }}/package-tests.log"
 
       - name: Upload ${{ matrix.package }} Quickstart diagnostics
-        if: always() && (matrix.package == 'webauth' || matrix.package == 'core')
+        if: always() && (matrix.package == 'webauth' || matrix.package == 'core' || matrix.package == 'react')
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.package }}-quickstart-diagnostics

@@ -1,0 +1,191 @@
+import type { EnvelopeSigner } from "@colibri/core/signers";
+import { type Ed25519PublicKey, StrKey } from "@colibri/core/strkey";
+import type { WalletConnector } from "@/config.ts";
+import { ColibriReactError, ReactCode } from "@/error.ts";
+/** Explicit XDR signing bridge for browser wallets such as Freighter or Wallets Kit. */
+export interface WalletEnvelopeOptions {
+  /** The actual Ed25519 signer key, independently of a controlled account. */
+  publicKey: Ed25519PublicKey;
+  /** Network reported by the wallet. */
+  networkPassphrase: string;
+  /** Optional controlled G/C accounts; defaults to the signer public key. */
+  accounts?: readonly string[];
+  /** Ask the wallet to sign the complete envelope and return signed XDR. */
+  signTransaction(xdr: string, networkPassphrase: string): Promise<string>;
+}
+/** Adapt an explicit wallet envelope capability to Core, without importing a wallet SDK. */
+export function createWalletEnvelopeSigner(
+  options: WalletEnvelopeOptions,
+): EnvelopeSigner {
+  const accounts = new Set(options.accounts ?? [options.publicKey]);
+  return {
+    signerKey: () => options.publicKey,
+    signsFor: (target) => accounts.has(target),
+    signTransaction: async (transaction) => {
+      if (transaction.networkPassphrase !== options.networkPassphrase) {
+        throw new ColibriReactError(
+          ReactCode.NETWORK_MISMATCH,
+          "Transaction and wallet networks differ",
+        );
+      }
+      return await options.signTransaction(
+        transaction.toXDR(),
+        options.networkPassphrase,
+      );
+    },
+  };
+}
+/** Define a connector around an application-owned wallet SDK and its actual capabilities. */
+export function createWalletConnector(
+  connector: WalletConnector,
+): WalletConnector {
+  return Object.freeze({ ...connector });
+}
+
+/** Minimal Freighter API accepted by the optional injected adapter. */
+export interface FreighterApi {
+  /** User-initiated permission request. */
+  requestAccess(): Promise<{ address: string; error?: unknown }>;
+  /** Non-prompting account lookup. */
+  getAddress(): Promise<{ address: string; error?: unknown }>;
+  /** Actual wallet network lookup. */
+  getNetworkDetails(): Promise<{ networkPassphrase: string; error?: unknown }>;
+  /** Complete signed transaction envelope. */
+  signTransaction(
+    xdr: string,
+    options: { networkPassphrase: string; address: string },
+  ): Promise<{ signedTxXdr: string; signerAddress: string; error?: unknown }>;
+}
+/** Configuration for the optional Freighter envelope adapter. */
+export interface FreighterConnectorOptions {
+  /** Connector identifier, defaults to freighter. */
+  id?: string;
+  /** Non-prompting account/network observation interval, defaults to 2000 ms. */
+  pollIntervalMs?: number;
+}
+/**
+ * Connect Freighter without bundling its SDK. Inject the API module from the app.
+ * Supports envelope signing; authorization entries and WebAuth require their
+ * own explicitly configured capabilities. Polling stops on disconnect.
+ */
+export function createFreighterConnector(
+  api: FreighterApi,
+  options: FreighterConnectorOptions = {},
+): WalletConnector {
+  const interval = options.pollIntervalMs ?? 2000;
+  if (!Number.isFinite(interval) || interval < 1) {
+    throw new ColibriReactError(
+      ReactCode.INVALID_CONFIG,
+      "Wallet polling requires a positive interval",
+    );
+  }
+  let lastIdentity: string | undefined;
+  const read = async (prompt = false) => {
+    const account = await (prompt ? api.requestAccess() : api.getAddress());
+    if (account.error) throw account.error;
+    if (!account.address) return null;
+    const network = await api.getNetworkDetails();
+    if (network.error) throw network.error;
+    if (!StrKey.isValidEd25519PublicKey(account.address)) {
+      throw new ColibriReactError(
+        ReactCode.INVALID_CONFIG,
+        "Freighter returned an invalid account",
+      );
+    }
+    const publicKey = account.address;
+    const signer = createWalletEnvelopeSigner({
+      publicKey,
+      networkPassphrase: network.networkPassphrase,
+      signTransaction: async (xdr, networkPassphrase) => {
+        await assertFreighterIdentity(api, publicKey, networkPassphrase);
+        const signed = await api.signTransaction(xdr, {
+          networkPassphrase,
+          address: publicKey,
+        });
+        if (signed.error) throw signed.error;
+        if (signed.signerAddress !== publicKey) {
+          throw new ColibriReactError(
+            ReactCode.CONNECTION_CHANGED,
+            "Freighter returned a different signer",
+          );
+        }
+        await assertFreighterIdentity(api, publicKey, networkPassphrase);
+        return signed.signedTxXdr;
+      },
+    });
+    return {
+      address: publicKey,
+      networkPassphrase: network.networkPassphrase,
+      signers: [signer],
+    };
+  };
+  const restore = async (prompt = false) => {
+    const connection = await read(prompt);
+    lastIdentity = connection
+      ? `${connection.address}:${connection.networkPassphrase}`
+      : "disconnected";
+    return connection;
+  };
+  return createWalletConnector({
+    id: options.id ?? "freighter",
+    connect: async () => {
+      const connection = await restore(true);
+      if (!connection) {
+        throw new ColibriReactError(
+          ReactCode.CONNECTION_CHANGED,
+          "Freighter did not authorize an account",
+        );
+      }
+      return connection;
+    },
+    reconnect: () => restore(),
+    subscribe: (listener) => {
+      let stopped = false;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      let previous = lastIdentity;
+      const poll = async () => {
+        try {
+          const connection = await read();
+          const identity = connection
+            ? `${connection.address}:${connection.networkPassphrase}`
+            : "disconnected";
+          if (!stopped && identity !== previous) {
+            previous = identity;
+            listener(connection);
+          }
+        } catch {
+          if (!stopped) {
+            previous = "disconnected";
+            listener(null);
+          }
+        }
+        if (!stopped) timer = setTimeout(poll, interval);
+      };
+      timer = setTimeout(poll, interval);
+      return () => {
+        stopped = true;
+        clearTimeout(timer);
+      };
+    },
+  });
+}
+
+async function assertFreighterIdentity(
+  api: FreighterApi,
+  address: string,
+  networkPassphrase: string,
+): Promise<void> {
+  const account = await api.getAddress();
+  const network = await api.getNetworkDetails();
+  if (account.error) throw account.error;
+  if (network.error) throw network.error;
+  if (
+    account.address !== address ||
+    network.networkPassphrase !== networkPassphrase
+  ) {
+    throw new ColibriReactError(
+      ReactCode.CONNECTION_CHANGED,
+      "Freighter changed account or network during signing",
+    );
+  }
+}

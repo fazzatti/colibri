@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "baseUrl": "../../..",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "paths": {
+      "@/*": [
+        "react/src/*"
+      ],
+      "@colibri/core": [
+        "core/mod.ts"
+      ],
+      "@colibri/webauth": [
+        "webauth/mod.ts"
+      ],
+      "@colibri/rpc-streamer": [
+        "rpc-streamer/mod.ts"
+      ],
+      "@colibri/identicon": [
+        "identicon/mod.ts"
+      ],
+      "colibri-internal/*": [
+        "_internal/*"
+      ]
+    },
+    "skipLibCheck": true
+  },
+  "include": [
+    "../../../react/**/*.ts"
+  ],
+  "exclude": [
+    "../../../react/**/*.test.ts"
+  ]
+}

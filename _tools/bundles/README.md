@@ -81,3 +81,19 @@ a whole object; use `import * as SorobanType from "@colibri/core/values"` when
 individual-codec tree shaking matters. Static alias annotations cover only reads
 of owned readonly fields. The original symbol budget stays unchanged, and the
 forwarded form has its own explicit budget and browser/dependency checks.
+
+## React and pipeline probes
+
+The React probes cover provider/connection, pure query utilities, standalone
+contract reads, generated-client invocation adapters, Classic pipelines, assets,
+WebAuth and SVG identicons. Light probes reject retained SDK XDR, pipelines and
+unrelated package code. Read probes reject signer/send/invoke-pipeline code. The
+invocation adapter probe excludes the caller's generated client and its
+pipeline; it is not the total cost of an invoking application.
+
+Rollup replaces `process.env.NODE_ENV` with `"production"` to select production
+React. It also writes `split.json` for assets and WebAuth, alongside split
+chunks: `initial` follows every static dependency of the entry, while `complete`
+sums all emitted JavaScript chunks, including deferred imports. Gzip is summed
+per chunk. These are measurements, separate from the existing standalone budget
+gates and browser executions. Lazy loading changes timing, not total code cost.

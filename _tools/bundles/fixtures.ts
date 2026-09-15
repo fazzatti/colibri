@@ -1,5 +1,21 @@
 /** Public consumer probes: no private imports or tree-shaking overrides. */
 export const entries: Record<string, string> = {
+  "react-provider":
+    'export {ColibriProvider,createColibriConfig,useConnection,useNetwork} from "@colibri/react";',
+  "react-query":
+    'export {colibriQueryKey,colibriQueryOptions} from "@colibri/react/query";',
+  "react-read":
+    'export {useContractReadSpec} from "@colibri/react/contracts/read";',
+  "react-invoke":
+    'export {useContractInvoke} from "@colibri/react/contracts/invoke";',
+  "core-read": 'export {readContract} from "@colibri/core/contract-read";',
+  "react-identicon": 'export {useIdenticon} from "@colibri/react/identicon";',
+  "react-classic":
+    'export {useClassicTransaction} from "@colibri/react/transactions/classic";',
+  "react-assets": 'export {useBalance} from "@colibri/react/assets";',
+  "react-webauth":
+    'export {useWebAuthClient,useWebAuth} from "@colibri/react/webauth";',
+
   "unused-core": 'import "@colibri/core"; export const value = 1;',
   "root-error": 'export { ColibriError } from "@colibri/core";',
   "root-strkey": 'export { StrKey } from "@colibri/core";',
@@ -40,6 +56,15 @@ export function verify(address) {
 
 /** Independent budgets for each consumer, in raw bytes and gzip level 9 bytes. */
 export const budgets: Record<string, readonly [number, number]> = {
+  "react-provider": [22000, 8000],
+  "react-query": [4000, 2000],
+  "react-read": [880000, 200000],
+  "react-invoke": [22000, 8000],
+  "core-read": [850000, 190000],
+  "react-identicon": [33000, 13000],
+  "react-classic": [875000, 200000],
+  "react-assets": [1070000, 245000],
+  "react-webauth": [1150000, 265000],
   "unused-core": [1_010_000, 225_000],
   "root-error": [1_010_000, 225_000],
   "root-strkey": [1_010_000, 225_000],
@@ -56,6 +81,16 @@ export function forbiddenDependencies(name: string): RegExp[] {
   const png = /(?:fast-png|fflate)/;
   const heavy =
     /(?:stellar[-+]xdr|@stellar[+/]js-xdr|convee|\/(?:contract|rpc|xdr|ledger-parser|processes|pipelines)\/|\/(?:transaction|xdr)[^/]*\.[cm]?[jt]s)/;
+  if (
+    ["react-provider", "react-query", "react-invoke", "react-identicon"]
+      .includes(name)
+  ) return [png, heavy, /\/(?:webauth|rpc-streamer)\//];
+  if (["core-read", "react-read"].includes(name)) {
+    return [
+      png,
+      /\/core\/(?:signer|processes\/(?:sign-auth-entries|sign-envelope|send-transaction)|pipelines\/(?:classic-transaction|invoke-contract))\//,
+    ];
+  }
   if (name === "value-symbol" || name === "value-namespace") {
     return [
       png,

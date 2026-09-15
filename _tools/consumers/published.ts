@@ -1,5 +1,9 @@
 /** Validate actual JSR modules and registry-generated npm tarballs after publication. */
-import { consumerFiles, copyConsumerFixtures } from "./fixtures.ts";
+import {
+  consumerFiles,
+  copyConsumerFixtures,
+  installedFixture,
+} from "./fixtures.ts";
 import { resolve } from "node:path";
 import { readPackageInventory } from "../package-inventory.ts";
 import { git } from "../releases/repository.ts";
@@ -79,6 +83,9 @@ try {
     "",
   );
   dependencies.typescript = "5.9.3";
+  dependencies["react-dom"] = "^19.1.1";
+  dependencies["@types/react"] = "^19.1.13";
+  dependencies["@types/react-dom"] = "^19.1.9";
   await writeJson(resolve(npm, "package.json"), {
     private: true,
     type: "module",
@@ -129,8 +136,7 @@ try {
     for (const pkg of inventory) {
       source = source.replaceAll(`"${pkg.name}`, `"${npmName(pkg.name)}`);
     }
-    source = source.replaceAll('"stellar-sdk', '"@stellar/stellar-sdk')
-      .replaceAll('"convee"', '"@jsr/fifo__convee"');
+    source = installedFixture(source);
     await Deno.writeTextFile(resolve(npm, name), source);
   }
   await command("npx", [

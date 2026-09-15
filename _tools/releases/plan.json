@@ -1,11 +1,20 @@
 {
   "schema": 1,
-  "base": "74271e190cef907880ee81262c0f22f7317a658f",
+  "base": "b20ce71ee0693d96004d0edd2f5b747d102dd530",
   "packages": {
     "@colibri/core": {
-      "bump": "patch",
-      "reason": "Restore all StrKey encoding and decoding helpers in JSR-generated npm declarations.",
-      "apiReview": "Explicitly declare the existing public object shape, preserving all native SDK parameter types, branded string returns, validators, mutability and root/subpath identity. Runtime construction and behavior are unchanged. This repairs the published npm declaration omission without adding or removing APIs. Existing dependent package ranges remain compatible and do not require bumps."
+      "bump": "minor",
+      "reason": "Add granular frontend entrypoints and standalone contract reads through existing pipelines.",
+      "apiReview": "Additive exports preserve existing clients, constructor identity, process behavior and pipeline composition; thin steps import their own processes."
+    },
+    "@colibri/react": {
+      "bump": "initial",
+      "initialVersion": "0.1.0",
+      "reason": "Introduce headless React bindings for the Colibri SDK.",
+      "apiReview": "Initial provider, connection, query, contract, transaction, assets, events, SEP and session APIs.",
+      "dependencies": {
+        "@colibri/core": "^1.2.0"
+      }
     }
   }
 }

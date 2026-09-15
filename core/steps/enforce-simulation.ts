@@ -1,5 +1,5 @@
 import { type Step, step } from "convee";
-import { enforceSimulation } from "@/processes/index.ts";
+import { enforceSimulation } from "@/processes/enforce-simulation/index.ts";
 import { ENFORCE_SIMULATION_STEP_ID } from "@/steps/ids.ts";
 
 /**

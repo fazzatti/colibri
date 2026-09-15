@@ -455,6 +455,12 @@ MIT License. See [LICENSE](./LICENSE).
 ## Contract bindings
 
 Generate typed contract clients from Wasm, a Wasm hash, or a contract ID with
-[`@colibri/contract-bindings`](./contract-bindings/README.md). The Deno CLI supports
-prompts and flags, source files or JSR/npm packages, embedded specs, constructor
-error maps, and typed Core event definitions.
+[`@colibri/contract-bindings`](./contract-bindings/README.md). The Deno CLI
+supports prompts and flags, source files or JSR/npm packages, embedded specs,
+constructor error maps, and typed Core event definitions.
+
+### React applications
+
+[`@colibri/react`](react/README.md) adds headless React hooks for connections,
+queries, contracts, existing transaction pipelines, events and SEP integrations.
+See the [React guide](docs/packages/react.md) for setup and feature imports.

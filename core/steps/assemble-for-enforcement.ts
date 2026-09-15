@@ -1,5 +1,5 @@
 import { type Step, step } from "convee";
-import { assembleForEnforcement } from "@/processes/index.ts";
+import { assembleForEnforcement } from "@/processes/assemble-for-enforcement/index.ts";
 import { ASSEMBLE_FOR_ENFORCEMENT_STEP_ID } from "@/steps/ids.ts";
 
 /**

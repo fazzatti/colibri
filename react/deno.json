@@ -1,0 +1,46 @@
+{
+  "name": "@colibri/react",
+  "version": "0.1.0",
+  "license": "MIT",
+  "exports": {
+    ".": "./mod.ts",
+    "./query": "./query.ts",
+    "./rpc": "./rpc.ts",
+    "./accounts": "./accounts.ts",
+    "./assets": "./assets.ts",
+    "./contracts": "./contracts.ts",
+    "./contracts/read": "./contract-read.ts",
+    "./contracts/invoke": "./contract-invoke.ts",
+    "./transactions/classic": "./classic-transaction.ts",
+    "./transactions/soroban": "./soroban-transaction.ts",
+    "./transactions/simulate": "./simulation.ts",
+    "./events": "./events.ts",
+    "./webauth": "./webauth.ts",
+    "./sep1": "./sep1.ts",
+    "./signers": "./signers.ts",
+    "./wallets": "./wallets.ts",
+    "./identicon": "./identicon.ts",
+    "./session": "./session.ts"
+  },
+  "imports": {
+    "@/": "./src/",
+    "@colibri/core": "jsr:@colibri/core@^1.2.0",
+    "@colibri/webauth": "jsr:@colibri/webauth@^1.0.0",
+    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^1.0.0",
+    "@colibri/identicon": "jsr:@colibri/identicon@^1.1.0",
+    "react": "npm:react@^19.1.1",
+    "@types/react": "npm:@types/react@^19.1.13",
+    "@tanstack/react-query": "npm:@tanstack/react-query@^5.87.4"
+  },
+  "publish": {
+    "include": [
+      "./**/*.ts",
+      "./README.md",
+      "./LICENSE",
+      "./deno.json"
+    ],
+    "exclude": [
+      "./**/*.test.ts"
+    ]
+  }
+}

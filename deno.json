@@ -7,7 +7,8 @@
     "./rpc-streamer",
     "./webauth",
     "./plugins/*",
-    "./test-tooling"
+    "./test-tooling",
+    "./react"
   ],
   "nodeModulesDir": "auto",
   "minimumDependencyAge": {

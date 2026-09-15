@@ -7,7 +7,10 @@
     "jsr:@std/toml@^1.0.11": "1.0.11",
     "npm:@stellar/stellar-sdk@17.0.1": "17.0.1",
     "npm:@stellar/stellar-sdk@^17.0.1": "17.0.1",
-    "npm:fast-png@8.0.0": "8.0.0"
+    "npm:@tanstack/react-query@^5.87.4": "5.102.8_react@19.3.0",
+    "npm:@types/react@^19.1.13": "19.3.0",
+    "npm:fast-png@8.0.0": "8.0.0",
+    "npm:react@^19.1.1": "19.3.0"
   },
   "jsr": {
     "@fifo/convee@2.1.0": {
@@ -63,8 +66,24 @@
       ],
       "bin": true
     },
+    "@tanstack/query-core@5.102.8": {
+      "integrity": "sha512-ZNjkJ33CqvPNec/6lZBnHqLc3EVGPZ9ySLhYahU9TcuRFdmwXewuj0c4hwSWcGHqEUwcSrKeZ+oGcvPBqXcQcg=="
+    },
+    "@tanstack/react-query@5.102.8_react@19.3.0": {
+      "integrity": "sha512-TYBea4OuXWD7MhaSHq069TWbFe7rcwWN6kzT7JF0OKi1K6c1gTv2IzD6A6ExJsCMozdkqBWeuIUZmu4KQg0O5A==",
+      "dependencies": [
+        "@tanstack/query-core",
+        "react"
+      ]
+    },
     "@types/json-schema@7.0.15": {
       "integrity": "sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA=="
+    },
+    "@types/react@19.3.0": {
+      "integrity": "sha512-N0rFCuH9YoxG9/m61l9MfpJKfmLOVU0em7ipIz6TRgSSkvReLB9vL85GB+yr8Bs5leqpvg96JSwF4ZS1s4viQg==",
+      "dependencies": [
+        "csstype"
+      ]
     },
     "agent-base@6.0.2": {
       "integrity": "sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==",
@@ -102,6 +121,9 @@
     },
     "commander@14.0.3": {
       "integrity": "sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw=="
+    },
+    "csstype@3.2.3": {
+      "integrity": "sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ=="
     },
     "debug@4.4.3": {
       "integrity": "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==",
@@ -253,6 +275,9 @@
     "proxy-from-env@2.1.0": {
       "integrity": "sha512-cJ+oHTW1VAEa8cJslgmUZrc+sjRKgAKl3Zyse6+PV38hZe/V6Z14TbCuXcan9F9ghlz4QrFr2c92TNF82UkYHA=="
     },
+    "react@19.3.0": {
+      "integrity": "sha512-E8LUcbtBWt20bbl2YoHfx4ZDBdxVTfOKtCZn9cDSJ4l6/nuoApcpIBcj47t2wZoVX8g2ZHuMHbiShgCR1T5Sog=="
+    },
     "smol-toml@1.8.0": {
       "integrity": "sha512-kCZr2V3ch9i00x8zXRhjUNVcjG9ijES5dDudkXvUVCT5QlJNQWElSJdZqyPemffHoLNUYwOcou0Fy+ojN0uHSQ=="
     },
@@ -272,9 +297,12 @@
       "npm:@alperlabs/crap4ts@0.2.1",
       "npm:@resvg/resvg-js@2.6.2",
       "npm:@stellar/stellar-sdk@17.0.1",
+      "npm:@tanstack/react-query@^5.87.4",
+      "npm:@types/react@^19.1.13",
       "npm:archunit@2.4.0",
       "npm:dockerode@3.3.3",
-      "npm:fast-png@8.0.0"
+      "npm:fast-png@8.0.0",
+      "npm:react@^19.1.1"
     ],
     "links": {
       "jsr:@colibri/build-verification@0.4.5": {
@@ -290,7 +318,7 @@
           "npm:@stellar/stellar-sdk@^17.0.1"
         ]
       },
-      "jsr:@colibri/core@1.1.1": {},
+      "jsr:@colibri/core@1.2.0": {},
       "jsr:@colibri/identicon@1.1.0": {
         "dependencies": [
           "jsr:@colibri/core@^1.1.0",
@@ -312,6 +340,17 @@
       "jsr:@colibri/plugin-sep29@1.0.0": {
         "dependencies": [
           "jsr:@colibri/core@1"
+        ]
+      },
+      "jsr:@colibri/react@0.1.0": {
+        "dependencies": [
+          "jsr:@colibri/core@^1.2.0",
+          "jsr:@colibri/identicon@^1.1.0",
+          "jsr:@colibri/rpc-streamer@1",
+          "jsr:@colibri/webauth@1",
+          "npm:@tanstack/react-query@^5.87.4",
+          "npm:@types/react@^19.1.13",
+          "npm:react@^19.1.1"
         ]
       },
       "jsr:@colibri/rpc-streamer@1.0.0": {
