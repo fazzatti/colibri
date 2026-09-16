@@ -33,6 +33,73 @@ async function deno(args: string[]): Promise<void> {
   );
 }
 describe("generated consumer boundary", () => {
+  it("type-checks and runs clients without convenience exports in every output preset", async () => {
+    const directory = await Deno.makeTempDir();
+    try {
+      const imports: string[] = [];
+      for (const output of ["files", "package"] as const) {
+        for (const target of ["jsr", "npm"] as const) {
+          const name = `${output}_${target}`;
+          await writeBindings(
+            generateBindings(bindingSpec(), {
+              output,
+              target,
+              packageName: "@example/token",
+              includeColibri: false,
+            }),
+            { directory: `${directory}/${name}` },
+          );
+          imports.push(
+            `import * as ${name} from "./${name}/${
+              output === "package" ? "mod" : "index"
+            }.ts";`,
+          );
+        }
+      }
+      await Deno.writeTextFile(
+        `${directory}/consumer.ts`,
+        `
+${imports.join("\n")}
+import { Contract, NetworkConfig, LocalSigner, type TransactionConfig } from "@colibri/core";
+import { assertEquals, assertInstanceOf } from "@std/assert";
+const signer = LocalSigner.generateRandom();
+const config: TransactionConfig = { source: signer.publicKey(), fee: "100", timeout: 30, signers: [signer] };
+const read = Contract.prototype.read;
+try {
+  Contract.prototype.read = async () => 42n;
+  for (const bindings of [files_jsr, files_npm, package_jsr, package_npm]) {
+    assertEquals("NetworkConfig" in bindings, false);
+    assertEquals("LocalSigner" in bindings, false);
+    assertEquals("SorobanType" in bindings, false);
+    const client = new bindings.ContractClient({ networkConfig: NetworkConfig.TestNet(), contractConfig: { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" } });
+    assertInstanceOf(client, Contract);
+    const balance: bigint = await client.balance.read({ owner: "alice" });
+    assertEquals(balance, 42n);
+    function types() {
+      const result: Promise<files_jsr.ContractClientInvocationResult<bigint>> = client.balance.invoke({ methodArgs: { owner: "alice" }, config });
+      // @ts-expect-error Omitting conveniences retains typed ABI arguments.
+      client.balance.read({ owner: 7 });
+      // @ts-expect-error Core helper types must be imported from Core.
+      const missing: files_jsr.TransactionConfig = config;
+      void [result, missing];
+    }
+    void types;
+  }
+} finally { Contract.prototype.read = read; signer.destroy(); }
+`,
+      );
+      await deno([
+        "run",
+        "--check",
+        "--config",
+        rootConfig,
+        `${directory}/consumer.ts`,
+      ]);
+    } finally {
+      await Deno.remove(directory, { recursive: true });
+    }
+  });
+
   it("preserves optional composed input and output types in generated consumers", async () => {
     const directory = await Deno.makeTempDir();
     const value = option(xdr.ScSpecTypeDef.scSpecTypeTuple(

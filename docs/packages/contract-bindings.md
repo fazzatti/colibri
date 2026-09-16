@@ -1,12 +1,12 @@
-# Generate a Colibri contract client
+# Contract Bindings
 
 `@colibri/contract-bindings` turns a Soroban contract spec into a `Contract`
 subclass with typed per-method `.read()` and `.invoke()` helpers, embedded spec
-entries, a Colibri error map, and typed event definitions. Its initial 0.1
-release requires Core 1.1. The CLI runs on Deno; the renderer and generated
-clients can be used from supported Deno, Node or browser projects. See the
-[runtime compatibility policy](../getting-started/compatibility.md) and the
-[package API reference](https://jsr.io/@colibri/contract-bindings/doc).
+entries, a Colibri error map, and typed event definitions. Generated clients
+require Core 1.1 or a compatible 1.x release. The CLI runs on Deno; the renderer
+and generated clients can be used from supported Deno, Node or browser projects.
+See the [runtime compatibility policy](../getting-started/compatibility.md) and
+the [package API reference](https://jsr.io/@colibri/contract-bindings/doc).
 
 ## Choose a source and output
 
@@ -83,6 +83,7 @@ uses the defaults below and fails if a required value is absent.
 | `--class-name`         | Explicit class name; otherwise derived from the local filename or `ContractClient`. |
 | `--package-name`       | Required for package output; JSR names must be scoped.                              |
 | `--include-provenance` | Emit source identity; off by default.                                               |
+| `--no-colibri`         | Omit `colibri.ts` and its convenience exports; included by default.                 |
 | `--force`              | Replace existing generator-owned files; off by default.                             |
 | `--non-interactive`    | Disable prompts; off by default.                                                    |
 | `--help`               | Print usage without generating files.                                               |
@@ -114,14 +115,14 @@ The generated `types.ts` is organized into labeled sections: methods and their
 inputs/outputs/maps, contract-declared types when present, events, and client
 configuration. Error maps use Core's `ContractErrorMap` type.
 
-`--output package --target jsr` places the four source files in `generated/`,
-with a `mod.ts` entrypoint and a `deno.json`. Run `deno task check` in the
-output directory. `--target npm` creates a `package.json`, TypeScript build
-configuration, `.npmrc`, and ESM exports. Run `npm install` and `npm run build`;
-JavaScript and declarations appear in `dist/`. The SDK requires Node 22.12 or
-newer. The npm package shares Core through an alias of `@jsr/colibri__core`,
-using `https://npm.jsr.io` for the `@jsr` scope. Carry that registry
-configuration into consuming projects and CI.
+`--output package --target jsr` places the generated source files in
+`generated/`, with a `mod.ts` entrypoint and a `deno.json`. Run
+`deno task check` in the output directory. `--target npm` creates a
+`package.json`, TypeScript build configuration, `.npmrc`, and ESM exports. Run
+`npm install` and `npm run build`; JavaScript and declarations appear in
+`dist/`. The SDK requires Node 22.12 or newer. The npm package shares Core
+through an alias of `@jsr/colibri__core`, using `https://npm.jsr.io` for the
+`@jsr` scope. Carry that registry configuration into consuming projects and CI.
 
 Review the package name, version, license, and publication settings before
 publishing. Neither mode installs dependencies or publishes automatically.
@@ -149,7 +150,8 @@ npm run build
 
 Choose the commands for your target; the generator does not run them. JSR
 exports source TypeScript through `mod.ts`; npm exports compiled `dist/mod.js`
-and its declarations. Both expose the Core conveniences through `/colibri`.
+and its declarations. Both expose the Core conveniences through `/colibri`
+unless `--no-colibri` is set.
 
 ## Import Colibri conveniences
 
@@ -157,7 +159,7 @@ Generated `colibri.ts` re-exports `NetworkConfig`, `LocalSigner`, `SorobanType`,
 `ColibriError`, and common signer, transaction and contract types. These are the
 original Core implementations. They are also available from the client
 entrypoint unless an ABI declaration uses the same name; ABI names take
-precedence. The dedicated module always exposes the conveniences.
+precedence. When enabled, the dedicated module always exposes the conveniences.
 
 This fragment assumes file output for a class named `Token`:
 
@@ -196,6 +198,46 @@ Regeneration preserves existing manifests, so add that subpath manually if
 upgrading an older package scaffold. Reexports do not remove Core's runtime
 dependency; generated packages declare it for consumers. Applications need a
 direct Stellar SDK dependency only when they import and use that SDK themselves.
+
+### Omit convenience exports
+
+Use `--no-colibri` when your application already imports Core directly or owns a
+shared Colibri entrypoint for several generated clients:
+
+```sh
+deno run --allow-read --allow-write jsr:@colibri/contract-bindings/cli \
+  --wasm ./contract.wasm --class-name Token --output files \
+  --out ./token-client --no-colibri --non-interactive
+```
+
+The API option is `includeColibri: false`; its default is `true`. It applies to
+both output modes and both registry presets:
+
+- The output plan omits `colibri.ts` (or `generated/colibri.ts` for packages).
+- `index.ts` exports the contract's generated API without the convenience
+  re-exports. Contract types, constants, events and client behavior are
+  unchanged.
+- New package manifests omit the `/colibri` subpath.
+- The generated README imports helpers directly from `@colibri/core`.
+
+Core remains a runtime dependency. For example, the imports for the generated
+client fragment above become:
+
+```ts
+import { Token } from "./token-client/index.ts";
+import {
+  LocalSigner,
+  NetworkConfig,
+  type TransactionConfig,
+} from "@colibri/core";
+```
+
+When switching an existing directory, update application imports, remove its old
+convenience file and `/colibri` manifest export, and update the existing README
+(or remove it explicitly to generate a new one). `--force` does not delete files
+outside the new plan or rewrite existing package scaffolds. Keep `--no-colibri`
+on subsequent CLI runs, or `includeColibri: false` in your generation script;
+omitting the option enables conveniences again.
 
 ## Understand the generated types
 
@@ -366,11 +408,15 @@ const plan = generateBindings(loaded.spec, {
   output: "package",
   target: "jsr",
   packageName: "@example/token",
+  includeColibri: false,
   provenance: loaded.provenance,
 });
 const result = await writeBindings(plan, { directory: "./token-client" });
 console.log(result.written, plan.warnings);
 ```
+
+This example omits convenience re-exports so consuming code imports helpers from
+Core directly. Remove `includeColibri: false` to include them.
 
 ### Source variants
 
@@ -393,7 +439,8 @@ directly instead of loading a source again.
 `generateBindings(spec, options)` returns a plan without filesystem or network
 access. Its default class is `ContractClient` (filename-based naming belongs to
 the CLI), output is `files`, and target is `jsr`. Package output requires
-`packageName`. The return value separates:
+`packageName`. `includeColibri` defaults to `true`; set it to `false` to omit
+the convenience module and exports. The return value separates:
 
 - `files`: generator-owned relative paths and source contents;
 - `scaffold`: initial package/setup files to preserve when they already exist;

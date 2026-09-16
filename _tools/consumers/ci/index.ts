@@ -6,7 +6,7 @@ import {
   sdkSelections,
   verifyRuntime,
 } from "./plan.ts";
-import { runChecks, summarize } from "./runner.ts";
+import { execute, runChecks, summarize } from "./runner.ts";
 
 const [phase, destination] = Deno.args;
 if (!phase || !destination) {
@@ -63,6 +63,10 @@ if (phase === "plan") {
       node = new TextDecoder().decode(version.stdout).trim().replace(/^v/, "");
     }
     verifyRuntime(selected, Deno.version.deno, node);
-    if (!await runChecks(selected, directory)) Deno.exitCode = 1;
+    // Browser cases install system packages; keep those installs serialized.
+    const concurrency = phase === "browsers" ? 1 : 4;
+    if (!await runChecks(selected, directory, execute, concurrency)) {
+      Deno.exitCode = 1;
+    }
   }
 }

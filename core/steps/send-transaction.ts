@@ -1,5 +1,5 @@
-import { step, type Step } from "convee";
-import { sendTransaction } from "@/processes/index.ts";
+import { type Step, step } from "convee";
+import { sendTransaction } from "@/processes/send-transaction/index.ts";
 import { SEND_TRANSACTION_STEP_ID } from "@/steps/ids.ts";
 
 /**
@@ -12,5 +12,4 @@ export const createSendTransactionStep = (): Step<
   Awaited<ReturnType<typeof sendTransaction>>,
   Error,
   typeof SEND_TRANSACTION_STEP_ID
-> =>
-  step(sendTransaction, { id: SEND_TRANSACTION_STEP_ID });
+> => step(sendTransaction, { id: SEND_TRANSACTION_STEP_ID });

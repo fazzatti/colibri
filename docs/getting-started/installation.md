@@ -22,6 +22,7 @@ Deno-first TypeScript projects.
 deno add jsr:@colibri/core
 
 # Optional packages
+deno add jsr:@colibri/react
 deno add jsr:@colibri/webauth
 deno add jsr:@colibri/build-verification
 deno add jsr:@colibri/identicon
@@ -37,7 +38,8 @@ This will add imports similar to:
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^1.1.1",
+    "@colibri/core": "jsr:@colibri/core@^1.2.0",
+    "@colibri/react": "jsr:@colibri/react@^0.1.0",
     "@colibri/webauth": "jsr:@colibri/webauth@^1.0.0",
     "@colibri/build-verification": "jsr:@colibri/build-verification@^0.4.5",
     "@colibri/identicon": "jsr:@colibri/identicon@^1.1.0",
@@ -153,8 +155,13 @@ deno add npm:@stellar/stellar-sdk@^17.0.1
 ### Contract binding generation
 
 ```sh
-deno add jsr:@colibri/contract-bindings@^0.1.0
+deno add jsr:@colibri/contract-bindings@^0.2.0
 ```
 
 See [the generator guide](../packages/contract-bindings.md) for interactive and
 automated CLI use, JSR/npm outputs, and shared Core dependencies.
+
+### [@colibri/react](../packages/react.md)
+
+Headless React 19 and TanStack Query 5 integration with granular frontend
+imports.

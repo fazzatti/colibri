@@ -88,3 +88,25 @@ See the exact API references for
 [StrKey](https://jsr.io/@colibri/core/doc/strkey),
 [SVG rendering](https://jsr.io/@colibri/identicon/doc/svg), and
 [Core](https://jsr.io/@colibri/core/doc).
+
+## React and granular Core workflows
+
+Core 1.2 adds public feature entrypoints: `/network`, `/rpc`, `/ledger`,
+`/contract`, `/contract-read`, `/classic-transaction`, `/soroban-transaction`,
+`/simulation`, `/assets`, `/events`, `/signers` and `/sep1`. Existing root
+imports remain supported. Installing Core still installs its package
+dependencies; browser bundlers can discard runtime code that these entrypoints
+do not use.
+
+Use React's feature entrypoints in the [React guide](../packages/react.md).
+Provider/connection and pure query utilities avoid transaction and contract
+runtime imports. `useContractReadSpec` uses the standalone Core read action; its
+retained pipeline builds and simulates without signing or sending. `useContract`
+and generated-helper invocation preserve the supplied class and its complete
+pipelines, so that client's own runtime cost still applies.
+
+Assets and WebAuth defer heavier capabilities until used. The production bundle
+check reports both standalone totals and split builds' initial/complete graphs.
+Deferred code is included in the complete total. Precise results, dependency
+locks and source maps are retained with the CI artifact; measure the production
+application too, since shared dependencies change the incremental cost.

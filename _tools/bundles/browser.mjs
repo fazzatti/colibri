@@ -67,6 +67,11 @@ try {
                 return false;
               }
               if (name.startsWith("svg")) return module.toSvg(address);
+              if (name.startsWith("react-") || name === "core-read") {
+                return Object.values(module).some((value) =>
+                  typeof value === "function"
+                );
+              }
               return module.verify(address);
             },
             { name, bundler, address },

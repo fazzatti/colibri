@@ -45,11 +45,29 @@ export async function prepareArtifacts(
       "",
     );
     await Deno.mkdir(destination, { recursive: true });
-    const browserPackages = inventory.filter((pkg) =>
-      !dockerPackages.has(pkg.name)
-    ).sort((a, b) =>
-      Number(b.name === "@colibri/core") - Number(a.name === "@colibri/core")
-    );
+    const pending = inventory.filter((pkg) => !dockerPackages.has(pkg.name));
+    const browserPackages: typeof inventory = [];
+    // Packages can now compose several Colibri packages. Build dependencies first.
+    const dependencies = new Map<string, string[]>();
+    for (const pkg of pending) {
+      const manifest = JSON.parse(
+        await Deno.readTextFile(resolve(root, pkg.root, "deno.json")),
+      );
+      dependencies.set(pkg.name, Object.keys(colibriDependencies(manifest)));
+    }
+    while (pending.length) {
+      const index = pending.findIndex((pkg) =>
+        dependencies.get(pkg.name)!.every((name) =>
+          browserPackages.some((built) => built.name === name)
+        )
+      );
+      if (index < 0) {
+        throw new Error(
+          "CONSUMER_DEPENDENCY_ORDER: cyclic or unavailable package dependency",
+        );
+      }
+      browserPackages.push(...pending.splice(index, 1));
+    }
     const declarations = await emitDeclarations(source, inventory);
     await Deno.copyFile(
       resolve(source, "declaration-diagnostics.json"),
@@ -74,23 +92,23 @@ export async function prepareArtifacts(
             },
           }
           : {}),
-        ...(pkg.name === "@colibri/core" ? {} : Object.fromEntries(
-          Object.entries(
-            inventory.find((item) => item.name === "@colibri/core")!.exports,
-          )
-            .filter(([name]) =>
-              packageImports.has(
-                `@colibri/core${name === "." ? "" : name.slice(1)}`,
-              )
-            )
-            .map((
-              [name, entry],
-            ) => [pathToFileURL(resolve(source, "core", entry)).href, {
-              name: "@colibri/core",
-              version: `file:${artifacts.get("@colibri/core")}`,
-              ...(name === "." ? {} : { subPath: name.slice(2) }),
-            }]),
-        )),
+        ...Object.fromEntries(
+          inventory.filter((dependency) => dependency.name !== pkg.name)
+            .flatMap((dependency) =>
+              Object.entries(dependency.exports).filter(([name]) =>
+                packageImports.has(
+                  `${dependency.name}${name === "." ? "" : name.slice(1)}`,
+                )
+              ).map(([name, entry]) => [
+                pathToFileURL(resolve(source, dependency.root, entry)).href,
+                {
+                  name: dependency.name,
+                  version: `file:${artifacts.get(dependency.name)}`,
+                  ...(name === "." ? {} : { subPath: name.slice(2) }),
+                },
+              ])
+            ),
+        ),
       };
       await Deno.mkdir(outDir, { recursive: true });
       await Deno.writeTextFile(
@@ -117,18 +135,30 @@ export async function prepareArtifacts(
           target: "ES2023",
           lib: ["ESNext", "DOM", "DOM.Iterable"],
         },
-        package: { name: pkg.name, version: pkg.version, private: true },
+        package: {
+          name: pkg.name,
+          version: pkg.version,
+          private: true,
+          // dnt can infer a caret range from native types behind mapped packages.
+          // Every direct SDK consumer in this compatibility lane must use one selection.
+          dependencies: [...packageImports].some((name) =>
+              name === "stellar-sdk" || name.startsWith("stellar-sdk/")
+            )
+            ? { "@stellar/stellar-sdk": sdk }
+            : {},
+        },
       });
-      // dnt uses a local Core tarball to build declarations. Portable artifacts
+      // dnt uses local dependency tarballs to build declarations. Portable artifacts
       // retain the advertised range and are installed together by the consumer.
       const manifestPath = resolve(outDir, "package.json");
       const manifest = JSON.parse(await Deno.readTextFile(manifestPath));
       const original = JSON.parse(
         await Deno.readTextFile(resolve(root, pkg.root, "deno.json")),
       );
-      if (manifest.dependencies?.["@colibri/core"]) {
-        manifest.dependencies["@colibri/core"] =
-          colibriDependencies(original)["@colibri/core"];
+      for (
+        const [name, range] of Object.entries(colibriDependencies(original))
+      ) {
+        if (manifest.dependencies?.[name]) manifest.dependencies[name] = range;
       }
       await writeJson(manifestPath, manifest);
       const packed = await new Deno.Command("npm", {
@@ -180,7 +210,9 @@ export async function prepareArtifacts(
     ], source);
     console.log(`Prepared portable consumer artifacts in ${destination}`);
   } finally {
-    await Deno.remove(temporary, { recursive: true });
+    if (Deno.env.get("COLIBRI_CONSUMER_KEEP_SOURCE") === "1") {
+      console.log(`Consumer build diagnostics retained at ${temporary}`);
+    } else await Deno.remove(temporary, { recursive: true });
   }
 }
 

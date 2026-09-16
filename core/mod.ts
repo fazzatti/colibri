@@ -92,3 +92,6 @@ export * from "@/sep1/index.ts";
 export type * from "@/sep1/types.ts";
 /** Error constructors for SEP-1 helpers. */
 export const ERRORS_SEP1: typeof Sep1Errors = Sep1Errors;
+
+export { readContract } from "@/contract/read/index.ts";
+export type { ContractReadRequest } from "@/contract/read/index.ts";

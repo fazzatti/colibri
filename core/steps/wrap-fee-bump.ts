@@ -1,5 +1,5 @@
-import { step, type Step } from "convee";
-import { wrapFeeBump } from "@/processes/index.ts";
+import { type Step, step } from "convee";
+import { wrapFeeBump } from "@/processes/wrap-fee-bump/index.ts";
 import { WRAP_FEE_BUMP_STEP_ID } from "@/steps/ids.ts";
 
 /**
@@ -12,5 +12,4 @@ export const createWrapFeeBumpStep = (): Step<
   Awaited<ReturnType<typeof wrapFeeBump>>,
   Error,
   typeof WRAP_FEE_BUMP_STEP_ID
-> =>
-  step(wrapFeeBump, { id: WRAP_FEE_BUMP_STEP_ID });
+> => step(wrapFeeBump, { id: WRAP_FEE_BUMP_STEP_ID });

@@ -70,6 +70,15 @@ Contract Bindings starts at 0.1 as a preview. Its portable root API supports
 Deno/Node tooling; its `/cli` entrypoint is Deno-only. Generated JSR and npm
 clients use Core 1.1 or later in the current major.
 
+React starts at **0.1** as a headless preview. It requires Core 1.2+, React
+19.1+ within 19.x and TanStack Query 5.87+ within 5.x. Apps own their React,
+QueryClient and wallet integrations; keep one resolved React instance. The
+consumer matrix covers SSR, hydration, connection updates, shared bigint query
+data and SVG rendering. The local Stellar integration suite also executes
+contract read/invoke, Classic payment, Soroban simulation/submission and events.
+Freighter is tested through its injected API boundary, without claiming live
+extension coverage for every supported wallet/version.
+
 ## Supported and tested integrations
 
 | Surface                             | Compatibility boundary and CI checks                                                      |
@@ -94,11 +103,12 @@ on the provider's availability, protocol support, and browser CORS policy.
 CI validates a reviewed release plan and normalized public declaration changes
 early. Preserved 1.0 consumers compile and execute against candidate packages,
 including native SDK objects, custom signers, subclassing, plugins, and typed
-errors. A single `compatibility` check groups the Deno, installed npm, browser and
-released-Core scenarios into named steps, with individual logs and a complete
-results table. Minimum and latest-compatible SDK selections are resolved once;
-identical resolved versions share one matrix, while distinct versions both run
-all supported combinations. Failed or missing results fail the check.
+errors. A single `compatibility` check groups the Deno, installed npm, browser
+and released-Core scenarios into named steps, with individual logs and a
+complete results table. Minimum and latest-compatible SDK selections are
+resolved once; identical resolved versions share one matrix, while distinct
+versions both run all supported combinations. Failed or missing results fail the
+check.
 
 Dependent packages are also checked against the oldest available Core release
 accepted by their range. Conversely, the earliest still-compatible dependent

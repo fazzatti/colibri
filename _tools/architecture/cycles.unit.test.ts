@@ -62,18 +62,24 @@ describe("dependency cycles", () => {
 
   it("permits only the two established RPC Streamer factory cycles", async () => {
     const root = "../../../rpc-streamer/src";
-    await assertNoUnexpectedCycles(PACKAGE_ARCHITECTURES[3], [
-      `${root}/streamer.ts->${root}/variants/event/index.ts|${root}/variants/event/index.ts->${root}/streamer.ts`,
-      `${root}/streamer.ts->${root}/variants/ledger/index.ts|${root}/variants/ledger/index.ts->${root}/streamer.ts`,
-    ]);
+    await assertNoUnexpectedCycles(
+      PACKAGE_ARCHITECTURES.find((p) => p.root === "rpc-streamer")!,
+      [
+        `${root}/streamer.ts->${root}/variants/event/index.ts|${root}/variants/event/index.ts->${root}/streamer.ts`,
+        `${root}/streamer.ts->${root}/variants/ledger/index.ts|${root}/variants/ledger/index.ts->${root}/streamer.ts`,
+      ],
+    );
   });
 
   it("permits only the established WebAuth type and error cycles", async () => {
     const root = "../../../webauth/src";
-    await assertNoUnexpectedCycles(PACKAGE_ARCHITECTURES[4], [
-      `${root}/error.ts->${root}/types.ts|${root}/sep45/codec.ts->${root}/error.ts|${root}/sep45/contract-auth.ts->${root}/sep45/codec.ts|${root}/types.ts->${root}/sep45/contract-auth.ts`,
-      `${root}/sep45/contract-auth.ts->${root}/types.ts|${root}/types.ts->${root}/sep45/contract-auth.ts`,
-    ]);
+    await assertNoUnexpectedCycles(
+      PACKAGE_ARCHITECTURES.find((p) => p.root === "webauth")!,
+      [
+        `${root}/error.ts->${root}/types.ts|${root}/sep45/codec.ts->${root}/error.ts|${root}/sep45/contract-auth.ts->${root}/sep45/codec.ts|${root}/types.ts->${root}/sep45/contract-auth.ts`,
+        `${root}/sep45/contract-auth.ts->${root}/types.ts|${root}/types.ts->${root}/sep45/contract-auth.ts`,
+      ],
+    );
   });
 
   it("keeps every independently evolving Core region cycle-free", async () => {
