@@ -1,25 +1,11 @@
 {
   "schema": 1,
-  "base": "b20ce71ee0693d96004d0edd2f5b747d102dd530",
+  "base": "7c12c47bf5d5a5b0ee757ea31fc0aaef06d5c0c1",
   "packages": {
-    "@colibri/contract-bindings": {
-      "bump": "minor",
-      "reason": "Add the default-on includeColibri generation option and --no-colibri CLI switch to omit Core convenience re-exports.",
-      "apiReview": "The optional boolean preserves existing output by default. Opting out removes the convenience module, generated client re-exports and fresh package subpath; Core remains required and the writer still preserves existing files and scaffolds."
-    },
-    "@colibri/core": {
-      "bump": "minor",
-      "reason": "Add granular frontend entrypoints and standalone contract reads through existing pipelines.",
-      "apiReview": "Additive exports preserve existing clients, constructor identity, process behavior and pipeline composition; thin steps import their own processes."
-    },
     "@colibri/react": {
-      "bump": "initial",
-      "initialVersion": "0.1.0",
-      "reason": "Introduce headless React bindings for the Colibri SDK.",
-      "apiReview": "Initial provider, connection, query, contract, transaction, assets, events, SEP and session APIs. Ecosystem adapters are isolated under /ecosystem/freighter and /ecosystem/stellar-wallets-kit; the unreleased preview removes Freighter from the general /wallets entrypoint and derives supported vendor signatures from upstream types. Disconnect notifications and rejected network updates terminate observation until explicit reconnection; new private lifecycle helpers preserve the public method signatures.",
-      "dependencies": {
-        "@colibri/core": "^1.2.0"
-      }
+      "bump": "minor",
+      "reason": "Support consumer migrations with explicit wallet authorization entries, optional async clients, structural client identity and shared query utilities.",
+      "apiReview": "Additive APIs preserve current hooks and explicit signing policies. Generated client identity no longer depends on private Core class fields. ABI keys use full-content SHA-256 fingerprints; disabled clients cannot fetch. Wallet authorization validates address, network, expiry and payload preservation. Token precision reads share a five-minute cache."
     }
   }
 }

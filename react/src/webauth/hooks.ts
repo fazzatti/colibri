@@ -20,7 +20,7 @@ import {
   type MutationControls,
   type QueryControls,
 } from "@/query/options.ts";
-import { useColibriMutation } from "@/query/mutation.ts";
+import { useColibriMutation } from "@/query/mutation/hook.ts";
 import { ColibriReactError, ReactCode } from "@/errors/index.ts";
 /** Discover a SEP-10/45 client. Pass a distinct scope for custom fetchers or discovery policies. */
 export function useWebAuthClient(

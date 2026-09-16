@@ -1,17 +1,24 @@
+import type { WalletAuthEntryOptions } from "@/wallets/auth-entry/index.ts";
 import type * as Kit from "@creit.tech/stellar-wallets-kit/sdk";
-import type { MessageSigner, Signer } from "@colibri/core/signers";
+import type {
+  AuthEntrySigner,
+  MessageSigner,
+  Signer,
+} from "@colibri/core/signers";
 
 /** Published Kit 2.6+ API used by the adapter; the application owns initialization. */
-export type StellarWalletsKitApi = Pick<
-  (typeof Kit)["StellarWalletsKit"],
-  | "authModal"
-  | "getAddress"
-  | "getNetwork"
-  | "signTransaction"
-  | "selectedModule"
-  | "disconnect"
-  | "on"
->;
+export type StellarWalletsKitApi =
+  & Pick<
+    (typeof Kit)["StellarWalletsKit"],
+    | "authModal"
+    | "getAddress"
+    | "getNetwork"
+    | "signTransaction"
+    | "selectedModule"
+    | "disconnect"
+    | "on"
+  >
+  & Partial<Pick<(typeof Kit)["StellarWalletsKit"], "signAuthEntry">>;
 
 /** Account and module for which the application declares signing capabilities. */
 export interface WalletsKitAccount {
@@ -27,6 +34,8 @@ export interface WalletsKitAccount {
 export interface WalletsKitCapabilities {
   /** Adapt Kit transaction signing for this G-address. Omitted means unavailable. */
   envelope?: boolean;
+  /** Opt in with createWalletAuthEntrySigner; connection-only bundles do not load XDR. */
+  authEntry?: (options: WalletAuthEntryOptions) => AuthEntrySigner;
   /** Additional application-owned Core signers, including contract-account authorization. */
   signers?: readonly Signer[];
   /** Application-owned SEP-53 message signer, if supported by this wallet. */

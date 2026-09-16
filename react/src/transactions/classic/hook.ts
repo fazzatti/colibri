@@ -12,7 +12,7 @@ import type { UseMutationResult } from "@/shared/types.ts";
 import type { MutationControls } from "@/query/options.ts";
 import { useColibriConfig } from "@/context/provider.ts";
 import { useRpc } from "@/rpc/hooks.ts";
-import { useColibriMutation } from "@/query/mutation.ts";
+import { useColibriMutation } from "@/query/mutation/hook.ts";
 /** Execute the existing classic pipeline. Supply a stable pipeline to retain caller-installed plugins. */
 export function useClassicTransaction(
   options:

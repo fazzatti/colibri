@@ -227462,6 +227462,114 @@
         "kind": "typeAlias"
       }
     ],
+    "ContractIdentity": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "methods": [
+            {
+              "kind": "method",
+              "name": "getContractId",
+              "params": [],
+              "returnType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getSpec",
+              "params": [],
+              "returnType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "entries",
+                      "readonly": true,
+                      "tsType": {
+                        "kind": "typeOperator",
+                        "value": {
+                          "operator": "readonly",
+                          "tsType": {
+                            "kind": "array",
+                            "value": {
+                              "kind": "typeLiteral",
+                              "value": {
+                                "methods": [
+                                  {
+                                    "kind": "method",
+                                    "name": "toXdr",
+                                    "params": [
+                                      {
+                                        "kind": "identifier",
+                                        "name": "format",
+                                        "optional": false,
+                                        "tsType": {
+                                          "kind": "literal",
+                                          "repr": "base64",
+                                          "value": {
+                                            "kind": "string",
+                                            "string": "base64"
+                                          }
+                                        }
+                                      }
+                                    ],
+                                    "returnType": {
+                                      "kind": "keyword",
+                                      "repr": "string",
+                                      "value": "string"
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "properties": [
+            {
+              "name": "networkConfig",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "networkPassphrase",
+                      "readonly": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    },
+                    {
+                      "name": "rpcUrl",
+                      "optional": true,
+                      "readonly": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
     "ContractInterfaceAnalysis": [
       {
         "declarationKind": "export",
@@ -234293,9 +234401,9 @@
             {
               "constraint": {
                 "kind": "typeRef",
-                "repr": "Contract",
+                "repr": "ContractIdentity",
                 "value": {
-                  "typeName": "Contract"
+                  "typeName": "ContractIdentity"
                 }
               },
               "name": "T"
@@ -238127,53 +238235,108 @@
       {
         "declarationKind": "export",
         "def": {
-          "tsType": {
-            "kind": "typeRef",
-            "repr": "Pick",
-            "value": {
-              "typeName": "Pick",
-              "typeParams": [
-                {
-                  "kind": "typeRef",
-                  "repr": "Contract",
-                  "value": {
-                    "typeName": "Contract"
-                  }
-                },
-                {
-                  "kind": "union",
-                  "value": [
+          "methods": [
+            {
+              "kind": "method",
+              "name": "getContractId",
+              "params": [],
+              "returnType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getSpec",
+              "params": [],
+              "returnType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
                     {
-                      "kind": "literal",
-                      "repr": "networkConfig",
-                      "value": {
-                        "kind": "string",
-                        "string": "networkConfig"
-                      }
-                    },
-                    {
-                      "kind": "literal",
-                      "repr": "getContractId",
-                      "value": {
-                        "kind": "string",
-                        "string": "getContractId"
-                      }
-                    },
-                    {
-                      "kind": "literal",
-                      "repr": "getSpec",
-                      "value": {
-                        "kind": "string",
-                        "string": "getSpec"
+                      "name": "entries",
+                      "readonly": true,
+                      "tsType": {
+                        "kind": "typeOperator",
+                        "value": {
+                          "operator": "readonly",
+                          "tsType": {
+                            "kind": "array",
+                            "value": {
+                              "kind": "typeLiteral",
+                              "value": {
+                                "methods": [
+                                  {
+                                    "kind": "method",
+                                    "name": "toXdr",
+                                    "params": [
+                                      {
+                                        "kind": "identifier",
+                                        "name": "format",
+                                        "optional": false,
+                                        "tsType": {
+                                          "kind": "literal",
+                                          "repr": "base64",
+                                          "value": {
+                                            "kind": "string",
+                                            "string": "base64"
+                                          }
+                                        }
+                                      }
+                                    ],
+                                    "returnType": {
+                                      "kind": "keyword",
+                                      "repr": "string",
+                                      "value": "string"
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
                       }
                     }
                   ]
                 }
-              ]
+              }
             }
-          }
+          ],
+          "properties": [
+            {
+              "name": "networkConfig",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "networkPassphrase",
+                      "readonly": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    },
+                    {
+                      "name": "rpcUrl",
+                      "optional": true,
+                      "readonly": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
         },
-        "kind": "typeAlias"
+        "kind": "interface"
       }
     ],
     "ContractInterfaceAnalysis": [
@@ -239341,11 +239504,21 @@
             {
               "name": "contract",
               "tsType": {
-                "kind": "typeRef",
-                "repr": "C",
-                "value": {
-                  "typeName": "C"
-                }
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "typeRef",
+                    "repr": "C",
+                    "value": {
+                      "typeName": "C"
+                    }
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "undefined",
+                    "value": "undefined"
+                  }
+                ]
               }
             },
             {
@@ -249761,53 +249934,108 @@
       {
         "declarationKind": "export",
         "def": {
-          "tsType": {
-            "kind": "typeRef",
-            "repr": "Pick",
-            "value": {
-              "typeName": "Pick",
-              "typeParams": [
-                {
-                  "kind": "typeRef",
-                  "repr": "Contract",
-                  "value": {
-                    "typeName": "Contract"
-                  }
-                },
-                {
-                  "kind": "union",
-                  "value": [
+          "methods": [
+            {
+              "kind": "method",
+              "name": "getContractId",
+              "params": [],
+              "returnType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getSpec",
+              "params": [],
+              "returnType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
                     {
-                      "kind": "literal",
-                      "repr": "networkConfig",
-                      "value": {
-                        "kind": "string",
-                        "string": "networkConfig"
-                      }
-                    },
-                    {
-                      "kind": "literal",
-                      "repr": "getContractId",
-                      "value": {
-                        "kind": "string",
-                        "string": "getContractId"
-                      }
-                    },
-                    {
-                      "kind": "literal",
-                      "repr": "getSpec",
-                      "value": {
-                        "kind": "string",
-                        "string": "getSpec"
+                      "name": "entries",
+                      "readonly": true,
+                      "tsType": {
+                        "kind": "typeOperator",
+                        "value": {
+                          "operator": "readonly",
+                          "tsType": {
+                            "kind": "array",
+                            "value": {
+                              "kind": "typeLiteral",
+                              "value": {
+                                "methods": [
+                                  {
+                                    "kind": "method",
+                                    "name": "toXdr",
+                                    "params": [
+                                      {
+                                        "kind": "identifier",
+                                        "name": "format",
+                                        "optional": false,
+                                        "tsType": {
+                                          "kind": "literal",
+                                          "repr": "base64",
+                                          "value": {
+                                            "kind": "string",
+                                            "string": "base64"
+                                          }
+                                        }
+                                      }
+                                    ],
+                                    "returnType": {
+                                      "kind": "keyword",
+                                      "repr": "string",
+                                      "value": "string"
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
                       }
                     }
                   ]
                 }
-              ]
+              }
             }
-          }
+          ],
+          "properties": [
+            {
+              "name": "networkConfig",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "networkPassphrase",
+                      "readonly": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    },
+                    {
+                      "name": "rpcUrl",
+                      "optional": true,
+                      "readonly": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
         },
-        "kind": "typeAlias"
+        "kind": "interface"
       }
     ],
     "ContractInterfaceAnalysis": [
@@ -284754,95 +284982,147 @@
         "declarationKind": "export",
         "def": {
           "tsType": {
-            "kind": "typeRef",
-            "repr": "Pick",
-            "value": {
-              "typeName": "Pick",
-              "typeParams": [
-                {
-                  "kind": "indexedAccess",
-                  "value": {
-                    "indexType": {
-                      "kind": "literal",
-                      "repr": "StellarWalletsKit",
+            "kind": "intersection",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "Pick",
+                "value": {
+                  "typeName": "Pick",
+                  "typeParams": [
+                    {
+                      "kind": "indexedAccess",
                       "value": {
-                        "kind": "string",
-                        "string": "StellarWalletsKit"
+                        "indexType": {
+                          "kind": "literal",
+                          "repr": "StellarWalletsKit",
+                          "value": {
+                            "kind": "string",
+                            "string": "StellarWalletsKit"
+                          }
+                        },
+                        "objType": {
+                          "kind": "parenthesized",
+                          "value": {
+                            "kind": "typeQuery",
+                            "repr": "Kit",
+                            "value": "Kit"
+                          }
+                        }
                       }
                     },
-                    "objType": {
-                      "kind": "parenthesized",
-                      "value": {
-                        "kind": "typeQuery",
-                        "repr": "Kit",
-                        "value": "Kit"
-                      }
+                    {
+                      "kind": "union",
+                      "value": [
+                        {
+                          "kind": "literal",
+                          "repr": "authModal",
+                          "value": {
+                            "kind": "string",
+                            "string": "authModal"
+                          }
+                        },
+                        {
+                          "kind": "literal",
+                          "repr": "getAddress",
+                          "value": {
+                            "kind": "string",
+                            "string": "getAddress"
+                          }
+                        },
+                        {
+                          "kind": "literal",
+                          "repr": "getNetwork",
+                          "value": {
+                            "kind": "string",
+                            "string": "getNetwork"
+                          }
+                        },
+                        {
+                          "kind": "literal",
+                          "repr": "signTransaction",
+                          "value": {
+                            "kind": "string",
+                            "string": "signTransaction"
+                          }
+                        },
+                        {
+                          "kind": "literal",
+                          "repr": "selectedModule",
+                          "value": {
+                            "kind": "string",
+                            "string": "selectedModule"
+                          }
+                        },
+                        {
+                          "kind": "literal",
+                          "repr": "disconnect",
+                          "value": {
+                            "kind": "string",
+                            "string": "disconnect"
+                          }
+                        },
+                        {
+                          "kind": "literal",
+                          "repr": "on",
+                          "value": {
+                            "kind": "string",
+                            "string": "on"
+                          }
+                        }
+                      ]
                     }
-                  }
-                },
-                {
-                  "kind": "union",
-                  "value": [
+                  ]
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "Partial",
+                "value": {
+                  "typeName": "Partial",
+                  "typeParams": [
                     {
-                      "kind": "literal",
-                      "repr": "authModal",
+                      "kind": "typeRef",
+                      "repr": "Pick",
                       "value": {
-                        "kind": "string",
-                        "string": "authModal"
-                      }
-                    },
-                    {
-                      "kind": "literal",
-                      "repr": "getAddress",
-                      "value": {
-                        "kind": "string",
-                        "string": "getAddress"
-                      }
-                    },
-                    {
-                      "kind": "literal",
-                      "repr": "getNetwork",
-                      "value": {
-                        "kind": "string",
-                        "string": "getNetwork"
-                      }
-                    },
-                    {
-                      "kind": "literal",
-                      "repr": "signTransaction",
-                      "value": {
-                        "kind": "string",
-                        "string": "signTransaction"
-                      }
-                    },
-                    {
-                      "kind": "literal",
-                      "repr": "selectedModule",
-                      "value": {
-                        "kind": "string",
-                        "string": "selectedModule"
-                      }
-                    },
-                    {
-                      "kind": "literal",
-                      "repr": "disconnect",
-                      "value": {
-                        "kind": "string",
-                        "string": "disconnect"
-                      }
-                    },
-                    {
-                      "kind": "literal",
-                      "repr": "on",
-                      "value": {
-                        "kind": "string",
-                        "string": "on"
+                        "typeName": "Pick",
+                        "typeParams": [
+                          {
+                            "kind": "indexedAccess",
+                            "value": {
+                              "indexType": {
+                                "kind": "literal",
+                                "repr": "StellarWalletsKit",
+                                "value": {
+                                  "kind": "string",
+                                  "string": "StellarWalletsKit"
+                                }
+                              },
+                              "objType": {
+                                "kind": "parenthesized",
+                                "value": {
+                                  "kind": "typeQuery",
+                                  "repr": "Kit",
+                                  "value": "Kit"
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "kind": "literal",
+                            "repr": "signAuthEntry",
+                            "value": {
+                              "kind": "string",
+                              "string": "signAuthEntry"
+                            }
+                          }
+                        ]
                       }
                     }
                   ]
                 }
-              ]
-            }
+              }
+            ]
           }
         },
         "kind": "typeAlias"
@@ -284945,6 +285225,76 @@
           }
         },
         "kind": "typeAlias"
+      }
+    ],
+    "WalletAuthEntryOptions": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "methods": [
+            {
+              "kind": "method",
+              "name": "signAuthEntry",
+              "params": [
+                {
+                  "kind": "identifier",
+                  "name": "xdr",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                },
+                {
+                  "kind": "identifier",
+                  "name": "networkPassphrase",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                }
+              ],
+              "returnType": {
+                "kind": "typeRef",
+                "repr": "Promise",
+                "value": {
+                  "typeName": "Promise",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "properties": [
+            {
+              "name": "address",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Ed25519PublicKey",
+                "value": {
+                  "typeName": "Ed25519PublicKey"
+                }
+              }
+            },
+            {
+              "name": "networkPassphrase",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
       }
     ],
     "WalletConnection": [
@@ -285219,6 +285569,37 @@
               }
             },
             {
+              "name": "authEntry",
+              "optional": true,
+              "tsType": {
+                "kind": "fnOrConstructor",
+                "value": {
+                  "constructor": false,
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "options",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "WalletAuthEntryOptions",
+                        "value": {
+                          "typeName": "WalletAuthEntryOptions"
+                        }
+                      }
+                    }
+                  ],
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "AuthEntrySigner",
+                    "value": {
+                      "typeName": "AuthEntrySigner"
+                    }
+                  }
+                }
+              }
+            },
+            {
               "name": "signers",
               "optional": true,
               "tsType": {
@@ -285252,6 +285633,316 @@
           ]
         },
         "kind": "interface"
+      }
+    ]
+  },
+  "@colibri/react/wallets/auth-entry": {
+    "createWalletAuthEntrySigner": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "options",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "WalletAuthEntryOptions",
+                "value": {
+                  "typeName": "WalletAuthEntryOptions"
+                }
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "AuthEntrySigner",
+            "value": {
+              "typeName": "AuthEntrySigner"
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "WalletAuthEntryOptions": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "methods": [
+            {
+              "kind": "method",
+              "name": "signAuthEntry",
+              "params": [
+                {
+                  "kind": "identifier",
+                  "name": "xdr",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                },
+                {
+                  "kind": "identifier",
+                  "name": "networkPassphrase",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                }
+              ],
+              "returnType": {
+                "kind": "typeRef",
+                "repr": "Promise",
+                "value": {
+                  "typeName": "Promise",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "properties": [
+            {
+              "name": "address",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Ed25519PublicKey",
+                "value": {
+                  "typeName": "Ed25519PublicKey"
+                }
+              }
+            },
+            {
+              "name": "networkPassphrase",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ]
+  },
+  "@colibri/react/query/mutation": {
+    "MutationControls": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "Omit",
+            "value": {
+              "typeName": "Omit",
+              "typeParams": [
+                {
+                  "kind": "typeRef",
+                  "repr": "UseMutationOptions",
+                  "value": {
+                    "typeName": "UseMutationOptions",
+                    "typeParams": [
+                      {
+                        "kind": "typeRef",
+                        "repr": "T",
+                        "value": {
+                          "typeName": "T"
+                        }
+                      },
+                      {
+                        "kind": "typeRef",
+                        "repr": "Error",
+                        "value": {
+                          "typeName": "Error"
+                        }
+                      },
+                      {
+                        "kind": "typeRef",
+                        "repr": "A",
+                        "value": {
+                          "typeName": "A"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "union",
+                  "value": [
+                    {
+                      "kind": "literal",
+                      "repr": "mutationFn",
+                      "value": {
+                        "kind": "string",
+                        "string": "mutationFn"
+                      }
+                    },
+                    {
+                      "kind": "literal",
+                      "repr": "retry",
+                      "value": {
+                        "kind": "string",
+                        "string": "retry"
+                      }
+                    },
+                    {
+                      "kind": "literal",
+                      "repr": "scope",
+                      "value": {
+                        "kind": "string",
+                        "string": "scope"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "typeParams": [
+            {
+              "name": "T"
+            },
+            {
+              "name": "A"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "useColibriMutation": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "execute",
+              "optional": false,
+              "tsType": {
+                "kind": "fnOrConstructor",
+                "value": {
+                  "constructor": false,
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "args",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "A",
+                        "value": {
+                          "typeName": "A"
+                        }
+                      }
+                    }
+                  ],
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Promise",
+                    "value": {
+                      "typeName": "Promise",
+                      "typeParams": [
+                        {
+                          "kind": "typeRef",
+                          "repr": "T",
+                          "value": {
+                            "typeName": "T"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "kind": "assign",
+              "left": {
+                "kind": "identifier",
+                "name": "options",
+                "optional": false,
+                "tsType": {
+                  "kind": "typeRef",
+                  "repr": "MutationControls",
+                  "value": {
+                    "typeName": "MutationControls",
+                    "typeParams": [
+                      {
+                        "kind": "typeRef",
+                        "repr": "T",
+                        "value": {
+                          "typeName": "T"
+                        }
+                      },
+                      {
+                        "kind": "typeRef",
+                        "repr": "A",
+                        "value": {
+                          "typeName": "A"
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "right": "[UNSUPPORTED]"
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "UseMutationResult",
+            "value": {
+              "typeName": "UseMutationResult",
+              "typeParams": [
+                {
+                  "kind": "typeRef",
+                  "repr": "T",
+                  "value": {
+                    "typeName": "T"
+                  }
+                },
+                {
+                  "kind": "typeRef",
+                  "repr": "Error",
+                  "value": {
+                    "typeName": "Error"
+                  }
+                },
+                {
+                  "kind": "typeRef",
+                  "repr": "A",
+                  "value": {
+                    "typeName": "A"
+                  }
+                }
+              ]
+            }
+          },
+          "typeParams": [
+            {
+              "name": "T"
+            },
+            {
+              "name": "A"
+            }
+          ]
+        },
+        "kind": "function"
       }
     ]
   },

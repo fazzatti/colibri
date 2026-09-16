@@ -1,5 +1,5 @@
 "use client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryResult } from "@/shared/types.ts";
 import { Asset } from "@colibri/core/ledger";
 import type { ContractId, Ed25519PublicKey } from "@colibri/core/strkey";
@@ -30,6 +30,7 @@ export function useBalance(
   address: Ed25519PublicKey | ContractId | undefined,
   query: QueryControls<Balance> = {},
 ): UseQueryResult<Balance, Error> {
+  const client = useQueryClient();
   const config = useColibriConfig();
   const reader = useLedgerEntries();
   const rpc = useRpc();
@@ -44,7 +45,15 @@ export function useBalance(
         });
         const [raw, decimals] = await Promise.all([
           token.balance({ id: address! }),
-          token.decimals(),
+          client.fetchQuery(
+            colibriQueryOptions(
+              config,
+              "token-decimals",
+              asset.contractId,
+              () => token.decimals(),
+              { staleTime: 300_000 },
+            ),
+          ),
         ]);
         return { asset, address: address!, raw, decimals };
       }
@@ -72,6 +81,7 @@ export function useTokenMetadata(
   contractId: ContractId,
   query: QueryControls<TokenMetadata> = {},
 ): UseQueryResult<TokenMetadata, Error> {
+  const client = useQueryClient();
   const config = useColibriConfig();
   const rpc = useRpc();
   return useQuery(
@@ -85,7 +95,15 @@ export function useTokenMetadata(
       const [name, symbol, decimals] = await Promise.all([
         token.name(),
         token.symbol(),
-        token.decimals(),
+        client.fetchQuery(
+          colibriQueryOptions(
+            config,
+            "token-decimals",
+            contractId,
+            () => token.decimals(),
+            { staleTime: 300_000 },
+          ),
+        ),
       ]);
       return { name, symbol, decimals };
     }, query),

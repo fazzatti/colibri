@@ -2,8 +2,8 @@
 import { ColibriReactError, ReactCode } from "@/errors/index.ts";
 import type { UseMutationResult } from "@/shared/types.ts";
 import { useColibriConfig } from "@/context/provider.ts";
-import { useColibriMutation } from "@/query/mutation.ts";
-import { contractIdentity } from "@/contracts/identity.ts";
+import { useColibriMutation } from "@/query/mutation/hook.ts";
+import { assertContractNetwork } from "@/contracts/network.ts";
 import type {
   ContractIdentity,
   InvokeArgs,
@@ -22,7 +22,7 @@ export function useContractInvoke<
 ): UseMutationResult<InvokeResult<C, M>, Error, InvokeArgs<C, M>> {
   const config = useColibriConfig();
   return useColibriMutation((args: InvokeArgs<C, M>) => {
-    contractIdentity(config, contract);
+    assertContractNetwork(config, contract);
     const member = contract[method] as {
       invoke: (args: InvokeArgs<C, M>) => Promise<InvokeResult<C, M>>;
     };

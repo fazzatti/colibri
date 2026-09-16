@@ -12,6 +12,7 @@ import type {
   StellarWalletsKitApi,
   StellarWalletsKitConnectorOptions,
   WalletsKitAccount,
+  WalletsKitCapabilities,
 } from "@/ecosystem/stellar-wallets-kit/types.ts";
 
 /**
@@ -91,12 +92,43 @@ class KitConnector implements WalletConnector {
     const capabilities = this.options.capabilities(account);
     const signers = [...(capabilities.signers ?? [])];
     if (capabilities.envelope) signers.unshift(this.envelope(account));
+    if (capabilities.authEntry) {
+      signers.push(this.authEntry(account, capabilities.authEntry));
+    }
     return {
       address: account.address,
       networkPassphrase: account.networkPassphrase,
       signers,
       messageSigner: capabilities.messageSigner,
     };
+  }
+
+  private authEntry(
+    account: WalletsKitAccount,
+    create: NonNullable<WalletsKitCapabilities["authEntry"]>,
+  ) {
+    const { address, networkPassphrase } = account;
+    if (!this.kit.signAuthEntry || !StrKey.isValidEd25519PublicKey(address)) {
+      throw new ColibriReactError(
+        ReactCode.UNSUPPORTED_CAPABILITY,
+        "Kit auth-entry signing requires a G-address and signAuthEntry capability",
+      );
+    }
+    const sign = this.kit.signAuthEntry.bind(this.kit);
+    const revision = this.revision;
+    return create({
+      address,
+      networkPassphrase,
+      signAuthEntry: async (xdr) => {
+        await this.assertAccount(account, revision);
+        const signed = await sign(xdr, { address, networkPassphrase });
+        if (signed.signerAddress && signed.signerAddress !== address) {
+          throw connectionChanged();
+        }
+        await this.assertAccount(account, revision);
+        return signed.signedAuthEntry;
+      },
+    });
   }
 
   private envelope(account: WalletsKitAccount) {

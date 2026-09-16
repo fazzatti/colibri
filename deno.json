@@ -38,7 +38,8 @@
     "archunit": "npm:archunit@2.4.0",
     "crap4ts-tool": "npm:@alperlabs/crap4ts@0.2.1",
     "resvg-test": "npm:@resvg/resvg-js@2.6.2",
-    "jsr:@colibri/contract-bindings": "./contract-bindings"
+    "jsr:@colibri/contract-bindings": "./contract-bindings",
+    "colibri-internal/previous-core": "jsr:@colibri/core@1.1.1"
   },
   "tasks": {
     "release:init": "deno run -A _tools/releases/cli.ts init",

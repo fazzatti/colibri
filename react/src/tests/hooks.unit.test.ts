@@ -254,6 +254,19 @@ describe("React feature hooks", () => {
       assertEquals(token.data!.decimals, 9);
       assertEquals(metadata.data!.symbol, "TOK");
       assertEquals(
+        _decimals.calls.length,
+        1,
+        "balance and metadata share precision",
+      );
+      await act(async () => {
+        await token.refetch();
+      });
+      assertEquals(
+        _decimals.calls.length,
+        1,
+        "balance refresh reuses precision",
+      );
+      assertEquals(
         trust.calls[0].args[0].asset?.toString(),
         new Asset("USD", address).toString(),
       );

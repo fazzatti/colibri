@@ -11,7 +11,7 @@ import type {
 import { useColibriConfig, useConnection } from "@/context/provider.ts";
 import type { ColibriConfig, WalletConnection } from "@/context/config.ts";
 import { ColibriReactError, ReactCode } from "@/errors/index.ts";
-import { useColibriMutation } from "@/query/mutation.ts";
+import { useColibriMutation } from "@/query/mutation/hook.ts";
 import type { MutationControls } from "@/query/options.ts";
 import type { UseMutationResult } from "@/shared/types.ts";
 /** Reject a capability retained after the wallet identity or network changed. */

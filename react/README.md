@@ -5,7 +5,7 @@ signers and transaction pipelines. Read account and token data, retain full
 contract clients, invoke contracts, submit Classic transactions, and observe
 wallets, sessions and events through React.
 
-**0.1 preview** · Core **1.2+** within 1.x · React **19.1+** within 19.x ·
+**0.2 preview** · Core **1.2+** within 1.x · React **19.1+** within 19.x ·
 TanStack Query **5.87+** within 5.x.
 
 ## Contents
@@ -615,3 +615,30 @@ subscriptions and configs when their scope ends.
 - [Contract clients, invocation and pipeline recipes](https://github.com/fazzatti/colibri/blob/dev/docs/packages/react/contracts-and-transactions.md)
 - [Frontend imports and bundle measurements](https://github.com/fazzatti/colibri/blob/dev/docs/getting-started/browser-bundles.md)
 - [Complete React API reference](https://jsr.io/@colibri/react/doc)
+
+## Consumer migration additions in 0.2
+
+`useContractRead` accepts `contract: undefined` while an application loads an
+ABI or configures plugins. It remains disabled, including manual refetch, until
+the real client is provided. Clients use a structural public identity, so a
+compatible older Core minor does not fail because of private class members.
+Argument/result inference and the client's existing pipelines remain intact.
+Query keys contain a SHA-256 ABI fingerprint. Current XDR is checked before a
+cached digest is reused, so replacing or changing a spec invalidates its key.
+
+`useBalance` and `useTokenMetadata` share SEP-41 decimal precision in the same
+QueryClient for five minutes. The balance itself retains its normal freshness.
+Invalidate the network-scoped `token-decimals` query after a known token
+upgrade.
+
+`createWalletAuthEntrySigner` from `/wallets/auth-entry` adapts an explicitly
+supported G-account wallet capability. Wallets Kit can opt in using
+`authEntry: createWalletAuthEntrySigner`, independently of `envelope: true`.
+Returned authorizations must preserve the requested account, nonce, invocation
+and expiry. See the wallet guide for the complete workflow.
+
+`useColibriMutation` is exported from `/query/mutation` for application-owned
+SDK facades and compound actions. It retains Colibri's network-scoped
+serialization and never retries automatically. It does not infer transaction
+phases or replace a facade's validation, signing, submission or receipt
+handling.
