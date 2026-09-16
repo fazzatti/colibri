@@ -13,7 +13,7 @@ import type {
  */
 export class ColibriError<
   C extends string = string,
-  M extends BaseMeta = BaseMeta
+  M extends BaseMeta = BaseMeta,
 > extends Error {
   /** High-level Colibri error domain. */
   readonly domain: ErrorDomain;
@@ -87,14 +87,18 @@ export class ColibriError<
     meta?: BaseMeta;
     cause?: unknown;
   }): ColibriError {
-    return new ColibriError({
+    const Failure = (args?.code ?? "GEN_000") === "GEN_000"
+      ? UnexpectedError
+      : ColibriError;
+    const payload: ColibriErrorShape<string, BaseMeta> = {
       domain: args?.domain ?? "core",
       source: args?.source ?? "colibri",
       code: (args?.code ?? "GEN_000") as string,
       message: args?.message ?? "Unexpected error",
       details: args?.details ?? "An unexpected error occurred",
       meta: { ...args?.meta, cause: args?.cause },
-    });
+    };
+    return new Failure(payload);
   }
 
   /**
@@ -106,11 +110,14 @@ export class ColibriError<
    */
   static fromUnknown(
     error: unknown,
-    ctx?: Partial<ColibriErrorShape<string, BaseMeta>>
+    ctx?: Partial<ColibriErrorShape<string, BaseMeta>>,
   ): ColibriError {
     if (error instanceof ColibriError) return error;
     if (error instanceof Error) {
-      return new ColibriError({
+      const Failure = (ctx?.code ?? "GEN_000") === "GEN_000"
+        ? UnexpectedError
+        : ColibriError;
+      const payload: ColibriErrorShape<string, BaseMeta> = {
         domain: ctx?.domain ?? "core",
         source: ctx?.source ?? "colibri",
         code: ctx?.code ?? "GEN_000",
@@ -118,8 +125,22 @@ export class ColibriError<
         details: ctx?.details ?? error.stack,
         diagnostic: ctx?.diagnostic,
         meta: { ...ctx?.meta, cause: error },
-      });
+      };
+      return new Failure(payload);
     }
     return ColibriError.unexpected({ cause: error, ...ctx });
+  }
+}
+
+/** Stable fallback for an unexpected failure without a domain-specific code. */
+export enum GeneralCode {
+  /** Unexpected boundary failure. */
+  UNEXPECTED = "GEN_000",
+}
+/** Unexpected fallback failure. Library-owned failures should prefer a domain-specific subclass. */
+export class UnexpectedError extends ColibriError<GeneralCode.UNEXPECTED> {
+  /** Preserve context while fixing the general fallback code. */
+  constructor(context: Omit<ColibriErrorShape<string, BaseMeta>, "code">) {
+    super({ ...context, code: GeneralCode.UNEXPECTED });
   }
 }

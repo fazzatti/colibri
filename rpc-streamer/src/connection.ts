@@ -1,6 +1,12 @@
 import { Server } from "stellar-sdk/rpc";
 import type { StreamerArchiveConfig, StreamerRpcConfig } from "@/types.ts";
-import { RPCStreamerError, RPCStreamerErrorCode as Code } from "@/errors.ts";
+import {
+  RPCStreamerArchiveConnectionFailedError,
+  RPCStreamerInvalidArchiveConnectionError,
+  RPCStreamerInvalidLiveConnectionError,
+  RPCStreamerLiveConnectionFailedError,
+  RPCStreamerMissingLiveRpcUrlError,
+} from "@/errors.ts";
 
 /** Resolve exactly one live connection; never replace a caller-owned client. @internal */
 export function resolveLiveRpc(config: StreamerRpcConfig): Server {
@@ -12,16 +18,14 @@ export function resolveLiveRpc(config: StreamerRpcConfig): Server {
     count !== 1 ||
     (config.allowHttp !== undefined && config.rpcUrl === undefined)
   ) {
-    throw new RPCStreamerError(
-      Code.INVALID_LIVE_CONNECTION,
+    throw new RPCStreamerInvalidLiveConnectionError(
       "Provide exactly one of rpcUrl, networkConfig, or rpc; allowHttp belongs to rpcUrl.",
     );
   }
   if (config.rpc) return config.rpc;
   const url = config.rpcUrl ?? config.networkConfig?.rpcUrl;
   if (!url) {
-    throw new RPCStreamerError(
-      Code.MISSING_LIVE_RPC_URL,
+    throw new RPCStreamerMissingLiveRpcUrlError(
       "The selected network must contain an RPC URL.",
     );
   }
@@ -30,8 +34,7 @@ export function resolveLiveRpc(config: StreamerRpcConfig): Server {
       allowHttp: config.allowHttp ?? config.networkConfig?.allowHttp ?? false,
     });
   } catch (cause) {
-    throw new RPCStreamerError(
-      Code.LIVE_CONNECTION_FAILED,
+    throw new RPCStreamerLiveConnectionFailedError(
       "Failed to create the live RPC client",
       undefined,
       cause as Error,
@@ -48,8 +51,7 @@ export function resolveArchiveRpc(
     (config.archiveRpcUrl !== undefined ||
       config.archiveAllowHttp !== undefined)
   ) {
-    throw new RPCStreamerError(
-      Code.INVALID_ARCHIVE_CONNECTION,
+    throw new RPCStreamerInvalidArchiveConnectionError(
       "archiveRpc cannot be combined with archiveRpcUrl or archiveAllowHttp.",
     );
   }
@@ -61,8 +63,7 @@ export function resolveArchiveRpc(
         config.networkConfig?.allowHttp ?? false,
     });
   } catch (cause) {
-    throw new RPCStreamerError(
-      Code.ARCHIVE_CONNECTION_FAILED,
+    throw new RPCStreamerArchiveConnectionFailedError(
       "Failed to create the archive RPC client",
       undefined,
       cause as Error,

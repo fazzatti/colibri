@@ -1,6 +1,9 @@
 import type { ScValLike } from "@/common/types/external.ts";
 import type { Spec } from "@/contract/spec.ts";
-import { Code, SorobanValueError } from "@/soroban-types/error.ts";
+import {
+  SorobanInvalidSchemaError,
+  SorobanInvalidValueError,
+} from "@/soroban-types/error.ts";
 import { createSorobanType } from "@/soroban-types/codecs/custom.ts";
 import type { SorobanCodec } from "@/soroban-types/codecs/codec.ts";
 import type { SorobanValue } from "@/soroban-types/values/value.ts";
@@ -65,11 +68,7 @@ export function createSorobanUnion<Input, Output = Input>(
     entry.value.name.toString() === name
   );
   if (variants?.type !== "scSpecEntryUdtUnionV0") {
-    throw new SorobanValueError(
-      Code.INVALID_SCHEMA,
-      name,
-      "expected union declaration",
-    );
+    throw new SorobanInvalidSchemaError(name, "expected union declaration");
   }
   const result = Object.defineProperties(
     Object.create(null),
@@ -79,8 +78,7 @@ export function createSorobanUnion<Input, Output = Input>(
     const tag = item.value.name.toString();
     const isVoid = item.type === "scSpecUdtUnionCaseVoidV0";
     if (Object.hasOwn(result, tag)) {
-      throw new SorobanValueError(
-        Code.INVALID_SCHEMA,
+      throw new SorobanInvalidSchemaError(
         name,
         `variant conflicts with factory member ${tag}`,
       );
@@ -90,11 +88,7 @@ export function createSorobanUnion<Input, Output = Input>(
       value: (...values: unknown[]) => {
         const input = isVoid ? { tag } : { tag, values };
         if (isVoid && values.length) {
-          throw new SorobanValueError(
-            Code.INVALID_VALUE,
-            name,
-            `${tag} takes no values`,
-          );
+          throw new SorobanInvalidValueError(name, `${tag} takes no values`);
         }
         return factory.from(input as Input);
       },

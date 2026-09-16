@@ -1,4 +1,3 @@
-import type { Contract } from "@colibri/core/contract";
 /** Generated bound read method. */
 export type ReadMethod = { read: (...args: never[]) => Promise<unknown> };
 /** Generated bound invoke method. */
@@ -29,8 +28,17 @@ export type InvokeArgs<C, M extends keyof C> = C[M] extends InvokeMethod
 export type InvokeResult<C, M extends keyof C> = C[M] extends InvokeMethod
   ? Awaited<ReturnType<C[M]["invoke"]>>
   : never;
-/** Identity needed for correct contract query scoping. */
-export type ContractIdentity = Pick<
-  Contract,
-  "networkConfig" | "getContractId" | "getSpec"
->;
+/** Public structural identity: generated clients may use another compatible Core minor. */
+export interface ContractIdentity {
+  /** Network fields consumed by queries; no dependency on Core's private class members. */
+  readonly networkConfig: {
+    readonly networkPassphrase: string;
+    readonly rpcUrl?: string;
+  };
+  /** Full contract address. */
+  getContractId(): string;
+  /** Embedded or loaded ABI. Replace the spec when its contents change. */
+  getSpec(): {
+    readonly entries: readonly { toXdr(format: "base64"): string }[];
+  };
+}

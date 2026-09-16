@@ -1,25 +1,16 @@
+import { ColibriQueryProvider } from "@colibri/react/provider";
+import { useWallet } from "@colibri/react/wallet";
 /// <reference lib="dom" />
 /** Interactive fixture driven by Playwright against installed public entrypoints. */
 // @deno-types="npm:@types/react@^19.1.13"
 import { createElement as h, StrictMode, useState } from "npm:react@^19.1.1";
 // @deno-types="npm:@types/react-dom@^19.1.9/client"
 import { createRoot } from "npm:react-dom@^19.1.1/client";
-import {
-  dehydrate,
-  QueryClient,
-  QueryClientProvider,
-} from "npm:@tanstack/react-query@^5.87.4";
+import { dehydrate, QueryClient } from "npm:@tanstack/react-query@^5.87.4";
 import { NetworkConfig } from "@colibri/core/network";
 import { LocalSigner } from "@colibri/core";
 import { WebAuthClient, WebAuthToken } from "@colibri/webauth";
-import {
-  ColibriProvider,
-  createColibriConfig,
-  useConnect,
-  useConnection,
-  useDisconnect,
-  type WalletConnection,
-} from "@colibri/react";
+import { createColibriConfig, type WalletConnection } from "@colibri/react";
 import { useTransaction, useWaitForTransaction } from "@colibri/react/rpc";
 import { useSignMessage } from "@colibri/react/signers";
 import {
@@ -135,9 +126,8 @@ if (typeof document !== "undefined") {
     );
   }
   function Controls({ session }: { session: WebAuthSession }) {
-    const connect = useConnect();
-    const disconnect = useDisconnect();
-    const connection = useConnection();
+    const connection = useWallet();
+    const { connect, disconnect } = connection;
     const message = useSignMessage();
     const authentication = useWebAuth(session);
     const sessionState = useSession(session);
@@ -199,17 +189,13 @@ if (typeof document !== "undefined") {
   function App() {
     const [selected, setSelected] = useState(0);
     return h(
-      QueryClientProvider,
-      { client },
+      ColibriQueryProvider,
+      { config: configs[selected], queryClient: client },
       h(
         "div",
         null,
         h("button", { onClick: () => setSelected(1) }, "Change provider"),
-        h(
-          ColibriProvider,
-          { config: configs[selected] },
-          h(Controls, { session: sessions[selected] }),
-        ),
+        h(Controls, { session: sessions[selected] }),
       ),
     );
   }

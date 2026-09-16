@@ -3,6 +3,7 @@
  * @module
  */
 export { createStellarWalletsKitConnector } from "@/ecosystem/stellar-wallets-kit/connector.ts";
+export type { WalletAuthEntryOptions } from "@/wallets/auth-entry/index.ts";
 export type {
   StellarWalletsKitApi,
   StellarWalletsKitConnectorOptions,
@@ -25,3 +26,5 @@ export type {
   SignerKey,
   TransactionXDRBase64,
 } from "@/wallets/index.ts";
+
+export type { WalletSignerOptions } from "@/wallets/signer/index.ts";

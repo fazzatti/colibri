@@ -97,3 +97,5 @@ export type {
   TransactionSource,
   TransactionXDRBase64,
 } from "@colibri/core";
+
+export type { ContractIdentity } from "@/contracts/types.ts";

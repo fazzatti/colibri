@@ -1,6 +1,9 @@
 import { ColibriError, Ledger as CoreLedger } from "@colibri/core";
 import type { Ledger, NetworkConfig, Server } from "@/native-types.ts";
-import { RPCStreamerError, RPCStreamerErrorCode } from "@/errors.ts";
+import {
+  RPCStreamerInvalidNetworkPassphraseError,
+  RPCStreamerNetworkDiscoveryFailedError,
+} from "@/errors.ts";
 
 /** Shared ledger parsing for live/archive variants. @internal */
 export type LedgerParser = (
@@ -18,16 +21,14 @@ export function createLedgerParser(network?: NetworkConfig): LedgerParser {
       try {
         passphrase = (await rpc.getNetwork()).passphrase;
       } catch (cause) {
-        throw new RPCStreamerError(
-          RPCStreamerErrorCode.NETWORK_DISCOVERY_FAILED,
+        throw new RPCStreamerNetworkDiscoveryFailedError(
           "Failed to discover the ledger RPC network.",
           undefined,
           cause instanceof Error ? cause : ColibriError.fromUnknown(cause),
         );
       }
       if (typeof passphrase !== "string" || passphrase.length === 0) {
-        throw new RPCStreamerError(
-          RPCStreamerErrorCode.INVALID_NETWORK_PASSPHRASE,
+        throw new RPCStreamerInvalidNetworkPassphraseError(
           "Ledger RPC returned an invalid network passphrase.",
         );
       }

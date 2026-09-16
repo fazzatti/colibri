@@ -70,17 +70,6 @@ export enum Code {
 
 // Currently unused, reserving
 //
-// export class UNEXPECTED_ERROR extends SACError<Code> {
-//   constructor(cause: Error) {
-//     super({
-//       code: Code.UNEXPECTED_ERROR,
-//       message: "An unexpected error occurred in the Contract module!",
-//       details: "See the 'cause' for more details",
-//       cause,
-//       data: {},
-//     });
-//   }
-// }
 
 /**
  * Raised when a required SAC argument is missing.
@@ -175,8 +164,22 @@ export class MISSING_RETURN_VALUE extends SACError<Code> {
 /**
  * Error code to constructor map for SAC errors.
  */
+/** Reserved unexpected-failure code, now exposed as a concrete error. */
+export class UNEXPECTED_ERROR extends SACError<Code> {
+  /** Preserve the original underlying failure. */
+  constructor(cause: Error) {
+    super({
+      code: Code.UNEXPECTED_ERROR,
+      message: "An unexpected contract failure occurred",
+      details: cause.message,
+      cause,
+      data: {},
+    });
+  }
+}
+
 export const ERROR_CONTR = {
-  // [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
+  ["SAC_000" as Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   ["SAC_001" as Code.MISSING_ARG]: MISSING_ARG,
   ["SAC_003" as Code.UNMATCHED_CONTRACT_ID]: UNMATCHED_CONTRACT_ID,
   ["SAC_002" as Code.FAILED_TO_DEPLOY_CONTRACT]: FAILED_TO_DEPLOY_CONTRACT,

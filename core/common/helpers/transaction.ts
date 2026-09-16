@@ -1,8 +1,11 @@
+import { errorContext } from "@/common/helpers/error-context.ts";
+import type { BaseMeta, ColibriErrorShape } from "@/error/types.ts";
 import { FeeBumpTransaction, Transaction, type xdr } from "stellar-sdk";
 import { ColibriError } from "@/error/index.ts";
 import { softTryToXDR } from "@/common/helpers/xdr/soft-try-to-xdr.ts";
 
-enum ErrorCode {
+/** Stable helper failure codes. */
+export enum TransactionCode {
   FAILED_TO_GET_TRANSACTION_TIMEOUT = "HLP_TX_01",
   FAILED_TO_GET_OPERATIONS_FROM_TRANSACTION = "HLP_TX_02",
 }
@@ -12,14 +15,14 @@ const baseErrorSource = "@colibri/core/helpers/transaction";
 /** Returns the remaining transaction timeout in seconds or milliseconds. */
 export const getTransactionTimeout = (
   tx: Transaction | FeeBumpTransaction,
-  unit: "seconds" | "milliseconds" = "seconds"
+  unit: "seconds" | "milliseconds" = "seconds",
 ): number | undefined => {
   const timeoutContext = {
     domain: "helpers" as const,
     source: baseErrorSource + "/getTransactionTimeout",
     message:
       "Failed to get transaction timeout from Transaction or FeeBumpTransaction!",
-    code: ErrorCode.FAILED_TO_GET_TRANSACTION_TIMEOUT,
+    code: TransactionCode.FAILED_TO_GET_TRANSACTION_TIMEOUT,
     meta: {
       data: {
         txXDR: softTryToXDR(() => tx.toXdr()),
@@ -28,8 +31,9 @@ export const getTransactionTimeout = (
   };
 
   try {
-    if (tx instanceof FeeBumpTransaction && "innerTransaction" in tx)
+    if (tx instanceof FeeBumpTransaction && "innerTransaction" in tx) {
       tx = tx.innerTransaction;
+    }
 
     if (tx instanceof Transaction) {
       const txTimeout = Number(tx.timeBounds?.maxTime || 0);
@@ -40,34 +44,40 @@ export const getTransactionTimeout = (
         : undefined;
     }
 
-    throw ColibriError.unexpected({
+    throw new FailedToGetTransactionTimeoutError({
       ...timeoutContext,
       details:
         "The provided value is not a supported Transaction or FeeBumpTransaction instance.",
     });
   } catch (e) {
-    throw ColibriError.fromUnknown(e, timeoutContext);
+    throw (e instanceof ColibriError
+      ? e
+      : new FailedToGetTransactionTimeoutError(
+        errorContext(e, timeoutContext),
+      ));
   }
 };
 
 /** Extracts classic operations from a built transaction envelope. */
 export const getOperationsFromTransaction = (
-  transaction: Transaction
+  transaction: Transaction,
 ): xdr.Operation[] => {
   try {
     return transaction.tx.operations;
   } catch (e) {
-    throw ColibriError.fromUnknown(e, {
-      domain: "helpers",
-      source: baseErrorSource + "/getOperationsFromTransaction",
-      message: "Failed to get operations from Transaction!",
-      code: ErrorCode.FAILED_TO_GET_OPERATIONS_FROM_TRANSACTION,
-      meta: {
-        data: {
-          txXDR: softTryToXDR(() => transaction.toXdr()),
+    throw (e instanceof ColibriError
+      ? e
+      : new FailedToGetOperationsFromTransactionError(errorContext(e, {
+        domain: "helpers",
+        source: baseErrorSource + "/getOperationsFromTransaction",
+        message: "Failed to get operations from Transaction!",
+
+        meta: {
+          data: {
+            txXDR: softTryToXDR(() => transaction.toXdr()),
+          },
         },
-      },
-    });
+      })));
   }
 };
 
@@ -78,7 +88,32 @@ export const getOperationType = (op: xdr.Operation): string => {
 
 /** Returns the ordered list of operation type names contained in a transaction. */
 export const getOperationTypesFromTransaction = (
-  transaction: Transaction
+  transaction: Transaction,
 ): string[] => {
   return getOperationsFromTransaction(transaction).map(getOperationType);
 };
+
+/** Failed to get transaction timeout. Stable code `HLP_TX_01`. */
+export class FailedToGetTransactionTimeoutError
+  extends ColibriError<TransactionCode.FAILED_TO_GET_TRANSACTION_TIMEOUT> {
+  /** Preserve diagnostics while fixing this failure's code. */
+  constructor(context: Omit<ColibriErrorShape<string, BaseMeta>, "code">) {
+    super({
+      ...context,
+      code: TransactionCode.FAILED_TO_GET_TRANSACTION_TIMEOUT,
+    });
+  }
+}
+
+/** Failed to get operations from transaction. Stable code `HLP_TX_02`. */
+export class FailedToGetOperationsFromTransactionError extends ColibriError<
+  TransactionCode.FAILED_TO_GET_OPERATIONS_FROM_TRANSACTION
+> {
+  /** Preserve diagnostics while fixing this failure's code. */
+  constructor(context: Omit<ColibriErrorShape<string, BaseMeta>, "code">) {
+    super({
+      ...context,
+      code: TransactionCode.FAILED_TO_GET_OPERATIONS_FROM_TRANSACTION,
+    });
+  }
+}

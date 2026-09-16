@@ -1,6 +1,10 @@
 import { NetworkConfig } from "@colibri/core/network";
 import type { MessageSigner, Signer } from "@colibri/core/signers";
-import { ColibriReactError, ReactCode } from "@/errors/index.ts";
+import {
+  ReactConnectionChangedError,
+  ReactInvalidConfigError,
+  ReactNetworkMismatchError,
+} from "@/errors/index.ts";
 /** A connection reports its actual network and independently configured signer capabilities. */
 export interface WalletConnection {
   /** Active G, M or C account identity. */
@@ -64,10 +68,7 @@ export class ColibriConfig {
   /** Validate and snapshot application configuration. */
   constructor(options: ColibriConfigOptions) {
     if (!options.network.networkPassphrase) {
-      throw new ColibriReactError(
-        ReactCode.INVALID_CONFIG,
-        "A network passphrase is required",
-      );
+      throw new ReactInvalidConfigError("A network passphrase is required");
     }
     const network = options.network;
     this.network = NetworkConfig.CustomNet({
@@ -84,10 +85,7 @@ export class ColibriConfig {
     if (
       new Set(this.connectors.map((c) => c.id)).size !== this.connectors.length
     ) {
-      throw new ColibriReactError(
-        ReactCode.INVALID_CONFIG,
-        "Connector IDs must be unique",
-      );
+      throw new ReactInvalidConfigError("Connector IDs must be unique");
     }
     this.scope = options.scope ?? options.network.rpcUrl ?? "default";
   }
@@ -111,18 +109,14 @@ export class ColibriConfig {
   private connector(id: string): WalletConnector {
     const connector = this.connectors.find((c) => c.id === id);
     if (!connector) {
-      throw new ColibriReactError(
-        ReactCode.INVALID_CONFIG,
-        `Unknown connector: ${id}`,
-      );
+      throw new ReactInvalidConfigError(`Unknown connector: ${id}`);
     }
     return connector;
   }
   /** @internal */
   private accept(connection: WalletConnection): WalletConnection {
     if (connection.networkPassphrase !== this.network.networkPassphrase) {
-      throw new ColibriReactError(
-        ReactCode.NETWORK_MISMATCH,
+      throw new ReactNetworkMismatchError(
         "Wallet and application networks differ",
       );
     }
@@ -178,8 +172,7 @@ export class ColibriConfig {
         ? await (connector.reconnect?.() ?? null)
         : await connector.connect();
       if (revision !== this.revision) {
-        throw new ColibriReactError(
-          ReactCode.CONNECTION_CHANGED,
+        throw new ReactConnectionChangedError(
           "Connection changed while connecting",
         );
       }

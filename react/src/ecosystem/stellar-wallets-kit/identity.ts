@@ -1,4 +1,8 @@
-import { ColibriReactError, ReactCode } from "@/errors/index.ts";
+import {
+  type ColibriReactError,
+  ReactConnectionChangedError,
+  ReactInvalidConfigError,
+} from "@/errors/index.ts";
 import type {
   StellarWalletsKitApi,
   WalletsKitAccount,
@@ -31,10 +35,7 @@ export async function readKitAccount(
   if (!address) return null;
   const { networkPassphrase } = await kit.getNetwork();
   if (!networkPassphrase) {
-    throw new ColibriReactError(
-      ReactCode.INVALID_CONFIG,
-      "Wallet network is missing",
-    );
+    throw new ReactInvalidConfigError("Wallet network is missing");
   }
   if (
     kit.selectedModule !== module ||
@@ -54,8 +55,7 @@ export function sameKitAccount(
 
 /** A retained capability must never silently switch to another wallet or account. */
 export function connectionChanged(): ColibriReactError {
-  return new ColibriReactError(
-    ReactCode.CONNECTION_CHANGED,
+  return new ReactConnectionChangedError(
     "Wallets Kit account, module or network changed",
   );
 }

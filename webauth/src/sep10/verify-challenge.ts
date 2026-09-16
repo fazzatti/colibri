@@ -1,10 +1,11 @@
+import { WebAuthErrors } from "@/error.ts";
 import {
   Keypair,
   type Operation,
   type Transaction,
   TransactionBuilder,
 } from "stellar-sdk";
-import { Sep10Code, Sep10Error } from "@/error.ts";
+import { Sep10Code } from "@/error.ts";
 import type {
   VerifiedSep10Challenge,
   VerifySep10ChallengeInput,
@@ -19,7 +20,7 @@ function fail(
   data?: Record<string, unknown>,
   cause?: unknown,
 ): never {
-  throw new Sep10Error({ code, message, data, cause });
+  throw new WebAuthErrors[code]({ message, data, cause });
 }
 
 function decodeTransaction(

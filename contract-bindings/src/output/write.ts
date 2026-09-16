@@ -1,7 +1,7 @@
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import type { GeneratedBindings } from "@/types.ts";
 import { GENERATED_MARKER } from "@/generation/constants.ts";
-import { BindingError, Code } from "@/error.ts";
+import { BindingError, BindingOutputFailedError } from "@/error.ts";
 
 /** Options for writing a rendered plan; scaffold files are always preserved. */
 export type WriteBindingsOptions = { directory: string; force?: boolean };
@@ -22,8 +22,7 @@ async function safePath(root: string, name: string): Promise<string> {
     !suffix || isAbsolute(suffix) || suffix === ".." ||
     suffix.startsWith(`..${sep}`)
   ) {
-    throw new BindingError(
-      Code.OUTPUT_FAILED,
+    throw new BindingOutputFailedError(
       `Output path escapes destination: ${name}`,
     );
   }
@@ -31,10 +30,7 @@ async function safePath(root: string, name: string): Promise<string> {
   for (const segment of suffix.split(sep)) {
     current = resolve(current, segment);
     if ((await stat(current))?.isSymlink) {
-      throw new BindingError(
-        Code.OUTPUT_FAILED,
-        `Refusing symbolic link: ${name}`,
-      );
+      throw new BindingOutputFailedError(`Refusing symbolic link: ${name}`);
     }
   }
   return path;
@@ -47,8 +43,7 @@ export async function writeBindings(
   try {
     const root = resolve(options.directory);
     if ((await stat(root))?.isSymlink) {
-      throw new BindingError(
-        Code.OUTPUT_FAILED,
+      throw new BindingOutputFailedError(
         "Output directory must not be a symbolic link",
       );
     }
@@ -58,14 +53,12 @@ export async function writeBindings(
       const path = await safePath(root, name);
       if (await stat(path)) {
         if (!options.force) {
-          throw new BindingError(
-            Code.OUTPUT_FAILED,
+          throw new BindingOutputFailedError(
             `Already exists: ${name}. Use --force to regenerate.`,
           );
         }
         if (!(await Deno.readTextFile(path)).startsWith(GENERATED_MARKER)) {
-          throw new BindingError(
-            Code.OUTPUT_FAILED,
+          throw new BindingOutputFailedError(
             `Refusing to overwrite handwritten file: ${name}`,
           );
         }
@@ -74,10 +67,7 @@ export async function writeBindings(
     }
     for (const [name, source] of Object.entries(plan.scaffold)) {
       if (name in plan.files) {
-        throw new BindingError(
-          Code.OUTPUT_FAILED,
-          `Duplicate output path: ${name}`,
-        );
+        throw new BindingOutputFailedError(`Duplicate output path: ${name}`);
       }
       const path = await safePath(root, name);
       if (await stat(path)) preserved.push(name);
@@ -100,8 +90,7 @@ export async function writeBindings(
     return { written, preserved };
   } catch (cause) {
     if (cause instanceof BindingError) throw cause;
-    throw new BindingError(
-      Code.OUTPUT_FAILED,
+    throw new BindingOutputFailedError(
       "Could not write generated bindings",
       cause,
     );

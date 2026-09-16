@@ -4,7 +4,12 @@ import type {
   WebAuthToken,
 } from "@colibri/webauth";
 import type { ColibriConfig } from "@/context/config.ts";
-import { ColibriReactError, ReactCode } from "@/errors/index.ts";
+import {
+  ReactConnectionChangedError,
+  ReactInvalidConfigError,
+  ReactInvalidSessionError,
+  ReactNetworkMismatchError,
+} from "@/errors/index.ts";
 /** Shared in-memory session state. Tokens never enter TanStack Query or browser storage. */
 export interface SessionState {
   /** Current authentication state. */
@@ -24,8 +29,7 @@ export class WebAuthSession {
   /** Bind authentication to a provider and an existing unified SEP-10/45 client. */
   constructor(readonly config: ColibriConfig, readonly client: WebAuthClient) {
     if (client.network.networkPassphrase !== config.network.networkPassphrase) {
-      throw new ColibriReactError(
-        ReactCode.NETWORK_MISMATCH,
+      throw new ReactNetworkMismatchError(
         "WebAuth and provider networks differ",
       );
     }
@@ -64,15 +68,11 @@ export class WebAuthSession {
     options: WebAuthAuthenticationOptions,
   ): Promise<WebAuthToken> {
     if (this.disposed) {
-      throw new ColibriReactError(
-        ReactCode.INVALID_CONFIG,
-        "The WebAuth session was disposed",
-      );
+      throw new ReactInvalidConfigError("The WebAuth session was disposed");
     }
     const connection = this.config.getSnapshot().connection;
     if (connection && connection.address !== options.account) {
-      throw new ColibriReactError(
-        ReactCode.CONNECTION_CHANGED,
+      throw new ReactConnectionChangedError(
         "Authentication account differs from the active connection",
       );
     }
@@ -82,8 +82,7 @@ export class WebAuthSession {
     try {
       const token = await this.client.authenticate(options);
       if (revision !== this.revision) {
-        throw new ColibriReactError(
-          ReactCode.CONNECTION_CHANGED,
+        throw new ReactConnectionChangedError(
           "The session changed during authentication",
         );
       }
@@ -92,8 +91,7 @@ export class WebAuthSession {
         token.homeDomain !== this.client.homeDomain || !token.protocol ||
         !token.expiresAt || token.expiresAt.getTime() <= Date.now()
       ) {
-        throw new ColibriReactError(
-          ReactCode.INVALID_SESSION,
+        throw new ReactInvalidSessionError(
           "WebAuth did not return a current token bound to this exchange",
         );
       }

@@ -1,5 +1,9 @@
 import { xdr } from "stellar-sdk";
-import { Sep45Code, Sep45Error } from "@/error.ts";
+import {
+  Sep45EmptyEntriesError,
+  Sep45Error,
+  Sep45InvalidXdrError,
+} from "@/error.ts";
 import type { SorobanAuthorizationEntry } from "@/stellar-sdk-types.ts";
 
 /** Decodes an exact variable-length Soroban authorization-entry array. */
@@ -12,8 +16,7 @@ export function decodeSep45AuthorizationEntries(
     value.length % 4 !== 0 ||
     !/^[A-Za-z0-9+/]*={0,2}$/.test(value)
   ) {
-    throw new Sep45Error({
-      code: Sep45Code.INVALID_XDR,
+    throw new Sep45InvalidXdrError({
       message: "Invalid SEP-45 authorization_entries encoding",
     });
   }
@@ -25,8 +28,7 @@ export function decodeSep45AuthorizationEntries(
       "base64",
     );
     if (entries.length === 0) {
-      throw new Sep45Error({
-        code: Sep45Code.EMPTY_ENTRIES,
+      throw new Sep45EmptyEntriesError({
         message: "SEP-45 challenge contains no authorization entries",
       });
     }
@@ -35,8 +37,7 @@ export function decodeSep45AuthorizationEntries(
     if (cause instanceof Sep45Error) {
       throw cause;
     }
-    throw new Sep45Error({
-      code: Sep45Code.INVALID_XDR,
+    throw new Sep45InvalidXdrError({
       message: "Invalid SEP-45 authorization_entries XDR",
       cause,
     });

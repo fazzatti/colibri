@@ -1,6 +1,7 @@
 "use client";
-import { ColibriReactError, ReactCode } from "@/errors/index.ts";
-import { useQuery } from "@tanstack/react-query";
+import { specFingerprint } from "@/contracts/fingerprint.ts";
+import { ReactInvalidMethodError } from "@/errors/index.ts";
+import { skipToken, useQuery } from "@tanstack/react-query";
 import type {
   QueryKey,
   UseQueryOptions,
@@ -12,7 +13,11 @@ import {
 } from "@colibri/core/contract-read";
 import type { ColibriConfig } from "@/context/config.ts";
 import { useColibriConfig } from "@/context/provider.ts";
-import { colibriQueryOptions, type QueryControls } from "@/query/options.ts";
+import {
+  colibriQueryKey,
+  colibriQueryOptions,
+  type QueryControls,
+} from "@/query/options.ts";
 import { contractIdentity } from "@/contracts/identity.ts";
 import type {
   ContractIdentity,
@@ -25,8 +30,8 @@ export interface ContractReadOptions<
   C extends ContractIdentity,
   M extends ReadMethodName<C>,
 > {
-  /** Existing generated client, with its owned read pipeline. */
-  contract: C;
+  /** Existing generated client and owned pipeline; undefined disables the query while loading. */
+  contract: C | undefined;
   /** CamelCase generated helper property. */
   method: M;
   /** Arguments passed to the helper as a tuple. */
@@ -45,6 +50,20 @@ export function contractReadQueryOptions<
   options: ContractReadOptions<C, M>,
 ): UseQueryOptions<ReadResult<C, M>, Error, ReadResult<C, M>, QueryKey> {
   const { contract, method, args, query, scope } = options;
+  if (!contract) {
+    return {
+      staleTime: 10000,
+      ...query,
+      queryKey: colibriQueryKey(config, "contract-read", {
+        scope,
+        method,
+        args,
+        pending: true,
+      }),
+      enabled: false,
+      queryFn: skipToken,
+    };
+  }
   return colibriQueryOptions(config, "contract-read", {
     ...contractIdentity(config, contract),
     scope,
@@ -55,8 +74,7 @@ export function contractReadQueryOptions<
       read: (...args: ReadArgs<C, M>) => Promise<ReadResult<C, M>>;
     };
     if (!member || typeof member.read !== "function") {
-      throw new ColibriReactError(
-        ReactCode.INVALID_METHOD,
+      throw new ReactInvalidMethodError(
         `Contract has no read helper: ${method}`,
       );
     }
@@ -81,7 +99,7 @@ export function useContractReadSpec<T = unknown>(
     ...colibriQueryOptions<unknown>(config, "contract-read-spec", {
       scope: request.scope,
       contractId: request.contractId,
-      spec: request.spec.entries.map((e) => e.toXdr("base64")),
+      spec: specFingerprint(request.spec),
       method: request.method,
       methodArgs: request.methodArgs,
     }, () => readContract({ ...request, networkConfig: config.network })),

@@ -212,3 +212,12 @@ bytes. Custom presentation options intentionally change those rendered pixels.
     payload bits. Identical G/C payloads always produce identical icons, and
     different payloads can collide too. We consider this suitable for a visual
     aid, never as a substitute for checking the full address and its type.
+
+## Concrete failure classes
+
+Every library-owned error code has a dedicated exported class. Use
+`IdenticonErrors[code]` to obtain its constructor, or catch a specific class
+with `instanceof`. Existing family base classes, stable codes, messages and
+metadata remain compatible. Legacy generic constructors remain available for
+source compatibility; library implementations construct the dedicated
+subclasses. Caller-owned failures preserve their existing propagation behavior.

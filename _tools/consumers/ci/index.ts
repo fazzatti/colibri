@@ -1,12 +1,16 @@
-/** One CI compatibility job, with separately logged runtime phases and a complete summary. */
+/** Shared compatibility plan and phase runner for local checks and parallel CI jobs. */
 import { resolve } from "node:path";
 import {
   compatibilityChecks,
   type SdkResolution,
   sdkSelections,
   verifyRuntime,
-} from "./plan.ts";
-import { execute, runChecks, summarize } from "./runner.ts";
+} from "colibri-tools/consumers/ci/plan.ts";
+import {
+  execute,
+  runChecks,
+  summarize,
+} from "colibri-tools/consumers/ci/runner.ts";
 
 const [phase, destination] = Deno.args;
 if (!phase || !destination) {
@@ -15,7 +19,7 @@ if (!phase || !destination) {
 const directory = resolve(destination);
 const planPath = resolve(directory, "plan.json");
 if (phase === "plan") {
-  const { resolveSdk } = await import("../sdk.ts");
+  const { resolveSdk } = await import("colibri-tools/consumers/sdk.ts");
   const resolutions = await Promise.all(
     sdkSelections.map(async (selection) => ({
       selection,

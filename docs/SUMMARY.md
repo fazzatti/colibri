@@ -14,6 +14,7 @@
 ## @colibri/react
 
 - [React applications](packages/react.md)
+  - [Common workflows](packages/react/convenience.md)
   - [Wallets and sessions](packages/react/wallets-and-sessions.md)
   - [Contracts and transactions](packages/react/contracts-and-transactions.md)
 
@@ -186,6 +187,7 @@
   - [core/common/helpers/xdr](reference/errors/core-common-helpers-xdr.md)
   - [core/contract](reference/errors/core-contract.md)
   - [core/contract/events](reference/errors/core-contract-events.md)
+  - [core](reference/errors/core.md)
   - [core/event](reference/errors/core-event.md)
   - [core/event/event-filter](reference/errors/core-event-event-filter.md)
   - [core/event/event-id](reference/errors/core-event-event-id.md)

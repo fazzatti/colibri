@@ -87,17 +87,6 @@ export enum Code {
 
 // Currently unused, reserving
 //
-// export class UNEXPECTED_ERROR extends ContractError<Code> {
-//   constructor(cause: Error) {
-//     super({
-//       code: Code.UNEXPECTED_ERROR,
-//       message: "An unexpected error occurred in the Contract module!",
-//       details: "See the 'cause' for more details",
-//       cause,
-//       data: {},
-//     });
-//   }
-// }
 
 /**
  * Raised when a required contract constructor argument is missing.
@@ -526,8 +515,22 @@ export class CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED
 /**
  * Contract error constructors indexed by stable error code.
  */
+/** Reserved unexpected-failure code, now exposed as a concrete error. */
+export class UNEXPECTED_ERROR extends ContractError<Code> {
+  /** Preserve the original underlying failure. */
+  constructor(cause: Error) {
+    super({
+      code: Code.UNEXPECTED_ERROR,
+      message: "An unexpected contract failure occurred",
+      details: cause.message,
+      cause,
+      data: {},
+    });
+  }
+}
+
 export const ERROR_CONTR = {
-  // [Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
+  ["CONTR_000" as Code.UNEXPECTED_ERROR]: UNEXPECTED_ERROR,
   ["CONTR_001" as Code.MISSING_ARG]: MISSING_ARG,
   ["CONTR_002" as Code.MISSING_RPC_URL]: MISSING_RPC_URL,
   ["CONTR_003" as Code.INVALID_CONTRACT_CONFIG]: INVALID_CONTRACT_CONFIG,

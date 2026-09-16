@@ -1,6 +1,6 @@
 import { StrKey } from "@colibri/core";
 import { dirname, resolve } from "node:path";
-import { BindingError, Code } from "@/error.ts";
+import { BindingError, BindingInvalidOptionsError } from "@/error.ts";
 import {
   validateClassName,
   validatePackageName,
@@ -61,8 +61,7 @@ async function validatePath(
     return await (key === "wasm" ? wasmPath(value) : outputPath(value));
   } catch (cause) {
     if (cause instanceof Deno.errors.NotCapable) {
-      throw new BindingError(
-        Code.INVALID_OPTIONS,
+      throw new BindingInvalidOptionsError(
         "Input validation needs file access; run the CLI with --allow-read for the input and output paths",
         cause,
       );
