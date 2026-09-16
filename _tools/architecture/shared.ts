@@ -20,6 +20,18 @@ export const REPOSITORY_CONFIG = `${CONFIG_DIRECTORY}/repository.json`;
 
 export const PACKAGE_ARCHITECTURES: readonly PackageArchitecture[] = [
   {
+    name: "@colibri/react",
+    root: "react",
+    config: `${CONFIG_DIRECTORY}/react.json`,
+    source: "../../../react/**/*.ts",
+    allowedColibriDependencies: [
+      "@colibri/core",
+      "@colibri/webauth",
+      "@colibri/rpc-streamer",
+      "@colibri/identicon",
+    ],
+  },
+  {
     name: "@colibri/core",
     root: "core",
     config: CORE_CONFIG,

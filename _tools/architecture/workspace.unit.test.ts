@@ -120,6 +120,7 @@ describe("workspace structure", () => {
       "./webauth",
       "./plugins/*",
       "./test-tooling",
+      "./react",
     ]);
 
     for (const architecture of PACKAGE_ARCHITECTURES) {

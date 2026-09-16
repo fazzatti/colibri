@@ -1,5 +1,10 @@
 /** Run one real browser fixture, failing on page errors instead of a timeout. */
-export async function runBrowserFixture(browser, url, timeout = 30_000) {
+export async function runBrowserFixture(
+  browser,
+  url,
+  timeout = 30_000,
+  interact,
+) {
   const page = await browser.newPage();
   const errors = [];
   // Resolve this signal instead of rejecting it: an error during navigation
@@ -19,6 +24,7 @@ export async function runBrowserFixture(browser, url, timeout = 30_000) {
   try {
     const completed = (async () => {
       await page.goto(url, { waitUntil: "commit", timeout });
+      if (interact) await interact(page);
       // Document load alone is not success for asynchronous SDK operations.
       await page.waitForFunction(
         "globalThis.colibriPassed === true",

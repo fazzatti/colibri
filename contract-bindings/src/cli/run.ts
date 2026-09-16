@@ -30,6 +30,7 @@ Network sources: --network testnet|futurenet|mainnet|custom
 Output: --output files|package --target jsr|npm --out DIRECTORY
   --class-name NAME             Override the filename-derived class (remote: ContractClient)
   --include-provenance          Include source identity in constants.ts (off by default)
+  --no-colibri                  Omit colibri.ts and its re-exports (included by default)
   --package-name @scope/name    Required with --output package
   --non-interactive             Never prompt; fail for missing required flags
   --force                       Replace marked generated files; preserve scaffold
@@ -87,6 +88,7 @@ export async function runCli(
     target: flags.target as "jsr" | "npm",
     packageName: flags["package-name"] as string | undefined,
     provenance: flags["include-provenance"] ? loaded.provenance : undefined,
+    includeColibri: flags["no-colibri"] !== true,
   });
   for (const warning of plan.warnings) terminal.log(warning);
   const result = await writeBindings(plan, {

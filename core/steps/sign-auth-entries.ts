@@ -1,5 +1,5 @@
-import { step, type Step } from "convee";
-import { signAuthEntries } from "@/processes/index.ts";
+import { type Step, step } from "convee";
+import { signAuthEntries } from "@/processes/sign-auth-entries/index.ts";
 import { SIGN_AUTH_ENTRIES_STEP_ID } from "@/steps/ids.ts";
 
 /**
@@ -12,5 +12,4 @@ export const createSignAuthEntriesStep = (): Step<
   Awaited<ReturnType<typeof signAuthEntries>>,
   Error,
   typeof SIGN_AUTH_ENTRIES_STEP_ID
-> =>
-  step(signAuthEntries, { id: SIGN_AUTH_ENTRIES_STEP_ID });
+> => step(signAuthEntries, { id: SIGN_AUTH_ENTRIES_STEP_ID });

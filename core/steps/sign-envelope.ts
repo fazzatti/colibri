@@ -1,5 +1,5 @@
-import { step, type Step } from "convee";
-import { signEnvelope } from "@/processes/index.ts";
+import { type Step, step } from "convee";
+import { signEnvelope } from "@/processes/sign-envelope/index.ts";
 import { SIGN_ENVELOPE_STEP_ID } from "@/steps/ids.ts";
 
 /**
@@ -12,5 +12,4 @@ export const createSignEnvelopeStep = (): Step<
   Awaited<ReturnType<typeof signEnvelope>>,
   Error,
   typeof SIGN_ENVELOPE_STEP_ID
-> =>
-  step(signEnvelope, { id: SIGN_ENVELOPE_STEP_ID });
+> => step(signEnvelope, { id: SIGN_ENVELOPE_STEP_ID });

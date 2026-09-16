@@ -11,6 +11,12 @@
 - [Read and invoke a contract](getting-started/contract-call.md)
 - [Architecture Overview](getting-started/architecture.md)
 
+## @colibri/react
+
+- [React applications](packages/react.md)
+  - [Wallets and sessions](packages/react/wallets-and-sessions.md)
+  - [Contracts and transactions](packages/react/contracts-and-transactions.md)
+
 ## @colibri/core
 
 - [Core](core/overview.md)
@@ -80,6 +86,10 @@
     - [Standardized Events](events/standardized-events/README.md)
       - [SAC](events/standardized-events/sac.md)
       - [SEP-41](events/standardized-events/sep-41.md)
+
+## @colibri/contract-bindings
+
+- [Overview](packages/contract-bindings.md)
 
 ## @colibri/rpc-streamer
 
@@ -216,6 +226,7 @@
   - [plugins/channel-accounts/shared](reference/errors/plugins-channel-accounts-shared.md)
   - [plugins/fee-bump](reference/errors/plugins-fee-bump.md)
   - [plugins/sep29](reference/errors/plugins-sep29.md)
+  - [react](reference/errors/react.md)
   - [rpc-streamer](reference/errors/rpc-streamer.md)
   - [test-tooling/quickstart](reference/errors/test-tooling-quickstart.md)
   - [webauth](reference/errors/webauth.md)
@@ -225,5 +236,3 @@
 ## Examples
 
 - [Examples Repository](https://github.com/fazzatti/colibri-examples)
-
-- [Contract bindings](packages/contract-bindings.md)

@@ -17,6 +17,7 @@
     "../../../plugins/channel-accounts/**/*.ts",
     "../../../plugins/sep29/**/*.ts",
     "../../../test-tooling/**/*.ts",
-    "../../../contract-bindings/**/*.ts"
+    "../../../contract-bindings/**/*.ts",
+    "../../../react/**/*.ts"
   ]
 }

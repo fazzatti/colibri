@@ -67,10 +67,19 @@ JSON results for seven days. Production bundle evidence remains a separate
 artifact. `test:compatibility-runner` exercises deduplication, runtime checks,
 subprocess failures, continued execution and incomplete-result detection.
 
-This trades separate runners for sequential runtime phases, reducing checkout,
-installation and artifact-transfer duplication. Package tests, coverage and CRAP
-still run independently. Consumer fixtures remain outside implementation
-coverage.
+Runtime phases remain sequential in one job, reusing checkout and artifacts.
+Within each phase, up to four isolated cases run concurrently (including SDK
+preparation and Node/TypeScript consumers). Each case has its own temporary
+source/install directory and result/log files. Browser cases remain sequential
+because Playwright installs Linux system packages. Output groups are written
+when each case finishes, without interleaving diagnostics. Package tests,
+coverage and CRAP still run independently. Consumer fixtures remain outside
+implementation coverage.
+
+The bundle fixture/version regression check runs before artifact preparation, so
+a stale candidate version in the frozen dependency fixture fails before the
+expensive matrix starts. The full frozen-lock, size, isolation and browser
+checks still run later.
 
 ## Preserved consumers
 
@@ -136,9 +145,13 @@ deno task check:consumers:npm /tmp/colibri-consumers --jsr-declarations
 ```
 
 The `jsr-declarations` phase compiles these artifacts with both supported
-TypeScript versions on Node 24 and executes all consumers, including a generated
-bindings package. This is a named phase in the existing compatibility job.
-Publishing repeats the candidate declaration check before `deno publish`.
+TypeScript versions on Node 24 and executes all consumers, including generated
+bindings packages with and without Core convenience exports. Both presets build
+with TypeScript and execute through their npm exports; the omitted `/colibri`
+subpath must fail resolution. The portable renderer smoke consumer also checks
+the disabled mode in Deno, Node and browser lanes. This is a named phase in the
+existing compatibility job. Publishing repeats the candidate declaration check
+before `deno publish`.
 
 `strkey.ts` checks all 18 encode/decode helpers through both public entrypoints,
 exact SDK parameters and branded outputs, rejection of invalid inputs, shared
@@ -162,11 +175,11 @@ pinned local engine.
 dnt tarballs are CI artifacts only, never published packages. They are reused
 locally within the compatibility job, never uploaded to JSR/npm. The publish
 workflow runs a separate check against real JSR modules and JSR-generated npm
-tarballs after publication, using the same five consumer fixtures. It retains
-`package-lock.json` (resolved URLs and integrity hashes) and installed package
-versions/JSR revisions before compilation, including on a compile failure. Use
-`--evidence <directory>` to select the artifact destination. To validate that
-tool using an already published baseline, run
+tarballs after publication, using the same consumer fixture inventory. It
+retains `package-lock.json` (resolved URLs and integrity hashes) and installed
+package versions/JSR revisions before compilation, including on a compile
+failure. Use `--evidence <directory>` to select the artifact destination. To
+validate that tool using an already published baseline, run
 `check:consumers:published --versions-from-ref origin/main`.
 
 The npm registry check imports canonical `@jsr/colibri__…` package names to
@@ -186,3 +199,74 @@ ESM/declarations, execute a native SDK/Core identity check, and pack it. The
 generated package substitutes the candidate Core test tarball for the otherwise
 unchanged JSR npm alias, so it checks the proposed release rather than an
 already published Core version.
+
+## React consumers
+
+`react-smoke.ts` uses the public React entrypoints with an application-owned
+QueryClient. It verifies a disconnected SSR snapshot, shared cached bigint data,
+client hydration into the connected state without recoverable errors, and an SVG
+identicon. Node runs its SSR/cache branch; all three real browsers also run
+hydration. The wallet is an injected fixture and makes no external prompts.
+
+`react-browser.ts` mounts an application under React StrictMode. Playwright
+drives its buttons through `react-browser.mjs` in Chromium, Firefox and WebKit;
+the native SDK talks over HTTP to a deterministic local RPC fixture. These
+journeys run in the existing required compatibility/browser phase:
+
+| Boundary     | Assertions                                                                                                                                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Connection   | No mount-time prompts; pending/disabled UI; rejected permission; exactly one wallet subscription; account/network changes invalidate authority; disconnect notifications release observers and cannot silently reconnect. |
+| Signing      | Explicit user action; global mutation retries cannot repeat a rejected signature; approval after disconnect is discarded.                                                                                                 |
+| Queries      | Absent inputs stay idle; two observers share an HTTP request and error; manual retry recovers both; changing provider scope fetches independently.                                                                        |
+| Transactions | NOT_FOUND remains pending; default polling observes native parsed SUCCESS/FAILED responses, then stops; unmount stops pending polling.                                                                                    |
+| WebAuth      | Authentication updates shared session state; credentials stay out of DOM, local/session storage and dehydrated caches; disconnect clears the session.                                                                     |
+| Cleanup      | Unmount removes rendered controls, wallet listeners and polling. Browser page errors or interaction assertions fail the run even if other fixtures signaled completion.                                                   |
+
+The wallet and authentication exchange are controlled fixtures, not live
+extensions or an anchor service. The transport, installed SDK, React DOM,
+TanStack Query, browser timers and storage are real. Deno DOM unit tests cover
+failure paths and inputs; polling must also run in browsers because TanStack
+Query detects server mode when loaded before the Deno DOM harness.
+
+The separate `react/src/tests/application.integration.test.ts` runs the mounted
+React application against Docker-backed local Stellar: deployment, generated and
+standalone reads, simulation, both transaction pipelines, events and disconnect.
+Run the whole React package and collect coverage with:
+
+```sh
+deno test -A --clean --coverage=/tmp/colibri-react-coverage react
+deno coverage /tmp/colibri-react-coverage
+deno task prepare:consumers /tmp/colibri-consumers
+deno task check:consumers:npm /tmp/colibri-consumers --jsr-declarations --browsers
+deno task test:browser-runner
+```
+
+The Deno DOM harness assigns browser globals so CommonJS React DOM sees them on
+Deno 2.7.11 as well as 2.9.6. It explicitly selects Node declarations for
+jsdom's wildcard type dependency; fresh caches must pass the full workspace type
+check.
+
+Filter coverage to `react/` when reporting this package: aggregate workspace
+coverage does not establish React coverage, and browser consumer fixtures do not
+contribute to Deno implementation coverage. Keep the existing implementation
+target, CRAP gate and Codecov policy unchanged.
+
+Artifact preparation orders packages by their declared Colibri dependencies,
+maps public subpaths and pins every direct SDK dependency to the selected test
+lane. This avoids duplicate SDK private types while preserving the declared
+Colibri ranges in the temporary artifacts. `COLIBRI_CONSUMER_KEEP_SOURCE=1`
+retains the disposable source tree for diagnostics; the default removes it.
+
+## Wallet ecosystem compatibility
+
+`deno task check:wallets` resolves the minimum and newest compatible Freighter
+6.x / Wallets Kit 2.x versions declared by React and type-checks the public
+adapters against their actual SDK exports in isolated package graphs. Identical
+resolved lanes are checked once. Failures propagate to workspace quality CI.
+
+`wallets.ts` also runs in installed declaration consumers. In real browsers it
+initializes the actual Kit SDK with an offline fixture module, verifies an
+envelope signature and account/module events, and releases the connection. This
+exercises upstream SDK machinery, not a live extension or wallet service.
+Adapter-only bundle probes forbid retained vendor runtimes, Preact and wallet
+UI.

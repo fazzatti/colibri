@@ -92,6 +92,9 @@ jobs:
       - name: Check publishable type surfaces
         run: deno task check:slow-types
 
+      - name: Check upstream wallet SDK compatibility
+        run: deno task check:wallets
+
       - name: Check GitBook documentation and examples
         run: |
           deno task test:docs
@@ -121,6 +124,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
+      - name: Check bundle fixture and regression guards
+        run: deno task test:bundle-tooling
       - name: Setup pinned declaration emitter toolchain
         run: rustup toolchain install 1.96.0 --profile minimal --no-self-update
       - name: Cache declaration emitter
@@ -236,6 +241,9 @@ jobs:
           - package: contract-bindings
             path: contract-bindings
             test_flags: --parallel
+          - package: react
+            path: react
+            test_flags: --parallel
           - package: identicon
             path: identicon
             test_flags: --parallel
@@ -268,7 +276,7 @@ jobs:
 
       - name: Run ${{ matrix.package }} tests
         env:
-          COLIBRI_TEST_QUICKSTART_DIAGNOSTICS: ${{ (matrix.package == 'webauth' || matrix.package == 'core') && '1' || '' }}
+          COLIBRI_TEST_QUICKSTART_DIAGNOSTICS: ${{ (matrix.package == 'webauth' || matrix.package == 'core' || matrix.package == 'react') && '1' || '' }}
         run: |
           set -o pipefail
           deno test -A --clean ${{ matrix.test_flags }} \
@@ -276,7 +284,7 @@ jobs:
             ${{ matrix.path }} 2>&1 | tee "${{ runner.temp }}/package-tests.log"
 
       - name: Upload ${{ matrix.package }} Quickstart diagnostics
-        if: always() && (matrix.package == 'webauth' || matrix.package == 'core')
+        if: always() && (matrix.package == 'webauth' || matrix.package == 'core' || matrix.package == 'react')
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.package }}-quickstart-diagnostics
@@ -385,7 +393,7 @@ jobs:
           deno test -A
           --filter='__coverage_cache_prime_never_matches__'
           --coverage=coverage-prime --coverage-raw-data-only
-          core build-verification contract-bindings identicon webauth rpc-streamer
+          core build-verification contract-bindings identicon webauth rpc-streamer react
           plugins/fee-bump plugins/channel-accounts plugins/sep29 test-tooling
 
       - name: Generate aggregate coverage report

@@ -5,7 +5,7 @@ import {
   assertStringIncludes,
 } from "@std/assert";
 import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
-import { type Browser, chromium } from "npm:playwright@1.61.0";
+import { type Browser, chromium, type Page } from "npm:playwright@1.61.0";
 import { runBrowserFixture } from "./browser-fixture.mjs";
 
 describe("browser consumer failure diagnostics", () => {
@@ -42,6 +42,23 @@ describe("browser consumer failure diagnostics", () => {
 
   it("waits for asynchronous completion and closes its page/context", async () => {
     await runBrowserFixture(browser, `${origin}/success`);
+    assertEquals(browser.contexts().length, 0);
+  });
+
+  it("runs interactions before accepting completion and preserves assertion failures", async () => {
+    const failure = new Error("React DOM assertion failed");
+    const error = await assertRejects(() =>
+      runBrowserFixture(
+        browser,
+        `${origin}/success`,
+        30_000,
+        async (page: Page) => {
+          await page.waitForFunction("globalThis.colibriPassed === true");
+          throw failure;
+        },
+      )
+    );
+    assertEquals(error, failure);
     assertEquals(browser.contexts().length, 0);
   });
 

@@ -1,5 +1,5 @@
 /** Execute installed artifacts with the selected real Node/TypeScript/browser runtime. */
-import { consumerFiles } from "./fixtures.ts";
+import { consumerFiles, installedFixture } from "./fixtures.ts";
 import { checkGeneratedBindings } from "./generated-bindings.ts";
 import { resolve } from "node:path";
 import { command, playwrightVersion, writeJson } from "./environment.ts";
@@ -41,6 +41,9 @@ export async function runArtifacts(
       `@stellar/stellar-sdk@${manifest.sdk}`,
       `typescript@${typescript}`,
       "esbuild@0.28.2",
+      "react-dom@^19.1.1",
+      "@types/react@^19.1.13",
+      "@types/react-dom@^19.1.9",
       ...(browsers ? [`playwright@${playwrightVersion}`] : []),
     ], consumer);
     await command("node", ["--version"], consumer);
@@ -57,10 +60,7 @@ export async function runArtifacts(
       );
       await Deno.writeTextFile(
         resolve(consumer, file),
-        fixture.replaceAll('"stellar-sdk', '"@stellar/stellar-sdk').replaceAll(
-          '"convee"',
-          '"@jsr/fifo__convee"',
-        ),
+        installedFixture(fixture),
       );
     }
     await command("npx", [
@@ -103,7 +103,13 @@ export async function runArtifacts(
         "firefox",
         "webkit",
       ], consumer);
-      for (const file of ["browser.mjs", "browser-fixture.mjs"]) {
+      for (
+        const file of [
+          "browser.mjs",
+          "browser-fixture.mjs",
+          "react-browser.mjs",
+        ]
+      ) {
         await Deno.copyFile(
           resolve(import.meta.dirname!, file),
           resolve(consumer, file),

@@ -24,8 +24,8 @@ Applications holding a native Stellar SDK Keypair can use
 `LocalSigner.fromKeypair(keypair)` and pass the returned signer through the
 existing transaction configuration. The factory borrows the keypair; destroying
 the signer leaves the original keypair unchanged. See the
-[LocalSigner API](https://jsr.io/@colibri/core/doc/~/LocalSigner)
-for targeting and lifecycle details.
+[LocalSigner API](https://jsr.io/@colibri/core/doc/~/LocalSigner) for targeting
+and lifecycle details.
 
 ## Installation
 
@@ -1343,10 +1343,9 @@ source when needed. `extractContractEventsFromSpec` and
 provide strict decoding and indexed filters; decoded `ContractEvent` objects
 retain ledger, transaction, and raw XDR metadata. Both decoding and filters
 accept G-, C-, and M-addresses for `MuxedAddress` fields; ordinary `Address`
-fields accept G- and C-addresses only. Missing declarations do not
-imply that a contract emits no events. See
-[the guide](../docs/core/contract/events.md) and the
-[bindings generator](../contract-bindings/README.md).
+fields accept G- and C-addresses only. Missing declarations do not imply that a
+contract emits no events. See [the guide](../docs/core/contract/events.md) and
+the [bindings generator](../contract-bindings/README.md).
 
 ## Soroban types and validated values
 
@@ -1372,3 +1371,12 @@ consumers. Direct namespace imports let Deno discard unused codecs. Use
 Native Spec identity and existing pipelines remain unchanged. See
 [the complete type guide](../docs/core/contract/values.md) for schemas, units,
 errors, enum ordering, custom factories and wire values.
+
+## Granular frontend imports
+
+Core 1.2 exposes `/network`, `/rpc`, `/ledger`, `/contract`, `/contract-read`,
+`/classic-transaction`, `/soroban-transaction`, `/simulation`, `/assets`,
+`/events`, `/signers`, and `/sep1` alongside the existing small entrypoints.
+`readContract` uses the normal read pipeline without creating a full Contract.
+See the [React guide](../docs/packages/react.md) and
+[browser import guide](../docs/getting-started/browser-bundles.md).

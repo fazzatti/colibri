@@ -1,5 +1,5 @@
 import { stub } from "@std/testing/mock";
-import { assertEquals, assertStringIncludes } from "@std/assert";
+import { assertEquals, assertRejects, assertStringIncludes } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { type Check, compatibilityChecks } from "./plan.ts";
 import { execute, runChecks, summarize } from "./runner.ts";
@@ -61,6 +61,69 @@ describe("compatibility result reporting", () => {
       assertEquals(summary.passed, false);
       assertStringIncludes(summary.markdown, "| failed | FAIL |");
       assertStringIncludes(summary.markdown, "| passed | PASS |");
+    } finally {
+      await Deno.remove(directory, { recursive: true });
+    }
+  });
+  it("bounds concurrent cases and retains all results after asynchronous failures", async () => {
+    using log = stub(console, "log");
+    using _error = stub(console, "error");
+    const directory = await Deno.makeTempDir();
+    let active = 0;
+    let peak = 0;
+    const completed: string[] = [];
+    const checks = ["first", "failed", "throws", "fourth", "last"].map(check);
+    try {
+      const passed = await runChecks(checks, directory, async (item) => {
+        peak = Math.max(peak, ++active);
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        active--;
+        completed.push(item.id);
+        if (item.id === "throws") throw new Error("asynchronous failure");
+        return {
+          code: item.id === "failed" ? 7 : 0,
+          stdout: item.id,
+          stderr: "",
+        };
+      }, 2);
+      assertEquals(peak, 2);
+      assertEquals(active, 0);
+      assertEquals(passed, false);
+      assertEquals(completed.sort(), checks.map((item) => item.id).sort());
+      for (const item of checks) {
+        const result = JSON.parse(
+          await Deno.readTextFile(`${directory}/results/${item.id}.json`),
+        );
+        assertEquals(result.id, item.id);
+        assertEquals(
+          result.code,
+          item.id === "failed" ? 7 : item.id === "throws" ? 1 : 0,
+        );
+        assertStringIncludes(
+          await Deno.readTextFile(`${directory}/logs/${item.id}.log`),
+          item.id === "throws" ? "asynchronous failure" : item.id,
+        );
+      }
+      const groups = log.calls.map((call) => call.args[0]).filter((text) =>
+        typeof text === "string" && text.startsWith("::")
+      );
+      assertEquals(groups.length, checks.length * 2);
+      for (let i = 0; i < groups.length; i += 2) {
+        assertStringIncludes(groups[i], "::group::");
+        assertEquals(groups[i + 1], "::endgroup::");
+      }
+      assertEquals(
+        (await summarize(checks, resolutions, directory)).passed,
+        false,
+      );
+      assertEquals(await runChecks([], directory, undefined, 4), true);
+      for (const concurrency of [0, -1, 1.5, NaN, Infinity]) {
+        await assertRejects(
+          () => runChecks(checks, directory, undefined, concurrency),
+          Error,
+          "positive integer",
+        );
+      }
     } finally {
       await Deno.remove(directory, { recursive: true });
     }

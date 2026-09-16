@@ -22,8 +22,11 @@ version explicitly, rather than silently comparing a different SDK release.
 Production Deno inputs use `dependencies.lock` and `--frozen-lockfile`; the
 resolved SDK graph is checked for one matching instance. The reviewed fixture
 covers isolated source scopes, not the repository workspace's mutable lockfile.
-When deliberately changing dependencies, regenerate that fixture from the
-isolated source directory, review its changes, and remeasure the baseline.
+When deliberately changing dependencies or candidate package versions,
+regenerate that fixture from the isolated source directory, review its changes,
+and remeasure the baseline. `test:bundle-tooling` checks candidate versions
+against the fixture before CI prepares artifacts; the full build still enforces
+the frozen dependency graph.
 
 The second bundler is Rollup 4.50.1 with browser resolution, CommonJS conversion
 and Terser minification. It consumes installed npm ESM artifacts from dnt
@@ -81,3 +84,19 @@ a whole object; use `import * as SorobanType from "@colibri/core/values"` when
 individual-codec tree shaking matters. Static alias annotations cover only reads
 of owned readonly fields. The original symbol budget stays unchanged, and the
 forwarded form has its own explicit budget and browser/dependency checks.
+
+## React and pipeline probes
+
+The React probes cover provider/connection, pure query utilities, standalone
+contract reads, generated-client invocation adapters, Classic pipelines, assets,
+WebAuth and SVG identicons. Light probes reject retained SDK XDR, pipelines and
+unrelated package code. Read probes reject signer/send/invoke-pipeline code. The
+invocation adapter probe excludes the caller's generated client and its
+pipeline; it is not the total cost of an invoking application.
+
+Rollup replaces `process.env.NODE_ENV` with `"production"` to select production
+React. It also writes `split.json` for assets and WebAuth, alongside split
+chunks: `initial` follows every static dependency of the entry, while `complete`
+sums all emitted JavaScript chunks, including deferred imports. Gzip is summed
+per chunk. These are measurements, separate from the existing standalone budget
+gates and browser executions. Lazy loading changes timing, not total code cost.

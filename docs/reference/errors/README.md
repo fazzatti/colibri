@@ -149,6 +149,10 @@ catalog.
 
 - [plugins/sep29](plugins-sep29.md) — 4 codes.
 
+## @colibri/react
+
+- [react](react.md) — 8 codes.
+
 ## @colibri/rpc-streamer
 
 - [rpc-streamer](rpc-streamer.md) — 26 codes.

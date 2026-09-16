@@ -1,5 +1,5 @@
-import { step, type Step } from "convee";
-import { envelopeSigningRequirements } from "@/processes/index.ts";
+import { type Step, step } from "convee";
+import { envelopeSigningRequirements } from "@/processes/envelope-signing-requirements/index.ts";
 import { ENVELOPE_SIGNING_REQUIREMENTS_STEP_ID } from "@/steps/ids.ts";
 
 /**

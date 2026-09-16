@@ -1,0 +1,50 @@
+{
+  "name": "@colibri/react",
+  "version": "0.1.0",
+  "license": "MIT",
+  "exports": {
+    ".": "./mod.ts",
+    "./query": "./src/query/index.ts",
+    "./rpc": "./src/rpc/index.ts",
+    "./accounts": "./src/accounts/index.ts",
+    "./assets": "./src/assets/index.ts",
+    "./contracts": "./src/contracts/index.ts",
+    "./contracts/read": "./src/contracts/read/index.ts",
+    "./contracts/invoke": "./src/contracts/invoke/index.ts",
+    "./transactions/classic": "./src/transactions/classic/index.ts",
+    "./transactions/soroban": "./src/transactions/soroban/index.ts",
+    "./transactions/simulate": "./src/transactions/simulation/index.ts",
+    "./events": "./src/events/index.ts",
+    "./webauth": "./src/webauth/index.ts",
+    "./sep1": "./src/discovery/sep1/index.ts",
+    "./signers": "./src/signers/index.ts",
+    "./wallets": "./src/wallets/index.ts",
+    "./identicon": "./src/identicon/index.ts",
+    "./session": "./src/webauth/session/index.ts",
+    "./ecosystem/freighter": "./src/ecosystem/freighter/index.ts",
+    "./ecosystem/stellar-wallets-kit": "./src/ecosystem/stellar-wallets-kit/index.ts"
+  },
+  "imports": {
+    "@/": "./src/",
+    "@colibri/core": "jsr:@colibri/core@^1.2.0",
+    "@colibri/webauth": "jsr:@colibri/webauth@^1.0.0",
+    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^1.0.0",
+    "@colibri/identicon": "jsr:@colibri/identicon@^1.1.0",
+    "react": "npm:react@^19.1.1",
+    "@types/react": "npm:@types/react@^19.1.13",
+    "@tanstack/react-query": "npm:@tanstack/react-query@^5.87.4",
+    "@stellar/freighter-api": "npm:@stellar/freighter-api@^6.0.1",
+    "@creit.tech/stellar-wallets-kit": "npm:@creit.tech/stellar-wallets-kit@^2.6.0"
+  },
+  "publish": {
+    "include": [
+      "./**/*.ts",
+      "./README.md",
+      "./LICENSE",
+      "./deno.json"
+    ],
+    "exclude": [
+      "./**/*.test.ts"
+    ]
+  }
+}

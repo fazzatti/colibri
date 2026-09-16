@@ -1,6 +1,6 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { generateDocumentation } from "./documentation.ts";
+import { declarationImport, generateDocumentation } from "./documentation.ts";
 import { normalizeDeclaration } from "./api-model.ts";
 
 async function fixture(
@@ -81,11 +81,12 @@ describe("deterministic declaration generation", () => {
         JSON.parse(await generateDocumentation(root, file)),
       );
       const module = new URL("./documentation.ts", import.meta.url).href;
-      const script = `import { generateDocumentation } from ${
-        JSON.stringify(module)
-      }; console.log(await generateDocumentation(${JSON.stringify(root)}, ${
-        JSON.stringify(file)
-      }));`;
+      const script =
+        `import { declarationImport, generateDocumentation } from ${
+          JSON.stringify(module)
+        }; console.log(await generateDocumentation(${JSON.stringify(root)}, ${
+          JSON.stringify(file)
+        }));`;
       const environments: Record<string, string>[] = [
         {},
         { FORCE_COLOR: "1" },
@@ -125,4 +126,38 @@ describe("deterministic declaration generation", () => {
       );
     });
   });
+});
+
+it("resolves namespace re-exports in the declaring package rather than the consuming package", () => {
+  const scopes: { directory: string; imports: Record<string, string> }[] = [
+    {
+      directory: "/workspace/core",
+      imports: { "@/": "./", "@/special/": "./special/" },
+    },
+    { directory: "/workspace/react", imports: { "@/": "./src/" } },
+  ];
+  assertEquals(
+    declarationImport(
+      "/workspace/core/account/index.ts",
+      "@/account/error.ts",
+      scopes,
+    ),
+    "/workspace/core/account/error.ts",
+  );
+  assertEquals(
+    declarationImport("/workspace/react/src/hooks.ts", "@/error.ts", scopes),
+    "/workspace/react/src/error.ts",
+  );
+  assertEquals(
+    declarationImport("/workspace/core/account/index.ts", "./error.ts", scopes),
+    "/workspace/core/account/error.ts",
+  );
+  assertEquals(
+    declarationImport(
+      "/workspace/core/account/index.ts",
+      "npm:library",
+      scopes,
+    ),
+    undefined,
+  );
 });

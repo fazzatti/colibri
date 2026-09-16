@@ -49,3 +49,12 @@ const plan = generateBindings(spec, { className: "PingClient" });
 if (!plan.files["index.ts"].includes("class PingClient extends Contract")) {
   throw new Error("Portable bindings rendering failed");
 }
+
+const withoutConveniences = generateBindings(spec, { includeColibri: false });
+if (
+  "colibri.ts" in withoutConveniences.files ||
+  withoutConveniences.files["index.ts"].includes("./colibri.ts") ||
+  !withoutConveniences.scaffold["README.md"].includes('from "@colibri/core"')
+) {
+  throw new Error("Portable bindings without conveniences failed");
+}

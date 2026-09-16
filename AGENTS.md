@@ -19,6 +19,10 @@ Soroban packages:
 - `core/`: the architectural center of the repo. It defines the shared error
   model, networks, accounts, signers, helpers, processes, steps, pipelines,
   plugins, contract clients, event tooling, ledger parsing, and utilities.
+- `react/`: headless React bindings, TanStack Query integration, explicit wallet
+  capabilities and memory-only WebAuth sessions. Keep feature runtime imports
+  behind public subpaths; never silently sign, reconnect, retry submissions or
+  persist credentials.
 - `webauth/`: a unified SEP-10 and SEP-45 web-auth client package built on top
   of Colibri core.
 - `identicon/`: local, reference-compatible SEP-33 generation and SVG/PNG
@@ -120,15 +124,18 @@ GitHub Actions behavior matters when changing structure or versions:
   exports through `_tools/package-inventory.ts`, including subpath exports. CRAP
   and documentation inventories use the same package discovery. Do not add a new
   hard-coded entrypoint list.
-- The required `compatibility` job checks isolated Deno package trees and installs
-  temporary npm test artifacts on Node 22.12 (minimum SDK) and Node 24 (supported
-  SDK range). It type-checks native SDK interop, executes a smoke consumer, and
-  bundles the browser-capable packages. These test artifacts are never published
-  and are not claimed to be JSR's own generated tarballs. See
+- The required `compatibility` job checks isolated Deno package trees and
+  installs temporary npm test artifacts on Node 22.12 (minimum SDK) and Node 24
+  (supported SDK range). It type-checks native SDK interop, executes a smoke
+  consumer, and bundles the browser-capable packages. These test artifacts are
+  never published and are not claimed to be JSR's own generated tarballs. See
   `_tools/consumers/README.md`. Runtime/compiler combinations are named steps in
-  one job, with per-case logs and a complete summary. Resolve minimum and current
-  SDK selections once; deduplicate only identical resolved versions. Failed or
-  missing scenarios must fail the job and the final `test` gate.
+  one job, with up to four isolated cases running concurrently per step,
+  per-case logs and a complete summary. Browser cases stay sequential because
+  they install system packages. Check bundle fixture versions before artifact
+  preparation. Resolve minimum and current SDK selections once; deduplicate only
+  identical resolved versions. Failed or missing scenarios must fail the job and
+  the final `test` gate.
 - Quality uploads a syntax-level constructor/throw/catch inventory alongside the
   complete stable error-code reference. Review unknown and passthrough
   boundaries deliberately; do not conflate caller-owned errors with missing SDK
@@ -158,6 +165,7 @@ Current package version sources:
 
 - `contract-bindings/deno.json`
 - `core/deno.json`
+- `react/deno.json`
 - `build-verification/deno.json`
 - `identicon/deno.json`
 - `webauth/deno.json`
@@ -476,6 +484,27 @@ references are allowed; runtime dependency cycles are not. The public
 
 If you change `core/`, consider ripple effects on all dependent packages.
 
+### `react/`
+
+Keep `mod.ts` as the only root TypeScript file. Put every additional public
+entrypoint in its feature directory under `src/`, and map the stable package
+subpath to that directory's `index.ts` in `deno.json`. Group implementations and
+unit tests by context: provider/config/connection, queries, RPC, accounts,
+assets, contracts, transactions, wallets/signers, discovery, WebAuth/sessions,
+events and identicons. Cross-feature application tests belong in `src/tests/`.
+Do not recreate flat lists of feature files at the package root or `src/`. Keep
+vendor-specific adapters under `src/ecosystem/<vendor>/` with their own public
+entrypoints. General wallet/provider code must not import ecosystem adapters.
+Derive vendor API types from supported upstream SDKs; keep their runtime
+initialization and wallet/module selection application-owned. Run
+`check:wallets` and installed browser consumers after adapter changes.
+
+The README includes the public API, inputs/results/lifetimes and idiomatic TSX
+examples. Mark complete snippets with `<!-- deno-check -->`. The checker uses a
+package README's dependency scope; GitBook examples can select the same scope
+with `<!-- deno-check @colibri/react -->`. TSX is syntax-checked and complete
+examples are type-checked alongside ordinary TypeScript examples.
+
 ### `webauth/`
 
 Keep the split between:
@@ -568,6 +597,7 @@ There are also custom lint rules in:
 The enum rule is currently wired into:
 
 - `core/deno.json`
+- `react/deno.json`
 - `test-tooling/deno.json`
 
 It requires enums with more than 50 members to live alone in their file. If you

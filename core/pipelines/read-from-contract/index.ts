@@ -11,10 +11,8 @@ import { simulateToRetval } from "@/pipelines/shared/connectors/simulate-to-retv
 import * as E from "@/pipelines/read-from-contract/error.ts";
 import { inputToBuild } from "@/pipelines/read-from-contract/connectors.ts";
 import { assert } from "@/common/assert/assert.ts";
-import {
-  createBuildTransactionStep,
-  createSimulateTransactionStep,
-} from "@/steps/index.ts";
+import { createBuildTransactionStep } from "@/steps/build-transaction.ts";
+import { createSimulateTransactionStep } from "@/steps/simulate-transaction.ts";
 import type {
   BuildTransactionInput,
   BuildTransactionOutput,

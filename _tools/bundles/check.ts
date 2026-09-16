@@ -91,7 +91,13 @@ await writeJson(resolve(consumer, "package.json"), {
   dependencies: {
     ...Object.fromEntries(
       manifest.packages.filter((pkg: { name: string }) =>
-        ["@colibri/core", "@colibri/identicon"].includes(pkg.name)
+        [
+          "@colibri/core",
+          "@colibri/identicon",
+          "@colibri/react",
+          "@colibri/webauth",
+          "@colibri/rpc-streamer",
+        ].includes(pkg.name)
       ).map((
         pkg: { name: string; archive: string },
       ) => [pkg.name, `file:${resolve(artifacts, pkg.archive)}`]),

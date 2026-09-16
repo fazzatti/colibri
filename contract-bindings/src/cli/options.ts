@@ -42,6 +42,7 @@ const SWITCHES = new Set([
   "non-interactive",
   "allow-http",
   "include-provenance",
+  "no-colibri",
 ]);
 /** Parses flags without I/O; rejects typos, duplicate options and ambiguous sources. */
 export function parseCliArgs(args: readonly string[]): CliFlags {
