@@ -78,11 +78,11 @@ application/request; release an application-owned configuration with
 `config.destroy()` when its lifetime ends. Owned caches are cleared when their
 provider unmounts.
 
-`useWallet()` exposes state, address, guarded signers, connector choices and
-explicit `connect`, `reconnect`, and `disconnect` actions. No action runs during
-render. Omit the connector id only when exactly one connector is configured.
-`reconnect` restores existing authority without prompting; it never runs
-silently.
+[`useWallet()`](hooks/use-wallet.md) exposes state, address, guarded signers,
+connector choices and explicit `connect`, `reconnect`, and `disconnect` actions.
+No action runs during render. Omit the connector id only when exactly one
+connector is configured. `reconnect` restores existing authority without
+prompting; it never runs silently.
 
 ## One signer for both transaction stages
 
@@ -99,12 +99,14 @@ signer. Neither route submits a transaction by itself.
 
 ## Invoke with wallet defaults
 
-Use `useWalletContractInvoke(client, "method")` from `/contracts/invoke` with
-the same loaded/generated client used by reads. It fills missing `config.source`
-and `config.signers` from the connected wallet. Supply the generated
-`methodArgs` to `mutateAsync`. Fees and timeout retain the client's existing
-defaults; optional `config` overrides pass through unchanged. The return type
-remains the generated method's decoded result and transaction metadata.
+Use
+[`useWalletContractInvoke(client, "method")`](hooks/use-wallet-contract-invoke.md)
+from `/contracts/invoke` with the same loaded/generated client used by reads. It
+fills missing `config.source` and `config.signers` from the connected wallet.
+Supply the generated `methodArgs` to `mutateAsync`. Fees and timeout retain the
+client's existing defaults; optional `config` overrides pass through unchanged.
+The return type remains the generated method's decoded result and transaction
+metadata.
 
 For example, if your generated client exposes `increment`, the invocation is:
 

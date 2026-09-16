@@ -87,11 +87,12 @@ client's pipelines intact. ABI fingerprints keep query keys bounded while still
 detecting changes in the current ABI. They do not validate deployed WASM.
 
 For SDK facades that combine multiple reads or writes, use `colibriQueryOptions`
-and `useColibriMutation` from `/query`. Include all behavior-changing inputs in
-the query key. Mutations execute only after an explicit call, serialize within
-the provider scope, and never retry automatically. These utilities do not invent
-receipt recovery or a prepared-envelope lifecycle; keep those responsibilities
-in the existing SDK until the corresponding Core capability is available.
+from `/query` and [useColibriMutation](hooks/use-colibri-mutation.md) from
+`/query/mutation`. Include all behavior-changing inputs in the query key.
+Mutations execute only after an explicit call, serialize within the provider
+scope, and never retry automatically. These utilities do not invent receipt
+recovery or a prepared-envelope lifecycle; keep those responsibilities in the
+existing SDK until the corresponding Core capability is available.
 
 ## Read without constructing a full Contract
 
