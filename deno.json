@@ -91,7 +91,7 @@
     "test:architecture": "deno test --allow-read --allow-write --allow-env --allow-sys=cpus --clean _tools/architecture",
     "test:file": "deno test -A --parallel --clean --ignore='_*/'",
     "check:bundles": "deno run -A _tools/bundles/check.ts",
-    "test:bundle-tooling": "deno test -A _tools/bundles/metrics.unit.test.ts",
+    "test:bundle-tooling": "deno test -A _tools/bundles/metrics.unit.test.ts _tools/bundles/dependency-fixture.unit.test.ts",
     "check:wallets": "deno run -A _tools/consumers/wallet-compatibility.ts"
   },
   "lint": {

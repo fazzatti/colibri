@@ -2985,7 +2985,8 @@
       "npm:archunit@2.4.0",
       "npm:dockerode@3.3.3",
       "npm:fast-png@8.0.0",
-      "npm:react@^19.1.1"
+      "npm:react@^19.1.1",
+      "npm:yaml@2.8.2"
     ],
     "links": {
       "jsr:@colibri/build-verification@0.4.5": {

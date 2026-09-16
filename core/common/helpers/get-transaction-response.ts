@@ -49,21 +49,19 @@ export const getWasmHashFromGetTransactionResponse = (
   } catch (e) {
     if (e instanceof ColibriError) throw e;
 
-    throw (e instanceof ColibriError
-      ? e
-      : new FailedToGetWasmHashError(errorContext(e, {
-        domain: "helpers",
-        source: baseErrorSource + "/getWasmHashFromGetTransactionResponse",
-        message: "Failed to get wasm hash from GetTransactionResponse!",
+    throw new FailedToGetWasmHashError(errorContext(e, {
+      domain: "helpers",
+      source: baseErrorSource + "/getWasmHashFromGetTransactionResponse",
+      message: "Failed to get wasm hash from GetTransactionResponse!",
 
-        meta: {
-          data: {
-            resultMetaXdr: softTryToXDR(() =>
-              response.resultMetaXdr.toXdr("base64")
-            ),
-          },
+      meta: {
+        data: {
+          resultMetaXdr: softTryToXDR(() =>
+            response.resultMetaXdr.toXdr("base64")
+          ),
         },
-      })));
+      },
+    }));
   }
 };
 
@@ -112,21 +110,19 @@ export const getContractIdFromGetTransactionResponse = (
   } catch (e) {
     if (e instanceof ColibriError) throw e;
 
-    throw (e instanceof ColibriError
-      ? e
-      : new FailedToGetContractIdError(errorContext(e, {
-        domain: "helpers",
-        source: baseErrorSource + "/getContractIdFromGetTransactionResponse",
-        message: "Failed to get contract ID from GetTransactionResponse!",
+    throw new FailedToGetContractIdError(errorContext(e, {
+      domain: "helpers",
+      source: baseErrorSource + "/getContractIdFromGetTransactionResponse",
+      message: "Failed to get contract ID from GetTransactionResponse!",
 
-        meta: {
-          data: {
-            resultMetaXdr: softTryToXDR(() =>
-              response.resultMetaXdr.toXdr("base64")
-            ),
-          },
+      meta: {
+        data: {
+          resultMetaXdr: softTryToXDR(() =>
+            response.resultMetaXdr.toXdr("base64")
+          ),
         },
-      })));
+      },
+    }));
   }
 };
 
