@@ -100,130 +100,22 @@ jobs:
           deno task test:docs
           deno task check:docs
 
+  compatibility_checks:
+    name: compatibility
+    uses: ./.github/workflows/compatibility.yml
+
+  # Preserve the existing required check while the reusable workflow groups
+  # parallel checks as compatibility / <runtime or concern> in the Actions UI.
   compatibility:
     name: compatibility
+    if: ${{ always() }}
+    needs: compatibility_checks
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    env:
-      RUSTUP_TOOLCHAIN: 1.96.0
-      CARGO_TARGET_DIR: ${{ github.workspace }}/target/declarations
     steps:
-      - name: Set compatibility output directory
-        run: echo "COMPATIBILITY_DIR=$RUNNER_TEMP/compatibility" >> "$GITHUB_ENV"
-      - name: Setup repo and release history
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Setup Deno 2.9.6
-        id: deno-current
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version: 2.9.6
-      - name: Setup Node 24
-        id: node-current
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-      - name: Check bundle fixture and regression guards
-        run: deno task test:bundle-tooling
-      - name: Setup pinned declaration emitter toolchain
-        run: rustup toolchain install 1.96.0 --profile minimal --no-self-update
-      - name: Cache declaration emitter
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target/declarations
-          key: declarations-${{ runner.os }}-rust-1.96.0-${{ hashFiles('_tools/consumers/declarations/emitter/Cargo.lock') }}
-      - name: Test declaration regression harness
-        run: deno task test:declarations
-      - name: Test compatibility reporting and failure propagation
-        run: deno task test:compatibility-runner
-      - name: Resolve minimum and latest compatible SDK versions
-        id: plan
-        run: deno task check:consumers:ci plan "$COMPATIBILITY_DIR"
-      # Preserve fail-fast:false semantics inside one check: independent phases
-      # continue after failures, and the final summary rejects missing cases.
-      - name: Prepare reusable npm artifacts
-        if: ${{ !cancelled() && steps.plan.outcome == 'success' }}
-        run: deno task check:consumers:ci prepare "$COMPATIBILITY_DIR"
-      - name: Check JSR-generated declarations with both TypeScript versions
-        if: ${{ !cancelled() && steps.plan.outcome == 'success' }}
-        run: deno task check:consumers:ci jsr-declarations "$COMPATIBILITY_DIR"
-      - name: Check released Core dependency ranges
-        if: ${{ !cancelled() && steps.plan.outcome == 'success' }}
-        run: deno task check:consumers:ci dependencies "$COMPATIBILITY_DIR"
-      - name: Check Deno 2.9.6 consumers
-        if: ${{ !cancelled() && steps.plan.outcome == 'success' }}
-        run: deno task check:consumers:ci deno-2.9.6 "$COMPATIBILITY_DIR"
-      - name: Check Node 24 with both TypeScript versions
-        if: ${{ !cancelled() && steps.plan.outcome == 'success' }}
-        run: deno task check:consumers:ci node-24 "$COMPATIBILITY_DIR"
-      - name: Check Chromium, Firefox and WebKit
-        if: ${{ !cancelled() && steps.plan.outcome == 'success' }}
-        run: deno task check:consumers:ci browsers "$COMPATIBILITY_DIR"
-      - name: Check production bundle budgets and isolation
-        if: ${{ !cancelled() && steps.plan.outcome == 'success' }}
-        run: deno task check:consumers:ci bundles "$COMPATIBILITY_DIR"
-      - name: Check browser failure diagnostics and cleanup
-        if: ${{ !cancelled() && steps.plan.outcome == 'success' }}
-        run: deno task check:consumers:ci browser-runner "$COMPATIBILITY_DIR"
-      - name: Setup Node 22
-        id: node-22
-        if: ${{ !cancelled() && steps.plan.outcome == 'success' }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - name: Check Node 22 with both TypeScript versions
-        if: ${{ !cancelled() && steps.plan.outcome == 'success' && steps.node-22.outcome == 'success' }}
-        run: deno task check:consumers:ci node-22 "$COMPATIBILITY_DIR"
-      - name: Setup Node 22.12.0
-        id: node-22-12-0
-        if: ${{ !cancelled() && steps.plan.outcome == 'success' }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22.12.0"
-      - name: Check Node 22.12.0 with both TypeScript versions
-        if: ${{ !cancelled() && steps.plan.outcome == 'success' && steps.node-22-12-0.outcome == 'success' }}
-        run: deno task check:consumers:ci node-22.12.0 "$COMPATIBILITY_DIR"
-      - name: Setup Deno 2.7.11
-        id: deno-minimum
-        if: ${{ !cancelled() && steps.plan.outcome == 'success' }}
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version: 2.7.11
-      - name: Check Deno 2.7.11 consumers
-        if: ${{ !cancelled() && steps.plan.outcome == 'success' && steps.deno-minimum.outcome == 'success' }}
-        run: deno task check:consumers:ci deno-2.7.11 "$COMPATIBILITY_DIR"
-      - name: Summarize every required compatibility case
-        if: always()
-        run: deno task check:consumers:ci summary "$COMPATIBILITY_DIR"
-      - name: Upload compatibility results and logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: compatibility-results
-          path: |
-            ${{ runner.temp }}/compatibility/plan.json
-            ${{ runner.temp }}/compatibility/summary.md
-            ${{ runner.temp }}/compatibility/sdk-*/manifest.json
-            ${{ runner.temp }}/compatibility/sdk-*/declaration-diagnostics.json
-            ${{ runner.temp }}/compatibility/results/
-            ${{ runner.temp }}/compatibility/logs/
-          if-no-files-found: warn
-          retention-days: 7
-      - name: Upload production bundle evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: production-browser-bundles
-          path: |
-            ${{ runner.temp }}/compatibility/bundles/*.json
-            ${{ runner.temp }}/compatibility/bundles/*.lock
-            ${{ runner.temp }}/compatibility/bundles/deno/
-            ${{ runner.temp }}/compatibility/bundles/rollup/
-            ${{ runner.temp }}/compatibility/bundles/npm/package-lock.json
+      - name: Require every compatibility job and result
+        env:
+          SUITE_RESULT: ${{ needs.compatibility_checks.result }}
+        run: test "$SUITE_RESULT" = "success"
 
   package_tests:
     name: test / ${{ matrix.package }}

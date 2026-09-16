@@ -121,6 +121,7 @@ export class RPCStreamerError extends Error {
    * @param details - Additional context about the error
    * @param cause - The original error that caused this failure
    */
+  /** @deprecated Use a dedicated failure subclass; this constructor is retained for source compatibility. */
   constructor(
     code: RPCStreamerErrorCode,
     message: string,
@@ -210,4 +211,438 @@ export const ERROR_DESCRIPTIONS: Record<RPCStreamerErrorCode, string> = {
     "Live ingestor is required but not provided",
   [RPCStreamerErrorCode.MISSING_ARCHIVE_INGESTOR]:
     "Archive ingestor is required but not provided",
+};
+
+/** Invalid config. Stable code `RPC_001`. */
+export class RPCStreamerInvalidConfigError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.INVALID_CONFIG, message, details, cause);
+  }
+}
+
+/** Invalid rpc. Stable code `RPC_002`. */
+export class RPCStreamerInvalidRpcError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.INVALID_RPC, message, details, cause);
+  }
+}
+
+/** Health check failed. Stable code `RPC_003`. */
+export class RPCStreamerHealthCheckFailedError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.HEALTH_CHECK_FAILED, message, details, cause);
+  }
+}
+
+/** Live fetch failed. Stable code `RPC_004`. */
+export class RPCStreamerLiveFetchFailedError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.LIVE_FETCH_FAILED, message, details, cause);
+  }
+}
+
+/** Archive fetch failed. Stable code `RPC_005`. */
+export class RPCStreamerArchiveFetchFailedError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.ARCHIVE_FETCH_FAILED, message, details, cause);
+  }
+}
+
+/** Parse failed. Stable code `RPC_006`. */
+export class RPCStreamerParseFailedError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.PARSE_FAILED, message, details, cause);
+  }
+}
+
+/** Invalid sequence range. Stable code `RPC_007`. */
+export class RPCStreamerInvalidSequenceRangeError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.INVALID_SEQUENCE_RANGE, message, details, cause);
+  }
+}
+
+/** Already running. Stable code `RPC_008`. */
+export class RPCStreamerAlreadyRunningError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.ALREADY_RUNNING, message, details, cause);
+  }
+}
+
+/** Not running. Stable code `RPC_009`. */
+export class RPCStreamerNotRunningError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.NOT_RUNNING, message, details, cause);
+  }
+}
+
+/** Max failures exceeded. Stable code `RPC_010`. */
+export class RPCStreamerMaxFailuresExceededError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.MAX_FAILURES_EXCEEDED, message, details, cause);
+  }
+}
+
+/** Rpc already set. Stable code `RPC_011`. */
+export class RPCStreamerRpcAlreadySetError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.RPC_ALREADY_SET, message, details, cause);
+  }
+}
+
+/** Archive rpc already set. Stable code `RPC_012`. */
+export class RPCStreamerArchiveRpcAlreadySetError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(
+      RPCStreamerErrorCode.ARCHIVE_RPC_ALREADY_SET,
+      message,
+      details,
+      cause,
+    );
+  }
+}
+
+/** Rpc not healthy. Stable code `RPC_013`. */
+export class RPCStreamerRpcNotHealthyError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.RPC_NOT_HEALTHY, message, details, cause);
+  }
+}
+
+/** Ledger too old. Stable code `RPC_014`. */
+export class RPCStreamerLedgerTooOldError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.LEDGER_TOO_OLD, message, details, cause);
+  }
+}
+
+/** Ledger too high. Stable code `RPC_015`. */
+export class RPCStreamerLedgerTooHighError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.LEDGER_TOO_HIGH, message, details, cause);
+  }
+}
+
+/** Missing archive rpc. Stable code `RPC_016`. */
+export class RPCStreamerMissingArchiveRpcError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.MISSING_ARCHIVE_RPC, message, details, cause);
+  }
+}
+
+/** Missing live ingestor. Stable code `RPC_017`. */
+export class RPCStreamerMissingLiveIngestorError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.MISSING_LIVE_INGESTOR, message, details, cause);
+  }
+}
+
+/** Missing archive ingestor. Stable code `RPC_018`. */
+export class RPCStreamerMissingArchiveIngestorError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(
+      RPCStreamerErrorCode.MISSING_ARCHIVE_INGESTOR,
+      message,
+      details,
+      cause,
+    );
+  }
+}
+
+/** Invalid live connection. Stable code `RPC_019`. */
+export class RPCStreamerInvalidLiveConnectionError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(
+      RPCStreamerErrorCode.INVALID_LIVE_CONNECTION,
+      message,
+      details,
+      cause,
+    );
+  }
+}
+
+/** Live connection failed. Stable code `RPC_020`. */
+export class RPCStreamerLiveConnectionFailedError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.LIVE_CONNECTION_FAILED, message, details, cause);
+  }
+}
+
+/** Invalid archive connection. Stable code `RPC_021`. */
+export class RPCStreamerInvalidArchiveConnectionError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(
+      RPCStreamerErrorCode.INVALID_ARCHIVE_CONNECTION,
+      message,
+      details,
+      cause,
+    );
+  }
+}
+
+/** Archive connection failed. Stable code `RPC_022`. */
+export class RPCStreamerArchiveConnectionFailedError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(
+      RPCStreamerErrorCode.ARCHIVE_CONNECTION_FAILED,
+      message,
+      details,
+      cause,
+    );
+  }
+}
+
+/** Checkpoint failed. Stable code `RPC_023`. */
+export class RPCStreamerCheckpointFailedError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.CHECKPOINT_FAILED, message, details, cause);
+  }
+}
+
+/** Missing live rpc url. Stable code `RPC_024`. */
+export class RPCStreamerMissingLiveRpcUrlError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(RPCStreamerErrorCode.MISSING_LIVE_RPC_URL, message, details, cause);
+  }
+}
+
+/** Network discovery failed. Stable code `RPC_025`. */
+export class RPCStreamerNetworkDiscoveryFailedError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(
+      RPCStreamerErrorCode.NETWORK_DISCOVERY_FAILED,
+      message,
+      details,
+      cause,
+    );
+  }
+}
+
+/** Invalid network passphrase. Stable code `RPC_026`. */
+export class RPCStreamerInvalidNetworkPassphraseError extends RPCStreamerError {
+  /** Preserve the existing stream failure details and cause. */
+  constructor(
+    message: string,
+    details?: Record<string, unknown>,
+    cause?: Error,
+  ) {
+    super(
+      RPCStreamerErrorCode.INVALID_NETWORK_PASSPHRASE,
+      message,
+      details,
+      cause,
+    );
+  }
+}
+
+/** One constructor per RPC failure. */
+export const RPCStreamerErrors: {
+  [RPCStreamerErrorCode.INVALID_CONFIG]: typeof RPCStreamerInvalidConfigError;
+  [RPCStreamerErrorCode.INVALID_RPC]: typeof RPCStreamerInvalidRpcError;
+  [RPCStreamerErrorCode.HEALTH_CHECK_FAILED]:
+    typeof RPCStreamerHealthCheckFailedError;
+  [RPCStreamerErrorCode.LIVE_FETCH_FAILED]:
+    typeof RPCStreamerLiveFetchFailedError;
+  [RPCStreamerErrorCode.ARCHIVE_FETCH_FAILED]:
+    typeof RPCStreamerArchiveFetchFailedError;
+  [RPCStreamerErrorCode.PARSE_FAILED]: typeof RPCStreamerParseFailedError;
+  [RPCStreamerErrorCode.INVALID_SEQUENCE_RANGE]:
+    typeof RPCStreamerInvalidSequenceRangeError;
+  [RPCStreamerErrorCode.ALREADY_RUNNING]: typeof RPCStreamerAlreadyRunningError;
+  [RPCStreamerErrorCode.NOT_RUNNING]: typeof RPCStreamerNotRunningError;
+  [RPCStreamerErrorCode.MAX_FAILURES_EXCEEDED]:
+    typeof RPCStreamerMaxFailuresExceededError;
+  [RPCStreamerErrorCode.RPC_ALREADY_SET]: typeof RPCStreamerRpcAlreadySetError;
+  [RPCStreamerErrorCode.ARCHIVE_RPC_ALREADY_SET]:
+    typeof RPCStreamerArchiveRpcAlreadySetError;
+  [RPCStreamerErrorCode.RPC_NOT_HEALTHY]: typeof RPCStreamerRpcNotHealthyError;
+  [RPCStreamerErrorCode.LEDGER_TOO_OLD]: typeof RPCStreamerLedgerTooOldError;
+  [RPCStreamerErrorCode.LEDGER_TOO_HIGH]: typeof RPCStreamerLedgerTooHighError;
+  [RPCStreamerErrorCode.MISSING_ARCHIVE_RPC]:
+    typeof RPCStreamerMissingArchiveRpcError;
+  [RPCStreamerErrorCode.MISSING_LIVE_INGESTOR]:
+    typeof RPCStreamerMissingLiveIngestorError;
+  [RPCStreamerErrorCode.MISSING_ARCHIVE_INGESTOR]:
+    typeof RPCStreamerMissingArchiveIngestorError;
+  [RPCStreamerErrorCode.INVALID_LIVE_CONNECTION]:
+    typeof RPCStreamerInvalidLiveConnectionError;
+  [RPCStreamerErrorCode.LIVE_CONNECTION_FAILED]:
+    typeof RPCStreamerLiveConnectionFailedError;
+  [RPCStreamerErrorCode.INVALID_ARCHIVE_CONNECTION]:
+    typeof RPCStreamerInvalidArchiveConnectionError;
+  [RPCStreamerErrorCode.ARCHIVE_CONNECTION_FAILED]:
+    typeof RPCStreamerArchiveConnectionFailedError;
+  [RPCStreamerErrorCode.CHECKPOINT_FAILED]:
+    typeof RPCStreamerCheckpointFailedError;
+  [RPCStreamerErrorCode.MISSING_LIVE_RPC_URL]:
+    typeof RPCStreamerMissingLiveRpcUrlError;
+  [RPCStreamerErrorCode.NETWORK_DISCOVERY_FAILED]:
+    typeof RPCStreamerNetworkDiscoveryFailedError;
+  [RPCStreamerErrorCode.INVALID_NETWORK_PASSPHRASE]:
+    typeof RPCStreamerInvalidNetworkPassphraseError;
+} = {
+  [RPCStreamerErrorCode.INVALID_CONFIG]: RPCStreamerInvalidConfigError,
+  [RPCStreamerErrorCode.INVALID_RPC]: RPCStreamerInvalidRpcError,
+  [RPCStreamerErrorCode.HEALTH_CHECK_FAILED]: RPCStreamerHealthCheckFailedError,
+  [RPCStreamerErrorCode.LIVE_FETCH_FAILED]: RPCStreamerLiveFetchFailedError,
+  [RPCStreamerErrorCode.ARCHIVE_FETCH_FAILED]:
+    RPCStreamerArchiveFetchFailedError,
+  [RPCStreamerErrorCode.PARSE_FAILED]: RPCStreamerParseFailedError,
+  [RPCStreamerErrorCode.INVALID_SEQUENCE_RANGE]:
+    RPCStreamerInvalidSequenceRangeError,
+  [RPCStreamerErrorCode.ALREADY_RUNNING]: RPCStreamerAlreadyRunningError,
+  [RPCStreamerErrorCode.NOT_RUNNING]: RPCStreamerNotRunningError,
+  [RPCStreamerErrorCode.MAX_FAILURES_EXCEEDED]:
+    RPCStreamerMaxFailuresExceededError,
+  [RPCStreamerErrorCode.RPC_ALREADY_SET]: RPCStreamerRpcAlreadySetError,
+  [RPCStreamerErrorCode.ARCHIVE_RPC_ALREADY_SET]:
+    RPCStreamerArchiveRpcAlreadySetError,
+  [RPCStreamerErrorCode.RPC_NOT_HEALTHY]: RPCStreamerRpcNotHealthyError,
+  [RPCStreamerErrorCode.LEDGER_TOO_OLD]: RPCStreamerLedgerTooOldError,
+  [RPCStreamerErrorCode.LEDGER_TOO_HIGH]: RPCStreamerLedgerTooHighError,
+  [RPCStreamerErrorCode.MISSING_ARCHIVE_RPC]: RPCStreamerMissingArchiveRpcError,
+  [RPCStreamerErrorCode.MISSING_LIVE_INGESTOR]:
+    RPCStreamerMissingLiveIngestorError,
+  [RPCStreamerErrorCode.MISSING_ARCHIVE_INGESTOR]:
+    RPCStreamerMissingArchiveIngestorError,
+  [RPCStreamerErrorCode.INVALID_LIVE_CONNECTION]:
+    RPCStreamerInvalidLiveConnectionError,
+  [RPCStreamerErrorCode.LIVE_CONNECTION_FAILED]:
+    RPCStreamerLiveConnectionFailedError,
+  [RPCStreamerErrorCode.INVALID_ARCHIVE_CONNECTION]:
+    RPCStreamerInvalidArchiveConnectionError,
+  [RPCStreamerErrorCode.ARCHIVE_CONNECTION_FAILED]:
+    RPCStreamerArchiveConnectionFailedError,
+  [RPCStreamerErrorCode.CHECKPOINT_FAILED]: RPCStreamerCheckpointFailedError,
+  [RPCStreamerErrorCode.MISSING_LIVE_RPC_URL]:
+    RPCStreamerMissingLiveRpcUrlError,
+  [RPCStreamerErrorCode.NETWORK_DISCOVERY_FAILED]:
+    RPCStreamerNetworkDiscoveryFailedError,
+  [RPCStreamerErrorCode.INVALID_NETWORK_PASSPHRASE]:
+    RPCStreamerInvalidNetworkPassphraseError,
 };

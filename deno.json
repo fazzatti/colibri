@@ -31,6 +31,7 @@
     "crypto": "node:crypto",
     "convee": "jsr:@fifo/convee@2.1.0",
     "@std/toml": "jsr:@std/toml@^1.0.11",
+    "yaml": "npm:yaml@2.8.2",
     "@std/assert": "jsr:@std/assert@^1.0.0",
     "@std/testing": "jsr:@std/testing@^1.0.0",
     "@std/expect": "jsr:@std/expect@^1.0.0",
@@ -38,7 +39,8 @@
     "archunit": "npm:archunit@2.4.0",
     "crap4ts-tool": "npm:@alperlabs/crap4ts@0.2.1",
     "resvg-test": "npm:@resvg/resvg-js@2.6.2",
-    "jsr:@colibri/contract-bindings": "./contract-bindings"
+    "jsr:@colibri/contract-bindings": "./contract-bindings",
+    "colibri-internal/previous-core": "jsr:@colibri/core@1.1.1"
   },
   "tasks": {
     "release:init": "deno run -A _tools/releases/cli.ts init",
@@ -89,7 +91,7 @@
     "test:architecture": "deno test --allow-read --allow-write --allow-env --allow-sys=cpus --clean _tools/architecture",
     "test:file": "deno test -A --parallel --clean --ignore='_*/'",
     "check:bundles": "deno run -A _tools/bundles/check.ts",
-    "test:bundle-tooling": "deno test -A _tools/bundles/metrics.unit.test.ts",
+    "test:bundle-tooling": "deno test -A _tools/bundles/metrics.unit.test.ts _tools/bundles/dependency-fixture.unit.test.ts",
     "check:wallets": "deno run -A _tools/consumers/wallet-compatibility.ts"
   },
   "lint": {

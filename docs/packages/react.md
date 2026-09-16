@@ -4,10 +4,10 @@ Headless React bindings for Stellar applications: connection state, cached
 reads, explicit contract invocations, existing transaction pipelines, events and
 SEPs.
 
-This is the initial **0.1 preview**. React 19.1+ in the 19.x line and TanStack
-Query 5.87+ in the 5.x line are supported. The app owns its configuration,
-QueryClient, wallet SDKs and signing authority. Core 1.2 or later in 1.x is
-required.
+This is the **0.2 preview**. React 19.1+ in the 19.x line and TanStack Query
+5.87+ in the 5.x line are supported. The app owns its configuration, wallet SDKs
+and signing authority. `ColibriQueryProvider` can own the query cache or reuse
+the application cache. Core 1.2 or later in 1.x is required.
 
 ## Install
 
@@ -15,8 +15,11 @@ Follow [installation and provider setup](react/setup.md#install).
 
 ## Start with a balance
 
-The [complete TSX balance example](react/setup.md#start-with-a-balance) mounts
-both providers and displays a funded account’s balance.
+The [complete TSX balance example](react/setup.md#start-with-a-balance) uses
+`ColibriQueryProvider` and displays a funded account’s balance.
+
+See [common workflows and convenience APIs](react/convenience.md) for complete
+provider, wallet and combined signing setup. Granular APIs remain available.
 
 ## Feature imports
 
@@ -27,16 +30,19 @@ exports are erased from JavaScript.
 | Import after `@colibri/react`    | APIs                                                                                                                                       |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | root                             | `createColibriConfig`, `ColibriProvider`, `useColibriConfig`, `useConnection`, `useConnect`, `useReconnect`, `useDisconnect`, `useNetwork` |
+| `/provider`                      | `ColibriQueryProvider`                                                                                                                     |
+| `/wallet`                        | `useWallet`                                                                                                                                |
 | `/rpc`                           | `useRpc`, `useLatestLedger`, `useTransaction`, `useWaitForTransaction`                                                                     |
 | `/accounts`                      | `useAccount`, `useTrustline`, `useLedgerEntries`                                                                                           |
 | `/assets`                        | `useBalance`, `useTokenMetadata`                                                                                                           |
 | `/contracts`                     | `useContract` and its full client type                                                                                                     |
 | `/contracts/read`                | `useContractRead`, `useContractReadSpec`, `contractReadQueryOptions`                                                                       |
-| `/contracts/invoke`              | `useContractInvoke`                                                                                                                        |
+| `/contracts/invoke`              | `useContractInvoke`, `useWalletContractInvoke`                                                                                             |
 | `/transactions/classic`          | `useClassicTransaction`                                                                                                                    |
 | `/transactions/soroban`          | `useSorobanTransaction`                                                                                                                    |
 | `/transactions/simulate`         | `useSimulateSorobanTransaction`                                                                                                            |
 | `/query`                         | `colibriQueryKey`, `colibriQueryOptions`, `queryValue`, query/mutation controls                                                            |
+| `/query/mutation`                | `useColibriMutation`                                                                                                                       |
 | `/events`                        | `createContractEvents`, `useContractEvents`                                                                                                |
 | `/webauth`                       | `useWebAuthClient`, `useWebAuth`, `useSession`, session factory                                                                            |
 | `/session`                       | Framework-independent `createWebAuthSession`, `WebAuthSession`                                                                             |
@@ -45,6 +51,8 @@ exports are erased from JavaScript.
 | `/ecosystem/freighter`           | `createFreighterConnector`                                                                                                                 |
 | `/signers`                       | `useSigners`, `useSignMessage`, explicit connection guards                                                                                 |
 | `/wallets`                       | `createWalletConnector`, `createWalletEnvelopeSigner`                                                                                      |
+| `/wallets/auth-entry`            | `createWalletAuthEntrySigner`                                                                                                              |
+| `/wallets/signer`                | `createWalletSigner`                                                                                                                       |
 | `/identicon`                     | `useIdenticon`, unstyled `AccountIdenticon`                                                                                                |
 
 ## Contracts and transactions
@@ -52,6 +60,9 @@ exports are erased from JavaScript.
 Keep full clients and their plugins with
 [useContract](react/hooks/use-contract.md), read through a generated helper or
 an ABI spec, and invoke only from explicit user actions.
+[useWalletContractInvoke](react/hooks/use-wallet-contract-invoke.md) fills
+missing transaction source and signers from the connected wallet; explicit
+overrides remain available.
 [Contract and pipeline recipes](react/contracts-and-transactions.md) explain
 transaction configuration, simulation and event subscriptions.
 
@@ -83,13 +94,16 @@ changes, memory-only credentials and cleanup. Event subscriptions have their own
 
 Connection SSR snapshots are disconnected and session SSR snapshots are
 anonymous. Render ordinary query/mutation error states and handle connection
-Promise rejections at the user-action boundary.
-[React error codes](../reference/errors/react.md) cover integration failures;
+Promise rejections at the user-action boundary. React errors have dedicated
+subclasses, such as `ReactNetworkMismatchError`, within the `ColibriReactError`
+family. Use `instanceof` or stable
+[React error codes](../reference/errors/react.md) for integration failures;
 existing Core and wallet errors retain their identity.
 
 ## Guides and API references
 
 - [Setup and providers](react/setup.md)
+- [Common workflows](react/convenience.md)
 - [Every React hook](react/hooks/README.md)
 - [Queries and caching](react/queries.md)
 - [Wallets and sessions](react/wallets-and-sessions.md)

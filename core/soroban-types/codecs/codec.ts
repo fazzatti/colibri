@@ -1,6 +1,10 @@
 import type { ScValLike } from "@/common/types/external.ts";
 import * as xdr from "stellar-sdk/xdr";
-import { Code, SorobanValueError } from "@/soroban-types/error.ts";
+import {
+  SorobanInvalidValueError,
+  SorobanTypeMismatchError,
+  SorobanValueError,
+} from "@/soroban-types/error.ts";
 import { SorobanValue } from "@/soroban-types/values/value.ts";
 
 /** A reusable, explicit Soroban schema with validation and bidirectional encoding. */
@@ -71,8 +75,7 @@ export class SorobanCodec<Input, Output = Input, Name extends string = string> {
           return encoded;
         }
         if (!this.#acceptInner) {
-          throw new SorobanValueError(
-            Code.TYPE_MISMATCH,
+          throw new SorobanTypeMismatchError(
             this.name,
             `received ${value.codec.name}`,
           );
@@ -95,11 +98,12 @@ export class SorobanCodec<Input, Output = Input, Name extends string = string> {
 
   /** @internal Normalizes encoding failures into the value error family. */
   private failure(cause: unknown): SorobanValueError {
-    return cause instanceof SorobanValueError ? cause : new SorobanValueError(
-      Code.INVALID_VALUE,
-      this.name,
-      "value does not match its schema",
-      cause,
-    );
+    return cause instanceof SorobanValueError
+      ? cause
+      : new SorobanInvalidValueError(
+        this.name,
+        "value does not match its schema",
+        cause,
+      );
   }
 }

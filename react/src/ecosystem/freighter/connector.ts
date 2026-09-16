@@ -1,6 +1,9 @@
 import { StrKey } from "@colibri/core/strkey";
 import type { WalletConnector } from "@/context/config.ts";
-import { ColibriReactError, ReactCode } from "@/errors/index.ts";
+import {
+  ReactConnectionChangedError,
+  ReactInvalidConfigError,
+} from "@/errors/index.ts";
 import {
   createWalletConnector,
   createWalletEnvelopeSigner,
@@ -24,8 +27,7 @@ export function createFreighterConnector(
 ): WalletConnector {
   const interval = options.pollIntervalMs ?? 2000;
   if (!Number.isFinite(interval) || interval < 1) {
-    throw new ColibriReactError(
-      ReactCode.INVALID_CONFIG,
+    throw new ReactInvalidConfigError(
       "Wallet polling requires a positive interval",
     );
   }
@@ -37,8 +39,7 @@ export function createFreighterConnector(
     const network = await api.getNetworkDetails();
     if (network.error) throw network.error;
     if (!StrKey.isValidEd25519PublicKey(account.address)) {
-      throw new ColibriReactError(
-        ReactCode.INVALID_CONFIG,
+      throw new ReactInvalidConfigError(
         "Freighter returned an invalid account",
       );
     }
@@ -54,8 +55,7 @@ export function createFreighterConnector(
         });
         if (signed.error) throw signed.error;
         if (signed.signerAddress !== publicKey) {
-          throw new ColibriReactError(
-            ReactCode.CONNECTION_CHANGED,
+          throw new ReactConnectionChangedError(
             "Freighter returned a different signer",
           );
         }
@@ -81,8 +81,7 @@ export function createFreighterConnector(
     connect: async () => {
       const connection = await restore(true);
       if (!connection) {
-        throw new ColibriReactError(
-          ReactCode.CONNECTION_CHANGED,
+        throw new ReactConnectionChangedError(
           "Freighter did not authorize an account",
         );
       }
@@ -133,8 +132,7 @@ async function assertFreighterIdentity(
     account.address !== address ||
     network.networkPassphrase !== networkPassphrase
   ) {
-    throw new ColibriReactError(
-      ReactCode.CONNECTION_CHANGED,
+    throw new ReactConnectionChangedError(
       "Freighter changed account or network during signing",
     );
   }

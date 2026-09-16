@@ -129,13 +129,18 @@ GitHub Actions behavior matters when changing structure or versions:
   (supported SDK range). It type-checks native SDK interop, executes a smoke
   consumer, and bundles the browser-capable packages. These test artifacts are
   never published and are not claimed to be JSR's own generated tarballs. See
-  `_tools/consumers/README.md`. Runtime/compiler combinations are named steps in
-  one job, with up to four isolated cases running concurrently per step,
-  per-case logs and a complete summary. Browser cases stay sequential because
-  they install system packages. Check bundle fixture versions before artifact
-  preparation. Resolve minimum and current SDK selections once; deduplicate only
-  identical resolved versions. Failed or missing scenarios must fail the job and
-  the final `test` gate.
+  `_tools/consumers/README.md`. The reusable compatibility workflow groups
+  parallel source/runtime/browser jobs as `compatibility / <name>`. Resolve
+  minimum and current SDK selections once, prepare portable artifacts once per
+  distinct version, and share them between runners. Deduplicate only identical
+  resolved SDK versions. Preserve both TypeScript versions in every applicable
+  runtime job. Source checks run independently of preparation; installed checks
+  consume the same artifacts. Use `fail-fast: false`, retain disjoint per-case
+  diagnostics after failures, and reject missing results plus failed/skipped
+  jobs in the final summary. Browser installs stay sequential per runner. Keep
+  the existing required `compatibility` and `test` gates; do not rename away
+  branch-protection checks. Check bundle fixture versions before artifact
+  preparation.
 - Quality uploads a syntax-level constructor/throw/catch inventory alongside the
   complete stable error-code reference. Review unknown and passthrough
   boundaries deliberately; do not conflate caller-owned errors with missing SDK
@@ -261,6 +266,13 @@ If you add or change plugin behavior:
 
 ### 4. High-level clients should build on the lower layers, not bypass them
 
+Every package should pair granular building blocks with conveniences for common
+consumer workflows. In React, start guides with complete provider/wallet/client
+flows, preserving explicit overrides and the underlying client/pipeline
+identity. Keep optional heavy dependencies behind feature subpaths. Convenience
+must never silently sign, reconnect, broaden authority or retry transaction
+submissions.
+
 `Contract`, `StellarAssetContract`, SEP-10 helpers, and streamers are meant to
 compose lower-level primitives. Avoid introducing a second orchestration path
 that duplicates pipeline or process behavior unless there is a very strong
@@ -272,6 +284,13 @@ Colibri's typed error system is one of the most important repo-wide invariants.
 
 Rules:
 
+- Every library-owned stable error code must have one concrete, named subclass.
+  Never emit different codes by repeatedly constructing a generic family class.
+  Keep abstract family bases for shared metadata and `instanceof` handling.
+  Existing public constructors may remain as deprecated compatibility/extension
+  points; library implementation sites must instantiate concrete subclasses.
+- Architecture tests must inventory every published package, reject missing or
+  shared subclasses and reject generic coded-error construction at call sites.
 - Prefer typed errors with stable codes over generic thrown `Error` instances.
 - Public and reusable modules should expose a stable error namespace.
 - Unexpected failures are generally wrapped into a typed error class rather than

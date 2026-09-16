@@ -205,3 +205,12 @@ new streamer when changing providers between runs.
 ## License
 
 MIT
+
+## Concrete failure classes
+
+Every library-owned error code has a dedicated exported class. Use
+`RPCStreamerErrors[code]` to obtain its constructor, or catch a specific class
+with `instanceof`. Existing family base classes, stable codes, messages and
+metadata remain compatible. Legacy generic constructors remain available for
+source compatibility; library implementations construct the dedicated
+subclasses. Caller-owned failures preserve their existing propagation behavior.

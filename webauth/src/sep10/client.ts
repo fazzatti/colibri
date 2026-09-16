@@ -14,7 +14,19 @@ import type {
   Sep10ClientConfig,
   Sep10GetChallengeOptions,
 } from "@/sep10/types.ts";
-import { Sep10Code, Sep10Error, WebAuthCode, WebAuthError } from "@/error.ts";
+import {
+  Sep10AccountMismatchError,
+  Sep10ClientDomainDiscoveryError,
+  Sep10ClientDomainSignerMissingError,
+  Sep10ClientDomainSigningKeyError,
+  Sep10ClientDomainUnexpectedError,
+  Sep10ClientRequestFailedError,
+  Sep10Error,
+  Sep10InvalidStateError,
+  Sep10SigningFailedError,
+  WebAuthNetworkMismatchError,
+  WebAuthOptionMismatchError,
+} from "@/error.ts";
 import { WebAuthToken } from "@/token.ts";
 import { WebAuthTransport } from "@/transport.ts";
 import type { WebAuthCoreSigner } from "@/types.ts";
@@ -72,15 +84,13 @@ export class Sep10Client {
     options: Sep10GetChallengeOptions,
   ): Promise<Sep10Challenge> {
     if (protocolForAccount(options.account) !== "sep10") {
-      throw new Sep10Error({
-        code: Sep10Code.ACCOUNT_MISMATCH,
+      throw new Sep10AccountMismatchError({
         message: "SEP-10 requires a G or M account",
         data: { account: options.account },
       });
     }
     if (options.account.startsWith("M") && options.memo !== undefined) {
-      throw new WebAuthError({
-        code: WebAuthCode.OPTION_MISMATCH,
+      throw new WebAuthOptionMismatchError({
         message: "Muxed SEP-10 accounts cannot use a memo",
         protocol: "sep10",
       });
@@ -103,8 +113,7 @@ export class Sep10Client {
     );
     const transactionXdr = response.body.transaction;
     if (typeof transactionXdr !== "string") {
-      throw new Sep10Error({
-        code: Sep10Code.CLIENT_REQUEST_FAILED,
+      throw new Sep10ClientRequestFailedError({
         message: "SEP-10 response is missing transaction XDR",
         endpoint: this.#config.endpoint,
       });
@@ -114,8 +123,7 @@ export class Sep10Client {
       responseNetwork !== undefined &&
       responseNetwork !== this.#config.networkPassphrase
     ) {
-      throw new WebAuthError({
-        code: WebAuthCode.NETWORK_MISMATCH,
+      throw new WebAuthNetworkMismatchError({
         message: "SEP-10 response uses a different network",
         protocol: "sep10",
         endpoint: this.#config.endpoint,
@@ -134,8 +142,7 @@ export class Sep10Client {
       )
     ) {
       if (!options.clientDomain) {
-        throw new Sep10Error({
-          code: Sep10Code.CLIENT_DOMAIN_UNEXPECTED,
+        throw new Sep10ClientDomainUnexpectedError({
           message: "SEP-10 server returned an unrequested client domain",
         });
       }
@@ -146,16 +153,14 @@ export class Sep10Client {
         });
         clientDomainAccount = toml.signingKey;
       } catch (cause) {
-        throw new Sep10Error({
-          code: Sep10Code.CLIENT_DOMAIN_DISCOVERY,
+        throw new Sep10ClientDomainDiscoveryError({
           message: "Could not discover the SEP-10 client-domain signing key",
           cause,
           data: { clientDomain: options.clientDomain },
         });
       }
       if (!clientDomainAccount) {
-        throw new Sep10Error({
-          code: Sep10Code.CLIENT_DOMAIN_SIGNING_KEY,
+        throw new Sep10ClientDomainSigningKeyError({
           message: "Client-domain stellar.toml has no valid signing key",
           data: { clientDomain: options.clientDomain },
         });
@@ -189,15 +194,13 @@ export class Sep10Client {
     clientDomainSigner?: Keypair | WebAuthCoreSigner,
   ): Promise<Sep10SignedChallenge> {
     if (!(challenge instanceof Sep10Challenge)) {
-      throw new Sep10Error({
-        code: Sep10Code.INVALID_STATE,
+      throw new Sep10InvalidStateError({
         message: "SEP-10 signing requires a verified challenge",
       });
     }
     const signers = Array.isArray(signer) ? signer : [signer];
     if (signers.length === 0) {
-      throw new Sep10Error({
-        code: Sep10Code.SIGNING_FAILED,
+      throw new Sep10SigningFailedError({
         message: "SEP-10 requires at least one account signer",
       });
     }
@@ -208,8 +211,7 @@ export class Sep10Client {
       }
       if (challenge.clientDomainAccount) {
         if (!clientDomainSigner) {
-          throw new Sep10Error({
-            code: Sep10Code.CLIENT_DOMAIN_SIGNER_MISSING,
+          throw new Sep10ClientDomainSignerMissingError({
             message: "Accepted SEP-10 client domain requires its signer",
           });
         }
@@ -222,8 +224,7 @@ export class Sep10Client {
           )
           : publicKey === challenge.clientDomainAccount;
         if (!signsForDomain) {
-          throw new Sep10Error({
-            code: Sep10Code.CLIENT_DOMAIN_SIGNING_KEY,
+          throw new Sep10ClientDomainSigningKeyError({
             message: "Client-domain signer does not match the discovered key",
             data: {
               expected: challenge.clientDomainAccount,
@@ -237,8 +238,7 @@ export class Sep10Client {
       if (cause instanceof Sep10Error) {
         throw cause;
       }
-      throw new Sep10Error({
-        code: Sep10Code.SIGNING_FAILED,
+      throw new Sep10SigningFailedError({
         message: "Could not sign the SEP-10 challenge",
         cause,
       });
@@ -255,8 +255,7 @@ export class Sep10Client {
     challenge: Sep10SignedChallenge,
   ): Promise<WebAuthToken> {
     if (!(challenge instanceof Sep10SignedChallenge)) {
-      throw new Sep10Error({
-        code: Sep10Code.INVALID_STATE,
+      throw new Sep10InvalidStateError({
         message: "SEP-10 submission requires a signed challenge",
       });
     }
@@ -268,8 +267,7 @@ export class Sep10Client {
       "sep10",
     );
     if (typeof response.body.token !== "string") {
-      throw new Sep10Error({
-        code: Sep10Code.CLIENT_REQUEST_FAILED,
+      throw new Sep10ClientRequestFailedError({
         message: "SEP-10 response is missing a token",
         endpoint: this.#config.endpoint,
       });

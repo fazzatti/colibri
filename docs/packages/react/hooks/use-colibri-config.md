@@ -32,8 +32,9 @@ export function AvailableWallets() {
 ## Behavior
 
 Create the config once per application, or once per server request. A missing
-provider throws `ColibriReactError` with `REACT_001`. The config owns connection
-state; use [useConnection](use-connection.md) to subscribe to it.
+provider throws `ReactMissingProviderError` (a `ColibriReactError`) with
+`REACT_001`. The config owns connection state; use
+[useConnection](use-connection.md) to subscribe to it.
 
 ## See also
 

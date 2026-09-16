@@ -1,7 +1,7 @@
 import { encode } from "fast-png";
 import type { IdenticonColor, IdenticonData } from "@/core/types.ts";
 import type { RenderSettings } from "@/core/options.ts";
-import { IdenticonCode, IdenticonError } from "@/error/index.ts";
+import { IdenticonPngEncodingFailedError } from "@/error/index.ts";
 import { type Cell, filledCells } from "@/renderers/geometry.ts";
 
 const paint = (
@@ -33,8 +33,7 @@ export const encodePng = (size: number, pixels: Uint8Array): Uint8Array => {
       depth: 8,
     });
   } catch (cause) {
-    throw new IdenticonError(
-      IdenticonCode.PNG_ENCODING_FAILED,
+    throw new IdenticonPngEncodingFailedError(
       "Unable to encode the identicon as PNG.",
       { size },
       cause,

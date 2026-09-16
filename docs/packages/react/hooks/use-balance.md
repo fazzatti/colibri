@@ -51,6 +51,12 @@ SEP-41 includes SAC contracts as well as custom tokens. Classic paths read
 ledger entries; SEP-41 paths call the token client. Missing accounts/trustlines
 remain errors. Keep `raw` as bigint and format with exact arithmetic.
 
+SEP-41 decimal precision is shared with `useTokenMetadata` in the same
+QueryClient for five minutes; the balance keeps its normal query freshness.
+After a known token upgrade, invalidate the scoped `token-decimals` query and
+refresh affected results; see
+[token precision caching](../queries.md#token-precision-caching).
+
 ## See also
 
 - [All hooks](README.md)

@@ -95,6 +95,10 @@ export type {
   SorobanUnionFactory,
 } from "@/soroban-types/codecs/index.ts";
 export {
+  SorobanErrors,
+  SorobanInvalidSchemaError,
+  SorobanInvalidValueError,
+  SorobanTypeMismatchError,
   SorobanValueError,
   SorobanValueErrorCode,
 } from "@/soroban-types/error.ts";

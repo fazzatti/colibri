@@ -1,8 +1,9 @@
 # Queries and caching
 
-Query hooks share an application-owned TanStack QueryClient. Mount it as shown
-in [setup and providers](setup.md). Queries observe data; mutations run only
-when the application calls `mutate` or `mutateAsync`.
+Query hooks share the TanStack QueryClient supplied by `ColibriQueryProvider` or
+the application's own provider. Mount it as shown in
+[setup and providers](setup.md). Queries observe data; mutations run only when
+the application calls `mutate` or `mutateAsync`.
 
 ## Query controls
 
@@ -18,6 +19,10 @@ present. `enabled: false` is not input validation and does not prevent an
 explicit `refetch()` call. Supply valid arguments before manually fetching. A
 disabled query can be pending without fetching; account for that in loading UI.
 
+`useContractRead({ contract: undefined, ... })` has a stronger missing-client
+guard: it uses `skipToken`, so manual refetch cannot execute either. Supplying
+`enabled: true` cannot bypass this guard. Pass the loaded client to enable it.
+
 [`useContractReadSpec`](hooks/use-contract-read-spec.md) takes a separate
 decoder instead of `select`. Decoding happens per observer, while the cache
 retains Core's canonical decoded value.
@@ -27,7 +32,10 @@ retains Core's canonical decoded value.
 Keys include the network passphrase, provider `scope`, feature and canonical
 arguments. Give different scopes to RPC sources or custom pipelines/discovery
 policies that can return different data for otherwise identical inputs. For a
-generated contract, keys also include its address, RPC URL and embedded spec.
+generated contract, keys also include its address, RPC URL and a SHA-256
+fingerprint of its ABI. Spec reads also use that fingerprint. Current XDR is
+checked before reusing a cached digest, including when a spec mutates in place.
+The fingerprint identifies the supplied ABI; it does not verify deployed Wasm.
 
 `queryValue` supports bigint, bytes, maps and XDR-serializable inputs. It
 rejects unsupported class instances, cyclic values and non-finite numbers. This
@@ -71,6 +79,38 @@ export async function prefetchContract<
 `colibriQueryOptions` and `colibriQueryKey` are also available for your own
 application query features without importing React runtime code from that entry.
 
+## Token precision caching
+
+`useBalance` and `useTokenMetadata` share SEP-41 decimals under the
+`token-decimals` feature key for five minutes. Their outer queries keep their
+own freshness settings. Invalidate that shared key after a known token upgrade,
+then refresh any balance/metadata queries that already contain the old
+precision.
+
+This helper invalidates the precision entry before the caller refreshes its
+affected views:
+
+<!-- deno-check @colibri/react -->
+
+```ts
+import type { QueryClient } from "@tanstack/react-query";
+import {
+  type ColibriConfig,
+  colibriQueryKey,
+  type ContractId,
+} from "@colibri/react/query";
+
+export async function invalidateTokenDecimals(
+  client: QueryClient,
+  config: ColibriConfig,
+  contractId: ContractId,
+) {
+  await client.invalidateQueries({
+    queryKey: colibriQueryKey(config, "token-decimals", contractId),
+  });
+}
+```
+
 ## Mutation policy
 
 Mutation hooks accept callbacks and `MutationControls`, but do not expose retry,
@@ -83,6 +123,11 @@ clients.
 returns a Promise that the caller must handle. Pending covers the whole Core
 operation. Reconcile an ambiguous submission outcome before submitting again.
 See [contract and pipeline recipes](contracts-and-transactions.md).
+
+For an existing SDK facade or compound action, use
+[`useColibriMutation`](hooks/use-colibri-mutation.md) from `/query/mutation`. It
+applies the same mutation policy; the action retains responsibility for its own
+validation, wallet authority, network, submission and receipt handling.
 
 ## Server rendering and credentials
 

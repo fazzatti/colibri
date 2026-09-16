@@ -1,7 +1,11 @@
 import { renderConveniences } from "@/generation/conveniences.ts";
 import { Spec } from "@colibri/core";
 import type { GenerateBindingsOptions, GeneratedBindings } from "@/types.ts";
-import { BindingError, Code } from "@/error.ts";
+import {
+  BindingError,
+  BindingInvalidOptionsError,
+  BindingInvalidSpecError,
+} from "@/error.ts";
 import { TypeMap } from "@/generation/type-map.ts";
 import { validateClassName } from "@/generation/validation.ts";
 import { renderMethods } from "@/generation/methods.ts";
@@ -87,8 +91,7 @@ export function generateBindings(
     };
   } catch (cause) {
     if (cause instanceof BindingError) throw cause;
-    throw new BindingError(
-      Code.INVALID_SPEC,
+    throw new BindingInvalidSpecError(
       "Could not generate bindings from this spec",
       cause,
     );
@@ -104,16 +107,13 @@ function validateOptions(
     options.includeColibri !== undefined &&
     typeof options.includeColibri !== "boolean"
   ) {
-    throw new BindingError(
-      Code.INVALID_OPTIONS,
-      "includeColibri must be a boolean",
-    );
+    throw new BindingInvalidOptionsError("includeColibri must be a boolean");
   }
   if (
     options.target !== undefined && !["jsr", "npm"].includes(options.target)
-  ) throw new BindingError(Code.INVALID_OPTIONS, "Unknown target preset");
+  ) throw new BindingInvalidOptionsError("Unknown target preset");
   if (
     options.output !== undefined &&
     !["files", "package"].includes(options.output)
-  ) throw new BindingError(Code.INVALID_OPTIONS, "Unknown output mode");
+  ) throw new BindingInvalidOptionsError("Unknown output mode");
 }

@@ -56,6 +56,9 @@ Use exact ABI names here, such as `get_count`, rather than generated camelCase
 helper names. The decoder runs per observer; the cache keeps Core’s canonical
 decoded result. A spec does not prove a method is read-only. Custom
 RPC/pipelines must match the network; distinguish their semantics with `scope`.
+Query keys use a SHA-256 ABI fingerprint. Current spec XDR is checked before
+reusing a cached digest, so a changed ABI gets a different key. The fingerprint
+does not verify the deployed Wasm.
 
 ## See also
 

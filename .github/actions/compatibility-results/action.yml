@@ -1,0 +1,19 @@
+name: Retain compatibility results
+description: Keep disjoint per-case evidence, including failures, for the final compatibility gate.
+inputs:
+  shard:
+    description: Unique producing job or phase name
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/upload-artifact@v4
+      with:
+        name: compatibility-case-results-${{ inputs.shard }}
+        path: |
+          ${{ runner.temp }}/compatibility/results/
+          ${{ runner.temp }}/compatibility/logs/
+          ${{ runner.temp }}/compatibility/sdk-*/manifest.json
+          ${{ runner.temp }}/compatibility/sdk-*/declaration-diagnostics.json
+        if-no-files-found: warn
+        retention-days: 7

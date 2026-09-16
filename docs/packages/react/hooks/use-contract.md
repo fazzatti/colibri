@@ -14,6 +14,10 @@ does not require a Colibri or Query provider.
 **Returns:** The inferred client instance, retaining its pipelines, plugins and
 full API.
 
+The client must satisfy the public structural `ContractIdentity`; it need not
+inherit the exact Core class installed by React. Existing SDK facades and
+generated clients from compatible Core minors can retain their own pipelines.
+
 ## Example
 
 <!-- deno-check @colibri/react -->

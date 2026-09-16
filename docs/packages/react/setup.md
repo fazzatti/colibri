@@ -18,9 +18,9 @@ that JSR emits npm peer dependencies. Check `npm ls react @tanstack/react-query`
 
 ```tsx
 import { useState } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ColibriQueryProvider } from "@colibri/react/provider";
 import { NetworkConfig } from "@colibri/core/network";
-import { ColibriProvider, createColibriConfig } from "@colibri/react";
+import { createColibriConfig } from "@colibri/react";
 import { useBalance } from "@colibri/react/assets";
 
 type AccountProps = { address: `G${string}` };
@@ -44,14 +44,11 @@ export function App({ address }: AccountProps) {
   const [config] = useState(() =>
     createColibriConfig({ network: NetworkConfig.TestNet() })
   );
-  const [queryClient] = useState(() => new QueryClient());
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ColibriProvider config={config}>
-        <Balance address={address} />
-      </ColibriProvider>
-    </QueryClientProvider>
+    <ColibriQueryProvider config={config}>
+      <Balance address={address} />
+    </ColibriQueryProvider>
   );
 }
 ```
@@ -63,17 +60,26 @@ contract. Format amounts with exact integer arithmetic before displaying them.
 
 ## Configuration lifetime
 
-Keep the config and QueryClient stable for one browser application. Create fresh
-instances per server request. The config snapshots the network; replace it to
-switch networks. Provider construction never connects or prompts a wallet.
+Start with `ColibriQueryProvider` to supply both connection state and caching.
+It owns a separate QueryClient per mounted provider and clears that owned cache
+on unmount. Pass `queryClient` to reuse a stable application-owned cache; the
+provider will not clear it. The granular `ColibriProvider` plus
+`QueryClientProvider` composition remains available.
+
+Keep the config and any supplied QueryClient stable for one browser application.
+Create fresh instances per server request. The config snapshots the network;
+replace it to switch networks. Provider construction never connects or prompts a
+wallet. The application owns config cleanup: call `config.destroy()` when its
+lifetime ends.
 
 Feature hooks use their own public subpaths. Query and mutation hooks need both
 providers. Connection, signer observation, session observation, RPC clients and
 event subscriptions need only `ColibriProvider`. `useContract` and
 `useIdenticon` need neither provider; they still follow React's rules of hooks.
 
-See [all hooks](hooks/README.md),
+See [common workflows](convenience.md), [all hooks](hooks/README.md),
 [wallets and sessions](wallets-and-sessions.md), and
 [queries and caching](queries.md). API references:
+[ColibriQueryProvider](https://jsr.io/@colibri/react/doc/provider/~/ColibriQueryProvider),
 [ColibriProvider](https://jsr.io/@colibri/react/doc/~/ColibriProvider),
 [createColibriConfig](https://jsr.io/@colibri/react/doc/~/createColibriConfig).

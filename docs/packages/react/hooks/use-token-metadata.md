@@ -38,6 +38,11 @@ This queries the SEP-41 interface through Core, not a Classic code/issuer
 registry. The contract must exist on the configured network and implement those
 methods. The ID is required; mount the component only after it is available.
 
+Decimal precision is shared with `useBalance` in the same QueryClient for five
+minutes. A metadata refetch can reuse those cached decimals. After a known token
+upgrade, invalidate `token-decimals` and refresh affected results; see
+[token precision caching](../queries.md#token-precision-caching).
+
 ## See also
 
 - [All hooks](README.md)

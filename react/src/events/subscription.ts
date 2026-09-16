@@ -6,7 +6,7 @@ import type { Event, EventFilter } from "@colibri/core/events";
 import type { LiveStartOptions, StreamerOptions } from "@colibri/rpc-streamer";
 import type { ColibriConfig } from "@/context/config.ts";
 import { useColibriConfig } from "@/context/provider.ts";
-import { ColibriReactError, ReactCode } from "@/errors/index.ts";
+import { ReactInvalidConfigError } from "@/errors/index.ts";
 /** Observable contract-event window; event history remains RPC-retention bounded. */
 export interface ContractEventsState {
   /** Subscription lifecycle. */
@@ -47,8 +47,7 @@ export class ContractEventsSubscription {
   ) {
     this.maxEvents = options.maxEvents ?? 100;
     if (!Number.isSafeInteger(this.maxEvents) || this.maxEvents < 1) {
-      throw new ColibriReactError(
-        ReactCode.INVALID_CONFIG,
+      throw new ReactInvalidConfigError(
         "maxEvents must be a positive safe integer",
       );
     }
@@ -142,8 +141,7 @@ export function useContractEvents(
   subscription: ContractEventsSubscription,
 ): ContractEventsState {
   if (useColibriConfig() !== subscription.config) {
-    throw new ColibriReactError(
-      ReactCode.INVALID_CONFIG,
+    throw new ReactInvalidConfigError(
       "Event subscription belongs to another provider",
     );
   }

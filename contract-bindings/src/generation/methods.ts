@@ -1,5 +1,5 @@
 import type { Spec } from "@colibri/core";
-import { BindingError, Code } from "@/error.ts";
+import { BindingInvalidSpecError } from "@/error.ts";
 import {
   doc,
   indent,
@@ -28,12 +28,11 @@ export function renderMethods(
   for (const method of methods) {
     const name = method.name.toString();
     if (seen.has(name)) {
-      throw new BindingError(Code.INVALID_SPEC, `Duplicate function ${name}`);
+      throw new BindingInvalidSpecError(`Duplicate function ${name}`);
     }
     seen.add(name);
     if (method.outputs.length > 1) {
-      throw new BindingError(
-        Code.INVALID_SPEC,
+      throw new BindingInvalidSpecError(
         "The Stellar SDK does not support multiple function outputs",
       );
     }
@@ -41,7 +40,7 @@ export function renderMethods(
       new Set(method.inputs.map((field) => field.name.toString())).size !==
         method.inputs.length
     ) {
-      throw new BindingError(Code.INVALID_SPEC, `Duplicate inputs in ${name}`);
+      throw new BindingInvalidSpecError(`Duplicate inputs in ${name}`);
     }
     const input = `${typeName(name)}Input`;
     const output = `${typeName(name)}Output`;

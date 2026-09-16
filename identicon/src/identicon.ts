@@ -8,7 +8,7 @@ import type {
   IdenticonMatrix,
   IdenticonOptions,
 } from "@/core/types.ts";
-import { IdenticonCode, IdenticonError } from "@/error/index.ts";
+import { IdenticonInvalidFormatError } from "@/error/index.ts";
 import { renderPng } from "@/renderers/png.ts";
 import { renderSvg } from "@/renderers/svg.ts";
 
@@ -80,8 +80,7 @@ export class Identicon {
   toDataUrl(options: IdenticonDataUrlOptions): string {
     assertOptions(options);
     if (options.format !== "svg" && options.format !== "png") {
-      throw new IdenticonError(
-        IdenticonCode.INVALID_FORMAT,
+      throw new IdenticonInvalidFormatError(
         'Data URL format must be "svg" or "png".',
         { format: options.format },
       );

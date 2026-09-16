@@ -68,7 +68,10 @@ The contract/provider networks must match. Signers and authorization inputs stay
 explicit; the hook does not borrow wallet signers automatically. Existing
 plugins are retained. Automatic retries are disabled; reconcile ambiguous
 submission outcomes before another invocation. Invalidate affected reads
-explicitly after success; see [queries and caching](../queries.md).
+explicitly after success; see [queries and caching](../queries.md). For source
+and signer defaults from the connected wallet, use
+[useWalletContractInvoke](use-wallet-contract-invoke.md); explicit transaction
+configuration still takes precedence there.
 
 ## See also
 

@@ -2,17 +2,7 @@
 export { WebAuthClient } from "@/client.ts";
 export * from "@/token.ts";
 /** Shared and protocol-specific typed errors. */
-export {
-  Sep10Code,
-  Sep10Error,
-  Sep45Code,
-  Sep45Error,
-  WebAuthCode,
-  WebAuthError,
-  type WebAuthErrorCode,
-  type WebAuthErrorMeta,
-  type WebAuthErrorOptions,
-} from "@/error.ts";
+export * from "@/error.ts";
 /** Account-to-protocol routing helper. */
 export { protocolForAccount } from "@/routing.ts";
 

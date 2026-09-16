@@ -4,6 +4,10 @@ Each public React hook has its own reference below: purpose, parameters, result,
 short TSX example and important lifecycle behavior. Start with
 [setup and providers](../setup.md) if this is your first Colibri component.
 
+`ColibriQueryProvider` supplies both providers required by query and mutation
+hooks. See [common workflows](../convenience.md) for one complete provider and
+wallet setup.
+
 Examples are complete components with application inputs supplied as props. They
 assume the providers stated on each page are mounted above the component. Keep
 hooks unconditional; disable a query with its supported missing input or
@@ -16,6 +20,9 @@ return Promise-producing functions. See [queries and caching](../queries.md) for
 shared controls, invalidation and server rendering.
 
 ## Configuration and connection
+
+- [useWallet](use-wallet.md): Observe wallet state, guarded signers and explicit
+  connection actions together.
 
 - [useColibriConfig](use-colibri-config.md): Read the application configuration
   supplied by the nearest provider.
@@ -68,8 +75,16 @@ shared controls, invalidation and server rendering.
 
 ## Contract invocations
 
+- [useWalletContractInvoke](use-wallet-contract-invoke.md): Invoke a generated
+  method with wallet-derived source and signers, preserving explicit overrides.
+
 - [useContractInvoke](use-contract-invoke.md): Invoke a generated method using
   the client’s existing invocation pipeline.
+
+## Application mutations
+
+- [useColibriMutation](use-colibri-mutation.md): Run an application-owned SDK
+  action with Colibri’s serialization and no automatic retries.
 
 ## Classic transactions
 
