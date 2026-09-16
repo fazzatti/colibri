@@ -4,7 +4,7 @@ import type {
   UseQueryOptions,
 } from "@/shared/types.ts";
 import type { ColibriConfig } from "@/context/config.ts";
-import { ColibriReactError, ReactCode } from "@/errors/index.ts";
+import { ReactInvalidQueryValueError } from "@/errors/index.ts";
 /** Query controls that cannot replace the feature's identity or executor. */
 export type QueryControls<T> = Omit<
   UseQueryOptions<T, Error, T, QueryKey>,
@@ -23,8 +23,7 @@ export function queryValue(
   if (value === undefined) return ["undefined"];
   if (typeof value === "bigint") return ["bigint", value.toString()];
   if (typeof value === "number" && !Number.isFinite(value)) {
-    throw new ColibriReactError(
-      ReactCode.INVALID_QUERY_VALUE,
+    throw new ReactInvalidQueryValueError(
       "Cache inputs require finite numbers",
     );
   }
@@ -33,8 +32,7 @@ export function queryValue(
     typeof value === "number"
   ) return [typeof value, value];
   if (typeof value !== "object" || seen.has(value)) {
-    throw new ColibriReactError(
-      ReactCode.INVALID_QUERY_VALUE,
+    throw new ReactInvalidQueryValueError(
       "Cache inputs must be serializable and acyclic",
     );
   }
@@ -68,8 +66,7 @@ function objectQueryValue(value: object, next: Set<object>): unknown {
     Object.getPrototypeOf(value) !== Object.prototype &&
     Object.getPrototypeOf(value) !== null
   ) {
-    throw new ColibriReactError(
-      ReactCode.INVALID_QUERY_VALUE,
+    throw new ReactInvalidQueryValueError(
       "Provide plain values, bytes, maps or XDR-serializable values in query keys",
     );
   }

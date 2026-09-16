@@ -1,6 +1,6 @@
 "use client";
 import { useColibriConfig } from "@/context/provider.ts";
-import { ColibriReactError, ReactCode } from "@/errors/index.ts";
+import { ReactNetworkMismatchError } from "@/errors/index.ts";
 import {
   simulateTransaction,
   type SimulateTransactionInput,
@@ -26,8 +26,7 @@ export function useSimulateSorobanTransaction(
   return useColibriMutation(
     async (transaction) => {
       if (transaction.networkPassphrase !== network.networkPassphrase) {
-        throw new ColibriReactError(
-          ReactCode.NETWORK_MISMATCH,
+        throw new ReactNetworkMismatchError(
           "Simulation and provider networks differ",
         );
       }

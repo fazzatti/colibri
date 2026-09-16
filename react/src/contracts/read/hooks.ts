@@ -1,6 +1,6 @@
 "use client";
 import { specFingerprint } from "@/contracts/fingerprint.ts";
-import { ColibriReactError, ReactCode } from "@/errors/index.ts";
+import { ReactInvalidMethodError } from "@/errors/index.ts";
 import { skipToken, useQuery } from "@tanstack/react-query";
 import type {
   QueryKey,
@@ -74,8 +74,7 @@ export function contractReadQueryOptions<
       read: (...args: ReadArgs<C, M>) => Promise<ReadResult<C, M>>;
     };
     if (!member || typeof member.read !== "function") {
-      throw new ColibriReactError(
-        ReactCode.INVALID_METHOD,
+      throw new ReactInvalidMethodError(
         `Contract has no read helper: ${method}`,
       );
     }

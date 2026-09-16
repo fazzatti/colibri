@@ -1,5 +1,6 @@
+import type { ColibriConfig } from "@/context/config.ts";
 "use client";
-import { ColibriReactError, ReactCode } from "@/errors/index.ts";
+import { ReactInvalidMethodError } from "@/errors/index.ts";
 import type { UseMutationResult } from "@/shared/types.ts";
 import { useColibriConfig } from "@/context/provider.ts";
 import { useColibriMutation } from "@/query/mutation/hook.ts";
@@ -22,17 +23,7 @@ export function useContractInvoke<
 ): UseMutationResult<InvokeResult<C, M>, Error, InvokeArgs<C, M>> {
   const config = useColibriConfig();
   return useColibriMutation((args: InvokeArgs<C, M>) => {
-    assertContractNetwork(config, contract);
-    const member = contract[method] as {
-      invoke: (args: InvokeArgs<C, M>) => Promise<InvokeResult<C, M>>;
-    };
-    if (!member || typeof member.invoke !== "function") {
-      throw new ColibriReactError(
-        ReactCode.INVALID_METHOD,
-        `Contract has no invoke helper: ${method}`,
-      );
-    }
-    return member.invoke(args);
+    return invokeContractMethod(config, contract, method, args);
   }, options);
 }
 export type {
@@ -40,3 +31,25 @@ export type {
   InvokeMethodName,
   InvokeResult,
 } from "@/contracts/types.ts";
+
+/** @internal Invoke the original client without replacing its pipeline or plugins. */
+export function invokeContractMethod<
+  C extends ContractIdentity,
+  M extends InvokeMethodName<C>,
+>(
+  config: ColibriConfig,
+  contract: C,
+  method: M,
+  args: InvokeArgs<C, M>,
+): Promise<InvokeResult<C, M>> {
+  assertContractNetwork(config, contract);
+  const member = contract[method] as {
+    invoke: (args: InvokeArgs<C, M>) => Promise<InvokeResult<C, M>>;
+  };
+  if (!member || typeof member.invoke !== "function") {
+    throw new ReactInvalidMethodError(
+      `Contract has no invoke helper: ${method}`,
+    );
+  }
+  return member.invoke(args);
+}

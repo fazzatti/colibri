@@ -1,7 +1,7 @@
 import type { EnvelopeSigner } from "@colibri/core/signers";
 import type { Ed25519PublicKey } from "@colibri/core/strkey";
 import type { WalletConnector } from "@/context/config.ts";
-import { ColibriReactError, ReactCode } from "@/errors/index.ts";
+import { ReactNetworkMismatchError } from "@/errors/index.ts";
 /** Explicit XDR signing bridge for browser wallets such as Freighter or Wallets Kit. */
 export interface WalletEnvelopeOptions {
   /** The actual Ed25519 signer key, independently of a controlled account. */
@@ -23,8 +23,7 @@ export function createWalletEnvelopeSigner(
     signsFor: (target) => accounts.has(target),
     signTransaction: async (transaction) => {
       if (transaction.networkPassphrase !== options.networkPassphrase) {
-        throw new ColibriReactError(
-          ReactCode.NETWORK_MISMATCH,
+        throw new ReactNetworkMismatchError(
           "Transaction and wallet networks differ",
         );
       }

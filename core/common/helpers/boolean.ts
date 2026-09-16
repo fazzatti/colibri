@@ -1,6 +1,8 @@
+import type { BaseMeta, ColibriErrorShape } from "@/error/types.ts";
 import { ColibriError } from "@/error/index.ts";
 
-enum ErrorCode {
+/** Stable helper failure codes. */
+export enum BooleanCode {
   IS_FALSY = "HLP_BOOL_00",
 }
 
@@ -25,15 +27,29 @@ export const isBooleanStrict = (val: unknown): boolean => {
 /** Asserts that a value is truthy. */
 export const isTruthy = (
   checkResult: unknown,
-  subjectOfCheck = "variable"
+  subjectOfCheck = "variable",
 ): void => {
   if (!checkResult) {
     const message = `"${subjectOfCheck}" is falsy, need a truthy value.`;
-    throw ColibriError.unexpected({
+    throw new IsFalsyError({
       domain: "helpers",
       source: "@colibri/core/helpers/boolean",
       message,
-      code: ErrorCode.IS_FALSY,
     });
   }
 };
+
+/** Is falsy. Stable code `HLP_BOOL_00`. */
+export class IsFalsyError extends ColibriError<BooleanCode.IS_FALSY> {
+  /** Preserve diagnostics while fixing this failure's code. */
+  constructor(context: Omit<ColibriErrorShape<string, BaseMeta>, "code">) {
+    super({
+      ...context,
+      details: "details" in context
+        ? context.details
+        : "An unexpected error occurred",
+      meta: { cause: undefined, ...context.meta },
+      code: BooleanCode.IS_FALSY,
+    });
+  }
+}

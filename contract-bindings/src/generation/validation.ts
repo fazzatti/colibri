@@ -1,4 +1,4 @@
-import { BindingError, Code } from "@/error.ts";
+import { BindingInvalidOptionsError } from "@/error.ts";
 import { identifier } from "@/generation/type-map.ts";
 import { TEMPLATE_CLASS_NAMES } from "@/generation/names.ts";
 
@@ -7,8 +7,7 @@ export function validateClassName(name: string): void {
   if (
     !identifier(name) || TEMPLATE_CLASS_NAMES.has(name)
   ) {
-    throw new BindingError(
-      Code.INVALID_OPTIONS,
+    throw new BindingInvalidOptionsError(
       "Choose a valid class name without a TypeScript keyword or generated name collision",
     );
   }
@@ -23,8 +22,7 @@ export function validatePackageName(
     !name || !/^(?:@[a-z0-9][a-z0-9-]*\/)?[a-z0-9][a-z0-9-]*$/.test(name) ||
     (target === "jsr" && !name.startsWith("@"))
   ) {
-    throw new BindingError(
-      Code.INVALID_OPTIONS,
+    throw new BindingInvalidOptionsError(
       "Supply a valid package name (JSR requires @scope/name)",
     );
   }

@@ -1,6 +1,9 @@
+import { ReactInvalidConfigError } from "@/errors/index.ts";
+import type { WalletAuthEntryOptions } from "@/wallets/auth-entry/signer.ts";
+import type { WalletEnvelopeOptions } from "@/wallets/adapter.ts";
 import { StrKey } from "@colibri/core/strkey";
 import type { WalletConnection, WalletConnector } from "@/context/config.ts";
-import { ColibriReactError, ReactCode } from "@/errors/index.ts";
+import { ReactUnsupportedCapabilityError } from "@/errors/index.ts";
 import { createWalletEnvelopeSigner } from "@/wallets/adapter.ts";
 import {
   connectionChanged,
@@ -12,7 +15,6 @@ import type {
   StellarWalletsKitApi,
   StellarWalletsKitConnectorOptions,
   WalletsKitAccount,
-  WalletsKitCapabilities,
 } from "@/ecosystem/stellar-wallets-kit/types.ts";
 
 /**
@@ -91,9 +93,24 @@ class KitConnector implements WalletConnector {
   private connection(account: WalletsKitAccount): WalletConnection {
     const capabilities = this.options.capabilities(account);
     const signers = [...(capabilities.signers ?? [])];
-    if (capabilities.envelope) signers.unshift(this.envelope(account));
+    if (capabilities.signer) {
+      if (capabilities.envelope || capabilities.authEntry) {
+        throw new ReactInvalidConfigError(
+          "Choose the combined signer or the granular capabilities, not both",
+        );
+      }
+      signers.unshift(capabilities.signer({
+        ...this.authEntryOptions(account),
+        signTransaction: this.envelopeOptions(account).signTransaction,
+      }));
+    }
+    if (capabilities.envelope) {
+      signers.unshift(
+        createWalletEnvelopeSigner(this.envelopeOptions(account)),
+      );
+    }
     if (capabilities.authEntry) {
-      signers.push(this.authEntry(account, capabilities.authEntry));
+      signers.push(capabilities.authEntry(this.authEntryOptions(account)));
     }
     return {
       address: account.address,
@@ -103,20 +120,16 @@ class KitConnector implements WalletConnector {
     };
   }
 
-  private authEntry(
-    account: WalletsKitAccount,
-    create: NonNullable<WalletsKitCapabilities["authEntry"]>,
-  ) {
+  private authEntryOptions(account: WalletsKitAccount): WalletAuthEntryOptions {
     const { address, networkPassphrase } = account;
     if (!this.kit.signAuthEntry || !StrKey.isValidEd25519PublicKey(address)) {
-      throw new ColibriReactError(
-        ReactCode.UNSUPPORTED_CAPABILITY,
+      throw new ReactUnsupportedCapabilityError(
         "Kit auth-entry signing requires a G-address and signAuthEntry capability",
       );
     }
     const sign = this.kit.signAuthEntry.bind(this.kit);
     const revision = this.revision;
-    return create({
+    return {
       address,
       networkPassphrase,
       signAuthEntry: async (xdr) => {
@@ -128,19 +141,18 @@ class KitConnector implements WalletConnector {
         await this.assertAccount(account, revision);
         return signed.signedAuthEntry;
       },
-    });
+    };
   }
 
-  private envelope(account: WalletsKitAccount) {
+  private envelopeOptions(account: WalletsKitAccount): WalletEnvelopeOptions {
     const { address, networkPassphrase } = account;
     if (!StrKey.isValidEd25519PublicKey(address)) {
-      throw new ColibriReactError(
-        ReactCode.UNSUPPORTED_CAPABILITY,
+      throw new ReactUnsupportedCapabilityError(
         "Kit envelope signing requires a G-address; supply explicit signers for other accounts",
       );
     }
     const revision = this.revision;
-    return createWalletEnvelopeSigner({
+    return {
       publicKey: address,
       networkPassphrase,
       signTransaction: async (xdr) => {
@@ -155,7 +167,7 @@ class KitConnector implements WalletConnector {
         await this.assertAccount(account, revision);
         return signed.signedTxXdr;
       },
-    });
+    };
   }
 
   subscribe(

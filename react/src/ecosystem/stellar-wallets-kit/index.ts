@@ -26,3 +26,5 @@ export type {
   SignerKey,
   TransactionXDRBase64,
 } from "@/wallets/index.ts";
+
+export type { WalletSignerOptions } from "@/wallets/signer/index.ts";

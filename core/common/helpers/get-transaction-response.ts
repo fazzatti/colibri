@@ -1,3 +1,5 @@
+import { errorContext } from "@/common/helpers/error-context.ts";
+import type { BaseMeta, ColibriErrorShape } from "@/error/types.ts";
 import { Address, xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { ColibriError } from "@/error/index.ts";
@@ -6,7 +8,8 @@ import type { ContractId } from "@/strkeys/types.ts";
 import { assert } from "@/common/assert/assert.ts";
 import { StrKey } from "@/strkeys/index.ts";
 
-enum ErrorCode {
+/** Stable helper failure codes. */
+export enum GetTransactionResponseCode {
   FAILED_TO_GET_WASM_HASH = "HLP_GTR_01",
   FAILED_TO_GET_CONTRACT_ID = "HLP_GTR_02",
 
@@ -26,11 +29,11 @@ export const getWasmHashFromGetTransactionResponse = (
       : undefined;
     assert(
       returnValue?.type === "scvBytes",
-      ColibriError.unexpected({
+      new MissingWasmHashError({
         domain: "helpers",
         source: baseErrorSource + "/getWasmHashFromGetTransactionResponse",
         message: "Transaction result does not contain a WASM hash",
-        code: ErrorCode.MISSING_WASM_HASH,
+
         meta: {
           data: {
             resultMetaXdr: softTryToXDR(() =>
@@ -46,19 +49,21 @@ export const getWasmHashFromGetTransactionResponse = (
   } catch (e) {
     if (e instanceof ColibriError) throw e;
 
-    throw ColibriError.fromUnknown(e, {
-      domain: "helpers",
-      source: baseErrorSource + "/getWasmHashFromGetTransactionResponse",
-      message: "Failed to get wasm hash from GetTransactionResponse!",
-      code: ErrorCode.FAILED_TO_GET_WASM_HASH,
-      meta: {
-        data: {
-          resultMetaXdr: softTryToXDR(() =>
-            response.resultMetaXdr.toXdr("base64")
-          ),
+    throw (e instanceof ColibriError
+      ? e
+      : new FailedToGetWasmHashError(errorContext(e, {
+        domain: "helpers",
+        source: baseErrorSource + "/getWasmHashFromGetTransactionResponse",
+        message: "Failed to get wasm hash from GetTransactionResponse!",
+
+        meta: {
+          data: {
+            resultMetaXdr: softTryToXDR(() =>
+              response.resultMetaXdr.toXdr("base64")
+            ),
+          },
         },
-      },
-    });
+      })));
   }
 };
 
@@ -72,11 +77,11 @@ export const getContractIdFromGetTransactionResponse = (
       : undefined;
     assert(
       returnValue?.type === "scvAddress",
-      ColibriError.unexpected({
+      new MissingContractIdError({
         domain: "helpers",
         source: baseErrorSource + "/getContractIdFromGetTransactionResponse",
         message: "Transaction result does not contain a contract ID",
-        code: ErrorCode.MISSING_CONTRACT_ID,
+
         meta: {
           data: {
             resultMetaXdr: softTryToXDR(() =>
@@ -92,11 +97,11 @@ export const getContractIdFromGetTransactionResponse = (
 
     assert(
       StrKey.isValidContractId(contractId),
-      ColibriError.unexpected({
+      new InvalidContractIdError({
         domain: "helpers",
         source: baseErrorSource + "/getContractIdFromGetTransactionResponse",
         message: "Retrieved contract ID is not a valid contract ID!",
-        code: ErrorCode.INVALID_CONTRACT_ID,
+
         meta: {
           data: { contractId },
         },
@@ -107,18 +112,92 @@ export const getContractIdFromGetTransactionResponse = (
   } catch (e) {
     if (e instanceof ColibriError) throw e;
 
-    throw ColibriError.fromUnknown(e, {
-      domain: "helpers",
-      source: baseErrorSource + "/getContractIdFromGetTransactionResponse",
-      message: "Failed to get contract ID from GetTransactionResponse!",
-      code: ErrorCode.FAILED_TO_GET_CONTRACT_ID,
-      meta: {
-        data: {
-          resultMetaXdr: softTryToXDR(() =>
-            response.resultMetaXdr.toXdr("base64")
-          ),
+    throw (e instanceof ColibriError
+      ? e
+      : new FailedToGetContractIdError(errorContext(e, {
+        domain: "helpers",
+        source: baseErrorSource + "/getContractIdFromGetTransactionResponse",
+        message: "Failed to get contract ID from GetTransactionResponse!",
+
+        meta: {
+          data: {
+            resultMetaXdr: softTryToXDR(() =>
+              response.resultMetaXdr.toXdr("base64")
+            ),
+          },
         },
-      },
-    });
+      })));
   }
 };
+
+/** Failed to get wasm hash. Stable code `HLP_GTR_01`. */
+export class FailedToGetWasmHashError
+  extends ColibriError<GetTransactionResponseCode.FAILED_TO_GET_WASM_HASH> {
+  /** Preserve diagnostics while fixing this failure's code. */
+  constructor(context: Omit<ColibriErrorShape<string, BaseMeta>, "code">) {
+    super({
+      ...context,
+      code: GetTransactionResponseCode.FAILED_TO_GET_WASM_HASH,
+    });
+  }
+}
+
+/** Failed to get contract id. Stable code `HLP_GTR_02`. */
+export class FailedToGetContractIdError
+  extends ColibriError<GetTransactionResponseCode.FAILED_TO_GET_CONTRACT_ID> {
+  /** Preserve diagnostics while fixing this failure's code. */
+  constructor(context: Omit<ColibriErrorShape<string, BaseMeta>, "code">) {
+    super({
+      ...context,
+      code: GetTransactionResponseCode.FAILED_TO_GET_CONTRACT_ID,
+    });
+  }
+}
+
+/** Invalid contract id. Stable code `HLP_GTR_03`. */
+export class InvalidContractIdError
+  extends ColibriError<GetTransactionResponseCode.INVALID_CONTRACT_ID> {
+  /** Preserve diagnostics while fixing this failure's code. */
+  constructor(context: Omit<ColibriErrorShape<string, BaseMeta>, "code">) {
+    super({
+      ...context,
+      details: "details" in context
+        ? context.details
+        : "An unexpected error occurred",
+      meta: { cause: undefined, ...context.meta },
+      code: GetTransactionResponseCode.INVALID_CONTRACT_ID,
+    });
+  }
+}
+
+/** Missing wasm hash. Stable code `HLP_GTR_04`. */
+export class MissingWasmHashError
+  extends ColibriError<GetTransactionResponseCode.MISSING_WASM_HASH> {
+  /** Preserve diagnostics while fixing this failure's code. */
+  constructor(context: Omit<ColibriErrorShape<string, BaseMeta>, "code">) {
+    super({
+      ...context,
+      details: "details" in context
+        ? context.details
+        : "An unexpected error occurred",
+      meta: { cause: undefined, ...context.meta },
+      code: GetTransactionResponseCode.MISSING_WASM_HASH,
+    });
+  }
+}
+
+/** Missing contract id. Stable code `HLP_GTR_05`. */
+export class MissingContractIdError
+  extends ColibriError<GetTransactionResponseCode.MISSING_CONTRACT_ID> {
+  /** Preserve diagnostics while fixing this failure's code. */
+  constructor(context: Omit<ColibriErrorShape<string, BaseMeta>, "code">) {
+    super({
+      ...context,
+      details: "details" in context
+        ? context.details
+        : "An unexpected error occurred",
+      meta: { cause: undefined, ...context.meta },
+      code: GetTransactionResponseCode.MISSING_CONTRACT_ID,
+    });
+  }
+}

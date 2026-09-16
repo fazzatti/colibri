@@ -1,5 +1,5 @@
 import { NetworkConfig } from "@colibri/core";
-import { BindingError, Code } from "@/error.ts";
+import { BindingCancelledError, BindingInvalidOptionsError } from "@/error.ts";
 import { validateCliValue } from "@/cli/validation.ts";
 
 /** CLI interaction interface for terminals or an application-provided prompt UI. */
@@ -50,36 +50,31 @@ export function parseCliArgs(args: readonly string[]): CliFlags {
   for (let i = 0; i < args.length; i++) {
     const match = /^--([^=]+)(?:=(.*))?$/.exec(args[i]);
     if (!match) {
-      throw new BindingError(
-        Code.INVALID_OPTIONS,
+      throw new BindingInvalidOptionsError(
         `Expected --option, received ${args[i]}`,
       );
     }
     const [, key, inline] = match;
     if (Object.hasOwn(flags, key)) {
-      throw new BindingError(Code.INVALID_OPTIONS, `Duplicate --${key}`);
+      throw new BindingInvalidOptionsError(`Duplicate --${key}`);
     }
     if (SWITCHES.has(key)) {
       if (inline !== undefined) {
-        throw new BindingError(Code.INVALID_OPTIONS, `--${key} takes no value`);
+        throw new BindingInvalidOptionsError(`--${key} takes no value`);
       }
       flags[key] = true;
     } else if (VALUE_FLAGS.has(key)) {
       const value = inline ?? args[++i];
       if (!value || value.startsWith("--")) {
-        throw new BindingError(
-          Code.INVALID_OPTIONS,
-          `Missing value for --${key}`,
-        );
+        throw new BindingInvalidOptionsError(`Missing value for --${key}`);
       }
       flags[key] = value;
-    } else throw new BindingError(Code.INVALID_OPTIONS, `Unknown --${key}`);
+    } else throw new BindingInvalidOptionsError(`Unknown --${key}`);
   }
   if (
     ["wasm", "wasm-hash", "contract-id"].filter((key) => flags[key]).length > 1
   ) {
-    throw new BindingError(
-      Code.INVALID_OPTIONS,
+    throw new BindingInvalidOptionsError(
       "Choose exactly one source: --wasm, --wasm-hash or --contract-id",
     );
   }
@@ -102,8 +97,7 @@ async function answer(
       await requireValid(key, fallback, flags);
       return flags[key] = fallback;
     }
-    throw new BindingError(
-      Code.INVALID_OPTIONS,
+    throw new BindingInvalidOptionsError(
       `Missing --${key}; use interactive mode or supply this flag`,
     );
   }
@@ -117,7 +111,7 @@ async function requireValid(
 ): Promise<void> {
   const valid = await validateCliValue(key, value, flags);
   if (valid !== true) {
-    throw new BindingError(Code.INVALID_OPTIONS, `--${key}: ${valid}`);
+    throw new BindingInvalidOptionsError(`--${key}: ${valid}`);
   }
 }
 
@@ -135,7 +129,7 @@ async function promptValue(
       (value) => validate(normalize(value)),
     );
     if (value === null) {
-      throw new BindingError(Code.CANCELLED, "Generation cancelled");
+      throw new BindingCancelledError("Generation cancelled");
     }
     const resolved = normalize(value);
     // Prompt-only adapters may ignore the callback. Always enforce validation here too.
@@ -249,8 +243,7 @@ export async function resolveCliOptions(
       io,
     );
   } else if (flags["package-name"]) {
-    throw new BindingError(
-      Code.INVALID_OPTIONS,
+    throw new BindingInvalidOptionsError(
       "--package-name requires --output package",
     );
   }
@@ -260,16 +253,14 @@ export async function resolveCliOptions(
 
 function validateCombinations(flags: CliFlags): void {
   if (flags["package-name"] && flags.output === "files") {
-    throw new BindingError(
-      Code.INVALID_OPTIONS,
+    throw new BindingInvalidOptionsError(
       "--package-name requires --output package",
     );
   }
   if (
     flags["network-passphrase"] && flags.network && flags.network !== "custom"
   ) {
-    throw new BindingError(
-      Code.INVALID_OPTIONS,
+    throw new BindingInvalidOptionsError(
       "--network-passphrase requires --network custom",
     );
   }
@@ -279,8 +270,7 @@ export function cliNetwork(flags: CliFlags): NetworkConfig {
   const rpcUrl = flags["rpc-url"] as string | undefined;
   const allowHttp = flags["allow-http"] === true;
   if (flags["network-passphrase"] && flags.network !== "custom") {
-    throw new BindingError(
-      Code.INVALID_OPTIONS,
+    throw new BindingInvalidOptionsError(
       "--network-passphrase requires --network custom",
     );
   }
@@ -298,8 +288,7 @@ export function cliNetwork(flags: CliFlags): NetworkConfig {
         allowHttp,
       });
     default:
-      throw new BindingError(
-        Code.INVALID_OPTIONS,
+      throw new BindingInvalidOptionsError(
         "Select --network testnet|futurenet|mainnet|custom",
       );
   }

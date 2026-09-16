@@ -1,3 +1,4 @@
+import { createWalletSigner } from "@/wallets/signer/index.ts";
 import { createWalletAuthEntrySigner } from "@/wallets/auth-entry/index.ts";
 import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
@@ -129,6 +130,28 @@ function fixture() {
 }
 
 describe("Wallets Kit ecosystem adapter", () => {
+  it("offers a combined signer without duplicate capabilities and guards stale identities", async () => {
+    const f = fixture();
+    f.kit.signAuthEntry = (xdr) => Promise.resolve({ signedAuthEntry: xdr });
+    const connector = createStellarWalletsKitConnector(f.kit, {
+      capabilities: () => ({ signer: createWalletSigner }),
+    });
+    const connected = await connector.connect();
+    assertEquals(connected.signers.length, 1);
+    const signer = connected.signers[0];
+    assert("signTransaction" in signer && "signSorobanAuthEntry" in signer);
+    await signer.signTransaction(tx);
+    f.state.address = LocalSigner.generateRandom().publicKey();
+    await assertRejects(
+      async () => await signer.signTransaction(tx),
+      ColibriReactError,
+    );
+    f.state.address = address;
+    const conflict = createStellarWalletsKitConnector(f.kit, {
+      capabilities: () => ({ signer: createWalletSigner, envelope: true }),
+    });
+    await assertRejects(() => conflict.connect(), ColibriReactError);
+  });
   it("declares auth-entry support and guards each wallet authorization prompt", async () => {
     const f = fixture();
     const connector = createStellarWalletsKitConnector(f.kit, {

@@ -4,10 +4,10 @@ Headless React bindings for Stellar applications: connection state, cached
 reads, explicit contract invocations, existing transaction pipelines, events and
 SEPs.
 
-This is the initial **0.1 preview**. React 19.1+ in the 19.x line and TanStack
-Query 5.87+ in the 5.x line are supported. The app owns its configuration,
-QueryClient, wallet SDKs and signing authority. Core 1.2 or later in 1.x is
-required.
+This is the **0.2 preview**. React 19.1+ in the 19.x line and TanStack Query
+5.87+ in the 5.x line are supported. The app owns its configuration, wallet SDKs
+and signing authority. `ColibriQueryProvider` can own the query cache or reuse
+the application cache. Core 1.2 or later in 1.x is required.
 
 ## Install
 
@@ -27,9 +27,9 @@ that JSR emits npm peer dependencies. Check `npm ls react @tanstack/react-query`
 
 ```tsx
 import { useState } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ColibriQueryProvider } from "@colibri/react/provider";
 import { NetworkConfig } from "@colibri/core/network";
-import { ColibriProvider, createColibriConfig } from "@colibri/react";
+import { createColibriConfig } from "@colibri/react";
 import { useBalance } from "@colibri/react/assets";
 
 type AccountProps = { address: `G${string}` };
@@ -53,14 +53,11 @@ export function App({ address }: AccountProps) {
   const [config] = useState(() =>
     createColibriConfig({ network: NetworkConfig.TestNet() })
   );
-  const [queryClient] = useState(() => new QueryClient());
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ColibriProvider config={config}>
-        <Balance address={address} />
-      </ColibriProvider>
-    </QueryClientProvider>
+    <ColibriQueryProvider config={config}>
+      <Balance address={address} />
+    </ColibriQueryProvider>
   );
 }
 ```
@@ -69,6 +66,9 @@ The supplied address must be an existing, funded Testnet account. An absent
 account or trustline is an error, not a fabricated zero balance. Raw amounts are
 `bigint`; Classic balances have seven decimals. SEP-41 precision comes from the
 contract. Format amounts with exact integer arithmetic before displaying them.
+
+See [common workflows and convenience APIs](react/convenience.md) for complete
+provider, wallet and combined signing setup. Granular APIs remain available.
 
 ## Feature imports
 

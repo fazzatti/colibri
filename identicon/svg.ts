@@ -10,5 +10,5 @@
  * @module
  */
 export { identiconSvg } from "@/svg.ts";
-export { IdenticonCode, IdenticonError } from "@/error/index.ts";
+export * from "@/error/index.ts";
 export type { IdenticonOptions } from "@/core/types.ts";

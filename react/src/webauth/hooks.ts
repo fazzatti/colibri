@@ -21,7 +21,7 @@ import {
   type QueryControls,
 } from "@/query/options.ts";
 import { useColibriMutation } from "@/query/mutation/hook.ts";
-import { ColibriReactError, ReactCode } from "@/errors/index.ts";
+import { ReactInvalidConfigError } from "@/errors/index.ts";
 /** Discover a SEP-10/45 client. Pass a distinct scope for custom fetchers or discovery policies. */
 export function useWebAuthClient(
   domain: string | undefined,
@@ -50,10 +50,7 @@ export function useWebAuthClient(
 export function useSession(session: WebAuthSession): SessionState {
   const config = useColibriConfig();
   if (session.config !== config) {
-    throw new ColibriReactError(
-      ReactCode.INVALID_CONFIG,
-      "Session belongs to another provider",
-    );
+    throw new ReactInvalidConfigError("Session belongs to another provider");
   }
   return useSyncExternalStore(
     session.subscribe,

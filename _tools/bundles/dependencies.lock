@@ -2994,15 +2994,15 @@
           "npm:dockerode@3.3.3"
         ]
       },
-      "jsr:@colibri/contract-bindings@0.2.0": {
+      "jsr:@colibri/contract-bindings@0.3.0": {
         "dependencies": [
           "jsr:@cliffy/prompt@1.0.0-rc.8",
           "jsr:@colibri/core@^1.1.0",
           "npm:@stellar/stellar-sdk@^17.0.1"
         ]
       },
-      "jsr:@colibri/core@1.2.0": {},
-      "jsr:@colibri/identicon@1.1.0": {
+      "jsr:@colibri/core@1.3.0": {},
+      "jsr:@colibri/identicon@1.2.0": {
         "dependencies": [
           "jsr:@colibri/core@^1.1.0",
           "jsr:@std/encoding@^1.0.10",
@@ -3039,7 +3039,7 @@
           "npm:react@^19.1.1"
         ]
       },
-      "jsr:@colibri/rpc-streamer@1.0.0": {
+      "jsr:@colibri/rpc-streamer@1.1.0": {
         "dependencies": [
           "jsr:@colibri/core@1"
         ]
@@ -3049,7 +3049,7 @@
           "npm:dockerode@3.3.3"
         ]
       },
-      "jsr:@colibri/webauth@1.0.0": {
+      "jsr:@colibri/webauth@1.1.0": {
         "dependencies": [
           "jsr:@colibri/core@1"
         ]

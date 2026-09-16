@@ -1,6 +1,8 @@
+import type { BaseMeta, ColibriErrorShape } from "@/error/types.ts";
 import { ColibriError } from "@/error/index.ts";
 
-enum ErrorCode {
+/** Stable helper failure codes. */
+export enum BoundedArrayCode {
   ARRAY_LENGTH_OUT_OF_BOUNDS = "HLP_BND_01",
 }
 
@@ -8,10 +10,8 @@ enum ErrorCode {
  * Helper to create a fixed-length tuple.
  * @internal
  */
-type Tuple<T, N extends number, R extends T[] = []> = R["length"] extends N
-  ? R
-  : R["length"] extends 50
-  ? T[]
+type Tuple<T, N extends number, R extends T[] = []> = R["length"] extends N ? R
+  : R["length"] extends 50 ? T[]
   : Tuple<T, N, [T, ...R]>;
 
 /**
@@ -24,13 +24,10 @@ type BuildBoundedArray<
   Min extends number,
   Max extends number,
   Current extends T[] = Tuple<T, Min>,
-  Result = Current
-> = number extends Current["length"]
-  ? T[]
-  : Current["length"] extends Max
-  ? Result
-  : Current["length"] extends 50
-  ? Result | T[]
+  Result = Current,
+> = number extends Current["length"] ? T[]
+  : Current["length"] extends Max ? Result
+  : Current["length"] extends 50 ? Result | T[]
   : BuildBoundedArray<T, Min, Max, [...Current, T], Result | [...Current, T]>;
 
 /**
@@ -73,12 +70,10 @@ type BuildBoundedArray<
 export type BoundedArray<T, Min extends number, Max extends number> =
   // If Min or Max are generic 'number' types (not literals), fallback to T[]
   // to prevent infinite recursion during type checking.
-  number extends Min
-    ? T[]
-    : number extends Max
-    ? T[]
-    : // Otherwise, use the strict recursive tuple definition
-      BuildBoundedArray<T, Min, Max> & T[];
+  number extends Min ? T[]
+    : number extends Max ? T[]
+    // Otherwise, use the strict recursive tuple definition
+    : BuildBoundedArray<T, Min, Max> & T[];
 
 /**
  * Checks at runtime whether an array's length falls within the specified bounds.
@@ -107,7 +102,7 @@ export type BoundedArray<T, Min extends number, Max extends number> =
 export function isBoundedArray<T, Min extends number, Max extends number>(
   arr: T[],
   min: Min,
-  max: Max
+  max: Max,
 ): arr is BoundedArray<T, Min, Max> {
   return (
     Array.isArray(arr) &&
@@ -152,13 +147,13 @@ export function isBoundedArray<T, Min extends number, Max extends number>(
 export function asBoundedArray<T, Min extends number, Max extends number>(
   arr: T[],
   min: Min,
-  max: Max
+  max: Max,
 ): BoundedArray<T, Min, Max> {
   if (!isBoundedArray(arr, min, max)) {
-    throw ColibriError.unexpected({
+    throw new ArrayLengthOutOfBoundsError({
       domain: "helpers",
       source: "@colibri/core/common/helpers/bounded-array",
-      code: ErrorCode.ARRAY_LENGTH_OUT_OF_BOUNDS,
+
       message: `Array length ${arr.length} not in bounds [${min}, ${max}]`,
       details:
         "The provided array does not satisfy the required bounded length constraints.",
@@ -172,4 +167,20 @@ export function asBoundedArray<T, Min extends number, Max extends number>(
     });
   }
   return arr as unknown as BoundedArray<T, Min, Max>;
+}
+
+/** Array length out of bounds. Stable code `HLP_BND_01`. */
+export class ArrayLengthOutOfBoundsError
+  extends ColibriError<BoundedArrayCode.ARRAY_LENGTH_OUT_OF_BOUNDS> {
+  /** Preserve diagnostics while fixing this failure's code. */
+  constructor(context: Omit<ColibriErrorShape<string, BaseMeta>, "code">) {
+    super({
+      ...context,
+      details: "details" in context
+        ? context.details
+        : "An unexpected error occurred",
+      meta: { cause: undefined, ...context.meta },
+      code: BoundedArrayCode.ARRAY_LENGTH_OUT_OF_BOUNDS,
+    });
+  }
 }

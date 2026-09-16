@@ -11,14 +11,13 @@ import { useQuery } from "@tanstack/react-query";
 import type { UseQueryResult } from "@/shared/types.ts";
 import { useColibriConfig } from "@/context/provider.ts";
 import { colibriQueryOptions, type QueryControls } from "@/query/options.ts";
-import { ColibriReactError, ReactCode } from "@/errors/index.ts";
+import { ReactInvalidConfigError } from "@/errors/index.ts";
 /** Memoized RPC client for the provider's endpoint. */
 export function useRpc(): Server {
   const { network } = useColibriConfig();
   return useMemo(() => {
     if (!network.rpcUrl) {
-      throw new ColibriReactError(
-        ReactCode.INVALID_CONFIG,
+      throw new ReactInvalidConfigError(
         "Configure an RPC URL to use RPC hooks",
       );
     }

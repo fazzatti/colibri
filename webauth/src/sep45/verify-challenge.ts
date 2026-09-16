@@ -1,3 +1,4 @@
+import { WebAuthErrors } from "@/error.ts";
 import {
   Address,
   buildAuthorizationEntryPreimage,
@@ -38,7 +39,7 @@ function fail(
   data?: Record<string, unknown>,
   cause?: unknown,
 ): never {
-  throw new Sep45Error({ code, message, data, cause });
+  throw new WebAuthErrors[code]({ message, data, cause });
 }
 
 function legacyAddressCredentials(

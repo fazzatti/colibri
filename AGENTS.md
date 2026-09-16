@@ -261,6 +261,13 @@ If you add or change plugin behavior:
 
 ### 4. High-level clients should build on the lower layers, not bypass them
 
+Every package should pair granular building blocks with conveniences for common
+consumer workflows. In React, start guides with complete provider/wallet/client
+flows, preserving explicit overrides and the underlying client/pipeline
+identity. Keep optional heavy dependencies behind feature subpaths. Convenience
+must never silently sign, reconnect, broaden authority or retry transaction
+submissions.
+
 `Contract`, `StellarAssetContract`, SEP-10 helpers, and streamers are meant to
 compose lower-level primitives. Avoid introducing a second orchestration path
 that duplicates pipeline or process behavior unless there is a very strong
@@ -272,6 +279,13 @@ Colibri's typed error system is one of the most important repo-wide invariants.
 
 Rules:
 
+- Every library-owned stable error code must have one concrete, named subclass.
+  Never emit different codes by repeatedly constructing a generic family class.
+  Keep abstract family bases for shared metadata and `instanceof` handling.
+  Existing public constructors may remain as deprecated compatibility/extension
+  points; library implementation sites must instantiate concrete subclasses.
+- Architecture tests must inventory every published package, reject missing or
+  shared subclasses and reject generic coded-error construction at call sites.
 - Prefer typed errors with stable codes over generic thrown `Error` instances.
 - Public and reusable modules should expose a stable error namespace.
 - Unexpected failures are generally wrapped into a typed error class rather than

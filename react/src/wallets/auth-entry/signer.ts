@@ -1,7 +1,11 @@
 import type { xdr as XDR } from "stellar-sdk/base";
 import { type Ed25519PublicKey, StrKey } from "@colibri/core/strkey";
 import type { AuthEntrySigner } from "@colibri/core/signers";
-import { ColibriReactError, ReactCode } from "@/errors/index.ts";
+import {
+  ReactInvalidConfigError,
+  ReactNetworkMismatchError,
+  ReactUnsupportedCapabilityError,
+} from "@/errors/index.ts";
 
 /** Explicit G-account authorization capability; separate from envelope signing. */
 export interface WalletAuthEntryOptions {
@@ -23,8 +27,7 @@ export function createWalletAuthEntrySigner(
   options: WalletAuthEntryOptions,
 ): AuthEntrySigner {
   if (!StrKey.isValidEd25519PublicKey(options.address)) {
-    throw new ColibriReactError(
-      ReactCode.INVALID_CONFIG,
+    throw new ReactInvalidConfigError(
       "Wallet auth-entry signing requires a G-address",
     );
   }
@@ -37,8 +40,7 @@ export function createWalletAuthEntrySigner(
       forAddress,
     ) {
       if (networkPassphrase !== options.networkPassphrase) {
-        throw new ColibriReactError(
-          ReactCode.NETWORK_MISMATCH,
+        throw new ReactNetworkMismatchError(
           "Authorization and wallet networks differ",
         );
       }
@@ -46,8 +48,7 @@ export function createWalletAuthEntrySigner(
         !Number.isInteger(validUntil) || validUntil < 1 ||
         validUntil > 0xffff_ffff
       ) {
-        throw new ColibriReactError(
-          ReactCode.INVALID_CONFIG,
+        throw new ReactInvalidConfigError(
           "Authorization expiry must be a positive uint32 ledger sequence",
         );
       }
@@ -59,8 +60,7 @@ export function createWalletAuthEntrySigner(
             .toString() !== options.address ||
         (forAddress !== undefined && forAddress !== options.address)
       ) {
-        throw new ColibriReactError(
-          ReactCode.UNSUPPORTED_CAPABILITY,
+        throw new ReactUnsupportedCapabilityError(
           "Authorization belongs to another account",
         );
       }
@@ -81,8 +81,7 @@ export function createWalletAuthEntrySigner(
         "base64",
       );
       if (signed.credentials.type !== "sorobanCredentialsAddress") {
-        throw new ColibriReactError(
-          ReactCode.INVALID_CONFIG,
+        throw new ReactInvalidConfigError(
           "Wallet changed authorization credentials",
         );
       }
@@ -97,8 +96,7 @@ export function createWalletAuthEntrySigner(
         ),
       });
       if (comparable.toXdr("base64") !== unsigned.toXdr("base64")) {
-        throw new ColibriReactError(
-          ReactCode.INVALID_CONFIG,
+        throw new ReactInvalidConfigError(
           "Wallet changed the authorization payload",
         );
       }

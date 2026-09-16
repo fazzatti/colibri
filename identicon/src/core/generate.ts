@@ -1,7 +1,7 @@
 import { StrKey } from "stellar-sdk";
 import { colorFromHue } from "@/core/color.ts";
 import type { IdenticonData, IdenticonMatrix } from "@/core/types.ts";
-import { IdenticonCode, IdenticonError } from "@/error/index.ts";
+import { IdenticonInvalidPublicKeyError } from "@/error/index.ts";
 
 const matrixFromBytes = (bytes: Uint8Array): IdenticonMatrix => {
   const rows = Array.from({ length: 7 }, () => Array<boolean>(7).fill(false));
@@ -35,8 +35,7 @@ export const generateIdenticon = (publicKey: string): IdenticonData => {
   const isContract = typeof publicKey === "string" &&
     StrKey.isValidContract(publicKey);
   if (!isAccount && !isContract) {
-    throw new IdenticonError(
-      IdenticonCode.INVALID_PUBLIC_KEY,
+    throw new IdenticonInvalidPublicKeyError(
       "Expected a valid checksummed Stellar G-address or C-address.",
     );
   }

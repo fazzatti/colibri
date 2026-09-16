@@ -4,8 +4,33 @@
   "packages": {
     "@colibri/react": {
       "bump": "minor",
-      "reason": "Support consumer migrations with explicit wallet authorization entries, optional async clients, structural client identity and shared query utilities.",
-      "apiReview": "Additive APIs preserve current hooks and explicit signing policies. Generated client identity no longer depends on private Core class fields. ABI keys use full-content SHA-256 fingerprints; disabled clients cannot fetch. Wallet authorization validates address, network, expiry and payload preservation. Token precision reads share a five-minute cache."
+      "reason": "Support consumer migrations with explicit wallet authorization entries, optional async clients, structural client identity and shared query utilities. Add complete provider, wallet, combined signer and wallet-contract conveniences, with dedicated failure classes.",
+      "apiReview": "Additive APIs preserve current hooks and explicit signing policies. Generated client identity no longer depends on private Core class fields. ABI keys use full-content SHA-256 fingerprints; disabled clients cannot fetch. Wallet authorization validates address, network, expiry and payload preservation. Token precision reads share a five-minute cache. Existing granular APIs remain. Explicit transaction fields override wallet defaults. Each REACT code has a concrete exported class; base catches and legacy constructors remain source compatible."
+    },
+    "@colibri/core": {
+      "bump": "minor",
+      "reason": "Expose a distinct concrete error class for each stable failure code and emit these classes from library code.",
+      "apiReview": "Additive concrete subclasses and code registries preserve existing codes, messages, metadata, family-level instanceof handling and legacy constructor signatures. Library-owned failures use dedicated classes; legacy family constructors remain compatibility extension points. Core custom consumer error codes remain supported."
+    },
+    "@colibri/webauth": {
+      "bump": "minor",
+      "reason": "Expose a distinct concrete error class for each stable failure code and emit these classes from library code.",
+      "apiReview": "Additive concrete subclasses and code registries preserve existing codes, messages, metadata, family-level instanceof handling and legacy constructor signatures. Library-owned failures use dedicated classes; legacy family constructors remain compatibility extension points. Core custom consumer error codes remain supported."
+    },
+    "@colibri/identicon": {
+      "bump": "minor",
+      "reason": "Expose a distinct concrete error class for each stable failure code and emit these classes from library code.",
+      "apiReview": "Additive concrete subclasses and code registries preserve existing codes, messages, metadata, family-level instanceof handling and legacy constructor signatures. Library-owned failures use dedicated classes; legacy family constructors remain compatibility extension points. Core custom consumer error codes remain supported."
+    },
+    "@colibri/contract-bindings": {
+      "bump": "minor",
+      "reason": "Expose a distinct concrete error class for each stable failure code and emit these classes from library code.",
+      "apiReview": "Additive concrete subclasses and code registries preserve existing codes, messages, metadata, family-level instanceof handling and legacy constructor signatures. Library-owned failures use dedicated classes; legacy family constructors remain compatibility extension points. Core custom consumer error codes remain supported."
+    },
+    "@colibri/rpc-streamer": {
+      "bump": "minor",
+      "reason": "Expose a distinct concrete error class for each stable failure code and emit these classes from library code.",
+      "apiReview": "Additive concrete subclasses and code registries preserve existing codes, messages, metadata, family-level instanceof handling and legacy constructor signatures. Library-owned failures use dedicated classes; legacy family constructors remain compatibility extension points. Core custom consumer error codes remain supported."
     }
   }
 }

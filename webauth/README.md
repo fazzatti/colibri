@@ -213,3 +213,12 @@ const client = await WebAuthClient.fromDomain("localhost:8000", {
 - Implement custom handlers as narrowly as the account contract permits.
 - Submit only `Sep45PreparedChallenge` values that passed enforcing simulation.
 - Treat the returned JWT as a bearer credential and store it accordingly.
+
+## Concrete failure classes
+
+Every library-owned error code has a dedicated exported class. Use
+`WebAuthErrors[code]` to obtain its constructor, or catch a specific class with
+`instanceof`. Existing family base classes, stable codes, messages and metadata
+remain compatible. Legacy generic constructors remain available for source
+compatibility; library implementations construct the dedicated subclasses.
+Caller-owned failures preserve their existing propagation behavior.

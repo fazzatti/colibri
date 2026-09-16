@@ -54,9 +54,9 @@ your application. Supply the full G-address of an existing Testnet account.
 
 ```tsx
 import { useState } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ColibriQueryProvider } from "@colibri/react/provider";
 import { NetworkConfig } from "@colibri/core/network";
-import { ColibriProvider, createColibriConfig } from "@colibri/react";
+import { createColibriConfig } from "@colibri/react";
 import { useBalance } from "@colibri/react/assets";
 
 type AccountProps = { address: `G${string}` };
@@ -80,26 +80,40 @@ export function App({ address }: AccountProps) {
   const [config] = useState(() =>
     createColibriConfig({ network: NetworkConfig.TestNet() })
   );
-  const [queryClient] = useState(() => new QueryClient());
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ColibriProvider config={config}>
-        <Balance address={address} />
-      </ColibriProvider>
-    </QueryClientProvider>
+    <ColibriQueryProvider config={config}>
+      <Balance address={address} />
+    </ColibriQueryProvider>
   );
 }
 ```
 
-`ColibriProvider` supplies the network and connection state. TanStack's
-`QueryClientProvider` owns caching, loading/error state and refetching. Reading
-a public balance does not require connecting a wallet.
+`ColibriQueryProvider` supplies the network, connection state and an isolated
+query cache. Pass `queryClient` to reuse an existing application cache. The
+granular `ColibriProvider` plus `QueryClientProvider` composition remains
+available. Reading a public balance does not require connecting a wallet.
 
 `raw` is a `bigint`: XLM and Classic balances have seven decimal places, so
 10,000,000 stroops equals 1 XLM. SEP-41 precision comes from the token contract.
 Use exact integer formatting when displaying decimal amounts. Missing accounts
 or trustlines surface Core's structured error instead of a fabricated zero.
+
+## Common workflows first
+
+| Common task                                                    | Convenience API                                                            | Granular alternative                                    |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Provide state and caching                                      | `ColibriQueryProvider` from `/provider`                                    | `ColibriProvider` plus `QueryClientProvider`            |
+| Observe and control a wallet                                   | `useWallet` from `/wallet`                                                 | `useConnection`, connect/disconnect hooks, `useSigners` |
+| Sign envelopes and Soroban authorization                       | `createWalletSigner` from `/wallets/signer`                                | Envelope and auth-entry factories                       |
+| Invoke with the connected wallet                               | `useWalletContractInvoke` from `/contracts/invoke`                         | `useContractInvoke` with explicit config                |
+| Read accounts, balances, contracts or metadata                 | Existing `useAccount`, `useBalance`, `useContractRead`, `useTokenMetadata` | Core clients and query options                          |
+| Execute or simulate transactions, authenticate, observe events | Existing transaction hooks, `useWebAuth`, `useContractEvents`              | Core pipelines, WebAuth sessions and event stores       |
+
+Conveniences compose these same primitives. They do not introduce another cache,
+client or submission path. Import only the feature subpaths needed by the app.
+See the
+[complete convenience guide](https://github.com/fazzatti/colibri/blob/dev/docs/packages/react/convenience.md).
 
 ## API by import path
 
@@ -428,11 +442,16 @@ Import `createStellarWalletsKitConnector` from
 `@colibri/react/ecosystem/stellar-wallets-kit`. Pass the application's
 initialized Wallets Kit and required
 `capabilities({ module, address, networkPassphrase })`. The callback returns
-`{ envelope?, signers?, messageSigner? }`: only explicitly selected capabilities
-are exposed. `envelope: true` adapts Kit transaction signing for a G-address.
-Other Core signers and SEP-53 message signers are application supplied. Optional
-`id` defaults to `stellar-wallets-kit`; `connect` can supply custom UI in place
-of the Kit's `authModal()`.
+`{ signer?, envelope?, authEntry?, signers?, messageSigner? }`: only explicitly
+selected capabilities are exposed. For a G-account wallet supporting both
+signing forms, return `{ signer: createWalletSigner }`, importing the factory
+from `/wallets/signer`. This creates one guarded Core signer with both methods.
+Declare capabilities per module; the presence of an SDK method does not prove
+wallet support. Do not combine `signer` with `envelope` or `authEntry`. The
+separate `envelope: true` option adapts only transaction signing. Other Core
+signers and SEP-53 message signers are application supplied. Optional `id`
+defaults to `stellar-wallets-kit`; `connect` can supply custom UI in place of
+the Kit's `authModal()`.
 
 The application chooses wallet modules and initializes the Kit in the browser.
 Kit state changes, module changes and disconnect events invalidate the
@@ -582,8 +601,10 @@ never share authenticated application state between users.
 
 ## Errors and application lifetimes
 
-`ColibriReactError` extends Core `ColibriError`; branch on `error.code` rather
-than message text. `ReactCode` names the package's stable conditions:
+Each React failure has a dedicated class, such as `ReactNetworkMismatchError`,
+which extends `ColibriReactError` and Core `ColibriError`. Use `instanceof` or
+branch on the stable `error.code` rather than message text. `ReactCode` names
+the package's stable conditions:
 
 | Code        | Condition                                                       |
 | ----------- | --------------------------------------------------------------- |

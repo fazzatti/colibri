@@ -3,7 +3,13 @@ import {
   StellarToml as StellarTomlFacade,
 } from "@colibri/core";
 import { rpc, StrKey } from "stellar-sdk";
-import { WebAuthCode, WebAuthError } from "@/error.ts";
+import {
+  WebAuthIncompleteConfigurationError,
+  WebAuthMissingRpcError,
+  WebAuthNetworkMismatchError,
+  WebAuthOptionMismatchError,
+  WebAuthProtocolNotAdvertisedError,
+} from "@/error.ts";
 import { protocolForAccount } from "@/routing.ts";
 import { Sep10Client } from "@/sep10/client.ts";
 import { Sep45Client } from "@/sep45/client.ts";
@@ -27,16 +33,14 @@ function validateEndpoint(
   try {
     url = new URL(endpoint);
   } catch (cause) {
-    throw new WebAuthError({
-      code: WebAuthCode.INCOMPLETE_CONFIGURATION,
+    throw new WebAuthIncompleteConfigurationError({
       message: `Invalid ${protocol.toUpperCase()} endpoint`,
       protocol,
       cause,
     });
   }
   if (url.protocol !== "https:" && !(allowHttp && url.protocol === "http:")) {
-    throw new WebAuthError({
-      code: WebAuthCode.INCOMPLETE_CONFIGURATION,
+    throw new WebAuthIncompleteConfigurationError({
       message: `${protocol.toUpperCase()} endpoint must use HTTPS`,
       protocol,
       data: { protocol: url.protocol },
@@ -61,14 +65,12 @@ export class WebAuthClient {
     if (
       !config.homeDomain || !StrKey.isValidEd25519PublicKey(config.signingKey)
     ) {
-      throw new WebAuthError({
-        code: WebAuthCode.INCOMPLETE_CONFIGURATION,
+      throw new WebAuthIncompleteConfigurationError({
         message: "WebAuth requires a home domain and valid server signing key",
       });
     }
     if (!config.sep10 && !config.sep45) {
-      throw new WebAuthError({
-        code: WebAuthCode.INCOMPLETE_CONFIGURATION,
+      throw new WebAuthIncompleteConfigurationError({
         message: "WebAuth requires at least one advertised protocol",
       });
     }
@@ -100,15 +102,13 @@ export class WebAuthClient {
         "sep45",
       );
       if (!StrKey.isValidContract(config.sep45.contractId)) {
-        throw new WebAuthError({
-          code: WebAuthCode.INCOMPLETE_CONFIGURATION,
+        throw new WebAuthIncompleteConfigurationError({
           message: "SEP-45 requires a valid WEB_AUTH_CONTRACT_ID",
           protocol: "sep45",
         });
       }
       if (!config.network.rpcUrl) {
-        throw new WebAuthError({
-          code: WebAuthCode.MISSING_RPC,
+        throw new WebAuthMissingRpcError({
           message: "SEP-45 requires a Stellar RPC endpoint",
           protocol: "sep45",
         });
@@ -150,8 +150,7 @@ export class WebAuthClient {
   ): WebAuthClient {
     const discovery = toml.webAuthConfig;
     if (!discovery) {
-      throw new WebAuthError({
-        code: WebAuthCode.INCOMPLETE_CONFIGURATION,
+      throw new WebAuthIncompleteConfigurationError({
         message: "stellar.toml has no complete WebAuth configuration",
       });
     }
@@ -159,8 +158,7 @@ export class WebAuthClient {
       discovery.networkPassphrase !== undefined &&
       discovery.networkPassphrase !== options.network.networkPassphrase
     ) {
-      throw new WebAuthError({
-        code: WebAuthCode.NETWORK_MISMATCH,
+      throw new WebAuthNetworkMismatchError({
         message: "stellar.toml advertises a different Stellar network",
         data: {
           expected: options.network.networkPassphrase,
@@ -202,8 +200,7 @@ export class WebAuthClient {
   /** Explicit SEP-10 client. */
   get sep10(): Sep10Client {
     if (!this.#sep10) {
-      throw new WebAuthError({
-        code: WebAuthCode.PROTOCOL_NOT_ADVERTISED,
+      throw new WebAuthProtocolNotAdvertisedError({
         message: "The home domain does not advertise SEP-10",
         protocol: "sep10",
       });
@@ -214,8 +211,7 @@ export class WebAuthClient {
   /** Explicit SEP-45 client. */
   get sep45(): Sep45Client {
     if (!this.#sep45) {
-      throw new WebAuthError({
-        code: WebAuthCode.PROTOCOL_NOT_ADVERTISED,
+      throw new WebAuthProtocolNotAdvertisedError({
         message: "The home domain does not advertise SEP-45",
         protocol: "sep45",
       });
@@ -233,16 +229,14 @@ export class WebAuthClient {
         hasOwn(options, "authorize") ||
         hasOwn(options, "authorizationValidityLedgers")
       ) {
-        throw new WebAuthError({
-          code: WebAuthCode.OPTION_MISMATCH,
+        throw new WebAuthOptionMismatchError({
           message:
             "SEP-45 authorization options cannot be used with G or M accounts",
           protocol,
         });
       }
       if (!hasOwn(options, "signer")) {
-        throw new WebAuthError({
-          code: WebAuthCode.OPTION_MISMATCH,
+        throw new WebAuthOptionMismatchError({
           message: "SEP-10 requires a signer",
           protocol,
         });
@@ -253,16 +247,14 @@ export class WebAuthClient {
     }
 
     if (hasOwn(options, "signer") || hasOwn(options, "memo")) {
-      throw new WebAuthError({
-        code: WebAuthCode.OPTION_MISMATCH,
+      throw new WebAuthOptionMismatchError({
         message:
           "SEP-10 signing and memo options cannot be used with C accounts",
         protocol,
       });
     }
     if (!hasOwn(options, "authorize")) {
-      throw new WebAuthError({
-        code: WebAuthCode.OPTION_MISMATCH,
+      throw new WebAuthOptionMismatchError({
         message: "SEP-45 requires an authorization handler",
         protocol,
       });

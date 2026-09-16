@@ -24,7 +24,10 @@
     "./ecosystem/freighter": "./src/ecosystem/freighter/index.ts",
     "./ecosystem/stellar-wallets-kit": "./src/ecosystem/stellar-wallets-kit/index.ts",
     "./wallets/auth-entry": "./src/wallets/auth-entry/index.ts",
-    "./query/mutation": "./src/query/mutation/index.ts"
+    "./query/mutation": "./src/query/mutation/index.ts",
+    "./provider": "./src/provider/index.ts",
+    "./wallet": "./src/wallet/index.ts",
+    "./wallets/signer": "./src/wallets/signer/index.ts"
   },
   "imports": {
     "@/": "./src/",
