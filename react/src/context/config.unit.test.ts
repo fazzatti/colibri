@@ -43,6 +43,55 @@ describe("connection and cache isolation", () => {
     assertEquals(config.getSnapshot().connection?.address, "G-second");
     config.destroy();
   });
+  for (const synchronous of [false, true]) {
+    it(`requires explicit reconnect after a ${synchronous ? "synchronous" : "later"} disconnect notification`, async () => {
+      let cleaned = 0;
+      let connects = 0;
+      let restores = 0;
+      let terminateOnSubscribe = synchronous;
+      let changed!: (value: WalletConnection | null) => void;
+      const config = createColibriConfig({
+        network,
+        connectors: [{
+          id: "wallet",
+          connect: () => {
+            connects++;
+            return Promise.resolve(connection);
+          },
+          reconnect: () => {
+            restores++;
+            return Promise.resolve(connection);
+          },
+          subscribe: (listener) => {
+            changed = listener;
+            if (terminateOnSubscribe) listener(null);
+            return () => {
+              cleaned++;
+              // A final event delivered during teardown must also be ignored.
+              listener(connection);
+            };
+          },
+        }],
+      });
+      await config.connect("wallet");
+      if (!synchronous) changed(null);
+      assertEquals(config.getSnapshot().status, "disconnected");
+      assertEquals(cleaned, 1);
+      const stale = changed;
+      stale(connection);
+      assertEquals(config.getSnapshot().status, "disconnected");
+      assertEquals(connects, 1);
+      assertEquals(restores, 0);
+      terminateOnSubscribe = false;
+      await config.connect("wallet", true);
+      assertEquals(config.getSnapshot().status, "connected");
+      assertEquals(restores, 1);
+      stale(null);
+      assertEquals(config.getSnapshot().status, "connected");
+      config.destroy();
+      assertEquals(cleaned, 2);
+    });
+  }
   it("starts disconnected and snapshots network configuration", () => {
     const original = NetworkConfig.CustomNet({ networkPassphrase: "custom" });
     const config = createColibriConfig({ network: original });
@@ -106,8 +155,12 @@ describe("connection and cache isolation", () => {
     listener({ ...connection, networkPassphrase: "wrong" });
     assertEquals(config.getSnapshot().status, "disconnected");
     assert(config.getSnapshot().error instanceof ColibriReactError);
-    await config.disconnect();
     assertEquals(cleaned, 1);
+    listener(connection);
+    assertEquals(config.getSnapshot().status, "disconnected");
+    await config.connect("fast");
+    await config.disconnect();
+    assertEquals(cleaned, 2);
     assertEquals(disconnected, 1);
     listener(connection);
     assertEquals(config.getSnapshot().status, "disconnected");

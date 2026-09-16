@@ -166,7 +166,7 @@ describe("Wallets Kit ecosystem adapter", () => {
     assertEquals((await readonly.connect()).signers, []);
   });
 
-  it("observes account/network changes without invalidating synchronous initial snapshots", async () => {
+  it("preserves initial snapshots and requires explicit restoration after account/network invalidation", async () => {
     const f = fixture();
     const config = createColibriConfig({ network, connectors: [f.connector] });
     const original = await config.connect(f.connector.id);
@@ -177,13 +177,37 @@ describe("Wallets Kit ecosystem adapter", () => {
     f.emit(KitEventType.STATE_UPDATED);
     assertEquals(config.getSnapshot().status, "disconnected");
     await tick();
+    assertEquals(config.getSnapshot().status, "disconnected");
+    assertEquals(f.listeners.size, 0);
+    await config.connect(f.connector.id, true);
     assertEquals(config.getSnapshot().connection?.address, f.state.address);
     f.state.networkPassphrase = "different";
     f.emit(KitEventType.STATE_UPDATED);
     await tick();
+    assertEquals(config.getSnapshot().status, "disconnected");
+    await assertRejects(
+      () => config.connect(f.connector.id, true),
+      ColibriReactError,
+    );
     assert(config.getSnapshot().error instanceof ColibriReactError);
     config.destroy();
     assertEquals(f.listeners.size, 0);
+  });
+
+  it("closes the account-change gap before listener registration", async () => {
+    const f = fixture();
+    await f.connector.connect();
+    f.state.address = LocalSigner.generateRandom().publicKey();
+    const addresses: Array<string | null> = [];
+    const stop = f.connector.subscribe!((value) =>
+      addresses.push(value?.address ?? null)
+    );
+    try {
+      await tick();
+      assertEquals(addresses, [f.state.address]);
+    } finally {
+      stop();
+    }
   });
 
   it("invalidates module switches even when Kit keeps the previous address", async () => {

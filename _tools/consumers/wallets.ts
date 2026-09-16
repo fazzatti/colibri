@@ -101,15 +101,14 @@ if (typeof document !== "undefined") {
     }
     address = Keypair.random().publicKey();
     await kit.fetchAddress();
-    for (
-      let i = 0;
-      i < 20 && config.getSnapshot().connection?.address !== address;
-      i++
-    ) {
-      await new Promise((resolve) => setTimeout(resolve, 5));
+    if (config.getSnapshot().connection) {
+      throw new Error("Kit account change retained stale authority");
     }
+    await config.connect(connector.id, true);
     if (config.getSnapshot().connection?.address !== address) {
-      throw new Error("Kit account event was not adapted");
+      throw new Error(
+        "Explicit Kit restoration did not read the updated account",
+      );
     }
     kit.setWallet("other-fixture");
     if (config.getSnapshot().connection) {

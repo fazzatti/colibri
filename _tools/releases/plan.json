@@ -11,7 +11,7 @@
       "bump": "initial",
       "initialVersion": "0.1.0",
       "reason": "Introduce headless React bindings for the Colibri SDK.",
-      "apiReview": "Initial provider, connection, query, contract, transaction, assets, events, SEP and session APIs. Ecosystem adapters are isolated under /ecosystem/freighter and /ecosystem/stellar-wallets-kit; the unreleased preview removes Freighter from the general /wallets entrypoint and derives supported vendor signatures from upstream types.",
+      "apiReview": "Initial provider, connection, query, contract, transaction, assets, events, SEP and session APIs. Ecosystem adapters are isolated under /ecosystem/freighter and /ecosystem/stellar-wallets-kit; the unreleased preview removes Freighter from the general /wallets entrypoint and derives supported vendor signatures from upstream types. Disconnect notifications and rejected network updates terminate observation until explicit reconnection; new private lifecycle helpers preserve the public method signatures.",
       "dependencies": {
         "@colibri/core": "^1.2.0"
       }

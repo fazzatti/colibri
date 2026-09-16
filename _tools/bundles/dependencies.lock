@@ -51,7 +51,7 @@
         "idb-keyval",
         "ox@0.6.9_typescript@7.0.2",
         "preact@10.24.2",
-        "viem@2.56.3_typescript@7.0.2_zod@3.22.4",
+        "viem",
         "zustand"
       ]
     },
@@ -71,7 +71,7 @@
         "jose",
         "md5",
         "uncrypto",
-        "viem@2.56.3_typescript@7.0.2_zod@3.25.76",
+        "viem",
         "zod@3.25.76"
       ]
     },
@@ -84,7 +84,7 @@
         "idb-keyval",
         "ox@0.6.9_typescript@7.0.2",
         "preact@10.24.2",
-        "viem@2.56.3_typescript@7.0.2_zod@3.22.4",
+        "viem",
         "zustand"
       ]
     },
@@ -394,7 +394,7 @@
       "dependencies": [
         "big.js",
         "dayjs",
-        "viem@2.56.3_typescript@7.0.2_zod@3.22.4"
+        "viem"
       ]
     },
     "@reown/appkit-controllers@1.8.21_@types+react@19.3.0_react@19.3.0_typescript@7.0.2": {
@@ -404,7 +404,7 @@
         "@reown/appkit-wallet",
         "@walletconnect/universal-provider",
         "valtio",
-        "viem@2.56.3_typescript@7.0.2_zod@3.22.4"
+        "viem"
       ]
     },
     "@reown/appkit-pay@1.8.21_@types+react@19.3.0_react@19.3.0_typescript@7.0.2": {
@@ -458,7 +458,7 @@
         "@walletconnect/logger@3.0.2",
         "@walletconnect/universal-provider",
         "valtio",
-        "viem@2.56.3_typescript@7.0.2_zod@3.22.4"
+        "viem"
       ],
       "optionalDependencies": [
         "@base-org/account",
@@ -491,7 +491,7 @@
         "bs58@6.0.0",
         "semver@7.7.2",
         "valtio",
-        "viem@2.56.3_typescript@7.0.2_zod@3.22.4"
+        "viem"
       ],
       "optionalDependencies": [
         "@lit/react"
@@ -509,7 +509,7 @@
       "integrity": "sha512-N5p/ulfnnA2Pi2M3YeWjULeWbjo7ei22JwU/IXnhoHzKq3pYCN6ynL9mJBOlvDVv892EgLPCWCOwQk/uBT2v0Q==",
       "dependencies": [
         "@safe-global/safe-gateway-typescript-sdk",
-        "viem@2.56.3_typescript@7.0.2_zod@3.22.4"
+        "viem"
       ]
     },
     "@safe-global/safe-gateway-typescript-sdk@3.23.1": {
@@ -1776,17 +1776,6 @@
         "zod@3.22.4"
       ]
     },
-    "abitype@1.2.3_typescript@7.0.2_zod@3.25.76": {
-      "integrity": "sha512-Ofer5QUnuUdTFsBRwARMoWKOH1ND5ehwYhJ3OJ/BQO+StkwQjHw0XyVh4vDttzHB7QOFhPHa/o413PJ82gU/Tg==",
-      "dependencies": [
-        "typescript",
-        "zod@3.25.76"
-      ],
-      "optionalPeers": [
-        "typescript",
-        "zod@3.25.76"
-      ]
-    },
     "agent-base@6.0.2": {
       "integrity": "sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==",
       "dependencies": [
@@ -2515,23 +2504,6 @@
         "typescript"
       ]
     },
-    "ox@0.14.44_typescript@7.0.2_zod@3.25.76": {
-      "integrity": "sha512-O54qXXHEk4ySamMSyBpI0AeBegS5frxU6+LA6Jb9Sf6kMOxcTNaxYmwZfpOu22DIQsdKfgQxHq8EsAGaoBQScA==",
-      "dependencies": [
-        "@adraffy/ens-normalize",
-        "@noble/ciphers",
-        "@noble/curves@1.9.1",
-        "@noble/hashes@1.8.0",
-        "@scure/bip32",
-        "@scure/bip39",
-        "abitype@1.2.3_typescript@7.0.2_zod@3.25.76",
-        "eventemitter3",
-        "typescript"
-      ],
-      "optionalPeers": [
-        "typescript"
-      ]
-    },
     "ox@0.6.9_typescript@7.0.2": {
       "integrity": "sha512-wi5ShvzE4eOcTwQVsIPdFr+8ycyX+5le/96iAJutaZAvCes1J0+RvpEPg5QDPDiaR0XQQAvZVl7AwqQcINuUug==",
       "dependencies": [
@@ -2906,23 +2878,6 @@
         "typescript"
       ]
     },
-    "viem@2.56.3_typescript@7.0.2_zod@3.25.76": {
-      "integrity": "sha512-vUObq3GO7D3lz9gPNEE/xd5jIUnMbeVDWewh252o54pDEDlW4pDe6FEd/qTGL5RyK52cGHMM7kQ3wjxhilEvkQ==",
-      "dependencies": [
-        "@noble/curves@1.9.1",
-        "@noble/hashes@1.8.0",
-        "@scure/bip32",
-        "@scure/bip39",
-        "abitype@1.2.3_typescript@7.0.2_zod@3.25.76",
-        "isows",
-        "ox@0.14.44_typescript@7.0.2_zod@3.25.76",
-        "typescript",
-        "ws@8.21.0"
-      ],
-      "optionalPeers": [
-        "typescript"
-      ]
-    },
     "webidl-conversions@3.0.1": {
       "integrity": "sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ=="
     },
@@ -3023,6 +2978,7 @@
       "npm:@stellar/freighter-api@^6.0.1",
       "npm:@stellar/stellar-sdk@17.0.1",
       "npm:@tanstack/react-query@^5.87.4",
+      "npm:@types/node@22.20.2",
       "npm:@types/react@^19.1.13",
       "npm:archunit@2.4.0",
       "npm:dockerode@3.3.3",

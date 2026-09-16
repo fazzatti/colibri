@@ -164,6 +164,9 @@ end its session. Its `network`, `connectors` and `scope` are readonly.
 A connected `WalletConnection` contains `address`, the wallet's actual
 `networkPassphrase`, explicitly configured `signers`, and an optional
 `messageSigner`. The provider rejects a wallet connected to a different network.
+A disconnect notification (`null`) or network mismatch releases the wallet
+subscription and ignores later events from it. Restoring the connection requires
+an explicit `useConnect` or `useReconnect` call.
 
 This component can be placed below `ColibriProvider`. Its `connectorId` must
 identify a connector supplied to `createColibriConfig`.
@@ -432,11 +435,13 @@ Other Core signers and SEP-53 message signers are application supplied. Optional
 of the Kit's `authModal()`.
 
 The application chooses wallet modules and initializes the Kit in the browser.
-State events update account/network data; module changes and Kit disconnect
-invalidate the connection. An explicit Connect is required after a module switch
-because Kit can retain an earlier wallet's cached address. Silent reconnect uses
-cached Kit identity without opening UI. Envelope signing checks
-account/module/network around the request; Colibri pipelines own submission.
+Kit state changes, module changes and disconnect events invalidate the
+connection. After a state change, call `useReconnect` explicitly to read the
+cached account and network again without opening UI. An explicit Connect is
+required after a module switch because Kit can retain an earlier wallet's cached
+address. Silent reconnect uses cached Kit identity without opening UI. Envelope
+signing checks account/module/network around the request; Colibri pipelines own
+submission.
 
 For direct Freighter, import `createFreighterConnector(api, options?)` from
 `@colibri/react/ecosystem/freighter`. `id` defaults to `freighter` and

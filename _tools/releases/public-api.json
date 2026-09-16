@@ -209354,6 +209354,57 @@
               "name": "accept"
             },
             {
+              "accessibility": "private",
+              "functionDef": {
+                "hasBody": true,
+                "params": [],
+                "returnType": {
+                  "kind": "keyword",
+                  "repr": "void",
+                  "value": "void"
+                }
+              },
+              "kind": "method",
+              "name": "stopObserving"
+            },
+            {
+              "accessibility": "private",
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "connector",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "WalletConnector",
+                      "value": {
+                        "typeName": "WalletConnector"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "revision",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "keyword",
+                  "repr": "void",
+                  "value": "void"
+                }
+              },
+              "kind": "method",
+              "name": "observe"
+            },
+            {
               "functionDef": {
                 "hasBody": true,
                 "isAsync": true,
@@ -213780,6 +213831,57 @@
               },
               "kind": "method",
               "name": "accept"
+            },
+            {
+              "accessibility": "private",
+              "functionDef": {
+                "hasBody": true,
+                "params": [],
+                "returnType": {
+                  "kind": "keyword",
+                  "repr": "void",
+                  "value": "void"
+                }
+              },
+              "kind": "method",
+              "name": "stopObserving"
+            },
+            {
+              "accessibility": "private",
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "connector",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "WalletConnector",
+                      "value": {
+                        "typeName": "WalletConnector"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "revision",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "keyword",
+                  "repr": "void",
+                  "value": "void"
+                }
+              },
+              "kind": "method",
+              "name": "observe"
             },
             {
               "functionDef": {
@@ -234629,6 +234731,57 @@
               },
               "kind": "method",
               "name": "accept"
+            },
+            {
+              "accessibility": "private",
+              "functionDef": {
+                "hasBody": true,
+                "params": [],
+                "returnType": {
+                  "kind": "keyword",
+                  "repr": "void",
+                  "value": "void"
+                }
+              },
+              "kind": "method",
+              "name": "stopObserving"
+            },
+            {
+              "accessibility": "private",
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "connector",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "WalletConnector",
+                      "value": {
+                        "typeName": "WalletConnector"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "revision",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "keyword",
+                  "repr": "void",
+                  "value": "void"
+                }
+              },
+              "kind": "method",
+              "name": "observe"
             },
             {
               "functionDef": {
@@ -258023,6 +258176,57 @@
               "name": "accept"
             },
             {
+              "accessibility": "private",
+              "functionDef": {
+                "hasBody": true,
+                "params": [],
+                "returnType": {
+                  "kind": "keyword",
+                  "repr": "void",
+                  "value": "void"
+                }
+              },
+              "kind": "method",
+              "name": "stopObserving"
+            },
+            {
+              "accessibility": "private",
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "connector",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "WalletConnector",
+                      "value": {
+                        "typeName": "WalletConnector"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "revision",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "keyword",
+                  "repr": "void",
+                  "value": "void"
+                }
+              },
+              "kind": "method",
+              "name": "observe"
+            },
+            {
               "functionDef": {
                 "hasBody": true,
                 "isAsync": true,
@@ -262429,6 +262633,57 @@
               },
               "kind": "method",
               "name": "accept"
+            },
+            {
+              "accessibility": "private",
+              "functionDef": {
+                "hasBody": true,
+                "params": [],
+                "returnType": {
+                  "kind": "keyword",
+                  "repr": "void",
+                  "value": "void"
+                }
+              },
+              "kind": "method",
+              "name": "stopObserving"
+            },
+            {
+              "accessibility": "private",
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "connector",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "WalletConnector",
+                      "value": {
+                        "typeName": "WalletConnector"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "revision",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "keyword",
+                  "repr": "void",
+                  "value": "void"
+                }
+              },
+              "kind": "method",
+              "name": "observe"
             },
             {
               "functionDef": {
@@ -271675,6 +271930,57 @@
               "name": "accept"
             },
             {
+              "accessibility": "private",
+              "functionDef": {
+                "hasBody": true,
+                "params": [],
+                "returnType": {
+                  "kind": "keyword",
+                  "repr": "void",
+                  "value": "void"
+                }
+              },
+              "kind": "method",
+              "name": "stopObserving"
+            },
+            {
+              "accessibility": "private",
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "connector",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "WalletConnector",
+                      "value": {
+                        "typeName": "WalletConnector"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "revision",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "keyword",
+                  "repr": "void",
+                  "value": "void"
+                }
+              },
+              "kind": "method",
+              "name": "observe"
+            },
+            {
               "functionDef": {
                 "hasBody": true,
                 "isAsync": true,
@@ -276509,6 +276815,57 @@
               },
               "kind": "method",
               "name": "accept"
+            },
+            {
+              "accessibility": "private",
+              "functionDef": {
+                "hasBody": true,
+                "params": [],
+                "returnType": {
+                  "kind": "keyword",
+                  "repr": "void",
+                  "value": "void"
+                }
+              },
+              "kind": "method",
+              "name": "stopObserving"
+            },
+            {
+              "accessibility": "private",
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "connector",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "WalletConnector",
+                      "value": {
+                        "typeName": "WalletConnector"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "revision",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "keyword",
+                  "repr": "void",
+                  "value": "void"
+                }
+              },
+              "kind": "method",
+              "name": "observe"
             },
             {
               "functionDef": {

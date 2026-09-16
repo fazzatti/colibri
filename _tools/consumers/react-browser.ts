@@ -220,6 +220,16 @@ if (typeof document !== "undefined") {
       reject: () => rejectConnection?.(),
       approveMessage: () => approveMessage?.(),
       rejectMessage: () => rejectMessage?.(),
+      disconnectNotification: () => {
+        const stale = changed;
+        stale?.(null);
+        // A queued event from the released observer must not restore authority.
+        stale?.({
+          address,
+          networkPassphrase: network.networkPassphrase,
+          signers: [],
+        });
+      },
       changeNetwork: () =>
         changed?.({ address, networkPassphrase: "wrong", signers: [] }),
       counts: () => ({ connectCalls, signCalls, subscriptions }),

@@ -151,10 +151,12 @@ export function WalletApp() {
 - `reconnect` reads the Kit's already-cached account and the selected module's
   network. It never invokes `fetchAddress()` or a modal. A cached identity is
   not proof of current signing authority; the wallet still approves signatures.
-- State events refresh account/network state. Wallet selection or Kit disconnect
-  immediately clears the Colibri connection. Reconnect with an explicit Connect
-  action after selecting another wallet: Kit can retain the previous wallet's
-  cached address, so that value cannot establish the new connection.
+- State changes, wallet selection and Kit disconnect immediately clear the
+  Colibri connection and release its listeners. Call `useReconnect` explicitly
+  after a state change to reread the cached account and network without a
+  prompt. Use an explicit Connect action after selecting another wallet: Kit can
+  retain the previous wallet's cached address, so that value cannot establish
+  the new connection.
 - Envelope signing rechecks the account, module and network before and after the
   request, and rejects a different returned signer when the wallet supplies one.
   It only signs; Colibri's existing pipeline performs submission.
@@ -223,6 +225,12 @@ optional `disconnect`, and `subscribe(listener) => cleanup`. It preserves the
 application's implementation. A connection reports `address`,
 `networkPassphrase`, `signers` and an optional `messageSigner`. No ecosystem SDK
 is required by this contract.
+
+A subscription's `null` notification ends the current connection. Colibri
+releases the observer, clears local authority and ignores its late callbacks. A
+rejected network update also ends observation. Only an explicit connect or
+reconnect can restore the connection; do not emit `null` as a temporary loading
+state.
 
 Use
 `createWalletEnvelopeSigner({ publicKey, networkPassphrase, accounts?,

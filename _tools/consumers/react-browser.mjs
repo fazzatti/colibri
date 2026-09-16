@@ -144,8 +144,21 @@ export async function checkReactBrowser(page, rpc) {
   await page.waitForFunction(() =>
     globalThis.colibriReactFixture.counts().subscriptions === 1
   );
+  await control("disconnectNotification");
+  await text("connection", "disconnected:");
+  assert.equal((await counts()).subscriptions, 0);
+  const explicitConnections = (await counts()).connectCalls;
+  await page.waitForTimeout(100);
+  await text("connection", "disconnected:");
+  assert.equal((await counts()).connectCalls, explicitConnections);
+  await click("Connect");
+  await control("approve");
+  await page.waitForFunction(() =>
+    globalThis.colibriReactFixture.counts().subscriptions === 1
+  );
   await control("changeNetwork");
   await text("connection", "disconnected:");
+  assert.equal((await counts()).subscriptions, 0);
   console.log(
     "React browser: StrictMode, connection rejection, stale signatures, explicit signing and network changes passed.",
   );

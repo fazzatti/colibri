@@ -20,11 +20,10 @@ export async function mountReact(node: ReactNode) {
     })
   ) {
     previous.set(key, Object.getOwnPropertyDescriptor(globalThis, key));
-    Object.defineProperty(globalThis, key, {
-      value,
-      configurable: true,
-      writable: true,
-    });
+    Reflect.deleteProperty(globalThis, key);
+    // Deno 2.7's CommonJS global proxy observes assignment, not defineProperty.
+    // React DOM must see the same window as the ESM test code.
+    Reflect.set(globalThis, key, value);
   }
   const root = createRoot(dom.window.document.getElementById("root")!);
   await act(async () => {
@@ -40,8 +39,8 @@ export async function mountReact(node: ReactNode) {
       });
       dom.window.close();
       for (const [key, value] of previous) {
+        Reflect.deleteProperty(globalThis, key);
         if (value) Object.defineProperty(globalThis, key, value);
-        else Reflect.deleteProperty(globalThis, key);
       }
     },
   };

@@ -200,14 +200,14 @@ drives its buttons through `react-browser.mjs` in Chromium, Firefox and WebKit;
 the native SDK talks over HTTP to a deterministic local RPC fixture. These
 journeys run in the existing required compatibility/browser phase:
 
-| Boundary     | Assertions                                                                                                                                                              |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Connection   | No mount-time prompts; pending/disabled UI; rejected permission; exactly one wallet subscription; account/network changes invalidate authority.                         |
-| Signing      | Explicit user action; global mutation retries cannot repeat a rejected signature; approval after disconnect is discarded.                                               |
-| Queries      | Absent inputs stay idle; two observers share an HTTP request and error; manual retry recovers both; changing provider scope fetches independently.                      |
-| Transactions | NOT_FOUND remains pending; default polling observes native parsed SUCCESS/FAILED responses, then stops; unmount stops pending polling.                                  |
-| WebAuth      | Authentication updates shared session state; credentials stay out of DOM, local/session storage and dehydrated caches; disconnect clears the session.                   |
-| Cleanup      | Unmount removes rendered controls, wallet listeners and polling. Browser page errors or interaction assertions fail the run even if other fixtures signaled completion. |
+| Boundary     | Assertions                                                                                                                                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Connection   | No mount-time prompts; pending/disabled UI; rejected permission; exactly one wallet subscription; account/network changes invalidate authority; disconnect notifications release observers and cannot silently reconnect. |
+| Signing      | Explicit user action; global mutation retries cannot repeat a rejected signature; approval after disconnect is discarded.                                                                                                 |
+| Queries      | Absent inputs stay idle; two observers share an HTTP request and error; manual retry recovers both; changing provider scope fetches independently.                                                                        |
+| Transactions | NOT_FOUND remains pending; default polling observes native parsed SUCCESS/FAILED responses, then stops; unmount stops pending polling.                                                                                    |
+| WebAuth      | Authentication updates shared session state; credentials stay out of DOM, local/session storage and dehydrated caches; disconnect clears the session.                                                                     |
+| Cleanup      | Unmount removes rendered controls, wallet listeners and polling. Browser page errors or interaction assertions fail the run even if other fixtures signaled completion.                                                   |
 
 The wallet and authentication exchange are controlled fixtures, not live
 extensions or an anchor service. The transport, installed SDK, React DOM,
@@ -227,6 +227,11 @@ deno task prepare:consumers /tmp/colibri-consumers
 deno task check:consumers:npm /tmp/colibri-consumers --jsr-declarations --browsers
 deno task test:browser-runner
 ```
+
+The Deno DOM harness assigns browser globals so CommonJS React DOM sees them on
+Deno 2.7.11 as well as 2.9.6. It explicitly selects Node declarations for
+jsdom's wildcard type dependency; fresh caches must pass the full workspace type
+check.
 
 Filter coverage to `react/` when reporting this package: aggregate workspace
 coverage does not establish React coverage, and browser consumer fixtures do not

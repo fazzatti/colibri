@@ -22,7 +22,7 @@ export interface WalletConnector {
   reconnect?(): Promise<WalletConnection | null>;
   /** Release the wallet session when supported. */
   disconnect?(): Promise<void>;
-  /** Subscribe to account/network changes; null means disconnected. */
+  /** Subscribe to account/network changes; null ends observation until explicit reconnection. */
   subscribe?(
     listener: (connection: WalletConnection | null) => void,
   ): () => void;
@@ -131,16 +131,47 @@ export class ColibriConfig {
       signers: Object.freeze([...connection.signers]),
     });
   }
+  /** Invalidate callbacks before releasing the current wallet observer. */
+  private stopObserving(): void {
+    ++this.revision;
+    this.activeConnectorId = undefined;
+    const cleanup = this.cleanup;
+    this.cleanup = undefined;
+    cleanup?.();
+  }
+  /** Observe only until the wallet disconnects or leaves the configured network. */
+  private observe(connector: WalletConnector, revision: number): void {
+    const cleanup = connector.subscribe?.((next) => {
+      if (revision !== this.revision) return;
+      if (!next) {
+        this.stopObserving();
+        this.set(disconnected);
+        return;
+      }
+      try {
+        this.set({
+          status: "connected",
+          connectorId: connector.id,
+          connection: this.accept(next),
+        });
+      } catch (error) {
+        this.stopObserving();
+        this.set({ status: "disconnected", error });
+      }
+    });
+    // A connector may notify synchronously before returning its cleanup.
+    if (revision === this.revision) this.cleanup = cleanup;
+    else cleanup?.();
+  }
   /** Connect or restore an explicit connector. A later disconnect/connect invalidates an in-flight result. */
   async connect(
     id: string,
     reconnect = false,
   ): Promise<WalletConnection | null> {
     const connector = this.connector(id);
-    const revision = ++this.revision;
+    this.stopObserving();
+    const revision = this.revision;
     this.activeConnectorId = id;
-    this.cleanup?.();
-    this.cleanup = undefined;
     this.set({ status: "connecting", connectorId: id });
     try {
       const value = reconnect
@@ -153,30 +184,17 @@ export class ColibriConfig {
         );
       }
       if (!value) {
+        this.stopObserving();
         this.set(disconnected);
         return null;
       }
       const connection = this.accept(value);
       this.set({ status: "connected", connectorId: id, connection });
-      this.cleanup = connector.subscribe?.((next) => {
-        if (revision !== this.revision) return;
-        try {
-          this.set(
-            next
-              ? {
-                status: "connected",
-                connectorId: id,
-                connection: this.accept(next),
-              }
-              : disconnected,
-          );
-        } catch (error) {
-          this.set({ status: "disconnected", error });
-        }
-      });
+      this.observe(connector, revision);
       return connection;
     } catch (error) {
       if (revision === this.revision) {
+        this.stopObserving();
         this.set({ status: "disconnected", error });
       }
       throw error;
@@ -185,19 +203,13 @@ export class ColibriConfig {
   /** Clear local authority immediately, even if wallet-side disconnect fails. */
   async disconnect(): Promise<void> {
     const id = this.activeConnectorId;
-    this.activeConnectorId = undefined;
-    ++this.revision;
-    this.cleanup?.();
-    this.cleanup = undefined;
+    this.stopObserving();
     this.set(disconnected);
     if (id) await this.connector(id).disconnect?.();
   }
   /** Release listeners without prompting or disconnecting an external wallet. */
   destroy(): void {
-    this.activeConnectorId = undefined;
-    ++this.revision;
-    this.cleanup?.();
-    this.cleanup = undefined;
+    this.stopObserving();
     this.set(disconnected);
     this.listeners.clear();
   }
