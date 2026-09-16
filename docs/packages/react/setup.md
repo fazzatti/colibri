@@ -62,9 +62,11 @@ contract. Format amounts with exact integer arithmetic before displaying them.
 
 Start with `ColibriQueryProvider` to supply both connection state and caching.
 It owns a separate QueryClient per mounted provider and clears that owned cache
-on unmount. Pass `queryClient` to reuse a stable application-owned cache; the
-provider will not clear it. The granular `ColibriProvider` plus
-`QueryClientProvider` composition remains available.
+after unmount. Strict Mode effect probing preserves cached data and in-flight
+queries; disposal waits until the current effect cycle finishes. Pass
+`queryClient` to reuse a stable application-owned cache; the provider will not
+clear it. The granular `ColibriProvider` plus `QueryClientProvider` composition
+remains available.
 
 Keep the config and any supplied QueryClient stable for one browser application.
 Create fresh instances per server request. The config snapshots the network;

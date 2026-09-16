@@ -7,8 +7,15 @@ import {
 } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { createElement, StrictMode } from "react";
-import { QueryClient, useQueryClient } from "@tanstack/react-query";
-import { act, mountReact } from "colibri-internal/tests/react.ts";
+import {
+  dehydrate,
+  HydrationBoundary,
+  isCancelledError,
+  QueryClient,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { act, mountReact, until } from "colibri-internal/tests/react.ts";
 import {
   LocalSigner,
   NetworkConfig,
@@ -91,6 +98,157 @@ describe("React conveniences", () => {
     assertEquals(external.getQueryData(["owned"]), 2);
     external.clear();
     f.config.destroy();
+  });
+  it("keeps the initial request alive through Strict Mode probing", async () => {
+    const f = fixture();
+    let calls = 0;
+    let finish!: (value: string) => void;
+    let client!: QueryClient;
+    const pending = new Promise<string>((resolve) => {
+      finish = resolve;
+    });
+    function View() {
+      client = useQueryClient();
+      const query = useQuery({
+        queryKey: ["initial-request"],
+        queryFn: () => {
+          calls++;
+          return pending;
+        },
+        staleTime: Infinity,
+        retry: false,
+      });
+      return createElement("span", null, query.data ?? "loading");
+    }
+    const view = await mountReact(
+      createElement(
+        StrictMode,
+        null,
+        createElement(
+          ColibriQueryProvider,
+          { config: f.config },
+          createElement(View),
+        ),
+      ),
+    );
+    try {
+      assertEquals(calls, 1);
+      assertEquals(
+        client.getQueryState(["initial-request"])?.fetchStatus,
+        "fetching",
+      );
+      await act(() => {
+        finish("loaded");
+      });
+      await until(() => view.document.body.textContent === "loaded");
+      assertEquals(calls, 1);
+      assertEquals(client.getQueryData(["initial-request"]), "loaded");
+    } finally {
+      finish("loaded");
+      await view.close();
+      f.config.destroy();
+    }
+    assertEquals(client.getQueryCache().getAll(), []);
+  });
+
+  it("preserves hydrated data through Strict Mode without refetching", async () => {
+    const f = fixture();
+    const server = new QueryClient();
+    server.setQueryData(["hydrated"], "server data");
+    const state = dehydrate(server);
+    server.clear();
+    let calls = 0;
+    let client!: QueryClient;
+    function View() {
+      client = useQueryClient();
+      const query = useQuery({
+        queryKey: ["hydrated"],
+        queryFn: () => {
+          calls++;
+          return Promise.resolve("refetched");
+        },
+        staleTime: Infinity,
+        retry: false,
+      });
+      return createElement("span", null, query.data);
+    }
+    const view = await mountReact(
+      createElement(
+        StrictMode,
+        null,
+        createElement(
+          ColibriQueryProvider,
+          { config: f.config },
+          createElement(HydrationBoundary, { state }, createElement(View)),
+        ),
+      ),
+    );
+    try {
+      assertEquals(calls, 0);
+      assertEquals(client.getQueryData(["hydrated"]), "server data");
+      assertEquals(view.document.body.textContent, "server data");
+    } finally {
+      await view.close();
+      f.config.destroy();
+    }
+    assertEquals(client.getQueryCache().getAll(), []);
+  });
+
+  it("cancels owned requests after unmount but leaves caller-owned requests running", async () => {
+    const f = fixture();
+    try {
+      for (const supplied of [undefined, new QueryClient()]) {
+        let client!: QueryClient;
+        let aborted = false;
+        let finish!: (value: string) => void;
+        const View = () => {
+          client = useQueryClient();
+          return createElement("span");
+        };
+        const view = await mountReact(
+          createElement(
+            StrictMode,
+            null,
+            createElement(ColibriQueryProvider, {
+              config: f.config,
+              queryClient: supplied,
+            }, createElement(View)),
+          ),
+        );
+        const result = client.fetchQuery({
+          queryKey: ["unmount-request"],
+          queryFn: ({ signal }) => {
+            signal.addEventListener("abort", () => {
+              aborted = true;
+            });
+            return new Promise<string>((resolve) => {
+              finish = resolve;
+            });
+          },
+        }).then((value) => ({ value }), (error) => ({ error }));
+        await view.close();
+        try {
+          assertEquals(aborted, !supplied);
+          if (supplied) {
+            assertEquals(
+              client.getQueryState(["unmount-request"])?.fetchStatus,
+              "fetching",
+            );
+            finish("completed");
+            assertEquals(await result, { value: "completed" });
+          } else {
+            const outcome = await result;
+            assert("error" in outcome && isCancelledError(outcome.error));
+            assertEquals(client.getQueryCache().getAll(), []);
+          }
+        } finally {
+          finish("completed");
+          supplied?.clear();
+        }
+      }
+    } finally {
+      f.config.destroy();
+    }
   });
   it("combines wallet observation/actions without auto-connect and rejects ambiguous selection", async () => {
     const f = fixture();

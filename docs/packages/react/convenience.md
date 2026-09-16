@@ -76,7 +76,8 @@ already has one; Colibri will not clear that caller-owned cache. No global
 singleton is shared across server requests. Keep configuration stable per
 application/request; release an application-owned configuration with
 `config.destroy()` when its lifetime ends. Owned caches are cleared when their
-provider unmounts.
+provider unmounts, after the current effect cycle. Strict Mode probing preserves
+the same cache and active queries.
 
 [`useWallet()`](hooks/use-wallet.md) exposes state, address, guarded signers,
 connector choices and explicit `connect`, `reconnect`, and `disconnect` actions.

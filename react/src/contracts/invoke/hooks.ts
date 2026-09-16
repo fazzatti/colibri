@@ -1,5 +1,5 @@
-import type { ColibriConfig } from "@/context/config.ts";
 "use client";
+import type { ColibriConfig } from "@/context/config.ts";
 import { ReactInvalidMethodError } from "@/errors/index.ts";
 import type { UseMutationResult } from "@/shared/types.ts";
 import { useColibriConfig } from "@/context/provider.ts";

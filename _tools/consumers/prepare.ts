@@ -1,5 +1,6 @@
 /** Build portable pre-publication npm test artifacts once per SDK selection. */
 import { consumerFiles, copyConsumerFixtures } from "./fixtures.ts";
+import { checkReactClientDirectives } from "../react-client-directives.ts";
 import { emitDeclarations } from "./declarations/index.ts";
 import { replaceDeclarations } from "./declarations/package.ts";
 import { build } from "jsr:@deno/dnt@0.43.2";
@@ -148,6 +149,12 @@ export async function prepareArtifacts(
             : {},
         },
       });
+      if (pkg.name === "@colibri/react") {
+        await checkReactClientDirectives(
+          resolve(source, pkg.root, "src"),
+          resolve(outDir, "esm", "src"),
+        );
+      }
       // dnt uses local dependency tarballs to build declarations. Portable artifacts
       // retain the advertised range and are installed together by the consumer.
       const manifestPath = resolve(outDir, "package.json");

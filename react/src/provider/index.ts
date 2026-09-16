@@ -4,7 +4,7 @@
  * @module
  */
 // @deno-types="@types/react"
-import { createElement, useEffect, useState } from "react";
+import { createElement, useEffect, useRef, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   ColibriProvider,
@@ -18,14 +18,26 @@ export interface ColibriQueryProviderProps extends ColibriProviderProps {
 }
 /**
  * Provide Colibri and Query in one component. Never shares a singleton between
- * SSR requests. Caller-owned clients are not cleared on unmount; owned caches are.
+ * SSR requests. Caller-owned clients are never cleared. Owned caches are cleared
+ * after unmount, preserving data during Strict Mode effect probing.
  * Mount one per application, or pass the existing application QueryClient.
  */
 export function ColibriQueryProvider(
   { config, queryClient, children }: ColibriQueryProviderProps,
 ): ReactElement {
   const [owned] = useState(() => new QueryClient());
-  useEffect(() => () => owned.clear(), [owned]);
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      // Strict Mode immediately sets up the same effect again. Dispose only
+      // after that cycle, when the provider is still unmounted.
+      queueMicrotask(() => {
+        if (!mounted.current) owned.clear();
+      });
+    };
+  }, [owned]);
   return createElement(
     QueryClientProvider,
     { client: queryClient ?? owned },

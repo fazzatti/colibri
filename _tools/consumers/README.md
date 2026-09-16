@@ -294,3 +294,8 @@ envelope signature and account/module events, and releases the connection. This
 exercises upstream SDK machinery, not a live extension or wallet service.
 Adapter-only bundle probes forbid retained vendor runtimes, Preact and wallet
 UI.
+
+React artifact preparation also checks every source module marked
+`"use client"`: the directive must precede all imports in source and remain the
+first statement in emitted ESM. This guards client boundaries before installing
+the tarballs.

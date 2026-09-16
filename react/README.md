@@ -90,9 +90,11 @@ export function App({ address }: AccountProps) {
 ```
 
 `ColibriQueryProvider` supplies the network, connection state and an isolated
-query cache. Pass `queryClient` to reuse an existing application cache. The
-granular `ColibriProvider` plus `QueryClientProvider` composition remains
-available. Reading a public balance does not require connecting a wallet.
+query cache. Strict Mode effect probing preserves its data and active queries;
+the owned cache is cleared after a real unmount. Pass `queryClient` to reuse an
+existing application cache, which the provider never clears. The granular
+`ColibriProvider` plus `QueryClientProvider` composition remains available.
+Reading a public balance does not require connecting a wallet.
 
 `raw` is a `bigint`: XLM and Classic balances have seven decimal places, so
 10,000,000 stroops equals 1 XLM. SEP-41 precision comes from the token contract.
