@@ -1,7 +1,12 @@
 import { Input } from "@cliffy/prompt/input";
 import { Select } from "@cliffy/prompt/select";
 import type { CliIO } from "@/cli/options.ts";
-import { BindingError, Code } from "@/error.ts";
+import {
+  BindingCancelledError,
+  BindingError,
+  BindingInvalidOptionsError,
+  Code,
+} from "@/error.ts";
 
 /** @internal Terminal adapter; prompt dependencies stay behind the Deno CLI entrypoint. */
 export function createTerminalIO(
@@ -19,7 +24,7 @@ export function createTerminalIO(
         count === null ||
         buffer.subarray(0, count).some((byte) => byte === 3 || byte === 4)
       ) {
-        throw new BindingError(Code.CANCELLED, "Generation cancelled");
+        throw new BindingCancelledError("Generation cancelled");
       }
       return count;
     },
@@ -34,8 +39,7 @@ export function createTerminalIO(
         answer = null;
       } else {
         if (cause instanceof BindingError) throw cause;
-        throw new BindingError(
-          Code.INVALID_OPTIONS,
+        throw new BindingInvalidOptionsError(
           "Could not read the terminal input",
           cause,
         );

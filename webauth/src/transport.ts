@@ -1,7 +1,9 @@
+import { WebAuthErrors } from "@/error.ts";
 import {
   WebAuthCode,
-  WebAuthError,
   type WebAuthErrorOptions,
+  WebAuthInvalidResponseError,
+  WebAuthTransportError,
 } from "@/error.ts";
 import type { WebAuthProtocol, WebAuthSubmissionFormat } from "@/types.ts";
 
@@ -112,7 +114,7 @@ export class WebAuthTransport {
         cause,
         data: aborted ? { timeout: this.#timeout } : undefined,
       };
-      throw new WebAuthError(options);
+      throw new WebAuthErrors[options.code](options);
     } finally {
       clearTimeout(timeoutId);
     }
@@ -127,8 +129,7 @@ export class WebAuthTransport {
     const { response, text } = await this.#receive(endpoint, init, protocol);
 
     if (!response.ok) {
-      throw new WebAuthError({
-        code: WebAuthCode.TRANSPORT,
+      throw new WebAuthTransportError({
         message: "WebAuth endpoint rejected the request",
         details: text.slice(0, MAX_ERROR_BODY) || response.statusText,
         protocol,
@@ -145,8 +146,7 @@ export class WebAuthTransport {
     try {
       body = JSON.parse(text);
     } catch (cause) {
-      throw new WebAuthError({
-        code: WebAuthCode.INVALID_RESPONSE,
+      throw new WebAuthInvalidResponseError({
         message: "WebAuth endpoint returned invalid JSON",
         protocol,
         endpoint,
@@ -154,8 +154,7 @@ export class WebAuthTransport {
       });
     }
     if (!body || typeof body !== "object" || Array.isArray(body)) {
-      throw new WebAuthError({
-        code: WebAuthCode.INVALID_RESPONSE,
+      throw new WebAuthInvalidResponseError({
         message: "WebAuth endpoint returned an invalid response object",
         protocol,
         endpoint,

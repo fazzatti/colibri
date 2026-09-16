@@ -10,8 +10,11 @@ import type {
 } from "@colibri/core/signers";
 import { useColibriConfig, useConnection } from "@/context/provider.ts";
 import type { ColibriConfig, WalletConnection } from "@/context/config.ts";
-import { ColibriReactError, ReactCode } from "@/errors/index.ts";
-import { useColibriMutation } from "@/query/mutation.ts";
+import {
+  ReactConnectionChangedError,
+  ReactUnsupportedCapabilityError,
+} from "@/errors/index.ts";
+import { useColibriMutation } from "@/query/mutation/hook.ts";
 import type { MutationControls } from "@/query/options.ts";
 import type { UseMutationResult } from "@/shared/types.ts";
 /** Reject a capability retained after the wallet identity or network changed. */
@@ -20,8 +23,7 @@ export function assertConnection(
   connection: WalletConnection | undefined,
 ): asserts connection is WalletConnection {
   if (!connection || config.getSnapshot().connection !== connection) {
-    throw new ColibriReactError(
-      ReactCode.CONNECTION_CHANGED,
+    throw new ReactConnectionChangedError(
       "The wallet connection is no longer current",
     );
   }
@@ -100,8 +102,7 @@ export function useSignMessage(
   return useColibriMutation(async (message) => {
     assertConnection(config, connection);
     if (!connection.messageSigner) {
-      throw new ColibriReactError(
-        ReactCode.UNSUPPORTED_CAPABILITY,
+      throw new ReactUnsupportedCapabilityError(
         "This connection has no SEP-53 message signer",
       );
     }

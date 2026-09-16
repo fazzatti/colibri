@@ -1,0 +1,239 @@
+# Called by CI so every shard appears under compatibility / <name>.
+name: Compatibility
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: plan and guards
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Check bundle fixture and compatibility orchestration
+        run: |
+          deno task test:bundle-tooling
+          deno task test:compatibility-runner
+      - name: Resolve minimum and latest compatible SDK versions once
+        run: deno task check:consumers:ci plan "$RUNNER_TEMP/compatibility"
+      - name: Share the SDK resolution plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: compatibility-plan
+          path: ${{ runner.temp }}/compatibility/plan.json
+          if-no-files-found: error
+          retention-days: 7
+
+  prepare:
+    name: prepare packages
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      RUSTUP_TOOLCHAIN: 1.96.0
+      CARGO_TARGET_DIR: ${{ github.workspace }}/target/declarations
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: actions/download-artifact@v4
+        with:
+          name: compatibility-plan
+          path: ${{ runner.temp }}/compatibility
+      - name: Setup pinned declaration emitter toolchain
+        run: rustup toolchain install 1.96.0 --profile minimal --no-self-update
+      - name: Cache declaration emitter
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/declarations
+          key: declarations-${{ runner.os }}-rust-1.96.0-${{ hashFiles('_tools/consumers/declarations/emitter/Cargo.lock') }}
+      - name: Test declaration regression harness
+        run: deno task test:declarations
+      - name: Prepare reusable npm artifacts
+        run: deno task check:consumers:ci prepare "$RUNNER_TEMP/compatibility"
+      - name: Pack portable artifacts for all consumers
+        working-directory: ${{ runner.temp }}/compatibility
+        run: tar -czf "$RUNNER_TEMP/compatibility-packages.tar.gz" sdk-*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: compatibility-packages
+          path: ${{ runner.temp }}/compatibility-packages.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+      - name: Retain preparation diagnostics
+        if: always()
+        uses: ./.github/actions/compatibility-results
+        with:
+          shard: prepare
+
+  source:
+    name: ${{ matrix.name }}
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - phase: dependencies
+            name: released Core ranges
+            deno: 2.9.6
+          - phase: deno-2.7.11
+            name: Deno 2.7.11
+            deno: 2.7.11
+          - phase: deno-2.9.6
+            name: Deno 2.9.6
+            deno: 2.9.6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: ${{ matrix.deno }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: compatibility-plan
+          path: ${{ runner.temp }}/compatibility
+      - name: Check source consumers
+        env:
+          PHASE: ${{ matrix.phase }}
+        run: deno task check:consumers:ci "$PHASE" "$RUNNER_TEMP/compatibility"
+      - name: Retain source diagnostics
+        if: always()
+        uses: ./.github/actions/compatibility-results
+        with:
+          shard: ${{ matrix.phase }}
+
+  installed:
+    name: ${{ matrix.name }}
+    needs: [plan, prepare]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - phase: jsr-declarations
+            name: JSR declarations
+            node: "24"
+          - phase: node-24
+            name: Node 24
+            node: "24"
+          - phase: node-22
+            name: Node 22
+            node: "22"
+          - phase: node-22.12.0
+            name: Node 22.12.0
+            node: "22.12.0"
+          - phase: browsers
+            name: browsers
+            node: "24"
+          - phase: bundles
+            name: production bundles
+            node: "24"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: compatibility-plan
+          path: ${{ runner.temp }}/compatibility
+      - uses: actions/download-artifact@v4
+        with:
+          name: compatibility-packages
+          path: ${{ runner.temp }}
+      - name: Restore the same prepared packages
+        run: tar -xzf "$RUNNER_TEMP/compatibility-packages.tar.gz" -C "$RUNNER_TEMP/compatibility"
+      - name: Check installed consumers
+        env:
+          PHASE: ${{ matrix.phase }}
+        run: deno task check:consumers:ci "$PHASE" "$RUNNER_TEMP/compatibility"
+      # Same runner as the browser phase: reuse its Playwright installation,
+      # but still run diagnostics after a failed browser consumer.
+      - name: Check browser failure diagnostics and cleanup
+        if: ${{ !cancelled() && matrix.phase == 'browsers' }}
+        run: deno task check:consumers:ci browser-runner "$RUNNER_TEMP/compatibility"
+      - name: Retain installed consumer diagnostics
+        if: always()
+        uses: ./.github/actions/compatibility-results
+        with:
+          shard: ${{ matrix.phase }}
+      - name: Upload production bundle evidence
+        if: ${{ always() && matrix.phase == 'bundles' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-browser-bundles
+          path: |
+            ${{ runner.temp }}/compatibility/bundles/*.json
+            ${{ runner.temp }}/compatibility/bundles/*.lock
+            ${{ runner.temp }}/compatibility/bundles/deno/
+            ${{ runner.temp }}/compatibility/bundles/rollup/
+            ${{ runner.temp }}/compatibility/bundles/npm/package-lock.json
+
+  summary:
+    name: complete matrix
+    if: ${{ always() }}
+    needs: [plan, prepare, source, installed]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.6
+      - uses: actions/download-artifact@v4
+        with:
+          name: compatibility-plan
+          path: ${{ runner.temp }}/compatibility
+      - name: Collect every shard's evidence
+        if: ${{ !cancelled() }}
+        uses: actions/download-artifact@v4
+        with:
+          pattern: compatibility-case-results-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/compatibility
+      - name: Reject failed or missing cases
+        if: always()
+        run: deno task check:consumers:ci summary "$RUNNER_TEMP/compatibility"
+      - name: Require every job to succeed, including setup and artifact transfer
+        if: always()
+        env:
+          PLAN_RESULT: ${{ needs.plan.result }}
+          PREPARE_RESULT: ${{ needs.prepare.result }}
+          SOURCE_RESULT: ${{ needs.source.result }}
+          INSTALLED_RESULT: ${{ needs.installed.result }}
+        run: |
+          test "$PLAN_RESULT" = "success"
+          test "$PREPARE_RESULT" = "success"
+          test "$SOURCE_RESULT" = "success"
+          test "$INSTALLED_RESULT" = "success"
+      - name: Upload consolidated compatibility results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compatibility-results
+          path: ${{ runner.temp }}/compatibility/
+          if-no-files-found: warn
+          retention-days: 7

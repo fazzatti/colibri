@@ -8,7 +8,7 @@ import {
   resolveCliOptions,
 } from "@/cli/options.ts";
 import type { BindingSource } from "@/types.ts";
-import { BindingError, Code } from "@/error.ts";
+import { BindingSourceFailedError } from "@/error.ts";
 import { createTerminalIO } from "@/cli/terminal.ts";
 import { defaultClassName } from "@/cli/naming.ts";
 export {
@@ -63,11 +63,7 @@ export async function runCli(
         wasm: await Deno.readFile(flags.wasm as string),
       };
     } catch (cause) {
-      throw new BindingError(
-        Code.SOURCE_FAILED,
-        "Could not read the Wasm file",
-        cause,
-      );
+      throw new BindingSourceFailedError("Could not read the Wasm file", cause);
     }
   } else {
     const networkConfig = cliNetwork(flags);

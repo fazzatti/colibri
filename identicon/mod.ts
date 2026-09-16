@@ -24,7 +24,21 @@
 export { Identicon } from "@/identicon.ts";
 export { identiconSvg } from "@/svg.ts";
 export { generateIdenticon } from "@/core/generate.ts";
-export { IdenticonCode, IdenticonError } from "@/error/index.ts";
+export {
+  IdenticonCode,
+  IdenticonError,
+  IdenticonErrors,
+  IdenticonInsufficientDrawingAreaError,
+  IdenticonInvalidBackgroundError,
+  IdenticonInvalidFormatError,
+  IdenticonInvalidOptionsError,
+  IdenticonInvalidPaddingError,
+  IdenticonInvalidPublicKeyError,
+  IdenticonInvalidSaturationError,
+  IdenticonInvalidSizeError,
+  IdenticonInvalidValueError,
+  IdenticonPngEncodingFailedError,
+} from "@/error/index.ts";
 export type {
   IdenticonColor,
   IdenticonData,

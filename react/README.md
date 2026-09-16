@@ -5,7 +5,7 @@ signers and transaction pipelines. Read account and token data, retain full
 contract clients, invoke contracts, submit Classic transactions, and observe
 wallets, sessions and events through React.
 
-**0.1 preview** · Core **1.2+** within 1.x · React **19.1+** within 19.x ·
+**0.2 preview** · Core **1.2+** within 1.x · React **19.1+** within 19.x ·
 TanStack Query **5.87+** within 5.x.
 
 ## Contents
@@ -54,9 +54,9 @@ your application. Supply the full G-address of an existing Testnet account.
 
 ```tsx
 import { useState } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ColibriQueryProvider } from "@colibri/react/provider";
 import { NetworkConfig } from "@colibri/core/network";
-import { ColibriProvider, createColibriConfig } from "@colibri/react";
+import { createColibriConfig } from "@colibri/react";
 import { useBalance } from "@colibri/react/assets";
 
 type AccountProps = { address: `G${string}` };
@@ -80,26 +80,42 @@ export function App({ address }: AccountProps) {
   const [config] = useState(() =>
     createColibriConfig({ network: NetworkConfig.TestNet() })
   );
-  const [queryClient] = useState(() => new QueryClient());
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ColibriProvider config={config}>
-        <Balance address={address} />
-      </ColibriProvider>
-    </QueryClientProvider>
+    <ColibriQueryProvider config={config}>
+      <Balance address={address} />
+    </ColibriQueryProvider>
   );
 }
 ```
 
-`ColibriProvider` supplies the network and connection state. TanStack's
-`QueryClientProvider` owns caching, loading/error state and refetching. Reading
-a public balance does not require connecting a wallet.
+`ColibriQueryProvider` supplies the network, connection state and an isolated
+query cache. Strict Mode effect probing preserves its data and active queries;
+the owned cache is cleared after a real unmount. Pass `queryClient` to reuse an
+existing application cache, which the provider never clears. The granular
+`ColibriProvider` plus `QueryClientProvider` composition remains available.
+Reading a public balance does not require connecting a wallet.
 
 `raw` is a `bigint`: XLM and Classic balances have seven decimal places, so
 10,000,000 stroops equals 1 XLM. SEP-41 precision comes from the token contract.
 Use exact integer formatting when displaying decimal amounts. Missing accounts
 or trustlines surface Core's structured error instead of a fabricated zero.
+
+## Common workflows first
+
+| Common task                                                    | Convenience API                                                            | Granular alternative                                    |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Provide state and caching                                      | `ColibriQueryProvider` from `/provider`                                    | `ColibriProvider` plus `QueryClientProvider`            |
+| Observe and control a wallet                                   | `useWallet` from `/wallet`                                                 | `useConnection`, connect/disconnect hooks, `useSigners` |
+| Sign envelopes and Soroban authorization                       | `createWalletSigner` from `/wallets/signer`                                | Envelope and auth-entry factories                       |
+| Invoke with the connected wallet                               | `useWalletContractInvoke` from `/contracts/invoke`                         | `useContractInvoke` with explicit config                |
+| Read accounts, balances, contracts or metadata                 | Existing `useAccount`, `useBalance`, `useContractRead`, `useTokenMetadata` | Core clients and query options                          |
+| Execute or simulate transactions, authenticate, observe events | Existing transaction hooks, `useWebAuth`, `useContractEvents`              | Core pipelines, WebAuth sessions and event stores       |
+
+Conveniences compose these same primitives. They do not introduce another cache,
+client or submission path. Import only the feature subpaths needed by the app.
+See the
+[complete convenience guide](https://github.com/fazzatti/colibri/blob/dev/docs/packages/react/convenience.md).
 
 ## API by import path
 
@@ -428,11 +444,16 @@ Import `createStellarWalletsKitConnector` from
 `@colibri/react/ecosystem/stellar-wallets-kit`. Pass the application's
 initialized Wallets Kit and required
 `capabilities({ module, address, networkPassphrase })`. The callback returns
-`{ envelope?, signers?, messageSigner? }`: only explicitly selected capabilities
-are exposed. `envelope: true` adapts Kit transaction signing for a G-address.
-Other Core signers and SEP-53 message signers are application supplied. Optional
-`id` defaults to `stellar-wallets-kit`; `connect` can supply custom UI in place
-of the Kit's `authModal()`.
+`{ signer?, envelope?, authEntry?, signers?, messageSigner? }`: only explicitly
+selected capabilities are exposed. For a G-account wallet supporting both
+signing forms, return `{ signer: createWalletSigner }`, importing the factory
+from `/wallets/signer`. This creates one guarded Core signer with both methods.
+Declare capabilities per module; the presence of an SDK method does not prove
+wallet support. Do not combine `signer` with `envelope` or `authEntry`. The
+separate `envelope: true` option adapts only transaction signing. Other Core
+signers and SEP-53 message signers are application supplied. Optional `id`
+defaults to `stellar-wallets-kit`; `connect` can supply custom UI in place of
+the Kit's `authModal()`.
 
 The application chooses wallet modules and initializes the Kit in the browser.
 Kit state changes, module changes and disconnect events invalidate the
@@ -582,8 +603,10 @@ never share authenticated application state between users.
 
 ## Errors and application lifetimes
 
-`ColibriReactError` extends Core `ColibriError`; branch on `error.code` rather
-than message text. `ReactCode` names the package's stable conditions:
+Each React failure has a dedicated class, such as `ReactNetworkMismatchError`,
+which extends `ColibriReactError` and Core `ColibriError`. Use `instanceof` or
+branch on the stable `error.code` rather than message text. `ReactCode` names
+the package's stable conditions:
 
 | Code        | Condition                                                       |
 | ----------- | --------------------------------------------------------------- |
@@ -615,3 +638,30 @@ subscriptions and configs when their scope ends.
 - [Contract clients, invocation and pipeline recipes](https://github.com/fazzatti/colibri/blob/dev/docs/packages/react/contracts-and-transactions.md)
 - [Frontend imports and bundle measurements](https://github.com/fazzatti/colibri/blob/dev/docs/getting-started/browser-bundles.md)
 - [Complete React API reference](https://jsr.io/@colibri/react/doc)
+
+## Consumer migration additions in 0.2
+
+`useContractRead` accepts `contract: undefined` while an application loads an
+ABI or configures plugins. It remains disabled, including manual refetch, until
+the real client is provided. Clients use a structural public identity, so a
+compatible older Core minor does not fail because of private class members.
+Argument/result inference and the client's existing pipelines remain intact.
+Query keys contain a SHA-256 ABI fingerprint. Current XDR is checked before a
+cached digest is reused, so replacing or changing a spec invalidates its key.
+
+`useBalance` and `useTokenMetadata` share SEP-41 decimal precision in the same
+QueryClient for five minutes. The balance itself retains its normal freshness.
+Invalidate the network-scoped `token-decimals` query after a known token
+upgrade.
+
+`createWalletAuthEntrySigner` from `/wallets/auth-entry` adapts an explicitly
+supported G-account wallet capability. Wallets Kit can opt in using
+`authEntry: createWalletAuthEntrySigner`, independently of `envelope: true`.
+Returned authorizations must preserve the requested account, nonce, invocation
+and expiry. See the wallet guide for the complete workflow.
+
+`useColibriMutation` is exported from `/query/mutation` for application-owned
+SDK facades and compound actions. It retains Colibri's network-scoped
+serialization and never retries automatically. It does not infer transaction
+phases or replace a facade's validation, signing, submission or receipt
+handling.

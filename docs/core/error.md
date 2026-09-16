@@ -48,6 +48,24 @@ contexts may use different constructor names for the same conceptual condition.
 Use the actual exported registry instead of inventing an import from a source
 path.
 
+## Dedicated classes across packages
+
+Every library-owned stable code has its own concrete class. This also applies to
+React (`ReactErrors`), WebAuth (`WebAuthErrors`), Identicon (`IdenticonErrors`),
+contract bindings (`BindingErrors`), RPC Streamer (`RPCStreamerErrors`), and
+Soroban values (`SorobanErrors`). The registry maps codes to exported
+constructors; family-level catches continue to work. Core's unclassified
+fallback is `UnexpectedError` (`GEN_000`). RPC Streamer retains its established
+`details` object and native `cause` shape.
+
+Legacy public family constructors are retained for source compatibility and
+extension, but library implementation sites must use dedicated subclasses.
+`ColibriError` remains the extensible base for consumer-owned codes. Existing
+Colibri errors and caller-owned errors retain identity at passthrough
+boundaries. Architecture tests inventory all workspace packages and reject
+missing, shared or duplicated concrete error classes, as well as generic
+coded-error construction in library implementations.
+
 ## Recovery belongs to the caller
 
 - Invalid configuration: correct input before retrying.

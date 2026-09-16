@@ -295,3 +295,46 @@ API modules: [wallets](https://jsr.io/@colibri/react/doc/wallets),
 [sessions](https://jsr.io/@colibri/react/doc/session),
 [SEP-1](https://jsr.io/@colibri/react/doc/sep1),
 [identicons](https://jsr.io/@colibri/react/doc/identicon).
+
+## Explicit authorization-entry signing
+
+The separate
+[`/wallets/auth-entry`](https://jsr.io/@colibri/react/doc/wallets/auth-entry)
+entrypoint keeps authorization decoding out of connection-only bundles. Envelope
+signing does not imply Soroban authorization support. Enable
+`authEntry: createWalletAuthEntrySigner` only for Kit modules that support
+G-account entry signing. Kit's `signAuthEntry` must be present; unsupported
+configurations fail before a signing request. The connector checks the account,
+module and network before and after the wallet prompt, including returned signer
+identity.
+
+The framework-independent bridge can also wrap another wallet. This complete
+factory takes a caller-owned, explicitly supported signing function:
+
+<!-- deno-check @colibri/react -->
+
+```ts
+import { createWalletAuthEntrySigner } from "@colibri/react/wallets/auth-entry";
+import type { Ed25519PublicKey } from "@colibri/core/strkey";
+
+export function authorizationSigner(
+  address: Ed25519PublicKey,
+  networkPassphrase: string,
+  signAuthEntry: (entryXdr: string, passphrase: string) => Promise<string>,
+) {
+  return createWalletAuthEntrySigner({
+    address,
+    networkPassphrase,
+    signAuthEntry,
+  });
+}
+```
+
+Pass this capability in the Core transaction's explicit `signers` array. The
+pipeline supplies a positive uint32 ledger expiry. The adapter copies the entry,
+checks its account/network, sets the expiry, and rejects a wallet response that
+changes the address, nonce, invocation or requested expiry. Wallet rejection
+propagates without retry. This adapter does not simulate, submit or verify an
+on-chain contract account's authorization policy. Supply a custom Core signer
+for contract accounts. Keep operator authorization separate from the user's
+wallet capability.

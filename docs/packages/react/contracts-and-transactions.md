@@ -38,6 +38,62 @@ a distinct read `scope` when custom pipelines/plugins change query semantics.
 The returned full contract retains its deployment, spec, metadata, events and
 plugin capabilities. No second contract orchestration system is introduced.
 
+## Loading an existing SDK client asynchronously
+
+Keep initialization and plugin installation in the SDK. Query its factory once,
+then pass the resulting client to `useContractRead`. An undefined client is
+idle; no dummy client or type cast is needed. This complete component takes a
+typed factory from its caller, including the caller's network and deployment
+choice.
+
+<!-- deno-check @colibri/react -->
+
+```tsx
+import { useQuery } from "@tanstack/react-query";
+import { useColibriConfig } from "@colibri/react";
+import { colibriQueryOptions } from "@colibri/react/query";
+import { useContractRead } from "@colibri/react/contracts/read";
+import type { ContractIdentity } from "@colibri/react/contracts";
+
+type Client = ContractIdentity & {
+  balance: { read(address: string): Promise<bigint> };
+};
+export function Balance({ load, deployment, account }: {
+  load: () => Promise<Client>;
+  deployment: string;
+  account: string;
+}) {
+  const config = useColibriConfig();
+  const client = useQuery(
+    colibriQueryOptions(config, "my-client", deployment, load),
+  );
+  const balance = useContractRead({
+    contract: client.data,
+    method: "balance",
+    args: [account],
+  });
+  return (
+    <output>
+      {client.error?.message ?? balance.error?.message ??
+        balance.data?.toString() ?? "Loading…"}
+    </output>
+  );
+}
+```
+
+The factory identity key must include deployment and any application-specific
+plugin configuration. Colibri uses structural network/spec fields and leaves the
+client's pipelines intact. ABI fingerprints keep query keys bounded while still
+detecting changes in the current ABI. They do not validate deployed WASM.
+
+For SDK facades that combine multiple reads or writes, use `colibriQueryOptions`
+from `/query` and [useColibriMutation](hooks/use-colibri-mutation.md) from
+`/query/mutation`. Include all behavior-changing inputs in the query key.
+Mutations execute only after an explicit call, serialize within the provider
+scope, and never retry automatically. These utilities do not invent receipt
+recovery or a prepared-envelope lifecycle; keep those responsibilities in the
+existing SDK until the corresponding Core capability is available.
+
 ## Read without constructing a full Contract
 
 This complete component accepts a loaded spec and deployed contract ID from its
@@ -134,3 +190,7 @@ API modules: [contracts](https://jsr.io/@colibri/react/doc/contracts),
 [RPC](https://jsr.io/@colibri/react/doc/rpc),
 [accounts](https://jsr.io/@colibri/react/doc/accounts),
 [balances](https://jsr.io/@colibri/react/doc/assets).
+
+The separate
+[`/query/mutation` API](https://jsr.io/@colibri/react/doc/query/mutation) keeps
+pure `/query` consumers free of React hook initialization.

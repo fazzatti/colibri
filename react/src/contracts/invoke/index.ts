@@ -2,7 +2,12 @@
  * Colibri React contract invoke APIs.
  * @module
  */
-export * from "@/contracts/invoke/hooks.ts";
+export { useContractInvoke } from "@/contracts/invoke/hooks.ts";
+export type {
+  InvokeArgs,
+  InvokeMethodName,
+  InvokeResult,
+} from "@/contracts/types.ts";
 
 // Shared type exports are erased from the runtime bundle.
 export type { ContractIdentity, InvokeMethod } from "@/contracts/types.ts";
@@ -99,3 +104,5 @@ export type {
   TransactionSource,
   TransactionXDRBase64,
 } from "@colibri/core";
+
+export * from "@/contracts/invoke/wallet.ts";

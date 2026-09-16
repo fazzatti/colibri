@@ -1,4 +1,10 @@
-import { WebAuthCode, WebAuthError } from "@/error.ts";
+import {
+  WebAuthError,
+  WebAuthInvalidTokenError,
+  WebAuthInvalidTokenPayloadTypeError,
+  WebAuthTokenContextMismatchError,
+  WebAuthTokenExpiredError,
+} from "@/error.ts";
 import type { WebAuthProtocol } from "@/types.ts";
 
 interface AuthenticatedTokenContext {
@@ -22,8 +28,7 @@ function decodeBase64Url(value: string): string {
 function decodeClaims(token: string): Readonly<Record<string, unknown>> {
   const parts = token.split(".");
   if (parts.length !== 3 || parts.some((part) => part.length === 0)) {
-    throw new WebAuthError({
-      code: WebAuthCode.INVALID_TOKEN,
+    throw new WebAuthInvalidTokenError({
       message: "Invalid JWT",
       details: "A JWT must contain three non-empty dot-separated parts.",
     });
@@ -31,8 +36,7 @@ function decodeClaims(token: string): Readonly<Record<string, unknown>> {
   try {
     const claims = JSON.parse(decodeBase64Url(parts[1]));
     if (!claims || typeof claims !== "object" || Array.isArray(claims)) {
-      throw new WebAuthError({
-        code: WebAuthCode.INVALID_TOKEN_PAYLOAD_TYPE,
+      throw new WebAuthInvalidTokenPayloadTypeError({
         message: "Invalid JWT payload",
         details: "The token payload must be a JSON object.",
       });
@@ -42,8 +46,7 @@ function decodeClaims(token: string): Readonly<Record<string, unknown>> {
     if (cause instanceof WebAuthError) {
       throw cause;
     }
-    throw new WebAuthError({
-      code: WebAuthCode.INVALID_TOKEN,
+    throw new WebAuthInvalidTokenError({
       message: "Invalid JWT payload",
       details: "The token payload is not valid base64url-encoded JSON.",
       cause,
@@ -57,8 +60,7 @@ function numericDate(
 ): number {
   const value = claims[name];
   if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new WebAuthError({
-      code: WebAuthCode.INVALID_TOKEN,
+    throw new WebAuthInvalidTokenError({
       message: `Invalid JWT ${name} claim`,
       details: `${name} must be an RFC 7519 NumericDate.`,
       data: { claim: name },
@@ -73,8 +75,7 @@ function requiredString(
 ): string {
   const value = claims[name];
   if (typeof value !== "string" || value.length === 0) {
-    throw new WebAuthError({
-      code: WebAuthCode.INVALID_TOKEN,
+    throw new WebAuthInvalidTokenError({
       message: `Invalid JWT ${name} claim`,
       details: `${name} must be a non-empty string.`,
       data: { claim: name },
@@ -120,8 +121,7 @@ export class WebAuthToken {
     try {
       new URL(issuer);
     } catch (cause) {
-      throw new WebAuthError({
-        code: WebAuthCode.INVALID_TOKEN,
+      throw new WebAuthInvalidTokenError({
         message: "Invalid JWT issuer",
         details: "The iss claim must be a URI.",
         protocol: context.protocol,
@@ -133,8 +133,7 @@ export class WebAuthToken {
     const expiresAt = numericDate(claims, "exp");
     const now = context.now ?? Math.floor(Date.now() / 1_000);
     if (now >= expiresAt) {
-      throw new WebAuthError({
-        code: WebAuthCode.TOKEN_EXPIRED,
+      throw new WebAuthTokenExpiredError({
         message: "WebAuth token has expired",
         protocol: context.protocol,
         data: { expiresAt, now },
@@ -145,8 +144,7 @@ export class WebAuthToken {
       ? `${context.account}:${context.memo}`
       : context.account;
     if (subject !== expectedSubject) {
-      throw new WebAuthError({
-        code: WebAuthCode.TOKEN_CONTEXT_MISMATCH,
+      throw new WebAuthTokenContextMismatchError({
         message: "WebAuth token subject does not match the authentication",
         protocol: context.protocol,
         data: { expected: expectedSubject, actual: subject },
@@ -159,8 +157,7 @@ export class WebAuthToken {
         ? claimClientDomain !== context.clientDomain
         : claimClientDomain !== undefined
     ) {
-      throw new WebAuthError({
-        code: WebAuthCode.TOKEN_CONTEXT_MISMATCH,
+      throw new WebAuthTokenContextMismatchError({
         message:
           "WebAuth token client domain does not match the authentication",
         protocol: context.protocol,

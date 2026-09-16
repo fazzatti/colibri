@@ -1,10 +1,12 @@
+import type { BaseMeta, ColibriErrorShape } from "@/error/types.ts";
 // Refer to: https://github.com/hyperledger-cacti/cacti/blob/main/packages/cactus-common/src/main/typescript/strings.ts
 // Refer to: https://github.com/hyperledger-cacti/cacti/blob/main/packages/cactus-common/src/main/typescript/checks.ts
 
 import { ColibriError } from "@/error/index.ts";
 import { isTruthy } from "@/common/helpers/boolean.ts";
 
-enum ErrorCode {
+/** Stable helper failure codes. */
+export enum StringCode {
   IS_BLANK_STRING = "HLP_STR_00",
 }
 
@@ -36,11 +38,26 @@ export const dropNonPrintable = (val: string): string => {
 export const nonBlankString = (value: unknown, subject = "variable"): void => {
   if (typeof value !== "string" || value.trim().length === 0) {
     const message = `"${subject}" is a blank string. Need non-blank.`;
-    throw ColibriError.unexpected({
+    throw new IsBlankStringError({
       domain: "helpers",
       source: baseErrorSource + "/string",
       message,
-      code: ErrorCode.IS_BLANK_STRING,
     });
   }
 };
+
+/** Is blank string. Stable code `HLP_STR_00`. */
+export class IsBlankStringError
+  extends ColibriError<StringCode.IS_BLANK_STRING> {
+  /** Preserve diagnostics while fixing this failure's code. */
+  constructor(context: Omit<ColibriErrorShape<string, BaseMeta>, "code">) {
+    super({
+      ...context,
+      details: "details" in context
+        ? context.details
+        : "An unexpected error occurred",
+      meta: { cause: undefined, ...context.meta },
+      code: StringCode.IS_BLANK_STRING,
+    });
+  }
+}

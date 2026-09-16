@@ -13,7 +13,22 @@ import type { Event, Ledger, Server } from "@/native-types.ts";
 import { isDefined } from "@colibri/core";
 import { resolveArchiveRpc, resolveLiveRpc } from "@/connection.ts";
 import { waitForStream } from "@/lifecycle.ts";
-import { RPCStreamerError, RPCStreamerErrorCode } from "@/errors.ts";
+import {
+  RPCStreamerAlreadyRunningError,
+  RPCStreamerArchiveRpcAlreadySetError,
+  RPCStreamerCheckpointFailedError,
+  RPCStreamerError,
+  RPCStreamerErrorCode,
+  RPCStreamerInvalidConfigError,
+  RPCStreamerInvalidSequenceRangeError,
+  RPCStreamerLedgerTooHighError,
+  RPCStreamerLedgerTooOldError,
+  RPCStreamerMissingArchiveIngestorError,
+  RPCStreamerMissingArchiveRpcError,
+  RPCStreamerMissingLiveIngestorError,
+  RPCStreamerRpcAlreadySetError,
+  RPCStreamerRpcNotHealthyError,
+} from "@/errors.ts";
 import { createEventStreamer } from "@/variants/event/index.ts";
 import type { EventStreamerConfig } from "@/variants/event/types.ts";
 import { createLedgerStreamer } from "@/variants/ledger/index.ts";
@@ -174,8 +189,7 @@ export class RPCStreamer<T> {
     }
 
     if (this._pagingIntervalMs > this._waitLedgerIntervalMs) {
-      throw new RPCStreamerError(
-        RPCStreamerErrorCode.INVALID_CONFIG,
+      throw new RPCStreamerInvalidConfigError(
         `pagingIntervalMs (${this._pagingIntervalMs}) cannot exceed waitLedgerIntervalMs (${this._waitLedgerIntervalMs})`,
       );
     }
@@ -194,10 +208,7 @@ export class RPCStreamer<T> {
    */
   set rpc(rpc: Server) {
     if (isDefined(this._rpc)) {
-      throw new RPCStreamerError(
-        RPCStreamerErrorCode.RPC_ALREADY_SET,
-        "RPC server is already set",
-      );
+      throw new RPCStreamerRpcAlreadySetError("RPC server is already set");
     }
     this._rpc = rpc;
   }
@@ -215,8 +226,7 @@ export class RPCStreamer<T> {
    */
   set archiveRpc(archiveRpc: Server) {
     if (isDefined(this._archiveRpc)) {
-      throw new RPCStreamerError(
-        RPCStreamerErrorCode.ARCHIVE_RPC_ALREADY_SET,
+      throw new RPCStreamerArchiveRpcAlreadySetError(
         "Archive RPC server is already set",
       );
     }
@@ -296,8 +306,7 @@ export class RPCStreamer<T> {
       try {
         await onCheckpoint(ledgerSequence);
       } catch (cause) {
-        throw new RPCStreamerError(
-          RPCStreamerErrorCode.CHECKPOINT_FAILED,
+        throw new RPCStreamerCheckpointFailedError(
           "Checkpoint persistence failed",
           { ledgerSequence },
           cause as Error,
@@ -331,18 +340,14 @@ export class RPCStreamer<T> {
   /** @internal */
   private assertNotRunning(): void {
     if (this.activeRun || this._isRunning) {
-      throw new RPCStreamerError(
-        RPCStreamerErrorCode.ALREADY_RUNNING,
-        "Streamer is already running",
-      );
+      throw new RPCStreamerAlreadyRunningError("Streamer is already running");
     }
   }
 
   /** @internal */
   private requireLiveIngestor(): LiveIngestFunc<T> {
     if (!this._ingestLive) {
-      throw new RPCStreamerError(
-        RPCStreamerErrorCode.MISSING_LIVE_INGESTOR,
+      throw new RPCStreamerMissingLiveIngestorError(
         "Live ingestor is required for live streaming",
       );
     }
@@ -352,10 +357,7 @@ export class RPCStreamer<T> {
   /** @internal */
   private assertHealthy(status: string): void {
     if (status !== "healthy") {
-      throw new RPCStreamerError(
-        RPCStreamerErrorCode.RPC_NOT_HEALTHY,
-        "Live RPC is not healthy",
-      );
+      throw new RPCStreamerRpcNotHealthyError("Live RPC is not healthy");
     }
   }
 
@@ -366,8 +368,7 @@ export class RPCStreamer<T> {
     latestLedger: number,
   ): void {
     if (currentLedger < oldestAvailable) {
-      throw new RPCStreamerError(
-        RPCStreamerErrorCode.LEDGER_TOO_OLD,
+      throw new RPCStreamerLedgerTooOldError(
         `Ledger ${currentLedger} is older than oldest available (${oldestAvailable})`,
       );
     }
@@ -380,8 +381,7 @@ export class RPCStreamer<T> {
     latestLedger: number,
   ): void {
     if (currentLedger > latestLedger) {
-      throw new RPCStreamerError(
-        RPCStreamerErrorCode.LEDGER_TOO_HIGH,
+      throw new RPCStreamerLedgerTooHighError(
         `Ledger ${currentLedger} is higher than latest available (${latestLedger})`,
       );
     }
@@ -548,22 +548,19 @@ export class RPCStreamer<T> {
     this.assertNotRunning();
 
     if (!this._ingestArchive) {
-      throw new RPCStreamerError(
-        RPCStreamerErrorCode.MISSING_ARCHIVE_INGESTOR,
+      throw new RPCStreamerMissingArchiveIngestorError(
         "Archive ingestor is required for archive streaming",
       );
     }
 
     if (!isDefined(this._archiveRpc)) {
-      throw new RPCStreamerError(
-        RPCStreamerErrorCode.MISSING_ARCHIVE_RPC,
+      throw new RPCStreamerMissingArchiveRpcError(
         "Archive RPC is required for archive ingestion",
       );
     }
 
     if (options.startLedger > options.stopLedger) {
-      throw new RPCStreamerError(
-        RPCStreamerErrorCode.INVALID_SEQUENCE_RANGE,
+      throw new RPCStreamerInvalidSequenceRangeError(
         `Invalid ingestion range: ${options.startLedger} > ${options.stopLedger}`,
       );
     }
@@ -592,14 +589,12 @@ export class RPCStreamer<T> {
     oldestAvailable: number,
   ): { rpc: Server; ingest: ArchiveIngestFunc<T> } {
     if (!isDefined(this._archiveRpc)) {
-      throw new RPCStreamerError(
-        RPCStreamerErrorCode.LEDGER_TOO_OLD,
+      throw new RPCStreamerLedgerTooOldError(
         `Ledger ${currentLedger} is older than oldest available (${oldestAvailable}). Configure an archive RPC to access historical data.`,
       );
     }
     if (!this._ingestArchive) {
-      throw new RPCStreamerError(
-        RPCStreamerErrorCode.MISSING_ARCHIVE_INGESTOR,
+      throw new RPCStreamerMissingArchiveIngestorError(
         `Ledger ${currentLedger} is older than oldest available (${oldestAvailable}). Archive ingestor is required to access historical data.`,
       );
     }

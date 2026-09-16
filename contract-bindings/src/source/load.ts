@@ -1,7 +1,7 @@
 import { Contract, extractContractSpec } from "@colibri/core";
 import { Spec } from "@colibri/core";
 import type { BindingSource, LoadedBindingSource } from "@/types.ts";
-import { BindingError, Code } from "@/error.ts";
+import { BindingSourceFailedError } from "@/error.ts";
 
 /** Loads an ABI without submitting transactions; local sources require no RPC. */
 export async function loadBindingSource(
@@ -50,8 +50,7 @@ export async function loadBindingSource(
       },
     };
   } catch (cause) {
-    throw new BindingError(
-      Code.SOURCE_FAILED,
+    throw new BindingSourceFailedError(
       `Could not load ${source.kind} contract source`,
       cause,
     );

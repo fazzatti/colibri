@@ -18,7 +18,24 @@ import type {
   Sep45ClientConfig,
   Sep45GetChallengeOptions,
 } from "@/sep45/types.ts";
-import { Sep45Code, Sep45Error, WebAuthCode, WebAuthError } from "@/error.ts";
+import {
+  Sep45AccountMismatchError,
+  Sep45AuthHandlerFailedError,
+  Sep45AuthHandlerMissingError,
+  Sep45ClientDomainDiscoveryError,
+  Sep45ClientDomainSignerMissingError,
+  Sep45ClientDomainSigningKeyError,
+  Sep45ClientDomainUnexpectedError,
+  Sep45ClientRequestFailedError,
+  Sep45Error,
+  Sep45InvalidAuthorizedEntryError,
+  Sep45InvalidStateError,
+  Sep45InvalidValidityError,
+  Sep45RpcFailedError,
+  Sep45ServerEntryExpiredError,
+  Sep45UnsupportedCredentialTypeError,
+  WebAuthNetworkMismatchError,
+} from "@/error.ts";
 import { WebAuthToken } from "@/token.ts";
 import { WebAuthTransport } from "@/transport.ts";
 import type { WebAuthCoreSigner } from "@/types.ts";
@@ -39,8 +56,7 @@ function setExpiration(
   const clone = cloneSep45AuthorizationEntry(entry);
   const credentials = clone.credentials;
   if (credentials.type !== "sorobanCredentialsAddress") {
-    throw new Sep45Error({
-      code: Sep45Code.UNSUPPORTED_CREDENTIAL_TYPE,
+    throw new Sep45UnsupportedCredentialTypeError({
       message: "SEP-45 v0.1.1 supports only legacy address credentials",
       data: { credentialType: credentials.type },
     });
@@ -72,8 +88,7 @@ async function signClientDomainEntry(
     )
     : publicKey === expectedAccount;
   if (!matches) {
-    throw new Sep45Error({
-      code: Sep45Code.CLIENT_DOMAIN_SIGNING_KEY,
+    throw new Sep45ClientDomainSigningKeyError({
       message: "SEP-45 client-domain signer does not match the discovered key",
       data: { expected: expectedAccount, actual: publicKey },
     });
@@ -128,8 +143,7 @@ export class Sep45Client {
     options: Sep45GetChallengeOptions,
   ): Promise<Sep45Challenge> {
     if (protocolForAccount(options.account) !== "sep45") {
-      throw new Sep45Error({
-        code: Sep45Code.ACCOUNT_MISMATCH,
+      throw new Sep45AccountMismatchError({
         message: "SEP-45 requires a C account",
         data: { account: options.account },
       });
@@ -148,8 +162,7 @@ export class Sep45Client {
     );
     const authorizationEntriesXdr = response.body.authorization_entries;
     if (typeof authorizationEntriesXdr !== "string") {
-      throw new Sep45Error({
-        code: Sep45Code.CLIENT_REQUEST_FAILED,
+      throw new Sep45ClientRequestFailedError({
         message: "SEP-45 response is missing authorization_entries XDR",
         endpoint: this.#config.endpoint,
       });
@@ -159,8 +172,7 @@ export class Sep45Client {
       responseNetwork !== undefined &&
       responseNetwork !== this.#config.networkPassphrase
     ) {
-      throw new WebAuthError({
-        code: WebAuthCode.NETWORK_MISMATCH,
+      throw new WebAuthNetworkMismatchError({
         message: "SEP-45 response uses a different network",
         protocol: "sep45",
         endpoint: this.#config.endpoint,
@@ -174,8 +186,7 @@ export class Sep45Client {
     let clientDomainAccount: string | undefined;
     if (hasSep45ClientDomainArguments(authorizationEntriesXdr)) {
       if (!options.clientDomain) {
-        throw new Sep45Error({
-          code: Sep45Code.CLIENT_DOMAIN_UNEXPECTED,
+        throw new Sep45ClientDomainUnexpectedError({
           message: "SEP-45 server returned an unrequested client domain",
         });
       }
@@ -186,16 +197,14 @@ export class Sep45Client {
         });
         clientDomainAccount = toml.signingKey;
       } catch (cause) {
-        throw new Sep45Error({
-          code: Sep45Code.CLIENT_DOMAIN_DISCOVERY,
+        throw new Sep45ClientDomainDiscoveryError({
           message: "Could not discover the SEP-45 client-domain signing key",
           cause,
           data: { clientDomain: options.clientDomain },
         });
       }
       if (!clientDomainAccount) {
-        throw new Sep45Error({
-          code: Sep45Code.CLIENT_DOMAIN_SIGNING_KEY,
+        throw new Sep45ClientDomainSigningKeyError({
           message: "Client-domain stellar.toml has no valid signing key",
           data: { clientDomain: options.clientDomain },
         });
@@ -206,8 +215,7 @@ export class Sep45Client {
     try {
       latestLedger = (await this.#config.rpc.getLatestLedger()).sequence;
     } catch (cause) {
-      throw new Sep45Error({
-        code: Sep45Code.RPC_FAILED,
+      throw new Sep45RpcFailedError({
         message: "Could not fetch the latest ledger for SEP-45 verification",
         cause,
       });
@@ -234,22 +242,19 @@ export class Sep45Client {
     options: Sep45AuthorizeChallengeOptions = {},
   ): Promise<Sep45AuthorizedChallenge> {
     if (!(challenge instanceof Sep45Challenge)) {
-      throw new Sep45Error({
-        code: Sep45Code.INVALID_STATE,
+      throw new Sep45InvalidStateError({
         message: "SEP-45 authorization requires a verified challenge",
       });
     }
     if (typeof authorize !== "function") {
-      throw new Sep45Error({
-        code: Sep45Code.AUTH_HANDLER_MISSING,
+      throw new Sep45AuthHandlerMissingError({
         message: "SEP-45 contract account requires an authorization handler",
       });
     }
     const validity = options.authorizationValidityLedgers ??
       DEFAULT_VALIDITY_LEDGERS;
     if (!Number.isInteger(validity) || validity <= 0) {
-      throw new Sep45Error({
-        code: Sep45Code.INVALID_VALIDITY,
+      throw new Sep45InvalidValidityError({
         message:
           "SEP-45 authorizationValidityLedgers must be a positive integer",
         data: { authorizationValidityLedgers: validity },
@@ -260,8 +265,7 @@ export class Sep45Client {
     try {
       latestLedger = (await this.#config.rpc.getLatestLedger()).sequence;
     } catch (cause) {
-      throw new Sep45Error({
-        code: Sep45Code.RPC_FAILED,
+      throw new Sep45RpcFailedError({
         message:
           "Could not fetch the latest ledger before SEP-45 authorization",
         cause,
@@ -269,8 +273,7 @@ export class Sep45Client {
     }
     const verified = challenge.verified;
     if (latestLedger >= verified.serverExpirationLedger) {
-      throw new Sep45Error({
-        code: Sep45Code.SERVER_ENTRY_EXPIRED,
+      throw new Sep45ServerEntryExpiredError({
         message: "SEP-45 server entry expired before authorization",
         data: {
           latestLedger,
@@ -294,8 +297,7 @@ export class Sep45Client {
         validUntilLedgerSeq,
       });
     } catch (cause) {
-      throw new Sep45Error({
-        code: Sep45Code.AUTH_HANDLER_FAILED,
+      throw new Sep45AuthHandlerFailedError({
         message: "SEP-45 contract authorization handler failed",
         cause,
       });
@@ -306,8 +308,7 @@ export class Sep45Client {
         returnedClient.toXdr(),
       );
     } catch (cause) {
-      throw new Sep45Error({
-        code: Sep45Code.INVALID_AUTHORIZED_ENTRY,
+      throw new Sep45InvalidAuthorizedEntryError({
         message:
           "SEP-45 contract authorization handler returned an invalid entry",
         cause,
@@ -317,8 +318,7 @@ export class Sep45Client {
 
     if (verified.clientDomainEntryIndex !== undefined) {
       if (!options.clientDomainSigner || !verified.clientDomainAccount) {
-        throw new Sep45Error({
-          code: Sep45Code.CLIENT_DOMAIN_SIGNER_MISSING,
+        throw new Sep45ClientDomainSignerMissingError({
           message: "Accepted SEP-45 client domain requires its signer",
         });
       }
@@ -334,8 +334,7 @@ export class Sep45Client {
         if (cause instanceof Sep45Error) {
           throw cause;
         }
-        throw new Sep45Error({
-          code: Sep45Code.AUTH_HANDLER_FAILED,
+        throw new Sep45AuthHandlerFailedError({
           message: "Could not sign the SEP-45 client-domain entry",
           cause,
         });
@@ -353,8 +352,7 @@ export class Sep45Client {
     challenge: Sep45AuthorizedChallenge,
   ): Promise<Sep45PreparedChallenge> {
     if (!(challenge instanceof Sep45AuthorizedChallenge)) {
-      throw new Sep45Error({
-        code: Sep45Code.INVALID_STATE,
+      throw new Sep45InvalidStateError({
         message: "SEP-45 preparation requires an authorized challenge",
       });
     }
@@ -371,8 +369,7 @@ export class Sep45Client {
     challenge: Sep45PreparedChallenge,
   ): Promise<WebAuthToken> {
     if (!(challenge instanceof Sep45PreparedChallenge)) {
-      throw new Sep45Error({
-        code: Sep45Code.INVALID_STATE,
+      throw new Sep45InvalidStateError({
         message: "SEP-45 submission requires a prepared challenge",
       });
     }
@@ -384,8 +381,7 @@ export class Sep45Client {
       "sep45",
     );
     if (typeof response.body.token !== "string") {
-      throw new Sep45Error({
-        code: Sep45Code.CLIENT_REQUEST_FAILED,
+      throw new Sep45ClientRequestFailedError({
         message: "SEP-45 response is missing a token",
         endpoint: this.#config.endpoint,
       });

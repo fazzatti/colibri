@@ -1,6 +1,6 @@
 import type { xdr } from "stellar-sdk";
 import type { Spec } from "@colibri/core";
-import { BindingError, Code } from "@/error.ts";
+import { BindingInvalidSpecError } from "@/error.ts";
 import { TEMPLATE_TYPE_NAMES } from "@/generation/names.ts";
 
 const RESERVED = new Set(
@@ -66,8 +66,7 @@ export function typeName(value: string): string {
   const name = value.split(/[^A-Za-z0-9$]+/).filter(Boolean)
     .map((part) => part[0].toUpperCase() + part.slice(1)).join("");
   if (!identifier(name)) {
-    throw new BindingError(
-      Code.INVALID_SPEC,
+    throw new BindingInvalidSpecError(
       `Cannot name a TypeScript type after ${value}`,
     );
   }
@@ -143,8 +142,7 @@ export class TypeMap {
   }
   claim(name: string): void {
     if (this.claimed.has(name)) {
-      throw new BindingError(
-        Code.INVALID_SPEC,
+      throw new BindingInvalidSpecError(
         `TypeScript name collision: ${name}. Rename the conflicting ABI declaration or client class.`,
       );
     }
@@ -190,8 +188,7 @@ export class TypeMap {
           functionResult,
         );
       default:
-        throw new BindingError(
-          Code.INVALID_SPEC,
+        throw new BindingInvalidSpecError(
           `Unsupported native SDK type ${type.type}`,
         );
     }
@@ -256,10 +253,7 @@ export class TypeMap {
   private userType(wireName: string, direction: Direction): string {
     const name = this.names.get(wireName);
     if (!name) {
-      throw new BindingError(
-        Code.INVALID_SPEC,
-        `Unknown user type ${wireName}`,
-      );
+      throw new BindingInvalidSpecError(`Unknown user type ${wireName}`);
     }
     this.referencedTypes.add(name);
     if (direction === "Output") return name;
@@ -314,8 +308,7 @@ export class TypeMap {
       const cases = entry.value.cases.map((item) => {
         const name = item.value.name.toString();
         if (["type", "from", "fromScVal", "fromXdr"].includes(name)) {
-          throw new BindingError(
-            Code.INVALID_SPEC,
+          throw new BindingInvalidSpecError(
             `Enum variant conflicts with factory member ${name}`,
           );
         }
@@ -344,8 +337,7 @@ ${indent(cases.join("\n"), 4)}
           item.name.toString(),
         )
       ) {
-        throw new BindingError(
-          Code.INVALID_SPEC,
+        throw new BindingInvalidSpecError(
           `Enum variant conflicts with factory member ${item.name}`,
         );
       }

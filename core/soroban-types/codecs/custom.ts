@@ -6,9 +6,8 @@ import { contractValType } from "@/soroban-types/codecs/generic.ts";
 import * as xdr from "stellar-sdk/xdr";
 import type { Spec } from "@/contract/spec.ts";
 import {
-  Code,
   requireValue,
-  SorobanValueError,
+  SorobanInvalidSchemaError,
 } from "@/soroban-types/error.ts";
 import { SorobanCodec } from "@/soroban-types/codecs/codec.ts";
 import {
@@ -87,11 +86,7 @@ export class SpecTypes {
       entry.value.name.toString() === name
     );
     if (!entry) {
-      throw new SorobanValueError(
-        Code.INVALID_SCHEMA,
-        name,
-        "unknown custom type",
-      );
+      throw new SorobanInvalidSchemaError(name, "unknown custom type");
     }
     return entry;
   }
@@ -126,8 +121,7 @@ export class SpecTypes {
   }
 
   private unsupported(type: never): never {
-    throw new SorobanValueError(
-      Code.INVALID_SCHEMA,
+    throw new SorobanInvalidSchemaError(
       String((type as { type?: unknown }).type),
       "unsupported spec type",
     );

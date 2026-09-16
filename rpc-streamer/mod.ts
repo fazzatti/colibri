@@ -91,7 +91,7 @@ export type {
 } from "@/types.ts";
 
 // Errors
-export { RPCStreamerError, RPCStreamerErrorCode } from "@/errors.ts";
+export * from "@/errors.ts";
 
 // Event streamer factory
 export { createEventStreamer } from "@/variants/event/index.ts";

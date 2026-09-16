@@ -1,3 +1,5 @@
+import { createWalletSigner } from "@/wallets/signer/index.ts";
+import { createWalletAuthEntrySigner } from "@/wallets/auth-entry/index.ts";
 import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import {
@@ -6,8 +8,13 @@ import {
   type ModuleInterface,
   ModuleType,
 } from "@creit.tech/stellar-wallets-kit/types";
-import { Account, TransactionBuilder } from "stellar-sdk/base";
-import { type EnvelopeSigner, LocalSigner, NetworkConfig } from "@colibri/core";
+import { Account, Address, TransactionBuilder, xdr } from "stellar-sdk/base";
+import {
+  type AuthEntrySigner,
+  type EnvelopeSigner,
+  LocalSigner,
+  NetworkConfig,
+} from "@colibri/core";
 import { createColibriConfig } from "@/context/config.ts";
 import { ColibriReactError } from "@/errors/index.ts";
 import { createStellarWalletsKitConnector } from "@/ecosystem/stellar-wallets-kit/connector.ts";
@@ -123,6 +130,117 @@ function fixture() {
 }
 
 describe("Wallets Kit ecosystem adapter", () => {
+  it("offers a combined signer without duplicate capabilities and guards stale identities", async () => {
+    const f = fixture();
+    f.kit.signAuthEntry = (xdr) => Promise.resolve({ signedAuthEntry: xdr });
+    const connector = createStellarWalletsKitConnector(f.kit, {
+      capabilities: () => ({ signer: createWalletSigner }),
+    });
+    const connected = await connector.connect();
+    assertEquals(connected.signers.length, 1);
+    const signer = connected.signers[0];
+    assert("signTransaction" in signer && "signSorobanAuthEntry" in signer);
+    await signer.signTransaction(tx);
+    f.state.address = LocalSigner.generateRandom().publicKey();
+    await assertRejects(
+      async () => await signer.signTransaction(tx),
+      ColibriReactError,
+    );
+    f.state.address = address;
+    const conflict = createStellarWalletsKitConnector(f.kit, {
+      capabilities: () => ({ signer: createWalletSigner, envelope: true }),
+    });
+    await assertRejects(() => conflict.connect(), ColibriReactError);
+  });
+  it("declares auth-entry support and guards each wallet authorization prompt", async () => {
+    const f = fixture();
+    const connector = createStellarWalletsKitConnector(f.kit, {
+      capabilities: () => ({ authEntry: createWalletAuthEntrySigner }),
+    });
+    await assertRejects(() => connector.connect(), ColibriReactError);
+    const input = new xdr.SorobanAuthorizationEntry({
+      credentials: xdr.SorobanCredentials.sorobanCredentialsAddress(
+        new xdr.SorobanAddressCredentials({
+          address: Address.fromString(address).toScAddress(),
+          nonce: 1n,
+          signatureExpirationLedger: 0,
+          signature: xdr.ScVal.scvVoid(),
+        }),
+      ),
+      rootInvocation: new xdr.SorobanAuthorizedInvocation({
+        function: xdr.SorobanAuthorizedFunction
+          .sorobanAuthorizedFunctionTypeContractFn(
+            new xdr.InvokeContractArgs({
+              contractAddress: Address.fromString(
+                "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              ).toScAddress(),
+              functionName: "claim",
+              args: [],
+            }),
+          ),
+        subInvocations: [],
+      }),
+    });
+    let calls = 0;
+    f.kit.signAuthEntry = (value, options) => {
+      calls++;
+      assertEquals(options, {
+        address,
+        networkPassphrase: network.networkPassphrase,
+      });
+      return Promise.resolve({ signedAuthEntry: value });
+    };
+    const connected = await connector.connect();
+    const signer = connected.signers[0] as AuthEntrySigner;
+    assertEquals(signer.signsFor(address), true);
+    const sign = () =>
+      signer.signSorobanAuthEntry(input, 150, network.networkPassphrase);
+    await sign();
+    assertEquals(calls, 1);
+    // Wallet declines pass through; no automatic retry or submission.
+    f.kit.signAuthEntry = () =>
+      Promise.reject(new Error("unused: captured method"));
+    await connector.disconnect!();
+    await assertRejects(sign, ColibriReactError);
+    assertEquals(calls, 1);
+    for (
+      const phase of [
+        "before",
+        "during",
+        "returned",
+        "valid",
+        "reject",
+      ] as const
+    ) {
+      const scenario = fixture();
+      const other = LocalSigner.generateRandom().publicKey();
+      let prompts = 0;
+      const declined = new Error("declined");
+      scenario.kit.signAuthEntry = (value) => {
+        prompts++;
+        if (phase === "reject") return Promise.reject(declined);
+        if (phase === "during") scenario.state.address = other;
+        return Promise.resolve({
+          signedAuthEntry: value,
+          signerAddress: phase === "returned" ? other : address,
+        });
+      };
+      const adapter = createStellarWalletsKitConnector(scenario.kit, {
+        capabilities: () => ({ authEntry: createWalletAuthEntrySigner }),
+      });
+      const auth = (await adapter.connect()).signers[0] as AuthEntrySigner;
+      if (phase === "before") scenario.state.address = other;
+      const invoke = () =>
+        auth.signSorobanAuthEntry(input, 150, network.networkPassphrase);
+      if (phase === "valid") await invoke();
+      else if (phase === "reject") {
+        assertEquals(await assertRejects(invoke), declined);
+      } else await assertRejects(invoke, ColibriReactError);
+      assertEquals(prompts, phase === "before" ? 0 : 1);
+      await adapter.disconnect!();
+    }
+  });
+
   it("connects explicitly, restores only cached state and signs without submitting", async () => {
     const f = fixture();
     assertEquals(f.state.prompts, 0);

@@ -1,3 +1,4 @@
+import { WebAuthErrors } from "@/error.ts";
 import {
   Account,
   Address,
@@ -8,7 +9,13 @@ import {
   xdr,
 } from "stellar-sdk";
 import { Api } from "stellar-sdk/rpc";
-import { Sep45Code, Sep45Error } from "@/error.ts";
+import {
+  Sep45AuthorizationExpiredError,
+  Sep45Code,
+  Sep45RpcFailedError,
+  Sep45SimulationFailedError,
+  Sep45UnsafeFootprintError,
+} from "@/error.ts";
 import type { Sep45Rpc, Sep45SimulationReceipt } from "@/sep45/types.ts";
 import type { Sep45AuthorizedChallenge } from "@/sep45/challenge.ts";
 import type { LedgerKey } from "@/stellar-sdk-types.ts";
@@ -25,8 +32,7 @@ function validateReadWriteKey(
   webAuthContractId: string,
 ): void {
   if (key.type !== "contractData") {
-    throw new Sep45Error({
-      code: Sep45Code.UNSAFE_FOOTPRINT,
+    throw new Sep45UnsafeFootprintError({
       message: "SEP-45 simulation attempted a non-contract-data write",
       data: { ledgerKeyType: key.type },
     });
@@ -46,10 +52,11 @@ function validateReadWriteKey(
   ) {
     return;
   }
-  throw new Sep45Error({
-    code: keyType === "scvLedgerKeyContractInstance"
+  throw new WebAuthErrors[
+    keyType === "scvLedgerKeyContractInstance"
       ? Sep45Code.INVALID_RESTORATION
-      : Sep45Code.UNSAFE_FOOTPRINT,
+      : Sep45Code.UNSAFE_FOOTPRINT
+  ]({
     message: "SEP-45 simulation produced an unsafe read-write footprint",
     data: { address, keyType },
   });
@@ -80,15 +87,13 @@ export async function simulateSep45Challenge(
   try {
     latest = await options.rpc.getLatestLedger();
   } catch (cause) {
-    throw new Sep45Error({
-      code: Sep45Code.RPC_FAILED,
+    throw new Sep45RpcFailedError({
       message: "Could not fetch the latest ledger for SEP-45 simulation",
       cause,
     });
   }
   if (latest.sequence >= challenge.validUntilLedgerSeq) {
-    throw new Sep45Error({
-      code: Sep45Code.AUTHORIZATION_EXPIRED,
+    throw new Sep45AuthorizationExpiredError({
       message: "SEP-45 authorization expired before simulation",
       data: {
         latestLedger: latest.sequence,
@@ -120,22 +125,19 @@ export async function simulateSep45Challenge(
       "enforce",
     );
   } catch (cause) {
-    throw new Sep45Error({
-      code: Sep45Code.RPC_FAILED,
+    throw new Sep45RpcFailedError({
       message: "SEP-45 enforcing simulation request failed",
       cause,
     });
   }
   if (Api.isSimulationError(response)) {
-    throw new Sep45Error({
-      code: Sep45Code.SIMULATION_FAILED,
+    throw new Sep45SimulationFailedError({
       message: "SEP-45 enforcing simulation rejected the challenge",
       data: { error: response.error },
     });
   }
   if (!Api.isSimulationSuccess(response)) {
-    throw new Sep45Error({
-      code: Sep45Code.SIMULATION_FAILED,
+    throw new Sep45SimulationFailedError({
       message: "SEP-45 enforcing simulation returned an unknown result",
     });
   }

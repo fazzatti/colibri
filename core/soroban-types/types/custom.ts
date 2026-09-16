@@ -9,7 +9,7 @@ import type {
 } from "@/soroban-types/codecs/factories.ts";
 import type * as Input from "@/soroban-types/types/inputs.ts";
 import type { SchemaOf } from "@/soroban-types/types/schema.ts";
-import { Code, SorobanValueError } from "@/soroban-types/error.ts";
+import { SorobanInvalidSchemaError } from "@/soroban-types/error.ts";
 import type {
   CustomSchema,
   CustomValue,
@@ -43,11 +43,7 @@ function fromSpec<T>(
     entry.value.name.toString() === name
   );
   if (!entry) {
-    throw new SorobanValueError(
-      Code.INVALID_SCHEMA,
-      name,
-      "missing custom declaration",
-    );
+    throw new SorobanInvalidSchemaError(name, "missing custom declaration");
   }
   if (entry.type === "scSpecEntryUdtUnionV0") {
     return createSorobanUnion<Input.Value<T>, T>(spec, name) as Factory<T>;
@@ -62,8 +58,7 @@ function fromSpec<T>(
   for (const item of entry.value.cases) {
     const key = item.name.toString();
     if (Object.hasOwn(result, key) || codes.has(item.value)) {
-      throw new SorobanValueError(
-        Code.INVALID_SCHEMA,
+      throw new SorobanInvalidSchemaError(
         name,
         "duplicate enum code or conflicting member name",
       );

@@ -8,7 +8,7 @@ import {
 } from "react";
 import type { ReactElement, ReactNode } from "@/shared/types.ts";
 import type { ColibriConfig, ConnectionState } from "@/context/config.ts";
-import { ColibriReactError, ReactCode } from "@/errors/index.ts";
+import { ReactMissingProviderError } from "@/errors/index.ts";
 import type { NetworkConfig } from "@colibri/core/network";
 const Context = createContext<ColibriConfig | null>(null);
 /** Provider props. The application owns config and QueryClient lifetimes. */
@@ -28,8 +28,7 @@ export function ColibriProvider(
 export function useColibriConfig(): ColibriConfig {
   const config = useContext(Context);
   if (!config) {
-    throw new ColibriReactError(
-      ReactCode.MISSING_PROVIDER,
+    throw new ReactMissingProviderError(
       "Wrap this component in ColibriProvider",
     );
   }

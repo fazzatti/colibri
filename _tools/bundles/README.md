@@ -24,9 +24,12 @@ resolved SDK graph is checked for one matching instance. The reviewed fixture
 covers isolated source scopes, not the repository workspace's mutable lockfile.
 When deliberately changing dependencies or candidate package versions,
 regenerate that fixture from the isolated source directory, review its changes,
-and remeasure the baseline. `test:bundle-tooling` checks candidate versions
-against the fixture before CI prepares artifacts; the full build still enforces
-the frozen dependency graph.
+and remeasure the baseline. Before CI prepares artifacts, `test:bundle-tooling`
+checks candidate versions and resolves every actual isolated bundle entrypoint
+with the pinned Deno runtime and `--frozen-lockfile`. This also catches drift in
+root import-map dependencies, even when package versions are unchanged. Its
+negative control removes dependency metadata and verifies that Deno rejects the
+fixture without rewriting it. The full build still enforces the frozen graph.
 
 The second bundler is Rollup 4.50.1 with browser resolution, CommonJS conversion
 and Terser minification. It consumes installed npm ESM artifacts from dnt
