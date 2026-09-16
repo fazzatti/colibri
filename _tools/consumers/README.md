@@ -4,9 +4,10 @@ These fixtures test installed/public APIs, not repository-private paths. They
 are additional compatibility evidence and do not contribute package coverage.
 Use Deno 2.9.6 and Rust 1.96.0 for preparation, with a supported Node runtime
 and npm available. `deno task check:consumers --browsers` runs the local source,
-packaging, Node, and browser path. CI runs one `compatibility` job with named
-steps for preparation, released Core, Deno, Node/TypeScript, browsers and bundle
-checks. The final `test` gate requires that job to pass.
+packaging, Node, and browser path. CI calls
+`.github/workflows/compatibility.yml` to group parallel jobs under
+`compatibility / <runtime or concern>`. The existing required `compatibility`
+check and final `test` gate require the entire group to pass.
 
 | Task                                         | Evidence                                                                                                                                    |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -31,7 +32,7 @@ browsers and the loopback server are closed after success or failure.
 `deno task test:browser-runner` covers this behavior in real Chromium, including
 immediate/asynchronous exceptions, missing completion and failed navigation. Run
 it after installing the pinned Playwright Chromium binary. CI runs it in the
-compatibility job after browser installation and checks.
+browser job after browser installation and checks.
 
 ## CI organization
 
@@ -43,8 +44,8 @@ Node/TypeScript combinations, two Deno runtimes, all three browsers,
 preparation, and released-Core checks. Production bundle baselines remain pinned
 to 17.0.1.
 
-Each named phase runs with the runtime installed by its workflow step. The
-runner verifies the actual Deno/Node version before executing it. Examples:
+Each named phase runs with the runtime installed in its own job. The runner
+verifies the actual Deno/Node version before executing it. Examples:
 
 ```sh
 deno task check:consumers:ci plan /tmp/colibri-compatibility
@@ -60,20 +61,43 @@ phases are `jsr-declarations`, `dependencies`, `deno-2.7.11`, `deno-2.9.6`,
 `check:consumers:ci summary <directory>` produces a table of every expected
 scenario, its result and duration. It fails for failed, missing or invalid
 results, so a skipped phase cannot produce a green check. Failed cases do not
-prevent the other cases in that phase from running, and independent workflow
-steps continue after failures. Cancellation still stops the job. The
+prevent the other cases in that phase from running, and parallel matrix jobs use
+`fail-fast: false`. A failed preparation blocks its artifact consumers but not
+the independent source checks. Cancellation still stops active work. The
 `compatibility-results` artifact retains the plan, summary, individual logs and
 JSON results for seven days. Production bundle evidence remains a separate
 artifact. `test:compatibility-runner` exercises deduplication, runtime checks,
 subprocess failures, continued execution and incomplete-result detection.
 
-Runtime phases remain sequential in one job, reusing checkout and artifacts.
-Within each phase, up to four isolated cases run concurrently (including SDK
-preparation and Node/TypeScript consumers). Each case has its own temporary
-source/install directory and result/log files. Browser cases remain sequential
-because Playwright installs Linux system packages. Output groups are written
-when each case finishes, without interleaving diagnostics. Package tests,
-coverage and CRAP still run independently. Consumer fixtures remain outside
+The reusable workflow has these dependencies:
+
+- **Plan and guards:** validate the runner and frozen fixture, resolve SDK
+  selections once, and upload the resolution plan.
+- **Prepare packages:** build the dnt and JSR-declaration artifacts once per
+  distinct SDK. Only this job installs Rust and builds the declaration emitter.
+  Portable tarballs, fixtures and manifests are packed together and passed to
+  other runners; they are never published to a package registry.
+- **Source jobs:** released-Core ranges and each Deno runtime run independently
+  after planning, alongside artifact preparation.
+- **Installed jobs:** JSR declarations, each Node runtime, all three browsers,
+  and production bundles run in parallel using the same prepared artifacts. Each
+  Node and declaration job retains both supported TypeScript versions.
+- **Complete matrix:** merge disjoint case logs/results and reject missing,
+  corrupt or failed cases. Also require every upstream job to succeed, so a
+  setup, upload or download failure cannot be hidden by passing case records.
+  This runs even after upstream failures. The parent workflow retains its
+  original required `compatibility` and `test` check names.
+
+Within a phase, up to four isolated cases run concurrently. Browser cases stay
+sequential within their runner because Playwright installs Linux system
+packages; the separate bundle runner can install its browsers independently.
+Browser failure diagnostics run in the browser job after installation, including
+when a consumer fails. Each producing job uploads uniquely named diagnostics;
+the complete matrix publishes the consolidated `compatibility-results` artifact.
+Per-case durations overlap and do not represent total workflow elapsed time.
+Regression tests check the workflow against the complete scenario inventory,
+runtime selections, artifact dependencies and required failure gates. Package
+tests, coverage and CRAP remain independent; consumer fixtures do not contribute
 implementation coverage.
 
 The bundle fixture/version regression check runs before artifact preparation, so
@@ -149,9 +173,9 @@ TypeScript versions on Node 24 and executes all consumers, including generated
 bindings packages with and without Core convenience exports. Both presets build
 with TypeScript and execute through their npm exports; the omitted `/colibri`
 subpath must fail resolution. The portable renderer smoke consumer also checks
-the disabled mode in Deno, Node and browser lanes. This is a named phase in the
-existing compatibility job. Publishing repeats the candidate declaration check
-before `deno publish`.
+the disabled mode in Deno, Node and browser lanes. This is a named job in the
+compatibility group. Publishing repeats the candidate declaration check before
+`deno publish`.
 
 `strkey.ts` checks all 18 encode/decode helpers through both public entrypoints,
 exact SDK parameters and branded outputs, rejection of invalid inputs, shared
@@ -172,15 +196,15 @@ pinned local engine.
 
 ## Distribution and runtime limits
 
-dnt tarballs are CI artifacts only, never published packages. They are reused
-locally within the compatibility job, never uploaded to JSR/npm. The publish
-workflow runs a separate check against real JSR modules and JSR-generated npm
-tarballs after publication, using the same consumer fixture inventory. It
-retains `package-lock.json` (resolved URLs and integrity hashes) and installed
-package versions/JSR revisions before compilation, including on a compile
-failure. Use `--evidence <directory>` to select the artifact destination. To
-validate that tool using an already published baseline, run
-`check:consumers:published --versions-from-ref origin/main`.
+dnt tarballs are CI artifacts only, never published packages. They are shared
+between compatibility jobs as temporary GitHub Actions artifacts, never uploaded
+to JSR/npm. The publish workflow runs a separate check against real JSR modules
+and JSR-generated npm tarballs after publication, using the same consumer
+fixture inventory. It retains `package-lock.json` (resolved URLs and integrity
+hashes) and installed package versions/JSR revisions before compilation,
+including on a compile failure. Use `--evidence <directory>` to select the
+artifact destination. To validate that tool using an already published baseline,
+run `check:consumers:published --versions-from-ref origin/main`.
 
 The npm registry check imports canonical `@jsr/colibri__…` package names to
 avoid alias-induced duplicate installations. Applications using aliases should

@@ -1,8 +1,15 @@
 import { stub } from "@std/testing/mock";
 import { assertEquals, assertRejects, assertStringIncludes } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { type Check, compatibilityChecks } from "./plan.ts";
-import { execute, runChecks, summarize } from "./runner.ts";
+import {
+  type Check,
+  compatibilityChecks,
+} from "colibri-tools/consumers/ci/plan.ts";
+import {
+  execute,
+  runChecks,
+  summarize,
+} from "colibri-tools/consumers/ci/runner.ts";
 
 const resolutions = [
   { selection: "17.0.1", version: "17.0.1" },
@@ -126,6 +133,62 @@ describe("compatibility result reporting", () => {
       }
     } finally {
       await Deno.remove(directory, { recursive: true });
+    }
+  });
+  it("combines independently produced shard evidence and rejects a missing shard", async () => {
+    using _log = stub(console, "log");
+    using _error = stub(console, "error");
+    const root = await Deno.makeTempDir();
+    try {
+      const plan = [resolutions[0], {
+        selection: "^17.0.1",
+        version: "17.1.0",
+      }];
+      const checks = compatibilityChecks(plan, `${root}/producer`);
+      const merged = `${root}/aggregate`;
+      await Deno.mkdir(`${merged}/results`, { recursive: true });
+      const ids = new Set<string>();
+      await Promise.all(
+        [...new Set(checks.map((item) => item.phase))].map(async (phase) => {
+          const shard = `${root}/${phase}`;
+          await runChecks(
+            checks.filter((item) => item.phase === phase),
+            shard,
+            () =>
+              Promise.resolve({
+                code: 0,
+                stdout: "passed on a separate runner",
+                stderr: "",
+              }),
+          );
+          for await (const entry of Deno.readDir(`${shard}/results`)) {
+            assertEquals(
+              ids.has(entry.name),
+              false,
+              "Shard artifacts must not overwrite another case",
+            );
+            ids.add(entry.name);
+            await Deno.writeFile(
+              `${merged}/results/${entry.name}`,
+              await Deno.readFile(`${shard}/results/${entry.name}`),
+              { createNew: true },
+            );
+          }
+        }),
+      );
+      assertEquals(ids.size, 29);
+      // The report recomputes paths for its own runner; IDs do not depend on
+      // the absolute directory used during preparation or case execution.
+      const relocated = compatibilityChecks(plan, merged);
+      assertEquals((await summarize(relocated, plan, merged)).passed, true);
+      for (const item of relocated.filter((item) => item.phase === "node-22")) {
+        await Deno.remove(`${merged}/results/${item.id}.json`);
+      }
+      const summary = await summarize(relocated, plan, merged);
+      assertEquals(summary.passed, false);
+      assertEquals(summary.markdown.split("| MISSING |").length - 1, 4);
+    } finally {
+      await Deno.remove(root, { recursive: true });
     }
   });
   it("fails the full matrix summary when any phase is missing, malformed or mismatched", async () => {
