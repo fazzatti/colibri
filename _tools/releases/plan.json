@@ -2,6 +2,11 @@
   "schema": 1,
   "base": "b20ce71ee0693d96004d0edd2f5b747d102dd530",
   "packages": {
+    "@colibri/contract-bindings": {
+      "bump": "minor",
+      "reason": "Add the default-on includeColibri generation option and --no-colibri CLI switch to omit Core convenience re-exports.",
+      "apiReview": "The optional boolean preserves existing output by default. Opting out removes the convenience module, generated client re-exports and fresh package subpath; Core remains required and the writer still preserves existing files and scaffolds."
+    },
     "@colibri/core": {
       "bump": "minor",
       "reason": "Add granular frontend entrypoints and standalone contract reads through existing pipelines.",

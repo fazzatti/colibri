@@ -61,6 +61,27 @@ Generated files separate the client (`index.ts`), method/spec/error constants
 (`constants.ts`), types and factories (`types.ts`), and shared Core conveniences
 (`colibri.ts`). A contract-specific README explains the generated API.
 
+### Omit Core convenience re-exports
+
+Add `--no-colibri` to generate the client without `colibri.ts`:
+
+```sh
+deno run --allow-read --allow-write jsr:@colibri/contract-bindings/cli \
+  --wasm ./token.wasm --class-name Token \
+  --output files --out ./token-client --no-colibri --non-interactive
+```
+
+The programmatic equivalent is `includeColibri: false` (default: `true`). This
+also omits convenience exports from the client entrypoint and the `/colibri`
+subpath from new JSR/npm package manifests. Import configuration helpers and
+signer types directly from `@colibri/core`, or your application's shared Core
+entrypoint. Generated clients still depend on Core.
+
+When changing this option in an existing output directory, update your imports
+and remove the old convenience file and manifest subpath yourself. Regeneration
+preserves existing files outside the new plan, manifests and READMEs, even with
+`--force`. Keep `--no-colibri` on subsequent runs.
+
 ## Programmatic generation
 
 Install with `deno add jsr:@colibri/contract-bindings`. This Deno example reads
@@ -78,7 +99,10 @@ const { spec } = await loadBindingSource({
   kind: "wasm",
   wasm: await Deno.readFile("./token.wasm"),
 });
-const bindings = generateBindings(spec, { className: "Token" });
+const bindings = generateBindings(spec, {
+  className: "Token",
+  includeColibri: false,
+});
 console.log(bindings.files["index.ts"]);
 ```
 

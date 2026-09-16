@@ -87,6 +87,10 @@
       - [SAC](events/standardized-events/sac.md)
       - [SEP-41](events/standardized-events/sep-41.md)
 
+## @colibri/contract-bindings
+
+- [Overview](packages/contract-bindings.md)
+
 ## @colibri/rpc-streamer
 
 - [RPC Streamer](packages/rpc-streamer.md)
@@ -232,5 +236,3 @@
 ## Examples
 
 - [Examples Repository](https://github.com/fazzatti/colibri-examples)
-
-- [Contract bindings](packages/contract-bindings.md)

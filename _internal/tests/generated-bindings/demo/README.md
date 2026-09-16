@@ -101,7 +101,7 @@ Generated declarations use `SorobanType.U32`, `SorobanType.Symbol`, and other
 Soroban names. Method inputs use `SorobanType.Input` and accept ordinary values
 or validated wrappers; decoded outputs remain ordinary JavaScript values.
 
-Import `SorobanType` from the generated `colibri.ts` module. For example,
+Import `SorobanType` from `./colibri.ts`. For example,
 `SorobanType.U32.from(7)` checks the integer range and
 `SorobanType.Symbol.from("ADMIN")` checks the symbol alphabet and length.
 Wrappers expose `.value`, `.toScVal()` and `.toXdr("base64")`.
@@ -237,7 +237,7 @@ are validated by the SDK codec.
 ## Regeneration
 
 Run the generator again with the same source and output directory. Add
-`--force` to replace generated `constants.ts`, `types.ts`, and `index.ts`.
+`--force` to replace generated `constants.ts`, `types.ts`, and `index.ts`, plus `colibri.ts`.
 Existing README, package configuration, and handwritten files are preserved.
 To refresh this guide, remove it explicitly before regenerating.
 

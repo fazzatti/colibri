@@ -61,11 +61,14 @@ export function generateBindings(
           events,
           model.imports,
         ),
-        [`${prefix}colibri.ts`]: renderConveniences(),
+        ...(options.includeColibri === false ? {} : {
+          [`${prefix}colibri.ts`]: renderConveniences(),
+        }),
         [`${prefix}index.ts`]: renderClient(
           className,
           bindings,
           model.declared,
+          options.includeColibri ?? true,
         ),
       },
       scaffold: packageScaffold(options, className, spec),
@@ -97,6 +100,15 @@ function validateOptions(
   className: string,
 ): void {
   validateClassName(className);
+  if (
+    options.includeColibri !== undefined &&
+    typeof options.includeColibri !== "boolean"
+  ) {
+    throw new BindingError(
+      Code.INVALID_OPTIONS,
+      "includeColibri must be a boolean",
+    );
+  }
   if (
     options.target !== undefined && !["jsr", "npm"].includes(options.target)
   ) throw new BindingError(Code.INVALID_OPTIONS, "Unknown target preset");

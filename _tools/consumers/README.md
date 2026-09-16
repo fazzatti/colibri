@@ -136,9 +136,13 @@ deno task check:consumers:npm /tmp/colibri-consumers --jsr-declarations
 ```
 
 The `jsr-declarations` phase compiles these artifacts with both supported
-TypeScript versions on Node 24 and executes all consumers, including a generated
-bindings package. This is a named phase in the existing compatibility job.
-Publishing repeats the candidate declaration check before `deno publish`.
+TypeScript versions on Node 24 and executes all consumers, including generated
+bindings packages with and without Core convenience exports. Both presets build
+with TypeScript and execute through their npm exports; the omitted `/colibri`
+subpath must fail resolution. The portable renderer smoke consumer also checks
+the disabled mode in Deno, Node and browser lanes. This is a named phase in the
+existing compatibility job. Publishing repeats the candidate declaration check
+before `deno publish`.
 
 `strkey.ts` checks all 18 encode/decode helpers through both public entrypoints,
 exact SDK parameters and branded outputs, rejection of invalid inputs, shared

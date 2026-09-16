@@ -10,6 +10,7 @@ export function renderClient(
   name: string,
   bindings: readonly MethodBinding[],
   declarations: ReadonlySet<string>,
+  includeColibri: boolean,
 ): string {
   return `${GENERATED_MARKER}
 /**
@@ -37,7 +38,7 @@ import type {
 
 export * from "./constants.ts";
 export * from "./types.ts";
-${renderConvenienceExports(declarations)}
+${includeColibri ? renderConvenienceExports(declarations) : ""}
 
 /** Simulate or invoke callable functions declared in the embedded contract spec. */
 export class ${name} extends Contract {

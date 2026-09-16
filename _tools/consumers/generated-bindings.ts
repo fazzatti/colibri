@@ -6,6 +6,22 @@ export async function checkGeneratedBindings(
   consumer: string,
   coreArchive: string,
 ): Promise<void> {
+  for (const includeColibri of [true, false]) {
+    await checkGeneratedPreset(consumer, coreArchive, includeColibri);
+  }
+}
+
+async function checkGeneratedPreset(
+  consumer: string,
+  coreArchive: string,
+  includeColibri: boolean,
+): Promise<void> {
+  const folder = includeColibri
+    ? "generated-package"
+    : "generated-package-no-colibri";
+  const helpers = includeColibri
+    ? "@example/generated-ping/colibri"
+    : "@colibri/core";
   const script = `
 import { generateBindings } from "@colibri/contract-bindings";
 import { Spec } from "@stellar/stellar-sdk/contract";
@@ -30,24 +46,26 @@ const spec = new Spec([
   xdr.ScSpecEntry.scSpecEntryFunctionV0(new xdr.ScSpecFunctionV0({ name: "echo", doc: "", inputs: [new xdr.ScSpecFunctionInputV0({ name: "config", doc: "", type: xdr.ScSpecTypeDef.scSpecTypeUdt(new xdr.ScSpecTypeUdt({ name: "Config" })) })], outputs: [xdr.ScSpecTypeDef.scSpecTypeUdt(new xdr.ScSpecTypeUdt({ name: "Config" }))] })),
   xdr.ScSpecEntry.scSpecEntryUdtErrorEnumV0(new xdr.ScSpecUdtErrorEnumV0({ name: "PingError", lib: "", doc: "", cases: [new xdr.ScSpecUdtErrorEnumCaseV0({ name: "Unavailable", value: 1, doc: "Try again later." })] })),
 ]);
-const plan = generateBindings(spec, { className: "PingClient", output: "package", target: "npm", packageName: "@example/generated-ping" });
+const plan = generateBindings(spec, { className: "PingClient", output: "package", target: "npm", packageName: "@example/generated-ping", includeColibri: ${includeColibri} });
+assert.equal("generated/colibri.ts" in plan.files, ${includeColibri});
 assert(!plan.files["generated/types.ts"].includes("export enum PingError"));
 for (const [path, content] of Object.entries({...plan.files, ...plan.scaffold})) {
-  await mkdir(dirname("generated-package/" + path), { recursive: true });
-  await writeFile("generated-package/" + path, content);
+  await mkdir(dirname("${folder}/" + path), { recursive: true });
+  await writeFile("${folder}/" + path, content);
 }
-const manifest = JSON.parse(await readFile("generated-package/package.json", "utf8"));
+const manifest = JSON.parse(await readFile("${folder}/package.json", "utf8"));
+assert.equal("./colibri" in manifest.exports, ${includeColibri});
 assert.deepEqual(Object.keys(manifest.dependencies), ["@colibri/core"]);
 assert.equal(manifest.dependencies["@colibri/core"], "npm:@jsr/colibri__core@^1.1.0");
 // Test the candidate Core build while preserving the generated dependency shape.
 manifest.dependencies["@colibri/core"] = ${
     JSON.stringify(`file:${coreArchive}`)
   };
-await writeFile("generated-package/package.json", JSON.stringify(manifest, null, 2));
+await writeFile("${folder}/package.json", JSON.stringify(manifest, null, 2));
 `;
   await Deno.writeTextFile(resolve(consumer, "generate-bindings.mjs"), script);
   await command("node", ["generate-bindings.mjs"], consumer);
-  const output = resolve(consumer, "generated-package");
+  const output = resolve(consumer, folder);
   await command("npm", [
     "install",
     "--ignore-scripts",
@@ -61,12 +79,14 @@ await writeFile("generated-package/package.json", JSON.stringify(manifest, null,
     resolve(output, "smoke.mjs"),
     `
 import { PingClient, PingClientSpec, PingClientErrors, ContractMethods, Config, RbacStorage } from "./dist/mod.js";
-import { NetworkConfig, LocalSigner, SorobanType } from "@example/generated-ping/colibri";
-import { NetworkConfig as RootNetworkConfig } from "@example/generated-ping";
+import { NetworkConfig, LocalSigner, SorobanType } from "${helpers}";
+import * as bindings from "@example/generated-ping";
 import { Contract, NetworkConfig as CoreNetworkConfig, LocalSigner as CoreLocalSigner, extractContractErrorMapFromSpec, SorobanValueError } from "@colibri/core";
 import { strict as assert } from "node:assert";
 assert.equal(NetworkConfig, CoreNetworkConfig);
-assert.equal(NetworkConfig, RootNetworkConfig);
+assert.equal("NetworkConfig" in bindings, ${includeColibri});
+if (${includeColibri}) assert.equal(NetworkConfig, bindings.NetworkConfig);
+else await assert.rejects(import("@example/generated-ping/colibri"), { code: "ERR_PACKAGE_PATH_NOT_EXPORTED" });
 assert.equal(LocalSigner, CoreLocalSigner);
 const client = new PingClient({ networkConfig: NetworkConfig.TestNet(), contractConfig: { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" } });
 assert(client instanceof Contract);
@@ -101,7 +121,7 @@ try {
   Contract.prototype.read = read;
   Contract.prototype.invoke = invoke;
 }
-console.log("Generated npm package: ESM imports, declarations, custom factories, native SDK codec and Core identity passed.");
+console.log("Generated npm package (includeColibri=${includeColibri}): ESM imports, declarations, custom factories, native SDK codec and Core identity passed.");
 `,
   );
   await command("node", ["smoke.mjs"], output);
@@ -109,7 +129,7 @@ console.log("Generated npm package: ESM imports, declarations, custom factories,
     resolve(output, "consumer.ts"),
     `
 import { PingClient, ContractMethods, PingClientErrors, Config, RbacStorage, type PingClientInvocation, type PingClientInvocationResult } from "./dist/mod.js";
-import { SorobanType, LocalSigner, type Signer, type TransactionConfig } from "@example/generated-ping/colibri";
+import { SorobanType, LocalSigner, type Signer, type TransactionConfig } from "${helpers}";
 import type { ContractErrorMap, KnownContractErrorMap } from "@colibri/core";
 import { Keypair } from "@stellar/stellar-sdk";
 declare const client: PingClient;

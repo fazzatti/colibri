@@ -155,7 +155,7 @@ deno add npm:@stellar/stellar-sdk@^17.0.1
 ### Contract binding generation
 
 ```sh
-deno add jsr:@colibri/contract-bindings@^0.1.0
+deno add jsr:@colibri/contract-bindings@^0.2.0
 ```
 
 See [the generator guide](../packages/contract-bindings.md) for interactive and

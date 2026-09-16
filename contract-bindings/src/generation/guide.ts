@@ -99,13 +99,54 @@ function fileGuide(options: GenerateBindingsOptions): string {
   }. |
 | [types.ts](${prefix}types.ts) | Sections for methods and their inputs/outputs/maps, contract types, events, and client configuration. |
 | [index.ts](${prefix}index.ts) | Client class and exports for the generated API. |
-| [colibri.ts](${prefix}colibri.ts) | Core configuration helpers and signer/transaction types. |
 ${
+    options.includeColibri === false
+      ? ""
+      : `| [colibri.ts](${prefix}colibri.ts) | Core configuration helpers and signer/transaction types. |\n`
+  }${
     packaged
       ? "\n`mod.ts` is the package entrypoint. Keep application setup and custom exports\nthere or in separate files; regeneration preserves the scaffold.\n"
       : ""
   }
 `;
+}
+function convenienceGuide(includeColibri: boolean): string {
+  if (!includeColibri) {
+    return `## Core configuration and signers
+
+Convenience re-exports are disabled for this client. Import \`NetworkConfig\`,
+\`LocalSigner\`, \`SorobanType\`, \`ColibriError\`, and common signer, contract and
+transaction types directly from \`@colibri/core\` or your application's shared
+Core entrypoint. Core remains a runtime dependency.`;
+  }
+  return `## Colibri conveniences
+
+The generated \`colibri.ts\` module re-exports \`NetworkConfig\`, \`LocalSigner\`,
+\`SorobanType\`, \`ColibriError\`, and common signer, contract and transaction types.
+The client entrypoint also re-exports them unless an ABI declaration has the
+same name. In that case, import the convenience directly from \`colibri.ts\`
+(or the published package's \`/colibri\` entrypoint). ABI names take precedence.
+These are the original Core exports, so constructor identity is preserved.
+Core remains a runtime dependency. Existing package manifests are preserved
+on regeneration; add the \`/colibri\` export manually when upgrading an older scaffold.`;
+}
+function convenienceImportPath(options: GenerateBindingsOptions): string {
+  if (options.includeColibri === false) return "@colibri/core";
+  return options.output === "package"
+    ? "./generated/colibri.ts"
+    : "./colibri.ts";
+}
+function regenerationGuide(includeColibri: boolean): string {
+  return `Run the generator again with the same source and output directory. Add
+\`--force\` to replace generated \`constants.ts\`, \`types.ts\`, and \`index.ts\`${
+    includeColibri ? ", plus \`colibri.ts\`" : ""
+  }.
+${
+    includeColibri
+      ? ""
+      : "Keep `--no-colibri` (or `includeColibri: false`) on subsequent runs.\n"
+  }Existing README, package configuration, and handwritten files are preserved.
+To refresh this guide, remove it explicitly before regenerating.`;
 }
 /** @internal A contract-specific guide with setup, concrete calls and readable reference tables. */
 export function renderGuide(
@@ -115,6 +156,7 @@ export function renderGuide(
 ): string {
   const packaged = options.output === "package";
   const npm = options.target === "npm";
+  const convenienceModule = convenienceImportPath(options);
   const entry = packaged ? "./mod.ts" : "./index.ts";
   const bindings = methodBindings(spec);
   const member = (name: string) =>
@@ -187,9 +229,7 @@ ${
     fence(
       "ts",
       `import { ${name} } from ${quote(entry)};
-import { NetworkConfig } from ${
-        quote(packaged ? "./generated/colibri.ts" : "./colibri.ts")
-      };
+import { NetworkConfig } from ${quote(convenienceModule)};
 
 const client = new ${name}({
   networkConfig: NetworkConfig.TestNet(),
@@ -198,16 +238,7 @@ const client = new ${name}({
     )
   }
 
-## Colibri conveniences
-
-The generated \`colibri.ts\` module re-exports \`NetworkConfig\`, \`LocalSigner\`,
-\`SorobanType\`, \`ColibriError\`, and common signer, contract and transaction types.
-The client entrypoint also re-exports them unless an ABI declaration has the
-same name. In that case, import the convenience directly from \`colibri.ts\`
-(or the published package's \`/colibri\` entrypoint). ABI names take precedence.
-These are the original Core exports, so constructor identity is preserved.
-Core remains a runtime dependency. Existing package manifests are preserved
-on regeneration; add the \`/colibri\` export manually when upgrading an older scaffold.
+${convenienceGuide(options.includeColibri !== false)}
 
 Use \`LocalSigner.fromKeypair(keypair)\` to adapt an existing native Stellar SDK
 signing keypair, then pass that signer in \`config.signers\`. It targets only its
@@ -251,7 +282,7 @@ Generated declarations use \`SorobanType.U32\`, \`SorobanType.Symbol\`, and othe
 Soroban names. Method inputs use \`SorobanType.Input\` and accept ordinary values
 or validated wrappers; decoded outputs remain ordinary JavaScript values.
 
-Import \`SorobanType\` from the generated \`colibri.ts\` module. For example,
+Import \`SorobanType\` from \`${convenienceModule}\`. For example,
 \`SorobanType.U32.from(7)\` checks the integer range and
 \`SorobanType.Symbol.from("ADMIN")\` checks the symbol alphabet and length.
 Wrappers expose \`.value\`, \`.toScVal()\` and \`.toXdr("base64")\`.
@@ -385,10 +416,7 @@ are validated by the SDK codec.
 
 ## Regeneration
 
-Run the generator again with the same source and output directory. Add
-\`--force\` to replace generated \`constants.ts\`, \`types.ts\`, and \`index.ts\`.
-Existing README, package configuration, and handwritten files are preserved.
-To refresh this guide, remove it explicitly before regenerating.
+${regenerationGuide(options.includeColibri !== false)}
 
 The embedded spec is a snapshot. Regenerate after an ABI change; loading a
 different spec into this typed client invalidates its type guarantees.

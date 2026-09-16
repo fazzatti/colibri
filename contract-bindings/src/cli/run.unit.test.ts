@@ -30,6 +30,7 @@ describe("bindings CLI", () => {
     assertEquals(await runCli(["--help"]), undefined);
     assert(output.includes("Colibri contract bindings"));
     assert(output.includes("--wasm FILE"));
+    assert(output.includes("--no-colibri"));
   });
   it("reports a WASM that disappears after validation without creating output", async () => {
     const directory = await Deno.makeTempDir();
@@ -168,6 +169,8 @@ describe("bindings CLI", () => {
         ["--wasm"],
         ["--force=true"],
         ["--force", "--force"],
+        ["--no-colibri=false"],
+        ["--no-colibri", "--no-colibri"],
         ["x"],
         ["--wasm", "x", "--contract-id", "y"],
       ]
@@ -354,6 +357,7 @@ describe("bindings CLI", () => {
         "--non-interactive",
       ], silent);
       assert(result?.written.includes("index.ts"));
+      assert(result?.written.includes("colibri.ts"));
       assert(
         (await Deno.readTextFile(`${directory}/index.ts`)).includes(
           "class TypesHarness",
@@ -384,6 +388,49 @@ describe("bindings CLI", () => {
         () => runCli(["--wasm", `${directory}/absent.wasm`], silent),
         BindingError,
       );
+    } finally {
+      await Deno.remove(directory, { recursive: true });
+    }
+  });
+  it("omits conveniences through --no-colibri for files and both package targets", async () => {
+    const directory = await Deno.makeTempDir();
+    try {
+      for (const output of ["files", "package"] as const) {
+        for (const target of ["jsr", "npm"] as const) {
+          const out = `${directory}/${output}-${target}`;
+          const result = await runCli([
+            "--wasm",
+            wasm,
+            "--out",
+            out,
+            "--output",
+            output,
+            "--target",
+            target,
+            ...(output === "package"
+              ? ["--package-name", "@example/token"]
+              : []),
+            "--no-colibri",
+            "--non-interactive",
+          ], silent);
+          const prefix = output === "package" ? "generated/" : "";
+          assert(!result?.written.some((file) => file.endsWith("colibri.ts")));
+          await assertRejects(
+            () => Deno.stat(`${out}/${prefix}colibri.ts`),
+            Deno.errors.NotFound,
+          );
+          assert(
+            !(await Deno.readTextFile(`${out}/${prefix}index.ts`)).includes(
+              "./colibri.ts",
+            ),
+          );
+          assert(
+            (await Deno.readTextFile(`${out}/README.md`)).includes(
+              'from "@colibri/core"',
+            ),
+          );
+        }
+      }
     } finally {
       await Deno.remove(directory, { recursive: true });
     }

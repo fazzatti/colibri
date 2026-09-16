@@ -48,6 +48,12 @@ export type GenerateBindingsOptions = {
   target?: "jsr" | "npm";
   /** Required for packages. JSR names must be scoped. */
   packageName?: string;
+  /**
+   * Emit colibri.ts and its convenience re-exports. Defaults to true.
+   * Set false to import helpers directly from @colibri/core. Existing files
+   * and package scaffolds are preserved by the writer during regeneration.
+   */
+  includeColibri?: boolean;
   /** Opt in to source identity in constants.ts and its guide; omitted by default. */
   provenance?: BindingProvenance;
 };

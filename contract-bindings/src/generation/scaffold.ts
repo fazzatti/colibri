@@ -29,10 +29,12 @@ export function packageScaffold(
         files: ["dist", "README.md"],
         exports: {
           ".": { types: "./dist/mod.d.ts", import: "./dist/mod.js" },
-          "./colibri": {
-            types: "./dist/generated/colibri.d.ts",
-            import: "./dist/generated/colibri.js",
-          },
+          ...(options.includeColibri === false ? {} : {
+            "./colibri": {
+              types: "./dist/generated/colibri.d.ts",
+              import: "./dist/generated/colibri.js",
+            },
+          }),
         },
         scripts: {
           build: "tsc -p tsconfig.json",
@@ -68,7 +70,12 @@ export function packageScaffold(
     "deno.json": json({
       name,
       version: "0.1.0",
-      exports: { ".": "./mod.ts", "./colibri": "./generated/colibri.ts" },
+      exports: {
+        ".": "./mod.ts",
+        ...(options.includeColibri === false ? {} : {
+          "./colibri": "./generated/colibri.ts",
+        }),
+      },
       imports: {
         "@colibri/core": "jsr:@colibri/core@^1.1.0",
       },

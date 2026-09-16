@@ -39290,6 +39290,15 @@
                   }
                 },
                 {
+                  "name": "includeColibri",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "boolean",
+                    "value": "boolean"
+                  }
+                },
+                {
                   "name": "provenance",
                   "optional": true,
                   "tsType": {

@@ -7,6 +7,60 @@ import { BindingError } from "@/error.ts";
 import { bindingSpec } from "colibri-internal/tests/binding-fixtures.ts";
 
 describe("bindings output", () => {
+  it("preserves existing conveniences and scaffolds when disabling their generation", async () => {
+    const directory = await Deno.makeTempDir();
+    try {
+      const options = {
+        output: "package",
+        packageName: "@example/token",
+      } as const;
+      const original = generateBindings(bindingSpec(), options);
+      await writeBindings(original, { directory });
+      const conveniencePath = `${directory}/generated/colibri.ts`;
+      await Deno.writeTextFile(
+        conveniencePath,
+        "// application-owned helpers\n",
+      );
+      const withoutConveniences = generateBindings(bindingSpec(), {
+        ...options,
+        includeColibri: false,
+      });
+      const result = await writeBindings(withoutConveniences, {
+        directory,
+        force: true,
+      });
+      assertEquals(result.written, [
+        "generated/constants.ts",
+        "generated/types.ts",
+        "generated/index.ts",
+      ]);
+      assertEquals(
+        await Deno.readTextFile(conveniencePath),
+        "// application-owned helpers\n",
+      );
+      for (const name of ["deno.json", "README.md", "mod.ts"]) {
+        assertEquals(
+          await Deno.readTextFile(`${directory}/${name}`),
+          original.scaffold[name],
+        );
+      }
+      // After the application removes the old convenience file, later disabled runs
+      // must neither recreate it nor reference it from the generated entrypoint.
+      await Deno.remove(conveniencePath);
+      await writeBindings(withoutConveniences, { directory, force: true });
+      await assertRejects(
+        () => Deno.stat(conveniencePath),
+        Deno.errors.NotFound,
+      );
+      assertEquals(
+        await Deno.readTextFile(`${directory}/generated/index.ts`),
+        withoutConveniences.files["generated/index.ts"],
+      );
+    } finally {
+      await Deno.remove(directory, { recursive: true });
+    }
+  });
+
   it("writes replaceable files and preserves customized package scaffold", async () => {
     const directory = await Deno.makeTempDir();
     try {
