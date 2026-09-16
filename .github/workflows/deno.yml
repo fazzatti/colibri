@@ -124,6 +124,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
+      - name: Check bundle fixture and regression guards
+        run: deno task test:bundle-tooling
       - name: Setup pinned declaration emitter toolchain
         run: rustup toolchain install 1.96.0 --profile minimal --no-self-update
       - name: Cache declaration emitter

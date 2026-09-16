@@ -130,9 +130,12 @@ GitHub Actions behavior matters when changing structure or versions:
   consumer, and bundles the browser-capable packages. These test artifacts are
   never published and are not claimed to be JSR's own generated tarballs. See
   `_tools/consumers/README.md`. Runtime/compiler combinations are named steps in
-  one job, with per-case logs and a complete summary. Resolve minimum and
-  current SDK selections once; deduplicate only identical resolved versions.
-  Failed or missing scenarios must fail the job and the final `test` gate.
+  one job, with up to four isolated cases running concurrently per step,
+  per-case logs and a complete summary. Browser cases stay sequential because
+  they install system packages. Check bundle fixture versions before artifact
+  preparation. Resolve minimum and current SDK selections once; deduplicate only
+  identical resolved versions. Failed or missing scenarios must fail the job and
+  the final `test` gate.
 - Quality uploads a syntax-level constructor/throw/catch inventory alongside the
   complete stable error-code reference. Review unknown and passthrough
   boundaries deliberately; do not conflate caller-owned errors with missing SDK

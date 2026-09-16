@@ -2992,7 +2992,7 @@
           "npm:dockerode@3.3.3"
         ]
       },
-      "jsr:@colibri/contract-bindings@0.1.0": {
+      "jsr:@colibri/contract-bindings@0.2.0": {
         "dependencies": [
           "jsr:@cliffy/prompt@1.0.0-rc.8",
           "jsr:@colibri/core@^1.1.0",

@@ -67,10 +67,19 @@ JSON results for seven days. Production bundle evidence remains a separate
 artifact. `test:compatibility-runner` exercises deduplication, runtime checks,
 subprocess failures, continued execution and incomplete-result detection.
 
-This trades separate runners for sequential runtime phases, reducing checkout,
-installation and artifact-transfer duplication. Package tests, coverage and CRAP
-still run independently. Consumer fixtures remain outside implementation
-coverage.
+Runtime phases remain sequential in one job, reusing checkout and artifacts.
+Within each phase, up to four isolated cases run concurrently (including SDK
+preparation and Node/TypeScript consumers). Each case has its own temporary
+source/install directory and result/log files. Browser cases remain sequential
+because Playwright installs Linux system packages. Output groups are written
+when each case finishes, without interleaving diagnostics. Package tests,
+coverage and CRAP still run independently. Consumer fixtures remain outside
+implementation coverage.
+
+The bundle fixture/version regression check runs before artifact preparation, so
+a stale candidate version in the frozen dependency fixture fails before the
+expensive matrix starts. The full frozen-lock, size, isolation and browser
+checks still run later.
 
 ## Preserved consumers
 

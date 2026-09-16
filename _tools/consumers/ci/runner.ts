@@ -18,17 +18,20 @@ export async function execute(check: Check): Promise<Execution> {
   };
 }
 
-/** Continue the phase after a failed case, preserving a distinct log and nonzero outcome. */
+/** Run isolated cases with bounded concurrency, retaining every result after failures. */
 export async function runChecks(
   checks: readonly Check[],
   directory: string,
   run: (check: Check) => Promise<Execution> = execute,
+  concurrency = 1,
 ): Promise<boolean> {
+  if (!Number.isInteger(concurrency) || concurrency < 1) {
+    throw new Error("Compatibility concurrency must be a positive integer");
+  }
   await Deno.mkdir(resolve(directory, "results"), { recursive: true });
   await Deno.mkdir(resolve(directory, "logs"), { recursive: true });
   let passed = true;
-  for (const check of checks) {
-    console.log(`::group::${check.label}`);
+  async function runOne(check: Check): Promise<void> {
     const start = performance.now();
     let output: Execution;
     try {
@@ -49,6 +52,8 @@ export async function runChecks(
       resolve(directory, "results", `${check.id}.json`),
       JSON.stringify(result, null, 2) + "\n",
     );
+    // Print each completed case as one group so parallel output cannot interleave.
+    console.log(`::group::${check.label}`);
     console.log(output.stdout);
     if (output.stderr) console.error(output.stderr);
     console.log(
@@ -59,6 +64,12 @@ export async function runChecks(
     console.log("::endgroup::");
     passed &&= output.code === 0;
   }
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, checks.length) }, async () => {
+      while (next < checks.length) await runOne(checks[next++]);
+    }),
+  );
   return passed;
 }
 
@@ -97,7 +108,7 @@ export async function summarize(
       resolutions.map((item) =>
         `- SDK \`${item.selection}\` resolved to \`${item.version}\`.`
       ).join("\n")
-    }\n\nIdentical resolved SDK versions share one set of checks. Every distinct runtime/compiler combination is retained.\n\n| Check | Result | Duration |\n| --- | --- | --- |\n${
+    }\n\nIdentical resolved SDK versions share one set of checks. Every distinct runtime/compiler combination is retained. Durations are per case and overlap when cases run concurrently.\n\n| Check | Result | Duration |\n| --- | --- | --- |\n${
       rows.join("\n")
     }\n`,
   };
