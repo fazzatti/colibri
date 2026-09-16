@@ -285637,6 +285637,171 @@
     ]
   },
   "@colibri/react/wallets/auth-entry": {
+    "AuthEntrySigner": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "methods": [
+                {
+                  "kind": "method",
+                  "name": "signSorobanAuthEntry",
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "authEntry",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "SorobanAuthorizationEntryLike",
+                        "value": {
+                          "typeName": "SorobanAuthorizationEntryLike"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "identifier",
+                      "name": "validUntilLedgerSeq",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    },
+                    {
+                      "kind": "identifier",
+                      "name": "networkPassphrase",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    },
+                    {
+                      "kind": "identifier",
+                      "name": "forAddress",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "union",
+                        "value": [
+                          {
+                            "kind": "typeRef",
+                            "repr": "Ed25519PublicKey",
+                            "value": {
+                              "typeName": "Ed25519PublicKey"
+                            }
+                          },
+                          {
+                            "kind": "typeRef",
+                            "repr": "ContractId",
+                            "value": {
+                              "typeName": "ContractId"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "typeRef",
+                    "repr": "Promise",
+                    "value": {
+                      "typeName": "Promise",
+                      "typeParams": [
+                        {
+                          "kind": "typeRef",
+                          "repr": "SorobanAuthorizationEntryLike",
+                          "value": {
+                            "typeName": "SorobanAuthorizationEntryLike"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "kind": "method",
+                  "name": "signsFor",
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "target",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "union",
+                        "value": [
+                          {
+                            "kind": "typeRef",
+                            "repr": "Ed25519PublicKey",
+                            "value": {
+                              "typeName": "Ed25519PublicKey"
+                            }
+                          },
+                          {
+                            "kind": "typeRef",
+                            "repr": "ContractId",
+                            "value": {
+                              "typeName": "ContractId"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "returnType": {
+                    "kind": "keyword",
+                    "repr": "boolean",
+                    "value": "boolean"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ContractId": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "C${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "C",
+                  "value": {
+                    "kind": "string",
+                    "string": "C"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
     "createWalletAuthEntrySigner": [
       {
         "declarationKind": "export",
@@ -285665,6 +285830,43 @@
           }
         },
         "kind": "function"
+      }
+    ],
+    "Ed25519PublicKey": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "literal",
+            "repr": "G${string}",
+            "value": {
+              "kind": "template",
+              "tsTypes": [
+                {
+                  "kind": "literal",
+                  "repr": "G",
+                  "value": {
+                    "kind": "string",
+                    "string": "G"
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                },
+                {
+                  "kind": "literal",
+                  "value": {
+                    "kind": "string",
+                    "string": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
       }
     ],
     "WalletAuthEntryOptions": [
