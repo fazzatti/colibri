@@ -14,7 +14,7 @@ import {
   TransactionBuilder,
 } from "stellar-sdk";
 import { signEnvelope } from "@/processes/sign-envelope/index.ts";
-import * as E from "@/processes/sign-envelope/error.ts";
+import * as ERROR from "@/processes/sign-envelope/error.ts";
 import { HashXSigner } from "@/signer/hash-x/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import { PreAuthorizedTransactionSigner } from "@/signer/pre-authorized-transaction/index.ts";
@@ -211,7 +211,7 @@ describe("signEnvelope signer mechanisms", () => {
             signatureRequirements: [requirement(account(0))],
             signers: [signer],
           }),
-        E.FAILED_TO_GET_SIGNER_KEY,
+        ERROR.FAILED_TO_GET_SIGNER_KEY,
       );
     });
 
@@ -232,7 +232,7 @@ describe("signEnvelope signer mechanisms", () => {
             signatureRequirements: [requirement(account(0))],
             signers: [signer],
           }),
-        E.FAILED_TO_CHECK_SIGNER_TARGET,
+        ERROR.FAILED_TO_CHECK_SIGNER_TARGET,
       );
     });
 
@@ -248,7 +248,7 @@ describe("signEnvelope signer mechanisms", () => {
             signatureRequirements: [requirement(account(0))],
             signers: [first, second],
           }),
-        E.DUPLICATE_SIGNER_KEY,
+        ERROR.DUPLICATE_SIGNER_KEY,
       );
     });
 
@@ -265,7 +265,7 @@ describe("signEnvelope signer mechanisms", () => {
             signatureRequirements: [requirement(account(0))],
             signers: [first, second],
           }),
-        E.AMBIGUOUS_ACCOUNT_SIGNERS,
+        ERROR.AMBIGUOUS_ACCOUNT_SIGNERS,
       );
     });
 
@@ -284,7 +284,7 @@ describe("signEnvelope signer mechanisms", () => {
             signatureRequirements: [requirement(sourceSigner.publicKey())],
             signers: [sourceSigner],
           }),
-        E.EXTRA_SIGNER_NOT_FOUND,
+        ERROR.EXTRA_SIGNER_NOT_FOUND,
       );
     });
 
@@ -304,7 +304,7 @@ describe("signEnvelope signer mechanisms", () => {
             signatureRequirements: [requirement(sourceSigner.publicKey())],
             signers: [sourceSigner, first, second],
           }),
-        E.DUPLICATE_SIGNER_KEY,
+        ERROR.DUPLICATE_SIGNER_KEY,
       );
     });
 
@@ -325,7 +325,7 @@ describe("signEnvelope signer mechanisms", () => {
             signatureRequirements: [requirement(sourceSigner.publicKey())],
             signers: [sourceSigner],
           }),
-        E.UNSUPPORTED_PRE_AUTH_EXTRA_SIGNER,
+        ERROR.UNSUPPORTED_PRE_AUTH_EXTRA_SIGNER,
       );
     });
 
@@ -351,7 +351,7 @@ describe("signEnvelope signer mechanisms", () => {
             signatureRequirements: [requirement(sourceSigner.publicKey())],
             signers: [sourceSigner, extraSigner],
           }),
-        E.FAILED_TO_READ_EXTRA_SIGNERS,
+        ERROR.FAILED_TO_READ_EXTRA_SIGNERS,
       );
     });
 
@@ -369,7 +369,7 @@ describe("signEnvelope signer mechanisms", () => {
             signatureRequirements: [requirement(account(0))],
             signers: [signer],
           }),
-        E.PRE_AUTH_TRANSACTION_MISMATCH,
+        ERROR.PRE_AUTH_TRANSACTION_MISMATCH,
       );
     });
 
@@ -391,7 +391,7 @@ describe("signEnvelope signer mechanisms", () => {
             signatureRequirements: [requirement(account(0))],
             signers: [signer],
           }),
-        E.FAILED_TO_CHECK_PRE_AUTH_TRANSACTION,
+        ERROR.FAILED_TO_CHECK_PRE_AUTH_TRANSACTION,
       );
     });
   });

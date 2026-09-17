@@ -28,7 +28,7 @@ import {
   LedgerEntries,
 } from "@/ledger-entries/index.ts";
 import { decodeLedgerEntry } from "@/ledger-entries/decode.ts";
-import * as E from "@/ledger-entries/error.ts";
+import * as ERROR from "@/ledger-entries/error.ts";
 import type {
   ClaimableBalanceId,
   ContractId,
@@ -402,7 +402,7 @@ describe("LedgerEntries", () => {
             rpc: makeRpc([]),
             networkConfig: NetworkConfig.TestNet(),
           } as never),
-        E.INVALID_CONSTRUCTOR_ARGS,
+        ERROR.INVALID_CONSTRUCTOR_ARGS,
       );
     });
 
@@ -414,7 +414,7 @@ describe("LedgerEntries", () => {
               networkPassphrase: "Standalone Network ; February 2017",
             }),
           }),
-        E.MISSING_RPC_URL,
+        ERROR.MISSING_RPC_URL,
       );
     });
   });
@@ -583,28 +583,28 @@ describe("LedgerEntries", () => {
     it("validates string inputs on the builders", () => {
       assertThrows(
         () => buildAccountLedgerKey({ accountId: "BAD" as Ed25519PublicKey }),
-        E.INVALID_ACCOUNT_ID,
+        ERROR.INVALID_ACCOUNT_ID,
       );
       assertThrows(
         () =>
           buildClaimableBalanceLedgerKey({
             balanceId: "BAD" as ClaimableBalanceId,
           }),
-        E.INVALID_CLAIMABLE_BALANCE_ID,
+        ERROR.INVALID_CLAIMABLE_BALANCE_ID,
       );
       assertThrows(
         () =>
           buildLiquidityPoolLedgerKey({
             liquidityPoolId: "BAD" as LiquidityPoolId,
           }),
-        E.INVALID_LIQUIDITY_POOL_ID,
+        ERROR.INVALID_LIQUIDITY_POOL_ID,
       );
       assertThrows(
         () =>
           buildContractCodeLedgerKey({
             hash: "not-hex",
           }),
-        E.INVALID_HEX_HASH,
+        ERROR.INVALID_HEX_HASH,
       );
     });
   });
@@ -842,7 +842,7 @@ describe("LedgerEntries", () => {
 
       await assertRejects(
         () => ledger.account({ accountId: ACCOUNT_ID }),
-        E.LEDGER_ENTRY_NOT_FOUND,
+        ERROR.LEDGER_ENTRY_NOT_FOUND,
       );
     });
 
@@ -867,7 +867,7 @@ describe("LedgerEntries", () => {
 
       await assertRejects(
         () => ledger.contractCode({ contractId: CONTRACT_ID }),
-        E.CONTRACT_INSTANCE_HAS_NO_WASM_HASH,
+        ERROR.CONTRACT_INSTANCE_HAS_NO_WASM_HASH,
       );
     });
 
@@ -900,7 +900,7 @@ describe("LedgerEntries", () => {
       const noInstance = new LedgerEntries({ rpc: makeRpc([]) });
       await assertRejects(
         () => noInstance.resolveContractExecutable({ contractId: CONTRACT_ID }),
-        E.LEDGER_ENTRY_NOT_FOUND,
+        ERROR.LEDGER_ENTRY_NOT_FOUND,
       );
 
       const missing = new LedgerEntries({
@@ -908,7 +908,7 @@ describe("LedgerEntries", () => {
       });
       await assertRejects(
         () => missing.resolveContractExecutable({ contractId: CONTRACT_ID }),
-        E.EXTERNAL_REFERENCE_ENTRY_NOT_FOUND,
+        ERROR.EXTERNAL_REFERENCE_ENTRY_NOT_FOUND,
       );
 
       const invalidValue = new LedgerEntries({
@@ -920,7 +920,7 @@ describe("LedgerEntries", () => {
       await assertRejects(
         () =>
           invalidValue.resolveContractExecutable({ contractId: CONTRACT_ID }),
-        E.EXTERNAL_REFERENCE_VALUE_INVALID,
+        ERROR.EXTERNAL_REFERENCE_VALUE_INVALID,
       );
 
       await assertRejects(
@@ -928,14 +928,14 @@ describe("LedgerEntries", () => {
           invalidValue.resolveContractExecutable({
             externalRef: { owner: ACCOUNT_ID, tag: "release" },
           }),
-        E.EXTERNAL_REFERENCE_OWNER_NOT_CONTRACT,
+        ERROR.EXTERNAL_REFERENCE_OWNER_NOT_CONTRACT,
       );
       await assertRejects(
         () =>
           invalidValue.resolveContractExecutable({
             externalRef: { owner: "not-an-address", tag: "release" },
           }),
-        E.INVALID_EXTERNAL_REFERENCE,
+        ERROR.INVALID_EXTERNAL_REFERENCE,
       );
 
       const nonErrorCause = {
@@ -949,7 +949,7 @@ describe("LedgerEntries", () => {
           invalidValue.resolveContractExecutable({
             externalRef: nonErrorCause,
           }),
-        E.INVALID_EXTERNAL_REFERENCE,
+        ERROR.INVALID_EXTERNAL_REFERENCE,
       );
 
       const invalidType = new LedgerEntries({
@@ -962,7 +962,7 @@ describe("LedgerEntries", () => {
           invalidType.resolveContractExecutable({
             externalRef: { owner: CONTRACT_ID, tag: EXTERNAL_TAG },
           }),
-        E.EXTERNAL_REFERENCE_VALUE_INVALID,
+        ERROR.EXTERNAL_REFERENCE_VALUE_INVALID,
       );
     });
 
@@ -976,7 +976,7 @@ describe("LedgerEntries", () => {
               key: buildContractInstanceLedgerKey({ contractId: CONTRACT_ID }),
             }),
           ),
-        E.UNSUPPORTED_RPC_LEDGER_KEY,
+        ERROR.UNSUPPORTED_RPC_LEDGER_KEY,
       );
     });
   });

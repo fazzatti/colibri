@@ -3,7 +3,7 @@ import { describe, it } from "@std/testing/bdd";
 import { xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { parseClassicTransactionOutcome } from "@/processes/parse-classic-transaction-outcome/index.ts";
-import * as E from "@/processes/parse-classic-transaction-outcome/error.ts";
+import * as ERROR from "@/processes/parse-classic-transaction-outcome/error.ts";
 import type { SendTransactionOutput } from "@/processes/send-transaction/types.ts";
 
 const manageOfferSuccess = new xdr.ManageOfferSuccessResult({
@@ -193,7 +193,7 @@ describe("parseClassicTransactionOutcome", () => {
 
     assertThrows(
       () => parseClassicTransactionOutcome(input),
-      E.UNEXPECTED_TRANSACTION_RESULT_ERROR,
+      ERROR.UNEXPECTED_TRANSACTION_RESULT_ERROR,
     );
   });
 
@@ -215,7 +215,7 @@ describe("parseClassicTransactionOutcome", () => {
 
     assertThrows(
       () => parseClassicTransactionOutcome(input),
-      E.UNEXPECTED_INNER_TRANSACTION_RESULT_ERROR,
+      ERROR.UNEXPECTED_INNER_TRANSACTION_RESULT_ERROR,
     );
   });
 
@@ -230,7 +230,7 @@ describe("parseClassicTransactionOutcome", () => {
 
     assertThrows(
       () => parseClassicTransactionOutcome(input),
-      E.UNEXPECTED_OPERATION_RESULT_ERROR,
+      ERROR.UNEXPECTED_OPERATION_RESULT_ERROR,
     );
   });
 
@@ -250,7 +250,7 @@ describe("parseClassicTransactionOutcome", () => {
 
     assertThrows(
       () => parseClassicTransactionOutcome(input),
-      E.UNSUPPORTED_OPERATION_OUTCOME_ERROR,
+      ERROR.UNSUPPORTED_OPERATION_OUTCOME_ERROR,
     );
   });
 
@@ -268,7 +268,7 @@ describe("parseClassicTransactionOutcome", () => {
 
     assertThrows(
       () => parseClassicTransactionOutcome(input),
-      E.UNSUCCESSFUL_OPERATION_OUTCOME_ERROR,
+      ERROR.UNSUCCESSFUL_OPERATION_OUTCOME_ERROR,
     );
   });
 
@@ -278,7 +278,7 @@ describe("parseClassicTransactionOutcome", () => {
         parseClassicTransactionOutcome(
           null as unknown as SendTransactionOutput,
         ),
-      E.UNEXPECTED_ERROR,
+      ERROR.UNEXPECTED_ERROR,
     );
   });
 });

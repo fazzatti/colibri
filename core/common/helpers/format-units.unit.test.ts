@@ -2,7 +2,7 @@ import { assertEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { fromDecimals, toDecimals } from "@/common/helpers/format-units.ts";
 import { ColibriError } from "@/error/index.ts";
-import * as E from "@/common/helpers/format-units.error.ts";
+import * as ERROR from "@/common/helpers/format-units.error.ts";
 
 describe("format-units", () => {
   describe("fromDecimals", () => {
@@ -24,7 +24,7 @@ describe("format-units", () => {
     it("supports truncation of excess fractional digits", () => {
       assertEquals(
         fromDecimals("1.23456789", 6, { excessFraction: "truncate" }),
-        1234567n
+        1234567n,
       );
     });
 
@@ -42,23 +42,23 @@ describe("format-units", () => {
       const err = assertThrows(() => fromDecimals("1.234", 2));
       if (!(err instanceof ColibriError)) throw err;
       assertEquals(err.domain, "helpers");
-      assertEquals(err.code, E.Code.TOO_MANY_FRACTION_DIGITS);
+      assertEquals(err.code, ERROR.Code.TOO_MANY_FRACTION_DIGITS);
     });
 
     it("throws INVALID_DECIMALS for bad decimals", () => {
       const e1 = assertThrows(() => fromDecimals("1", -1));
       if (!(e1 instanceof ColibriError)) throw e1;
-      assertEquals(e1.code, E.Code.INVALID_DECIMALS);
+      assertEquals(e1.code, ERROR.Code.INVALID_DECIMALS);
 
       const e2 = assertThrows(() => fromDecimals("1", 1.5));
       if (!(e2 instanceof ColibriError)) throw e2;
-      assertEquals(e2.code, E.Code.INVALID_DECIMALS);
+      assertEquals(e2.code, ERROR.Code.INVALID_DECIMALS);
     });
 
     it("throws EMPTY_VALUE for empty/whitespace", () => {
       const e = assertThrows(() => fromDecimals("   ", 6));
       if (!(e instanceof ColibriError)) throw e;
-      assertEquals(e.code, E.Code.EMPTY_VALUE);
+      assertEquals(e.code, ERROR.Code.EMPTY_VALUE);
     });
 
     it("throws INVALID_DECIMAL_INPUT for malformed inputs", () => {
@@ -66,18 +66,18 @@ describe("format-units", () => {
       for (const value of cases) {
         const e = assertThrows(() => fromDecimals(value, 6));
         if (!(e instanceof ColibriError)) throw e;
-        assertEquals(e.code, E.Code.INVALID_DECIMAL_INPUT);
+        assertEquals(e.code, ERROR.Code.INVALID_DECIMAL_INPUT);
       }
     });
 
     it("throws NON_FINITE_NUMBER for NaN/Infinity", () => {
       const e1 = assertThrows(() => fromDecimals(NaN, 6));
       if (!(e1 instanceof ColibriError)) throw e1;
-      assertEquals(e1.code, E.Code.NON_FINITE_NUMBER);
+      assertEquals(e1.code, ERROR.Code.NON_FINITE_NUMBER);
 
       const e2 = assertThrows(() => fromDecimals(Infinity, 6));
       if (!(e2 instanceof ColibriError)) throw e2;
-      assertEquals(e2.code, E.Code.NON_FINITE_NUMBER);
+      assertEquals(e2.code, ERROR.Code.NON_FINITE_NUMBER);
     });
 
     it("throws INVALID_SCIENTIFIC_NOTATION for malformed scientific strings", () => {
@@ -85,7 +85,7 @@ describe("format-units", () => {
       for (const value of cases) {
         const e = assertThrows(() => fromDecimals(value, 6));
         if (!(e instanceof ColibriError)) throw e;
-        assertEquals(e.code, E.Code.INVALID_SCIENTIFIC_NOTATION);
+        assertEquals(e.code, ERROR.Code.INVALID_SCIENTIFIC_NOTATION);
       }
     });
 
@@ -94,13 +94,13 @@ describe("format-units", () => {
       const hugeExp = "9".repeat(4000);
       const e = assertThrows(() => fromDecimals(`1e${hugeExp}`, 6));
       if (!(e instanceof ColibriError)) throw e;
-      assertEquals(e.code, E.Code.INVALID_SCIENTIFIC_EXPONENT);
+      assertEquals(e.code, ERROR.Code.INVALID_SCIENTIFIC_EXPONENT);
     });
 
     it("throws INVALID_SCIENTIFIC_EXPONENT when exponent exceeds MAX_EXPONENT_ABS", () => {
       const e = assertThrows(() => fromDecimals("1e1000001", 0));
       if (!(e instanceof ColibriError)) throw e;
-      assertEquals(e.code, E.Code.INVALID_SCIENTIFIC_EXPONENT);
+      assertEquals(e.code, ERROR.Code.INVALID_SCIENTIFIC_EXPONENT);
     });
   });
 
@@ -119,11 +119,11 @@ describe("format-units", () => {
     it("respects maxFractionDigits and trimTrailingZeros=false", () => {
       assertEquals(
         toDecimals(123456789n, 6, { maxFractionDigits: 2 }),
-        "123.45"
+        "123.45",
       );
       assertEquals(
         toDecimals(1200000n, 6, { trimTrailingZeros: false }),
-        "1.200000"
+        "1.200000",
       );
     });
 
@@ -135,11 +135,11 @@ describe("format-units", () => {
     it("throws INVALID_DECIMALS for bad decimals", () => {
       const e1 = assertThrows(() => toDecimals(1n, -1));
       if (!(e1 instanceof ColibriError)) throw e1;
-      assertEquals(e1.code, E.Code.INVALID_DECIMALS);
+      assertEquals(e1.code, ERROR.Code.INVALID_DECIMALS);
 
       const e2 = assertThrows(() => toDecimals(1n, 2.2));
       if (!(e2 instanceof ColibriError)) throw e2;
-      assertEquals(e2.code, E.Code.INVALID_DECIMALS);
+      assertEquals(e2.code, ERROR.Code.INVALID_DECIMALS);
     });
 
     it("throws INVALID_MAX_FRACTION_DIGITS", () => {
@@ -147,43 +147,46 @@ describe("format-units", () => {
         toDecimals(1n, 6, { maxFractionDigits: -1 })
       );
       if (!(e1 instanceof ColibriError)) throw e1;
-      assertEquals(e1.code, E.Code.INVALID_MAX_FRACTION_DIGITS);
+      assertEquals(e1.code, ERROR.Code.INVALID_MAX_FRACTION_DIGITS);
 
       const e2 = assertThrows(() =>
         toDecimals(1n, 6, { maxFractionDigits: 1.5 })
       );
       if (!(e2 instanceof ColibriError)) throw e2;
-      assertEquals(e2.code, E.Code.INVALID_MAX_FRACTION_DIGITS);
+      assertEquals(e2.code, ERROR.Code.INVALID_MAX_FRACTION_DIGITS);
     });
   });
 
   describe("errors", () => {
     it("exports an error map and all errors extend ColibriError", () => {
       // Touch the map for coverage.
-      assertEquals(typeof E.ERROR_HLP_UNT[E.Code.INVALID_DECIMALS], "function");
+      assertEquals(
+        typeof ERROR.ERROR_HLP_UNT[ERROR.Code.INVALID_DECIMALS],
+        "function",
+      );
 
-      const err = new E.ERROR_HLP_UNT[E.Code.INVALID_DECIMALS](0);
+      const err = new ERROR.ERROR_HLP_UNT[ERROR.Code.INVALID_DECIMALS](0);
       if (!(err instanceof ColibriError)) throw err;
-      if (!(err instanceof E.FormatUnitsError)) throw err;
+      if (!(err instanceof ERROR.FormatUnitsError)) throw err;
       assertEquals(err.domain, "helpers");
       assertEquals(err.source, "@colibri/core/helpers/format-units");
     });
 
     it("covers all error classes", () => {
-      const errors: E.FormatUnitsError[] = [
-        new E.INVALID_DECIMALS(-1),
-        new E.EMPTY_VALUE(""),
-        new E.INVALID_DECIMAL_INPUT("bad"),
-        new E.TOO_MANY_FRACTION_DIGITS("1.234", 2, 3),
-        new E.NON_FINITE_NUMBER(Infinity),
-        new E.INVALID_SCIENTIFIC_NOTATION("1e"),
-        new E.INVALID_SCIENTIFIC_EXPONENT("1e999"),
-        new E.INVALID_MAX_FRACTION_DIGITS(-1),
+      const errors: ERROR.FormatUnitsError[] = [
+        new ERROR.INVALID_DECIMALS(-1),
+        new ERROR.EMPTY_VALUE(""),
+        new ERROR.INVALID_DECIMAL_INPUT("bad"),
+        new ERROR.TOO_MANY_FRACTION_DIGITS("1.234", 2, 3),
+        new ERROR.NON_FINITE_NUMBER(Infinity),
+        new ERROR.INVALID_SCIENTIFIC_NOTATION("1e"),
+        new ERROR.INVALID_SCIENTIFIC_EXPONENT("1e999"),
+        new ERROR.INVALID_MAX_FRACTION_DIGITS(-1),
       ];
 
       for (const err of errors) {
         if (!(err instanceof ColibriError)) throw err;
-        if (!(err instanceof E.FormatUnitsError)) throw err;
+        if (!(err instanceof ERROR.FormatUnitsError)) throw err;
         // Touch a couple key fields so they're covered.
         assertEquals(err.domain, "helpers");
         assertEquals(err.source, "@colibri/core/helpers/format-units");

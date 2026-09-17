@@ -7,7 +7,7 @@ import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 import type { MuxedId } from "@/account/native/types.ts";
 import type { WithSigner } from "@/account/types.ts";
 
-import * as E from "@/account/native/error.ts";
+import * as ERROR from "@/account/native/error.ts";
 
 describe("NativeAccount", () => {
   const TEST_ADDRESS =
@@ -27,7 +27,7 @@ describe("NativeAccount", () => {
     it("throws on invalid Ed25519 public key", () => {
       assertThrows(
         () => NativeAccount.fromAddress(INVALID_ADDRESS as Ed25519PublicKey),
-        E.UNSUPPORTED_ADDRESS_TYPE,
+        ERROR.UNSUPPORTED_ADDRESS_TYPE,
       );
     });
 
@@ -37,7 +37,7 @@ describe("NativeAccount", () => {
 
       assertThrows(
         () => NativeAccount.fromAddress(muxedAddr),
-        E.UNSUPPORTED_ADDRESS_TYPE,
+        ERROR.UNSUPPORTED_ADDRESS_TYPE,
       );
     });
   });
@@ -53,7 +53,7 @@ describe("NativeAccount", () => {
     it("throws on invalid Ed25519 public key", () => {
       assertThrows(
         () => NativeAccount.fromPublicKey(INVALID_ADDRESS as Ed25519PublicKey),
-        E.INVALID_ED25519_PUBLIC_KEY,
+        ERROR.INVALID_ED25519_PUBLIC_KEY,
       );
     });
   });
@@ -89,7 +89,7 @@ describe("NativeAccount", () => {
 
       assertThrows(
         () => account.muxedAddress("not-a-number" as MuxedId),
-        E.INVALID_MUXED_ID,
+        ERROR.INVALID_MUXED_ID,
       );
     });
 
@@ -98,7 +98,7 @@ describe("NativeAccount", () => {
 
       assertThrows(
         () => account.muxedAddress("-123" as MuxedId),
-        E.INVALID_MUXED_ID,
+        ERROR.INVALID_MUXED_ID,
       );
     });
 
@@ -172,7 +172,7 @@ describe("NativeAccount", () => {
         TEST_ADDRESS,
       ) as unknown as WithSigner<NativeAccount>;
 
-      assertThrows(() => account.signer(), E.MISSING_MASTER_SIGNER);
+      assertThrows(() => account.signer(), ERROR.MISSING_MASTER_SIGNER);
     });
   });
 
@@ -189,7 +189,7 @@ describe("NativeAccount", () => {
       // Only signer() should throw
       assertThrows(
         () => (account as WithSigner<NativeAccount>).signer(),
-        E.MISSING_MASTER_SIGNER,
+        ERROR.MISSING_MASTER_SIGNER,
       );
     });
   });

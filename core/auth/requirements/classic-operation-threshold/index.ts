@@ -1,6 +1,6 @@
 import { type Operation, type OperationRecord, xdr } from "stellar-sdk";
 import { muxedAddressToBaseAccount } from "@/address/index.ts";
-import * as E from "@/auth/requirements/classic-operation-threshold/error.ts";
+import * as ERROR from "@/auth/requirements/classic-operation-threshold/error.ts";
 import { ColibriError } from "@/error/index.ts";
 import {
   OperationThreshold,
@@ -100,7 +100,7 @@ const getOperationSigner = (
   try {
     return setSourceSigner(operation.source);
   } catch (error) {
-    throw new E.FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE(
+    throw new ERROR.FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE(
       operation,
       operation.source,
       error as Error,
@@ -118,9 +118,9 @@ export const getRequiredOperationThresholdForClassicOperation = (
 
     return { address: getOperationSigner(operation), thresholdLevel };
   } catch (e) {
-    if (e instanceof E.ClassicOperationThresholdError) {
+    if (e instanceof ERROR.ClassicOperationThresholdError) {
       throw e;
     }
-    throw new E.UNEXPECTED_ERROR(operation, e as Error);
+    throw new ERROR.UNEXPECTED_ERROR(operation, e as Error);
   }
 };

@@ -4,7 +4,7 @@ import type {
   ClassicTransactionInput,
   CreateClassicTransactionPipelineArgs,
 } from "@/pipelines/classic-transaction/types.ts";
-import * as E from "@/pipelines/classic-transaction/error.ts";
+import * as ERROR from "@/pipelines/classic-transaction/error.ts";
 import { ColibriError } from "@/error/index.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 import {
@@ -131,11 +131,14 @@ const createClassicTransactionPipeline = ({
         networkConfig,
         networkPassphrase: networkConfig && networkConfig.networkPassphrase,
       },
-      (argName: string) => new E.MISSING_ARG(argName),
+      (argName: string) => new ERROR.MISSING_ARG(argName),
     );
 
     if (!rpc) {
-      assert(networkConfig && networkConfig.rpcUrl, new E.MISSING_RPC_URL());
+      assert(
+        networkConfig && networkConfig.rpcUrl,
+        new ERROR.MISSING_RPC_URL(),
+      );
       rpc = new Server(networkConfig.rpcUrl!, {
         allowHttp: networkConfig.allowHttp ?? false,
       });
@@ -145,7 +148,7 @@ const createClassicTransactionPipeline = ({
     if (error instanceof ColibriError) {
       throw error;
     }
-    throw new E.UNEXPECTED_ERROR(error as Error);
+    throw new ERROR.UNEXPECTED_ERROR(error as Error);
   }
 };
 

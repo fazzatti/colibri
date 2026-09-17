@@ -8,7 +8,7 @@ import {
 } from "stellar-sdk";
 import { Ledger } from "@/ledger-parser/ledger/index.ts";
 import { Operation } from "@/ledger-parser/operation/index.ts";
-import * as E from "@/ledger-parser/error.ts";
+import * as ERROR from "@/ledger-parser/error.ts";
 import { getLedgerFixture } from "colibri-internal/tests/fixtures/rpc/get_ledgers/index.ts";
 
 describe("Ledger operation native SDK conversion", () => {
@@ -35,11 +35,14 @@ describe("Ledger operation native SDK conversion", () => {
     const parsed = Operation.fromXdr(transaction, {} as xdr.Operation, 3);
     const error = assertThrows(
       () => parsed.toOperation(),
-      E.NATIVE_OPERATION_DECODE_FAILED,
+      ERROR.NATIVE_OPERATION_DECODE_FAILED,
     );
-    assertEquals(error.code, E.Code.NATIVE_OPERATION_DECODE_FAILED);
+    assertEquals(error.code, ERROR.Code.NATIVE_OPERATION_DECODE_FAILED);
     assertEquals(error.meta.data, { index: 3 });
     assertInstanceOf(error.meta.cause, Error);
-    assertEquals(E.ERROR_LDP[error.code], E.NATIVE_OPERATION_DECODE_FAILED);
+    assertEquals(
+      ERROR.ERROR_LDP[error.code],
+      ERROR.NATIVE_OPERATION_DECODE_FAILED,
+    );
   });
 });

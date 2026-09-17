@@ -8,7 +8,7 @@ import {
 import { NetworkConfig } from "@/network/index.ts";
 import { buildTransaction } from "@/processes/build-transaction/index.ts";
 import type { BuildTransactionInput } from "@/processes/build-transaction/types.ts";
-import * as E from "@/processes/build-transaction/error.ts";
+import * as ERROR from "@/processes/build-transaction/error.ts";
 
 const source = "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P";
 const operations = [
@@ -128,7 +128,7 @@ describe("buildTransaction fee strategies", () => {
           ...inputWith({ baseFee: "100" }),
           transactionFee: { base: "100" },
         } as BuildTransactionInput),
-      E.INVALID_TRANSACTION_FEE_CONFIGURATION_ERROR,
+      ERROR.INVALID_TRANSACTION_FEE_CONFIGURATION_ERROR,
     );
     await assertRejects(
       () =>
@@ -136,7 +136,7 @@ describe("buildTransaction fee strategies", () => {
           ...inputWith({ baseFee: "100" }),
           baseFee: undefined,
         } as unknown as BuildTransactionInput),
-      E.INVALID_TRANSACTION_FEE_CONFIGURATION_ERROR,
+      ERROR.INVALID_TRANSACTION_FEE_CONFIGURATION_ERROR,
     );
   });
 
@@ -149,7 +149,7 @@ describe("buildTransaction fee strategies", () => {
             "baseFee" | "transactionFee"
           >),
         ),
-      E.INVALID_TRANSACTION_FEE_CONFIGURATION_ERROR,
+      ERROR.INVALID_TRANSACTION_FEE_CONFIGURATION_ERROR,
     );
   });
 
@@ -162,7 +162,7 @@ describe("buildTransaction fee strategies", () => {
             "baseFee" | "transactionFee"
           >),
         ),
-      E.INVALID_BASE_FEE_ERROR,
+      ERROR.INVALID_BASE_FEE_ERROR,
     );
     await assertRejects(
       () =>
@@ -174,7 +174,7 @@ describe("buildTransaction fee strategies", () => {
             "baseFee" | "transactionFee"
           >),
         ),
-      E.INVALID_INCLUSION_FEE_ERROR,
+      ERROR.INVALID_INCLUSION_FEE_ERROR,
     );
     await assertRejects(
       () =>
@@ -184,14 +184,14 @@ describe("buildTransaction fee strategies", () => {
             "baseFee" | "transactionFee"
           >),
         ),
-      E.INVALID_MAX_FEE_ERROR,
+      ERROR.INVALID_MAX_FEE_ERROR,
     );
   });
 
   it("rejects a non-positive explicit base fee", async () => {
     await assertRejects(
       () => buildTransaction(inputWith({ transactionFee: { base: "0" } })),
-      E.BASE_FEE_TOO_LOW_ERROR,
+      ERROR.BASE_FEE_TOO_LOW_ERROR,
     );
   });
 
@@ -201,11 +201,11 @@ describe("buildTransaction fee strategies", () => {
         buildTransaction(
           inputWith({ transactionFee: { inclusion: "299" } }),
         ),
-      E.INCLUSION_FEE_TOO_LOW_ERROR,
+      ERROR.INCLUSION_FEE_TOO_LOW_ERROR,
     );
     await assertRejects(
       () => buildTransaction(inputWith({ transactionFee: { max: "299" } })),
-      E.MAX_FEE_TOO_LOW_ERROR,
+      ERROR.MAX_FEE_TOO_LOW_ERROR,
     );
   });
 
@@ -215,7 +215,7 @@ describe("buildTransaction fee strategies", () => {
         buildTransaction(
           sorobanInputWith({ transactionFee: { max: "199" } }),
         ),
-      E.MAX_FEE_TOO_LOW_ERROR,
+      ERROR.MAX_FEE_TOO_LOW_ERROR,
     );
   });
 
@@ -225,7 +225,7 @@ describe("buildTransaction fee strategies", () => {
         buildTransaction(
           inputWith({ transactionFee: { inclusion: "4294967296" } }),
         ),
-      E.TRANSACTION_FEE_TOO_HIGH_ERROR,
+      ERROR.TRANSACTION_FEE_TOO_HIGH_ERROR,
     );
     await assertRejects(
       () =>
@@ -234,13 +234,13 @@ describe("buildTransaction fee strategies", () => {
             transactionFee: { inclusion: "4294967295" },
           }),
         ),
-      E.TRANSACTION_FEE_TOO_HIGH_ERROR,
+      ERROR.TRANSACTION_FEE_TOO_HIGH_ERROR,
     );
   });
 
   it("keeps every build-transaction error code unique", () => {
-    const codes = Object.values(E.Code);
+    const codes = Object.values(ERROR.Code);
     assertEquals(new Set(codes).size, codes.length);
-    assertEquals(Object.keys(E.ERROR_BY_CODE).sort(), [...codes].sort());
+    assertEquals(Object.keys(ERROR.ERROR_BY_CODE).sort(), [...codes].sort());
   });
 });

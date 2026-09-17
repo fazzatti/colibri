@@ -2,7 +2,7 @@ import type {
   AssembleForEnforcementInput,
   AssembleForEnforcementOutput,
 } from "@/processes/assemble-for-enforcement/types.ts";
-import * as E from "@/processes/assemble-for-enforcement/error.ts";
+import * as ERROR from "@/processes/assemble-for-enforcement/error.ts";
 import { AssembleTransactionError } from "@/processes/assemble-transaction/error.ts";
 import { assembleTransaction } from "@/processes/assemble-transaction/index.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
@@ -29,11 +29,11 @@ export const assembleForEnforcement = async (
 
     assertRequiredArgs(
       { transaction },
-      () => new E.MISSING_TRANSACTION(input),
+      () => new ERROR.MISSING_TRANSACTION(input),
     );
     assertRequiredArgs(
       { authorizedOperation },
-      () => new E.MISSING_AUTHORIZED_OPERATION(input),
+      () => new ERROR.MISSING_AUTHORIZED_OPERATION(input),
     );
     if (!operationHasDelegatedAuthorization(authorizedOperation)) {
       return transaction;
@@ -50,14 +50,14 @@ export const assembleForEnforcement = async (
     });
   } catch (error) {
     if (
-      error instanceof E.AssembleForEnforcementError ||
+      error instanceof ERROR.AssembleForEnforcementError ||
       error instanceof AssembleTransactionError
     ) {
       throw error;
     }
-    throw new E.UNEXPECTED_ERROR(input, error as Error);
+    throw new ERROR.UNEXPECTED_ERROR(input, error as Error);
   }
 };
 
 /** Error constructors emitted by {@link assembleForEnforcement}. */
-export const AssembleForEnforcementErrors: typeof E = E;
+export const AssembleForEnforcementErrors: typeof ERROR = ERROR;

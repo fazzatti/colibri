@@ -2,7 +2,7 @@ import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Operation } from "stellar-sdk";
 import { NetworkConfig } from "@/network/index.ts";
-import * as E from "@/pipelines/read-from-contract/error.ts";
+import * as ERROR from "@/pipelines/read-from-contract/error.ts";
 import { createReadFromContractPipeline } from "@/pipelines/read-from-contract/index.ts";
 import { inputToBuild } from "@/pipelines/read-from-contract/connectors.ts";
 import type { ReadFromContractInput } from "@/pipelines/read-from-contract/types.ts";
@@ -61,7 +61,7 @@ describe("createReadFromContractPipeline", () => {
           createReadFromContractPipeline({
             networkConfig: undefined as unknown as NetworkConfig,
           }),
-        E.MISSING_ARG,
+        ERROR.MISSING_ARG,
       );
     });
 
@@ -72,7 +72,7 @@ describe("createReadFromContractPipeline", () => {
 
       assertThrows(
         () => createReadFromContractPipeline({ networkConfig }),
-        E.MISSING_ARG,
+        ERROR.MISSING_ARG,
       );
     });
 
@@ -83,7 +83,7 @@ describe("createReadFromContractPipeline", () => {
 
       assertThrows(
         () => createReadFromContractPipeline({ networkConfig }),
-        E.MISSING_RPC_URL,
+        ERROR.MISSING_RPC_URL,
       );
     });
 
@@ -92,7 +92,7 @@ describe("createReadFromContractPipeline", () => {
 
       assertThrows(
         () => createReadFromContractPipeline({ networkConfig }),
-        E.MISSING_ARG,
+        ERROR.MISSING_ARG,
       );
     });
 
@@ -104,7 +104,7 @@ describe("createReadFromContractPipeline", () => {
       });
       assertThrows(
         () => createReadFromContractPipeline({ networkConfig }),
-        E.UNEXPECTED_ERROR,
+        ERROR.UNEXPECTED_ERROR,
       );
     });
   });

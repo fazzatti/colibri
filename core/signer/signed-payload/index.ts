@@ -13,7 +13,7 @@ import type {
 } from "@/common/types/index.ts";
 import type { KeypairSigner } from "@/signer/types.ts";
 import type { Ed25519PublicKey, SignedPayload } from "@/strkeys/types.ts";
-import * as E from "@/signer/signed-payload/error.ts";
+import * as ERROR from "@/signer/signed-payload/error.ts";
 
 type PayloadSigningCapability = Pick<KeypairSigner, "publicKey" | "sign">;
 type HashableTransaction = SignableTransaction & { hash(): Uint8Array };
@@ -23,6 +23,10 @@ type DecoratedSignatureTransaction = SignableTransaction & {
 
 /**
  * Envelope signer that discloses an Ed25519 signature over a fixed payload.
+ *
+ * The name follows Stellar's
+ * {@link https://github.com/stellar/stellar-protocol/blob/master/core/cap-0040.md | CAP-40}
+ * "Ed25519 Signed Payload Signer" terminology.
  *
  * The payload is embedded in the signer's `P...` key and is signed directly,
  * without transaction hashing or network-domain separation. Prefer
@@ -59,17 +63,17 @@ export class Ed25519SignedPayloadSigner {
     try {
       this.payloadBytes = toUint8Array(payload).slice();
     } catch (cause) {
-      throw new E.FAILED_TO_NORMALIZE_PAYLOAD(cause as Error);
+      throw new ERROR.FAILED_TO_NORMALIZE_PAYLOAD(cause as Error);
     }
     assert(
       this.payloadBytes.length > 0 && this.payloadBytes.length <= 64,
-      new E.INVALID_PAYLOAD_LENGTH(this.payloadBytes.length),
+      new ERROR.INVALID_PAYLOAD_LENGTH(this.payloadBytes.length),
     );
 
     try {
       this.publicKeyValue = signer.publicKey();
     } catch (cause) {
-      throw new E.FAILED_TO_GET_PUBLIC_KEY(cause as Error);
+      throw new ERROR.FAILED_TO_GET_PUBLIC_KEY(cause as Error);
     }
 
     try {
@@ -77,7 +81,7 @@ export class Ed25519SignedPayloadSigner {
         this.publicKeyValue,
       );
     } catch (cause) {
-      throw new E.FAILED_TO_DECODE_PUBLIC_KEY(
+      throw new ERROR.FAILED_TO_DECODE_PUBLIC_KEY(
         this.publicKeyValue,
         cause as Error,
       );
@@ -90,7 +94,7 @@ export class Ed25519SignedPayloadSigner {
         this.payloadBytes,
       );
     } catch (cause) {
-      throw new E.FAILED_TO_BUILD_SIGNER_KEY_XDR(
+      throw new ERROR.FAILED_TO_BUILD_SIGNER_KEY_XDR(
         this.publicKeyValue,
         cause as Error,
       );
@@ -101,7 +105,7 @@ export class Ed25519SignedPayloadSigner {
         signerKeyXdr,
       ) as SignedPayload;
     } catch (cause) {
-      throw new E.FAILED_TO_ENCODE_SIGNER_KEY(
+      throw new ERROR.FAILED_TO_ENCODE_SIGNER_KEY(
         this.publicKeyValue,
         cause as Error,
       );
@@ -135,7 +139,7 @@ export class Ed25519SignedPayloadSigner {
     try {
       payload = (args.transaction as HashableTransaction).hash();
     } catch (cause) {
-      throw new E.FAILED_TO_HASH_TRANSACTION(cause as Error);
+      throw new ERROR.FAILED_TO_HASH_TRANSACTION(cause as Error);
     }
     return new Ed25519SignedPayloadSigner(args.signer, payload);
   }
@@ -186,14 +190,14 @@ export class Ed25519SignedPayloadSigner {
     try {
       signatureData = this.signer.sign(this.payloadBytes.slice());
     } catch (cause) {
-      throw new E.FAILED_TO_SIGN_PAYLOAD(this.key, cause as Error);
+      throw new ERROR.FAILED_TO_SIGN_PAYLOAD(this.key, cause as Error);
     }
 
     let signature: Uint8Array;
     try {
       signature = toUint8Array(signatureData);
     } catch (cause) {
-      throw new E.FAILED_TO_NORMALIZE_SIGNATURE(
+      throw new ERROR.FAILED_TO_NORMALIZE_SIGNATURE(
         this.key,
         cause as Error,
       );
@@ -213,7 +217,7 @@ export class Ed25519SignedPayloadSigner {
       });
       decoratedSignature.toXdr();
     } catch (cause) {
-      throw new E.FAILED_TO_BUILD_DECORATED_SIGNATURE(
+      throw new ERROR.FAILED_TO_BUILD_DECORATED_SIGNATURE(
         this.key,
         cause as Error,
       );
@@ -224,7 +228,7 @@ export class Ed25519SignedPayloadSigner {
         decoratedSignature,
       );
     } catch (cause) {
-      throw new E.FAILED_TO_ADD_DECORATED_SIGNATURE(
+      throw new ERROR.FAILED_TO_ADD_DECORATED_SIGNATURE(
         this.key,
         cause as Error,
       );
@@ -233,7 +237,7 @@ export class Ed25519SignedPayloadSigner {
     try {
       return transaction.toXdr() as TransactionXDRBase64;
     } catch (cause) {
-      throw new E.FAILED_TO_SERIALIZE_TRANSACTION(
+      throw new ERROR.FAILED_TO_SERIALIZE_TRANSACTION(
         this.key,
         cause as Error,
       );
@@ -242,4 +246,4 @@ export class Ed25519SignedPayloadSigner {
 }
 
 /** Error constructors emitted by {@link Ed25519SignedPayloadSigner}. */
-export const Ed25519SignedPayloadSignerErrors: typeof E = E;
+export const Ed25519SignedPayloadSignerErrors: typeof ERROR = ERROR;

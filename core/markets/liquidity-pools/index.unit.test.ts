@@ -15,7 +15,7 @@ import {
 } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import { NativeLiquidityPool } from "@/markets/liquidity-pools/index.ts";
-import * as E from "@/markets/liquidity-pools/error.ts";
+import * as ERROR from "@/markets/liquidity-pools/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import { StrKey } from "@/strkeys/index.ts";
@@ -89,7 +89,7 @@ describe("NativeLiquidityPool", () => {
             minimum: "1",
             maximum: "2",
           }),
-        E.INVALID_PRICE_ASSETS,
+        ERROR.INVALID_PRICE_ASSETS,
       );
     }
     assertThrows(
@@ -100,7 +100,7 @@ describe("NativeLiquidityPool", () => {
           minimum: "4",
           maximum: "2",
         }),
-      E.REVERSED_PRICE_BOUNDS,
+      ERROR.REVERSED_PRICE_BOUNDS,
     );
   });
 
@@ -112,7 +112,7 @@ describe("NativeLiquidityPool", () => {
     });
     const error = await assertRejects(
       () => unavailable.getPosition(signer.publicKey()),
-      E.FAILED_TO_READ_POSITION,
+      ERROR.FAILED_TO_READ_POSITION,
     );
     assert(error.meta?.cause instanceof Error);
     await assertRejects(
@@ -172,7 +172,7 @@ describe("NativeLiquidityPool", () => {
   it("distinguishes invalid assets and unavailable RPC configuration", () => {
     assertThrows(
       () => new NativeLiquidityPool({ assets: [xlm, xlm], networkConfig }),
-      E.INVALID_ASSET_PAIR,
+      ERROR.INVALID_ASSET_PAIR,
     );
     assertThrows(
       () =>
@@ -182,7 +182,7 @@ describe("NativeLiquidityPool", () => {
             rpcUrl: "http://localhost:8000",
           }),
         }),
-      E.FAILED_TO_CREATE_RPC,
+      ERROR.FAILED_TO_CREATE_RPC,
     );
     assertThrows(
       () =>
@@ -192,7 +192,7 @@ describe("NativeLiquidityPool", () => {
             networkPassphrase: "local",
           }),
         }),
-      E.FAILED_TO_CREATE_RPC,
+      ERROR.FAILED_TO_CREATE_RPC,
     );
   });
 
@@ -237,15 +237,15 @@ describe("NativeLiquidityPool", () => {
     const errors = [
       assertThrows(
         () => pool.changeTrustOperation({ limit: "-1" }),
-        E.FAILED_TO_BUILD_TRUSTLINE,
+        ERROR.FAILED_TO_BUILD_TRUSTLINE,
       ),
       assertThrows(
         () => pool.depositOperation({ ...deposit, maxAmountA: "-1" }),
-        E.FAILED_TO_BUILD_DEPOSIT,
+        ERROR.FAILED_TO_BUILD_DEPOSIT,
       ),
       assertThrows(
         () => pool.withdrawOperation({ ...withdrawal, amount: "-1" }),
-        E.FAILED_TO_BUILD_WITHDRAWAL,
+        ERROR.FAILED_TO_BUILD_WITHDRAWAL,
       ),
     ];
     for (const error of errors) assert(error.meta?.cause instanceof Error);
@@ -327,7 +327,7 @@ describe("NativeLiquidityPool", () => {
           minPrice: "1",
           maxPrice: "1",
         }),
-      E.INVALID_DEPOSIT_ASSETS,
+      ERROR.INVALID_DEPOSIT_ASSETS,
     );
     assertThrows(
       () =>
@@ -339,7 +339,7 @@ describe("NativeLiquidityPool", () => {
             amount: "0",
           }],
         }),
-      E.INVALID_WITHDRAWAL_ASSETS,
+      ERROR.INVALID_WITHDRAWAL_ASSETS,
     );
     const incomplete =
       [] as unknown as PoolDepositByAssetArgs["maximumAmounts"];
@@ -351,7 +351,7 @@ describe("NativeLiquidityPool", () => {
           minPrice: "1",
           maxPrice: "1",
         }),
-      E.INVALID_DEPOSIT_ASSETS,
+      ERROR.INVALID_DEPOSIT_ASSETS,
     );
   });
 
@@ -370,12 +370,12 @@ describe("NativeLiquidityPool", () => {
     });
     const error = await assertRejects(
       () => offline.getState(),
-      E.FAILED_TO_READ_POOL,
+      ERROR.FAILED_TO_READ_POOL,
     );
     assert(error.meta?.cause instanceof Error);
     const trustlineError = await assertRejects(
       () => offline.getTrustline(signer.publicKey()),
-      E.FAILED_TO_READ_TRUSTLINE,
+      ERROR.FAILED_TO_READ_TRUSTLINE,
     );
     assert(trustlineError.meta?.cause instanceof Error);
   });

@@ -5,7 +5,7 @@
 
 import { describe, it } from "@std/testing/bdd";
 import { assertEquals, assertInstanceOf } from "@std/assert";
-import * as E from "@/common/helpers/xdr/error.ts";
+import * as ERROR from "@/common/helpers/xdr/error.ts";
 import { Code, ERROR_XDR } from "@/common/helpers/xdr/error.ts";
 import { ColibriError } from "@/error/index.ts";
 
@@ -17,7 +17,7 @@ describe("XDR Helper Errors", () => {
 
   describe("UNKNOWN_ASSET_TYPE", () => {
     it("should create error with correct properties", () => {
-      const error = new E.UNKNOWN_ASSET_TYPE("invalidType");
+      const error = new ERROR.UNKNOWN_ASSET_TYPE("invalidType");
 
       assertInstanceOf(error, ColibriError);
       assertEquals(error.code, Code.UNKNOWN_ASSET_TYPE);
@@ -28,7 +28,7 @@ describe("XDR Helper Errors", () => {
 
   describe("UNKNOWN_CHANGE_TRUST_ASSET_TYPE", () => {
     it("should create error with correct properties", () => {
-      const error = new E.UNKNOWN_CHANGE_TRUST_ASSET_TYPE("invalidType");
+      const error = new ERROR.UNKNOWN_CHANGE_TRUST_ASSET_TYPE("invalidType");
 
       assertInstanceOf(error, ColibriError);
       assertEquals(error.code, Code.UNKNOWN_CHANGE_TRUST_ASSET_TYPE);
@@ -39,7 +39,7 @@ describe("XDR Helper Errors", () => {
 
   describe("UNKNOWN_MUXED_ACCOUNT_TYPE", () => {
     it("should create error with correct properties", () => {
-      const error = new E.UNKNOWN_MUXED_ACCOUNT_TYPE("invalidType");
+      const error = new ERROR.UNKNOWN_MUXED_ACCOUNT_TYPE("invalidType");
 
       assertInstanceOf(error, ColibriError);
       assertEquals(error.code, Code.UNKNOWN_MUXED_ACCOUNT_TYPE);
@@ -50,7 +50,7 @@ describe("XDR Helper Errors", () => {
 
   describe("INVALID_XDR_PARSE", () => {
     it("should create error with reason", () => {
-      const error = new E.INVALID_XDR_PARSE("corrupted data");
+      const error = new ERROR.INVALID_XDR_PARSE("corrupted data");
 
       assertInstanceOf(error, ColibriError);
       assertEquals(error.code, Code.INVALID_XDR_PARSE);
@@ -59,7 +59,7 @@ describe("XDR Helper Errors", () => {
 
     it("should create error with cause", () => {
       const cause = new Error("original error");
-      const error = new E.INVALID_XDR_PARSE("corrupted data", cause);
+      const error = new ERROR.INVALID_XDR_PARSE("corrupted data", cause);
 
       assertEquals(error.meta.cause, cause);
     });
@@ -67,7 +67,7 @@ describe("XDR Helper Errors", () => {
 
   describe("FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE", () => {
     it("should create error with authEntryXDR", () => {
-      const error = new E.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE("AAAA");
+      const error = new ERROR.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE("AAAA");
 
       assertInstanceOf(error, ColibriError);
       assertEquals(error.code, Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE);
@@ -84,7 +84,10 @@ describe("XDR Helper Errors", () => {
 
     it("should create error with cause", () => {
       const cause = new Error("original error");
-      const error = new E.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE("AAAA", cause);
+      const error = new ERROR.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE(
+        "AAAA",
+        cause,
+      );
 
       assertEquals(error.meta.cause, cause);
     });
@@ -92,7 +95,7 @@ describe("XDR Helper Errors", () => {
 
   describe("FAILED_TO_GET_AUTH_ENTRY_SIGNER", () => {
     it("should create error with authEntryXDR", () => {
-      const error = new E.FAILED_TO_GET_AUTH_ENTRY_SIGNER("AAAA");
+      const error = new ERROR.FAILED_TO_GET_AUTH_ENTRY_SIGNER("AAAA");
 
       assertInstanceOf(error, ColibriError);
       assertEquals(error.code, Code.FAILED_TO_GET_AUTH_ENTRY_SIGNER);
@@ -109,7 +112,7 @@ describe("XDR Helper Errors", () => {
 
     it("should create error with cause", () => {
       const cause = new Error("original error");
-      const error = new E.FAILED_TO_GET_AUTH_ENTRY_SIGNER("AAAA", cause);
+      const error = new ERROR.FAILED_TO_GET_AUTH_ENTRY_SIGNER("AAAA", cause);
 
       assertEquals(error.meta.cause, cause);
     });
@@ -118,12 +121,13 @@ describe("XDR Helper Errors", () => {
   describe("signer credential errors", () => {
     it("should distinguish credential reads from missing credentials", () => {
       const cause = new Error("credentials failed");
-      const failed = new E
+      const failed = new ERROR
         .FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER(
         "AAAA",
         cause,
       );
-      const missing = new E.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER(
+      const missing = new ERROR
+        .MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER(
         "BBBB",
       );
 
@@ -143,12 +147,12 @@ describe("XDR Helper Errors", () => {
   describe("address-type credential errors", () => {
     it("should distinguish credential reads from missing credentials", () => {
       const cause = new Error("credentials failed");
-      const failed = new E
+      const failed = new ERROR
         .FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE(
         "AAAA",
         cause,
       );
-      const missing = new E
+      const missing = new ERROR
         .MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE("BBBB");
 
       assertEquals(
@@ -166,7 +170,7 @@ describe("XDR Helper Errors", () => {
 
   describe("INVALID_AUTH_ENTRY_SIGNER_ADDRESS", () => {
     it("should create error with authEntryXDR and signer", () => {
-      const error = new E.INVALID_AUTH_ENTRY_SIGNER_ADDRESS(
+      const error = new ERROR.INVALID_AUTH_ENTRY_SIGNER_ADDRESS(
         "AAAA",
         "invalid-signer",
       );
@@ -184,7 +188,7 @@ describe("XDR Helper Errors", () => {
     });
 
     it("should include signer in meta data", () => {
-      const error = new E.INVALID_AUTH_ENTRY_SIGNER_ADDRESS(
+      const error = new ERROR.INVALID_AUTH_ENTRY_SIGNER_ADDRESS(
         "AAAA",
         "invalid-signer",
       );
@@ -197,7 +201,7 @@ describe("XDR Helper Errors", () => {
 
   describe("FAILED_TO_PARSE_ERROR_RESULT", () => {
     it("should create error with errorResultXDR", () => {
-      const error = new E.FAILED_TO_PARSE_ERROR_RESULT("AAAA");
+      const error = new ERROR.FAILED_TO_PARSE_ERROR_RESULT("AAAA");
 
       assertInstanceOf(error, ColibriError);
       assertEquals(error.code, Code.FAILED_TO_PARSE_ERROR_RESULT);
@@ -209,7 +213,7 @@ describe("XDR Helper Errors", () => {
     });
 
     it("should include errorResultXDR in meta data", () => {
-      const error = new E.FAILED_TO_PARSE_ERROR_RESULT("AAAA");
+      const error = new ERROR.FAILED_TO_PARSE_ERROR_RESULT("AAAA");
 
       assertEquals(error.meta.data, { value: { errorResultXDR: "AAAA" } });
     });
@@ -217,7 +221,7 @@ describe("XDR Helper Errors", () => {
 
   describe("UNSUPPORTED_SCVAL_TYPE", () => {
     it("should create error with correct properties", () => {
-      const error = new E.UNSUPPORTED_SCVAL_TYPE("scvUnknown");
+      const error = new ERROR.UNSUPPORTED_SCVAL_TYPE("scvUnknown");
 
       assertInstanceOf(error, ColibriError);
       assertEquals(error.code, Code.UNSUPPORTED_SCVAL_TYPE);
@@ -232,7 +236,7 @@ describe("XDR Helper Errors", () => {
 
   describe("UNKNOWN_SCVAL_TYPE", () => {
     it("should create error with correct properties", () => {
-      const error = new E.UNKNOWN_SCVAL_TYPE("scvUnknown");
+      const error = new ERROR.UNKNOWN_SCVAL_TYPE("scvUnknown");
 
       assertInstanceOf(error, ColibriError);
       assertEquals(error.code, Code.UNKNOWN_SCVAL_TYPE);
@@ -244,46 +248,52 @@ describe("XDR Helper Errors", () => {
 
   describe("ERROR_XDR mapping", () => {
     it("should map all error codes to classes", () => {
-      assertEquals(ERROR_XDR[Code.UNKNOWN_ASSET_TYPE], E.UNKNOWN_ASSET_TYPE);
+      assertEquals(
+        ERROR_XDR[Code.UNKNOWN_ASSET_TYPE],
+        ERROR.UNKNOWN_ASSET_TYPE,
+      );
       assertEquals(
         ERROR_XDR[Code.UNKNOWN_CHANGE_TRUST_ASSET_TYPE],
-        E.UNKNOWN_CHANGE_TRUST_ASSET_TYPE,
+        ERROR.UNKNOWN_CHANGE_TRUST_ASSET_TYPE,
       );
       assertEquals(
         ERROR_XDR[Code.UNKNOWN_TRUSTLINE_ASSET_TYPE],
-        E.UNKNOWN_TRUSTLINE_ASSET_TYPE,
+        ERROR.UNKNOWN_TRUSTLINE_ASSET_TYPE,
       );
       assertEquals(
         ERROR_XDR[Code.UNKNOWN_MUXED_ACCOUNT_TYPE],
-        E.UNKNOWN_MUXED_ACCOUNT_TYPE,
+        ERROR.UNKNOWN_MUXED_ACCOUNT_TYPE,
       );
-      assertEquals(ERROR_XDR[Code.INVALID_XDR_PARSE], E.INVALID_XDR_PARSE);
+      assertEquals(ERROR_XDR[Code.INVALID_XDR_PARSE], ERROR.INVALID_XDR_PARSE);
       assertEquals(
         ERROR_XDR[Code.UNSUPPORTED_SCVAL_TYPE],
-        E.UNSUPPORTED_SCVAL_TYPE,
+        ERROR.UNSUPPORTED_SCVAL_TYPE,
       );
-      assertEquals(ERROR_XDR[Code.UNKNOWN_SCVAL_TYPE], E.UNKNOWN_SCVAL_TYPE);
+      assertEquals(
+        ERROR_XDR[Code.UNKNOWN_SCVAL_TYPE],
+        ERROR.UNKNOWN_SCVAL_TYPE,
+      );
       assertEquals(
         ERROR_XDR[
           Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER
         ],
-        E.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
+        ERROR.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
       );
       assertEquals(
         ERROR_XDR[Code.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER],
-        E.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
+        ERROR.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
       );
       assertEquals(
         ERROR_XDR[
           Code.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE
         ],
-        E.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
+        ERROR.FAILED_TO_GET_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
       );
       assertEquals(
         ERROR_XDR[
           Code.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE
         ],
-        E.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
+        ERROR.MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
       );
     });
   });
@@ -291,7 +301,7 @@ describe("XDR Helper Errors", () => {
   describe("XdrHelperError base class coverage", () => {
     it("should handle missing data in args", () => {
       // UNKNOWN_ASSET_TYPE always passes data, so test through it
-      const error = new E.UNKNOWN_ASSET_TYPE("test");
+      const error = new ERROR.UNKNOWN_ASSET_TYPE("test");
 
       // Verify base class properties
       assertEquals(error.source, "@colibri/core/common/helpers/xdr");

@@ -5,7 +5,7 @@ import type { EventType } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import type { EventFilter } from "@/event/event-filter/index.ts";
 import type { EventHandler } from "@/event/types.ts";
-import * as E from "@/event/parsing/error.ts";
+import * as ERROR from "@/event/parsing/error.ts";
 import { assert } from "@/common/assert/assert.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
 
@@ -31,7 +31,7 @@ export const parseEventsFromLedgerCloseMeta = async (
 ): Promise<void> => {
   assert(
     xdr.LedgerCloseMeta.is(metadataXdr),
-    new E.INVALID_LEDGER_CLOSE_META_XDR(),
+    new ERROR.INVALID_LEDGER_CLOSE_META_XDR(),
   );
 
   let ledgerCloseMeta:
@@ -49,7 +49,7 @@ export const parseEventsFromLedgerCloseMeta = async (
 
   assert(
     isDefined(ledgerCloseMeta),
-    new E.UNSUPPORTED_LEDGER_CLOSE_META_VERSION(
+    new ERROR.UNSUPPORTED_LEDGER_CLOSE_META_VERSION(
       metadataXdr.toXdrObject().v,
     ),
   );
@@ -68,7 +68,9 @@ export const parseEventsFromLedgerCloseMeta = async (
 
     const transactionMeta = txProcessing.txApplyProcessing;
     if (transactionMeta.type !== "v4") {
-      throw new E.UNSUPPORTED_TRANSACTION_META_VERSION(transactionMeta.type);
+      throw new ERROR.UNSUPPORTED_TRANSACTION_META_VERSION(
+        transactionMeta.type,
+      );
     }
     const operations = transactionMeta.v4.operations;
     const txHash = txProcessing.result.transactionHash.toString();

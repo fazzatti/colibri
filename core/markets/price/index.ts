@@ -4,7 +4,7 @@ import type {
   StellarPriceAmounts,
   StellarPriceRatio,
 } from "@/markets/price/types.ts";
-import * as E from "@/markets/price/error.ts";
+import * as ERROR from "@/markets/price/error.ts";
 import { parseStellarAssetAmount } from "@/asset/native/amount.ts";
 
 const INT32_MAX = 2_147_483_647;
@@ -26,7 +26,7 @@ const validComponent = (value: number): boolean =>
 
 const validateRatio = (price: StellarPriceRatio): void => {
   if (!price || !validComponent(price.n) || !validComponent(price.d)) {
-    throw new E.INVALID_RATIO(price);
+    throw new ERROR.INVALID_RATIO(price);
   }
 };
 
@@ -49,10 +49,10 @@ export class StellarPrice {
   ): StellarPriceRatio {
     const base = parseStellarAssetAmount(baseAmount);
     const quote = parseStellarAssetAmount(quoteAmount);
-    if (base === 0n || quote === 0n) throw new E.ZERO_PRICE_AMOUNT();
+    if (base === 0n || quote === 0n) throw new ERROR.ZERO_PRICE_AMOUNT();
     const [n, d] = reduced(quote, base);
     if (n > BigInt(INT32_MAX) || d > BigInt(INT32_MAX)) {
-      throw new E.UNREPRESENTABLE_AMOUNTS(baseAmount, quoteAmount);
+      throw new ERROR.UNREPRESENTABLE_AMOUNTS(baseAmount, quoteAmount);
     }
     return { n: Number(n), d: Number(d) };
   }
@@ -76,16 +76,16 @@ export class StellarPrice {
    */
   static fromDecimal(value: string): StellarPriceRatio {
     if (typeof value !== "string" || !/^\d+(?:\.\d+)?$/.test(value)) {
-      throw new E.INVALID_DECIMAL(value);
+      throw new ERROR.INVALID_DECIMAL(value);
     }
     const [whole, fraction = ""] = value.split(".");
     const numerator = BigInt(whole + fraction);
     if (numerator === 0n) {
-      throw new E.NON_POSITIVE_DECIMAL(value);
+      throw new ERROR.NON_POSITIVE_DECIMAL(value);
     }
     const [n, d] = reduced(numerator, 10n ** BigInt(fraction.length));
     if (n > BigInt(INT32_MAX) || d > BigInt(INT32_MAX)) {
-      throw new E.UNREPRESENTABLE_DECIMAL(value);
+      throw new ERROR.UNREPRESENTABLE_DECIMAL(value);
     }
     return { n: Number(n), d: Number(d) };
   }

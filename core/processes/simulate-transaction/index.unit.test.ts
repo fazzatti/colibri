@@ -1,6 +1,6 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import type { Server, Api } from "stellar-sdk/rpc";
+import type { Api, Server } from "stellar-sdk/rpc";
 import {
   Account,
   nativeToScVal,
@@ -12,13 +12,13 @@ import {
 import { simulateTransaction } from "@/processes/simulate-transaction/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import type { SimulateTransactionInput } from "@/processes/simulate-transaction/types.ts";
-import * as E from "@/processes/simulate-transaction/error.ts";
+import * as ERROR from "@/processes/simulate-transaction/error.ts";
 
 // Helper function to create a test transaction
 const createTestTransaction = () => {
   const account = new Account(
     "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P",
-    "100"
+    "100",
   );
 
   return new TransactionBuilder(account, {
@@ -126,7 +126,7 @@ describe("SimulateTransaction", () => {
         assertEquals(
           (result as Api.SimulateTransactionRestoreResponse).restorePreamble
             .minResourceFee,
-          "200"
+          "200",
         );
       });
     });
@@ -149,7 +149,7 @@ describe("SimulateTransaction", () => {
 
         await assertRejects(
           async () => await simulateTransaction(input),
-          E.COULD_NOT_SIMULATE_TRANSACTION
+          ERROR.COULD_NOT_SIMULATE_TRANSACTION,
         );
       });
     });
@@ -168,7 +168,7 @@ describe("SimulateTransaction", () => {
 
         await assertRejects(
           async () => await simulateTransaction(input),
-          E.SIMULATION_FAILED
+          ERROR.SIMULATION_FAILED,
         );
       });
     });
@@ -177,12 +177,11 @@ describe("SimulateTransaction", () => {
       it("throws SIMULATION_RESULT_NOT_VERIFIED when result cannot be verified", async () => {
         const transaction = createTestTransaction();
         const mockRpc = {
-          simulateTransaction: (_: Transaction) =>
-            ({
-              id: "mock-id",
-              latestLedger: 1000,
-              // Invalid response that doesn't match any expected type
-            } as unknown as Api.SimulateTransactionResponse),
+          simulateTransaction: (_: Transaction) => ({
+            id: "mock-id",
+            latestLedger: 1000,
+            // Invalid response that doesn't match any expected type
+          } as unknown as Api.SimulateTransactionResponse),
         } as unknown as Server;
 
         const input: SimulateTransactionInput = {
@@ -192,7 +191,7 @@ describe("SimulateTransaction", () => {
 
         await assertRejects(
           async () => await simulateTransaction(input),
-          E.SIMULATION_RESULT_NOT_VERIFIED
+          ERROR.SIMULATION_RESULT_NOT_VERIFIED,
         );
       });
     });
@@ -214,7 +213,7 @@ describe("SimulateTransaction", () => {
 
         await assertRejects(
           async () => await simulateTransaction(input),
-          E.UNEXPECTED_ERROR
+          ERROR.UNEXPECTED_ERROR,
         );
       });
     });

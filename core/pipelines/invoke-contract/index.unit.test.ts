@@ -4,7 +4,7 @@ import { createRunContext, step } from "convee";
 import { Operation, SorobanDataBuilder, xdr } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
 import { NetworkConfig } from "@/network/index.ts";
-import * as E from "@/pipelines/invoke-contract/error.ts";
+import * as ERROR from "@/pipelines/invoke-contract/error.ts";
 import { createInvokeContractPipeline } from "@/pipelines/invoke-contract/index.ts";
 import type { SimulateTransactionOutput } from "@/processes/simulate-transaction/types.ts";
 import {
@@ -383,7 +383,7 @@ describe("createInvokeContractPipeline", () => {
           createInvokeContractPipeline({
             networkConfig: undefined as unknown as NetworkConfig,
           }),
-        E.MISSING_ARG,
+        ERROR.MISSING_ARG,
       );
     });
 
@@ -394,7 +394,7 @@ describe("createInvokeContractPipeline", () => {
 
       assertThrows(
         () => createInvokeContractPipeline({ networkConfig }),
-        E.MISSING_ARG,
+        ERROR.MISSING_ARG,
       );
     });
 
@@ -405,7 +405,7 @@ describe("createInvokeContractPipeline", () => {
 
       assertThrows(
         () => createInvokeContractPipeline({ networkConfig }),
-        E.MISSING_RPC_URL,
+        ERROR.MISSING_RPC_URL,
       );
     });
 
@@ -414,7 +414,7 @@ describe("createInvokeContractPipeline", () => {
 
       assertThrows(
         () => createInvokeContractPipeline({ networkConfig }),
-        E.MISSING_ARG,
+        ERROR.MISSING_ARG,
       );
     });
 
@@ -426,7 +426,7 @@ describe("createInvokeContractPipeline", () => {
       });
       assertThrows(
         () => createInvokeContractPipeline({ networkConfig }),
-        E.UNEXPECTED_ERROR,
+        ERROR.UNEXPECTED_ERROR,
       );
     });
   });

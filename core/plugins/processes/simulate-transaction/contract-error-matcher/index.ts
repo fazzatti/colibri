@@ -4,7 +4,7 @@ import {
   CONTRACT_ERROR_SIMULATION_FAILED as ContractErrorSimulationFailed,
 } from "@/processes/simulate-transaction/error.ts";
 import { SIMULATE_TRANSACTION_STEP_ID } from "@/steps/ids.ts";
-import * as E from "@/plugins/processes/simulate-transaction/contract-error-matcher/error.ts";
+import * as ERROR from "@/plugins/processes/simulate-transaction/contract-error-matcher/error.ts";
 import type {
   ContractErrorMatcher,
   ContractErrorMatcherCandidate,
@@ -79,7 +79,7 @@ export const createContractErrorMatcherPlugin = (
     const match = getKnownContractErrorMatch(error, matchers);
     if (!match) return error;
 
-    return new E.KNOWN_CONTRACT_ERROR_SIMULATION_FAILED(error, match);
+    return new ERROR.KNOWN_CONTRACT_ERROR_SIMULATION_FAILED(error, match);
   }) as unknown as ContractErrorMatcherPlugin;
 };
 

@@ -15,7 +15,7 @@ import {
   TYPES_HARNESS_SPEC,
 } from "colibri-internal/tests/specs/types-harness.ts";
 import { StrKey } from "@/strkeys/index.ts";
-import * as E from "@/contract/error.ts";
+import * as ERROR from "@/contract/error.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 
 describe("[Testnet] Contract", disableSanitizeConfig, () => {
@@ -215,12 +215,12 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
 
       await assertRejects(
         async () => await contract.getWasmHash(),
-        E.MISSING_REQUIRED_PROPERTY,
+        ERROR.MISSING_REQUIRED_PROPERTY,
       );
 
       await assertRejects(
         async () => await contract.getSpec(),
-        E.MISSING_REQUIRED_PROPERTY,
+        ERROR.MISSING_REQUIRED_PROPERTY,
       );
 
       await contract.loadSpecFromNetwork();
@@ -249,7 +249,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
               source: admin.address(),
               signers: [admin.signer()],
             }),
-          E.FAILED_TO_UPLOAD_WASM,
+          ERROR.FAILED_TO_UPLOAD_WASM,
         );
       });
 
@@ -274,7 +274,7 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
                 signers: [admin.signer()],
               },
             }),
-          E.FAILED_TO_DEPLOY_CONTRACT,
+          ERROR.FAILED_TO_DEPLOY_CONTRACT,
         );
       });
     });

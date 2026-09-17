@@ -1,6 +1,6 @@
 // deno-coverage-ignore-start — Babel decorator helpers are injected at line 1 during transpilation; this excludes them from coverage
 import { Contract } from "@/contract/index.ts";
-import * as E from "@/asset/sac/error.ts";
+import * as ERROR from "@/asset/sac/error.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 import { memoize } from "@/common/decorators/memoize/index.ts";
 // deno-coverage-ignore-stop
@@ -315,10 +315,10 @@ export class StellarAssetContract {
   /** @internal */
   private async deploy(config: TransactionConfig): Promise<void> {
     if (!this.code) {
-      throw new E.MISSING_ARG("code");
+      throw new ERROR.MISSING_ARG("code");
     }
     if (!this.issuer) {
-      throw new E.MISSING_ARG("issuer");
+      throw new ERROR.MISSING_ARG("issuer");
     }
 
     const asset = createAssetFromIdentity(this.code, this.issuer);
@@ -340,7 +340,7 @@ export class StellarAssetContract {
       assert(
         StrKey.isContractId(deployedContractId) &&
           deployedContractId === this.contractId,
-        new E.UNMATCHED_CONTRACT_ID(this.contractId, deployedContractId),
+        new ERROR.UNMATCHED_CONTRACT_ID(this.contractId, deployedContractId),
       );
     } catch (error) {
       if (error instanceof SIMULATION_FAILED) {
@@ -353,7 +353,7 @@ export class StellarAssetContract {
           if (contractId) {
             assert(
               StrKey.isContractId(contractId) && contractId === this.contractId,
-              new E.UNMATCHED_CONTRACT_ID(this.contractId, contractId),
+              new ERROR.UNMATCHED_CONTRACT_ID(this.contractId, contractId),
             );
             return;
           }
@@ -362,7 +362,7 @@ export class StellarAssetContract {
         }
       }
 
-      throw new E.FAILED_TO_DEPLOY_CONTRACT(asset, error as Error);
+      throw new ERROR.FAILED_TO_DEPLOY_CONTRACT(asset, error as Error);
     }
   }
 
@@ -445,7 +445,7 @@ export class StellarAssetContract {
 
     return decodeTokenValue<ContractOutput[Method.Decimals]>(
       result,
-      new E.MISSING_RETURN_VALUE(Method.Decimals),
+      new ERROR.MISSING_RETURN_VALUE(Method.Decimals),
     );
   }
 
@@ -480,7 +480,7 @@ export class StellarAssetContract {
 
     return decodeTokenValue<ContractOutput[Method.Name]>(
       result,
-      new E.MISSING_RETURN_VALUE(Method.Name),
+      new ERROR.MISSING_RETURN_VALUE(Method.Name),
     );
   }
 
@@ -514,7 +514,7 @@ export class StellarAssetContract {
 
     return decodeTokenValue<ContractOutput[Method.Symbol]>(
       result,
-      new E.MISSING_RETURN_VALUE(Method.Symbol),
+      new ERROR.MISSING_RETURN_VALUE(Method.Symbol),
     );
   }
 
@@ -559,7 +559,7 @@ export class StellarAssetContract {
 
     return decodeTokenValue<ContractOutput[Method.Allowance]>(
       result,
-      new E.MISSING_RETURN_VALUE(Method.Allowance),
+      new ERROR.MISSING_RETURN_VALUE(Method.Allowance),
     );
   }
 
@@ -587,7 +587,7 @@ export class StellarAssetContract {
 
     return decodeTokenValue<ContractOutput[Method.Balance]>(
       result,
-      new E.MISSING_RETURN_VALUE(Method.Balance),
+      new ERROR.MISSING_RETURN_VALUE(Method.Balance),
     );
   }
 
@@ -621,7 +621,7 @@ export class StellarAssetContract {
 
     return decodeTokenValue<ContractOutput[Method.Authorized]>(
       result,
-      new E.MISSING_RETURN_VALUE(Method.Authorized),
+      new ERROR.MISSING_RETURN_VALUE(Method.Authorized),
     );
   }
 
@@ -649,7 +649,7 @@ export class StellarAssetContract {
 
     return decodeTokenValue<ContractOutput[Method.Admin]>(
       result,
-      new E.MISSING_RETURN_VALUE(Method.Admin),
+      new ERROR.MISSING_RETURN_VALUE(Method.Admin),
     );
   }
 

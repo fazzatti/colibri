@@ -11,7 +11,7 @@ import {
   type xdr,
 } from "stellar-sdk";
 import { envelopeSigningRequirements } from "@/processes/envelope-signing-requirements/index.ts";
-import * as E from "@/processes/envelope-signing-requirements/error.ts";
+import * as ERROR from "@/processes/envelope-signing-requirements/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { muxedAddressToBaseAccount } from "@/address/index.ts";
 import type { EnvelopeSigningRequirementsInput } from "@/processes/envelope-signing-requirements/types.ts";
@@ -317,7 +317,7 @@ describe("EnvelopeSigningRequirements", () => {
 
       await assertRejects(
         async () => await envelopeSigningRequirements(faultyInput),
-        E.UNEXPECTED_ERROR,
+        ERROR.UNEXPECTED_ERROR,
       );
     });
 
@@ -326,7 +326,7 @@ describe("EnvelopeSigningRequirements", () => {
 
       await assertRejects(
         async () => await envelopeSigningRequirements({ transaction }),
-        E.INVALID_TRANSACTION_TYPE,
+        ERROR.INVALID_TRANSACTION_TYPE,
       );
     });
 
@@ -352,7 +352,7 @@ describe("EnvelopeSigningRequirements", () => {
       await assertRejects(
         async () =>
           await envelopeSigningRequirements({ transaction: faultyTx }),
-        E.FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX,
+        ERROR.FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX,
       );
     });
 
@@ -374,7 +374,7 @@ describe("EnvelopeSigningRequirements", () => {
           await envelopeSigningRequirements({
             transaction: faultyTx,
           }),
-        E.FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION,
+        ERROR.FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION,
       );
     });
   });

@@ -9,7 +9,7 @@ import type {
   TransactionPreconditions,
 } from "@/processes/build-transaction/types.ts";
 import type { Server } from "stellar-sdk/rpc";
-import * as E from "@/processes/build-transaction/error.ts";
+import * as ERROR from "@/processes/build-transaction/error.ts";
 import type { BaseFee } from "@/common/types/transaction-config/types.ts";
 import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
 
@@ -25,7 +25,7 @@ describe("BuildTransactionErrors", () => {
 
     await assertRejects(
       async () => await buildTransaction(faultyInput),
-      E.UNEXPECTED_ERROR,
+      ERROR.UNEXPECTED_ERROR,
     );
   });
 
@@ -41,7 +41,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.INVALID_BASE_FEE_ERROR,
+        ERROR.INVALID_BASE_FEE_ERROR,
       );
     });
 
@@ -56,7 +56,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.BASE_FEE_TOO_LOW_ERROR,
+        ERROR.BASE_FEE_TOO_LOW_ERROR,
       );
     });
 
@@ -71,7 +71,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.BASE_FEE_TOO_LOW_ERROR,
+        ERROR.BASE_FEE_TOO_LOW_ERROR,
       );
     });
   });
@@ -94,7 +94,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.COULD_NOT_LOAD_ACCOUNT_ERROR,
+        ERROR.COULD_NOT_LOAD_ACCOUNT_ERROR,
       );
     });
 
@@ -109,7 +109,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE_ERROR,
+        ERROR.COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE_ERROR,
       );
     });
 
@@ -124,7 +124,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.INVALID_MUXED_SOURCE_ERROR,
+        ERROR.INVALID_MUXED_SOURCE_ERROR,
       );
     });
 
@@ -150,7 +150,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.INVALID_MUXED_SOURCE_RPC_SEQUENCE_ERROR,
+        ERROR.INVALID_MUXED_SOURCE_RPC_SEQUENCE_ERROR,
       );
     });
 
@@ -171,7 +171,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.INVALID_MUXED_SOURCE_SEQUENCE_ERROR,
+        ERROR.INVALID_MUXED_SOURCE_SEQUENCE_ERROR,
       );
     });
   });
@@ -192,7 +192,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.CONFLICTING_TIME_CONSTRAINTS_ERROR,
+        ERROR.CONFLICTING_TIME_CONSTRAINTS_ERROR,
       );
     });
   });
@@ -226,7 +226,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.NO_OPERATIONS_PROVIDED_ERROR,
+        ERROR.NO_OPERATIONS_PROVIDED_ERROR,
       );
     });
   });
@@ -249,7 +249,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.COULD_NOT_CREATE_TRANSACTION_BUILDER_ERROR,
+        ERROR.COULD_NOT_CREATE_TRANSACTION_BUILDER_ERROR,
       );
     });
   });
@@ -267,7 +267,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.COULD_NOT_BUILD_TRANSACTION_ERROR,
+        ERROR.COULD_NOT_BUILD_TRANSACTION_ERROR,
       );
     });
   });
@@ -287,7 +287,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.FAILED_TO_SET_PRECONDITIONS_ERROR,
+        ERROR.FAILED_TO_SET_PRECONDITIONS_ERROR,
       );
     });
   });
@@ -306,7 +306,7 @@ describe("BuildTransactionErrors", () => {
 
       await assertRejects(
         async () => await buildTransaction(input),
-        E.COULD_NOT_SET_SOROBAN_DATA_ERROR,
+        ERROR.COULD_NOT_SET_SOROBAN_DATA_ERROR,
       );
     });
   });

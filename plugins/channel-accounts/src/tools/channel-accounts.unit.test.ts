@@ -8,7 +8,7 @@ import {
   NetworkType,
   type TransactionConfig,
 } from "@colibri/core";
-import * as E from "@/shared/error.ts";
+import * as ERROR from "@/shared/error.ts";
 import type { ChannelAccount } from "@/shared/types.ts";
 import { ChannelAccounts } from "@/tools/channel-accounts.ts";
 
@@ -53,7 +53,7 @@ describe("ChannelAccounts unit behavior", () => {
           networkConfig,
           config,
         }),
-      E.MISSING_ARG,
+      ERROR.MISSING_ARG,
     );
     await assertRejects(
       async () =>
@@ -63,7 +63,7 @@ describe("ChannelAccounts unit behavior", () => {
           networkConfig,
           config,
         }),
-      E.MISSING_ARG,
+      ERROR.MISSING_ARG,
     );
   });
 
@@ -79,7 +79,7 @@ describe("ChannelAccounts unit behavior", () => {
       ColibriError,
     );
 
-    assertEquals(error instanceof E.UNEXPECTED_ERROR, false);
+    assertEquals(error instanceof ERROR.UNEXPECTED_ERROR, false);
   });
 
   it("wraps unexpected errors raised while opening channels", async () => {
@@ -91,7 +91,7 @@ describe("ChannelAccounts unit behavior", () => {
           networkConfig,
           config,
         }),
-      E.UNEXPECTED_ERROR,
+      ERROR.UNEXPECTED_ERROR,
     );
   });
 
@@ -118,7 +118,7 @@ describe("ChannelAccounts unit behavior", () => {
       ColibriError,
     );
 
-    assertEquals(error instanceof E.UNEXPECTED_ERROR, false);
+    assertEquals(error instanceof ERROR.UNEXPECTED_ERROR, false);
   });
 
   it("wraps unexpected errors raised while closing channels", async () => {
@@ -138,7 +138,7 @@ describe("ChannelAccounts unit behavior", () => {
           networkConfig: networkConfigWithoutAllowHttp,
           config,
         }),
-      E.UNEXPECTED_ERROR,
+      ERROR.UNEXPECTED_ERROR,
     );
   });
 });

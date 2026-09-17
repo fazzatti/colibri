@@ -3,14 +3,13 @@ import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 import type { BinaryData, SignableTransaction } from "@/common/types/index.ts";
 import type { Ed25519PublicKey, PreAuthTx } from "@/strkeys/types.ts";
 import { StrKey } from "@/strkeys/index.ts";
-import * as E from "@/signer/pre-authorized-transaction/error.ts";
+import * as ERROR from "@/signer/pre-authorized-transaction/error.ts";
 
 type HashableTransaction = SignableTransaction & { hash(): Uint8Array };
 
 const bytesEqual = (left: Uint8Array, right: Uint8Array): boolean =>
-  left.length === right.length && left.every((byte, index) =>
-    byte === right[index]
-  );
+  left.length === right.length &&
+  left.every((byte, index) => byte === right[index]);
 
 /**
  * Signer that authorizes one exact transaction through its pre-authorized hash.
@@ -29,22 +28,22 @@ export class PreAuthorizedTransactionSigner {
       try {
         this.hashBytes = StrKey.decodePreAuthTx(hash);
       } catch (cause) {
-        throw new E.FAILED_TO_DECODE_SIGNER_KEY(hash, cause as Error);
+        throw new ERROR.FAILED_TO_DECODE_SIGNER_KEY(hash, cause as Error);
       }
     } else {
       try {
         this.hashBytes = toUint8Array(hash).slice();
       } catch (cause) {
-        throw new E.FAILED_TO_NORMALIZE_TRANSACTION_HASH(cause as Error);
+        throw new ERROR.FAILED_TO_NORMALIZE_TRANSACTION_HASH(cause as Error);
       }
       assert(
         this.hashBytes.length === 32,
-        new E.INVALID_TRANSACTION_HASH_LENGTH(this.hashBytes.length),
+        new ERROR.INVALID_TRANSACTION_HASH_LENGTH(this.hashBytes.length),
       );
       try {
         this.key = StrKey.encodePreAuthTx(this.hashBytes);
       } catch (cause) {
-        throw new E.FAILED_TO_ENCODE_SIGNER_KEY(cause as Error);
+        throw new ERROR.FAILED_TO_ENCODE_SIGNER_KEY(cause as Error);
       }
     }
   }
@@ -63,8 +62,10 @@ export class PreAuthorizedTransactionSigner {
         (transaction as HashableTransaction).hash(),
       );
     } catch (cause) {
-      if (cause instanceof E.PreAuthorizedTransactionSignerError) throw cause;
-      throw new E.FAILED_TO_HASH_TRANSACTION_DURING_CREATION(
+      if (cause instanceof ERROR.PreAuthorizedTransactionSignerError) {
+        throw cause;
+      }
+      throw new ERROR.FAILED_TO_HASH_TRANSACTION_DURING_CREATION(
         cause as Error,
       );
     }
@@ -118,7 +119,7 @@ export class PreAuthorizedTransactionSigner {
     try {
       transactionHash = (transaction as HashableTransaction).hash();
     } catch (cause) {
-      throw new E.FAILED_TO_HASH_TRANSACTION_DURING_AUTHORIZATION(
+      throw new ERROR.FAILED_TO_HASH_TRANSACTION_DURING_AUTHORIZATION(
         this.key,
         cause as Error,
       );
@@ -128,4 +129,4 @@ export class PreAuthorizedTransactionSigner {
 }
 
 /** Error constructors emitted by {@link PreAuthorizedTransactionSigner}. */
-export const PreAuthorizedTransactionSignerErrors: typeof E = E;
+export const PreAuthorizedTransactionSignerErrors: typeof ERROR = ERROR;

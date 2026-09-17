@@ -16,7 +16,7 @@ import { assembleTransaction } from "@/processes/assemble-transaction/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import type { AssembleTransactionInput } from "@/processes/assemble-transaction/types.ts";
 
-import * as E from "@/processes/assemble-transaction/error.ts";
+import * as ERROR from "@/processes/assemble-transaction/error.ts";
 import { stub } from "@std/testing/mock";
 import type { BaseFee } from "@/common/types/transaction-config/types.ts";
 
@@ -201,7 +201,7 @@ describe("AssembleTransaction", () => {
 
       await assertRejects(
         async () => await assembleTransaction(faultyInput),
-        E.UNEXPECTED_ERROR,
+        ERROR.UNEXPECTED_ERROR,
       );
     });
 
@@ -234,7 +234,7 @@ describe("AssembleTransaction", () => {
 
       await assertRejects(
         async () => await assembleTransaction(input),
-        E.NOT_SMART_CONTRACT_TRANSACTION_ERROR,
+        ERROR.NOT_SMART_CONTRACT_TRANSACTION_ERROR,
       );
     });
 
@@ -251,7 +251,7 @@ describe("AssembleTransaction", () => {
 
       await assertRejects(
         async () => await assembleTransaction(input),
-        E.FAILED_TO_BUILD_SOROBAN_DATA_ERROR,
+        ERROR.FAILED_TO_BUILD_SOROBAN_DATA_ERROR,
       );
     });
 
@@ -274,7 +274,7 @@ describe("AssembleTransaction", () => {
 
       await assertRejects(
         async () => await assembleTransaction(input),
-        E.FAILED_TO_ASSEMBLE_TRANSACTION_ERROR,
+        ERROR.FAILED_TO_ASSEMBLE_TRANSACTION_ERROR,
       );
 
       addOperationStub.restore();
@@ -299,7 +299,7 @@ describe("AssembleTransaction", () => {
       try {
         await assertRejects(
           async () => await assembleTransaction(input),
-          E.FAILED_TO_BUILD_TRANSACTION_ERROR,
+          ERROR.FAILED_TO_BUILD_TRANSACTION_ERROR,
         );
       } finally {
         buildStub.restore();
@@ -317,7 +317,7 @@ describe("AssembleTransaction", () => {
 
       await assertRejects(
         async () => await assembleTransaction(input),
-        E.MISSING_ARG,
+        ERROR.MISSING_ARG,
       );
     });
   });

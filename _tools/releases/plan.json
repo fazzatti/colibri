@@ -1,36 +1,26 @@
 {
   "schema": 1,
-  "base": "7c12c47bf5d5a5b0ee757ea31fc0aaef06d5c0c1",
+  "base": "2a5ded08d6cac7ae452c083468575d1f70a20171",
   "packages": {
-    "@colibri/react": {
-      "bump": "minor",
-      "reason": "Support consumer migrations with explicit wallet authorization entries, optional async clients, structural client identity and shared query utilities. Add complete provider, wallet, combined signer and wallet-contract conveniences, with dedicated failure classes.",
-      "apiReview": "Additive APIs preserve current hooks and explicit signing policies. Generated client identity no longer depends on private Core class fields. ABI keys use full-content SHA-256 fingerprints; disabled clients cannot fetch. Wallet authorization validates address, network, expiry and payload preservation. Token precision reads share a five-minute cache. Existing granular APIs remain. Explicit transaction fields override wallet defaults. Each REACT code has a concrete exported class; base catches and legacy constructors remain source compatible."
-    },
     "@colibri/core": {
-      "bump": "minor",
-      "reason": "Expose a distinct concrete error class for each stable failure code and emit these classes from library code.",
-      "apiReview": "Additive concrete subclasses and code registries preserve existing codes, messages, metadata, family-level instanceof handling and legacy constructor signatures. Library-owned failures use dedicated classes; legacy family constructors remain compatibility extension points. Core custom consumer error codes remain supported."
+      "bump": "patch",
+      "reason": "Standardize internal error namespace imports as ERROR and align error references. Document CAP-40 signed-payload signer nomenclature.",
+      "apiReview": "Local namespace aliases change from E to ERROR. Existing exported names, constructor identities, signatures, error codes and behavior are preserved. The declaration snapshot changes only local namespace qualifiers; no API additions or removals. Existing Core dependency ranges remain sufficient."
     },
-    "@colibri/webauth": {
-      "bump": "minor",
-      "reason": "Expose a distinct concrete error class for each stable failure code and emit these classes from library code.",
-      "apiReview": "Additive concrete subclasses and code registries preserve existing codes, messages, metadata, family-level instanceof handling and legacy constructor signatures. Library-owned failures use dedicated classes; legacy family constructors remain compatibility extension points. Core custom consumer error codes remain supported."
+    "@colibri/plugin-fee-bump": {
+      "bump": "patch",
+      "reason": "Standardize internal error namespace imports as ERROR and align error references.",
+      "apiReview": "Local namespace aliases change from E to ERROR. Existing exported names, constructor identities, signatures, error codes and behavior are preserved. The declaration snapshot changes only local namespace qualifiers; no API additions or removals. Existing Core dependency ranges remain sufficient."
     },
-    "@colibri/identicon": {
-      "bump": "minor",
-      "reason": "Expose a distinct concrete error class for each stable failure code and emit these classes from library code.",
-      "apiReview": "Additive concrete subclasses and code registries preserve existing codes, messages, metadata, family-level instanceof handling and legacy constructor signatures. Library-owned failures use dedicated classes; legacy family constructors remain compatibility extension points. Core custom consumer error codes remain supported."
+    "@colibri/plugin-channel-accounts": {
+      "bump": "patch",
+      "reason": "Standardize internal error namespace imports as ERROR and align error references.",
+      "apiReview": "Local namespace aliases change from E to ERROR. Existing exported names, constructor identities, signatures, error codes and behavior are preserved. The declaration snapshot changes only local namespace qualifiers; no API additions or removals. Existing Core dependency ranges remain sufficient."
     },
-    "@colibri/contract-bindings": {
-      "bump": "minor",
-      "reason": "Expose a distinct concrete error class for each stable failure code and emit these classes from library code.",
-      "apiReview": "Additive concrete subclasses and code registries preserve existing codes, messages, metadata, family-level instanceof handling and legacy constructor signatures. Library-owned failures use dedicated classes; legacy family constructors remain compatibility extension points. Core custom consumer error codes remain supported."
-    },
-    "@colibri/rpc-streamer": {
-      "bump": "minor",
-      "reason": "Expose a distinct concrete error class for each stable failure code and emit these classes from library code.",
-      "apiReview": "Additive concrete subclasses and code registries preserve existing codes, messages, metadata, family-level instanceof handling and legacy constructor signatures. Library-owned failures use dedicated classes; legacy family constructors remain compatibility extension points. Core custom consumer error codes remain supported."
+    "@colibri/plugin-sep29": {
+      "bump": "patch",
+      "reason": "Standardize internal error namespace imports as ERROR and align error references.",
+      "apiReview": "Local namespace aliases change from E to ERROR. Existing exported names, constructor identities, signatures, error codes and behavior are preserved. The declaration snapshot changes only local namespace qualifiers; no API additions or removals. Existing Core dependency ranges remain sufficient."
     }
   }
 }

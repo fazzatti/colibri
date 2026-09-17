@@ -1,7 +1,7 @@
 import { Spec } from "@/contract/spec.ts";
 import type { BinaryData } from "@/common/types/index.ts";
 import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
-import * as E from "@/plugins/processes/simulate-transaction/contract-error-matcher/error.ts";
+import * as ERROR from "@/plugins/processes/simulate-transaction/contract-error-matcher/error.ts";
 import type { ContractErrorMap } from "@/plugins/processes/simulate-transaction/contract-error-matcher/types.ts";
 
 /**
@@ -34,7 +34,7 @@ export function extractContractErrorMapFromSpec(
       const code = errorCase.value;
 
       if (errors[code]) {
-        throw new E.DUPLICATE_CONTRACT_ERROR_CODE(code);
+        throw new ERROR.DUPLICATE_CONTRACT_ERROR_CODE(code);
       }
 
       const details = errorCase.doc.toString().trim();

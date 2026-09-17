@@ -3,10 +3,7 @@ import type {
   createInvokeContractPipeline,
   SendTransactionInput,
 } from "@colibri/core";
-import {
-  plugin,
-  type PipeStepPlugin,
-} from "convee";
+import { type PipeStepPlugin, plugin } from "convee";
 import {
   FEE_BUMP_PLUGIN_ID,
   FEE_BUMP_PLUGIN_TARGET,
@@ -14,7 +11,7 @@ import {
 } from "@/types.ts";
 import { createFeeBumpPipeline } from "@/pipeline/pipeline.ts";
 import { assert, isTransaction } from "@colibri/core";
-import * as E from "@/error.ts";
+import * as ERROR from "@/error.ts";
 
 type ClassicTransactionPipeline = ReturnType<
   typeof createClassicTransactionPipeline
@@ -38,8 +35,8 @@ type PluginInput = SendTransactionInput;
  *
  * @param args - Plugin configuration.
  * @returns A plugin targeting the send-transaction step.
- * @throws {E.MISSING_ARG} If a required plugin argument is missing.
- * @throws {E.NOT_A_TRANSACTION} If the intercepted payload does not contain a transaction.
+ * @throws {ERROR.MISSING_ARG} If a required plugin argument is missing.
+ * @throws {ERROR.NOT_A_TRANSACTION} If the intercepted payload does not contain a transaction.
  */
 export const createFeeBumpPlugin = ({
   networkConfig,
@@ -56,7 +53,10 @@ export const createFeeBumpPlugin = ({
   }).onInput(async (input: PluginInput): Promise<PluginInput> => {
     const { transaction } = input;
 
-    assert(isTransaction(transaction), new E.NOT_A_TRANSACTION(transaction));
+    assert(
+      isTransaction(transaction),
+      new ERROR.NOT_A_TRANSACTION(transaction),
+    );
 
     const feeBumpTransaction = await wrapperPipeline({ transaction });
 

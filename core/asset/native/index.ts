@@ -26,7 +26,7 @@ import type {
   StellarAssetSetTrustLineFlagsArgs,
   StellarAssetTransferArgs,
 } from "@/asset/native/types.ts";
-import * as E from "@/asset/native/error.ts";
+import * as ERROR from "@/asset/native/error.ts";
 import { ColibriError } from "@/error/index.ts";
 import {
   formatStellarAssetAmount,
@@ -49,25 +49,25 @@ function resolveAsset(args: StellarAssetArgs): Asset {
   if ("asset" in args) return args.asset;
   if (args.issuer === "native") {
     const code: string = args.code;
-    if (code !== "XLM") throw new E.NATIVE_ASSET_CODE_MISMATCH(code);
+    if (code !== "XLM") throw new ERROR.NATIVE_ASSET_CODE_MISMATCH(code);
     return NativeAsset.native();
   }
   try {
     return new NativeAsset(args.code, args.issuer);
   } catch (cause) {
-    throw new E.INVALID_ASSET(cause);
+    throw new ERROR.INVALID_ASSET(cause);
   }
 }
 
 function resolveRpc(args: StellarAssetArgs): Server {
   if (args.rpc) return args.rpc;
-  if (!args.networkConfig.rpcUrl) throw new E.MISSING_RPC_URL();
+  if (!args.networkConfig.rpcUrl) throw new ERROR.MISSING_RPC_URL();
   try {
     return new NativeServer(args.networkConfig.rpcUrl, {
       allowHttp: args.networkConfig.allowHttp ?? false,
     });
   } catch (cause) {
-    throw new E.INVALID_RPC(cause);
+    throw new ERROR.INVALID_RPC(cause);
   }
 }
 
@@ -117,7 +117,7 @@ export class StellarAsset {
     { canonical, ...args }: StellarAssetNetwork & { canonical: string },
   ): StellarAsset {
     if (!isStellarAssetCanonicalString(canonical)) {
-      throw new E.INVALID_CANONICAL_ASSET(canonical);
+      throw new ERROR.INVALID_CANONICAL_ASSET(canonical);
     }
     const { code, issuer } = parseStellarAssetCanonicalString(canonical);
     return new StellarAsset({ ...args, asset: new NativeAsset(code, issuer) });
@@ -162,18 +162,18 @@ export class StellarAsset {
     { id }: StellarAssetBalanceArgs,
   ): Promise<AccountLedgerEntry | TrustlineLedgerEntry> {
     if (!this.isNative() && id === this.issuer) {
-      throw new E.ISSUER_BALANCE_UNDEFINED();
+      throw new ERROR.ISSUER_BALANCE_UNDEFINED();
     }
     try {
       if (this.isNative()) {
         return await this.ledgerEntries.account({ accountId: id });
       }
       const trustline = await this.getTrustline(id);
-      if (!trustline) throw new E.BALANCE_TRUSTLINE_MISSING(id);
+      if (!trustline) throw new ERROR.BALANCE_TRUSTLINE_MISSING(id);
       return trustline;
     } catch (cause) {
       if (cause instanceof ColibriError) throw cause;
-      throw new E.READ_BALANCE_FAILED(cause);
+      throw new ERROR.READ_BALANCE_FAILED(cause);
     }
   }
 
@@ -201,13 +201,13 @@ export class StellarAsset {
         rpc: this.rpc,
       });
     } catch (cause) {
-      throw new E.SAC_BINDING_FAILED(cause);
+      throw new ERROR.SAC_BINDING_FAILED(cause);
     }
   }
 
   /** Mints units by a payment from the issuer; never changes holder authorization. */
   async mint(args: StellarAssetMintArgs): Promise<ClassicTransactionOutput> {
-    if (this.isNative()) throw new E.NATIVE_MINT();
+    if (this.isNative()) throw new ERROR.NATIVE_MINT();
     return await this.transfer({ ...args, source: this.issuer });
   }
 
@@ -215,7 +215,7 @@ export class StellarAsset {
   async burn(
     args: StellarAssetBurnArgs,
   ): Promise<ClassicTransactionOutput> {
-    if (this.isNative()) throw new E.NATIVE_BURN();
+    if (this.isNative()) throw new ERROR.NATIVE_BURN();
     return await this.transfer({ ...args, destination: this.issuer! });
   }
 
@@ -228,7 +228,7 @@ export class StellarAsset {
       });
     } catch (cause) {
       if (cause instanceof ColibriError) throw cause;
-      throw new E.READ_ISSUER_FAILED(cause);
+      throw new ERROR.READ_ISSUER_FAILED(cause);
     }
   }
 
@@ -243,7 +243,7 @@ export class StellarAsset {
       );
     } catch (cause) {
       if (cause instanceof ColibriError) throw cause;
-      throw new E.READ_TRUSTLINE_FAILED(cause);
+      throw new ERROR.READ_TRUSTLINE_FAILED(cause);
     }
   }
 
@@ -255,7 +255,7 @@ export class StellarAsset {
   async changeTrust(
     { config, ...args }: StellarAssetChangeTrustArgs,
   ): Promise<ClassicTransactionOutput> {
-    if (this.asset.isNative()) throw new E.NATIVE_TRUSTLINE();
+    if (this.asset.isNative()) throw new ERROR.NATIVE_TRUSTLINE();
     let operation: xdr.Operation;
     try {
       operation = Operation.changeTrust({
@@ -264,7 +264,7 @@ export class StellarAsset {
         source: args.source ?? config.source,
       });
     } catch (cause) {
-      throw new E.CHANGE_TRUST_FAILED(cause);
+      throw new ERROR.CHANGE_TRUST_FAILED(cause);
     }
     return await this.transactionPipe({ operations: [operation], config });
   }
@@ -284,7 +284,7 @@ export class StellarAsset {
         source: args.source ?? config.source,
       });
     } catch (cause) {
-      throw new E.TRANSFER_FAILED(cause);
+      throw new ERROR.TRANSFER_FAILED(cause);
     }
     return await this.transactionPipe({ operations: [operation], config });
   }
@@ -297,7 +297,7 @@ export class StellarAsset {
   async setTrustLineFlags(
     { config, ...args }: StellarAssetSetTrustLineFlagsArgs,
   ): Promise<ClassicTransactionOutput> {
-    if (this.asset.isNative()) throw new E.NATIVE_TRUSTLINE_FLAGS();
+    if (this.asset.isNative()) throw new ERROR.NATIVE_TRUSTLINE_FLAGS();
     let operation: xdr.Operation;
     try {
       operation = Operation.setTrustLineFlags({
@@ -306,7 +306,7 @@ export class StellarAsset {
         source: args.source ?? this.asset.issuer,
       });
     } catch (cause) {
-      throw new E.TRUSTLINE_FLAGS_FAILED(cause);
+      throw new ERROR.TRUSTLINE_FLAGS_FAILED(cause);
     }
     return await this.transactionPipe({ operations: [operation], config });
   }
@@ -323,11 +323,11 @@ export class StellarAsset {
   async setAuthorized(
     { id, authorize, config }: StellarAssetSetAuthorizedArgs,
   ): Promise<ClassicTransactionOutput> {
-    if (this.isNative()) throw new E.NATIVE_AUTHORIZATION();
+    if (this.isNative()) throw new ERROR.NATIVE_AUTHORIZATION();
     let maintainLiabilities = false;
     if (!authorize) {
       const trustline = await this.getTrustline(id);
-      if (!trustline) throw new E.AUTHORIZATION_TRUSTLINE_MISSING(id);
+      if (!trustline) throw new ERROR.AUTHORIZATION_TRUSTLINE_MISSING(id);
       maintainLiabilities = trustline.flags.authorized ||
         trustline.flags.authorizedToMaintainLiabilities;
     }
@@ -359,7 +359,7 @@ export class StellarAsset {
         source: args.source ?? config.source,
       });
     } catch (cause) {
-      throw new E.CREATE_CLAIMABLE_BALANCE_FAILED(cause);
+      throw new ERROR.CREATE_CLAIMABLE_BALANCE_FAILED(cause);
     }
     return await this.transactionPipe({ operations: [operation], config });
   }
@@ -372,7 +372,7 @@ export class StellarAsset {
   async clawback(
     { config, ...args }: StellarAssetClawbackArgs,
   ): Promise<ClassicTransactionOutput> {
-    if (this.asset.isNative()) throw new E.NATIVE_CLAWBACK();
+    if (this.asset.isNative()) throw new ERROR.NATIVE_CLAWBACK();
     let operation: xdr.Operation;
     try {
       operation = Operation.clawback({
@@ -381,7 +381,7 @@ export class StellarAsset {
         source: args.source ?? this.asset.issuer,
       });
     } catch (cause) {
-      throw new E.CLAWBACK_FAILED(cause);
+      throw new ERROR.CLAWBACK_FAILED(cause);
     }
     return await this.transactionPipe({ operations: [operation], config });
   }

@@ -9,7 +9,7 @@ import {
 } from "@/pipelines/classic-transaction/index.ts";
 import type { ClassicTransactionOutput } from "@/pipelines/classic-transaction/types.ts";
 import { StellarPrice } from "@/markets/price/index.ts";
-import * as E from "@/markets/sdex/error.ts";
+import * as ERROR from "@/markets/sdex/error.ts";
 import { ColibriError } from "@/error/index.ts";
 import type {
   BuyArgs,
@@ -63,7 +63,7 @@ export class SDEX {
     { seller, offerId }: GetOfferArgs,
   ): Promise<OfferLedgerEntry | null> {
     if (typeof offerId === "number" && !Number.isSafeInteger(offerId)) {
-      throw new E.UNSAFE_OFFER_ID(offerId);
+      throw new ERROR.UNSAFE_OFFER_ID(offerId);
     }
     try {
       return await this.ledgerEntries.get(
@@ -71,7 +71,7 @@ export class SDEX {
       );
     } catch (cause) {
       if (cause instanceof ColibriError) throw cause;
-      throw new E.READ_OFFER_FAILED(cause);
+      throw new ERROR.READ_OFFER_FAILED(cause);
     }
   }
 
@@ -87,7 +87,7 @@ export class SDEX {
         source: options.source ?? config.source,
       });
     } catch (cause) {
-      throw new E.CREATE_SELL_FAILED(cause);
+      throw new ERROR.CREATE_SELL_FAILED(cause);
     }
     return await this.transactionPipe({ operations: [operation], config });
   }
@@ -97,7 +97,7 @@ export class SDEX {
     { config, ...options }: UpdateSellOfferArgs,
   ): Promise<ClassicTransactionOutput> {
     if (!isExistingOfferId(options.offerId)) {
-      throw new E.INVALID_UPDATE_SELL_ID();
+      throw new ERROR.INVALID_UPDATE_SELL_ID();
     }
     let operation: xdr.Operation;
     try {
@@ -106,7 +106,7 @@ export class SDEX {
         source: options.source ?? config.source,
       });
     } catch (cause) {
-      throw new E.UPDATE_SELL_FAILED(cause);
+      throw new ERROR.UPDATE_SELL_FAILED(cause);
     }
     return await this.transactionPipe({ operations: [operation], config });
   }
@@ -123,7 +123,7 @@ export class SDEX {
         source: options.source ?? config.source,
       });
     } catch (cause) {
-      throw new E.CREATE_BUY_FAILED(cause);
+      throw new ERROR.CREATE_BUY_FAILED(cause);
     }
     return await this.transactionPipe({ operations: [operation], config });
   }
@@ -133,7 +133,7 @@ export class SDEX {
     { config, ...options }: UpdateBuyOfferArgs,
   ): Promise<ClassicTransactionOutput> {
     if (!isExistingOfferId(options.offerId)) {
-      throw new E.INVALID_UPDATE_BUY_ID();
+      throw new ERROR.INVALID_UPDATE_BUY_ID();
     }
     let operation: xdr.Operation;
     try {
@@ -142,7 +142,7 @@ export class SDEX {
         source: options.source ?? config.source,
       });
     } catch (cause) {
-      throw new E.UPDATE_BUY_FAILED(cause);
+      throw new ERROR.UPDATE_BUY_FAILED(cause);
     }
     return await this.transactionPipe({ operations: [operation], config });
   }
@@ -158,7 +158,7 @@ export class SDEX {
         source: options.source ?? config.source,
       });
     } catch (cause) {
-      throw new E.CREATE_PASSIVE_FAILED(cause);
+      throw new ERROR.CREATE_PASSIVE_FAILED(cause);
     }
     return await this.transactionPipe({ operations: [operation], config });
   }
@@ -172,7 +172,7 @@ export class SDEX {
     { seller, offerId, config }: CancelOfferArgs,
   ): Promise<ClassicTransactionOutput> {
     const offer = await this.getOffer({ seller, offerId });
-    if (!offer) throw new E.OFFER_NOT_FOUND(seller, String(offerId));
+    if (!offer) throw new ERROR.OFFER_NOT_FOUND(seller, String(offerId));
     return await this.updateSellOffer({
       selling: nativeAsset(offer.selling),
       buying: nativeAsset(offer.buying),

@@ -27,7 +27,7 @@ import type {
 import { StellarPrice } from "@/markets/price/index.ts";
 import type { NetworkConfig } from "@/network/index.ts";
 import { ColibriError } from "@/error/index.ts";
-import * as E from "@/markets/liquidity-pools/error.ts";
+import * as ERROR from "@/markets/liquidity-pools/error.ts";
 import type {
   Asset as AssetType,
   LiquidityPoolAsset as PoolShareAsset,
@@ -87,7 +87,7 @@ export class NativeLiquidityPool {
       this.poolId = StrKey.encodeLiquidityPool(bytes);
       this.idHex = xdr.encodeBytes(bytes, "hex");
     } catch (cause) {
-      throw new E.INVALID_ASSET_PAIR(cause);
+      throw new ERROR.INVALID_ASSET_PAIR(cause);
     }
     this.networkConfig = networkConfig;
     try {
@@ -96,7 +96,7 @@ export class NativeLiquidityPool {
           allowHttp: networkConfig.allowHttp,
         });
     } catch (cause) {
-      throw new E.FAILED_TO_CREATE_RPC(cause);
+      throw new ERROR.FAILED_TO_CREATE_RPC(cause);
     }
     this.ledgerEntries = new LedgerEntries({ rpc: this.rpc });
     this.transactionPipe = createClassicTransactionPipeline({
@@ -132,14 +132,16 @@ export class NativeLiquidityPool {
       quoteAsset.equals(this.assetA);
     const reversed = baseAsset.equals(this.assetA) &&
       quoteAsset.equals(this.assetB);
-    if (!canonical && !reversed) throw new E.INVALID_PRICE_ASSETS();
+    if (!canonical && !reversed) throw new ERROR.INVALID_PRICE_ASSETS();
     const min = typeof minimum === "string"
       ? StellarPrice.fromDecimal(minimum)
       : minimum;
     const max = typeof maximum === "string"
       ? StellarPrice.fromDecimal(maximum)
       : maximum;
-    if (StellarPrice.compare(min, max) > 0) throw new E.REVERSED_PRICE_BOUNDS();
+    if (StellarPrice.compare(min, max) > 0) {
+      throw new ERROR.REVERSED_PRICE_BOUNDS();
+    }
     return canonical ? { minPrice: { ...min }, maxPrice: { ...max } } : {
       minPrice: StellarPrice.invert(max),
       maxPrice: StellarPrice.invert(min),
@@ -168,8 +170,8 @@ export class NativeLiquidityPool {
       );
       const poolEntry = entries.get(poolKey.toXdr("base64"));
       const trustEntry = entries.get(trustKey.toXdr("base64"));
-      if (!poolEntry) throw new E.POSITION_POOL_MISSING();
-      if (!trustEntry) throw new E.POSITION_TRUSTLINE_MISSING();
+      if (!poolEntry) throw new ERROR.POSITION_POOL_MISSING();
+      if (!trustEntry) throw new ERROR.POSITION_TRUSTLINE_MISSING();
       const pool = decodeLedgerEntryForKey(
         poolKey,
         poolEntry,
@@ -188,7 +190,7 @@ export class NativeLiquidityPool {
       };
     } catch (cause) {
       if (cause instanceof ColibriError) throw cause;
-      throw new E.FAILED_TO_READ_POSITION(cause);
+      throw new ERROR.FAILED_TO_READ_POSITION(cause);
     }
   }
 
@@ -205,9 +207,9 @@ export class NativeLiquidityPool {
         } as NativeLiquidityPoolState;
       }
     } catch (cause) {
-      throw new E.FAILED_TO_READ_POOL(cause);
+      throw new ERROR.FAILED_TO_READ_POOL(cause);
     }
-    throw new E.POOL_NOT_FOUND();
+    throw new ERROR.POOL_NOT_FOUND();
   }
 
   /** Reads an existing pool-share trustline; a missing trustline raises a ledger error. */
@@ -219,7 +221,7 @@ export class NativeLiquidityPool {
       });
     } catch (cause) {
       if (cause instanceof ColibriError) throw cause;
-      throw new E.FAILED_TO_READ_TRUSTLINE(cause);
+      throw new ERROR.FAILED_TO_READ_TRUSTLINE(cause);
     }
   }
 
@@ -228,7 +230,7 @@ export class NativeLiquidityPool {
     try {
       return Operation.changeTrust({ ...args, asset: this.poolShareAsset });
     } catch (cause) {
-      throw new E.FAILED_TO_BUILD_TRUSTLINE(cause);
+      throw new ERROR.FAILED_TO_BUILD_TRUSTLINE(cause);
     }
   }
   /** Builds exactly one deposit. Native price bounds are amount A divided by amount B. */
@@ -239,7 +241,7 @@ export class NativeLiquidityPool {
         liquidityPoolId: this.idHex,
       });
     } catch (cause) {
-      throw new E.FAILED_TO_BUILD_DEPOSIT(cause);
+      throw new ERROR.FAILED_TO_BUILD_DEPOSIT(cause);
     }
   }
   /** Builds exactly one withdrawal, with caller-selected minimum received amounts. */
@@ -250,7 +252,7 @@ export class NativeLiquidityPool {
         liquidityPoolId: this.idHex,
       });
     } catch (cause) {
-      throw new E.FAILED_TO_BUILD_WITHDRAWAL(cause);
+      throw new ERROR.FAILED_TO_BUILD_WITHDRAWAL(cause);
     }
   }
   /** Creates, adjusts or removes a pool-share trustline through the owned pipeline. */
@@ -298,7 +300,7 @@ export class NativeLiquidityPool {
     { maximumAmounts, ...args }: PoolTransaction<PoolDepositByAssetArgs>,
   ): Promise<ClassicTransactionOutput> {
     const amounts = this.orderedAmounts(maximumAmounts);
-    if (!amounts) throw new E.INVALID_DEPOSIT_ASSETS();
+    if (!amounts) throw new ERROR.INVALID_DEPOSIT_ASSETS();
     return this.deposit({
       ...args,
       maxAmountA: amounts[0],
@@ -310,7 +312,7 @@ export class NativeLiquidityPool {
     { minimumAmounts, ...args }: PoolTransaction<PoolWithdrawByAssetArgs>,
   ): Promise<ClassicTransactionOutput> {
     const amounts = this.orderedAmounts(minimumAmounts);
-    if (!amounts) throw new E.INVALID_WITHDRAWAL_ASSETS();
+    if (!amounts) throw new ERROR.INVALID_WITHDRAWAL_ASSETS();
     return this.withdraw({
       ...args,
       minAmountA: amounts[0],
@@ -320,7 +322,7 @@ export class NativeLiquidityPool {
 }
 
 /** Error constructors for native pool operations. */
-export const ERRORS_NATIVE_LIQUIDITY_POOL: typeof E = E;
+export const ERRORS_NATIVE_LIQUIDITY_POOL: typeof ERROR = ERROR;
 export type {
   NativeLiquidityPoolArgs,
   NativeLiquidityPoolPosition,

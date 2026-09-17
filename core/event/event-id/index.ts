@@ -2,7 +2,7 @@ import { regex } from "@/common/regex/index.ts";
 import { createTOID, isTOID, parseTOID } from "@/toid/index.ts";
 import type { TOID } from "@/toid/types.ts";
 import { assert } from "@/common/assert/assert.ts";
-import * as E from "@/event/event-id/error.ts";
+import * as ERROR from "@/event/event-id/error.ts";
 /**
  * Unique Colibri identifier for one event emitted by an operation.
  *
@@ -41,7 +41,7 @@ export function isEventId(id: string): id is EventId {
 export function createEventId(toid: TOID, eventIndex: number): EventId {
   assert(
     eventIndex >= 1 && eventIndex <= 9999999999,
-    new E.EVENT_INDEX_OUT_OF_RANGE(eventIndex),
+    new ERROR.EVENT_INDEX_OUT_OF_RANGE(eventIndex),
   );
 
   // Shift to 0-based for output (matches RPC behavior)
@@ -96,7 +96,7 @@ export function parseEventId(eventId: string): {
   operationIndex: number;
   eventIndex: number;
 } {
-  assert(isEventId(eventId), new E.INVALID_EVENT_ID_FORMAT(eventId));
+  assert(isEventId(eventId), new ERROR.INVALID_EVENT_ID_FORMAT(eventId));
 
   const [toidPart, eventIndexPart] = eventId.split("-");
   const toidComponents = parseTOID(toidPart);

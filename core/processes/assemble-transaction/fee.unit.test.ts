@@ -13,7 +13,7 @@ import {
 } from "@/common/helpers/transaction-fee.ts";
 import type { TransactionFee } from "@/common/types/transaction-config/types.ts";
 import { NetworkConfig } from "@/network/index.ts";
-import * as E from "@/processes/assemble-transaction/error.ts";
+import * as ERROR from "@/processes/assemble-transaction/error.ts";
 import { assembleTransaction } from "@/processes/assemble-transaction/index.ts";
 
 const source = "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P";
@@ -149,43 +149,43 @@ describe("assembleTransaction fee strategies", () => {
   it("rejects a fee object without exactly one supported mode", async () => {
     await assertRejects(
       () => assembleWith({} as TransactionFee),
-      E.INVALID_TRANSACTION_FEE_CONFIGURATION_ERROR,
+      ERROR.INVALID_TRANSACTION_FEE_CONFIGURATION_ERROR,
     );
   });
 
   it("uses a mode-specific error for every invalid amount", async () => {
     await assertRejects(
       () => assembleWith({ base: "bad" } as unknown as TransactionFee),
-      E.INVALID_BASE_FEE_ERROR,
+      ERROR.INVALID_BASE_FEE_ERROR,
     );
     await assertRejects(
       () => assembleWith({ inclusion: "bad" } as unknown as TransactionFee),
-      E.INVALID_INCLUSION_FEE_ERROR,
+      ERROR.INVALID_INCLUSION_FEE_ERROR,
     );
     await assertRejects(
       () => assembleWith({ max: "bad" } as unknown as TransactionFee),
-      E.INVALID_MAX_FEE_ERROR,
+      ERROR.INVALID_MAX_FEE_ERROR,
     );
   });
 
   it("rejects a non-positive explicit base fee", async () => {
     await assertRejects(
       () => assembleWith({ base: "0" }),
-      E.BASE_FEE_TOO_LOW_ERROR,
+      ERROR.BASE_FEE_TOO_LOW_ERROR,
     );
   });
 
   it("requires at least 100 stroops of explicit inclusion fee", async () => {
     await assertRejects(
       () => assembleWith({ inclusion: "99" }),
-      E.INCLUSION_FEE_TOO_LOW_ERROR,
+      ERROR.INCLUSION_FEE_TOO_LOW_ERROR,
     );
   });
 
   it("requires a maximum to cover resources and minimum inclusion", async () => {
     await assertRejects(
       () => assembleWith({ max: "102" }),
-      E.MAX_FEE_TOO_LOW_ERROR,
+      ERROR.MAX_FEE_TOO_LOW_ERROR,
     );
   });
 
@@ -193,7 +193,7 @@ describe("assembleTransaction fee strategies", () => {
     for (const resourceFee of ["", "-1", "1.5", " 3"]) {
       await assertRejects(
         () => assembleWith(undefined, 3, undefined, resourceFee),
-        E.INVALID_RESOURCE_FEE_ERROR,
+        ERROR.INVALID_RESOURCE_FEE_ERROR,
       );
     }
 
@@ -205,28 +205,28 @@ describe("assembleTransaction fee strategies", () => {
           authEntries: [],
           resourceFee: 5 as unknown as string,
         }),
-      E.INVALID_RESOURCE_FEE_ERROR,
+      ERROR.INVALID_RESOURCE_FEE_ERROR,
     );
   });
 
   it("rejects a resource-fee override below the simulated minimum", async () => {
     await assertRejects(
       () => assembleWith(undefined, 3, undefined, "2"),
-      E.RESOURCE_FEE_BELOW_SIMULATED_MINIMUM_ERROR,
+      ERROR.RESOURCE_FEE_BELOW_SIMULATED_MINIMUM_ERROR,
     );
   });
 
   it("rejects a resource-fee override above the transaction XDR limit", async () => {
     await assertRejects(
       () => assembleWith(undefined, 3, undefined, "4294967296"),
-      E.TRANSACTION_FEE_TOO_HIGH_ERROR,
+      ERROR.TRANSACTION_FEE_TOO_HIGH_ERROR,
     );
   });
 
   it("rejects a final total that does not fit transaction XDR", async () => {
     await assertRejects(
       () => assembleWith({ inclusion: "4294967295" }),
-      E.TRANSACTION_FEE_TOO_HIGH_ERROR,
+      ERROR.TRANSACTION_FEE_TOO_HIGH_ERROR,
     );
   });
 
@@ -238,13 +238,13 @@ describe("assembleTransaction fee strategies", () => {
 
     await assertRejects(
       () => assembleWith(undefined, 3, inconsistentTransaction),
-      E.TRANSACTION_FEE_BELOW_RESOURCE_FEE_ERROR,
+      ERROR.TRANSACTION_FEE_BELOW_RESOURCE_FEE_ERROR,
     );
   });
 
   it("keeps every assemble-transaction error code unique", () => {
-    const codes = Object.values(E.Code);
+    const codes = Object.values(ERROR.Code);
     assertEquals(new Set(codes).size, codes.length);
-    assertEquals(Object.keys(E.ERROR_BY_CODE).sort(), [...codes].sort());
+    assertEquals(Object.keys(ERROR.ERROR_BY_CODE).sort(), [...codes].sort());
   });
 });

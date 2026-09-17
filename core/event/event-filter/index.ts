@@ -7,7 +7,7 @@ import type { BoundedArray } from "@/common/helpers/bounded-array.ts";
 import type { RpcEventFilterLike, ScValLike } from "@/common/types/index.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import { assert } from "@/common/assert/assert.ts";
-import * as E from "@/event/event-filter/error.ts";
+import * as ERROR from "@/event/event-filter/error.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
 
 /**
@@ -108,7 +108,7 @@ const eventTopicsMatchFilterTopic = (
   eventTopics: ScValLike[],
 ): boolean => {
   if (eventTopics.length === 0 && topicFilter[0] === "**") return true;
-  assert(eventTopics.length > 0, new E.EVENT_HAS_NO_TOPICS());
+  assert(eventTopics.length > 0, new ERROR.EVENT_HAS_NO_TOPICS());
 
   for (let i = 0; i < eventTopics.length; i++) {
     const eventSegment = eventTopics[i];
@@ -125,7 +125,7 @@ const eventTopicsMatchFilterTopic = (
         continue; // Matched this segment, continue to next
       }
     } catch (e) {
-      throw new E.FAILED_TO_CHECK_FILTER_SEGMENT(
+      throw new ERROR.FAILED_TO_CHECK_FILTER_SEGMENT(
         filterSegment,
         eventSegment,
         e as Error,

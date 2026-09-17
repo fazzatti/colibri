@@ -4,7 +4,7 @@ import { Asset, Keypair, Operation } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import { NetworkConfig } from "@/network/index.ts";
 import { SDEX } from "@/markets/sdex/index.ts";
-import * as E from "@/markets/sdex/error.ts";
+import * as ERROR from "@/markets/sdex/error.ts";
 import { ColibriError } from "@/error/index.ts";
 import { BASE_FEE_TOO_LOW_ERROR } from "@/processes/build-transaction/error.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
@@ -44,9 +44,9 @@ describe("SDEX explicit operation boundaries", () => {
         () => unavailable.cancelOffer({ ...args, config }),
       ]
     ) {
-      const error = await assertRejects(action, E.READ_OFFER_FAILED);
+      const error = await assertRejects(action, ERROR.READ_OFFER_FAILED);
       assertEquals(error.meta?.cause instanceof Error, true);
-      assertEquals(E.ERROR_SDEX[error.code], E.READ_OFFER_FAILED);
+      assertEquals(ERROR.ERROR_SDEX[error.code], ERROR.READ_OFFER_FAILED);
     }
   });
 
@@ -126,23 +126,23 @@ describe("SDEX explicit operation boundaries", () => {
   it("maps each native SDK construction failure to its own typed occurrence", async () => {
     await assertRejects(
       () => sdex.createSellOffer({ ...sell, amount: "invalid" }),
-      E.CREATE_SELL_FAILED,
+      ERROR.CREATE_SELL_FAILED,
     );
     await assertRejects(
       () => sdex.updateSellOffer({ ...sell, offerId: "1", amount: "invalid" }),
-      E.UPDATE_SELL_FAILED,
+      ERROR.UPDATE_SELL_FAILED,
     );
     await assertRejects(
       () => sdex.createBuyOffer({ ...buy, buyAmount: "invalid" }),
-      E.CREATE_BUY_FAILED,
+      ERROR.CREATE_BUY_FAILED,
     );
     await assertRejects(
       () => sdex.updateBuyOffer({ ...buy, offerId: "1", buyAmount: "invalid" }),
-      E.UPDATE_BUY_FAILED,
+      ERROR.UPDATE_BUY_FAILED,
     );
     await assertRejects(
       () => sdex.createPassiveSellOffer({ ...sell, amount: "invalid" }),
-      E.CREATE_PASSIVE_FAILED,
+      ERROR.CREATE_PASSIVE_FAILED,
     );
   });
 
@@ -150,11 +150,11 @@ describe("SDEX explicit operation boundaries", () => {
     for (const offerId of ["0", "-1", "x", "9223372036854775808", 1]) {
       await assertRejects(
         () => sdex.updateSellOffer({ ...sell, offerId: offerId as string }),
-        E.INVALID_UPDATE_SELL_ID,
+        ERROR.INVALID_UPDATE_SELL_ID,
       );
       await assertRejects(
         () => sdex.updateBuyOffer({ ...buy, offerId: offerId as string }),
-        E.INVALID_UPDATE_BUY_ID,
+        ERROR.INVALID_UPDATE_BUY_ID,
       );
     }
   });
@@ -205,10 +205,10 @@ describe("SDEX explicit operation boundaries", () => {
   it("rejects unsafe numeric offer IDs before any RPC read or cancellation", async () => {
     for (const offerId of [Number.MAX_SAFE_INTEGER + 1, Infinity, NaN, 1.5]) {
       const args = { seller: config.source as Ed25519PublicKey, offerId };
-      await assertRejects(() => sdex.getOffer(args), E.UNSAFE_OFFER_ID);
+      await assertRejects(() => sdex.getOffer(args), ERROR.UNSAFE_OFFER_ID);
       await assertRejects(
         () => sdex.cancelOffer({ ...args, config }),
-        E.UNSAFE_OFFER_ID,
+        ERROR.UNSAFE_OFFER_ID,
       );
     }
   });
@@ -237,19 +237,19 @@ describe("SDEX explicit operation boundaries", () => {
   it("exports typed error constructors with distinct stable codes and SDK causes", () => {
     const cause = new TypeError("SDK validation");
     const errors = [
-      new E.CREATE_SELL_FAILED(cause),
-      new E.UPDATE_SELL_FAILED(cause),
-      new E.CREATE_BUY_FAILED(cause),
-      new E.UPDATE_BUY_FAILED(cause),
-      new E.CREATE_PASSIVE_FAILED(cause),
-      new E.OFFER_NOT_FOUND("seller", "1"),
-      new E.INVALID_UPDATE_BUY_ID(),
-      new E.INVALID_UPDATE_SELL_ID(),
-      new E.UNSAFE_OFFER_ID(Number.MAX_SAFE_INTEGER + 1),
+      new ERROR.CREATE_SELL_FAILED(cause),
+      new ERROR.UPDATE_SELL_FAILED(cause),
+      new ERROR.CREATE_BUY_FAILED(cause),
+      new ERROR.UPDATE_BUY_FAILED(cause),
+      new ERROR.CREATE_PASSIVE_FAILED(cause),
+      new ERROR.OFFER_NOT_FOUND("seller", "1"),
+      new ERROR.INVALID_UPDATE_BUY_ID(),
+      new ERROR.INVALID_UPDATE_SELL_ID(),
+      new ERROR.UNSAFE_OFFER_ID(Number.MAX_SAFE_INTEGER + 1),
     ];
     for (const error of errors) {
       assertEquals(error instanceof ColibriError, true);
-      assertEquals(E.ERROR_SDEX[error.code], error.constructor);
+      assertEquals(ERROR.ERROR_SDEX[error.code], error.constructor);
     }
     assertEquals(errors[0].meta?.cause, cause);
   });

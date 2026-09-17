@@ -17,7 +17,7 @@ import {
 } from "stellar-sdk";
 import { normalizeBinaryData } from "@/common/helpers/binary.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
-import * as E from "@/signer/local/error.ts";
+import * as ERROR from "@/signer/local/error.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 
 describe("LocalSigner.fromKeypair", () => {
@@ -36,7 +36,7 @@ describe("LocalSigner.fromKeypair", () => {
       JSON.stringify(signer),
       JSON.stringify({ publicKey: keypair.publicKey() }),
     );
-    assertThrows(() => signer.secretKey(), E.SECRET_NOT_ACCESSIBLE);
+    assertThrows(() => signer.secretKey(), ERROR.SECRET_NOT_ACCESSIBLE);
     const other = Keypair.random().publicKey() as Ed25519PublicKey;
     assertEquals(signer.signsFor(other), false);
     signer.addTarget(other);
@@ -54,8 +54,8 @@ describe("LocalSigner.fromKeypair", () => {
     assert(keypair.verify(bytes, normalizeBinaryData(signature)));
     signer[Symbol.dispose]();
     signer.destroy();
-    assertThrows(() => signer.sign(bytes), E.SIGNER_DESTROYED);
-    assertThrows(() => signer.secretKey(), E.SIGNER_DESTROYED);
+    assertThrows(() => signer.sign(bytes), ERROR.SIGNER_DESTROYED);
+    assertThrows(() => signer.secretKey(), ERROR.SIGNER_DESTROYED);
     assert(keypair.canSign());
     assert(keypair.verify(bytes, keypair.sign(bytes)));
     assert(signer.verifySignature(bytes, signature));
@@ -87,9 +87,12 @@ describe("LocalSigner.fromKeypair", () => {
     assert(signer.verifyMessage("message", signature));
     assertThrows(
       () => signer.signMessage("message"),
-      E.MESSAGE_SIGNER_DESTROYED,
+      ERROR.MESSAGE_SIGNER_DESTROYED,
     );
-    assertThrows(() => signer.signTransaction(transaction), E.SIGNER_DESTROYED);
+    assertThrows(
+      () => signer.signTransaction(transaction),
+      ERROR.SIGNER_DESTROYED,
+    );
   });
 
   it("preserves native Soroban authorization encoding including explicit forAddress", async () => {
@@ -134,7 +137,7 @@ describe("LocalSigner.fromKeypair", () => {
     signer.destroy();
     assertThrows(
       () => signer.signSorobanAuthEntry(entry, 123, Networks.TESTNET),
-      E.SIGNER_DESTROYED,
+      ERROR.SIGNER_DESTROYED,
     );
   });
 
@@ -156,7 +159,7 @@ describe("LocalSigner.fromKeypair", () => {
     const readonly = Keypair.fromPublicKey(Keypair.random().publicKey());
     const error = assertThrows(
       () => LocalSigner.fromKeypair(readonly),
-      E.KEYPAIR_CANNOT_SIGN,
+      ERROR.KEYPAIR_CANNOT_SIGN,
     );
     assertEquals(error.code, "SIG_LOC_007");
     assertEquals(error.meta.data, null);
@@ -168,7 +171,7 @@ describe("LocalSigner.fromKeypair", () => {
       };
       const failed = assertThrows(
         () => LocalSigner.fromKeypair(keypair),
-        E.KEYPAIR_ADAPTATION_FAILED,
+        ERROR.KEYPAIR_ADAPTATION_FAILED,
       );
       assertEquals(failed.code, "SIG_LOC_008");
       assertStrictEquals(failed.meta.cause, cause);

@@ -9,7 +9,7 @@ import {
   extractContractErrorMapFromWasm,
 } from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
 import { extractContractErrorMapFromSpec } from "@/plugins/processes/simulate-transaction/contract-error-matcher/helpers.ts";
-import * as E from "@/plugins/processes/simulate-transaction/contract-error-matcher/error.ts";
+import * as ERROR from "@/plugins/processes/simulate-transaction/contract-error-matcher/error.ts";
 import { Spec } from "stellar-sdk/contract";
 import {
   bindingSpec,
@@ -51,7 +51,7 @@ describe("contract error matcher helpers", () => {
 
     assertThrows(
       () => extractContractErrorMapFromSpec(spec),
-      E.DUPLICATE_CONTRACT_ERROR_CODE,
+      ERROR.DUPLICATE_CONTRACT_ERROR_CODE,
     );
   });
 

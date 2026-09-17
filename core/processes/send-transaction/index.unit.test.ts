@@ -6,7 +6,7 @@ import { Transaction, xdr } from "stellar-sdk";
 import { Api, type Server } from "stellar-sdk/rpc";
 import { sendTransaction } from "@/processes/send-transaction/index.ts";
 import { SendTransactionStatus } from "@/processes/send-transaction/types.ts";
-import * as E from "@/processes/send-transaction/error.ts";
+import * as ERROR from "@/processes/send-transaction/error.ts";
 
 const withMockedDateNow = async <T>(
   values: number[],
@@ -161,9 +161,9 @@ describe("SendTransaction", () => {
               transaction: undefined as unknown as Transaction,
               rpc: {} as Server,
             }),
-          E.MISSING_ARG,
+          ERROR.MISSING_ARG,
         );
-        assert(err instanceof E.MISSING_ARG);
+        assert(err instanceof ERROR.MISSING_ARG);
       });
 
       it("throws TIMEOUT_TOO_LOW when timeout is below minimum", async () => {
@@ -174,9 +174,9 @@ describe("SendTransaction", () => {
               rpc: {} as Server,
               options: { timeoutInSeconds: 0 },
             }),
-          E.TIMEOUT_TOO_LOW,
+          ERROR.TIMEOUT_TOO_LOW,
         );
-        assert(err instanceof E.TIMEOUT_TOO_LOW);
+        assert(err instanceof ERROR.TIMEOUT_TOO_LOW);
       });
 
       it("throws WAIT_INTERVAL_TOO_LOW when wait interval is below minimum", async () => {
@@ -187,9 +187,9 @@ describe("SendTransaction", () => {
               rpc: {} as Server,
               options: { waitIntervalInMs: 50 },
             }),
-          E.WAIT_INTERVAL_TOO_LOW,
+          ERROR.WAIT_INTERVAL_TOO_LOW,
         );
-        assert(err instanceof E.WAIT_INTERVAL_TOO_LOW);
+        assert(err instanceof ERROR.WAIT_INTERVAL_TOO_LOW);
       });
 
       it("throws FAIL_TO_SEND_TRANSACTION when RPC send fails", async () => {
@@ -208,9 +208,9 @@ describe("SendTransaction", () => {
               transaction: mockTransaction,
               rpc,
             }),
-          E.FAIL_TO_SEND_TRANSACTION,
+          ERROR.FAIL_TO_SEND_TRANSACTION,
         );
-        assert(err instanceof E.FAIL_TO_SEND_TRANSACTION);
+        assert(err instanceof ERROR.FAIL_TO_SEND_TRANSACTION);
       });
 
       it("throws DUPLICATE_TRANSACTION when RPC reports duplicate", async () => {
@@ -235,9 +235,9 @@ describe("SendTransaction", () => {
               transaction: mockTransaction,
               rpc,
             }),
-          E.DUPLICATE_TRANSACTION,
+          ERROR.DUPLICATE_TRANSACTION,
         );
-        assert(err instanceof E.DUPLICATE_TRANSACTION);
+        assert(err instanceof ERROR.DUPLICATE_TRANSACTION);
         assertEquals(getCalls, 0);
       });
 
@@ -261,9 +261,9 @@ describe("SendTransaction", () => {
               transaction: mockTransaction,
               rpc,
             }),
-          E.TRY_AGAIN_LATER,
+          ERROR.TRY_AGAIN_LATER,
         );
-        assert(err instanceof E.TRY_AGAIN_LATER);
+        assert(err instanceof ERROR.TRY_AGAIN_LATER);
       });
 
       it("throws ERROR_STATUS when RPC returns error status", async () => {
@@ -288,9 +288,9 @@ describe("SendTransaction", () => {
               transaction: mockTransaction,
               rpc,
             }),
-          E.ERROR_STATUS,
+          ERROR.ERROR_STATUS,
         );
-        assert(err instanceof E.ERROR_STATUS);
+        assert(err instanceof ERROR.ERROR_STATUS);
       });
 
       it("throws UNEXPECTED_STATUS when RPC returns unknown status", async () => {
@@ -313,9 +313,9 @@ describe("SendTransaction", () => {
               transaction: mockTransaction,
               rpc,
             }),
-          E.UNEXPECTED_STATUS,
+          ERROR.UNEXPECTED_STATUS,
         );
-        assert(err instanceof E.UNEXPECTED_STATUS);
+        assert(err instanceof ERROR.UNEXPECTED_STATUS);
       });
 
       it("throws UNEXPECTED_STATUS when getTransaction returns unknown status", async () => {
@@ -340,9 +340,9 @@ describe("SendTransaction", () => {
               transaction: mockTransaction,
               rpc,
             }),
-          E.UNEXPECTED_STATUS,
+          ERROR.UNEXPECTED_STATUS,
         );
-        assert(err instanceof E.UNEXPECTED_STATUS);
+        assert(err instanceof ERROR.UNEXPECTED_STATUS);
       });
       it("throws FAILED_TO_GET_TRANSACTION_STATUS when RPC get fails", async () => {
         const hash = "get-fail-hash";
@@ -364,9 +364,9 @@ describe("SendTransaction", () => {
               transaction: mockTransaction,
               rpc,
             }),
-          E.FAILED_TO_GET_TRANSACTION_STATUS,
+          ERROR.FAILED_TO_GET_TRANSACTION_STATUS,
         );
-        assert(err instanceof E.FAILED_TO_GET_TRANSACTION_STATUS);
+        assert(err instanceof ERROR.FAILED_TO_GET_TRANSACTION_STATUS);
       });
 
       it("throws TRANSACTION_FAILED when RPC reports failed execution", async () => {
@@ -398,9 +398,9 @@ describe("SendTransaction", () => {
               transaction: mockTransaction,
               rpc,
             }),
-          E.TRANSACTION_FAILED,
+          ERROR.TRANSACTION_FAILED,
         );
-        assert(err instanceof E.TRANSACTION_FAILED);
+        assert(err instanceof ERROR.TRANSACTION_FAILED);
       });
 
       it("throws TRANSACTION_NOT_FOUND when transaction never appears before timeout", async () => {
@@ -434,10 +434,10 @@ describe("SendTransaction", () => {
                     useTransactionTimeoutIfAvailable: false,
                   },
                 }),
-              E.TRANSACTION_NOT_FOUND,
+              ERROR.TRANSACTION_NOT_FOUND,
             ),
         );
-        assert(err instanceof E.TRANSACTION_NOT_FOUND);
+        assert(err instanceof ERROR.TRANSACTION_NOT_FOUND);
       });
     });
 
@@ -474,11 +474,11 @@ describe("SendTransaction", () => {
                   useTransactionTimeoutIfAvailable: false,
                 },
               }),
-            E.TRANSACTION_NOT_FOUND,
+            ERROR.TRANSACTION_NOT_FOUND,
           ),
       );
 
-      assert(err instanceof E.TRANSACTION_NOT_FOUND);
+      assert(err instanceof ERROR.TRANSACTION_NOT_FOUND);
       assert(getCalls >= 4);
     });
 
@@ -498,9 +498,9 @@ describe("SendTransaction", () => {
             transaction: {} as Transaction,
             rpc: rpc,
           }),
-        E.UNEXPECTED_ERROR,
+        ERROR.UNEXPECTED_ERROR,
       );
-      assert(err instanceof E.UNEXPECTED_ERROR);
+      assert(err instanceof ERROR.UNEXPECTED_ERROR);
     });
   });
 });

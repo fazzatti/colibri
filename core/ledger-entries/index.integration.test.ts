@@ -19,7 +19,7 @@ import { LocalSigner } from "@/signer/local/index.ts";
 import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
 import { createClassicTransactionPipeline } from "@/pipelines/classic-transaction/index.ts";
 import { Contract } from "@/contract/index.ts";
-import * as E from "@/ledger-entries/error.ts";
+import * as ERROR from "@/ledger-entries/error.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 
@@ -194,7 +194,7 @@ describe("LedgerEntries integration", disableSanitizeConfig, () => {
             key: buildContractInstanceLedgerKey({ contractId }),
           }),
         ),
-      E.UNSUPPORTED_RPC_LEDGER_KEY,
+      ERROR.UNSUPPORTED_RPC_LEDGER_KEY,
     );
   });
 

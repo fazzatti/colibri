@@ -9,7 +9,7 @@ import {
   decodeLedgerEntryForKey,
   detectLedgerEntryKindFromKey,
 } from "@/ledger-entries/decode.ts";
-import * as E from "@/ledger-entries/error.ts";
+import * as ERROR from "@/ledger-entries/error.ts";
 import {
   buildAccountLedgerKey,
   buildClaimableBalanceLedgerKey,
@@ -478,7 +478,7 @@ describe("LedgerEntries decode helpers", () => {
             dataValue: new xdr.DataValue(new Uint8Array([1])),
           }),
         ),
-      E.UNEXPECTED_LEDGER_ENTRY_TYPE,
+      ERROR.UNEXPECTED_LEDGER_ENTRY_TYPE,
     );
   });
 });

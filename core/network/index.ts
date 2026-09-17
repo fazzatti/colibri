@@ -10,7 +10,7 @@ import type {
   TestNetNetCustomConfig,
 } from "@/network/types.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
-import * as E from "@/network/error.ts";
+import * as ERROR from "@/network/error.ts";
 
 /**
  * Mutable network configuration implementation with preset constructors for
@@ -212,7 +212,7 @@ export class NetworkConfig implements INetworkConfig {
       | "_allowHttp",
   ): NetworkType | string | boolean {
     if (isDefined(this[arg])) return this[arg];
-    throw new E.PROPERTY_NOT_SET(this.normalizePropertyName(arg));
+    throw new ERROR.PROPERTY_NOT_SET(this.normalizePropertyName(arg));
   }
 
   /** @internal */
@@ -227,7 +227,7 @@ export class NetworkConfig implements INetworkConfig {
       | "_allowHttp",
   ): void {
     if (isDefined(this[arg])) {
-      throw new E.PROPERTY_ALREADY_SET(this.normalizePropertyName(arg));
+      throw new ERROR.PROPERTY_ALREADY_SET(this.normalizePropertyName(arg));
     }
   }
 

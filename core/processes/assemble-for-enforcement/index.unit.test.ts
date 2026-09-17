@@ -13,7 +13,7 @@ import {
 import { Buffer } from "node:buffer";
 import { assembleForEnforcement } from "@/processes/assemble-for-enforcement/index.ts";
 import type { AssembleForEnforcementInput } from "@/processes/assemble-for-enforcement/types.ts";
-import * as E from "@/processes/assemble-for-enforcement/error.ts";
+import * as ERROR from "@/processes/assemble-for-enforcement/error.ts";
 import * as AssembleErrors from "@/processes/assemble-transaction/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { getOperationsFromTransaction } from "@/common/helpers/transaction.ts";
@@ -129,7 +129,7 @@ describe("assembleForEnforcement", () => {
   });
 
   it("uses a unique error for each required input", async () => {
-    const codes = Object.values(E.Code);
+    const codes = Object.values(ERROR.Code);
     assertEquals(new Set(codes).size, codes.length);
 
     await assertRejects(
@@ -138,7 +138,7 @@ describe("assembleForEnforcement", () => {
           transaction: undefined,
           authorizedOperation: makeInvokeOperation(),
         } as unknown as AssembleForEnforcementInput),
-      E.MISSING_TRANSACTION,
+      ERROR.MISSING_TRANSACTION,
     );
     await assertRejects(
       () =>
@@ -146,7 +146,7 @@ describe("assembleForEnforcement", () => {
           transaction: makeTransaction(),
           authorizedOperation: undefined,
         } as unknown as AssembleForEnforcementInput),
-      E.MISSING_AUTHORIZED_OPERATION,
+      ERROR.MISSING_AUTHORIZED_OPERATION,
     );
   });
 
@@ -176,7 +176,7 @@ describe("assembleForEnforcement", () => {
         assembleForEnforcement(
           null as unknown as AssembleForEnforcementInput,
         ),
-      E.UNEXPECTED_ERROR,
+      ERROR.UNEXPECTED_ERROR,
     );
   });
 });

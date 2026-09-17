@@ -11,7 +11,7 @@ import type {
   ContractEventBinding,
   ContractEventOptions,
 } from "@/contract/events/types.ts";
-import * as E from "@/contract/events/error.ts";
+import * as ERROR from "@/contract/events/error.ts";
 export * from "@/contract/events/definition.ts";
 export * from "@/contract/events/types.ts";
 export { CONTRACT_EVENT_ERRORS } from "@/contract/events/error.ts";
@@ -86,7 +86,7 @@ export class ContractEventRegistry {
     const index = this.bindings.findIndex((binding) =>
       binding.name === name && binding.occurrence === occurrence
     );
-    if (index < 0) throw new E.UNKNOWN_EVENT(name, occurrence);
+    if (index < 0) throw new ERROR.UNKNOWN_EVENT(name, occurrence);
     return this.#definitions[index];
   }
   /** Returns all definitions in spec order. */
@@ -100,7 +100,7 @@ export class ContractEventRegistry {
       return parsed ? [{ definition, parsed }] : [];
     });
     if (matches.length > 1) {
-      throw new E.AMBIGUOUS_EVENT(
+      throw new ERROR.AMBIGUOUS_EVENT(
         matches.map((match) => match.definition.name),
       );
     }
