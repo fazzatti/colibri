@@ -24,7 +24,7 @@ import {
   FEE_BUMP_PLUGIN_ID,
   FEE_BUMP_PLUGIN_TARGET,
 } from "@/index.ts";
-import * as E from "@/error.ts";
+import * as ERROR from "@/error.ts";
 import {
   Account,
   type FeeBumpTransaction,
@@ -178,7 +178,7 @@ describe("FeeBump Plugin", () => {
 
   describe("Error Handling", () => {
     it("uses the plugin package identifier as the error source", () => {
-      const error = new E.MISSING_ARG("networkConfig");
+      const error = new ERROR.MISSING_ARG("networkConfig");
 
       assertEquals(error.source, "@colibri/plugin-fee-bump");
     });
@@ -196,7 +196,7 @@ describe("FeeBump Plugin", () => {
             transaction: mockTx,
             rpc: mockRpc,
           } as PluginInput),
-        E.NOT_A_TRANSACTION,
+        ERROR.NOT_A_TRANSACTION,
       );
 
       await assertRejects(
@@ -205,7 +205,7 @@ describe("FeeBump Plugin", () => {
             transaction: "not a transaction" as any,
             rpc: mockRpc,
           }),
-        E.NOT_A_TRANSACTION,
+        ERROR.NOT_A_TRANSACTION,
       );
     });
 
@@ -215,7 +215,7 @@ describe("FeeBump Plugin", () => {
           createFeeBumpPlugin({
             networkConfig,
           } as any),
-        E.MISSING_ARG,
+        ERROR.MISSING_ARG,
       );
 
       assertThrows(
@@ -227,7 +227,7 @@ describe("FeeBump Plugin", () => {
               signers: [feeBumpSource.signer()],
             },
           } as any),
-        E.MISSING_ARG,
+        ERROR.MISSING_ARG,
       );
     });
 
@@ -242,7 +242,7 @@ describe("FeeBump Plugin", () => {
               signers: [feeBumpSource.signer()],
             } as any,
           }),
-        E.UNEXPECTED_ERROR,
+        ERROR.UNEXPECTED_ERROR,
       );
     });
   });

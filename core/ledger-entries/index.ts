@@ -5,7 +5,7 @@ import type {
   ExternalExecutableRef,
   LedgerKeyLike,
 } from "@/common/types/index.ts";
-import * as E from "@/ledger-entries/error.ts";
+import * as ERROR from "@/ledger-entries/error.ts";
 import {
   buildAccountLedgerKey,
   buildClaimableBalanceLedgerKey,
@@ -75,7 +75,7 @@ const normalizeExternalExecutableRef = (
       tag: Uint8Array.from(ref.tag.bytes),
     };
   } catch (cause) {
-    throw new E.INVALID_EXTERNAL_REFERENCE(
+    throw new ERROR.INVALID_EXTERNAL_REFERENCE(
       cause instanceof Error ? cause : new Error(String(cause)),
     );
   }
@@ -106,7 +106,7 @@ export class LedgerEntries {
     const hasRpc = "rpc" in args && !!args.rpc;
 
     if (hasNetworkConfig === hasRpc) {
-      throw new E.INVALID_CONSTRUCTOR_ARGS();
+      throw new ERROR.INVALID_CONSTRUCTOR_ARGS();
     }
 
     if (hasRpc) {
@@ -115,7 +115,7 @@ export class LedgerEntries {
     }
 
     if (!args.networkConfig.rpcUrl) {
-      throw new E.MISSING_RPC_URL();
+      throw new ERROR.MISSING_RPC_URL();
     }
 
     this.rpc = new Server(args.networkConfig.rpcUrl, {
@@ -243,7 +243,7 @@ export class LedgerEntries {
 
     const resolved = await this.resolveContractExecutable(args);
     if (isStellarAssetResolution(resolved)) {
-      throw new E.CONTRACT_INSTANCE_HAS_NO_WASM_HASH(
+      throw new ERROR.CONTRACT_INSTANCE_HAS_NO_WASM_HASH(
         args.contractId,
         resolved.executable.type,
       );
@@ -326,7 +326,7 @@ export class LedgerEntries {
   ): Promise<EntryFromLedgerKey<TKey>> {
     const entry = await this.get(key);
     if (!entry) {
-      throw new E.LEDGER_ENTRY_NOT_FOUND(
+      throw new ERROR.LEDGER_ENTRY_NOT_FOUND(
         kind,
         toBase64Xdr(key),
       );
@@ -348,7 +348,7 @@ export class LedgerEntries {
 
     for (const key of keys) {
       if (key.type === "ttl") {
-        throw new E.UNSUPPORTED_RPC_LEDGER_KEY("ttl");
+        throw new ERROR.UNSUPPORTED_RPC_LEDGER_KEY("ttl");
       }
     }
 
@@ -383,7 +383,7 @@ export class LedgerEntries {
     const result = await this.queryMany([key]);
     const entry = result.entries[0] as EntryFromLedgerKey<TKey> | null;
     if (!entry) {
-      throw new E.LEDGER_ENTRY_NOT_FOUND(kind, toBase64Xdr(key));
+      throw new ERROR.LEDGER_ENTRY_NOT_FOUND(kind, toBase64Xdr(key));
     }
 
     return {
@@ -408,7 +408,7 @@ export class LedgerEntries {
       Address.fromString(executable.executableOwner).toScAddress().type !==
         "scAddressTypeContract"
     ) {
-      throw new E.EXTERNAL_REFERENCE_OWNER_NOT_CONTRACT(
+      throw new ERROR.EXTERNAL_REFERENCE_OWNER_NOT_CONTRACT(
         executable.executableOwner,
       );
     }
@@ -421,7 +421,7 @@ export class LedgerEntries {
     const result = await this.queryMany([key]);
     const reference = result.entries[0] as ContractDataLedgerEntry | null;
     if (!reference) {
-      throw new E.EXTERNAL_REFERENCE_ENTRY_NOT_FOUND(
+      throw new ERROR.EXTERNAL_REFERENCE_ENTRY_NOT_FOUND(
         executable.executableOwner,
         executable.tag,
       );
@@ -430,7 +430,7 @@ export class LedgerEntries {
     const value = reference.valueScVal as xdr.ScVal;
     const bytes = value.type === "scvBytes" ? value.bytes.toBytes() : undefined;
     if (!bytes || bytes.length !== 32) {
-      throw new E.EXTERNAL_REFERENCE_VALUE_INVALID(
+      throw new ERROR.EXTERNAL_REFERENCE_VALUE_INVALID(
         executable.executableOwner,
         executable.tag,
         value.type,

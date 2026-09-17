@@ -1,7 +1,7 @@
 import { xdr } from "stellar-sdk";
 import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 import type { BinaryData } from "@/common/types/index.ts";
-import * as E from "@/contract/error.ts";
+import * as ERROR from "@/contract/error.ts";
 import type {
   ContractMetadata,
   ContractMetadataEntry,
@@ -25,7 +25,7 @@ export const extractContractMetadata = (
   try {
     module = new WebAssembly.Module(new Uint8Array(toUint8Array(wasm)));
   } catch (cause) {
-    throw new E.INVALID_WASM_FOR_METADATA(cause as Error);
+    throw new ERROR.INVALID_WASM_FOR_METADATA(cause as Error);
   }
 
   const sections: ContractMetadataSection[] = WebAssembly.Module
@@ -38,7 +38,7 @@ export const extractContractMetadata = (
           new Uint8Array(section),
         );
       } catch (cause) {
-        throw new E.FAILED_TO_DECODE_METADATA_SECTION(
+        throw new ERROR.FAILED_TO_DECODE_METADATA_SECTION(
           sectionIndex,
           cause as Error,
         );

@@ -3,7 +3,7 @@ import { describe, it } from "@std/testing/bdd";
 import { Buffer } from "node:buffer";
 import { Keypair, xdr } from "stellar-sdk";
 import type { LedgerKeyLike } from "@/common/types/index.ts";
-import * as E from "@/ledger-entries/error.ts";
+import * as ERROR from "@/ledger-entries/error.ts";
 import {
   buildAccountLedgerKey,
   buildClaimableBalanceLedgerKey,
@@ -137,7 +137,7 @@ describe("LedgerEntries key builders", () => {
         buildClaimableBalanceLedgerKey({
           balanceId: KNOWN_ISSUE_INVALID_CLAIMABLE_BALANCE_ID,
         }),
-      E.INVALID_CLAIMABLE_BALANCE_ID,
+      ERROR.INVALID_CLAIMABLE_BALANCE_ID,
     );
 
     assertThrows(
@@ -146,35 +146,35 @@ describe("LedgerEntries key builders", () => {
           contractId: "BAD" as ContractId,
           key: xdr.ScVal.scvU32(1),
         }),
-      E.INVALID_CONTRACT_ID,
+      ERROR.INVALID_CONTRACT_ID,
     );
     assertThrows(
       () =>
         buildConfigSettingLedgerKey({
           configSettingId: "badSetting" as never,
         }),
-      E.INVALID_CONFIG_SETTING_ID,
+      ERROR.INVALID_CONFIG_SETTING_ID,
     );
     assertThrows(
       () =>
         buildContractCodeLedgerKey({
           hash: new Uint8Array(31),
         }),
-      E.INVALID_HEX_HASH,
+      ERROR.INVALID_HEX_HASH,
     );
     assertThrows(
       () =>
         buildTtlLedgerKey({
           keyHash: "BAD" as never,
         }),
-      E.INVALID_LEDGER_KEY_HASH,
+      ERROR.INVALID_LEDGER_KEY_HASH,
     );
     assertThrows(
       () =>
         buildTtlLedgerKey({
           keyHash: new Uint8Array(31),
         }),
-      E.INVALID_LEDGER_KEY_HASH,
+      ERROR.INVALID_LEDGER_KEY_HASH,
     );
     assertThrows(
       () =>
@@ -182,7 +182,7 @@ describe("LedgerEntries key builders", () => {
           sellerId: ACCOUNT_ID,
           offerId: 1.5,
         }),
-      E.INVALID_OFFER_ID,
+      ERROR.INVALID_OFFER_ID,
     );
     assertThrows(
       () =>
@@ -190,7 +190,7 @@ describe("LedgerEntries key builders", () => {
           sellerId: ACCOUNT_ID,
           offerId: -1,
         }),
-      E.INVALID_OFFER_ID,
+      ERROR.INVALID_OFFER_ID,
     );
     assertThrows(
       () =>
@@ -198,7 +198,7 @@ describe("LedgerEntries key builders", () => {
           sellerId: ACCOUNT_ID,
           offerId: "not-an-int",
         }),
-      E.INVALID_OFFER_ID,
+      ERROR.INVALID_OFFER_ID,
     );
   });
 

@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { NetworkPassphrase, NetworkType } from "@/network/types.ts";
-import * as E from "@/network/error.ts";
+import * as ERROR from "@/network/error.ts";
 import { isNetworkConfig, NetworkConfig } from "@/network/index.ts";
 
 describe("Network", () => {
@@ -298,7 +298,7 @@ describe("Network", () => {
         () => {
           customNet.rpcUrl = "https://rpc2.test.com";
         },
-        E.PROPERTY_ALREADY_SET,
+        ERROR.PROPERTY_ALREADY_SET,
       );
       assertEquals(error.meta.data, { property: "rpcUrl" });
       assertEquals(
@@ -407,7 +407,7 @@ describe("Network", () => {
       (customNet as any)._type = undefined;
       const error = assertThrows(
         () => customNet.type,
-        E.PROPERTY_NOT_SET,
+        ERROR.PROPERTY_NOT_SET,
       );
       assertEquals(error.meta.data, { property: "type" });
       assertEquals(
@@ -425,7 +425,7 @@ describe("Network", () => {
       (customNet as any)._networkPassphrase = undefined;
       const error = assertThrows(
         () => customNet.networkPassphrase,
-        E.PROPERTY_NOT_SET,
+        ERROR.PROPERTY_NOT_SET,
       );
       assertEquals(error.meta.data, { property: "networkPassphrase" });
       assertEquals(

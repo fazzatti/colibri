@@ -7,7 +7,7 @@ import {
   parsePredicateSeconds,
   validateClaimPredicate,
 } from "@/claimable-balance/validate.ts";
-import * as E from "@/claimable-balance/error.ts";
+import * as ERROR from "@/claimable-balance/error.ts";
 
 /**
  * Discoverable claimable-balance predicate helpers returning native SDK XDR.
@@ -22,13 +22,13 @@ export class ClaimableBalancePredicates {
    * An empty list is rejected rather than silently authorizing a claim.
    */
   static allOf(predicates: readonly ClaimPredicate[]): ClaimPredicate {
-    if (predicates.length === 0) throw new E.EMPTY_ALL_OF();
+    if (predicates.length === 0) throw new ERROR.EMPTY_ALL_OF();
     return combinePredicates(predicates, ClaimableBalancePredicates.and);
   }
 
   /** Combines a nonempty list into a balanced native OR tree, preserving order. */
   static anyOf(predicates: readonly ClaimPredicate[]): ClaimPredicate {
-    if (predicates.length === 0) throw new E.EMPTY_ANY_OF();
+    if (predicates.length === 0) throw new ERROR.EMPTY_ANY_OF();
     return combinePredicates(predicates, ClaimableBalancePredicates.or);
   }
 
@@ -47,7 +47,7 @@ export class ClaimableBalancePredicates {
     const afterStart = ClaimableBalancePredicates.atOrAfter(start);
     const beforeEnd = ClaimableBalancePredicates.before(end);
     if (Math.ceil(start.getTime() / 1000) >= Math.ceil(end.getTime() / 1000)) {
-      throw new E.EMPTY_TIME_WINDOW();
+      throw new ERROR.EMPTY_TIME_WINDOW();
     }
     return ClaimableBalancePredicates.and(afterStart, beforeEnd);
   }
@@ -65,7 +65,7 @@ export class ClaimableBalancePredicates {
   static before(deadline: Date): ClaimPredicate {
     const milliseconds = deadline instanceof Date ? deadline.getTime() : NaN;
     if (!Number.isFinite(milliseconds) || milliseconds < 0) {
-      throw new E.INVALID_DATE(deadline);
+      throw new ERROR.INVALID_DATE(deadline);
     }
     return Claimant.predicateBeforeAbsoluteTime(
       String(Math.ceil(milliseconds / 1000)),
@@ -75,7 +75,7 @@ export class ClaimableBalancePredicates {
   /** Permits claims strictly before these absolute Unix seconds (not milliseconds). */
   static beforeAbsoluteTime(seconds: ClaimPredicateSeconds): ClaimPredicate {
     const value = parsePredicateSeconds(seconds);
-    if (value === null) throw new E.INVALID_ABSOLUTE_TIME(seconds);
+    if (value === null) throw new ERROR.INVALID_ABSOLUTE_TIME(seconds);
     return Claimant.predicateBeforeAbsoluteTime(String(value));
   }
 
@@ -85,7 +85,7 @@ export class ClaimableBalancePredicates {
    */
   static beforeRelativeTime(seconds: ClaimPredicateSeconds): ClaimPredicate {
     const value = parsePredicateSeconds(seconds);
-    if (value === null) throw new E.INVALID_RELATIVE_TIME(seconds);
+    if (value === null) throw new ERROR.INVALID_RELATIVE_TIME(seconds);
     return Claimant.predicateBeforeRelativeTime(String(value));
   }
 

@@ -15,7 +15,7 @@ import { Buffer } from "node:buffer";
 import { enforceSimulation } from "@/processes/enforce-simulation/index.ts";
 import type { EnforceSimulationInput } from "@/processes/enforce-simulation/types.ts";
 import type { SimulateTransactionOutput } from "@/processes/simulate-transaction/types.ts";
-import * as E from "@/processes/enforce-simulation/error.ts";
+import * as ERROR from "@/processes/enforce-simulation/error.ts";
 import * as SimulateErrors from "@/processes/simulate-transaction/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
 
@@ -122,7 +122,7 @@ describe("enforceSimulation", () => {
   });
 
   it("uses a unique error for each required input", async () => {
-    const codes = Object.values(E.Code);
+    const codes = Object.values(ERROR.Code);
     assertEquals(new Set(codes).size, codes.length);
 
     await assertRejects(
@@ -132,7 +132,7 @@ describe("enforceSimulation", () => {
           recordingSimulation: makeSimulation("recording"),
           rpc: {},
         } as unknown as EnforceSimulationInput),
-      E.MISSING_TRANSACTION,
+      ERROR.MISSING_TRANSACTION,
     );
     await assertRejects(
       () =>
@@ -141,7 +141,7 @@ describe("enforceSimulation", () => {
           recordingSimulation: undefined,
           rpc: {},
         } as unknown as EnforceSimulationInput),
-      E.MISSING_RECORDING_SIMULATION,
+      ERROR.MISSING_RECORDING_SIMULATION,
     );
     await assertRejects(
       () =>
@@ -150,7 +150,7 @@ describe("enforceSimulation", () => {
           recordingSimulation: makeSimulation("recording"),
           rpc: undefined,
         } as unknown as EnforceSimulationInput),
-      E.MISSING_RPC,
+      ERROR.MISSING_RPC,
     );
   });
 
@@ -178,7 +178,7 @@ describe("enforceSimulation", () => {
         enforceSimulation(
           null as unknown as EnforceSimulationInput,
         ),
-      E.UNEXPECTED_ERROR,
+      ERROR.UNEXPECTED_ERROR,
     );
   });
 });

@@ -10,7 +10,7 @@ import {
   Operation,
 } from "stellar-sdk";
 import type { AuthFlag, OperationRecord, xdr } from "stellar-sdk";
-import * as E from "@/auth/requirements/classic-operation-threshold/error.ts";
+import * as ERROR from "@/auth/requirements/classic-operation-threshold/error.ts";
 import { getRequiredOperationThresholdForClassicOperation as getRequirements } from "@/auth/requirements/classic-operation-threshold/index.ts";
 
 import {
@@ -383,7 +383,7 @@ describe("Auth classic operation threshold", () => {
 
     await assertRejects(
       async () => await getRequirements(op),
-      E.FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE,
+      ERROR.FAILED_TO_IDENTIFY_SIGNER_FROM_SOURCE,
     );
   });
 
@@ -403,7 +403,7 @@ describe("Auth classic operation threshold", () => {
 
     await assertRejects(
       async () => await getRequirements(op),
-      E.UNEXPECTED_ERROR,
+      ERROR.UNEXPECTED_ERROR,
     );
   });
 });

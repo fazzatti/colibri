@@ -35,7 +35,7 @@ import {
 } from "@/common/helpers/get-transaction-response.ts";
 import { generateRandomSalt } from "@/common/helpers/generate-random-salt.ts";
 import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
-import * as E from "@/contract/error.ts";
+import * as ERROR from "@/contract/error.ts";
 import type {
   ContractConstructorArgs,
   LoadContractErrorsFromWasmArgs,
@@ -166,12 +166,15 @@ export class Contract {
         networkPassphrase: networkConfig && networkConfig.networkPassphrase,
         contractConfig: contractConfig,
       },
-      (argName: string) => new E.MISSING_ARG(argName),
+      (argName: string) => new ERROR.MISSING_ARG(argName),
     );
 
     this.networkConfig = networkConfig;
     if (!rpc) {
-      assert(networkConfig && networkConfig.rpcUrl, new E.MISSING_RPC_URL());
+      assert(
+        networkConfig && networkConfig.rpcUrl,
+        new ERROR.MISSING_RPC_URL(),
+      );
       rpc = new Server(networkConfig.rpcUrl, {
         allowHttp: networkConfig.allowHttp ?? false,
       });
@@ -196,9 +199,9 @@ export class Contract {
     if (externalRef !== undefined) configuredSources.push("externalRef");
 
     if (configuredSources.length > 1) {
-      throw new E.CONTRACT_CONFIG_SOURCES_CONFLICT(configuredSources);
+      throw new ERROR.CONTRACT_CONFIG_SOURCES_CONFLICT(configuredSources);
     }
-    assert(configuredSources.length === 1, new E.INVALID_CONTRACT_CONFIG());
+    assert(configuredSources.length === 1, new ERROR.INVALID_CONTRACT_CONFIG());
 
     for (const plugin of plugins?.invokePipe ?? []) {
       this.invokePipe.use(plugin);
@@ -213,7 +216,7 @@ export class Contract {
     if (contractId) {
       assert(
         StrKey.isContractId(contractId),
-        new E.INVALID_CONTRACT_ID(contractId),
+        new ERROR.INVALID_CONTRACT_ID(contractId),
       );
       this.contractId = contractId;
     }
@@ -248,13 +251,13 @@ export class Contract {
   protected require(
     arg: "spec" | "contractId" | "wasm" | "wasmHash" | "externalRef",
   ): ContractId | ExternalExecutableRef | Spec | Uint8Array | string {
-    assert(this[arg], new E.MISSING_REQUIRED_PROPERTY(arg));
+    assert(this[arg], new ERROR.MISSING_REQUIRED_PROPERTY(arg));
     return this[arg];
   }
 
   /** @internal */
   protected requireNo(arg: "spec" | "contractId" | "wasm" | "wasmHash"): void {
-    assert(!this[arg], new E.PROPERTY_ALREADY_SET(arg));
+    assert(!this[arg], new ERROR.PROPERTY_ALREADY_SET(arg));
   }
 
   /** @internal */
@@ -285,7 +288,7 @@ export class Contract {
     const readPipe = this.hasContractErrorMatcherPlugin(this.readPipe);
 
     if (invokePipe || readPipe) {
-      throw new E.CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED({
+      throw new ERROR.CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED({
         invokePipe,
         readPipe,
       });
@@ -463,7 +466,7 @@ export class Contract {
 
     assert(
       contractInstance,
-      new E.CONTRACT_INSTANCE_NOT_FOUND(this.getContractId()),
+      new ERROR.CONTRACT_INSTANCE_NOT_FOUND(this.getContractId()),
     );
     return contractInstance as Api.LedgerEntryResult;
   }
@@ -502,7 +505,7 @@ export class Contract {
 
       return result;
     } catch (error) {
-      throw new E.FAILED_TO_UPLOAD_WASM(error as Error);
+      throw new ERROR.FAILED_TO_UPLOAD_WASM(error as Error);
     }
   }
 
@@ -564,7 +567,7 @@ export class Contract {
 
       return result;
     } catch (error) {
-      throw new E.FAILED_TO_DEPLOY_CONTRACT(error as Error);
+      throw new ERROR.FAILED_TO_DEPLOY_CONTRACT(error as Error);
     }
   }
 
@@ -674,7 +677,7 @@ export class Contract {
         contractId: this.contractId,
       });
       if (resolved.executable.type === "stellarAsset") {
-        throw new E.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM();
+        throw new ERROR.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM();
       }
       wasmHash = resolved.resolvedWasmHash;
     } else if (this.externalRef) {
@@ -685,7 +688,7 @@ export class Contract {
     }
 
     if (!wasmHash) {
-      throw new E.NETWORK_EXECUTABLE_NOT_AVAILABLE();
+      throw new ERROR.NETWORK_EXECUTABLE_NOT_AVAILABLE();
     }
 
     const key = buildContractCodeLedgerKey({ hash: wasmHash });
@@ -693,7 +696,7 @@ export class Contract {
     const entry = response.entries.find((entry) =>
       entry.key.toXdr("base64") === key.toXdr("base64")
     );
-    assert(entry, new E.CONTRACT_CODE_NOT_FOUND(wasmHash));
+    assert(entry, new ERROR.CONTRACT_CODE_NOT_FOUND(wasmHash));
     const code = decodeLedgerEntryForKey(key, entry) as ContractCodeLedgerEntry;
     return {
       code,
@@ -810,7 +813,7 @@ export class Contract {
           result.returnValue,
         ) as Value;
     } catch (cause) {
-      throw new E.FAILED_TO_DECODE_INVOCATION_RESULT(method, result, cause);
+      throw new ERROR.FAILED_TO_DECODE_INVOCATION_RESULT(method, result, cause);
     }
     return { ...result, value };
   }

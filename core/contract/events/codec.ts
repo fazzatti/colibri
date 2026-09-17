@@ -1,6 +1,6 @@
 import type { xdr } from "stellar-sdk";
 import type { Spec } from "@/contract/spec.ts";
-import * as E from "@/contract/events/error.ts";
+import * as ERROR from "@/contract/events/error.ts";
 
 const PRIMITIVES: Readonly<Record<string, string>> = {
   scSpecTypeBool: "scvBool",
@@ -30,7 +30,9 @@ export function validateEventValue(
   type: xdr.ScSpecTypeDef,
   depth = 0,
 ): void {
-  if (depth > 64) throw new E.INVALID_SPEC("event value nesting exceeds 64");
+  if (depth > 64) {
+    throw new ERROR.INVALID_SPEC("event value nesting exceeds 64");
+  }
   if (validatePrimitive(value, type)) return;
   const recurse = (child: xdr.ScVal, childType: xdr.ScSpecTypeDef) =>
     validateEventValue(spec, child, childType, depth + 1);
@@ -43,14 +45,14 @@ function validatePrimitive(value: xdr.ScVal, type: xdr.ScSpecTypeDef): boolean {
   if (kind === "scSpecTypeVal") return true;
   if (!(kind in PRIMITIVES)) return false;
   if (actual !== PRIMITIVES[kind]) {
-    throw new E.INVALID_SPEC(`expected ${kind}, received ${actual}`);
+    throw new ERROR.INVALID_SPEC(`expected ${kind}, received ${actual}`);
   }
   // Soroban MuxedAddress also accepts ordinary account and contract addresses.
   // Only an Address declaration excludes multiplexed accounts.
   if (
     kind === "scSpecTypeAddress" && value.type === "scvAddress" &&
     value.value.type === "scAddressTypeMuxedAccount"
-  ) throw new E.INVALID_SPEC("muxed address in Address field");
+  ) throw new ERROR.INVALID_SPEC("muxed address in Address field");
   return true;
 }
 
@@ -72,7 +74,7 @@ function validateContainer(
   }
   if (kind === "scSpecTypeBytesN") {
     if (actual !== "scvBytes" || value.value.value.length !== type.value.n) {
-      throw new E.INVALID_SPEC("invalid fixed byte length");
+      throw new ERROR.INVALID_SPEC("invalid fixed byte length");
     }
     return;
   }
@@ -95,19 +97,19 @@ function validateContainer(
     validateUserType(spec, value, type.value.name.toString(), recurse);
     return;
   }
-  throw new E.INVALID_SPEC(`unsupported type ${kind}`);
+  throw new ERROR.INVALID_SPEC(`unsupported type ${kind}`);
 }
 
 const requireVec = (value: xdr.ScVal): xdr.ScVal[] => {
   if (value.type !== "scvVec" || value.value === null) {
-    throw new E.INVALID_SPEC("expected vector");
+    throw new ERROR.INVALID_SPEC("expected vector");
   }
   return value.value!;
 };
 /** @internal */
 export const requireMap = (value: xdr.ScVal): xdr.ScMapEntry[] => {
   if (value.type !== "scvMap" || value.value === null) {
-    throw new E.INVALID_SPEC("expected map");
+    throw new ERROR.INVALID_SPEC("expected map");
   }
   return value.value!;
 };
@@ -118,7 +120,7 @@ const validateTuple = (
   recurse: Recurse,
 ): void => {
   if (values.length !== types.length) {
-    throw new E.INVALID_SPEC("tuple length mismatch");
+    throw new ERROR.INVALID_SPEC("tuple length mismatch");
   }
   types.forEach((type, index) => recurse(values[index], type));
 };
@@ -141,14 +143,14 @@ const validateUserType = (
       } else {
         const entries = requireMap(value);
         if (entries.length !== fields.length) {
-          throw new E.INVALID_SPEC("struct field count mismatch");
+          throw new ERROR.INVALID_SPEC("struct field count mismatch");
         }
         fields.forEach((field, index) => {
           const key = entries[index].key;
           if (
             key.type !== "scvSymbol" ||
             key.value.toString() !== field.name.toString()
-          ) throw new E.INVALID_SPEC("struct key mismatch");
+          ) throw new ERROR.INVALID_SPEC("struct key mismatch");
           recurse(entries[index].val, field.type);
         });
       }
@@ -158,12 +160,12 @@ const validateUserType = (
       const values = requireVec(value);
       const tag = values[0];
       if (!tag || tag.type !== "scvSymbol") {
-        throw new E.INVALID_SPEC("missing union tag");
+        throw new ERROR.INVALID_SPEC("missing union tag");
       }
       const variant = entry.value.cases.find((item) =>
         item.value.name.toString() === tag.value.toString()
       );
-      if (!variant) throw new E.INVALID_SPEC("unknown union tag");
+      if (!variant) throw new ERROR.INVALID_SPEC("unknown union tag");
       const types = variant.type === "scSpecUdtUnionCaseVoidV0"
         ? []
         : variant.value.type;
@@ -174,10 +176,10 @@ const validateUserType = (
       if (
         value.type !== "scvU32" ||
         !entry.value.cases.some((item) => item.value === value.value)
-      ) throw new E.INVALID_SPEC("unknown enum value");
+      ) throw new ERROR.INVALID_SPEC("unknown enum value");
       return;
     }
     default:
-      throw new E.INVALID_SPEC(`unsupported event user type ${name}`);
+      throw new ERROR.INVALID_SPEC(`unsupported event user type ${name}`);
   }
 };

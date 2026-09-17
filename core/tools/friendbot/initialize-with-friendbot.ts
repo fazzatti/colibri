@@ -1,7 +1,7 @@
 import { assert } from "@/common/assert/assert.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
-import * as E from "@/tools/friendbot/error.ts";
+import * as ERROR from "@/tools/friendbot/error.ts";
 import { Server } from "stellar-sdk/rpc";
 
 /** Optional behavior overrides for Friendbot initialization. */
@@ -41,7 +41,7 @@ const waitForRpcPropagation = async (
     }
   }
 
-  throw new E.RPC_PROPAGATION_TIMEOUT(
+  throw new ERROR.RPC_PROPAGATION_TIMEOUT(
     friendbotUrl,
     publicKey,
     options.rpcUrl,
@@ -58,7 +58,7 @@ export const initializeWithFriendbot = async (
 ): Promise<void> => {
   assert(
     StrKey.isEd25519PublicKey(publicKey),
-    new E.INVALID_ADDRESS(friendbotUrl, publicKey),
+    new ERROR.INVALID_ADDRESS(friendbotUrl, publicKey),
   );
 
   try {
@@ -72,7 +72,7 @@ export const initializeWithFriendbot = async (
       text.includes("account already funded to starting balance");
 
     if (response.status !== 200 && !alreadyFunded) {
-      throw new E.UNEXPECTED(
+      throw new ERROR.UNEXPECTED(
         friendbotUrl,
         new Error(`Failed to initialize with Friendbot: ${text}`),
       );
@@ -82,9 +82,9 @@ export const initializeWithFriendbot = async (
 
     return;
   } catch (e) {
-    if (e instanceof E.FriendbotError) {
+    if (e instanceof ERROR.FriendbotError) {
       throw e;
     }
-    throw new E.UNEXPECTED(friendbotUrl, e as Error);
+    throw new ERROR.UNEXPECTED(friendbotUrl, e as Error);
   }
 };

@@ -12,6 +12,6 @@ export {
 } from "@/types.ts";
 export type { CheckMemoRequiredInput } from "@/types.ts";
 export { Code, ERROR_PLG_SEP29 } from "@/error.ts";
-import * as E from "@/error.ts";
+import * as ERROR from "@/error.ts";
 /** Typed SEP-29 failures for code-based or constructor-based handling. */
-export const Sep29Errors: typeof E = E;
+export const Sep29Errors: typeof ERROR = ERROR;

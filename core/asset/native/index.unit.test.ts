@@ -10,7 +10,7 @@ import { Asset, Claimant, Memo, Operation } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import { StellarAsset } from "@/asset/native/index.ts";
 import type { StellarAssetArgs } from "@/asset/native/types.ts";
-import * as E from "@/asset/native/error.ts";
+import * as ERROR from "@/asset/native/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
@@ -55,7 +55,7 @@ describe("StellarAsset", () => {
     );
     assertThrows(
       () => StellarAsset.fromCanonical({ canonical: "USD", networkConfig }),
-      E.INVALID_CANONICAL_ASSET,
+      ERROR.INVALID_CANONICAL_ASSET,
     );
     for (const value of [usd, xlm]) {
       const sac = value.toContract();
@@ -74,16 +74,16 @@ describe("StellarAsset", () => {
     const usd = new StellarAsset({ asset, networkConfig, rpc });
     await assertRejects(
       () => usd.balance({ id: issuer.publicKey() }),
-      E.ISSUER_BALANCE_UNDEFINED,
+      ERROR.ISSUER_BALANCE_UNDEFINED,
     );
     await assertRejects(
       () => usd.balance({ id: holder.publicKey() }),
-      E.READ_TRUSTLINE_FAILED,
+      ERROR.READ_TRUSTLINE_FAILED,
     );
     const xlm = StellarAsset.NativeXLM({ networkConfig, rpc });
     const error = await assertRejects(
       () => xlm.balance({ id: holder.publicKey() }),
-      E.READ_BALANCE_FAILED,
+      ERROR.READ_BALANCE_FAILED,
     );
     assert(error.meta?.cause instanceof Error);
     await assertRejects(
@@ -104,10 +104,10 @@ describe("StellarAsset", () => {
     });
     const error = assertThrows(
       () => invalid.toContract(),
-      E.SAC_BINDING_FAILED,
+      ERROR.SAC_BINDING_FAILED,
     );
     assert(error.meta?.cause instanceof Error);
-    assertEquals(E.ERROR_STAS[error.code], error.constructor);
+    assertEquals(ERROR.ERROR_STAS[error.code], error.constructor);
   });
 
   it("mints and burns using explicit issuer payment endpoints", async () => {
@@ -145,11 +145,11 @@ describe("StellarAsset", () => {
     const xlm = StellarAsset.NativeXLM({ networkConfig });
     await assertRejects(
       () => xlm.mint({ destination: holder.publicKey(), amount: "1", config }),
-      E.NATIVE_MINT,
+      ERROR.NATIVE_MINT,
     );
     await assertRejects(
       () => xlm.burn({ amount: "1", config }),
-      E.NATIVE_BURN,
+      ERROR.NATIVE_BURN,
     );
   });
 
@@ -207,7 +207,7 @@ describe("StellarAsset", () => {
               networkConfig,
             } as unknown as StellarAssetArgs,
           ),
-        E.NATIVE_ASSET_CODE_MISMATCH,
+        ERROR.NATIVE_ASSET_CODE_MISMATCH,
       );
     }
     assertEquals(
@@ -225,7 +225,7 @@ describe("StellarAsset", () => {
           issuer: issuer.publicKey(),
           networkConfig,
         }),
-      E.INVALID_ASSET,
+      ERROR.INVALID_ASSET,
     );
     assertThrows(
       () =>
@@ -233,7 +233,7 @@ describe("StellarAsset", () => {
           asset,
           networkConfig: NetworkConfig.CustomNet({ networkPassphrase: "test" }),
         }),
-      E.MISSING_RPC_URL,
+      ERROR.MISSING_RPC_URL,
     );
     assertThrows(
       () =>
@@ -243,7 +243,7 @@ describe("StellarAsset", () => {
             rpcUrl: "http://localhost:8000",
           }),
         }),
-      E.INVALID_RPC,
+      ERROR.INVALID_RPC,
     );
   });
 
@@ -251,7 +251,10 @@ describe("StellarAsset", () => {
     const xlm = new StellarAsset({ asset: Asset.native(), networkConfig });
     assertEquals(await xlm.getIssuer(), null);
     assertEquals(await xlm.getTrustline(holder.publicKey()), null);
-    await assertRejects(() => xlm.changeTrust({ config }), E.NATIVE_TRUSTLINE);
+    await assertRejects(
+      () => xlm.changeTrust({ config }),
+      ERROR.NATIVE_TRUSTLINE,
+    );
     await assertRejects(
       () =>
         xlm.setTrustLineFlags({
@@ -259,11 +262,11 @@ describe("StellarAsset", () => {
           flags: { authorized: true },
           config,
         }),
-      E.NATIVE_TRUSTLINE_FLAGS,
+      ERROR.NATIVE_TRUSTLINE_FLAGS,
     );
     await assertRejects(
       () => xlm.clawback({ from: holder.publicKey(), amount: "1", config }),
-      E.NATIVE_CLAWBACK,
+      ERROR.NATIVE_CLAWBACK,
     );
     await assertRejects(
       () => new StellarAsset({ asset, networkConfig }).getTrustline("Ginvalid"),
@@ -276,11 +279,11 @@ describe("StellarAsset", () => {
     const errors = [
       await assertRejects(
         () => usd.changeTrust({ limit: "-1", config }),
-        E.CHANGE_TRUST_FAILED,
+        ERROR.CHANGE_TRUST_FAILED,
       ),
       await assertRejects(
         () => usd.transfer({ destination: "invalid", amount: "1", config }),
-        E.TRANSFER_FAILED,
+        ERROR.TRANSFER_FAILED,
       ),
       await assertRejects(
         () =>
@@ -289,11 +292,11 @@ describe("StellarAsset", () => {
             flags: { authorized: true },
             config,
           }),
-        E.TRUSTLINE_FLAGS_FAILED,
+        ERROR.TRUSTLINE_FLAGS_FAILED,
       ),
       await assertRejects(
         () => usd.clawback({ from: "invalid", amount: "1", config }),
-        E.CLAWBACK_FAILED,
+        ERROR.CLAWBACK_FAILED,
       ),
     ];
     for (const error of errors) assert(error.meta?.cause instanceof Error);
@@ -306,11 +309,11 @@ describe("StellarAsset", () => {
     const usd = new StellarAsset({ asset, networkConfig, rpc });
     const issuerError = await assertRejects(
       () => usd.getIssuer(),
-      E.READ_ISSUER_FAILED,
+      ERROR.READ_ISSUER_FAILED,
     );
     const trustlineError = await assertRejects(
       () => usd.getTrustline(holder.publicKey()),
-      E.READ_TRUSTLINE_FAILED,
+      ERROR.READ_TRUSTLINE_FAILED,
     );
     assert(issuerError.meta?.cause instanceof Error);
     assert(trustlineError.meta?.cause instanceof Error);
@@ -417,29 +420,29 @@ describe("StellarAsset", () => {
 
   it("exposes a unique stable constructor for every asset error", () => {
     const errors = [
-      new E.INVALID_ASSET("cause"),
-      new E.MISSING_RPC_URL(),
-      new E.INVALID_RPC("cause"),
-      new E.NATIVE_TRUSTLINE(),
-      new E.CHANGE_TRUST_FAILED("cause"),
-      new E.TRANSFER_FAILED("cause"),
-      new E.NATIVE_TRUSTLINE_FLAGS(),
-      new E.TRUSTLINE_FLAGS_FAILED("cause"),
-      new E.NATIVE_CLAWBACK(),
-      new E.CLAWBACK_FAILED("cause"),
-      new E.READ_ISSUER_FAILED("cause"),
-      new E.READ_TRUSTLINE_FAILED("cause"),
-      new E.NATIVE_ASSET_CODE_MISMATCH("USD"),
-      new E.NATIVE_AUTHORIZATION(),
-      new E.AUTHORIZATION_TRUSTLINE_MISSING(holder.publicKey()),
-      new E.CREATE_CLAIMABLE_BALANCE_FAILED("cause"),
+      new ERROR.INVALID_ASSET("cause"),
+      new ERROR.MISSING_RPC_URL(),
+      new ERROR.INVALID_RPC("cause"),
+      new ERROR.NATIVE_TRUSTLINE(),
+      new ERROR.CHANGE_TRUST_FAILED("cause"),
+      new ERROR.TRANSFER_FAILED("cause"),
+      new ERROR.NATIVE_TRUSTLINE_FLAGS(),
+      new ERROR.TRUSTLINE_FLAGS_FAILED("cause"),
+      new ERROR.NATIVE_CLAWBACK(),
+      new ERROR.CLAWBACK_FAILED("cause"),
+      new ERROR.READ_ISSUER_FAILED("cause"),
+      new ERROR.READ_TRUSTLINE_FAILED("cause"),
+      new ERROR.NATIVE_ASSET_CODE_MISMATCH("USD"),
+      new ERROR.NATIVE_AUTHORIZATION(),
+      new ERROR.AUTHORIZATION_TRUSTLINE_MISSING(holder.publicKey()),
+      new ERROR.CREATE_CLAIMABLE_BALANCE_FAILED("cause"),
     ];
     assertEquals(
       new Set(errors.map((error) => error.code)).size,
       errors.length,
     );
     for (const error of errors) {
-      assertEquals(E.ERROR_STAS[error.code], error.constructor);
+      assertEquals(ERROR.ERROR_STAS[error.code], error.constructor);
     }
   });
 
@@ -466,11 +469,11 @@ describe("StellarAsset", () => {
           authorize: false,
           config,
         }),
-      E.NATIVE_AUTHORIZATION,
+      ERROR.NATIVE_AUTHORIZATION,
     );
     await assertRejects(
       () => usd.setAuthorized({ id: "Ginvalid", authorize: true, config }),
-      E.TRUSTLINE_FLAGS_FAILED,
+      ERROR.TRUSTLINE_FLAGS_FAILED,
     );
     const offline = new StellarAsset({
       asset,
@@ -484,7 +487,7 @@ describe("StellarAsset", () => {
           authorize: false,
           config,
         }),
-      E.READ_TRUSTLINE_FAILED,
+      ERROR.READ_TRUSTLINE_FAILED,
     );
   });
 
@@ -516,13 +519,13 @@ describe("StellarAsset", () => {
       }
       const error = await assertRejects(
         () => token.createClaimableBalance({ amount: "-1", claimants, config }),
-        E.CREATE_CLAIMABLE_BALANCE_FAILED,
+        ERROR.CREATE_CLAIMABLE_BALANCE_FAILED,
       );
       assert(error.meta?.cause instanceof Error);
       await assertRejects(
         () =>
           token.createClaimableBalance({ amount: "1", claimants: [], config }),
-        E.CREATE_CLAIMABLE_BALANCE_FAILED,
+        ERROR.CREATE_CLAIMABLE_BALANCE_FAILED,
       );
     }
   });

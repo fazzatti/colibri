@@ -1,5 +1,5 @@
 import type { TOID } from "@/toid/types.ts";
-import * as E from "@/toid/error.ts";
+import * as ERROR from "@/toid/error.ts";
 import { assert } from "@/common/assert/assert.ts";
 
 /**
@@ -51,17 +51,17 @@ export function createTOID(
   // Validate bounds
   assert(
     ledgerSequence >= 0 && ledgerSequence <= 2147483647,
-    new E.LEDGER_OUT_OF_RANGE(ledgerSequence),
+    new ERROR.LEDGER_OUT_OF_RANGE(ledgerSequence),
   );
 
   assert(
     transactionOrder >= 1 && transactionOrder <= 1048575,
-    new E.TX_ORDER_OUT_OF_RANGE(transactionOrder),
+    new ERROR.TX_ORDER_OUT_OF_RANGE(transactionOrder),
   );
 
   assert(
     operationIndex >= 1 && operationIndex <= 4095,
-    new E.OP_INDEX_OUT_OF_RANGE(operationIndex),
+    new ERROR.OP_INDEX_OUT_OF_RANGE(operationIndex),
   );
 
   // Shift operation index to 0-based for bit packing (matches RPC behavior)
@@ -94,7 +94,7 @@ export function parseTOID(toid: string): {
   transactionOrder: number;
   operationIndex: number;
 } {
-  assert(isTOID(toid), new E.INVALID_TOID(toid));
+  assert(isTOID(toid), new ERROR.INVALID_TOID(toid));
 
   const val = BigInt(toid);
 

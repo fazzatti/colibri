@@ -9,7 +9,7 @@ import { memoize } from "@/common/decorators/memoize/index.ts";
 import { Contract } from "@/contract/index.ts";
 // deno-coverage-ignore-stop
 import { decodeTokenValue } from "@/asset/token-value.ts";
-import * as E from "@/asset/sep41-token/error.ts";
+import * as ERROR from "@/asset/sep41-token/error.ts";
 import type {
   SEP41AllowanceArgs,
   SEP41ApproveArgs,
@@ -31,7 +31,7 @@ type ScValEncodingOptions = NonNullable<
 const encodeArgument = (
   value: unknown,
   options: ScValEncodingOptions,
-  error: (cause: Error) => E.SEP41TokenError,
+  error: (cause: Error) => ERROR.SEP41TokenError,
 ): ReturnType<typeof nativeToScVal> => {
   try {
     return nativeToScVal(value, options);
@@ -117,13 +117,14 @@ export class SEP41TokenContract {
       encodeArgument(
         from,
         { type: "address" },
-        (cause) => new E.FAILED_TO_ENCODE_ALLOWANCE_ARGUMENT_FROM(from, cause),
+        (cause) =>
+          new ERROR.FAILED_TO_ENCODE_ALLOWANCE_ARGUMENT_FROM(from, cause),
       ),
       encodeArgument(
         spender,
         { type: "address" },
         (cause) =>
-          new E.FAILED_TO_ENCODE_ALLOWANCE_ARGUMENT_SPENDER(spender, cause),
+          new ERROR.FAILED_TO_ENCODE_ALLOWANCE_ARGUMENT_SPENDER(spender, cause),
       ),
     ]);
   }
@@ -143,25 +144,26 @@ export class SEP41TokenContract {
         encodeArgument(
           from,
           { type: "address" },
-          (cause) => new E.FAILED_TO_ENCODE_APPROVE_ARGUMENT_FROM(from, cause),
+          (cause) =>
+            new ERROR.FAILED_TO_ENCODE_APPROVE_ARGUMENT_FROM(from, cause),
         ),
         encodeArgument(
           spender,
           { type: "address" },
           (cause) =>
-            new E.FAILED_TO_ENCODE_APPROVE_ARGUMENT_SPENDER(spender, cause),
+            new ERROR.FAILED_TO_ENCODE_APPROVE_ARGUMENT_SPENDER(spender, cause),
         ),
         encodeArgument(
           amount,
           { type: "i128" },
           (cause) =>
-            new E.FAILED_TO_ENCODE_APPROVE_ARGUMENT_AMOUNT(amount, cause),
+            new ERROR.FAILED_TO_ENCODE_APPROVE_ARGUMENT_AMOUNT(amount, cause),
         ),
         encodeArgument(
           liveUntilLedger,
           { type: "u32" },
           (cause) =>
-            new E.FAILED_TO_ENCODE_APPROVE_ARGUMENT_LIVE_UNTIL_LEDGER(
+            new ERROR.FAILED_TO_ENCODE_APPROVE_ARGUMENT_LIVE_UNTIL_LEDGER(
               liveUntilLedger,
               cause,
             ),
@@ -178,7 +180,7 @@ export class SEP41TokenContract {
       encodeArgument(
         id,
         { type: "address" },
-        (cause) => new E.FAILED_TO_ENCODE_BALANCE_ARGUMENT_ID(id, cause),
+        (cause) => new ERROR.FAILED_TO_ENCODE_BALANCE_ARGUMENT_ID(id, cause),
       ),
     ]);
   }
@@ -197,18 +199,19 @@ export class SEP41TokenContract {
         encodeArgument(
           from,
           { type: "address" },
-          (cause) => new E.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_FROM(from, cause),
+          (cause) =>
+            new ERROR.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_FROM(from, cause),
         ),
         encodeArgument(
           to,
           { type: "address" },
-          (cause) => new E.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_TO(to, cause),
+          (cause) => new ERROR.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_TO(to, cause),
         ),
         encodeArgument(
           amount,
           { type: "i128" },
           (cause) =>
-            new E.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_AMOUNT(amount, cause),
+            new ERROR.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_AMOUNT(amount, cause),
         ),
       ],
       config,
@@ -232,7 +235,7 @@ export class SEP41TokenContract {
           spender,
           { type: "address" },
           (cause) =>
-            new E.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_SPENDER(
+            new ERROR.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_SPENDER(
               spender,
               cause,
             ),
@@ -241,19 +244,22 @@ export class SEP41TokenContract {
           from,
           { type: "address" },
           (cause) =>
-            new E.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_FROM(from, cause),
+            new ERROR.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_FROM(from, cause),
         ),
         encodeArgument(
           to,
           { type: "address" },
           (cause) =>
-            new E.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_TO(to, cause),
+            new ERROR.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_TO(to, cause),
         ),
         encodeArgument(
           amount,
           { type: "i128" },
           (cause) =>
-            new E.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_AMOUNT(amount, cause),
+            new ERROR.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_AMOUNT(
+              amount,
+              cause,
+            ),
         ),
       ],
       config,
@@ -274,12 +280,13 @@ export class SEP41TokenContract {
         encodeArgument(
           from,
           { type: "address" },
-          (cause) => new E.FAILED_TO_ENCODE_BURN_ARGUMENT_FROM(from, cause),
+          (cause) => new ERROR.FAILED_TO_ENCODE_BURN_ARGUMENT_FROM(from, cause),
         ),
         encodeArgument(
           amount,
           { type: "i128" },
-          (cause) => new E.FAILED_TO_ENCODE_BURN_ARGUMENT_AMOUNT(amount, cause),
+          (cause) =>
+            new ERROR.FAILED_TO_ENCODE_BURN_ARGUMENT_AMOUNT(amount, cause),
         ),
       ],
       config,
@@ -302,19 +309,22 @@ export class SEP41TokenContract {
           spender,
           { type: "address" },
           (cause) =>
-            new E.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_SPENDER(spender, cause),
+            new ERROR.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_SPENDER(
+              spender,
+              cause,
+            ),
         ),
         encodeArgument(
           from,
           { type: "address" },
           (cause) =>
-            new E.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_FROM(from, cause),
+            new ERROR.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_FROM(from, cause),
         ),
         encodeArgument(
           amount,
           { type: "i128" },
           (cause) =>
-            new E.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_AMOUNT(amount, cause),
+            new ERROR.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_AMOUNT(amount, cause),
         ),
       ],
       config,
@@ -369,7 +379,7 @@ export class SEP41TokenContract {
     const result = await this.contract.readRaw({ method, methodArgs });
     return decodeTokenValue<Output>(
       result,
-      new E.MISSING_RETURN_VALUE(method),
+      new ERROR.MISSING_RETURN_VALUE(method),
     );
   }
 

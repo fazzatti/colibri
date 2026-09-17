@@ -11,7 +11,7 @@ import {
   type xdr,
 } from "stellar-sdk";
 import { wrapFeeBump } from "@/processes/wrap-fee-bump/index.ts";
-import * as E from "@/processes/wrap-fee-bump/error.ts";
+import * as ERROR from "@/processes/wrap-fee-bump/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { isFeeBumpTransaction } from "@/common/type-guards/is-fee-bump-transaction.ts";
 import type {
@@ -96,7 +96,7 @@ describe("WrapFeeBump", () => {
             config: { source: bob, fee: "204", signers: [] },
             networkPassphrase,
           }),
-        E.FEE_TOO_LOW,
+        ERROR.FEE_TOO_LOW,
       );
     });
     it("wraps a Transaction into a FeeBumpTransaction", async () => {
@@ -149,7 +149,7 @@ describe("WrapFeeBump", () => {
             config: null as unknown as FeeBumpConfig,
             networkPassphrase,
           }),
-        E.UNEXPECTED_ERROR,
+        ERROR.UNEXPECTED_ERROR,
       );
     });
 
@@ -169,7 +169,7 @@ describe("WrapFeeBump", () => {
             config: { source: bob, fee: "100", signers: [] },
             networkPassphrase,
           }),
-        E.ALREADY_FEE_BUMP,
+        ERROR.ALREADY_FEE_BUMP,
       );
     });
   });
@@ -183,7 +183,7 @@ describe("WrapFeeBump", () => {
             config: { source: bob, fee: "100", signers: [] },
             networkPassphrase,
           }),
-        E.NOT_A_TRANSACTION,
+        ERROR.NOT_A_TRANSACTION,
       );
     });
 
@@ -204,7 +204,7 @@ describe("WrapFeeBump", () => {
             },
             networkPassphrase,
           }),
-        E.MISSING_ARG,
+        ERROR.MISSING_ARG,
       );
 
       assertThrows(
@@ -219,7 +219,7 @@ describe("WrapFeeBump", () => {
             },
             networkPassphrase,
           }),
-        E.MISSING_ARG,
+        ERROR.MISSING_ARG,
       );
     });
 
@@ -242,7 +242,7 @@ describe("WrapFeeBump", () => {
               config: { source: bob, fee: "101", signers: [] },
               networkPassphrase,
             }),
-          E.FAILED_TO_BUILD_FEE_BUMP,
+          ERROR.FAILED_TO_BUILD_FEE_BUMP,
         );
       } finally {
         (TransactionBuilder as any).buildFeeBumpTransaction = original;
@@ -261,7 +261,7 @@ describe("WrapFeeBump", () => {
             config: { source: bob, fee: "99", signers: [] },
             networkPassphrase,
           }),
-        E.FEE_TOO_LOW,
+        ERROR.FEE_TOO_LOW,
       );
     });
   });

@@ -1,6 +1,6 @@
 import type { xdr } from "stellar-sdk";
 import { assert } from "@/common/assert/assert.ts";
-import * as E from "@/processes/parse-classic-transaction-outcome/error.ts";
+import * as ERROR from "@/processes/parse-classic-transaction-outcome/error.ts";
 import type {
   ClassicOperationOutcome,
   ParseClassicTransactionOutcomeInput,
@@ -46,7 +46,7 @@ const getOperationResults = (
   }
 
   if (transactionResult.type !== "txFeeBumpInnerSuccess") {
-    throw new E.UNEXPECTED_TRANSACTION_RESULT_ERROR(
+    throw new ERROR.UNEXPECTED_TRANSACTION_RESULT_ERROR(
       input,
       transactionResult.type,
     );
@@ -55,7 +55,10 @@ const getOperationResults = (
   const innerResult = transactionResult.innerResultPair.result.result;
   assert(
     innerResult.type === "txSuccess",
-    new E.UNEXPECTED_INNER_TRANSACTION_RESULT_ERROR(input, innerResult.type),
+    new ERROR.UNEXPECTED_INNER_TRANSACTION_RESULT_ERROR(
+      input,
+      innerResult.type,
+    ),
   );
   return innerResult.results;
 };
@@ -67,7 +70,7 @@ const parseOperationOutcome = (
 ): ClassicOperationOutcome => {
   assert(
     operationResult.type === "opInner",
-    new E.UNEXPECTED_OPERATION_RESULT_ERROR(
+    new ERROR.UNEXPECTED_OPERATION_RESULT_ERROR(
       input,
       index,
       operationResult.type,
@@ -78,13 +81,17 @@ const parseOperationOutcome = (
   const expectedResultType = OPERATION_SUCCESS_TYPES[typedResult.type];
   assert(
     expectedResultType !== undefined,
-    new E.UNSUPPORTED_OPERATION_OUTCOME_ERROR(input, index, typedResult.type),
+    new ERROR.UNSUPPORTED_OPERATION_OUTCOME_ERROR(
+      input,
+      index,
+      typedResult.type,
+    ),
   );
 
   const result = typedResult.value;
   assert(
     result.type === expectedResultType,
-    new E.UNSUCCESSFUL_OPERATION_OUTCOME_ERROR(
+    new ERROR.UNSUCCESSFUL_OPERATION_OUTCOME_ERROR(
       input,
       index,
       typedResult.type,
@@ -117,10 +124,10 @@ export const parseClassicTransactionOutcome = (
       ),
     };
   } catch (error) {
-    if (error instanceof E.ParseClassicTransactionOutcomeError) throw error;
-    throw new E.UNEXPECTED_ERROR(input, error as Error);
+    if (error instanceof ERROR.ParseClassicTransactionOutcomeError) throw error;
+    throw new ERROR.UNEXPECTED_ERROR(input, error as Error);
   }
 };
 
 /** Error constructors emitted by {@link parseClassicTransactionOutcome}. */
-export const ParseClassicTransactionOutcomeErrors: typeof E = E;
+export const ParseClassicTransactionOutcomeErrors: typeof ERROR = ERROR;

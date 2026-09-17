@@ -2,7 +2,7 @@ import type {
   EnforceSimulationInput,
   EnforceSimulationOutput,
 } from "@/processes/enforce-simulation/types.ts";
-import * as E from "@/processes/enforce-simulation/error.ts";
+import * as ERROR from "@/processes/enforce-simulation/error.ts";
 import { SimulateTransactionError } from "@/processes/simulate-transaction/error.ts";
 import { simulateTransaction } from "@/processes/simulate-transaction/index.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
@@ -24,15 +24,15 @@ export const enforceSimulation = async (
 
     assertRequiredArgs(
       { transaction },
-      () => new E.MISSING_TRANSACTION(input),
+      () => new ERROR.MISSING_TRANSACTION(input),
     );
     assertRequiredArgs(
       { recordingSimulation },
-      () => new E.MISSING_RECORDING_SIMULATION(input),
+      () => new ERROR.MISSING_RECORDING_SIMULATION(input),
     );
     assertRequiredArgs(
       { rpc },
-      () => new E.MISSING_RPC(input),
+      () => new ERROR.MISSING_RPC(input),
     );
 
     const requiresEnforcingSimulation = getOperationsFromTransaction(
@@ -44,14 +44,14 @@ export const enforceSimulation = async (
     return await simulateTransaction({ transaction, rpc });
   } catch (error) {
     if (
-      error instanceof E.EnforceSimulationError ||
+      error instanceof ERROR.EnforceSimulationError ||
       error instanceof SimulateTransactionError
     ) {
       throw error;
     }
-    throw new E.UNEXPECTED_ERROR(input, error as Error);
+    throw new ERROR.UNEXPECTED_ERROR(input, error as Error);
   }
 };
 
 /** Error constructors emitted by {@link enforceSimulation}. */
-export const EnforceSimulationErrors: typeof E = E;
+export const EnforceSimulationErrors: typeof ERROR = ERROR;

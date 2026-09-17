@@ -3,7 +3,7 @@ import { describe, it } from "@std/testing/bdd";
 import { type SorobanDataBuilder, xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { simulateToRetval } from "@/pipelines/shared/connectors/simulate-to-retval/index.ts";
-import * as E from "@/pipelines/shared/connectors/simulate-to-retval/error.ts";
+import * as ERROR from "@/pipelines/shared/connectors/simulate-to-retval/error.ts";
 
 describe("Shared pipeline connector simulateToRetval", () => {
   it("extracts the return value from a simulation output", async () => {
@@ -23,13 +23,13 @@ describe("Shared pipeline connector simulateToRetval", () => {
 
     assertEquals(
       await simulateToRetval(mockSimulateOutputWithRetval),
-      xdr.ScVal.scvU32(42)
+      xdr.ScVal.scvU32(42),
     );
   });
 
   it("throws NO_RETURN_VALUE if the simulate output does not contain a return value", async () => {
-    const mockSimulateOutputWithoutRetval: Api.SimulateTransactionSuccessResponse =
-      {
+    const mockSimulateOutputWithoutRetval:
+      Api.SimulateTransactionSuccessResponse = {
         id: "1",
         minResourceFee: "1",
         latestLedger: 1,
@@ -40,7 +40,7 @@ describe("Shared pipeline connector simulateToRetval", () => {
 
     await assertRejects(
       async () => await simulateToRetval(mockSimulateOutputWithoutRetval),
-      E.NO_RETURN_VALUE
+      ERROR.NO_RETURN_VALUE,
     );
   });
 });

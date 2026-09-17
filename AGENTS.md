@@ -293,6 +293,13 @@ Rules:
   shared subclasses and reject generic coded-error construction at call sites.
 - Prefer typed errors with stable codes over generic thrown `Error` instances.
 - Public and reusable modules should expose a stable error namespace.
+- Import a module's error namespace as `ERROR` (all caps), for example
+  `import * as ERROR from "@/signer/local/error.ts"`, and refer to constructors
+  as `ERROR.KEYPAIR_CANNOT_SIGN`. Use this convention in implementation and
+  tests; do not abbreviate the namespace to `E`. Keep the native `Error` name
+  available for JavaScript errors and preserve existing public error namespace
+  exports. When a file needs multiple error domains, use descriptive aliases to
+  distinguish the additional namespaces.
 - Unexpected failures are generally wrapped into a typed error class rather than
   being allowed to leak as raw unknown exceptions.
 - Structured metadata matters. Keep `meta`, `details`, `diagnostic`, and

@@ -9,7 +9,7 @@ import type {
 } from "@/common/types/index.ts";
 import type { Ed25519PublicKey, Sha256Hash } from "@/strkeys/types.ts";
 import { StrKey } from "@/strkeys/index.ts";
-import * as E from "@/signer/hash-x/error.ts";
+import * as ERROR from "@/signer/hash-x/error.ts";
 
 type HashXSignableTransaction = SignableTransaction & {
   signHashX(preimage: Uint8Array): void;
@@ -46,44 +46,44 @@ export class HashXSigner {
     try {
       bytes = toUint8Array(preimage);
     } catch (cause) {
-      throw new E.FAILED_TO_NORMALIZE_PREIMAGE(cause as Error);
+      throw new ERROR.FAILED_TO_NORMALIZE_PREIMAGE(cause as Error);
     }
-    assert(bytes.length <= 64, new E.INVALID_PREIMAGE_LENGTH(bytes.length));
+    assert(bytes.length <= 64, new ERROR.INVALID_PREIMAGE_LENGTH(bytes.length));
 
     let retainedPreimage: Uint8Array | null = bytes.slice();
 
     try {
       this.hashBytes = HashXSigner.deriveHash(bytes);
     } catch (cause) {
-      throw new E.FAILED_TO_DERIVE_HASH(cause as Error);
+      throw new ERROR.FAILED_TO_DERIVE_HASH(cause as Error);
     }
 
     try {
       this.key = StrKey.encodeSha256Hash(this.hashBytes);
     } catch (cause) {
-      throw new E.FAILED_TO_ENCODE_SIGNER_KEY(cause as Error);
+      throw new ERROR.FAILED_TO_ENCODE_SIGNER_KEY(cause as Error);
     }
 
     this.preimage = hidePreimage
       ? () => {
-        throw new E.PREIMAGE_NOT_ACCESSIBLE();
+        throw new ERROR.PREIMAGE_NOT_ACCESSIBLE();
       }
       : () => {
-        assert(isDefined(retainedPreimage), new E.SIGNER_DESTROYED());
+        assert(isDefined(retainedPreimage), new ERROR.SIGNER_DESTROYED());
         return retainedPreimage.slice();
       };
 
     this.signTransaction = (
       transaction: SignableTransaction,
     ): TransactionXDRBase64 => {
-      assert(isDefined(retainedPreimage), new E.SIGNER_DESTROYED());
+      assert(isDefined(retainedPreimage), new ERROR.SIGNER_DESTROYED());
 
       try {
         (transaction as HashXSignableTransaction).signHashX(
           retainedPreimage.slice(),
         );
       } catch (cause) {
-        throw new E.FAILED_TO_ADD_PREIMAGE_SIGNATURE(
+        throw new ERROR.FAILED_TO_ADD_PREIMAGE_SIGNATURE(
           this.key,
           cause as Error,
         );
@@ -92,7 +92,7 @@ export class HashXSigner {
       try {
         return transaction.toXdr() as TransactionXDRBase64;
       } catch (cause) {
-        throw new E.FAILED_TO_SERIALIZE_TRANSACTION(
+        throw new ERROR.FAILED_TO_SERIALIZE_TRANSACTION(
           this.key,
           cause as Error,
         );
@@ -133,8 +133,8 @@ export class HashXSigner {
         hidePreimage,
       );
     } catch (cause) {
-      if (cause instanceof E.HashXSignerError) throw cause;
-      throw new E.FAILED_TO_GENERATE_PREIMAGE(cause as Error);
+      if (cause instanceof ERROR.HashXSignerError) throw cause;
+      throw new ERROR.FAILED_TO_GENERATE_PREIMAGE(cause as Error);
     }
   }
 
@@ -175,4 +175,4 @@ export class HashXSigner {
 }
 
 /** Error constructors emitted by {@link HashXSigner}. */
-export const HashXSignerErrors: typeof E = E;
+export const HashXSignerErrors: typeof ERROR = ERROR;

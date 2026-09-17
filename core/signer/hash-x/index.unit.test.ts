@@ -18,7 +18,7 @@ import {
 } from "stellar-sdk";
 import type { SignableTransaction } from "@/common/types/index.ts";
 import { HashXSigner } from "@/signer/hash-x/index.ts";
-import * as E from "@/signer/hash-x/error.ts";
+import * as ERROR from "@/signer/hash-x/error.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 
@@ -93,20 +93,20 @@ describe("HashXSigner", () => {
     const hidden = HashXSigner.generateRandom(true);
 
     assertEquals((signer.preimage() as Uint8Array).byteLength, 32);
-    assertThrows(() => hidden.preimage(), E.PREIMAGE_NOT_ACCESSIBLE);
+    assertThrows(() => hidden.preimage(), ERROR.PREIMAGE_NOT_ACCESSIBLE);
   });
 
   it("rejects preimages above Stellar's 64-byte limit", () => {
     assertThrows(
       () => HashXSigner.fromPreimage(Buffer.alloc(65)),
-      E.INVALID_PREIMAGE_LENGTH,
+      ERROR.INVALID_PREIMAGE_LENGTH,
     );
   });
 
   it("wraps unsupported preimage values", () => {
     assertThrows(
       () => HashXSigner.fromPreimage(null as unknown as ArrayBuffer),
-      E.FAILED_TO_NORMALIZE_PREIMAGE,
+      ERROR.FAILED_TO_NORMALIZE_PREIMAGE,
     );
   });
 
@@ -121,7 +121,7 @@ describe("HashXSigner", () => {
 
     assertThrows(
       () => HashXSigner.generateRandom(),
-      E.FAILED_TO_GENERATE_PREIMAGE,
+      ERROR.FAILED_TO_GENERATE_PREIMAGE,
     );
   });
 
@@ -132,7 +132,7 @@ describe("HashXSigner", () => {
 
     assertThrows(
       () => HashXSigner.fromPreimage(Buffer.from("secret")),
-      E.FAILED_TO_ENCODE_SIGNER_KEY,
+      ERROR.FAILED_TO_ENCODE_SIGNER_KEY,
     );
   });
 
@@ -149,7 +149,7 @@ describe("HashXSigner", () => {
 
     assertThrows(
       () => HashXSigner.fromPreimage(Buffer.from("secret")),
-      E.FAILED_TO_DERIVE_HASH,
+      ERROR.FAILED_TO_DERIVE_HASH,
     );
   });
 
@@ -160,7 +160,7 @@ describe("HashXSigner", () => {
 
     assertThrows(
       () => HashXSigner.generateRandom(),
-      E.FAILED_TO_ENCODE_SIGNER_KEY,
+      ERROR.FAILED_TO_ENCODE_SIGNER_KEY,
     );
   });
 
@@ -176,7 +176,7 @@ describe("HashXSigner", () => {
 
     assertThrows(
       () => signer.signTransaction(transaction),
-      E.FAILED_TO_ADD_PREIMAGE_SIGNATURE,
+      ERROR.FAILED_TO_ADD_PREIMAGE_SIGNATURE,
     );
   });
 
@@ -192,7 +192,7 @@ describe("HashXSigner", () => {
 
     assertThrows(
       () => signer.signTransaction(transaction),
-      E.FAILED_TO_SERIALIZE_TRANSACTION,
+      ERROR.FAILED_TO_SERIALIZE_TRANSACTION,
     );
   });
 
@@ -201,10 +201,10 @@ describe("HashXSigner", () => {
     signer.destroy();
     signer.destroy();
 
-    assertThrows(() => signer.preimage(), E.SIGNER_DESTROYED);
+    assertThrows(() => signer.preimage(), ERROR.SIGNER_DESTROYED);
     assertThrows(
       () => signer.signTransaction(buildTransaction()),
-      E.SIGNER_DESTROYED,
+      ERROR.SIGNER_DESTROYED,
     );
   });
 
@@ -215,6 +215,6 @@ describe("HashXSigner", () => {
       signer = disposable;
     }
 
-    assertThrows(() => signer.preimage(), E.SIGNER_DESTROYED);
+    assertThrows(() => signer.preimage(), ERROR.SIGNER_DESTROYED);
   });
 });

@@ -10,7 +10,7 @@ import type {
   AssembleTransactionInput,
   AssembleTransactionOutput,
 } from "@/processes/assemble-transaction/types.ts";
-import * as E from "@/processes/assemble-transaction/error.ts";
+import * as ERROR from "@/processes/assemble-transaction/error.ts";
 
 import { assert } from "@/common/assert/assert.ts";
 import { isSmartContractTransaction } from "@/common/type-guards/is-smart-contract-transaction.ts";
@@ -36,12 +36,12 @@ export const assembleTransaction = async (
 
     assertRequiredArgs(
       { transaction },
-      (argName: string) => new E.MISSING_ARG(input, argName),
+      (argName: string) => new ERROR.MISSING_ARG(input, argName),
     );
 
     assert(
       isSmartContractTransaction(transaction),
-      new E.NOT_SMART_CONTRACT_TRANSACTION_ERROR(input),
+      new ERROR.NOT_SMART_CONTRACT_TRANSACTION_ERROR(input),
     );
 
     const op = getOperationsFromTransaction(transaction)[0];
@@ -49,13 +49,13 @@ export const assembleTransaction = async (
 
     assert(
       opType === "invokeHostFunction",
-      new E.UNSUPPORTED_OPERATION_ERROR(input, opType),
+      new ERROR.UNSUPPORTED_OPERATION_ERROR(input, opType),
     );
 
     const body = op.body;
     assert(
       body.type === "invokeHostFunction",
-      new E.UNSUPPORTED_OPERATION_ERROR(input, body.type),
+      new ERROR.UNSUPPORTED_OPERATION_ERROR(input, body.type),
     );
     const authorizedOperation = Operation.invokeHostFunction({
       func: body.invokeHostFunctionOp.hostFunction,
@@ -94,22 +94,25 @@ export const assembleTransaction = async (
 
       assembledTransaction.addOperation(authorizedOperation);
     } catch (error) {
-      throw new E.FAILED_TO_ASSEMBLE_TRANSACTION_ERROR(input, error as Error);
+      throw new ERROR.FAILED_TO_ASSEMBLE_TRANSACTION_ERROR(
+        input,
+        error as Error,
+      );
     }
 
     let builtTransaction;
     try {
       builtTransaction = await assembledTransaction.build();
     } catch (error) {
-      throw new E.FAILED_TO_BUILD_TRANSACTION_ERROR(input, error as Error);
+      throw new ERROR.FAILED_TO_BUILD_TRANSACTION_ERROR(input, error as Error);
     }
 
     return builtTransaction;
   } catch (e) {
-    if (e instanceof E.AssembleTransactionError) {
+    if (e instanceof ERROR.AssembleTransactionError) {
       throw e;
     }
-    throw new E.UNEXPECTED_ERROR(input, e as Error);
+    throw new ERROR.UNEXPECTED_ERROR(input, e as Error);
   }
 };
 
@@ -121,7 +124,7 @@ const buildSorobanData = (
   try {
     simulatedSorobanData = sorobanData?.build();
   } catch (error) {
-    throw new E.FAILED_TO_BUILD_SOROBAN_DATA_ERROR(input, error as Error);
+    throw new ERROR.FAILED_TO_BUILD_SOROBAN_DATA_ERROR(input, error as Error);
   }
 
   const { resourceFee } = input;
@@ -131,14 +134,14 @@ const buildSorobanData = (
 
   assert(
     typeof resourceFee === "string" && /^\d+$/.test(resourceFee),
-    new E.INVALID_RESOURCE_FEE_ERROR(input, resourceFee),
+    new ERROR.INVALID_RESOURCE_FEE_ERROR(input, resourceFee),
   );
 
   const override = BigInt(resourceFee);
   const simulatedMinimum = simulatedSorobanData?.resourceFee ?? 0n;
   assert(
     override >= simulatedMinimum,
-    new E.RESOURCE_FEE_BELOW_SIMULATED_MINIMUM_ERROR(
+    new ERROR.RESOURCE_FEE_BELOW_SIMULATED_MINIMUM_ERROR(
       input,
       override,
       simulatedMinimum,
@@ -146,7 +149,7 @@ const buildSorobanData = (
   );
   assert(
     override <= MAXIMUM_TRANSACTION_FEE,
-    new E.TRANSACTION_FEE_TOO_HIGH_ERROR(input, override),
+    new ERROR.TRANSACTION_FEE_TOO_HIGH_ERROR(input, override),
   );
 
   return new SorobanDataBuilder(simulatedSorobanData)
@@ -164,7 +167,7 @@ const resolveInclusionFee = (
 
   assert(
     currentInclusionFee >= 0n,
-    new E.TRANSACTION_FEE_BELOW_RESOURCE_FEE_ERROR(
+    new ERROR.TRANSACTION_FEE_BELOW_RESOURCE_FEE_ERROR(
       input,
       BigInt(transaction.fee),
       currentResourceFee,
@@ -176,34 +179,34 @@ const resolveInclusionFee = (
     const parsedFee = parseTransactionFee(transactionFee);
     if (!parsedFee.ok) {
       if (parsedFee.error.reason === "invalid-configuration") {
-        throw new E.INVALID_TRANSACTION_FEE_CONFIGURATION_ERROR(input);
+        throw new ERROR.INVALID_TRANSACTION_FEE_CONFIGURATION_ERROR(input);
       }
       if (parsedFee.error.mode === "base") {
-        throw new E.INVALID_BASE_FEE_ERROR(input, parsedFee.error.value);
+        throw new ERROR.INVALID_BASE_FEE_ERROR(input, parsedFee.error.value);
       }
       if (parsedFee.error.mode === "inclusion") {
-        throw new E.INVALID_INCLUSION_FEE_ERROR(
+        throw new ERROR.INVALID_INCLUSION_FEE_ERROR(
           input,
           parsedFee.error.value,
         );
       }
-      throw new E.INVALID_MAX_FEE_ERROR(input, parsedFee.error.value);
+      throw new ERROR.INVALID_MAX_FEE_ERROR(input, parsedFee.error.value);
     }
 
     const { mode, amount } = parsedFee.value;
     if (mode === "base") {
-      assert(amount > 0n, new E.BASE_FEE_TOO_LOW_ERROR(input, amount));
+      assert(amount > 0n, new ERROR.BASE_FEE_TOO_LOW_ERROR(input, amount));
       inclusionFee = amount;
     } else if (mode === "inclusion") {
       assert(
         amount >= MINIMUM_BASE_FEE,
-        new E.INCLUSION_FEE_TOO_LOW_ERROR(input, amount),
+        new ERROR.INCLUSION_FEE_TOO_LOW_ERROR(input, amount),
       );
       inclusionFee = amount;
     } else {
       assert(
         amount >= resourceFee + MINIMUM_BASE_FEE,
-        new E.MAX_FEE_TOO_LOW_ERROR(input, amount, resourceFee),
+        new ERROR.MAX_FEE_TOO_LOW_ERROR(input, amount, resourceFee),
       );
       inclusionFee = amount - resourceFee;
     }
@@ -212,10 +215,10 @@ const resolveInclusionFee = (
   const totalFee = inclusionFee + resourceFee;
   assert(
     totalFee <= MAXIMUM_TRANSACTION_FEE,
-    new E.TRANSACTION_FEE_TOO_HIGH_ERROR(input, totalFee),
+    new ERROR.TRANSACTION_FEE_TOO_HIGH_ERROR(input, totalFee),
   );
 
   return inclusionFee;
 };
 /** Error constructors emitted by {@link assembleTransaction}. */
-export const AssembleTransactionErrors: typeof E = E;
+export const AssembleTransactionErrors: typeof ERROR = ERROR;

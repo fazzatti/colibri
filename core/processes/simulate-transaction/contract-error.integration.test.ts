@@ -10,7 +10,7 @@ import { NativeAccount } from "@/account/native/index.ts";
 import { Contract } from "@/contract/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
-import * as E from "@/processes/simulate-transaction/error.ts";
+import * as ERROR from "@/processes/simulate-transaction/error.ts";
 import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 
@@ -75,10 +75,10 @@ describe(
             methodArgs: { error_code: 1 },
             config,
           }),
-        E.CONTRACT_ERROR_SIMULATION_FAILED,
+        ERROR.CONTRACT_ERROR_SIMULATION_FAILED,
       );
 
-      assertEquals(error.code, E.Code.CONTRACT_ERROR_SIMULATION_FAILED);
+      assertEquals(error.code, ERROR.Code.CONTRACT_ERROR_SIMULATION_FAILED);
       assertEquals(
         error.message,
         "Transaction simulation failed with contract error #1!",
@@ -130,10 +130,10 @@ describe(
             methodArgs: { error_code: 265 },
             config,
           }),
-        E.CONTRACT_ERROR_SIMULATION_FAILED,
+        ERROR.CONTRACT_ERROR_SIMULATION_FAILED,
       );
 
-      assertEquals(error.code, E.Code.CONTRACT_ERROR_SIMULATION_FAILED);
+      assertEquals(error.code, ERROR.Code.CONTRACT_ERROR_SIMULATION_FAILED);
       assertEquals(
         error.message,
         "Transaction simulation failed with contract error #265!",
@@ -177,10 +177,10 @@ describe(
             methodArgs: { error_code: 3477 },
             config,
           }),
-        E.CONTRACT_ERROR_SIMULATION_FAILED,
+        ERROR.CONTRACT_ERROR_SIMULATION_FAILED,
       );
 
-      assertEquals(error.code, E.Code.CONTRACT_ERROR_SIMULATION_FAILED);
+      assertEquals(error.code, ERROR.Code.CONTRACT_ERROR_SIMULATION_FAILED);
       assertEquals(
         error.message,
         "Transaction simulation failed with contract error #3477!",
@@ -224,10 +224,10 @@ describe(
             methodArgs: { error_code: 65_535 },
             config,
           }),
-        E.CONTRACT_ERROR_SIMULATION_FAILED,
+        ERROR.CONTRACT_ERROR_SIMULATION_FAILED,
       );
 
-      assertEquals(error.code, E.Code.CONTRACT_ERROR_SIMULATION_FAILED);
+      assertEquals(error.code, ERROR.Code.CONTRACT_ERROR_SIMULATION_FAILED);
       assertEquals(
         error.message,
         "Transaction simulation failed with contract error #65535!",
@@ -271,10 +271,10 @@ describe(
             methodArgs: { error_code: 700_001 },
             config,
           }),
-        E.CONTRACT_ERROR_SIMULATION_FAILED,
+        ERROR.CONTRACT_ERROR_SIMULATION_FAILED,
       );
 
-      assertEquals(error.code, E.Code.CONTRACT_ERROR_SIMULATION_FAILED);
+      assertEquals(error.code, ERROR.Code.CONTRACT_ERROR_SIMULATION_FAILED);
       assertEquals(
         error.message,
         "Transaction simulation failed with contract error #700001!",
@@ -318,11 +318,14 @@ describe(
             methodArgs: { message: "plain panic path" },
             config,
           }),
-        E.SIMULATION_FAILED,
+        ERROR.SIMULATION_FAILED,
       );
 
-      assertEquals(error.code, E.Code.SIMULATION_FAILED);
-      assertEquals(error instanceof E.CONTRACT_ERROR_SIMULATION_FAILED, false);
+      assertEquals(error.code, ERROR.Code.SIMULATION_FAILED);
+      assertEquals(
+        error instanceof ERROR.CONTRACT_ERROR_SIMULATION_FAILED,
+        false,
+      );
       assertEquals(error.meta.data.contractError, undefined);
       assertEquals(error.meta.data.contractErrorStack.length, 0);
       assertEquals(error.meta.data.diagnosticEvents.length > 0, true);
@@ -340,10 +343,10 @@ describe(
             },
             config,
           }),
-        E.CONTRACT_ERROR_SIMULATION_FAILED,
+        ERROR.CONTRACT_ERROR_SIMULATION_FAILED,
       );
 
-      assertEquals(error.code, E.Code.CONTRACT_ERROR_SIMULATION_FAILED);
+      assertEquals(error.code, ERROR.Code.CONTRACT_ERROR_SIMULATION_FAILED);
       assertEquals(
         error.message,
         "Transaction simulation failed with contract error #1!",
@@ -410,11 +413,14 @@ describe(
             },
             config,
           }),
-        E.SIMULATION_FAILED,
+        ERROR.SIMULATION_FAILED,
       );
 
-      assertEquals(error.code, E.Code.SIMULATION_FAILED);
-      assertEquals(error instanceof E.CONTRACT_ERROR_SIMULATION_FAILED, false);
+      assertEquals(error.code, ERROR.Code.SIMULATION_FAILED);
+      assertEquals(
+        error instanceof ERROR.CONTRACT_ERROR_SIMULATION_FAILED,
+        false,
+      );
       assertEquals(error.meta.data.contractError, undefined);
       assertEquals(error.meta.data.contractErrorStack.length, 0);
       assertEquals(error.meta.data.diagnosticEvents.length > 0, true);
@@ -433,10 +439,10 @@ describe(
             },
             config,
           }),
-        E.CONTRACT_ERROR_SIMULATION_FAILED,
+        ERROR.CONTRACT_ERROR_SIMULATION_FAILED,
       );
 
-      assertEquals(error.code, E.Code.CONTRACT_ERROR_SIMULATION_FAILED);
+      assertEquals(error.code, ERROR.Code.CONTRACT_ERROR_SIMULATION_FAILED);
       assertEquals(error.meta.data.contractError.kind, "contract");
       assertEquals(error.meta.data.contractError.code, 265);
       assertEquals(

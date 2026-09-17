@@ -3,7 +3,7 @@ import { describe, it } from "@std/testing/bdd";
 import { StellarAsset } from "@/asset/native/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { fromDecimals, toDecimals } from "@/common/helpers/format-units.ts";
-import * as E from "@/asset/native/amount.error.ts";
+import * as ERROR from "@/asset/native/amount.error.ts";
 
 describe("StellarAsset exact units", () => {
   const asset = StellarAsset.NativeXLM({
@@ -38,27 +38,27 @@ describe("StellarAsset exact units", () => {
     ) {
       const error = assertThrows(
         () => asset.parseAmount(value as string),
-        E.INVALID_DECIMAL,
+        ERROR.INVALID_DECIMAL,
       );
-      assertEquals(E.ERROR_AMNT[error.code], error.constructor);
+      assertEquals(ERROR.ERROR_AMNT[error.code], error.constructor);
     }
     const precision = assertThrows(
       () => asset.parseAmount("0.00000001"),
-      E.EXCESS_PRECISION,
+      ERROR.EXCESS_PRECISION,
     );
     const overflow = assertThrows(
       () => asset.parseAmount("922337203685.4775808"),
-      E.DECIMAL_OVERFLOW,
+      ERROR.DECIMAL_OVERFLOW,
     );
     for (const error of [precision, overflow]) {
-      assertEquals(E.ERROR_AMNT[error.code], error.constructor);
+      assertEquals(ERROR.ERROR_AMNT[error.code], error.constructor);
     }
     for (const value of [-1n, 9_223_372_036_854_775_808n, 1, null]) {
       const error = assertThrows(
         () => asset.formatAmount(value as bigint),
-        E.INVALID_UNITS,
+        ERROR.INVALID_UNITS,
       );
-      assertEquals(E.ERROR_AMNT[error.code], error.constructor);
+      assertEquals(ERROR.ERROR_AMNT[error.code], error.constructor);
     }
   });
 });

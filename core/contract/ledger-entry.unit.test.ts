@@ -6,7 +6,7 @@ import { Contract } from "@/contract/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { buildContractDataLedgerKey } from "@/ledger-entries/index.ts";
 import { LEDGER_ENTRY_NOT_FOUND } from "@/ledger-entries/error.ts";
-import * as E from "@/contract/error.ts";
+import * as ERROR from "@/contract/error.ts";
 
 const contractId = "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM";
 const key = xdr.ScVal.scvSymbol("counter");
@@ -112,7 +112,7 @@ describe("Contract.getLedgerEntry", () => {
     });
     await assertRejects(
       () => contract.getLedgerEntry({ key }),
-      E.MISSING_REQUIRED_PROPERTY,
+      ERROR.MISSING_REQUIRED_PROPERTY,
     );
     assertEquals(calls, 0);
   });

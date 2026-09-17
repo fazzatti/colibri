@@ -21,7 +21,7 @@ import {
   SorobanString,
   SorobanSymbol,
 } from "@/soroban-types/values/primitives.ts";
-import * as E from "@/contract/events/error.ts";
+import * as ERROR from "@/contract/events/error.ts";
 import { validateEventValue } from "@/contract/events/codec.ts";
 import { Contract } from "@/contract/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
@@ -84,7 +84,7 @@ describe("spec-aware contract events", () => {
         validateEventValue(spec, symbol("value"), {
           type: "futureType",
         } as unknown as xdr.ScSpecTypeDef),
-      E.INVALID_SPEC,
+      ERROR.INVALID_SPEC,
       "unsupported type",
     );
     const declaration = new xdr.ScSpecEventV0({
@@ -95,9 +95,9 @@ describe("spec-aware contract events", () => {
     });
     const error = assertThrows(
       () => new ContractEventDefinition(spec, declaration).fromEvent(event()),
-      E.DECODE_FAILED,
+      ERROR.DECODE_FAILED,
     );
-    assertInstanceOf(error.meta?.cause, E.INVALID_SPEC);
+    assertInstanceOf(error.meta?.cause, ERROR.INVALID_SPEC);
   });
   for (
     const [name, type] of [
@@ -131,11 +131,14 @@ describe("spec-aware contract events", () => {
           [symbol("transfer"), value],
         );
         if (name === "Address" && address === muxed) {
-          assertThrows(() => definition.fromEvent(occurrence), E.DECODE_FAILED);
+          assertThrows(
+            () => definition.fromEvent(occurrence),
+            ERROR.DECODE_FAILED,
+          );
           assertEquals(definition.tryFromEvent(occurrence), undefined);
           assertThrows(
             () => definition.toEventFilter({ owner: address }),
-            E.INVALID_FILTER,
+            ERROR.INVALID_FILTER,
           );
         } else {
           assertEquals(definition.fromEvent(occurrence).fields, {
@@ -190,24 +193,24 @@ describe("spec-aware contract events", () => {
       );
       assertThrows(
         () => definition.toTopicFilter({ owner: new SorobanString("alice") }),
-        E.INVALID_FILTER,
+        ERROR.INVALID_FILTER,
       );
       assertEquals(definition.toTopicFilter()[1], "*");
       if (format === xdr.ScSpecEventDataFormat.scSpecEventDataFormatVec) {
         for (const invalid of [amount(), xdr.ScVal.scvVec([])]) {
           assertThrows(
             () => definition.fromEvent(event(invalid)),
-            E.DECODE_FAILED,
+            ERROR.DECODE_FAILED,
           );
         }
       }
       assertThrows(
         () => definition.toTopicFilter({ amount: 1 }),
-        E.INVALID_FILTER,
+        ERROR.INVALID_FILTER,
       );
       assertThrows(
         () => definition.toTopicFilter({ owner: 1 }),
-        E.INVALID_FILTER,
+        ERROR.INVALID_FILTER,
       );
     });
   }
@@ -269,7 +272,7 @@ describe("spec-aware contract events", () => {
       ]
     ) {
       assertEquals(definition.tryFromEvent(invalid), undefined);
-      assertThrows(() => definition.fromEvent(invalid), E.DECODE_FAILED);
+      assertThrows(() => definition.fromEvent(invalid), ERROR.DECODE_FAILED);
     }
     const foreign = event();
     foreign.contractId = undefined;
@@ -280,13 +283,13 @@ describe("spec-aware contract events", () => {
     const ambiguous = new ContractEventRegistry(
       new Spec([eventEntry(), eventEntry()]),
     );
-    assertThrows(() => ambiguous.parse(event()), E.AMBIGUOUS_EVENT);
+    assertThrows(() => ambiguous.parse(event()), ERROR.AMBIGUOUS_EVENT);
     assertEquals(ambiguous.bindings.map((item) => item.key), [
       "Transfer",
       "Transfer_2",
     ]);
     assertEquals(ambiguous.get("Transfer", 1).occurrence, 1);
-    assertThrows(() => ambiguous.get("missing"), E.UNKNOWN_EVENT);
+    assertThrows(() => ambiguous.get("missing"), ERROR.UNKNOWN_EVENT);
     assertEquals(ambiguous.parse(system), undefined);
   });
   it("handles collisions, topicless events and empty registries", () => {
@@ -342,7 +345,7 @@ describe("spec-aware contract events", () => {
             prefixTopics: ["one", "two", "three", "four"],
           }),
         ),
-      E.INVALID_SPEC,
+      ERROR.INVALID_SPEC,
       "too many topics",
     );
     assertThrows(
@@ -358,7 +361,7 @@ describe("spec-aware contract events", () => {
             params: [...params, params[0]],
           }),
         ),
-      E.INVALID_SPEC,
+      ERROR.INVALID_SPEC,
     );
     assertThrows(
       () =>
@@ -375,7 +378,7 @@ describe("spec-aware contract events", () => {
               xdr.ScSpecEventDataFormat.scSpecEventDataFormatSingleValue,
           }),
         ),
-      E.INVALID_SPEC,
+      ERROR.INVALID_SPEC,
     );
     const spec = bindingSpec();
     const registry = new ContractEventRegistry(spec);
@@ -435,19 +438,19 @@ describe("spec-aware contract events", () => {
     validateEventValue(spec, symbol("any"), xdr.ScSpecTypeDef.scSpecTypeVal());
     assertThrows(
       () => validateEventValue(spec, xdr.ScVal.scvVec([]), tuple),
-      E.INVALID_SPEC,
+      ERROR.INVALID_SPEC,
     );
     assertThrows(
       () => validateEventValue(spec, xdr.ScVal.scvVec(null), vec),
-      E.INVALID_SPEC,
+      ERROR.INVALID_SPEC,
     );
     assertThrows(
       () => validateEventValue(spec, xdr.ScVal.scvMap(null), map),
-      E.INVALID_SPEC,
+      ERROR.INVALID_SPEC,
     );
     assertThrows(
       () => validateEventValue(spec, xdr.ScVal.scvU32(1), u32, 65),
-      E.INVALID_SPEC,
+      ERROR.INVALID_SPEC,
     );
     assertThrows(
       () =>
@@ -458,7 +461,7 @@ describe("spec-aware contract events", () => {
             new xdr.ScSpecTypeBytesN({ n: 3 }),
           ),
         ),
-      E.INVALID_SPEC,
+      ERROR.INVALID_SPEC,
     );
   });
 });

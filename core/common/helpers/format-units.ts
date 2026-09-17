@@ -1,4 +1,4 @@
-import * as E from "@/common/helpers/format-units.error.ts";
+import * as ERROR from "@/common/helpers/format-units.error.ts";
 
 /** Decimal-like inputs accepted by unit conversion helpers. */
 export type DecimalInput = string | number | bigint;
@@ -31,7 +31,7 @@ export function fromDecimals(
   opts: FromDecimalsOptions = {},
 ): bigint {
   if (!Number.isInteger(decimals) || decimals < 0) {
-    throw new E.INVALID_DECIMALS(decimals);
+    throw new ERROR.INVALID_DECIMALS(decimals);
   }
   if (typeof value === "bigint") return value;
 
@@ -56,7 +56,7 @@ const parseDecimalParts = (
   raw: string,
 ): { sign: bigint; whole: string; fraction: string } => {
   const value = raw.trim();
-  if (value.length === 0) throw new E.EMPTY_VALUE(raw);
+  if (value.length === 0) throw new ERROR.EMPTY_VALUE(raw);
 
   const sign = value.startsWith("-") ? -1n : 1n;
   const unsigned = value.startsWith("-") || value.startsWith("+")
@@ -66,7 +66,7 @@ const parseDecimalParts = (
   const whole = match?.[1] ?? "";
   const fraction = match?.[2] ?? "";
   if (whole === "" && fraction === "") {
-    throw new E.INVALID_DECIMAL_INPUT(raw);
+    throw new ERROR.INVALID_DECIMAL_INPUT(raw);
   }
 
   return {
@@ -84,7 +84,7 @@ const normalizeFraction = (
 ): string => {
   if (fraction.length <= decimals) return fraction;
   if (excessFraction === "truncate") return fraction.slice(0, decimals);
-  throw new E.TOO_MANY_FRACTION_DIGITS(raw, decimals, fraction.length);
+  throw new ERROR.TOO_MANY_FRACTION_DIGITS(raw, decimals, fraction.length);
 };
 
 /**
@@ -97,7 +97,7 @@ export function toDecimals(
   opts: ToDecimalsOptions = {},
 ): string {
   if (!Number.isInteger(decimals) || decimals < 0) {
-    throw new E.INVALID_DECIMALS(decimals);
+    throw new ERROR.INVALID_DECIMALS(decimals);
   }
 
   const trimTrailingZeros = opts.trimTrailingZeros ?? true;
@@ -120,7 +120,7 @@ export function toDecimals(
       !Number.isInteger(opts.maxFractionDigits) ||
       opts.maxFractionDigits < 0
     ) {
-      throw new E.INVALID_MAX_FRACTION_DIGITS(opts.maxFractionDigits);
+      throw new ERROR.INVALID_MAX_FRACTION_DIGITS(opts.maxFractionDigits);
     }
     frac = frac.slice(0, opts.maxFractionDigits);
   }
@@ -135,7 +135,7 @@ export function toDecimals(
 /** Turns numbers into a deterministic string; rejects non-finite values. */
 function numberToPlainString(n: number): string {
   if (!Number.isFinite(n)) {
-    throw new E.NON_FINITE_NUMBER(n);
+    throw new ERROR.NON_FINITE_NUMBER(n);
   }
   // Keep as-is; if it becomes scientific notation, expandScientific() will handle it.
   return n.toString();
@@ -150,7 +150,7 @@ function expandScientific(s: string): string {
 
   const m = /^(\d+)(?:\.(\d*))?[eE]([+-]?\d+)$/.exec(s);
   if (!m) {
-    throw new E.INVALID_SCIENTIFIC_NOTATION(s);
+    throw new ERROR.INVALID_SCIENTIFIC_NOTATION(s);
   }
 
   const intPart = m[1];
@@ -158,14 +158,14 @@ function expandScientific(s: string): string {
   const exp = Number(m[3]);
 
   if (!Number.isInteger(exp)) {
-    throw new E.INVALID_SCIENTIFIC_EXPONENT(s);
+    throw new ERROR.INVALID_SCIENTIFIC_EXPONENT(s);
   }
 
   // Prevent pathological inputs (e.g. 1e999999999) from exploding memory or
   // throwing RangeError via String.repeat(). Treat these as invalid.
   const MAX_EXPONENT_ABS = 1_000_000;
   if (Math.abs(exp) > MAX_EXPONENT_ABS) {
-    throw new E.INVALID_SCIENTIFIC_EXPONENT(s);
+    throw new ERROR.INVALID_SCIENTIFIC_EXPONENT(s);
   }
 
   const digits = intPart + fracPart;

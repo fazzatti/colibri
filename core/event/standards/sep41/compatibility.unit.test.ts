@@ -8,7 +8,7 @@ import { ClawbackEvent } from "@/event/standards/sep41/clawback.ts";
 import { MintEvent } from "@/event/standards/sep41/mint.ts";
 import { TransferEvent } from "@/event/standards/sep41/transfer.ts";
 import { SEP41Events } from "@/event/standards/sep41/index.ts";
-import * as E from "@/event/error.ts";
+import * as ERROR from "@/event/error.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
 
@@ -282,7 +282,7 @@ describe("SEP-41 v0.5.1 event compatibility", () => {
             amountMap(100n, [symbolEntry("x", xdr.ScVal.scvBool(true))]),
           ),
         ),
-        error: E.TRANSFER_EXTENSION_DECODER_FAILED,
+        error: ERROR.TRANSFER_EXTENSION_DECODER_FAILED,
       },
       {
         event: ApproveEvent.fromEvent(
@@ -295,7 +295,7 @@ describe("SEP-41 v0.5.1 event compatibility", () => {
             ]),
           ),
         ),
-        error: E.APPROVE_EXTENSION_DECODER_FAILED,
+        error: ERROR.APPROVE_EXTENSION_DECODER_FAILED,
       },
       {
         event: BurnEvent.fromEvent(
@@ -304,7 +304,7 @@ describe("SEP-41 v0.5.1 event compatibility", () => {
             amountMap(100n, [symbolEntry("x", xdr.ScVal.scvBool(true))]),
           ),
         ),
-        error: E.BURN_EXTENSION_DECODER_FAILED,
+        error: ERROR.BURN_EXTENSION_DECODER_FAILED,
       },
       {
         event: MintEvent.fromEvent(
@@ -313,7 +313,7 @@ describe("SEP-41 v0.5.1 event compatibility", () => {
             amountMap(100n, [symbolEntry("x", xdr.ScVal.scvBool(true))]),
           ),
         ),
-        error: E.MINT_EXTENSION_DECODER_FAILED,
+        error: ERROR.MINT_EXTENSION_DECODER_FAILED,
       },
       {
         event: ClawbackEvent.fromEvent(
@@ -322,7 +322,7 @@ describe("SEP-41 v0.5.1 event compatibility", () => {
             amountMap(100n, [symbolEntry("x", xdr.ScVal.scvBool(true))]),
           ),
         ),
-        error: E.CLAWBACK_EXTENSION_DECODER_FAILED,
+        error: ERROR.CLAWBACK_EXTENSION_DECODER_FAILED,
       },
     ];
 

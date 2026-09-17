@@ -2,7 +2,7 @@ import { assertEquals, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { Asset, Keypair, Operation } from "stellar-sdk";
 import { StellarPrice, type StellarPriceRatio } from "@/markets/price/index.ts";
-import * as E from "@/markets/price/error.ts";
+import * as ERROR from "@/markets/price/error.ts";
 import { ColibriError } from "@/error/index.ts";
 
 describe("StellarPrice", () => {
@@ -28,7 +28,7 @@ describe("StellarPrice", () => {
     for (const [baseAmount, quoteAmount] of [["0", "1"], ["1", "0"]]) {
       assertThrows(
         () => StellarPrice.fromAmounts({ baseAmount, quoteAmount }),
-        E.ZERO_PRICE_AMOUNT,
+        ERROR.ZERO_PRICE_AMOUNT,
       );
     }
     for (
@@ -39,15 +39,15 @@ describe("StellarPrice", () => {
     ) {
       assertThrows(
         () => StellarPrice.fromAmounts({ baseAmount, quoteAmount }),
-        E.UNREPRESENTABLE_AMOUNTS,
+        ERROR.UNREPRESENTABLE_AMOUNTS,
       );
     }
     for (
       const error of [
-        new E.ZERO_PRICE_AMOUNT(),
-        new E.UNREPRESENTABLE_AMOUNTS("1", "2147483648"),
+        new ERROR.ZERO_PRICE_AMOUNT(),
+        new ERROR.UNREPRESENTABLE_AMOUNTS("1", "2147483648"),
       ]
-    ) assertEquals(E.ERROR_PRCE[error.code], error.constructor);
+    ) assertEquals(ERROR.ERROR_PRCE[error.code], error.constructor);
   });
 
   it("compares rational prices exactly even when cross-products exceed safe integers", () => {
@@ -58,11 +58,11 @@ describe("StellarPrice", () => {
     assertEquals(StellarPrice.compare({ n: 2, d: 4 }, { n: 1, d: 2 }), 0);
     assertThrows(
       () => StellarPrice.compare({ n: 0, d: 1 }, high),
-      E.INVALID_RATIO,
+      ERROR.INVALID_RATIO,
     );
     assertThrows(
       () => StellarPrice.compare(low, { n: 0, d: 1 }),
-      E.INVALID_RATIO,
+      ERROR.INVALID_RATIO,
     );
   });
 
@@ -99,13 +99,13 @@ describe("StellarPrice", () => {
     ) {
       assertThrows(
         () => StellarPrice.fromDecimal(value as string),
-        E.INVALID_DECIMAL,
+        ERROR.INVALID_DECIMAL,
       );
     }
     for (const value of ["0", "000", "0.000"]) {
       assertThrows(
         () => StellarPrice.fromDecimal(value),
-        E.NON_POSITIVE_DECIMAL,
+        ERROR.NON_POSITIVE_DECIMAL,
       );
     }
   });
@@ -121,7 +121,7 @@ describe("StellarPrice", () => {
     ) {
       assertThrows(
         () => StellarPrice.fromDecimal(value),
-        E.UNREPRESENTABLE_DECIMAL,
+        ERROR.UNREPRESENTABLE_DECIMAL,
       );
     }
   });
@@ -157,11 +157,11 @@ describe("StellarPrice", () => {
     ) {
       assertThrows(
         () => StellarPrice.invert(price as StellarPriceRatio),
-        E.INVALID_RATIO,
+        ERROR.INVALID_RATIO,
       );
       assertThrows(
         () => StellarPrice.format(price as StellarPriceRatio),
-        E.INVALID_RATIO,
+        ERROR.INVALID_RATIO,
       );
     }
   });
@@ -205,15 +205,15 @@ describe("StellarPrice", () => {
 
   it("exports distinct typed errors", () => {
     const errors = [
-      new E.INVALID_DECIMAL("x"),
-      new E.NON_POSITIVE_DECIMAL("0"),
-      new E.UNREPRESENTABLE_DECIMAL("1e20"),
-      new E.INVALID_RATIO({}),
+      new ERROR.INVALID_DECIMAL("x"),
+      new ERROR.NON_POSITIVE_DECIMAL("0"),
+      new ERROR.UNREPRESENTABLE_DECIMAL("1e20"),
+      new ERROR.INVALID_RATIO({}),
     ];
     for (const error of errors) {
       assertEquals(error instanceof ColibriError, true);
       assertEquals(error.source, "@colibri/core/markets/price");
-      assertEquals(E.ERROR_PRCE[error.code], error.constructor);
+      assertEquals(ERROR.ERROR_PRCE[error.code], error.constructor);
     }
   });
 });

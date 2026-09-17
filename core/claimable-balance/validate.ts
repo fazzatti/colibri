@@ -3,7 +3,7 @@ import type {
   ClaimPredicate,
   ClaimPredicateSeconds,
 } from "@/claimable-balance/types.ts";
-import * as E from "@/claimable-balance/error.ts";
+import * as ERROR from "@/claimable-balance/error.ts";
 
 const MAX_INT64 = 9_223_372_036_854_775_807n;
 
@@ -34,33 +34,33 @@ export function validateClaimPredicate(
   depth = 1,
 ): void {
   if (!(predicate instanceof xdr.ClaimPredicate)) {
-    throw new E.INVALID_PREDICATE(predicate);
+    throw new ERROR.INVALID_PREDICATE(predicate);
   }
-  if (depth > 4) throw new E.EXCESSIVE_DEPTH(depth);
+  if (depth > 4) throw new ERROR.EXCESSIVE_DEPTH(depth);
   switch (predicate.type) {
     case "claimPredicateUnconditional":
       return;
     case "claimPredicateAnd":
       if (predicate.andPredicates.length !== 2) {
-        throw new E.INVALID_AND_ARITY(predicate.andPredicates.length);
+        throw new ERROR.INVALID_AND_ARITY(predicate.andPredicates.length);
       }
       return validateChildren(predicate.andPredicates, depth);
     case "claimPredicateOr":
       if (predicate.orPredicates.length !== 2) {
-        throw new E.INVALID_OR_ARITY(predicate.orPredicates.length);
+        throw new ERROR.INVALID_OR_ARITY(predicate.orPredicates.length);
       }
       return validateChildren(predicate.orPredicates, depth);
     case "claimPredicateNot":
-      if (!predicate.notPredicate) throw new E.EMPTY_NOT();
+      if (!predicate.notPredicate) throw new ERROR.EMPTY_NOT();
       return validateClaimPredicate(predicate.notPredicate, depth + 1);
     case "claimPredicateBeforeAbsoluteTime":
       if (!isValidNativeTime(predicate.absBefore)) {
-        throw new E.INVALID_ABSOLUTE_PREDICATE(predicate.absBefore);
+        throw new ERROR.INVALID_ABSOLUTE_PREDICATE(predicate.absBefore);
       }
       return;
     case "claimPredicateBeforeRelativeTime":
       if (!isValidNativeTime(predicate.relBefore)) {
-        throw new E.INVALID_RELATIVE_PREDICATE(predicate.relBefore);
+        throw new ERROR.INVALID_RELATIVE_PREDICATE(predicate.relBefore);
       }
       return;
   }

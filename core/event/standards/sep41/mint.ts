@@ -1,6 +1,6 @@
 import { StrKey } from "@/strkeys/index.ts";
 import { EventTemplate } from "@/event/template.ts";
-import * as E from "@/event/error.ts";
+import * as ERROR from "@/event/error.ts";
 import type { EventSchema, SchemaField } from "@/event/types.ts";
 import type { Event } from "@/event/event.ts";
 import {
@@ -78,7 +78,7 @@ export class MintEvent extends EventTemplate<typeof MintEventSchema> {
    */
   get amount(): bigint {
     const amount = getSEP41Amount(this.value);
-    if (amount === undefined) throw new E.INVALID_EVENT_DATA_FORMAT("mint");
+    if (amount === undefined) throw new ERROR.INVALID_EVENT_DATA_FORMAT("mint");
     return amount;
   }
 
@@ -122,7 +122,7 @@ export class MintEvent extends EventTemplate<typeof MintEventSchema> {
     return decodeSEP41EventExtensions(
       this.extensions,
       decoder,
-      (cause, keys) => new E.MINT_EXTENSION_DECODER_FAILED(keys, cause),
+      (cause, keys) => new ERROR.MINT_EXTENSION_DECODER_FAILED(keys, cause),
     );
   }
 

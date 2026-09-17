@@ -7,7 +7,7 @@ import {
 import { describe, it } from "@std/testing/bdd";
 import { Claimant, xdr } from "stellar-sdk";
 import { ClaimableBalancePredicates as P } from "@/claimable-balance/index.ts";
-import * as E from "@/claimable-balance/error.ts";
+import * as ERROR from "@/claimable-balance/error.ts";
 import { validateClaimPredicate } from "@/claimable-balance/validate.ts";
 import type { ClaimPredicate } from "@/claimable-balance/types.ts";
 
@@ -39,18 +39,21 @@ describe("ClaimableBalancePredicates", () => {
       expectedOr.toXdr("base64"),
     );
     assertEquals(P.allOf([predicates[0]]), predicates[0]);
-    assertThrows(() => P.allOf([]), E.EMPTY_ALL_OF);
-    assertThrows(() => P.anyOf([]), E.EMPTY_ANY_OF);
+    assertThrows(() => P.allOf([]), ERROR.EMPTY_ALL_OF);
+    assertThrows(() => P.anyOf([]), ERROR.EMPTY_ANY_OF);
     assertThrows(
       () => P.allOf([...predicates, P.unconditional()]),
-      E.EXCESSIVE_DEPTH,
+      ERROR.EXCESSIVE_DEPTH,
     );
     assertThrows(
       () =>
         P.anyOf([P.not(P.not(P.not(P.unconditional()))), P.unconditional()]),
-      E.EXCESSIVE_DEPTH,
+      ERROR.EXCESSIVE_DEPTH,
     );
-    assertThrows(() => P.allOf([{} as ClaimPredicate]), E.INVALID_PREDICATE);
+    assertThrows(
+      () => P.allOf([{} as ClaimPredicate]),
+      ERROR.INVALID_PREDICATE,
+    );
   });
 
   it("expresses inclusive starts and exclusive ends at ledger-close precision", () => {
@@ -73,22 +76,22 @@ describe("ClaimableBalancePredicates", () => {
         new Date(10_001),
         new Date(10_999),
       ], [new Date(10_000), new Date(10_000)]]
-    ) assertThrows(() => P.between({ start, end }), E.EMPTY_TIME_WINDOW);
+    ) assertThrows(() => P.between({ start, end }), ERROR.EMPTY_TIME_WINDOW);
     assertThrows(
       () => P.between({ start: new Date(NaN), end }),
-      E.INVALID_DATE,
+      ERROR.INVALID_DATE,
     );
     assertThrows(
       () => P.between({ start, end: new Date(NaN) }),
-      E.INVALID_DATE,
+      ERROR.INVALID_DATE,
     );
     for (
       const error of [
-        new E.EMPTY_ALL_OF(),
-        new E.EMPTY_ANY_OF(),
-        new E.EMPTY_TIME_WINDOW(),
+        new ERROR.EMPTY_ALL_OF(),
+        new ERROR.EMPTY_ANY_OF(),
+        new ERROR.EMPTY_TIME_WINDOW(),
       ]
-    ) assertEquals(E.ERROR_CBPR[error.code], error.constructor);
+    ) assertEquals(ERROR.ERROR_CBPR[error.code], error.constructor);
   });
 
   it("returns native SDK predicates with exact absolute and relative seconds", () => {
@@ -132,7 +135,7 @@ describe("ClaimableBalancePredicates", () => {
         "2026-09-05" as unknown as Date,
       ]
     ) {
-      assertThrows(() => P.before(date), E.INVALID_DATE);
+      assertThrows(() => P.before(date), ERROR.INVALID_DATE);
     }
   });
 
@@ -155,11 +158,11 @@ describe("ClaimableBalancePredicates", () => {
     ) {
       assertThrows(
         () => P.beforeAbsoluteTime(invalid),
-        E.INVALID_ABSOLUTE_TIME,
+        ERROR.INVALID_ABSOLUTE_TIME,
       );
       assertThrows(
         () => P.beforeRelativeTime(invalid),
-        E.INVALID_RELATIVE_TIME,
+        ERROR.INVALID_RELATIVE_TIME,
       );
     }
   });
@@ -190,61 +193,67 @@ describe("ClaimableBalancePredicates", () => {
     const levelThree = P.and(levelTwo, P.unconditional());
     const levelFour = P.or(levelThree, P.unconditional());
     validateClaimPredicate(levelFour);
-    assertThrows(() => P.not(levelFour), E.EXCESSIVE_DEPTH);
-    assertThrows(() => P.and(P.unconditional(), levelFour), E.EXCESSIVE_DEPTH);
-    assertThrows(() => P.or(levelFour, P.unconditional()), E.EXCESSIVE_DEPTH);
+    assertThrows(() => P.not(levelFour), ERROR.EXCESSIVE_DEPTH);
+    assertThrows(
+      () => P.and(P.unconditional(), levelFour),
+      ERROR.EXCESSIVE_DEPTH,
+    );
+    assertThrows(
+      () => P.or(levelFour, P.unconditional()),
+      ERROR.EXCESSIVE_DEPTH,
+    );
   });
 
   it("validates malformed native children, not only its own generated trees", () => {
     assertThrows(
       () => P.and({} as ClaimPredicate, P.unconditional()),
-      E.INVALID_PREDICATE,
+      ERROR.INVALID_PREDICATE,
     );
     assertThrows(
       () => P.not(xdr.ClaimPredicate.claimPredicateAnd([])),
-      E.INVALID_AND_ARITY,
+      ERROR.INVALID_AND_ARITY,
     );
     assertThrows(
       () => P.not(xdr.ClaimPredicate.claimPredicateOr([P.unconditional()])),
-      E.INVALID_OR_ARITY,
+      ERROR.INVALID_OR_ARITY,
     );
     assertThrows(
       () => P.not(xdr.ClaimPredicate.claimPredicateNot(null)),
-      E.EMPTY_NOT,
+      ERROR.EMPTY_NOT,
     );
     for (const seconds of [-1n, 9_223_372_036_854_775_808n]) {
       assertThrows(
         () =>
           P.not(xdr.ClaimPredicate.claimPredicateBeforeAbsoluteTime(seconds)),
-        E.INVALID_ABSOLUTE_PREDICATE,
+        ERROR.INVALID_ABSOLUTE_PREDICATE,
       );
       assertThrows(
         () =>
           P.not(xdr.ClaimPredicate.claimPredicateBeforeRelativeTime(seconds)),
-        E.INVALID_RELATIVE_PREDICATE,
+        ERROR.INVALID_RELATIVE_PREDICATE,
       );
     }
   });
 
   it("exposes a distinct stable constructor for each error code", () => {
     const errors = [
-      new E.INVALID_DATE(null),
-      new E.INVALID_ABSOLUTE_TIME(-1),
-      new E.INVALID_RELATIVE_TIME(-1),
-      new E.INVALID_PREDICATE(null),
-      new E.EXCESSIVE_DEPTH(5),
-      new E.INVALID_AND_ARITY(1),
-      new E.INVALID_OR_ARITY(1),
-      new E.EMPTY_NOT(),
-      new E.INVALID_ABSOLUTE_PREDICATE(-1n),
-      new E.INVALID_RELATIVE_PREDICATE(-1n),
+      new ERROR.INVALID_DATE(null),
+      new ERROR.INVALID_ABSOLUTE_TIME(-1),
+      new ERROR.INVALID_RELATIVE_TIME(-1),
+      new ERROR.INVALID_PREDICATE(null),
+      new ERROR.EXCESSIVE_DEPTH(5),
+      new ERROR.INVALID_AND_ARITY(1),
+      new ERROR.INVALID_OR_ARITY(1),
+      new ERROR.EMPTY_NOT(),
+      new ERROR.INVALID_ABSOLUTE_PREDICATE(-1n),
+      new ERROR.INVALID_RELATIVE_PREDICATE(-1n),
     ];
     assertEquals(
       new Set(errors.map((error) => error.code)).size,
       errors.length,
     );
     for (const error of errors) {
-      assertEquals(E.ERROR_CBPR[error.code], error.constructor);
+      assertEquals(ERROR.ERROR_CBPR[error.code], error.constructor);
       assertEquals(error.source, "@colibri/core/claimable-balance");
     }
   });

@@ -5,7 +5,7 @@ import { Operation } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
 
 import { NetworkConfig } from "@/network/index.ts";
-import * as E from "@/pipelines/classic-transaction/error.ts";
+import * as ERROR from "@/pipelines/classic-transaction/error.ts";
 import { createClassicTransactionPipeline } from "@/pipelines/classic-transaction/index.ts";
 import type { ClassicTransactionInput } from "@/pipelines/classic-transaction/types.ts";
 import {
@@ -206,7 +206,7 @@ describe("createClassicTransactionPipeline", () => {
           createClassicTransactionPipeline({
             networkConfig: undefined as unknown as NetworkConfig,
           }),
-        E.MISSING_ARG,
+        ERROR.MISSING_ARG,
       );
     });
 
@@ -217,7 +217,7 @@ describe("createClassicTransactionPipeline", () => {
 
       assertThrows(
         () => createClassicTransactionPipeline({ networkConfig }),
-        E.MISSING_ARG,
+        ERROR.MISSING_ARG,
       );
     });
 
@@ -228,7 +228,7 @@ describe("createClassicTransactionPipeline", () => {
 
       assertThrows(
         () => createClassicTransactionPipeline({ networkConfig }),
-        E.MISSING_RPC_URL,
+        ERROR.MISSING_RPC_URL,
       );
     });
 
@@ -237,7 +237,7 @@ describe("createClassicTransactionPipeline", () => {
 
       assertThrows(
         () => createClassicTransactionPipeline({ networkConfig }),
-        E.MISSING_ARG,
+        ERROR.MISSING_ARG,
       );
     });
 
@@ -249,7 +249,7 @@ describe("createClassicTransactionPipeline", () => {
       });
       assertThrows(
         () => createClassicTransactionPipeline({ networkConfig }),
-        E.UNEXPECTED_ERROR,
+        ERROR.UNEXPECTED_ERROR,
       );
     });
   });

@@ -11,7 +11,7 @@ import {
 import type { EventFilter } from "@/event/event-filter/index.ts";
 import type { EventType } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
-import * as E from "@/event/parsing/error.ts";
+import * as ERROR from "@/event/parsing/error.ts";
 import type { Buffer } from "node:buffer";
 import type { BoundedArray } from "@/common/helpers/bounded-array.ts";
 import type { TopicFilter } from "@/event/event-filter/types.ts";
@@ -400,7 +400,7 @@ describe("parseEventsFromLedgerCloseMeta", () => {
         const meta = createMockLedgerCloseMeta(1);
         await assertRejects(
           () => parseEventsFromLedgerCloseMeta(meta, async () => {}),
-          E.INVALID_LEDGER_CLOSE_META_XDR,
+          ERROR.INVALID_LEDGER_CLOSE_META_XDR,
         );
       } finally {
         xdr.LedgerCloseMeta.is = originalIsValid;
@@ -415,7 +415,7 @@ describe("parseEventsFromLedgerCloseMeta", () => {
         const meta = createMockLedgerCloseMeta(0); // Version 0 is unsupported
         await assertRejects(
           () => parseEventsFromLedgerCloseMeta(meta, async () => {}),
-          E.UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
+          ERROR.UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
         );
       } finally {
         xdr.LedgerCloseMeta.is = originalIsValid;
@@ -430,7 +430,7 @@ describe("parseEventsFromLedgerCloseMeta", () => {
         const meta = createMockLedgerCloseMeta(3);
         await assertRejects(
           () => parseEventsFromLedgerCloseMeta(meta, async () => {}),
-          E.UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
+          ERROR.UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
         );
       } finally {
         xdr.LedgerCloseMeta.is = originalIsValid;
@@ -449,7 +449,7 @@ describe("parseEventsFromLedgerCloseMeta", () => {
         });
         await assertRejects(
           () => parseEventsFromLedgerCloseMeta(meta, async () => {}),
-          E.UNSUPPORTED_TRANSACTION_META_VERSION,
+          ERROR.UNSUPPORTED_TRANSACTION_META_VERSION,
         );
       } finally {
         xdr.LedgerCloseMeta.is = originalIsValid;

@@ -15,7 +15,7 @@ import { LocalSigner } from "@colibri/core";
 import {
   checkMemoRequired,
   createSep29Plugin,
-  Sep29Errors as E,
+  Sep29Errors as ERROR,
 } from "@colibri/plugin-sep29";
 import { memoDestinations } from "@/destinations.ts";
 import {
@@ -146,14 +146,14 @@ describe("SEP-29 transaction inspection", () => {
   it("fails with distinct typed envelope and connection errors", async () => {
     await assertRejects(
       () => checkMemoRequired({ transaction: {} } as CheckMemoRequiredInput),
-      E.INVALID_TRANSACTION,
+      ERROR.INVALID_TRANSACTION,
     );
     await assertRejects(
       () =>
         checkMemoRequired(
           { transaction: build([payment()]) } as CheckMemoRequiredInput,
         ),
-      E.FAILED_TO_CREATE_READER,
+      ERROR.FAILED_TO_CREATE_READER,
     );
     const listener = Deno.listen({ hostname: "127.0.0.1", port: 0 });
     const port = listener.addr.port;
@@ -164,19 +164,19 @@ describe("SEP-29 transaction inspection", () => {
           transaction: build([payment()]),
           rpc: new Server(`http://127.0.0.1:${port}`, { allowHttp: true }),
         }),
-      E.FAILED_TO_READ_REQUIREMENTS,
+      ERROR.FAILED_TO_READ_REQUIREMENTS,
     );
-    assertEquals(error.code, E.Code.FAILED_TO_READ_REQUIREMENTS);
+    assertEquals(error.code, ERROR.Code.FAILED_TO_READ_REQUIREMENTS);
   });
 
   it("exposes stable plugin and error identifiers", () => {
     const guard = createSep29Plugin();
     assertEquals(guard.id, SEP29_PLUGIN_ID);
     assertEquals(guard.target, SEP29_PLUGIN_TARGET);
-    const error = new E.MEMO_REQUIRED(recipients[0], 4);
+    const error = new ERROR.MEMO_REQUIRED(recipients[0], 4);
     assertEquals(error.destination, recipients[0]);
     assertEquals(error.operationIndex, 4);
-    assertEquals(error.code, E.Code.MEMO_REQUIRED);
-    assertStrictEquals(E.ERROR_PLG_SEP29[error.code], E.MEMO_REQUIRED);
+    assertEquals(error.code, ERROR.Code.MEMO_REQUIRED);
+    assertStrictEquals(ERROR.ERROR_PLG_SEP29[error.code], ERROR.MEMO_REQUIRED);
   });
 });

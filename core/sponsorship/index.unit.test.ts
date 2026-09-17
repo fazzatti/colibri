@@ -10,7 +10,7 @@ import {
 } from "stellar-sdk";
 import { LocalSigner } from "@/signer/local/index.ts";
 import {
-  SponsorshipErrors as E,
+  SponsorshipErrors as ERROR,
   wrapSponsorship,
 } from "@/sponsorship/index.ts";
 import type { WrapSponsorshipArgs } from "@/sponsorship/types.ts";
@@ -77,20 +77,23 @@ describe("wrapSponsorship", () => {
     const args: WrapSponsorshipArgs = { sponsor, sponsored, operations: [] };
     const invalidSponsor = assertThrows(
       () => wrapSponsorship({ ...args, sponsor: "Ginvalid" }),
-      E.INVALID_SPONSOR,
+      ERROR.INVALID_SPONSOR,
     );
-    assertEquals(invalidSponsor.code, E.Code.INVALID_SPONSOR);
+    assertEquals(invalidSponsor.code, ERROR.Code.INVALID_SPONSOR);
     const muxed = new MuxedAccount(new Account(sponsored, "0"), "1")
       .accountId();
     const invalidSponsored = assertThrows(
       () => wrapSponsorship({ ...args, sponsored: muxed as typeof sponsored }),
-      E.INVALID_SPONSORED_ACCOUNT,
+      ERROR.INVALID_SPONSORED_ACCOUNT,
     );
-    assertEquals(invalidSponsored.code, E.Code.INVALID_SPONSORED_ACCOUNT);
-    assertStrictEquals(E.ERROR_SPNS[invalidSponsor.code], E.INVALID_SPONSOR);
+    assertEquals(invalidSponsored.code, ERROR.Code.INVALID_SPONSORED_ACCOUNT);
     assertStrictEquals(
-      E.ERROR_SPNS[invalidSponsored.code],
-      E.INVALID_SPONSORED_ACCOUNT,
+      ERROR.ERROR_SPNS[invalidSponsor.code],
+      ERROR.INVALID_SPONSOR,
+    );
+    assertStrictEquals(
+      ERROR.ERROR_SPNS[invalidSponsored.code],
+      ERROR.INVALID_SPONSORED_ACCOUNT,
     );
   });
 });

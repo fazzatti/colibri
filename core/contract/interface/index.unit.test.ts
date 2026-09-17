@@ -18,7 +18,7 @@ import {
   matchesContractInterface,
   NetworkConfig,
 } from "@/mod.ts";
-import * as E from "@/contract/error.ts";
+import * as ERROR from "@/contract/error.ts";
 import {
   normalizeContractInterfaceValue,
   normalizeContractUserType,
@@ -268,9 +268,9 @@ describe("contract metadata", () => {
   it("rejects non-Wasm input with a typed occurrence-specific error", () => {
     const error = assertThrows(
       () => extractContractMetadata(new Uint8Array([1, 2, 3])),
-      E.INVALID_WASM_FOR_METADATA,
+      ERROR.INVALID_WASM_FOR_METADATA,
     );
-    assertEquals(error.code, E.Code.INVALID_WASM_FOR_METADATA);
+    assertEquals(error.code, ERROR.Code.INVALID_WASM_FOR_METADATA);
   });
 
   it("identifies the exact malformed metadata section", () => {
@@ -283,9 +283,9 @@ describe("contract metadata", () => {
           },
           { name: "contractmetav0", payload: new Uint8Array([1]) },
         ])),
-      E.FAILED_TO_DECODE_METADATA_SECTION,
+      ERROR.FAILED_TO_DECODE_METADATA_SECTION,
     );
-    assertEquals(error.code, E.Code.FAILED_TO_DECODE_METADATA_SECTION);
+    assertEquals(error.code, ERROR.Code.FAILED_TO_DECODE_METADATA_SECTION);
     assertEquals(error.meta.data, { sectionIndex: 1 });
   });
 });
@@ -348,9 +348,9 @@ describe("SEP-47 claims", () => {
     for (const sep of [0, Number.NaN, Number.MAX_SAFE_INTEGER + 1]) {
       const error = assertThrows(
         () => claimsSep(analysis, sep),
-        E.INVALID_SEP_IDENTIFIER,
+        ERROR.INVALID_SEP_IDENTIFIER,
       );
-      assertEquals(error.code, E.Code.INVALID_SEP_IDENTIFIER);
+      assertEquals(error.code, ERROR.Code.INVALID_SEP_IDENTIFIER);
       assertEquals(error.meta.data, { sep });
     }
   });
@@ -381,11 +381,11 @@ describe("contract specification extraction", () => {
       assertThrows(
         () => extractContractSpec(new Uint8Array([1, 2, 3])),
       ),
-      E.INVALID_WASM_FOR_SPEC,
+      ERROR.INVALID_WASM_FOR_SPEC,
     );
     assertInstanceOf(
       assertThrows(() => extractContractSpec(WASM_HEADER)),
-      E.MISSING_SPEC_IN_WASM,
+      ERROR.MISSING_SPEC_IN_WASM,
     );
   });
 
@@ -399,9 +399,9 @@ describe("contract specification extraction", () => {
           },
           { name: "contractspecv0", payload: new Uint8Array([1]) },
         ])),
-      E.FAILED_TO_DECODE_SPEC_SECTION,
+      ERROR.FAILED_TO_DECODE_SPEC_SECTION,
     );
-    assertEquals(error.code, E.Code.FAILED_TO_DECODE_SPEC_SECTION);
+    assertEquals(error.code, ERROR.Code.FAILED_TO_DECODE_SPEC_SECTION);
     assertEquals(error.meta.data, { sectionIndex: 1 });
   });
 });

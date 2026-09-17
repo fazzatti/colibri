@@ -9,7 +9,7 @@ import {
 import { Ledger } from "@/ledger-parser/ledger/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { matchTransactionEnvelopes } from "@/ledger-parser/ledger/match-envelopes.ts";
-import * as E from "@/ledger-parser/error.ts";
+import * as ERROR from "@/ledger-parser/error.ts";
 import { loadLedgerFixtures } from "colibri-internal/tests/fixtures/rpc/get_ledgers/index.ts";
 
 const fixtures = loadLedgerFixtures();
@@ -72,11 +72,11 @@ describe("Ledger network-bound envelope association", () => {
     assertEquals(tx.hasEnvelope, false);
     assert(tx.hash.length === 64);
     assertEquals(typeof tx.successful, "boolean");
-    assertThrows(() => tx.toEnvelope(), E.MISSING_NATIVE_ENVELOPE);
-    assertThrows(() => tx.sourceAccount, E.MISSING_TRANSACTION_ENVELOPE);
+    assertThrows(() => tx.toEnvelope(), ERROR.MISSING_NATIVE_ENVELOPE);
+    assertThrows(() => tx.sourceAccount, ERROR.MISSING_TRANSACTION_ENVELOPE);
     assertThrows(
       () => Ledger.fromEntry(fixtures[0], "").transactions,
-      E.INVALID_NETWORK_PASSPHRASE,
+      ERROR.INVALID_NETWORK_PASSPHRASE,
     );
     assertThrows(
       () =>
@@ -84,11 +84,11 @@ describe("Ledger network-bound envelope association", () => {
           fixtures[0],
           { networkPassphrase: 3 } as unknown as NetworkConfig,
         ),
-      E.INVALID_NETWORK_PASSPHRASE,
+      ERROR.INVALID_NETWORK_PASSPHRASE,
     );
     assertThrows(
       () => Ledger.fromEntry(fixtures[0], Networks.TESTNET).transactions,
-      E.RESULT_ENVELOPE_NOT_FOUND,
+      ERROR.RESULT_ENVELOPE_NOT_FOUND,
     );
   });
 
@@ -101,7 +101,7 @@ describe("Ledger network-bound envelope association", () => {
     const failures = [
       assertThrows(
         () => matchTransactionEnvelopes(results, [], Networks.PUBLIC),
-        E.RESULT_ENVELOPE_NOT_FOUND,
+        ERROR.RESULT_ENVELOPE_NOT_FOUND,
       ),
       assertThrows(
         () =>
@@ -110,11 +110,11 @@ describe("Ledger network-bound envelope association", () => {
             [envelopes[0], envelopes[0]],
             Networks.PUBLIC,
           ),
-        E.DUPLICATE_ENVELOPE_HASH,
+        ERROR.DUPLICATE_ENVELOPE_HASH,
       ),
       assertThrows(
         () => matchTransactionEnvelopes([], envelopes, Networks.PUBLIC),
-        E.UNMATCHED_TRANSACTION_ENVELOPES,
+        ERROR.UNMATCHED_TRANSACTION_ENVELOPES,
       ),
       assertThrows(
         () =>
@@ -123,15 +123,15 @@ describe("Ledger network-bound envelope association", () => {
             [{} as xdr.TransactionEnvelope],
             Networks.PUBLIC,
           ),
-        E.ENVELOPE_HASH_FAILED,
+        ERROR.ENVELOPE_HASH_FAILED,
       ),
       assertThrows(
         () => Ledger.fromEntry(fixtures[0], ""),
-        E.INVALID_NETWORK_PASSPHRASE,
+        ERROR.INVALID_NETWORK_PASSPHRASE,
       ),
     ];
     for (const error of failures) {
-      assertEquals(E.ERROR_LDP[error.code], error.constructor);
+      assertEquals(ERROR.ERROR_LDP[error.code], error.constructor);
     }
     assert(failures[3].meta.cause instanceof Error);
     assertEquals(matchTransactionEnvelopes([], [], Networks.PUBLIC), []);

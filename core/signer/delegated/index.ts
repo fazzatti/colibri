@@ -7,7 +7,7 @@ import {
 import type { SorobanAuthorizationEntryLike } from "@/common/types/index.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 import type { AuthEntrySigner } from "@/signer/types.ts";
-import * as E from "@/signer/delegated/error.ts";
+import * as ERROR from "@/signer/delegated/error.ts";
 
 /**
  * Configuration used to create a recursive delegated authorization signer.
@@ -58,7 +58,7 @@ export class DelegatedSigner implements AuthEntrySigner {
       const previous = this.nestedDelegates[index - 1].getAddress();
       const current = this.nestedDelegates[index].getAddress();
       if (previous === current) {
-        throw new E.DUPLICATE_NESTED_DELEGATE(this.address, current);
+        throw new ERROR.DUPLICATE_NESTED_DELEGATE(this.address, current);
       }
     }
   }
@@ -109,7 +109,7 @@ export class DelegatedSigner implements AuthEntrySigner {
           delegates: this.nestedDelegates.map(toDelegateSignature),
         });
       } catch (error) {
-        throw new E.FAILED_TO_BUILD_DELEGATED_ENTRY(
+        throw new ERROR.FAILED_TO_BUILD_DELEGATED_ENTRY(
           this.address,
           error as Error,
         );
@@ -125,8 +125,8 @@ export class DelegatedSigner implements AuthEntrySigner {
           forAddress,
         ) as xdr.SorobanAuthorizationEntry;
       } catch (error) {
-        if (error instanceof E.DelegatedSignerError) throw error;
-        throw new E.FAILED_TO_AUTHORIZE_DELEGATE(
+        if (error instanceof ERROR.DelegatedSignerError) throw error;
+        throw new ERROR.FAILED_TO_AUTHORIZE_DELEGATE(
           forAddress,
           error as Error,
         );
@@ -174,4 +174,4 @@ const isDelegatedEntry = (
   entry.credentials.type === "sorobanCredentialsAddressWithDelegates";
 
 /** Error constructors emitted by {@link DelegatedSigner}. */
-export const DelegatedSignerErrors: typeof E = E;
+export const DelegatedSignerErrors: typeof ERROR = ERROR;

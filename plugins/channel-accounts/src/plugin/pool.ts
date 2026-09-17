@@ -1,4 +1,4 @@
-import * as E from "@/shared/error.ts";
+import * as ERROR from "@/shared/error.ts";
 import type { ChannelAccount } from "@/shared/types.ts";
 
 type Waiter = (channel: ChannelAccount) => void;
@@ -50,7 +50,7 @@ export class ChannelAccountsPool {
 
   release(runId: string): void {
     const channel = this.lockedChannels.get(runId);
-    if (!channel) throw new E.CHANNEL_NOT_ALLOCATED(runId);
+    if (!channel) throw new ERROR.CHANNEL_NOT_ALLOCATED(runId);
 
     this.lockedChannels.delete(runId);
     this.enqueue(channel);

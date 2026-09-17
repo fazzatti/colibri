@@ -18,7 +18,7 @@ import type {
   StellarTomlValidator,
   WebAuthDiscoveryConfig,
 } from "@/sep1/types.ts";
-import * as E from "@/sep1/error.ts";
+import * as ERROR from "@/sep1/error.ts";
 
 /** Maximum file size allowed by SEP-1 specification (100KB) */
 const MAX_FILE_SIZE = 100 * 1024;
@@ -51,7 +51,7 @@ const validateSigningKeys = (
   for (const field of SIGNING_KEY_FIELDS) {
     const value = data[field];
     if (value && !StrKey.isValidEd25519PublicKey(value)) {
-      throw new E.INVALID_SIGNING_KEY(field, value, domain);
+      throw new ERROR.INVALID_SIGNING_KEY(field, value, domain);
     }
   }
 };
@@ -65,11 +65,11 @@ const validateUrl = (
   try {
     const url = new URL(value);
     if (requireHttps && url.protocol !== "https:") {
-      throw new E.INVALID_URL(field, value, domain, requireHttps);
+      throw new ERROR.INVALID_URL(field, value, domain, requireHttps);
     }
   } catch (error) {
-    if (error instanceof E.INVALID_URL) throw error;
-    throw new E.INVALID_URL(field, value, domain, requireHttps);
+    if (error instanceof ERROR.INVALID_URL) throw error;
+    throw new ERROR.INVALID_URL(field, value, domain, requireHttps);
   }
 };
 
@@ -97,7 +97,7 @@ const validateUrls = (
 const validateAccounts = (data: StellarTomlData, domain?: string): void => {
   for (const [index, account] of (data.ACCOUNTS ?? []).entries()) {
     if (!StrKey.isValidEd25519PublicKey(account)) {
-      throw new E.INVALID_ACCOUNT("ACCOUNTS", account, domain, index);
+      throw new ERROR.INVALID_ACCOUNT("ACCOUNTS", account, domain, index);
     }
   }
 };
@@ -108,7 +108,7 @@ const validateValidators = (data: StellarTomlData, domain?: string): void => {
       validator.PUBLIC_KEY &&
       !StrKey.isValidEd25519PublicKey(validator.PUBLIC_KEY)
     ) {
-      throw new E.INVALID_SIGNING_KEY(
+      throw new ERROR.INVALID_SIGNING_KEY(
         `VALIDATORS[${index}].PUBLIC_KEY`,
         validator.PUBLIC_KEY,
         domain,
@@ -120,14 +120,14 @@ const validateValidators = (data: StellarTomlData, domain?: string): void => {
 const validateCurrencies = (data: StellarTomlData, domain?: string): void => {
   for (const [index, currency] of (data.CURRENCIES ?? []).entries()) {
     if (currency.issuer && !StrKey.isValidEd25519PublicKey(currency.issuer)) {
-      throw new E.INVALID_ACCOUNT(
+      throw new ERROR.INVALID_ACCOUNT(
         `CURRENCIES[${index}].issuer`,
         currency.issuer,
         domain,
       );
     }
     if (currency.contract && !StrKey.isValidContractId(currency.contract)) {
-      throw new E.INVALID_ACCOUNT(
+      throw new ERROR.INVALID_ACCOUNT(
         `CURRENCIES[${index}].contract`,
         currency.contract,
         domain,
@@ -214,7 +214,7 @@ export class StellarToml {
     if (!regex.domain.test(cleanDomain) && !cleanDomain.includes("localhost")) {
       // Allow localhost for testing
       if (cleanDomain.includes("://")) {
-        throw new E.INVALID_DOMAIN(domain);
+        throw new ERROR.INVALID_DOMAIN(domain);
       }
     }
 
@@ -234,7 +234,7 @@ export class StellarToml {
       });
 
       if (!response.ok) {
-        throw new E.FETCH_FAILED(
+        throw new ERROR.FETCH_FAILED(
           cleanDomain,
           undefined,
           response.status,
@@ -245,7 +245,7 @@ export class StellarToml {
       // Check content length if available
       const contentLength = response.headers.get("content-length");
       if (contentLength && parseInt(contentLength, 10) > MAX_FILE_SIZE) {
-        throw new E.FILE_TOO_LARGE(
+        throw new ERROR.FILE_TOO_LARGE(
           cleanDomain,
           parseInt(contentLength, 10),
           MAX_FILE_SIZE,
@@ -256,7 +256,7 @@ export class StellarToml {
 
       // Check actual size after reading
       if (text.length > MAX_FILE_SIZE) {
-        throw new E.FILE_TOO_LARGE(cleanDomain, text.length, MAX_FILE_SIZE);
+        throw new ERROR.FILE_TOO_LARGE(cleanDomain, text.length, MAX_FILE_SIZE);
       }
 
       clearTimeout(timeoutId);
@@ -264,15 +264,15 @@ export class StellarToml {
     } catch (error) {
       clearTimeout(timeoutId);
 
-      if (error instanceof E.Sep1Error) {
+      if (error instanceof ERROR.Sep1Error) {
         throw error;
       }
 
       if (error instanceof DOMException && error.name === "AbortError") {
-        throw new E.TIMEOUT(cleanDomain, timeout);
+        throw new ERROR.TIMEOUT(cleanDomain, timeout);
       }
 
-      throw new E.FETCH_FAILED(
+      throw new ERROR.FETCH_FAILED(
         cleanDomain,
         error instanceof Error ? error : new Error(String(error)),
       );
@@ -313,7 +313,7 @@ export class StellarToml {
     try {
       data = parseToml(content) as StellarTomlData;
     } catch (error) {
-      throw new E.PARSE_ERROR(domain, error as Error, content);
+      throw new ERROR.PARSE_ERROR(domain, error as Error, content);
     }
 
     if (validate) {

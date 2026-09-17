@@ -2,7 +2,7 @@ import type {
   EnvelopeSigningRequirementsInput,
   EnvelopeSigningRequirementsOutput,
 } from "@/processes/envelope-signing-requirements/types.ts";
-import * as E from "@/processes/envelope-signing-requirements/error.ts";
+import * as ERROR from "@/processes/envelope-signing-requirements/error.ts";
 import { isFeeBumpTransaction } from "@/common/type-guards/is-fee-bump-transaction.ts";
 import { isTransaction } from "@/common/type-guards/is-transaction.ts";
 import { muxedAddressToBaseAccount } from "@/address/index.ts";
@@ -35,7 +35,7 @@ export const envelopeSigningRequirements = (
         return [sourceRequirement];
       }
     } catch (e) {
-      throw new E.FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX(
+      throw new ERROR.FAILED_TO_PROCESS_REQUIREMENTS_FOR_FEE_BUMP_TX(
         input,
         e as Error,
       );
@@ -73,18 +73,18 @@ export const envelopeSigningRequirements = (
         return finalRequirements;
       }
     } catch (e) {
-      throw new E.FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION(
+      throw new ERROR.FAILED_TO_PROCESS_REQUIREMENTS_FOR_TRANSACTION(
         input,
         e as Error,
       );
     }
 
-    throw new E.INVALID_TRANSACTION_TYPE(input);
+    throw new ERROR.INVALID_TRANSACTION_TYPE(input);
   } catch (e) {
-    if (e instanceof E.EnvelopeSigningRequirementsError) {
+    if (e instanceof ERROR.EnvelopeSigningRequirementsError) {
       throw e;
     }
-    throw new E.UNEXPECTED_ERROR(input, e as Error);
+    throw new ERROR.UNEXPECTED_ERROR(input, e as Error);
   }
 };
 
@@ -131,4 +131,4 @@ const removeConflictingRequirements = (
 };
 
 /** Error constructors emitted by {@link envelopeSigningRequirements}. */
-export const EnvelopeSigningRequirementsErrors: typeof E = E;
+export const EnvelopeSigningRequirementsErrors: typeof ERROR = ERROR;

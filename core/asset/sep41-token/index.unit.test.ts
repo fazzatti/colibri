@@ -6,7 +6,7 @@ import {
 } from "@std/assert";
 import { afterEach, describe, it } from "@std/testing/bdd";
 import { SEP41TokenContract } from "@/asset/sep41-token/index.ts";
-import * as E from "@/asset/sep41-token/error.ts";
+import * as ERROR from "@/asset/sep41-token/error.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
@@ -124,8 +124,8 @@ describe("SEP41TokenContract", () => {
     const error = await assertRejects(() =>
       token.balance({ id: owner.publicKey() })
     );
-    assertInstanceOf(error, E.MISSING_RETURN_VALUE);
-    assertEquals(error.code, E.Code.MISSING_RETURN_VALUE);
+    assertInstanceOf(error, ERROR.MISSING_RETURN_VALUE);
+    assertEquals(error.code, ERROR.Code.MISSING_RETURN_VALUE);
     assertEquals(error.meta?.data, { functionName: "balance" });
   });
 
@@ -267,7 +267,7 @@ describe("SEP41TokenContract", () => {
     const invalidAddress = "invalid-address" as ContractId;
     const overflowingI128 = 1n << 127n;
     const cases: ReadonlyArray<{
-      code: E.Code;
+      code: ERROR.Code;
       functionName: string;
       argumentName: string;
       stellarType: string;
@@ -275,7 +275,7 @@ describe("SEP41TokenContract", () => {
       run(token: SEP41TokenContract): Promise<unknown>;
     }> = [
       {
-        code: E.Code.FAILED_TO_ENCODE_ALLOWANCE_ARGUMENT_FROM,
+        code: ERROR.Code.FAILED_TO_ENCODE_ALLOWANCE_ARGUMENT_FROM,
         functionName: "allowance",
         argumentName: "from",
         stellarType: "address",
@@ -287,7 +287,7 @@ describe("SEP41TokenContract", () => {
           }),
       },
       {
-        code: E.Code.FAILED_TO_ENCODE_ALLOWANCE_ARGUMENT_SPENDER,
+        code: ERROR.Code.FAILED_TO_ENCODE_ALLOWANCE_ARGUMENT_SPENDER,
         functionName: "allowance",
         argumentName: "spender",
         stellarType: "address",
@@ -299,7 +299,7 @@ describe("SEP41TokenContract", () => {
           }),
       },
       {
-        code: E.Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_FROM,
+        code: ERROR.Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_FROM,
         functionName: "approve",
         argumentName: "from",
         stellarType: "address",
@@ -314,7 +314,7 @@ describe("SEP41TokenContract", () => {
           }),
       },
       {
-        code: E.Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_SPENDER,
+        code: ERROR.Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_SPENDER,
         functionName: "approve",
         argumentName: "spender",
         stellarType: "address",
@@ -329,7 +329,7 @@ describe("SEP41TokenContract", () => {
           }),
       },
       {
-        code: E.Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_AMOUNT,
+        code: ERROR.Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_AMOUNT,
         functionName: "approve",
         argumentName: "amount",
         stellarType: "i128",
@@ -344,7 +344,7 @@ describe("SEP41TokenContract", () => {
           }),
       },
       {
-        code: E.Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_LIVE_UNTIL_LEDGER,
+        code: ERROR.Code.FAILED_TO_ENCODE_APPROVE_ARGUMENT_LIVE_UNTIL_LEDGER,
         functionName: "approve",
         argumentName: "liveUntilLedger",
         stellarType: "u32",
@@ -359,7 +359,7 @@ describe("SEP41TokenContract", () => {
           }),
       },
       {
-        code: E.Code.FAILED_TO_ENCODE_BALANCE_ARGUMENT_ID,
+        code: ERROR.Code.FAILED_TO_ENCODE_BALANCE_ARGUMENT_ID,
         functionName: "balance",
         argumentName: "id",
         stellarType: "address",
@@ -367,7 +367,7 @@ describe("SEP41TokenContract", () => {
         run: (token) => token.balance({ id: invalidAddress }),
       },
       {
-        code: E.Code.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_FROM,
+        code: ERROR.Code.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_FROM,
         functionName: "transfer",
         argumentName: "from",
         stellarType: "address",
@@ -381,7 +381,7 @@ describe("SEP41TokenContract", () => {
           }),
       },
       {
-        code: E.Code.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_TO,
+        code: ERROR.Code.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_TO,
         functionName: "transfer",
         argumentName: "to",
         stellarType: "address",
@@ -395,7 +395,7 @@ describe("SEP41TokenContract", () => {
           }),
       },
       {
-        code: E.Code.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_AMOUNT,
+        code: ERROR.Code.FAILED_TO_ENCODE_TRANSFER_ARGUMENT_AMOUNT,
         functionName: "transfer",
         argumentName: "amount",
         stellarType: "i128",
@@ -409,7 +409,7 @@ describe("SEP41TokenContract", () => {
           }),
       },
       {
-        code: E.Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_SPENDER,
+        code: ERROR.Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_SPENDER,
         functionName: "transfer_from",
         argumentName: "spender",
         stellarType: "address",
@@ -424,7 +424,7 @@ describe("SEP41TokenContract", () => {
           }),
       },
       {
-        code: E.Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_FROM,
+        code: ERROR.Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_FROM,
         functionName: "transfer_from",
         argumentName: "from",
         stellarType: "address",
@@ -439,7 +439,7 @@ describe("SEP41TokenContract", () => {
           }),
       },
       {
-        code: E.Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_TO,
+        code: ERROR.Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_TO,
         functionName: "transfer_from",
         argumentName: "to",
         stellarType: "address",
@@ -454,7 +454,7 @@ describe("SEP41TokenContract", () => {
           }),
       },
       {
-        code: E.Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_AMOUNT,
+        code: ERROR.Code.FAILED_TO_ENCODE_TRANSFER_FROM_ARGUMENT_AMOUNT,
         functionName: "transfer_from",
         argumentName: "amount",
         stellarType: "i128",
@@ -469,7 +469,7 @@ describe("SEP41TokenContract", () => {
           }),
       },
       {
-        code: E.Code.FAILED_TO_ENCODE_BURN_ARGUMENT_FROM,
+        code: ERROR.Code.FAILED_TO_ENCODE_BURN_ARGUMENT_FROM,
         functionName: "burn",
         argumentName: "from",
         stellarType: "address",
@@ -478,7 +478,7 @@ describe("SEP41TokenContract", () => {
           token.burn({ from: invalidAddress, amount: 1n, config }),
       },
       {
-        code: E.Code.FAILED_TO_ENCODE_BURN_ARGUMENT_AMOUNT,
+        code: ERROR.Code.FAILED_TO_ENCODE_BURN_ARGUMENT_AMOUNT,
         functionName: "burn",
         argumentName: "amount",
         stellarType: "i128",
@@ -491,7 +491,7 @@ describe("SEP41TokenContract", () => {
           }),
       },
       {
-        code: E.Code.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_SPENDER,
+        code: ERROR.Code.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_SPENDER,
         functionName: "burn_from",
         argumentName: "spender",
         stellarType: "address",
@@ -505,7 +505,7 @@ describe("SEP41TokenContract", () => {
           }),
       },
       {
-        code: E.Code.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_FROM,
+        code: ERROR.Code.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_FROM,
         functionName: "burn_from",
         argumentName: "from",
         stellarType: "address",
@@ -519,7 +519,7 @@ describe("SEP41TokenContract", () => {
           }),
       },
       {
-        code: E.Code.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_AMOUNT,
+        code: ERROR.Code.FAILED_TO_ENCODE_BURN_FROM_ARGUMENT_AMOUNT,
         functionName: "burn_from",
         argumentName: "amount",
         stellarType: "i128",
@@ -536,11 +536,11 @@ describe("SEP41TokenContract", () => {
 
     for (const testCase of cases) {
       const error = await assertRejects(() => testCase.run(createToken()));
-      assertInstanceOf(error, E.SEP41TokenError);
+      assertInstanceOf(error, ERROR.SEP41TokenError);
       assertEquals(error.code, testCase.code);
       assertStrictEquals(
         error.constructor,
-        E.ERRORS_SEP41_TOKEN[testCase.code],
+        ERROR.ERRORS_SEP41_TOKEN[testCase.code],
       );
       assertInstanceOf(error.meta?.cause, Error);
       assertEquals(error.meta?.data, {

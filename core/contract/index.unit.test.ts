@@ -8,7 +8,7 @@ import { describe, it } from "@std/testing/bdd";
 import { stub } from "@std/testing/mock";
 import { Buffer } from "node:buffer";
 import { Contract } from "@/contract/index.ts";
-import * as E from "@/contract/error.ts";
+import * as ERROR from "@/contract/error.ts";
 import type { Server } from "stellar-sdk/rpc";
 import type { ContractConfig } from "@/contract/types.ts";
 import { NetworkConfig } from "@/network/index.ts";
@@ -250,7 +250,10 @@ describe("Contract", () => {
       });
 
       assertEquals(contract.getExternalRef(), externalRef);
-      assertThrows(() => contract.getWasmHash(), E.MISSING_REQUIRED_PROPERTY);
+      assertThrows(
+        () => contract.getWasmHash(),
+        ERROR.MISSING_REQUIRED_PROPERTY,
+      );
     });
   });
 
@@ -266,7 +269,7 @@ describe("Contract", () => {
             networkConfig: undefined as unknown as NetworkConfig,
             contractConfig,
           }),
-        E.MISSING_ARG,
+        ERROR.MISSING_ARG,
       );
 
       assertThrows(
@@ -275,7 +278,7 @@ describe("Contract", () => {
             networkConfig: {} as unknown as NetworkConfig,
             contractConfig,
           }),
-        E.MISSING_ARG,
+        ERROR.MISSING_ARG,
       );
 
       assertThrows(
@@ -287,7 +290,7 @@ describe("Contract", () => {
             } as unknown as NetworkConfig,
             contractConfig: undefined as unknown as ContractConfig,
           }),
-        E.MISSING_ARG,
+        ERROR.MISSING_ARG,
       );
     });
 
@@ -304,7 +307,7 @@ describe("Contract", () => {
               wasm: mockWasm,
             },
           }),
-        E.MISSING_RPC_URL,
+        ERROR.MISSING_RPC_URL,
       );
     });
 
@@ -319,7 +322,7 @@ describe("Contract", () => {
             }),
             contractConfig: {} as unknown as ContractConfig,
           }),
-        E.INVALID_CONTRACT_CONFIG,
+        ERROR.INVALID_CONTRACT_CONFIG,
       );
     });
 
@@ -341,7 +344,7 @@ describe("Contract", () => {
             } as unknown as ContractConfig,
             rpc: {} as Server,
           }),
-        E.CONTRACT_CONFIG_SOURCES_CONFLICT,
+        ERROR.CONTRACT_CONFIG_SOURCES_CONFLICT,
       );
     });
 
@@ -372,22 +375,22 @@ describe("Contract", () => {
 
       assertThrows(
         () => contractWithWasm.getWasmHash(),
-        E.MISSING_REQUIRED_PROPERTY,
+        ERROR.MISSING_REQUIRED_PROPERTY,
       );
 
       assertThrows(
         () => contractWithWasm.getSpec(),
-        E.MISSING_REQUIRED_PROPERTY,
+        ERROR.MISSING_REQUIRED_PROPERTY,
       );
 
       assertThrows(
         () => contractWithWasm.getContractId(),
-        E.MISSING_REQUIRED_PROPERTY,
+        ERROR.MISSING_REQUIRED_PROPERTY,
       );
 
       assertThrows(
         () => contractWithWasmHash.getWasm(),
-        E.MISSING_REQUIRED_PROPERTY,
+        ERROR.MISSING_REQUIRED_PROPERTY,
       );
     });
   });
@@ -422,7 +425,7 @@ describe("Contract", () => {
 
       assertThrows(
         () => contractWithId.requireNoContractIdForTest(),
-        E.PROPERTY_ALREADY_SET,
+        ERROR.PROPERTY_ALREADY_SET,
       );
 
       const contractWithSpec = new TestContract({
@@ -435,7 +438,7 @@ describe("Contract", () => {
       });
       assertThrows(
         () => contractWithSpec.requireNoSpecForTest(),
-        E.PROPERTY_ALREADY_SET,
+        ERROR.PROPERTY_ALREADY_SET,
       );
     });
 
@@ -477,7 +480,7 @@ describe("Contract", () => {
             },
             salt,
           }),
-        E.FAILED_TO_DEPLOY_CONTRACT,
+        ERROR.FAILED_TO_DEPLOY_CONTRACT,
       );
 
       assertExists(operation);
@@ -568,7 +571,7 @@ describe("Contract", () => {
       });
       await assertRejects(
         () => localWasm.loadSpecFromNetwork(),
-        E.NETWORK_EXECUTABLE_NOT_AVAILABLE,
+        ERROR.NETWORK_EXECUTABLE_NOT_AVAILABLE,
       );
 
       const missingCode = new Contract({
@@ -578,7 +581,7 @@ describe("Contract", () => {
       });
       await assertRejects(
         () => missingCode.loadSpecFromNetwork(),
-        E.CONTRACT_CODE_NOT_FOUND,
+        ERROR.CONTRACT_CODE_NOT_FOUND,
       );
 
       const stellarAsset = new Contract({
@@ -592,7 +595,7 @@ describe("Contract", () => {
       });
       await assertRejects(
         () => stellarAsset.loadSpecFromNetwork(),
-        E.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM,
+        ERROR.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM,
       );
     });
 
@@ -803,7 +806,7 @@ describe("Contract", () => {
           await contract.loadContractErrorsFromWasm({
             strategy: "any",
           }),
-        E.CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED,
+        ERROR.CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED,
       );
     });
 
@@ -825,7 +828,7 @@ describe("Contract", () => {
           await contract.loadContractErrorsFromWasm({
             strategy: "any",
           }),
-        E.CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED,
+        ERROR.CONTRACT_ERROR_MATCHER_ALREADY_CONFIGURED,
       );
     });
 
