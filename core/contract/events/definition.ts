@@ -6,7 +6,7 @@ import { EventFilter } from "@/event/event-filter/index.ts";
 import type { TopicFilter } from "@/event/event-filter/types.ts";
 import type { ContractEventOptions } from "@/contract/events/types.ts";
 import { requireMap, validateEventValue } from "@/contract/events/codec.ts";
-import * as E from "@/contract/events/error.ts";
+import * as ERROR from "@/contract/events/error.ts";
 import {
   containsSorobanValue,
   needsExtendedCodec,
@@ -50,16 +50,16 @@ export class ContractEventDefinition<
     this.occurrence = occurrence;
     const names = declaration.params.map((param) => param.name.toString());
     if (new Set(names).size !== names.length) {
-      throw new E.INVALID_SPEC(`duplicate parameters in ${this.name}`);
+      throw new ERROR.INVALID_SPEC(`duplicate parameters in ${this.name}`);
     }
     if (declaration.prefixTopics.length + this.topicParams().length > 4) {
-      throw new E.INVALID_SPEC(`too many topics in ${this.name}`);
+      throw new ERROR.INVALID_SPEC(`too many topics in ${this.name}`);
     }
     if (
       declaration.dataFormat.name === "scSpecEventDataFormatSingleValue" &&
       this.dataParams().length !== 1
     ) {
-      throw new E.INVALID_SPEC(
+      throw new ERROR.INVALID_SPEC(
         `single-value event ${this.name} must have one data field`,
       );
     }
@@ -73,7 +73,7 @@ export class ContractEventDefinition<
     try {
       return this.fromEvent(event);
     } catch (cause) {
-      if (cause instanceof E.DECODE_FAILED) return undefined;
+      if (cause instanceof ERROR.DECODE_FAILED) return undefined;
       throw cause;
     }
   }
@@ -84,20 +84,20 @@ export class ContractEventDefinition<
         event.type !== EventType.Contract ||
         (this.options.contractId &&
           event.contractId !== this.options.contractId)
-      ) throw new E.DECODE_FAILED(this.name);
+      ) throw new ERROR.DECODE_FAILED(this.name);
       const topics = event.scvalTopics.map((value) =>
         xdr.ScVal.fromXdr(value.toXdr())
       );
       const prefix = this.declaration.prefixTopics;
       const indexed = this.topicParams();
       if (topics.length !== prefix.length + indexed.length) {
-        throw new E.DECODE_FAILED(this.name);
+        throw new ERROR.DECODE_FAILED(this.name);
       }
       prefix.forEach((name, index) => {
         if (
           topics[index].type !== "scvSymbol" ||
           topics[index].value.toString() !== name.toString()
-        ) throw new E.DECODE_FAILED(this.name);
+        ) throw new ERROR.DECODE_FAILED(this.name);
       });
       const fields: Record<string, unknown> = Object.create(null);
       indexed.forEach((param, index) => {
@@ -109,8 +109,8 @@ export class ContractEventDefinition<
       this.decodeData(xdr.ScVal.fromXdr(event.scvalValue.toXdr()), fields);
       return new ContractEvent(event, fields as Data);
     } catch (cause) {
-      if (cause instanceof E.DECODE_FAILED) throw cause;
-      throw new E.DECODE_FAILED(this.name, cause);
+      if (cause instanceof ERROR.DECODE_FAILED) throw cause;
+      throw new ERROR.DECODE_FAILED(this.name, cause);
     }
   }
   /** Creates a Colibri topic filter; omitted indexed fields become wildcards. */
@@ -121,7 +121,7 @@ export class ContractEventDefinition<
         Object.keys(values).some((key) =>
           !params.some((param) => param.name.toString() === key)
         )
-      ) throw new E.INVALID_FILTER(this.name);
+      ) throw new ERROR.INVALID_FILTER(this.name);
       const topics = containsSorobanValue(values) || params.some((param) =>
           needsExtendedCodec(this.spec, param.type)
         )
@@ -161,8 +161,8 @@ export class ContractEventDefinition<
         return topic;
       }) as TopicFilter;
     } catch (cause) {
-      if (cause instanceof E.INVALID_FILTER) throw cause;
-      throw new E.INVALID_FILTER(this.name, cause);
+      if (cause instanceof ERROR.INVALID_FILTER) throw cause;
+      throw new ERROR.INVALID_FILTER(this.name, cause);
     }
   }
   /** Creates a full filter, scoped to the contract when this definition is bound. */
@@ -205,7 +205,7 @@ export class ContractEventDefinition<
         break;
       case "scSpecEventDataFormatVec": {
         if (value.type !== "scvVec" || value.value?.length !== params.length) {
-          throw new E.DECODE_FAILED(this.name);
+          throw new ERROR.DECODE_FAILED(this.name);
         }
         values = value.value!;
         break;
@@ -216,19 +216,19 @@ export class ContractEventDefinition<
           map.length !== params.length ||
           new Set(map.map((entry) => entry.key.toXdr("base64"))).size !==
             map.length
-        ) throw new E.DECODE_FAILED(this.name);
+        ) throw new ERROR.DECODE_FAILED(this.name);
         values = params.map((param) => {
           const entry = map.find((entry) =>
             entry.key.type === "scvSymbol" &&
             entry.key.value.toString() === param.name.toString()
           );
-          if (!entry) throw new E.DECODE_FAILED(this.name);
+          if (!entry) throw new ERROR.DECODE_FAILED(this.name);
           return entry.val;
         });
         break;
       }
       default:
-        throw new E.INVALID_SPEC(`unknown data format in ${this.name}`);
+        throw new ERROR.INVALID_SPEC(`unknown data format in ${this.name}`);
     }
     params.forEach((param, index) => {
       fields[param.name.toString()] = this.decode(values[index], param.type);

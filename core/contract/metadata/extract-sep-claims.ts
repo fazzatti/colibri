@@ -1,4 +1,4 @@
-import * as E from "@/contract/error.ts";
+import * as ERROR from "@/contract/error.ts";
 import type {
   ContractMetadata,
   InvalidSepClaimReason,
@@ -62,7 +62,7 @@ export const claimsSep = (
   sep: number,
 ): boolean => {
   if (!Number.isSafeInteger(sep) || sep <= 0) {
-    throw new E.INVALID_SEP_IDENTIFIER(sep);
+    throw new ERROR.INVALID_SEP_IDENTIFIER(sep);
   }
   return claims.seps.includes(sep);
 };

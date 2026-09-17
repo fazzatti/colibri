@@ -3,7 +3,7 @@ import type {
   WrapFeeBumpInput,
   WrapFeeBumpOutput,
 } from "@/processes/wrap-fee-bump/types.ts";
-import * as E from "@/processes/wrap-fee-bump/error.ts";
+import * as ERROR from "@/processes/wrap-fee-bump/error.ts";
 import { isFeeBumpTransaction } from "@/common/type-guards/is-fee-bump-transaction.ts";
 import { isTransaction } from "@/common/type-guards/is-transaction.ts";
 import { assert } from "@/common/assert/assert.ts";
@@ -28,11 +28,14 @@ export const wrapFeeBump = (input: WrapFeeBumpInput): WrapFeeBumpOutput => {
 
     assertRequiredArgs(
       args,
-      (argName: string) => new E.MISSING_ARG(input, argName),
+      (argName: string) => new ERROR.MISSING_ARG(input, argName),
     );
 
-    assert(!isFeeBumpTransaction(transaction), new E.ALREADY_FEE_BUMP(input));
-    assert(isTransaction(transaction), new E.NOT_A_TRANSACTION(input));
+    assert(
+      !isFeeBumpTransaction(transaction),
+      new ERROR.ALREADY_FEE_BUMP(input),
+    );
+    assert(isTransaction(transaction), new ERROR.NOT_A_TRANSACTION(input));
 
     // Compare like units, excluding Soroban resources. The SDK performs the
     // authoritative exact-decimal validation below; preserve its accepted base
@@ -42,7 +45,7 @@ export const wrapFeeBump = (input: WrapFeeBumpInput): WrapFeeBumpOutput => {
       baseFee >= Number(MINIMUM_BASE_FEE) &&
         baseFee * transaction.operations.length >=
           Number(getTransactionInclusionFee(transaction)),
-      new E.FEE_TOO_LOW(input),
+      new ERROR.FEE_TOO_LOW(input),
     );
 
     try {
@@ -55,14 +58,14 @@ export const wrapFeeBump = (input: WrapFeeBumpInput): WrapFeeBumpOutput => {
 
       return feeBumpTransaction;
     } catch (e) {
-      throw new E.FAILED_TO_BUILD_FEE_BUMP(input, e as Error);
+      throw new ERROR.FAILED_TO_BUILD_FEE_BUMP(input, e as Error);
     }
   } catch (e) {
-    if (e instanceof E.WrapFeeBumpError) {
+    if (e instanceof ERROR.WrapFeeBumpError) {
       throw e;
     }
-    throw new E.UNEXPECTED_ERROR(input, e as Error);
+    throw new ERROR.UNEXPECTED_ERROR(input, e as Error);
   }
 };
 /** Error constructors emitted by {@link wrapFeeBump}. */
-export const WrapFeeBumpErrors: typeof E = E;
+export const WrapFeeBumpErrors: typeof ERROR = ERROR;

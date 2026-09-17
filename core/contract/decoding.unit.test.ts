@@ -8,7 +8,7 @@ import { describe, it } from "@std/testing/bdd";
 import { stub } from "@std/testing/mock";
 import { xdr } from "stellar-sdk";
 import { Contract } from "@/contract/index.ts";
-import * as E from "@/contract/error.ts";
+import * as ERROR from "@/contract/error.ts";
 import { ColibriError } from "@/error/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import type { InvokeContractOutput } from "@/pipelines/invoke-contract/types.ts";
@@ -72,7 +72,7 @@ describe("Contract invocation decoding", () => {
     const result = successfulResult(xdr.ScVal.scvString("wrong ABI"));
     const error = assertThrows(
       () => client().decode("balance", result),
-      E.FAILED_TO_DECODE_INVOCATION_RESULT,
+      ERROR.FAILED_TO_DECODE_INVOCATION_RESULT,
     );
     assertInstanceOf(error, ColibriError);
     assertEquals(error.code, "CONTR_021");
@@ -81,17 +81,17 @@ describe("Contract invocation decoding", () => {
     assertEquals(error.meta.data.method, "balance");
     assertStrictEquals(error.meta.data.result, result);
     assertInstanceOf(error.meta.cause, Error);
-    assertStrictEquals(E.ERROR_CONTR[error.code], error.constructor);
+    assertStrictEquals(ERROR.ERROR_CONTR[error.code], error.constructor);
   });
 
   it("retains the result if loading the spec fails after a successful invocation", () => {
     const result = successfulResult(amount());
     const error = assertThrows(
       () => client(false).decode("balance", result),
-      E.FAILED_TO_DECODE_INVOCATION_RESULT,
+      ERROR.FAILED_TO_DECODE_INVOCATION_RESULT,
     );
     assertStrictEquals(error.meta.data.result, result);
-    assertInstanceOf(error.meta.cause, E.MISSING_REQUIRED_PROPERTY);
+    assertInstanceOf(error.meta.cause, ERROR.MISSING_REQUIRED_PROPERTY);
   });
 
   it("retains the exact original cause, including non-Error exceptions", () => {
@@ -105,7 +105,7 @@ describe("Contract invocation decoding", () => {
       });
       const error = assertThrows(
         () => contract.decode("balance", result),
-        E.FAILED_TO_DECODE_INVOCATION_RESULT,
+        ERROR.FAILED_TO_DECODE_INVOCATION_RESULT,
       );
       assertStrictEquals(error.meta.cause, cause);
       assertStrictEquals(error.meta.data.result, result);

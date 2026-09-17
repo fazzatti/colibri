@@ -5,7 +5,7 @@ import type {
   SignAuthEntriesInput,
   SignAuthEntriesOutput,
 } from "@/processes/sign-auth-entries/types.ts";
-import * as E from "@/processes/sign-auth-entries/error.ts";
+import * as ERROR from "@/processes/sign-auth-entries/error.ts";
 import { assert } from "@/common/assert/assert.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 import { getAddressSignerFromAuthEntry } from "@/common/helpers/xdr/get-address-signer-from-auth-entry.ts";
@@ -24,7 +24,7 @@ export const signAuthEntries = async (
 
     assertRequiredArgs(
       { auth, rpc, signers, networkPassphrase },
-      (argName: string) => new E.MISSING_ARG(input, argName),
+      (argName: string) => new ERROR.MISSING_ARG(input, argName),
     );
 
     const validUntilLedgerSeq = (
@@ -71,7 +71,10 @@ export const signAuthEntries = async (
           .filter(isAuthEntrySigner)
           .find((candidate) => candidate.signsFor(requiredSigner));
 
-        assert(signer, new E.MISSING_SIGNER(input, requiredSigner, authEntry));
+        assert(
+          signer,
+          new ERROR.MISSING_SIGNER(input, requiredSigner, authEntry),
+        );
 
         let signedEntry: xdr.SorobanAuthorizationEntry;
         try {
@@ -81,7 +84,11 @@ export const signAuthEntries = async (
             networkPassphrase,
           ) as xdr.SorobanAuthorizationEntry;
         } catch (e) {
-          throw new E.FAILED_TO_SIGN_AUTH_ENTRY(input, authEntry, e as Error);
+          throw new ERROR.FAILED_TO_SIGN_AUTH_ENTRY(
+            input,
+            authEntry,
+            e as Error,
+          );
         }
 
         signedEntries.push(signedEntry);
@@ -91,10 +98,10 @@ export const signAuthEntries = async (
 
     return [...sourceAccountEntries, ...signedEntries];
   } catch (e) {
-    if (e instanceof E.SignAuthEntriesError) {
+    if (e instanceof ERROR.SignAuthEntriesError) {
       throw e;
     }
-    throw new E.UNEXPECTED_ERROR(input, e as Error);
+    throw new ERROR.UNEXPECTED_ERROR(input, e as Error);
   }
 };
 
@@ -102,12 +109,14 @@ const getValidUntilLedgerSeq = async (
   validity: LedgerValidity | undefined,
   rpc: Server,
 ): Promise<
-  ResultOrError<number, SignAuthEntriesInput, E.SignAuthEntriesError>
+  ResultOrError<number, SignAuthEntriesInput, ERROR.SignAuthEntriesError>
 > => {
   if (validity && "validUntilLedgerSeq" in validity) {
     const { validUntilLedgerSeq } = validity;
     if (validUntilLedgerSeq <= 0) {
-      return E.VALID_UNTIL_LEDGER_SEQ_TOO_LOW.deferInput(validUntilLedgerSeq);
+      return ERROR.VALID_UNTIL_LEDGER_SEQ_TOO_LOW.deferInput(
+        validUntilLedgerSeq,
+      );
     }
 
     return ResultOrError.wrapVal(validUntilLedgerSeq);
@@ -118,7 +127,7 @@ const getValidUntilLedgerSeq = async (
   if (validity && "validForSeconds" in validity) {
     const { validForSeconds } = validity;
     if (validForSeconds <= 5) {
-      return E.VALID_FOR_SECONDS_TOO_LOW.deferInput(validForSeconds);
+      return ERROR.VALID_FOR_SECONDS_TOO_LOW.deferInput(validForSeconds);
     }
 
     nOfLedgersToSignFor = nOfLedgersToSignFor = Math.ceil(validForSeconds / 5);
@@ -127,7 +136,7 @@ const getValidUntilLedgerSeq = async (
   if (validity && "validForLedgers" in validity) {
     const { validForLedgers } = validity;
     if (validForLedgers <= 0) {
-      return E.VALID_FOR_LEDGERS_TOO_LOW.deferInput(validForLedgers);
+      return ERROR.VALID_FOR_LEDGERS_TOO_LOW.deferInput(validForLedgers);
     }
 
     nOfLedgersToSignFor = validForLedgers;
@@ -137,7 +146,7 @@ const getValidUntilLedgerSeq = async (
   try {
     latestLedger = await rpc.getLatestLedger();
   } catch (e) {
-    return E.FAILED_TO_FETCH_LATEST_LEDGER.deferInput(e as Error);
+    return ERROR.FAILED_TO_FETCH_LATEST_LEDGER.deferInput(e as Error);
   }
 
   const latestLedgerSeq = latestLedger.sequence;
@@ -196,4 +205,4 @@ const separateSignedAndUnsignedAuthEntries = (
   return { signed, unsigned };
 };
 /** Error constructors emitted by {@link signAuthEntries}. */
-export const SignAuthEntriesErrors: typeof E = E;
+export const SignAuthEntriesErrors: typeof ERROR = ERROR;

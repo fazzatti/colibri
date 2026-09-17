@@ -7,7 +7,7 @@ import { EventType, type IEvent } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
 import { StrKey } from "@/strkeys/index.ts";
-import * as E from "@/event/error.ts";
+import * as ERROR from "@/event/error.ts";
 
 type EventConstructorArgs =
   & Omit<RpcEventResponseLike, "type" | "contractId">
@@ -59,14 +59,14 @@ export class Event implements IEvent {
       const { contractId } = args;
 
       if (!StrKey.isContractId(contractId)) {
-        throw new E.INVALID_CONTRACT_ID(contractId);
+        throw new ERROR.INVALID_CONTRACT_ID(contractId);
       }
 
       this.contractId = contractId;
     }
 
     if (!isEventId(args.id)) {
-      throw new E.INVALID_EVENT_ID(args.id);
+      throw new ERROR.INVALID_EVENT_ID(args.id);
     }
 
     this.id = args.id;
@@ -112,7 +112,7 @@ export class Event implements IEvent {
         eventType = EventType.System;
         break;
       default:
-        throw new E.UNKNOWN_EVENT_TYPE(response.type);
+        throw new ERROR.UNKNOWN_EVENT_TYPE(response.type);
     }
 
     let contractId: ContractId | undefined;
@@ -121,7 +121,7 @@ export class Event implements IEvent {
       const eventContractId = response.contractId?.contractId();
 
       if (!StrKey.isContractId(eventContractId)) {
-        throw new E.INVALID_CONTRACT_ID(eventContractId);
+        throw new ERROR.INVALID_CONTRACT_ID(eventContractId);
       }
 
       contractId = eventContractId;

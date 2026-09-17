@@ -6,7 +6,7 @@ import {
 } from "@std/assert";
 import { beforeEach, describe, it } from "@std/testing/bdd";
 import { StellarToml } from "@/sep1/index.ts";
-import * as E from "@/sep1/error.ts";
+import * as ERROR from "@/sep1/error.ts";
 
 // Valid test keys (these are not real keys, just properly formatted)
 const VALID_PUBLIC_KEY =
@@ -119,7 +119,10 @@ describe("StellarToml", () => {
         UNCLOSED_STRING
       `;
 
-      assertThrows(() => StellarToml.fromString(invalidToml), E.PARSE_ERROR);
+      assertThrows(
+        () => StellarToml.fromString(invalidToml),
+        ERROR.PARSE_ERROR,
+      );
     });
 
     it("throws PARSE_ERROR for invalid TOML and includes domain context when provided", async () => {
@@ -129,7 +132,7 @@ describe("StellarToml", () => {
 
       const error = await assertRejects(
         () => StellarToml.fromDomain("example.com", { fetchFn: mockFetch }),
-        E.PARSE_ERROR,
+        ERROR.PARSE_ERROR,
       );
       assertEquals(error.meta.data.domain, "example.com");
     });
@@ -141,7 +144,7 @@ describe("StellarToml", () => {
 
       assertThrows(
         () => StellarToml.fromString(tomlWithBadKey, { validate: true }),
-        E.INVALID_SIGNING_KEY,
+        ERROR.INVALID_SIGNING_KEY,
       );
     });
 
@@ -161,7 +164,7 @@ describe("StellarToml", () => {
 
       assertThrows(
         () => StellarToml.fromString(tomlWithHttpUrl, { validate: true }),
-        E.INVALID_URL,
+        ERROR.INVALID_URL,
       );
     });
 
@@ -184,7 +187,7 @@ describe("StellarToml", () => {
 
       assertThrows(
         () => StellarToml.fromString(tomlWithBadUrl, { validate: true }),
-        E.INVALID_URL,
+        ERROR.INVALID_URL,
       );
     });
 
@@ -196,7 +199,7 @@ describe("StellarToml", () => {
 
       assertThrows(
         () => StellarToml.fromString(tomlWithHttpDocUrl, { validate: true }),
-        E.INVALID_URL,
+        ERROR.INVALID_URL,
       );
     });
 
@@ -224,7 +227,7 @@ describe("StellarToml", () => {
             validate: true,
             allowHttp: true,
           }),
-        E.INVALID_URL,
+        ERROR.INVALID_URL,
       );
     });
 
@@ -236,7 +239,7 @@ describe("StellarToml", () => {
 
       assertThrows(
         () => StellarToml.fromString(tomlWithBadDocUrl, { validate: true }),
-        E.INVALID_URL,
+        ERROR.INVALID_URL,
       );
     });
 
@@ -247,7 +250,7 @@ describe("StellarToml", () => {
 
       const error = assertThrows(
         () => StellarToml.fromString(tomlWithBadAccount, { validate: true }),
-        E.INVALID_ACCOUNT,
+        ERROR.INVALID_ACCOUNT,
       );
       assertEquals(error.meta.data.index, 0);
       assertEquals(error.meta.data.field, "ACCOUNTS");
@@ -261,7 +264,7 @@ describe("StellarToml", () => {
       const error = assertThrows(
         () =>
           StellarToml.fromString(tomlWithBadAccountAtIndex, { validate: true }),
-        E.INVALID_ACCOUNT,
+        ERROR.INVALID_ACCOUNT,
       );
       assertEquals(error.meta.data.index, 2);
     });
@@ -275,7 +278,7 @@ describe("StellarToml", () => {
 
       const error = assertThrows(
         () => StellarToml.fromString(tomlWithBadIssuer, { validate: true }),
-        E.INVALID_ACCOUNT,
+        ERROR.INVALID_ACCOUNT,
       );
       assertEquals(error.meta.data.field, "CURRENCIES[0].issuer");
     });
@@ -289,7 +292,7 @@ describe("StellarToml", () => {
 
       const error = assertThrows(
         () => StellarToml.fromString(tomlWithBadContract, { validate: true }),
-        E.INVALID_ACCOUNT,
+        ERROR.INVALID_ACCOUNT,
       );
       assertEquals(error.meta.data.field, "CURRENCIES[0].contract");
     });
@@ -303,7 +306,7 @@ describe("StellarToml", () => {
 
       const error = assertThrows(
         () => StellarToml.fromString(tomlWithBadValidator, { validate: true }),
-        E.INVALID_SIGNING_KEY,
+        ERROR.INVALID_SIGNING_KEY,
       );
       assertEquals(error.meta.data.field, "VALIDATORS[0].PUBLIC_KEY");
     });
@@ -315,7 +318,7 @@ describe("StellarToml", () => {
 
       const error = assertThrows(
         () => StellarToml.fromString(tomlWithBadUriKey, { validate: true }),
-        E.INVALID_SIGNING_KEY,
+        ERROR.INVALID_SIGNING_KEY,
       );
       assertEquals(error.meta.data.field, "URI_REQUEST_SIGNING_KEY");
     });
@@ -508,7 +511,7 @@ describe("StellarToml", () => {
     it("throws INVALID_DOMAIN for domain with protocol", async () => {
       await assertRejects(
         () => StellarToml.fromDomain("https://example.com"),
-        E.INVALID_DOMAIN,
+        ERROR.INVALID_DOMAIN,
       );
     });
 
@@ -556,7 +559,7 @@ describe("StellarToml", () => {
 
       const error = await assertRejects(
         () => StellarToml.fromDomain("example.com", { fetchFn: mockFetch }),
-        E.FETCH_FAILED,
+        ERROR.FETCH_FAILED,
       );
       // Verify error contains status info
       assertEquals(error.meta.data.statusCode, 404);
@@ -570,7 +573,7 @@ describe("StellarToml", () => {
 
       const error = await assertRejects(
         () => StellarToml.fromDomain("example.com", { fetchFn: mockFetch }),
-        E.FETCH_FAILED,
+        ERROR.FETCH_FAILED,
       );
       assertEquals(error.meta.data.statusCode, 500);
       assertEquals(error.meta.data.statusText, "");
@@ -588,7 +591,7 @@ describe("StellarToml", () => {
 
       await assertRejects(
         () => StellarToml.fromDomain("example.com", { fetchFn: mockFetch }),
-        E.FILE_TOO_LARGE,
+        ERROR.FILE_TOO_LARGE,
       );
     });
 
@@ -611,7 +614,7 @@ describe("StellarToml", () => {
             fetchFn: mockFetch,
             timeout: 50, // Very short timeout
           }),
-        E.TIMEOUT,
+        ERROR.TIMEOUT,
       );
     });
 
@@ -622,7 +625,7 @@ describe("StellarToml", () => {
 
       const error = await assertRejects(
         () => StellarToml.fromDomain("example.com", { fetchFn: mockFetch }),
-        E.FETCH_FAILED,
+        ERROR.FETCH_FAILED,
       );
       // Verify cause is captured
       assertEquals(error.meta.cause?.message, "Network error");
@@ -637,7 +640,7 @@ describe("StellarToml", () => {
 
       const error = await assertRejects(
         () => StellarToml.fromDomain("example.com", { fetchFn: mockFetch }),
-        E.FETCH_FAILED,
+        ERROR.FETCH_FAILED,
       );
       assertEquals(error.meta.cause instanceof Error, true);
     });
@@ -660,7 +663,7 @@ describe("StellarToml", () => {
       // Should throw with validation enabled (default)
       await assertRejects(
         () => StellarToml.fromDomain("example.com", { fetchFn: mockFetch }),
-        E.INVALID_SIGNING_KEY,
+        ERROR.INVALID_SIGNING_KEY,
       );
 
       // Should not throw with validation disabled
@@ -680,7 +683,7 @@ describe("StellarToml", () => {
 
       await assertRejects(
         () => StellarToml.fromDomain("example.com", { fetchFn: mockFetch }),
-        E.FILE_TOO_LARGE,
+        ERROR.FILE_TOO_LARGE,
       );
     });
 
@@ -691,7 +694,7 @@ describe("StellarToml", () => {
 
       await assertRejects(
         () => StellarToml.fromDomain("example.com", { fetchFn: mockFetch }),
-        E.FETCH_FAILED,
+        ERROR.FETCH_FAILED,
       );
     });
   });
@@ -797,18 +800,18 @@ describe("StellarToml", () => {
 
   describe("error edge cases", () => {
     it("PARSE_ERROR uses fallback message when cause has no message", () => {
-      const error = new E.PARSE_ERROR("example.com", undefined, "invalid");
+      const error = new ERROR.PARSE_ERROR("example.com", undefined, "invalid");
       assertEquals(error.diagnostic?.rootCause, "Invalid TOML syntax");
     });
 
     it("PARSE_ERROR uses cause message when provided", () => {
       const cause = new Error("Unexpected token at line 5");
-      const error = new E.PARSE_ERROR("example.com", cause, "invalid");
+      const error = new ERROR.PARSE_ERROR("example.com", cause, "invalid");
       assertEquals(error.diagnostic?.rootCause, "Unexpected token at line 5");
     });
 
     it("INVALID_URL details reflect requireHttps=false", () => {
-      const error = new E.INVALID_URL(
+      const error = new ERROR.INVALID_URL(
         "WEB_AUTH_ENDPOINT",
         "not-a-url",
         "example.com",
@@ -820,7 +823,7 @@ describe("StellarToml", () => {
     });
 
     it("INVALID_URL details reflect requireHttps=true", () => {
-      const error = new E.INVALID_URL(
+      const error = new ERROR.INVALID_URL(
         "WEB_AUTH_ENDPOINT",
         "http://example.com",
         "example.com",
@@ -834,7 +837,11 @@ describe("StellarToml", () => {
       // This exercises the String(error) fallback path
       const nonErrorValue = "string error";
       const wrappedError = new Error(String(nonErrorValue));
-      const error = new E.PARSE_ERROR("example.com", wrappedError, "invalid");
+      const error = new ERROR.PARSE_ERROR(
+        "example.com",
+        wrappedError,
+        "invalid",
+      );
       assertEquals(error.diagnostic?.rootCause, "string error");
     });
   });

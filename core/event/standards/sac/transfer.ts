@@ -11,7 +11,7 @@
 
 import { StrKey } from "@/strkeys/index.ts";
 import { EventTemplate } from "@/event/template.ts";
-import * as E from "@/event/error.ts";
+import * as ERROR from "@/event/error.ts";
 import type { EventSchema, SchemaField } from "@/event/types.ts";
 import type { Event } from "@/event/event.ts";
 import { isEventMuxedData } from "@/event/standards/cap67/index.ts";
@@ -110,7 +110,7 @@ export class TransferEvent extends EventTemplate<typeof TransferEventSchema> {
   get asset(): StellarAssetCanonicalString {
     const val = this.get("asset");
     if (!isStellarAssetCanonicalString(val)) {
-      throw new E.INVALID_EVENT_ASSET_FORMAT(val);
+      throw new ERROR.INVALID_EVENT_ASSET_FORMAT(val);
     }
     return val;
   }
@@ -127,7 +127,7 @@ export class TransferEvent extends EventTemplate<typeof TransferEventSchema> {
     if (isEventMuxedData(val)) {
       return val.amount as bigint;
     }
-    throw new E.INVALID_EVENT_DATA_FORMAT("transfer");
+    throw new ERROR.INVALID_EVENT_DATA_FORMAT("transfer");
   }
 
   /**

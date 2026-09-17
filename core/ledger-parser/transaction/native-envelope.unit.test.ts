@@ -13,7 +13,7 @@ import {
 } from "stellar-sdk";
 import { Ledger } from "@/ledger-parser/ledger/index.ts";
 import { Transaction } from "@/ledger-parser/transaction/index.ts";
-import * as E from "@/ledger-parser/error.ts";
+import * as ERROR from "@/ledger-parser/error.ts";
 import { getLedgerFixture } from "colibri-internal/tests/fixtures/rpc/get_ledgers/index.ts";
 
 describe("Native transaction context", () => {
@@ -85,11 +85,11 @@ describe("Native transaction context", () => {
     const parsed = Transaction.fromMeta(ledger, result, 0);
     const feeSource = assertThrows(
       () => parsed.feeSource,
-      E.MISSING_FEE_SOURCE_ENVELOPE,
+      ERROR.MISSING_FEE_SOURCE_ENVELOPE,
     );
     const envelope = assertThrows(
       () => parsed.toEnvelope(),
-      E.MISSING_NATIVE_ENVELOPE,
+      ERROR.MISSING_NATIVE_ENVELOPE,
     );
     const malformed = Transaction.fromMetaWithEnvelope(
       ledger,
@@ -99,11 +99,11 @@ describe("Native transaction context", () => {
     );
     const decoding = assertThrows(
       () => malformed.toEnvelope(),
-      E.NATIVE_ENVELOPE_DECODE_FAILED,
+      ERROR.NATIVE_ENVELOPE_DECODE_FAILED,
     );
     assert(decoding.meta.cause instanceof Error);
     for (const error of [feeSource, envelope, decoding]) {
-      assertEquals(E.ERROR_LDP[error.code], error.constructor);
+      assertEquals(ERROR.ERROR_LDP[error.code], error.constructor);
     }
   });
 });

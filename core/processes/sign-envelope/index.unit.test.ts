@@ -1,6 +1,6 @@
 // deno-lint-ignore-file require-await
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { describe, it, beforeEach } from "@std/testing/bdd";
+import { beforeEach, describe, it } from "@std/testing/bdd";
 import type { Buffer } from "node:buffer";
 import {
   Account,
@@ -11,9 +11,9 @@ import {
   TransactionBuilder,
 } from "stellar-sdk";
 import { signEnvelope } from "@/processes/sign-envelope/index.ts";
-import * as E from "@/processes/sign-envelope/error.ts";
+import * as ERROR from "@/processes/sign-envelope/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
-import { OperationThreshold, type KeypairSigner } from "@/signer/types.ts";
+import { type KeypairSigner, OperationThreshold } from "@/signer/types.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 
 describe("SignEnvelope", () => {
@@ -22,13 +22,13 @@ describe("SignEnvelope", () => {
   // Reuse deterministic test keypairs
   const KPS = [
     Keypair.fromSecret(
-      "SAO45YQLDI4LIEPP2HXYVX72XBKEN4OBWYKR3P6AOS7EMOLJCJX5IF5A"
+      "SAO45YQLDI4LIEPP2HXYVX72XBKEN4OBWYKR3P6AOS7EMOLJCJX5IF5A",
     ),
     Keypair.fromSecret(
-      "SA2WW3DO6AVJQO5V4MU64DSDL34FRXVIQXIUMKS7JMAENCCI3ORMQVLA"
+      "SA2WW3DO6AVJQO5V4MU64DSDL34FRXVIQXIUMKS7JMAENCCI3ORMQVLA",
     ),
     Keypair.fromSecret(
-      "SCHH7OAC6MC4NF3TG2JML56WJT5U7ZE355USOKGXZCQ2FCJZEX62OEKR"
+      "SCHH7OAC6MC4NF3TG2JML56WJT5U7ZE355USOKGXZCQ2FCJZEX62OEKR",
     ),
   ];
 
@@ -45,13 +45,13 @@ describe("SignEnvelope", () => {
 
   const buildFeeBump = (
     feeSource: string,
-    inner: Transaction
+    inner: Transaction,
   ): FeeBumpTransaction => {
     return TransactionBuilder.buildFeeBumpTransaction(
       feeSource,
       "100",
       inner,
-      networkPassphrase
+      networkPassphrase,
     );
   };
 
@@ -75,7 +75,7 @@ describe("SignEnvelope", () => {
         return b;
       },
       async signTransaction(
-        tx: Transaction | FeeBumpTransaction
+        tx: Transaction | FeeBumpTransaction,
       ): Promise<string> {
         this.calls++;
         if (tx instanceof FeeBumpTransaction) {
@@ -93,7 +93,7 @@ describe("SignEnvelope", () => {
 
   const createFailingSigner = (
     publicKey: string,
-    mode: "throw" | "invalidXDR"
+    mode: "throw" | "invalidXDR",
   ): MockSigner => {
     const pub = publicKey as Ed25519PublicKey;
     return {
@@ -261,7 +261,7 @@ describe("SignEnvelope", () => {
             signatureRequirements: [],
             signers: [signer],
           }),
-        E.NO_REQUIREMENTS
+        ERROR.NO_REQUIREMENTS,
       );
     });
 
@@ -280,7 +280,7 @@ describe("SignEnvelope", () => {
             ],
             signers: [],
           }),
-        E.NO_SIGNERS
+        ERROR.NO_SIGNERS,
       );
     });
 
@@ -300,7 +300,7 @@ describe("SignEnvelope", () => {
             ],
             signers: [signer],
           }),
-        E.SIGNER_NOT_FOUND
+        ERROR.SIGNER_NOT_FOUND,
       );
     });
 
@@ -320,7 +320,7 @@ describe("SignEnvelope", () => {
             ],
             signers: [badSigner],
           }),
-        E.FAILED_TO_PARSE_SIGNED_TRANSACTION
+        ERROR.FAILED_TO_PARSE_SIGNED_TRANSACTION,
       );
     });
 
@@ -340,7 +340,7 @@ describe("SignEnvelope", () => {
             ],
             signers: [badSigner],
           }),
-        E.FAILED_TO_SIGN_TRANSACTION
+        ERROR.FAILED_TO_SIGN_TRANSACTION,
       );
     });
 
@@ -349,7 +349,7 @@ describe("SignEnvelope", () => {
 
       await assertRejects(
         async () => await signEnvelope(faultyInput),
-        E.UNEXPECTED_ERROR
+        ERROR.UNEXPECTED_ERROR,
       );
     });
   });

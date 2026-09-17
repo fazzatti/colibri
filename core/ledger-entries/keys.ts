@@ -3,7 +3,7 @@ import { Address, hash, Keypair, xdr } from "stellar-sdk";
 import type { BinaryData, LedgerKeyLike } from "@/common/types/index.ts";
 import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 import { StrKey } from "@/strkeys/index.ts";
-import * as E from "@/ledger-entries/error.ts";
+import * as ERROR from "@/ledger-entries/error.ts";
 import { toRawXdrBytes } from "@/ledger-entries/xdr.ts";
 import type {
   AccountLedgerEntry,
@@ -98,7 +98,7 @@ function brandLedgerKey<
 
 function requireAccountId(accountId: string): void {
   if (!StrKey.isValidEd25519PublicKey(accountId)) {
-    throw new E.INVALID_ACCOUNT_ID(accountId);
+    throw new ERROR.INVALID_ACCOUNT_ID(accountId);
   }
 }
 
@@ -109,20 +109,20 @@ function normalizeOfferId(offerId: bigint | number | string): xdr.Int64 {
     parsed = offerId;
   } else if (typeof offerId === "number") {
     if (!Number.isInteger(offerId)) {
-      throw new E.INVALID_OFFER_ID(offerId);
+      throw new ERROR.INVALID_OFFER_ID(offerId);
     }
 
     parsed = BigInt(offerId);
   } else {
     if (!/^\d+$/.test(offerId)) {
-      throw new E.INVALID_OFFER_ID(offerId);
+      throw new ERROR.INVALID_OFFER_ID(offerId);
     }
 
     parsed = BigInt(offerId);
   }
 
   if (parsed < 0n || parsed > MAX_SIGNED_INT64) {
-    throw new E.INVALID_OFFER_ID(offerId);
+    throw new ERROR.INVALID_OFFER_ID(offerId);
   }
 
   return xdr.Int64.fromString(parsed.toString());
@@ -130,33 +130,33 @@ function normalizeOfferId(offerId: bigint | number | string): xdr.Int64 {
 
 function requireContractId(contractId: string): void {
   if (!StrKey.isValidContractId(contractId)) {
-    throw new E.INVALID_CONTRACT_ID(contractId);
+    throw new ERROR.INVALID_CONTRACT_ID(contractId);
   }
 }
 
 function requireClaimableBalanceId(balanceId: string): void {
   if (!StrKey.isValidClaimableBalanceId(balanceId)) {
-    throw new E.INVALID_CLAIMABLE_BALANCE_ID(balanceId);
+    throw new ERROR.INVALID_CLAIMABLE_BALANCE_ID(balanceId);
   }
 }
 
 function requireLiquidityPoolId(liquidityPoolId: string): void {
   if (!StrKey.isValidLiquidityPoolId(liquidityPoolId)) {
-    throw new E.INVALID_LIQUIDITY_POOL_ID(liquidityPoolId);
+    throw new ERROR.INVALID_LIQUIDITY_POOL_ID(liquidityPoolId);
   }
 }
 
 function normalizeHashBytes(hashValue: string | BinaryData): Uint8Array {
   if (typeof hashValue === "string") {
     if (!HEX_32_BYTE_REGEX.test(hashValue)) {
-      throw new E.INVALID_HEX_HASH(hashValue);
+      throw new ERROR.INVALID_HEX_HASH(hashValue);
     }
     return xdr.decodeBytes(hashValue, "hex");
   }
 
   const hashBytes = toUint8Array(hashValue);
   if (hashBytes.length !== 32) {
-    throw new E.INVALID_HEX_HASH(xdr.encodeBytes(hashBytes, "hex"));
+    throw new ERROR.INVALID_HEX_HASH(xdr.encodeBytes(hashBytes, "hex"));
   }
 
   return hashBytes;
@@ -177,7 +177,7 @@ function normalizeConfigSettingId(
 ): xdr.ConfigSettingId {
   const value = CONFIG_SETTING_IDS[configSettingId];
   if (!value) {
-    throw new E.INVALID_CONFIG_SETTING_ID(configSettingId);
+    throw new ERROR.INVALID_CONFIG_SETTING_ID(configSettingId);
   }
 
   return value;
@@ -201,13 +201,13 @@ function normalizeLedgerKeyHash(
     try {
       return StrKey.decodeSha256Hash(args.keyHash);
     } catch (_) {
-      throw new E.INVALID_LEDGER_KEY_HASH();
+      throw new ERROR.INVALID_LEDGER_KEY_HASH();
     }
   }
 
   const keyHash = toUint8Array(args.keyHash);
   if (keyHash.length !== 32) {
-    throw new E.INVALID_LEDGER_KEY_HASH();
+    throw new ERROR.INVALID_LEDGER_KEY_HASH();
   }
 
   return keyHash;

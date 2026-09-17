@@ -14,7 +14,7 @@ import {
 import type { BinaryData, SignableTransaction } from "@/common/types/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import { Ed25519SignedPayloadSigner } from "@/signer/signed-payload/index.ts";
-import * as E from "@/signer/signed-payload/error.ts";
+import * as ERROR from "@/signer/signed-payload/error.ts";
 import type { Ed25519PublicKey, SignedPayload } from "@/strkeys/types.ts";
 
 describe("Ed25519SignedPayloadSigner", () => {
@@ -146,7 +146,7 @@ describe("Ed25519SignedPayloadSigner", () => {
             signer: localSigner,
             payload,
           }),
-        E.INVALID_PAYLOAD_LENGTH,
+        ERROR.INVALID_PAYLOAD_LENGTH,
       );
     }
   });
@@ -158,7 +158,7 @@ describe("Ed25519SignedPayloadSigner", () => {
           signer: localSigner,
           payload: null as unknown as ArrayBuffer,
         }),
-      E.FAILED_TO_NORMALIZE_PAYLOAD,
+      ERROR.FAILED_TO_NORMALIZE_PAYLOAD,
     );
   });
 
@@ -174,7 +174,7 @@ describe("Ed25519SignedPayloadSigner", () => {
           },
           payload: Buffer.from("payload"),
         }),
-      E.FAILED_TO_GET_PUBLIC_KEY,
+      ERROR.FAILED_TO_GET_PUBLIC_KEY,
     );
   });
 
@@ -188,7 +188,7 @@ describe("Ed25519SignedPayloadSigner", () => {
           },
           payload: Buffer.from("payload"),
         }),
-      E.FAILED_TO_DECODE_PUBLIC_KEY,
+      ERROR.FAILED_TO_DECODE_PUBLIC_KEY,
     );
   });
 
@@ -209,7 +209,7 @@ describe("Ed25519SignedPayloadSigner", () => {
           signer: localSigner,
           payload: Buffer.from("payload"),
         }),
-      E.FAILED_TO_BUILD_SIGNER_KEY_XDR,
+      ERROR.FAILED_TO_BUILD_SIGNER_KEY_XDR,
     );
   });
 
@@ -228,7 +228,7 @@ describe("Ed25519SignedPayloadSigner", () => {
           signer: localSigner,
           payload: Buffer.from("payload"),
         }),
-      E.FAILED_TO_ENCODE_SIGNER_KEY,
+      ERROR.FAILED_TO_ENCODE_SIGNER_KEY,
     );
   });
 
@@ -243,7 +243,7 @@ describe("Ed25519SignedPayloadSigner", () => {
             },
           } as unknown as SignableTransaction,
         }),
-      E.FAILED_TO_HASH_TRANSACTION,
+      ERROR.FAILED_TO_HASH_TRANSACTION,
     );
   });
 
@@ -260,7 +260,7 @@ describe("Ed25519SignedPayloadSigner", () => {
 
     assertThrows(
       () => signer.signTransaction(buildTransaction()),
-      E.FAILED_TO_SIGN_PAYLOAD,
+      ERROR.FAILED_TO_SIGN_PAYLOAD,
     );
   });
 
@@ -275,7 +275,7 @@ describe("Ed25519SignedPayloadSigner", () => {
 
     assertThrows(
       () => signer.signTransaction(buildTransaction()),
-      E.FAILED_TO_NORMALIZE_SIGNATURE,
+      ERROR.FAILED_TO_NORMALIZE_SIGNATURE,
     );
   });
 
@@ -290,7 +290,7 @@ describe("Ed25519SignedPayloadSigner", () => {
 
     assertThrows(
       () => signer.signTransaction(buildTransaction()),
-      E.FAILED_TO_BUILD_DECORATED_SIGNATURE,
+      ERROR.FAILED_TO_BUILD_DECORATED_SIGNATURE,
     );
   });
 
@@ -309,7 +309,7 @@ describe("Ed25519SignedPayloadSigner", () => {
 
     assertThrows(
       () => signer.signTransaction(transaction),
-      E.FAILED_TO_ADD_DECORATED_SIGNATURE,
+      ERROR.FAILED_TO_ADD_DECORATED_SIGNATURE,
     );
   });
 
@@ -328,7 +328,7 @@ describe("Ed25519SignedPayloadSigner", () => {
 
     assertThrows(
       () => signer.signTransaction(transaction),
-      E.FAILED_TO_SERIALIZE_TRANSACTION,
+      ERROR.FAILED_TO_SERIALIZE_TRANSACTION,
     );
   });
 

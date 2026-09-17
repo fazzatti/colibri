@@ -4,7 +4,7 @@ import { Keypair, xdr } from "stellar-sdk";
 import { LocalSigner } from "@/signer/local/index.ts";
 import { isMessageSigner, isSigner } from "@/common/type-guards/is-signer.ts";
 import type { MessageSigner } from "@/signer/types.ts";
-import * as E from "@/signer/local/error.ts";
+import * as ERROR from "@/signer/local/error.ts";
 import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
 const decodeBase64 = (value: string): Uint8Array =>
   xdr.decodeBytes(value, "base64");
@@ -52,10 +52,13 @@ describe("SEP-53 message signer capability", () => {
           42 as unknown as string,
           decodeBase64(vectors[0][1]),
         ),
-      E.MESSAGE_VERIFICATION_FAILED,
+      ERROR.MESSAGE_VERIFICATION_FAILED,
     );
     assertInstanceOf(error.meta.cause, Error);
-    assertEquals(E.ERROR_SIG_LOC[error.code], E.MESSAGE_VERIFICATION_FAILED);
+    assertEquals(
+      ERROR.ERROR_SIG_LOC[error.code],
+      ERROR.MESSAGE_VERIFICATION_FAILED,
+    );
   });
   it("signs text and equivalent UTF-8 bytes using the native format", () => {
     using signer = LocalSigner.generateRandom();
@@ -93,18 +96,21 @@ describe("SEP-53 message signer capability", () => {
     using signer = LocalSigner.generateRandom();
     const error = assertThrows(
       () => signer.signMessage(42 as unknown as Uint8Array),
-      E.MESSAGE_SIGNING_FAILED,
+      ERROR.MESSAGE_SIGNING_FAILED,
     );
     assertInstanceOf(error.meta.cause, TypeError);
-    assertEquals(error.code, E.Code.MESSAGE_SIGNING_FAILED);
+    assertEquals(error.code, ERROR.Code.MESSAGE_SIGNING_FAILED);
     signer.destroy();
     const destroyed = assertThrows(
       () => signer.signMessage("message"),
-      E.MESSAGE_SIGNER_DESTROYED,
+      ERROR.MESSAGE_SIGNER_DESTROYED,
     );
-    assertEquals(destroyed.code, E.Code.MESSAGE_SIGNER_DESTROYED);
-    assertEquals(E.ERROR_SIG_LOC[error.code], E.MESSAGE_SIGNING_FAILED);
-    assertEquals(E.ERROR_SIG_LOC[destroyed.code], E.MESSAGE_SIGNER_DESTROYED);
+    assertEquals(destroyed.code, ERROR.Code.MESSAGE_SIGNER_DESTROYED);
+    assertEquals(ERROR.ERROR_SIG_LOC[error.code], ERROR.MESSAGE_SIGNING_FAILED);
+    assertEquals(
+      ERROR.ERROR_SIG_LOC[destroyed.code],
+      ERROR.MESSAGE_SIGNER_DESTROYED,
+    );
   });
 
   it("recognizes sync and asynchronous capabilities without granting transaction eligibility", async () => {

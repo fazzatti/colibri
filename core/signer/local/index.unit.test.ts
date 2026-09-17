@@ -24,7 +24,7 @@ import type {
   Ed25519PublicKey,
   Ed25519SecretKey,
 } from "@/strkeys/types.ts";
-import * as E from "@/signer/local/error.ts";
+import * as ERROR from "@/signer/local/error.ts";
 
 describe("LocalSigner", () => {
   const TEST_SECRET =
@@ -72,7 +72,7 @@ describe("LocalSigner", () => {
       const signer = LocalSigner.fromSecret(TEST_SECRET, true);
       assertThrows(
         () => signer.secretKey(),
-        E.SECRET_NOT_ACCESSIBLE,
+        ERROR.SECRET_NOT_ACCESSIBLE,
         "Secret key is not accessible",
       );
     });
@@ -97,7 +97,7 @@ describe("LocalSigner", () => {
       const signer = LocalSigner.generateRandom(true);
       assertThrows(
         () => signer.secretKey(),
-        E.SECRET_NOT_ACCESSIBLE,
+        ERROR.SECRET_NOT_ACCESSIBLE,
         "Secret key is not accessible",
       );
     });
@@ -113,7 +113,7 @@ describe("LocalSigner", () => {
       const signer = LocalSigner.fromSecret(TEST_SECRET, true);
       assertThrows(
         () => signer.secretKey(),
-        E.SECRET_NOT_ACCESSIBLE,
+        ERROR.SECRET_NOT_ACCESSIBLE,
         "Secret key is not accessible",
       );
     });
@@ -121,7 +121,7 @@ describe("LocalSigner", () => {
     it("throws after destroy even when secret was accessible", () => {
       const signer = LocalSigner.fromSecret(TEST_SECRET);
       signer.destroy();
-      assertThrows(() => signer.secretKey(), E.SIGNER_DESTROYED);
+      assertThrows(() => signer.secretKey(), ERROR.SIGNER_DESTROYED);
     });
   });
 
@@ -242,7 +242,7 @@ describe("LocalSigner", () => {
       const signer = LocalSigner.fromSecret(TEST_SECRET);
       assertThrows(
         () => signer.removeTarget(TEST_PUBLIC),
-        E.CANNOT_REMOVE_MASTER_TARGET,
+        ERROR.CANNOT_REMOVE_MASTER_TARGET,
       );
     });
 
@@ -306,7 +306,7 @@ describe("LocalSigner", () => {
 
       assertThrows(
         () => signer.signTransaction(tx),
-        E.SIGNER_DESTROYED,
+        ERROR.SIGNER_DESTROYED,
       );
     });
   });
@@ -367,7 +367,7 @@ describe("LocalSigner", () => {
 
       assertThrows(
         () => signer.sign(data),
-        E.SIGNER_DESTROYED,
+        ERROR.SIGNER_DESTROYED,
       );
     });
   });
@@ -499,7 +499,7 @@ describe("LocalSigner", () => {
         await signer.signSorobanAuthEntry(entry, 1000000, Networks.TESTNET);
         assert(false, "Should have thrown");
       } catch (e) {
-        assert(e instanceof E.SIGNER_DESTROYED);
+        assert(e instanceof ERROR.SIGNER_DESTROYED);
       }
     });
   });
@@ -553,7 +553,7 @@ describe("LocalSigner", () => {
 
       assertThrows(
         () => signer.signTransaction(tx),
-        E.SIGNER_DESTROYED,
+        ERROR.SIGNER_DESTROYED,
       );
     });
   });

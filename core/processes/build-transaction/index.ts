@@ -4,7 +4,7 @@ import {
   NO_LIMIT,
   type TransactionPreconditions,
 } from "@/processes/build-transaction/types.ts";
-import * as E from "@/processes/build-transaction/error.ts";
+import * as ERROR from "@/processes/build-transaction/error.ts";
 import {
   Account,
   MuxedAccount,
@@ -39,11 +39,11 @@ type ResolvedTransactionFee = {
 const assertValidBuildInput = (input: BuildTransactionInput): void => {
   assert(
     input.operations && input.operations.length > 0,
-    new E.NO_OPERATIONS_PROVIDED_ERROR(input),
+    new ERROR.NO_OPERATIONS_PROVIDED_ERROR(input),
   );
   assert(
     (input.baseFee === undefined) !== (input.transactionFee === undefined),
-    new E.INVALID_TRANSACTION_FEE_CONFIGURATION_ERROR(input),
+    new ERROR.INVALID_TRANSACTION_FEE_CONFIGURATION_ERROR(input),
   );
 };
 
@@ -52,15 +52,15 @@ const throwTransactionFeeParseError = (
   error: TransactionFeeParseError,
 ): never => {
   if (error.reason === "invalid-configuration") {
-    throw new E.INVALID_TRANSACTION_FEE_CONFIGURATION_ERROR(input);
+    throw new ERROR.INVALID_TRANSACTION_FEE_CONFIGURATION_ERROR(input);
   }
   if (error.mode === "base") {
-    throw new E.INVALID_BASE_FEE_ERROR(input, error.value);
+    throw new ERROR.INVALID_BASE_FEE_ERROR(input, error.value);
   }
   if (error.mode === "inclusion") {
-    throw new E.INVALID_INCLUSION_FEE_ERROR(input, error.value);
+    throw new ERROR.INVALID_INCLUSION_FEE_ERROR(input, error.value);
   }
-  throw new E.INVALID_MAX_FEE_ERROR(input, error.value);
+  throw new ERROR.INVALID_MAX_FEE_ERROR(input, error.value);
 };
 
 const resolveParsedTransactionFee = (
@@ -68,7 +68,10 @@ const resolveParsedTransactionFee = (
   fee: ParsedTransactionFee,
 ): ResolvedTransactionFee => {
   if (fee.mode === "base") {
-    assert(fee.amount > 0n, new E.BASE_FEE_TOO_LOW_ERROR(input, fee.amount));
+    assert(
+      fee.amount > 0n,
+      new ERROR.BASE_FEE_TOO_LOW_ERROR(input, fee.amount),
+    );
     return { builderBaseFee: fee.amount.toString() as BaseFee };
   }
 
@@ -77,7 +80,7 @@ const resolveParsedTransactionFee = (
   if (fee.mode === "inclusion") {
     assert(
       fee.amount >= minimumInclusionFee,
-      new E.INCLUSION_FEE_TOO_LOW_ERROR(
+      new ERROR.INCLUSION_FEE_TOO_LOW_ERROR(
         input,
         fee.amount,
         minimumInclusionFee,
@@ -86,7 +89,7 @@ const resolveParsedTransactionFee = (
   }
   assert(
     fee.amount <= MAXIMUM_TRANSACTION_FEE,
-    new E.TRANSACTION_FEE_TOO_HIGH_ERROR(input, fee.amount),
+    new ERROR.TRANSACTION_FEE_TOO_HIGH_ERROR(input, fee.amount),
   );
 
   return {
@@ -105,11 +108,11 @@ const resolveTransactionFee = (
   if (input.baseFee !== undefined) {
     assert(
       !Number.isNaN(Number(input.baseFee)),
-      new E.INVALID_BASE_FEE_ERROR(input),
+      new ERROR.INVALID_BASE_FEE_ERROR(input),
     );
     assert(
       Number(input.baseFee) > 0,
-      new E.BASE_FEE_TOO_LOW_ERROR(input),
+      new ERROR.BASE_FEE_TOO_LOW_ERROR(input),
     );
     return { builderBaseFee: input.baseFee };
   }
@@ -132,7 +135,7 @@ const loadSourceAccount = async (
     try {
       baseAccountAddress = muxedAddressToBaseAccount(muxedSource);
     } catch (error) {
-      throw new E.INVALID_MUXED_SOURCE_ERROR(
+      throw new ERROR.INVALID_MUXED_SOURCE_ERROR(
         input,
         error as Error,
       );
@@ -140,19 +143,19 @@ const loadSourceAccount = async (
   }
 
   if (!input.sequence) {
-    assert(input.rpc, new E.RPC_REQUIRED_TO_LOAD_ACCOUNT_ERROR(input));
+    assert(input.rpc, new ERROR.RPC_REQUIRED_TO_LOAD_ACCOUNT_ERROR(input));
     let account: Account;
     try {
       account = (await input.rpc.getAccount(baseAccountAddress)) as Account;
     } catch (error) {
-      throw new E.COULD_NOT_LOAD_ACCOUNT_ERROR(input, error as Error);
+      throw new ERROR.COULD_NOT_LOAD_ACCOUNT_ERROR(input, error as Error);
     }
     if (!muxedSource) return account;
 
     try {
       return MuxedAccount.fromAddress(muxedSource, account.sequenceNumber());
     } catch (error) {
-      throw new E.INVALID_MUXED_SOURCE_RPC_SEQUENCE_ERROR(
+      throw new ERROR.INVALID_MUXED_SOURCE_RPC_SEQUENCE_ERROR(
         input,
         error as Error,
       );
@@ -163,7 +166,7 @@ const loadSourceAccount = async (
     try {
       return MuxedAccount.fromAddress(muxedSource, input.sequence);
     } catch (error) {
-      throw new E.INVALID_MUXED_SOURCE_SEQUENCE_ERROR(
+      throw new ERROR.INVALID_MUXED_SOURCE_SEQUENCE_ERROR(
         input,
         error as Error,
       );
@@ -173,7 +176,7 @@ const loadSourceAccount = async (
   try {
     return new Account(input.source, input.sequence);
   } catch (error) {
-    throw new E.COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE_ERROR(
+    throw new ERROR.COULD_NOT_INITIALIZE_ACCOUNT_WITH_SEQUENCE_ERROR(
       input,
       error as Error,
     );
@@ -191,7 +194,7 @@ const createTransactionBuilder = (
       networkPassphrase: input.networkPassphrase,
     });
   } catch (error) {
-    throw new E.COULD_NOT_CREATE_TRANSACTION_BUILDER_ERROR(
+    throw new ERROR.COULD_NOT_CREATE_TRANSACTION_BUILDER_ERROR(
       input,
       error as Error,
     );
@@ -206,7 +209,7 @@ const setSorobanData = (
   try {
     builder.setSorobanData(input.sorobanData);
   } catch (error) {
-    throw new E.COULD_NOT_SET_SOROBAN_DATA_ERROR(input, error as Error);
+    throw new ERROR.COULD_NOT_SET_SOROBAN_DATA_ERROR(input, error as Error);
   }
 };
 
@@ -217,12 +220,12 @@ const setPreconditions = (
   if (!input.preconditions) return builder;
   assert(
     !(input.preconditions.timeBounds && input.preconditions.timeoutSeconds),
-    new E.CONFLICTING_TIME_CONSTRAINTS_ERROR(input),
+    new ERROR.CONFLICTING_TIME_CONSTRAINTS_ERROR(input),
   );
   try {
     return appendPreconditions(builder, input.preconditions);
   } catch (error) {
-    throw new E.FAILED_TO_SET_PRECONDITIONS_ERROR(input, error as Error);
+    throw new ERROR.FAILED_TO_SET_PRECONDITIONS_ERROR(input, error as Error);
   }
 };
 
@@ -247,7 +250,7 @@ const buildConfiguredTransaction = (
   try {
     return builder.build() as BuildTransactionOutput;
   } catch (error) {
-    throw new E.COULD_NOT_BUILD_TRANSACTION_ERROR(input, error as Error);
+    throw new ERROR.COULD_NOT_BUILD_TRANSACTION_ERROR(input, error as Error);
   }
 };
 
@@ -266,7 +269,7 @@ const applyExactTransactionFee = (
     const minimumTransactionFee = exactFee.minimumInclusionFee + resourceFee;
     assert(
       exactFee.amount >= minimumTransactionFee,
-      new E.MAX_FEE_TOO_LOW_ERROR(
+      new ERROR.MAX_FEE_TOO_LOW_ERROR(
         input,
         exactFee.amount,
         minimumTransactionFee,
@@ -275,7 +278,7 @@ const applyExactTransactionFee = (
   }
   assert(
     finalTransactionFee <= MAXIMUM_TRANSACTION_FEE,
-    new E.TRANSACTION_FEE_TOO_HIGH_ERROR(input, finalTransactionFee),
+    new ERROR.TRANSACTION_FEE_TOO_HIGH_ERROR(input, finalTransactionFee),
   );
   return setTransactionFee(transaction, finalTransactionFee);
 };
@@ -299,11 +302,11 @@ export const buildTransaction = async (
     const transaction = buildConfiguredTransaction(input, builder);
     return applyExactTransactionFee(input, transaction, exactTransactionFee);
   } catch (e) {
-    if (e instanceof E.BuildTransactionError) {
+    if (e instanceof ERROR.BuildTransactionError) {
       throw e;
     }
 
-    throw new E.UNEXPECTED_ERROR(input, e as Error);
+    throw new ERROR.UNEXPECTED_ERROR(input, e as Error);
   }
 };
 
@@ -358,4 +361,4 @@ const appendPreconditions = (
 };
 
 /** Error constructors emitted by {@link buildTransaction}. */
-export const BuildTransactionErrors: typeof E = E;
+export const BuildTransactionErrors: typeof ERROR = ERROR;

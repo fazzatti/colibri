@@ -11,7 +11,7 @@ import {
 } from "stellar-sdk";
 import type { SignableTransaction } from "@/common/types/index.ts";
 import { PreAuthorizedTransactionSigner } from "@/signer/pre-authorized-transaction/index.ts";
-import * as E from "@/signer/pre-authorized-transaction/error.ts";
+import * as ERROR from "@/signer/pre-authorized-transaction/error.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import type { Ed25519PublicKey, PreAuthTx } from "@/strkeys/types.ts";
 
@@ -81,7 +81,7 @@ describe("PreAuthorizedTransactionSigner", () => {
   it("rejects raw transaction hashes with invalid lengths", () => {
     assertThrows(
       () => PreAuthorizedTransactionSigner.fromHash(Buffer.alloc(31)),
-      E.INVALID_TRANSACTION_HASH_LENGTH,
+      ERROR.INVALID_TRANSACTION_HASH_LENGTH,
     );
   });
 
@@ -91,7 +91,7 @@ describe("PreAuthorizedTransactionSigner", () => {
         PreAuthorizedTransactionSigner.fromHash(
           null as unknown as ArrayBuffer,
         ),
-      E.FAILED_TO_NORMALIZE_TRANSACTION_HASH,
+      ERROR.FAILED_TO_NORMALIZE_TRANSACTION_HASH,
     );
   });
 
@@ -101,7 +101,7 @@ describe("PreAuthorizedTransactionSigner", () => {
         PreAuthorizedTransactionSigner.fromHash(
           "TINVALID" as PreAuthTx,
         ),
-      E.FAILED_TO_DECODE_SIGNER_KEY,
+      ERROR.FAILED_TO_DECODE_SIGNER_KEY,
     );
   });
 
@@ -112,7 +112,7 @@ describe("PreAuthorizedTransactionSigner", () => {
 
     assertThrows(
       () => PreAuthorizedTransactionSigner.fromHash(Buffer.alloc(32)),
-      E.FAILED_TO_ENCODE_SIGNER_KEY,
+      ERROR.FAILED_TO_ENCODE_SIGNER_KEY,
     );
   });
 
@@ -125,7 +125,7 @@ describe("PreAuthorizedTransactionSigner", () => {
 
     assertThrows(
       () => PreAuthorizedTransactionSigner.fromTransaction(transaction),
-      E.FAILED_TO_HASH_TRANSACTION_DURING_CREATION,
+      ERROR.FAILED_TO_HASH_TRANSACTION_DURING_CREATION,
     );
   });
 
@@ -136,7 +136,7 @@ describe("PreAuthorizedTransactionSigner", () => {
 
     assertThrows(
       () => PreAuthorizedTransactionSigner.fromTransaction(transaction),
-      E.INVALID_TRANSACTION_HASH_LENGTH,
+      ERROR.INVALID_TRANSACTION_HASH_LENGTH,
     );
   });
 
@@ -150,7 +150,7 @@ describe("PreAuthorizedTransactionSigner", () => {
 
     assertThrows(
       () => signer.authorizesTransaction(transaction),
-      E.FAILED_TO_HASH_TRANSACTION_DURING_AUTHORIZATION,
+      ERROR.FAILED_TO_HASH_TRANSACTION_DURING_AUTHORIZATION,
     );
   });
 });

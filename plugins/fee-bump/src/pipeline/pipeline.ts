@@ -9,15 +9,15 @@ import {
   inputToBuild,
   wrapFeeBumpToEnvelopeSigningRequirements,
 } from "@/pipeline/connectors.ts";
-import * as E from "@/error.ts";
+import * as ERROR from "@/error.ts";
 
 /**
  * Creates the internal pipeline used to wrap and sign fee-bump transactions.
  *
  * @param args - Pipeline construction arguments.
  * @returns A configured fee-bump pipeline.
- * @throws {E.MISSING_ARG} If a required argument is missing.
- * @throws {E.UNEXPECTED_ERROR} If pipeline creation fails unexpectedly.
+ * @throws {ERROR.MISSING_ARG} If a required argument is missing.
+ * @throws {ERROR.UNEXPECTED_ERROR} If pipeline creation fails unexpectedly.
  */
 const createFeeBumpPipeline = ({
   networkConfig,
@@ -30,7 +30,7 @@ const createFeeBumpPipeline = ({
         networkPassphrase: networkConfig && networkConfig.networkPassphrase,
         feeBumpConfig,
       },
-      (argName: string) => new E.MISSING_ARG(argName),
+      (argName: string) => new ERROR.MISSING_ARG(argName),
     );
 
     const inputStep = inputToBuild(
@@ -61,7 +61,7 @@ const createFeeBumpPipeline = ({
     if (error instanceof ColibriError) {
       throw error;
     }
-    throw new E.UNEXPECTED_ERROR(error as Error);
+    throw new ERROR.UNEXPECTED_ERROR(error as Error);
   }
 };
 

@@ -13,7 +13,7 @@ import type {
   TrustlineLedgerKey,
 } from "@/ledger-entries/types.ts";
 import type { KeypairSigner } from "@/signer/types.ts";
-import * as E from "@/account/native/error.ts";
+import * as ERROR from "@/account/native/error.ts";
 import type { INativeAccount, MuxedId } from "@/account/native/types.ts";
 import type {
   StellarAddress,
@@ -33,7 +33,7 @@ export class NativeAccount implements INativeAccount {
   private constructor(publicKey: Ed25519PublicKey) {
     assert(
       StrKey.isValidEd25519PublicKey(publicKey),
-      new E.INVALID_ED25519_PUBLIC_KEY(publicKey),
+      new ERROR.INVALID_ED25519_PUBLIC_KEY(publicKey),
     );
 
     this._publicKey = publicKey;
@@ -48,7 +48,7 @@ export class NativeAccount implements INativeAccount {
   static fromAddress(address: StellarAddress): WithoutSigner<NativeAccount> {
     assert(
       StrKey.isEd25519PublicKey(address),
-      new E.UNSUPPORTED_ADDRESS_TYPE(address),
+      new ERROR.UNSUPPORTED_ADDRESS_TYPE(address),
     );
     return new NativeAccount(address) as WithoutSigner<NativeAccount>;
   }
@@ -81,7 +81,7 @@ export class NativeAccount implements INativeAccount {
    * @returns A muxed address derived from this account.
    */
   muxedAddress(id: MuxedId): MuxedAddress {
-    assert(isMuxedId(id), new E.INVALID_MUXED_ID(id));
+    assert(isMuxedId(id), new ERROR.INVALID_MUXED_ID(id));
 
     const baseAcc = new Account(this._publicKey, "1");
     const acc = new MuxedAccount(baseAcc, id);
@@ -89,7 +89,11 @@ export class NativeAccount implements INativeAccount {
 
     assert(
       StrKey.isValidMuxedAddress(muxedAddress),
-      new E.INVALID_MUXED_ADDRESS_GENERATED(muxedAddress, id, this._publicKey),
+      new ERROR.INVALID_MUXED_ADDRESS_GENERATED(
+        muxedAddress,
+        id,
+        this._publicKey,
+      ),
     );
 
     return muxedAddress as MuxedAddress;
@@ -150,7 +154,10 @@ export class NativeAccount implements INativeAccount {
    * @returns Bound signer for the account.
    */
   signer(): KeypairSigner {
-    assert(this._masterSigner, new E.MISSING_MASTER_SIGNER(this._publicKey));
+    assert(
+      this._masterSigner,
+      new ERROR.MISSING_MASTER_SIGNER(this._publicKey),
+    );
     return this._masterSigner;
   }
 }

@@ -10,7 +10,7 @@ import type {
   Ed25519PublicKey,
   Ed25519SecretKey,
 } from "@/strkeys/types.ts";
-import * as E from "@/signer/delegated/error.ts";
+import * as ERROR from "@/signer/delegated/error.ts";
 
 const makeInvocation = (address: Address) =>
   new xdr.SorobanAuthorizedInvocation({
@@ -99,7 +99,10 @@ describe("DelegatedSigner", () => {
     const middleNode = credentials.delegates[0];
     const leafNode = middleNode.nestedDelegates[0];
 
-    assertEquals(signedCredentials.type, "sorobanCredentialsAddressWithDelegates");
+    assertEquals(
+      signedCredentials.type,
+      "sorobanCredentialsAddressWithDelegates",
+    );
     assertEquals(
       credentials.addressCredentials.signature.type,
       "scvVec",
@@ -176,7 +179,7 @@ describe("DelegatedSigner", () => {
           address: asAddress(Address.contract(Buffer.alloc(32, 8))),
           nestedDelegates: [first, second],
         }),
-      E.DUPLICATE_NESTED_DELEGATE,
+      ERROR.DUPLICATE_NESTED_DELEGATE,
     );
   });
 
@@ -225,7 +228,7 @@ describe("DelegatedSigner", () => {
           40,
           Networks.TESTNET,
         ),
-      E.FAILED_TO_BUILD_DELEGATED_ENTRY,
+      ERROR.FAILED_TO_BUILD_DELEGATED_ENTRY,
     );
   });
 
@@ -247,7 +250,7 @@ describe("DelegatedSigner", () => {
           40,
           Networks.TESTNET,
         ),
-      E.FAILED_TO_AUTHORIZE_DELEGATE,
+      ERROR.FAILED_TO_AUTHORIZE_DELEGATE,
     );
 
     assertEquals(error.meta.data.address, rootAddress.toString());
@@ -257,7 +260,7 @@ describe("DelegatedSigner", () => {
   it("preserves delegated-signer errors raised by a node signer", async () => {
     const rootAddress = asAddress(Address.contract(Buffer.alloc(32, 14)));
     const nestedAddress = asAddress(Address.contract(Buffer.alloc(32, 15)));
-    const expected = new E.DUPLICATE_NESTED_DELEGATE(
+    const expected = new ERROR.DUPLICATE_NESTED_DELEGATE(
       rootAddress,
       nestedAddress,
     );
@@ -277,7 +280,7 @@ describe("DelegatedSigner", () => {
           40,
           Networks.TESTNET,
         ),
-      E.DUPLICATE_NESTED_DELEGATE,
+      ERROR.DUPLICATE_NESTED_DELEGATE,
     );
 
     assertEquals(actual, expected);

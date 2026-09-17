@@ -3,7 +3,7 @@ import type {
   SignEnvelopeInput,
   SignEnvelopeOutput,
 } from "@/processes/sign-envelope/types.ts";
-import * as E from "@/processes/sign-envelope/error.ts";
+import * as ERROR from "@/processes/sign-envelope/error.ts";
 import { assert } from "@/common/assert/assert.ts";
 import {
   isEnvelopeSigner,
@@ -30,8 +30,8 @@ export const signEnvelope = async (
   try {
     const { transaction, signatureRequirements, signers } = input;
 
-    assert(signatureRequirements.length > 0, new E.NO_REQUIREMENTS(input));
-    assert(signers.length > 0, new E.NO_SIGNERS(input));
+    assert(signatureRequirements.length > 0, new ERROR.NO_REQUIREMENTS(input));
+    assert(signers.length > 0, new ERROR.NO_SIGNERS(input));
 
     const passphrase = transaction.networkPassphrase;
     let signedTransaction = transaction;
@@ -50,7 +50,7 @@ export const signEnvelope = async (
       try {
         key = signer.signerKey();
       } catch (cause) {
-        throw new E.FAILED_TO_GET_SIGNER_KEY(
+        throw new ERROR.FAILED_TO_GET_SIGNER_KEY(
           input,
           index,
           cause as Error,
@@ -70,7 +70,7 @@ export const signEnvelope = async (
         try {
           return candidate.signsFor(requiredSigner);
         } catch (cause) {
-          throw new E.FAILED_TO_CHECK_SIGNER_TARGET(
+          throw new ERROR.FAILED_TO_CHECK_SIGNER_TARGET(
             input,
             requiredSigner,
             key,
@@ -81,19 +81,19 @@ export const signEnvelope = async (
 
       assert(
         matching.length > 0,
-        new E.SIGNER_NOT_FOUND(input, requiredSigner, signers),
+        new ERROR.SIGNER_NOT_FOUND(input, requiredSigner, signers),
       );
 
       const matchingByKey = groupBySignerKey(matching);
       for (const [key, matches] of matchingByKey) {
         assert(
           matches.length === 1,
-          new E.DUPLICATE_SIGNER_KEY(input, key),
+          new ERROR.DUPLICATE_SIGNER_KEY(input, key),
         );
       }
       assert(
         matchingByKey.size === 1,
-        new E.AMBIGUOUS_ACCOUNT_SIGNERS(
+        new ERROR.AMBIGUOUS_ACCOUNT_SIGNERS(
           input,
           requiredSigner,
           [...matchingByKey.keys()],
@@ -111,11 +111,11 @@ export const signEnvelope = async (
 
       assert(
         matching.length > 0,
-        new E.EXTRA_SIGNER_NOT_FOUND(input, extraSignerKey),
+        new ERROR.EXTRA_SIGNER_NOT_FOUND(input, extraSignerKey),
       );
       assert(
         matching.length === 1,
-        new E.DUPLICATE_SIGNER_KEY(input, extraSignerKey),
+        new ERROR.DUPLICATE_SIGNER_KEY(input, extraSignerKey),
       );
       selected.set(extraSignerKey, matching[0]);
     }
@@ -126,7 +126,7 @@ export const signEnvelope = async (
         try {
           authorized = await signer.authorizesTransaction(signedTransaction);
         } catch (cause) {
-          throw new E.FAILED_TO_CHECK_PRE_AUTH_TRANSACTION(
+          throw new ERROR.FAILED_TO_CHECK_PRE_AUTH_TRANSACTION(
             input,
             key as PreAuthTx,
             cause as Error,
@@ -134,7 +134,7 @@ export const signEnvelope = async (
         }
         assert(
           authorized,
-          new E.PRE_AUTH_TRANSACTION_MISMATCH(input, key as PreAuthTx),
+          new ERROR.PRE_AUTH_TRANSACTION_MISMATCH(input, key as PreAuthTx),
         );
         continue;
       }
@@ -143,7 +143,7 @@ export const signEnvelope = async (
       try {
         signedTransactionXdr = await signer.signTransaction(signedTransaction);
       } catch (cause) {
-        throw new E.FAILED_TO_SIGN_TRANSACTION(input, key, cause as Error);
+        throw new ERROR.FAILED_TO_SIGN_TRANSACTION(input, key, cause as Error);
       }
 
       try {
@@ -152,7 +152,7 @@ export const signEnvelope = async (
           passphrase,
         ) as typeof transaction;
       } catch (cause) {
-        throw new E.FAILED_TO_PARSE_SIGNED_TRANSACTION(
+        throw new ERROR.FAILED_TO_PARSE_SIGNED_TRANSACTION(
           input,
           key,
           cause as Error,
@@ -162,10 +162,10 @@ export const signEnvelope = async (
 
     return signedTransaction;
   } catch (e) {
-    if (e instanceof E.SignEnvelopeError) {
+    if (e instanceof ERROR.SignEnvelopeError) {
       throw e;
     }
-    throw new E.UNEXPECTED_ERROR(input, e as Error);
+    throw new ERROR.UNEXPECTED_ERROR(input, e as Error);
   }
 };
 
@@ -192,13 +192,13 @@ const getExtraSignerKeys = (
       StellarSignerKey.encodeSignerKey(signerKey) as SignerKey
     );
   } catch (cause) {
-    throw new E.FAILED_TO_READ_EXTRA_SIGNERS(input, cause as Error);
+    throw new ERROR.FAILED_TO_READ_EXTRA_SIGNERS(input, cause as Error);
   }
 
   for (const signerKey of signerKeys) {
     assert(
       !signerKey.startsWith("T"),
-      new E.UNSUPPORTED_PRE_AUTH_EXTRA_SIGNER(
+      new ERROR.UNSUPPORTED_PRE_AUTH_EXTRA_SIGNER(
         input,
         signerKey as PreAuthTx,
       ),
@@ -208,4 +208,4 @@ const getExtraSignerKeys = (
   return signerKeys as ExtraSignerKey[];
 };
 /** Error constructors emitted by {@link signEnvelope}. */
-export const SignEnvelopeErrors: typeof E = E;
+export const SignEnvelopeErrors: typeof ERROR = ERROR;

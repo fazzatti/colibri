@@ -2,7 +2,7 @@ import type {
   SimulateTransactionInput,
   SimulateTransactionOutput,
 } from "@/processes/simulate-transaction/types.ts";
-import * as E from "@/processes/simulate-transaction/error.ts";
+import * as ERROR from "@/processes/simulate-transaction/error.ts";
 import { parseFailedSimulationResponse } from "@/common/helpers/contract-error-from-failed-simulation-response.ts";
 
 import { Api } from "stellar-sdk/rpc";
@@ -19,7 +19,7 @@ export const simulateTransaction = async (
     try {
       simulationResponse = await rpc.simulateTransaction(transaction);
     } catch (e) {
-      throw new E.COULD_NOT_SIMULATE_TRANSACTION(input, e as Error);
+      throw new ERROR.COULD_NOT_SIMULATE_TRANSACTION(input, e as Error);
     }
 
     if (Api.isSimulationError(simulationResponse)) {
@@ -28,7 +28,7 @@ export const simulateTransaction = async (
       );
 
       if (failedSimulation.contractError) {
-        throw new E.CONTRACT_ERROR_SIMULATION_FAILED(
+        throw new ERROR.CONTRACT_ERROR_SIMULATION_FAILED(
           input,
           simulationResponse,
           {
@@ -38,7 +38,7 @@ export const simulateTransaction = async (
         );
       }
 
-      throw new E.SIMULATION_FAILED(input, simulationResponse, {
+      throw new ERROR.SIMULATION_FAILED(input, simulationResponse, {
         failedSimulation,
       });
     }
@@ -58,13 +58,13 @@ export const simulateTransaction = async (
       } as SimulateTransactionOutput;
     }
 
-    throw new E.SIMULATION_RESULT_NOT_VERIFIED(input, simulationResponse);
+    throw new ERROR.SIMULATION_RESULT_NOT_VERIFIED(input, simulationResponse);
   } catch (e) {
-    if (e instanceof E.SimulateTransactionError) {
+    if (e instanceof ERROR.SimulateTransactionError) {
       throw e;
     }
-    throw new E.UNEXPECTED_ERROR(input, e as Error);
+    throw new ERROR.UNEXPECTED_ERROR(input, e as Error);
   }
 };
 /** Error constructors emitted by {@link simulateTransaction}. */
-export const SimulateTransactionErrors: typeof E = E;
+export const SimulateTransactionErrors: typeof ERROR = ERROR;

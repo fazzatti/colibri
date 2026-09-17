@@ -1,13 +1,13 @@
 import { assert, assertEquals, assertFalse, assertThrows } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import {
-  isEventId,
   createEventId,
   createEventIdFromParts,
+  isEventId,
   parseEventId,
 } from "@/event/event-id/index.ts";
 import type { TOID } from "@/toid/types.ts";
-import * as E from "@/event/event-id/error.ts";
+import * as ERROR from "@/event/event-id/error.ts";
 
 // =============================================================================
 // Tests: isEventId
@@ -128,13 +128,19 @@ describe("createEventId", () => {
     it("throws EVENT_INDEX_OUT_OF_RANGE for event index 0", () => {
       const toid = "0000530242871959553" as TOID;
 
-      assertThrows(() => createEventId(toid, 0), E.EVENT_INDEX_OUT_OF_RANGE);
+      assertThrows(
+        () => createEventId(toid, 0),
+        ERROR.EVENT_INDEX_OUT_OF_RANGE,
+      );
     });
 
     it("throws EVENT_INDEX_OUT_OF_RANGE for negative event index", () => {
       const toid = "0000530242871959553" as TOID;
 
-      assertThrows(() => createEventId(toid, -1), E.EVENT_INDEX_OUT_OF_RANGE);
+      assertThrows(
+        () => createEventId(toid, -1),
+        ERROR.EVENT_INDEX_OUT_OF_RANGE,
+      );
     });
 
     it("throws EVENT_INDEX_OUT_OF_RANGE for event index exceeding maximum", () => {
@@ -142,7 +148,7 @@ describe("createEventId", () => {
 
       assertThrows(
         () => createEventId(toid, 10000000000),
-        E.EVENT_INDEX_OUT_OF_RANGE
+        ERROR.EVENT_INDEX_OUT_OF_RANGE,
       );
     });
   });
@@ -277,27 +283,27 @@ describe("parseEventId", () => {
 
   describe("invalid Event IDs", () => {
     it("throws INVALID_EVENT_ID_FORMAT for empty string", () => {
-      assertThrows(() => parseEventId(""), E.INVALID_EVENT_ID_FORMAT);
+      assertThrows(() => parseEventId(""), ERROR.INVALID_EVENT_ID_FORMAT);
     });
 
     it("throws INVALID_EVENT_ID_FORMAT for malformed Event ID", () => {
       assertThrows(
         () => parseEventId("not-an-event-id"),
-        E.INVALID_EVENT_ID_FORMAT
+        ERROR.INVALID_EVENT_ID_FORMAT,
       );
     });
 
     it("throws INVALID_EVENT_ID_FORMAT for wrong format", () => {
       assertThrows(
         () => parseEventId("12345-67890"),
-        E.INVALID_EVENT_ID_FORMAT
+        ERROR.INVALID_EVENT_ID_FORMAT,
       );
     });
 
     it("throws INVALID_EVENT_ID_FORMAT for invalid TOID part", () => {
       assertThrows(
         () => parseEventId("9223372036854775808-0000000001"),
-        E.INVALID_EVENT_ID_FORMAT
+        ERROR.INVALID_EVENT_ID_FORMAT,
       );
     });
   });
@@ -326,7 +332,7 @@ describe("parseEventId", () => {
         parsed1.ledgerSequence,
         parsed1.transactionOrder,
         parsed1.operationIndex,
-        parsed1.eventIndex + 1 // Convert back to 1-based
+        parsed1.eventIndex + 1, // Convert back to 1-based
       );
       const parsed2 = parseEventId(eventId2);
 

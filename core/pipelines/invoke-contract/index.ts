@@ -4,7 +4,7 @@ import type {
   CreateInvokeContractPipelineArgs,
   InvokeContractInput,
 } from "@/pipelines/invoke-contract/types.ts";
-import * as E from "@/pipelines/invoke-contract/error.ts";
+import * as ERROR from "@/pipelines/invoke-contract/error.ts";
 import { ColibriError } from "@/error/index.ts";
 import { buildToSimulate } from "@/pipelines/shared/connectors/build-to-simulate.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
@@ -203,11 +203,14 @@ const createInvokeContractPipeline = ({
         networkConfig,
         networkPassphrase: networkConfig && networkConfig.networkPassphrase,
       },
-      (argName: string) => new E.MISSING_ARG(argName),
+      (argName: string) => new ERROR.MISSING_ARG(argName),
     );
 
     if (!rpc) {
-      assert(networkConfig && networkConfig.rpcUrl, new E.MISSING_RPC_URL());
+      assert(
+        networkConfig && networkConfig.rpcUrl,
+        new ERROR.MISSING_RPC_URL(),
+      );
       rpc = new Server(networkConfig.rpcUrl!, {
         allowHttp: networkConfig.allowHttp ?? false,
       });
@@ -217,7 +220,7 @@ const createInvokeContractPipeline = ({
     if (error instanceof ColibriError) {
       throw error;
     }
-    throw new E.UNEXPECTED_ERROR(error as Error);
+    throw new ERROR.UNEXPECTED_ERROR(error as Error);
   }
 };
 

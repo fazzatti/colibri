@@ -19,7 +19,7 @@ import {
   resolveRpc,
   sponsorCanSignChannel,
 } from "@/tools/helpers.ts";
-import * as E from "@/shared/error.ts";
+import * as ERROR from "@/shared/error.ts";
 
 /**
  * Opens and closes sponsored Stellar channel accounts for later pipeline reuse.
@@ -58,14 +58,14 @@ export class ChannelAccounts {
         networkConfig,
         config,
       },
-      (argName: string) => new E.MISSING_ARG(argName),
+      (argName: string) => new ERROR.MISSING_ARG(argName),
     );
 
     if (
       numberOfChannels < 1 ||
       numberOfChannels > MAX_CHANNELS_PER_TRANSACTION
     ) {
-      throw new E.INVALID_NUMBER_OF_CHANNELS(
+      throw new ERROR.INVALID_NUMBER_OF_CHANNELS(
         numberOfChannels,
         1,
         MAX_CHANNELS_PER_TRANSACTION,
@@ -131,7 +131,7 @@ export class ChannelAccounts {
       return channels;
     } catch (error) {
       if (error instanceof ColibriError) throw error;
-      throw new E.UNEXPECTED_ERROR(error as Error);
+      throw new ERROR.UNEXPECTED_ERROR(error as Error);
     }
   }
 
@@ -167,7 +167,7 @@ export class ChannelAccounts {
         networkConfig,
         config,
       },
-      (argName: string) => new E.MISSING_ARG(argName),
+      (argName: string) => new ERROR.MISSING_ARG(argName),
     );
 
     if (channels.length === 0) return;
@@ -179,10 +179,12 @@ export class ChannelAccounts {
       const closeRpc = resolveRpc({ networkConfig, rpc });
       const sponsorSigner = sponsor.signer();
 
-      for (const channelBatch of chunkChannels(
-        channels,
-        MAX_CHANNELS_PER_TRANSACTION,
-      )) {
+      for (
+        const channelBatch of chunkChannels(
+          channels,
+          MAX_CHANNELS_PER_TRANSACTION,
+        )
+      ) {
         const closeSigners = await Promise.all(
           channelBatch.map(async (channel) =>
             await sponsorCanSignChannel(closeRpc, sponsor, channel)
@@ -206,7 +208,7 @@ export class ChannelAccounts {
       }
     } catch (error) {
       if (error instanceof ColibriError) throw error;
-      throw new E.UNEXPECTED_ERROR(error as Error);
+      throw new ERROR.UNEXPECTED_ERROR(error as Error);
     }
   }
 }

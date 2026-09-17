@@ -2,7 +2,7 @@ import { assertEquals, assertRejects, assertStrictEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { stub } from "@std/testing/mock";
 import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
-import * as E from "@/tools/friendbot/error.ts";
+import * as ERROR from "@/tools/friendbot/error.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 import { Server } from "stellar-sdk/rpc";
 
@@ -31,7 +31,7 @@ describe("initializeWithFriendbot", () => {
 
     await assertRejects(
       () => initializeWithFriendbot(FRIENDBOT_URL, invalidAddress),
-      E.INVALID_ADDRESS,
+      ERROR.INVALID_ADDRESS,
       "The address provided is invalid!",
     );
   });
@@ -49,7 +49,7 @@ describe("initializeWithFriendbot", () => {
     try {
       await assertRejects(
         () => initializeWithFriendbot(FRIENDBOT_URL, TEST_PUBLIC),
-        E.UNEXPECTED,
+        ERROR.UNEXPECTED,
         "An unexpected error occurred when using Friendbot!",
       );
     } finally {
@@ -67,7 +67,7 @@ describe("initializeWithFriendbot", () => {
     try {
       await assertRejects(
         () => initializeWithFriendbot(FRIENDBOT_URL, TEST_PUBLIC),
-        E.UNEXPECTED,
+        ERROR.UNEXPECTED,
       );
     } finally {
       fetchStub.restore();
@@ -158,7 +158,7 @@ describe("initializeWithFriendbot", () => {
             timeoutInMs: 1,
             pollIntervalInMs: 0,
           }),
-        E.RPC_PROPAGATION_TIMEOUT,
+        ERROR.RPC_PROPAGATION_TIMEOUT,
       );
 
       assertEquals(

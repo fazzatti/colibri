@@ -8,7 +8,7 @@ import type {
 } from "@/pipelines/read-from-contract/types.ts";
 import { assertRequiredArgs } from "@/common/assert/assert-args.ts";
 import { simulateToRetval } from "@/pipelines/shared/connectors/simulate-to-retval/index.ts";
-import * as E from "@/pipelines/read-from-contract/error.ts";
+import * as ERROR from "@/pipelines/read-from-contract/error.ts";
 import { inputToBuild } from "@/pipelines/read-from-contract/connectors.ts";
 import { assert } from "@/common/assert/assert.ts";
 import { createBuildTransactionStep } from "@/steps/build-transaction.ts";
@@ -90,11 +90,14 @@ const createReadFromContractPipeline = ({
         networkConfig,
         networkPassphrase: networkConfig && networkConfig.networkPassphrase,
       },
-      (argName: string) => new E.MISSING_ARG(argName),
+      (argName: string) => new ERROR.MISSING_ARG(argName),
     );
 
     if (!rpc) {
-      assert(networkConfig && networkConfig.rpcUrl, new E.MISSING_RPC_URL());
+      assert(
+        networkConfig && networkConfig.rpcUrl,
+        new ERROR.MISSING_RPC_URL(),
+      );
       rpc = new Server(networkConfig.rpcUrl!, {
         allowHttp: networkConfig.allowHttp ?? false,
       });
@@ -104,7 +107,7 @@ const createReadFromContractPipeline = ({
     if (error instanceof ColibriError) {
       throw error;
     }
-    throw new E.UNEXPECTED_ERROR(error as Error);
+    throw new ERROR.UNEXPECTED_ERROR(error as Error);
   }
 };
 

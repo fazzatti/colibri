@@ -1,6 +1,6 @@
 import { StrKey } from "@/strkeys/index.ts";
 import { EventTemplate } from "@/event/template.ts";
-import * as E from "@/event/error.ts";
+import * as ERROR from "@/event/error.ts";
 import type { EventSchema, SchemaField } from "@/event/types.ts";
 import type { Event } from "@/event/event.ts";
 import {
@@ -110,7 +110,7 @@ export class ApproveEvent extends EventTemplate<typeof ApproveEventSchema> {
     return decodeSEP41EventExtensions(
       this.extensions,
       decoder,
-      (cause, keys) => new E.APPROVE_EXTENSION_DECODER_FAILED(keys, cause),
+      (cause, keys) => new ERROR.APPROVE_EXTENSION_DECODER_FAILED(keys, cause),
     );
   }
 

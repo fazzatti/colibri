@@ -15,7 +15,7 @@ import type {
   Ed25519SecretKey,
 } from "@/strkeys/types.ts";
 import type { LocalSigner as LocalSignerType } from "@/signer/local/types.ts";
-import * as E from "@/signer/local/error.ts";
+import * as ERROR from "@/signer/local/error.ts";
 import { assert } from "@/common/assert/assert.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
 import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
@@ -145,10 +145,10 @@ export class LocalSigner implements LocalSignerType {
     // Public methods close over `kp` to access secret material as needed.
     this.secretKey = hideSecret
       ? () => {
-        throw new E.SECRET_NOT_ACCESSIBLE();
+        throw new ERROR.SECRET_NOT_ACCESSIBLE();
       }
       : () => {
-        assert(isDefined(kp), new E.SIGNER_DESTROYED());
+        assert(isDefined(kp), new ERROR.SIGNER_DESTROYED());
         return kp.secret() as Ed25519SecretKey;
       };
 
@@ -159,16 +159,16 @@ export class LocalSigner implements LocalSignerType {
     this.addTarget(this.publicKey());
 
     this.sign = (data: BinaryData): BinaryData => {
-      assert(isDefined(kp), new E.SIGNER_DESTROYED());
+      assert(isDefined(kp), new ERROR.SIGNER_DESTROYED());
       return kp.sign(toUint8Array(data));
     };
 
     this.signMessage = (message: string | Uint8Array): Uint8Array => {
-      assert(isDefined(kp), new E.MESSAGE_SIGNER_DESTROYED());
+      assert(isDefined(kp), new ERROR.MESSAGE_SIGNER_DESTROYED());
       try {
         return kp.signMessage(message);
       } catch (cause) {
-        throw new E.MESSAGE_SIGNING_FAILED(cause as Error);
+        throw new ERROR.MESSAGE_SIGNING_FAILED(cause as Error);
       }
     };
 
@@ -187,14 +187,14 @@ export class LocalSigner implements LocalSignerType {
           signature,
         );
       } catch (cause) {
-        throw new E.MESSAGE_VERIFICATION_FAILED(cause as Error);
+        throw new ERROR.MESSAGE_VERIFICATION_FAILED(cause as Error);
       }
     };
 
     this.signTransaction = (
       tx: SignableTransaction,
     ): TransactionXDRBase64 => {
-      assert(isDefined(kp), new E.SIGNER_DESTROYED());
+      assert(isDefined(kp), new ERROR.SIGNER_DESTROYED());
       tx.sign(kp);
       return tx.toXdr() as TransactionXDRBase64;
     };
@@ -205,7 +205,7 @@ export class LocalSigner implements LocalSignerType {
       passphrase: string,
       forAddress?: Ed25519PublicKey | ContractId,
     ): Promise<SorobanAuthorizationEntryLike> => {
-      assert(isDefined(kp), new E.SIGNER_DESTROYED());
+      assert(isDefined(kp), new ERROR.SIGNER_DESTROYED());
       return authorizeEntry(
         entry as xdr.SorobanAuthorizationEntry,
         kp,
@@ -255,8 +255,8 @@ export class LocalSigner implements LocalSignerType {
    * @param keypair - Native SDK keypair containing a signing key.
    * @param hideSecret - Prevent secret access through the returned signer.
    * @returns A LocalSigner using the supplied keypair.
-   * @throws {E.KEYPAIR_CANNOT_SIGN} If the keypair is public-only.
-   * @throws {E.KEYPAIR_ADAPTATION_FAILED} If the native keypair cannot be adapted.
+   * @throws {ERROR.KEYPAIR_CANNOT_SIGN} If the keypair is public-only.
+   * @throws {ERROR.KEYPAIR_ADAPTATION_FAILED} If the native keypair cannot be adapted.
    * @example Adapt an application-provided Stellar SDK keypair.
    * ```ts
    * const signer = LocalSigner.fromKeypair(keypair, true);
@@ -270,11 +270,11 @@ export class LocalSigner implements LocalSignerType {
    */
   static fromKeypair(keypair: Keypair, hideSecret = false): LocalSigner {
     try {
-      assert(keypair.canSign(), new E.KEYPAIR_CANNOT_SIGN());
+      assert(keypair.canSign(), new ERROR.KEYPAIR_CANNOT_SIGN());
       return new LocalSigner(keypair, hideSecret);
     } catch (cause) {
-      if (cause instanceof E.LocalSignerError) throw cause;
-      throw new E.KEYPAIR_ADAPTATION_FAILED(cause as Error);
+      if (cause instanceof ERROR.LocalSignerError) throw cause;
+      throw new ERROR.KEYPAIR_ADAPTATION_FAILED(cause as Error);
     }
   }
 
@@ -309,7 +309,10 @@ export class LocalSigner implements LocalSignerType {
    * @param target Ed25519 public key or contract ID to remove.
    */
   public removeTarget(target: Ed25519PublicKey | ContractId) {
-    assert(target !== this.publicKey(), new E.CANNOT_REMOVE_MASTER_TARGET());
+    assert(
+      target !== this.publicKey(),
+      new ERROR.CANNOT_REMOVE_MASTER_TARGET(),
+    );
     this.targets.delete(target);
   }
 
@@ -341,4 +344,4 @@ export class LocalSigner implements LocalSignerType {
 }
 
 /** Error constructors emitted by LocalSigner, including Keypair adaptation failures. */
-export const LocalSignerErrors: typeof E = E;
+export const LocalSignerErrors: typeof ERROR = ERROR;

@@ -32,7 +32,7 @@ import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-c
 import { checkMemoRequired } from "@/check-memo-required.ts";
 import { createSep29Plugin } from "@/index.ts";
 import { SEP29_MEMO_REQUIRED_DATA_NAME } from "@/types.ts";
-import * as E from "@/error.ts";
+import * as ERROR from "@/error.ts";
 
 describe("SEP-29 on Quickstart", disableSanitizeConfig, () => {
   const ledger = new StellarTestLedger({
@@ -130,7 +130,7 @@ describe("SEP-29 on Quickstart", disableSanitizeConfig, () => {
       const before = transaction.toXdr();
       const error = await assertRejects(
         () => checkMemoRequired({ transaction, rpc }),
-        E.MEMO_REQUIRED,
+        ERROR.MEMO_REQUIRED,
       );
       assertEquals(error.destination, required);
       assertEquals(error.operationIndex, 0);
@@ -154,7 +154,7 @@ describe("SEP-29 on Quickstart", disableSanitizeConfig, () => {
     ]);
     const error = await assertRejects(
       () => checkMemoRequired({ transaction, networkConfig }),
-      E.MEMO_REQUIRED,
+      ERROR.MEMO_REQUIRED,
     );
     assertEquals(error.operationIndex, destinations.length);
     assertEquals(error.destination, required);
@@ -167,7 +167,7 @@ describe("SEP-29 on Quickstart", disableSanitizeConfig, () => {
     ]);
     const error = await assertRejects(
       () => checkMemoRequired({ transaction, rpc }),
-      E.MEMO_REQUIRED,
+      ERROR.MEMO_REQUIRED,
     );
     assertEquals(error.operationIndex, 99);
   });
@@ -201,7 +201,7 @@ describe("SEP-29 on Quickstart", disableSanitizeConfig, () => {
     send.use(createSep29Plugin());
     await assertRejects(
       () => send({ operations: [payment()], config }),
-      E.MEMO_REQUIRED,
+      ERROR.MEMO_REQUIRED,
     );
     assertEquals(
       (await rpc.getAccount(sender.publicKey())).sequenceNumber(),
@@ -254,7 +254,7 @@ describe("SEP-29 on Quickstart", disableSanitizeConfig, () => {
       else send.use(feeBump).use(guard);
       await assertRejects(
         () => send({ operations: [payment()], config }),
-        E.MEMO_REQUIRED,
+        ERROR.MEMO_REQUIRED,
       );
       const memo = Memo.id("29");
       const result = await send({

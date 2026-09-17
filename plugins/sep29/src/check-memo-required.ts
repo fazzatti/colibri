@@ -10,7 +10,7 @@ import {
   type CheckMemoRequiredInput,
   SEP29_MEMO_REQUIRED_DATA_NAME,
 } from "@/types.ts";
-import * as E from "@/error.ts";
+import * as ERROR from "@/error.ts";
 
 /**
  * Checks SEP-29 memo presence without modifying or submitting a transaction.
@@ -27,10 +27,10 @@ import * as E from "@/error.ts";
  * Lookup failures reject rather than silently allowing submission. This reads
  * current ledger state, not future state or changes within this transaction.
  *
- * @throws {E.MEMO_REQUIRED} When a destination requires a missing memo.
- * @throws {E.INVALID_TRANSACTION} When the envelope type is unsupported.
- * @throws {E.FAILED_TO_CREATE_READER} When connection configuration is invalid.
- * @throws {E.FAILED_TO_READ_REQUIREMENTS} When RPC or decoding fails.
+ * @throws {ERROR.MEMO_REQUIRED} When a destination requires a missing memo.
+ * @throws {ERROR.INVALID_TRANSACTION} When the envelope type is unsupported.
+ * @throws {ERROR.FAILED_TO_CREATE_READER} When connection configuration is invalid.
+ * @throws {ERROR.FAILED_TO_READ_REQUIREMENTS} When RPC or decoding fails.
  */
 export const checkMemoRequired = async (
   input: CheckMemoRequiredInput,
@@ -38,7 +38,7 @@ export const checkMemoRequired = async (
   const transaction = isFeeBumpTransaction(input.transaction)
     ? input.transaction.innerTransaction
     : input.transaction;
-  if (!isTransaction(transaction)) throw new E.INVALID_TRANSACTION();
+  if (!isTransaction(transaction)) throw new ERROR.INVALID_TRANSACTION();
   if (transaction.memo.type !== "none") return;
   const destinations = memoDestinations(transaction);
   if (!destinations.length) return;
@@ -47,7 +47,7 @@ export const checkMemoRequired = async (
   try {
     reader = new LedgerEntries(input);
   } catch (cause) {
-    throw new E.FAILED_TO_CREATE_READER(cause);
+    throw new ERROR.FAILED_TO_CREATE_READER(cause);
   }
   let entries: (DataLedgerEntry | null)[];
   try {
@@ -60,7 +60,7 @@ export const checkMemoRequired = async (
       ),
     );
   } catch (cause) {
-    throw new E.FAILED_TO_READ_REQUIREMENTS(
+    throw new ERROR.FAILED_TO_READ_REQUIREMENTS(
       destinations.map(({ destination }) => destination),
       cause,
     );
@@ -68,7 +68,7 @@ export const checkMemoRequired = async (
   for (const [index, entry] of entries.entries()) {
     if (entry?.dataValue.length === 1 && entry.dataValue[0] === 49) {
       const { destination, operationIndex } = destinations[index];
-      throw new E.MEMO_REQUIRED(destination, operationIndex);
+      throw new ERROR.MEMO_REQUIRED(destination, operationIndex);
     }
   }
 };

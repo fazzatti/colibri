@@ -4,7 +4,7 @@ import { parseAccountId } from "@/common/helpers/xdr/parse-account-id.ts";
 import { parseAsset } from "@/common/helpers/xdr/parse-asset.ts";
 import { parseTrustLineAsset } from "@/common/helpers/xdr/parse-trustline-asset.ts";
 import { parseScVal } from "@/common/helpers/xdr/scval.ts";
-import * as E from "@/ledger-entries/error.ts";
+import * as ERROR from "@/ledger-entries/error.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import type { Api } from "stellar-sdk/rpc";
 import type {
@@ -145,7 +145,7 @@ function decodeSignerKey(key: xdr.SignerKey): SignerKeyView {
     }
 
     default:
-      throw new E.UNSUPPORTED_XDR_VARIANT("signer key", type);
+      throw new ERROR.UNSUPPORTED_XDR_VARIANT("signer key", type);
   }
 }
 
@@ -190,7 +190,7 @@ function decodeClaimPredicate(
         seconds: predicate.relBefore,
       };
     default:
-      throw new E.UNSUPPORTED_XDR_VARIANT(
+      throw new ERROR.UNSUPPORTED_XDR_VARIANT(
         "claim predicate",
         (predicate as { type: string }).type,
       );
@@ -227,7 +227,7 @@ function decodeContractExecutable(
         tag: Uint8Array.from(executable.externalRef.tag.bytes),
       };
     default:
-      throw new E.UNSUPPORTED_XDR_VARIANT(
+      throw new ERROR.UNSUPPORTED_XDR_VARIANT(
         "contract executable",
         (executable as { type: string }).type,
       );
@@ -465,7 +465,7 @@ export function detectLedgerEntryKindFromKey(
     case "ttl":
       return "ttl";
     default:
-      throw new E.UNSUPPORTED_XDR_VARIANT(
+      throw new ERROR.UNSUPPORTED_XDR_VARIANT(
         "ledger key",
         (key as { type: string }).type,
       );
@@ -509,7 +509,7 @@ export function decodeLedgerEntry(
     case "ttl":
       return decodeTtlEntry(entry, entry.val.ttl);
     default:
-      throw new E.UNSUPPORTED_XDR_VARIANT(
+      throw new ERROR.UNSUPPORTED_XDR_VARIANT(
         "ledger entry",
         (entry.val as { type: string }).type,
       );
@@ -527,7 +527,7 @@ export function decodeLedgerEntryForKey(
   const decoded = decodeLedgerEntry(entry);
 
   if (decoded.type !== expected) {
-    throw new E.UNEXPECTED_LEDGER_ENTRY_TYPE(expected, decoded.type);
+    throw new ERROR.UNEXPECTED_LEDGER_ENTRY_TYPE(expected, decoded.type);
   }
 
   return decoded;
