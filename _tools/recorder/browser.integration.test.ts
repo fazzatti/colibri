@@ -101,10 +101,24 @@ describe("standalone HTML evidence report", () => {
         await page.evaluate(() => Reflect.get(globalThis, "pwned")),
         undefined,
       );
+      await page.evaluate(
+        `Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async value => { globalThis.copiedHash = value; } } });`,
+      );
       await page.getByRole("button", { name: "Copy hash", exact: true })
         .click();
-      await page.locator("#toast").filter({ hasText: "Hash" }).waitFor();
-      assertStringIncludes(await page.locator("#toast").innerText(), "Hash");
+      await page.getByRole("button", { name: "Copied", exact: true }).waitFor();
+      assertEquals(
+        await page.evaluate(() => Reflect.get(globalThis, "copiedHash")),
+        hash,
+      );
+      assertEquals(await page.locator("#toast").count(), 0);
+      assertStringIncludes(
+        await page.locator(".hash .copy-feedback").innerText(),
+        "Hash copied",
+      );
+      await page.getByRole("button", { name: "Copy hash", exact: true })
+        .waitFor();
+      assertEquals(await page.locator(".copy-feedback").innerText(), "");
       const deepLink = page.url();
       await page.reload();
       assertEquals(page.url(), deepLink);
@@ -113,8 +127,49 @@ describe("standalone HTML evidence report", () => {
         "</script>",
       );
       await page.locator("#profiling-tab").click();
+      assertEquals(
+        await page.locator("#profile-mode").inputValue(),
+        "executions",
+      );
+      assertEquals(await page.locator("#profile-body tr").count(), 3);
+      assertEquals(
+        await page.locator(
+          '#profile-body tr:first-child [data-metric="duration"]',
+        ).innerText(),
+        "30",
+      );
+      assertEquals(await page.locator("#metric-set").count(), 0);
+      for (
+        const title of [
+          "Instructions (budget)",
+          "Read-only entries",
+          "Read-write entries",
+          "Disk read (bytes)",
+          "Write (bytes)",
+          "Minimum resource fee (stroops)",
+          "Confirmed fee charged (stroops)",
+        ]
+      ) {
+        assertEquals(
+          await page.getByRole("button", { name: title, exact: true }).count(),
+          1,
+        );
+      }
+      await page.getByRole("button", { name: "Duration (ms)", exact: true })
+        .click();
+      assertEquals(
+        await page.locator(
+          '#profile-body tr:first-child [data-metric="duration"]',
+        ).innerText(),
+        "10",
+      );
+      await page.locator("#profile-mode").selectOption("groups");
       assertEquals(await page.locator("#group-body tr").count(), 1);
       await page.locator("#group-body button[data-group]").click();
+      assertStringIncludes(
+        await page.locator("#profile-content").innerText(),
+        "3 recorded calls",
+      );
       assertStringIncludes(
         await page.locator("#profile-content").innerText(),
         "Standard deviation",
@@ -123,34 +178,7 @@ describe("standalone HTML evidence report", () => {
         await page.locator("#profile-content").innerText(),
         "1,200",
       );
-      assertEquals(
-        await page.locator("#profile-content details[open]").count(),
-        0,
-      );
       await page.locator("#profile-mode").selectOption("executions");
-      assertEquals(await page.locator("#profile-body tr").count(), 3);
-      assertEquals(
-        await page.locator("#profile-body tr:first-child td").last()
-          .innerText(),
-        "30",
-      );
-      await page.getByRole("button", { name: "Duration (ms)", exact: true })
-        .click();
-      assertEquals(
-        await page.locator("#profile-body tr:first-child td").last()
-          .innerText(),
-        "10",
-      );
-      await page.locator("#metric-set").selectOption("resources");
-      assertStringIncludes(
-        await page.locator("#profile-content").innerText(),
-        "Read-only entries",
-      );
-      await page.locator("#metric-set").selectOption("fees");
-      assertStringIncludes(
-        await page.locator("#profile-content").innerText(),
-        "Confirmed fee charged",
-      );
       await page.locator("#search").fill("no matches");
       assert(await page.locator("#profile-empty").isVisible());
       await page.locator("#search").fill("CDEMO");
@@ -238,10 +266,6 @@ describe("standalone HTML evidence report", () => {
       assert(await page.locator('[data-record="test-2999"]').isVisible());
       await page.locator("#clear-context").click();
       await page.locator("#search").fill("test 1999");
-      await page.locator("#file-body").getByRole("button", {
-        name: "Expand package-6",
-        exact: true,
-      }).click();
       await page.locator(
         '#file-body button[title="package-6/index.unit.test.ts"]',
       ).click();
@@ -297,6 +321,7 @@ describe("standalone HTML evidence report", () => {
     try {
       await page.setContent(renderReport(report));
       await page.locator("#profiling-tab").click();
+      await page.locator("#profile-mode").selectOption("groups");
       assertEquals(await page.locator("#group-body tr").count(), 10);
       await page.locator("#cross-files").check();
       assertEquals(await page.locator("#group-body tr").count(), 9);
@@ -345,7 +370,19 @@ describe("standalone HTML evidence report", () => {
     try {
       await page.setContent(renderReport(report));
       await page.locator('#file-body button[title="token.test.ts"]').click();
-      await page.locator('#detail [data-record="suite"]').click();
+      await page.locator("#test-body tr").filter({
+        has: page.locator('[data-suite="suite"]'),
+      }).locator("td").nth(2).click();
+      assertEquals(
+        await page.locator("#detail h2").innerText(),
+        "token.test.ts",
+      );
+      assertEquals(
+        await page.locator('#detail [data-suite="suite"]').getAttribute(
+          "aria-expanded",
+        ),
+        "true",
+      );
       assertEquals(
         await page.locator('#detail [data-record="hook"]').count(),
         1,
@@ -376,6 +413,7 @@ describe("standalone HTML evidence report", () => {
     try {
       await page.setContent(renderReport(report));
       await page.locator("#profiling-tab").click();
+      await page.locator("#profile-mode").selectOption("groups");
       await page.locator("#group-body button[data-group]").click();
       const instructions = page.locator("#profile-content tr").filter({
         has: page.getByRole("cell", {
@@ -385,21 +423,229 @@ describe("standalone HTML evidence report", () => {
       }).first();
       assertStringIncludes(await instructions.innerText(), "2 / 3");
       await page.locator("#profile-mode").selectOption("executions");
-      await page.locator("#metric-set").selectOption("fees");
+      await page.getByRole("button", {
+        name: "Minimum resource fee (stroops)",
+        exact: true,
+      }).click();
       assertEquals(
-        await page.locator("#profile-body tr:first-child td").nth(3)
+        await page.locator('#profile-body tr:first-child [data-metric="fee"]')
           .innerText(),
         "9007199254740993",
       );
       assertEquals(
-        await page.locator("#profile-body tr:last-child td").nth(3).innerText(),
-        "—",
-      );
-      assertEquals(
-        await page.locator("#profile-body tr:first-child td").nth(4)
+        await page.locator('#profile-body tr:last-child [data-metric="fee"]')
           .innerText(),
         "—",
       );
+      assertEquals(
+        await page.locator(
+          '#profile-body tr:first-child [data-metric="charged"]',
+        )
+          .innerText(),
+        "—",
+      );
+    } finally {
+      await page.close();
+    }
+  });
+  it("expands whole folder and suite rows without duplicate view links or directory pages", async () => {
+    const report = fixture();
+    for (const r of report.records) {
+      r.file = "file:///repo/core/contract/read/index.test.ts";
+    }
+    report.records.push({
+      ...report.records[0],
+      id: "other",
+      file: "file:///repo/react/wallet/index.test.ts",
+    });
+    const page = await browser.newPage();
+    try {
+      await page.setContent(renderReport(report));
+      const context = page.locator("#file-body tr").filter({
+        has: page.getByRole("button", {
+          name: "Expand core/contract/read",
+          exact: true,
+        }),
+      });
+      // Clicking a count cell must perform the same expansion as clicking the name.
+      await context.locator("td").nth(1).click();
+      assertEquals(
+        await page.locator("#summary-view h2").innerText(),
+        "All contexts",
+      );
+      await page.locator(
+        '#file-body [data-file="file:///repo/core/contract/read/index.test.ts"]',
+      ).click();
+      assertEquals(
+        await page.locator('#tree [aria-current="page"]').count(),
+        1,
+      );
+      assertEquals(
+        await page.locator("#tree button").filter({ hasText: /^View / })
+          .count(),
+        0,
+      );
+      const selected = page.locator('#tree [aria-current="page"]');
+      assert(
+        await selected.evaluate((node) => {
+          const style = Reflect.get(globalThis, "getComputedStyle")(node);
+          return style.borderLeftWidth === "3px" &&
+            style.backgroundColor !== "rgba(0, 0, 0, 0)";
+        }),
+      );
+      const before = await page.locator("#detail").innerText();
+      const folder = page.locator('#tree [data-folder="core/contract/read"]');
+      await folder.click();
+      assertEquals(await folder.getAttribute("aria-expanded"), "false");
+      assertEquals(await page.locator("#detail").innerText(), before);
+      await page.locator("#clear-context").click();
+      assertEquals(await page.locator("#detail [aria-expanded]").count(), 0);
+      assertEquals(await page.locator("#file-body tr").count(), 2);
+      assertStringIncludes(
+        await page.locator("#file-body").innerText(),
+        "core/contract/read/index.test.ts",
+      );
+    } finally {
+      await page.close();
+    }
+  });
+  it("filters every measurement with ranges, restores range state and keeps numeric columns aligned", async () => {
+    const report = fixture();
+    report.records[2].execution!.feeCharged = "9007199254740993";
+    report.records[3].execution!.feeCharged = "9007199254740992";
+    const path = join(directory, "ranges.html");
+    await Deno.writeTextFile(path, renderReport(report));
+    const page = await browser.newPage({
+      viewport: { width: 1440, height: 960 },
+    });
+    const errors: string[] = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    try {
+      await page.goto(pathToFileURL(path).href);
+      await page.locator("#profiling-tab").click();
+      for (
+        const [key, min, max, count] of [
+          ["duration", "20", "20", 1],
+          ["instructions", "1200", "1400", 2],
+          ["reads", "2", "2", 3],
+          ["writes", "0", "0", 3],
+          ["readBytes", "500", "500", 3],
+          ["writeBytes", "0", "0", 3],
+          ["fee", "120", "120", 3],
+          ["charged", "9007199254740993", "9007199254740993", 1],
+        ] as const
+      ) {
+        await page.locator("#range-" + key + "Min").fill(min);
+        await page.locator("#range-" + key + "Max").fill(max);
+        assertEquals(
+          await page.locator("#profile-body tr").count(),
+          count,
+          key,
+        );
+        await page.locator("#clear-filters").click();
+      }
+      await page.locator("#range-durationMin").fill("21");
+      await page.locator("#range-durationMax").fill("20");
+      assertEquals(
+        await page.locator("#range-durationMin").getAttribute("aria-invalid"),
+        "true",
+      );
+      assert(await page.locator("#profile-empty").isVisible());
+      await page.locator("#clear-filters").click();
+      await page.locator("#range-feeMin").fill("1.5");
+      assertEquals(
+        await page.locator("#range-feeMin").getAttribute("aria-invalid"),
+        "true",
+      );
+      await page.locator("#clear-filters").click();
+      await page.locator("#range-instructionsMin").fill("1200");
+      await page.locator("#profile-mode").selectOption("groups");
+      assertEquals(await page.locator("#group-body tr").count(), 1);
+      assertEquals(
+        await page.locator("#group-body tr td").nth(1).innerText(),
+        "2",
+      );
+      await page.locator("#group-body [data-group]").click();
+      assertStringIncludes(
+        await page.locator("#profile-content").innerText(),
+        "2 recorded calls",
+      );
+      assertEquals(await page.locator("#profile-body tr").count(), 2);
+      await page.locator("#profile-mode").selectOption("executions");
+      await page.locator("#range-instructionsMin").fill("1400");
+      await page.reload();
+      assertEquals(
+        await page.locator("#range-instructionsMin").inputValue(),
+        "1400",
+      );
+      assertEquals(await page.locator("#profile-body tr").count(), 1);
+      await page.locator('#profile-body [data-record="execution-2"]').click();
+      await page.goBack();
+      assertEquals(
+        await page.locator("#range-instructionsMin").inputValue(),
+        "1400",
+      );
+      assertEquals(await page.locator("#profile-body tr").count(), 1);
+      assert(
+        await page.evaluate(`(() => {
+        const table = document.querySelector('.profile-table');
+        const headers = [...table.querySelectorAll('th')];
+        const cells = [...table.querySelector('tbody tr').children];
+        return cells.every((td, i) => !td.classList.contains('num') ||
+          getComputedStyle(td).textAlign === 'right' && getComputedStyle(headers[i]).textAlign === 'right') &&
+          getComputedStyle(cells[1]).borderRightWidth === '1px' &&
+          getComputedStyle(headers[0]).position === 'sticky' &&
+          getComputedStyle(cells[0]).position === 'sticky' && cells[0].getBoundingClientRect().width <= 301;
+      })()`),
+      );
+      await page.setViewportSize({ width: 390, height: 844 });
+      assert(
+        await page.evaluate(
+          "document.documentElement.scrollWidth <= innerWidth",
+        ),
+      );
+      assertEquals(errors, []);
+    } finally {
+      await page.close();
+    }
+  });
+  it("keeps clipboard failure local and clears feedback when leaving the selected call", async () => {
+    const page = await browser.newPage();
+    try {
+      await page.setContent(renderReport(fixture()));
+      await page.locator('#file-body [data-file="token.test.ts"]').click();
+      await page.locator('#detail [data-record="test"]').click();
+      await page.locator('#detail [data-record="execution-0"]').click();
+      for (
+        const title of [
+          "Overview",
+          "Measurements",
+          "Inputs and result",
+          "Authorization",
+        ]
+      ) {
+        assert(
+          await page.getByRole("heading", { name: title, exact: true })
+            .isVisible(),
+        );
+      }
+      await page.evaluate(
+        `Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async () => { throw new Error("Denied"); } } });`,
+      );
+      await page.getByRole("button", { name: "Copy hash", exact: true })
+        .click();
+      await page.locator(".hash .copy-feedback").filter({
+        hasText: "Clipboard unavailable",
+      }).waitFor();
+      assertEquals(
+        await page.getByRole("button", { name: "Copied", exact: true }).count(),
+        0,
+      );
+      assertEquals(await page.evaluate("getSelection().toString()"), hash);
+      await page.locator("#summary-tab").click();
+      assertEquals(await page.locator(".copy-feedback:visible").count(), 0);
+      await page.locator("#evidence-tab").click();
+      assertEquals(await page.locator(".copy-feedback").innerText(), "");
     } finally {
       await page.close();
     }
@@ -432,7 +678,7 @@ describe("standalone HTML evidence report", () => {
       await page.locator("#evidence-tab").click();
       assertStringIncludes(
         await page.locator("#detail").innerText(),
-        "Choose a context",
+        "Select a file",
       );
     } finally {
       await page.close();

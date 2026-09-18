@@ -26,9 +26,17 @@ while (prefix.length && !files.every((f) => f.startsWith(prefix.join("/") + "/")
 const fileLabel = (f) => prefix.length ? f.slice(prefix.join("/").length + 1) : f;
 const basename = (f) => fileLabel(f).split("/").at(-1);
 const defaults = { tab: "summary", scope: "", file: "", record: "", q: "",
-  test: "", outcome: "", chain: "", client: "", method: "", mode: "groups",
-  metrics: "timing", cross: "", group: "", page: "0", sort: "duration", desc: "1", order: "duration", reverse: "1" };
-let state = { ...defaults }, expanded = new Set();
+  test: "", outcome: "", chain: "", client: "", method: "", mode: "executions", cross: "", group: "", page: "0", sort: "duration", desc: "1", order: "duration", reverse: "1" };
+const metricColumns = [
+  ["duration", "Duration (ms)"], ["instructions", "Instructions (budget)"],
+  ["reads", "Read-only entries"], ["writes", "Read-write entries"],
+  ["readBytes", "Disk read (bytes)"], ["writeBytes", "Write (bytes)"],
+  ["fee", "Minimum resource fee (stroops)"], ["charged", "Confirmed fee charged (stroops)"]
+];
+for (const [key] of metricColumns) { defaults[key + "Min"] = ""; defaults[key + "Max"] = ""; }
+let state = { ...defaults };
+const expanded = new Set(), foldersOpen = new Set(), suitesOpen = new Set();
+let sidebarFile = "";
 const pageSize = 50;
 function readState() {
   state = { ...defaults };
@@ -37,11 +45,13 @@ function readState() {
   if (!["summary", "evidence", "profiling"].includes(state.tab)) state.tab = "summary";
   if (!files.includes(state.file)) state.file = "";
   if (!byId.has(state.record)) state.record = "";
-  if (!["groups", "executions"].includes(state.mode)) state.mode = "groups";
-  if (!["timing", "resources", "fees"].includes(state.metrics)) state.metrics = "timing";
+  if (!["groups", "executions"].includes(state.mode)) state.mode = "executions";
+  if (!metricColumns.some(([key]) => key === state.sort)) state.sort = "duration";
+  if (!["count", ...metricColumns.map(([key]) => key)].includes(state.order)) state.order = "duration";
   state.page = String(Math.max(0, Number.parseInt(state.page) || 0));
 }
 function navigate(change, replace = false) {
+  const newView = ["tab", "file", "record", "group"].some((key) => key in change && change[key] !== state[key]);
   state = { ...state, ...change };
   const params = new URLSearchParams();
   for (const key of Object.keys(defaults)) if (state[key] !== defaults[key]) params.set(key, state[key]);
@@ -50,6 +60,7 @@ function navigate(change, replace = false) {
   history.replaceState(position, "");
   history[replace ? "replaceState" : "pushState"](position, "", hash);
   render();
+  if (newView) scrollTo(0, 0);
 }
 function openFile(file, tab = "evidence") {
   navigate({ tab, scope: "", file, record: "", group: "", page: "0" });
@@ -129,19 +140,55 @@ function paginate(host, rows, draw) {
     (page * pageSize + 1) + "–" + Math.min((page + 1) * pageSize, rows.length) + " of " + rows.length : "0 results"), next);
   host.append(pager);
 }
+// A single native button supplies keyboard access; the entire table row shares its action.
+function actionRow(row, control) {
+  row.classList.add("action-row");
+  row.onclick = (event) => { if (!event.target.closest("button, a, input, select")) control.click(); };
+}
+function disclosureLabel(control, name, open, kind) {
+  const arrow = el("span", open === undefined ? "" : open ? "▾" : "▸", "arrow");
+  arrow.setAttribute("aria-hidden", "true");
+  const icon = el("span", undefined, "item-icon " + kind); icon.setAttribute("aria-hidden", "true");
+  control.replaceChildren(arrow, icon, el("span", name, "row-name"));
+  if (open !== undefined) control.setAttribute("aria-expanded", String(open));
+}
+function fileChildren(visible, path = "") {
+  const children = new Map();
+  for (const file of visible) {
+    const label = fileLabel(file);
+    if (path && !label.startsWith(path + "/")) continue;
+    const rest = path ? label.slice(path.length + 1) : label;
+    const name = rest.split("/")[0], directory = rest.includes("/");
+    const key = directory ? (path ? path + "/" : "") + name : file;
+    if (!children.has(key)) children.set(key, { key, name, directory, files: [] });
+    children.get(key).files.push(file);
+  }
+  return [...children.values()].sort((a, b) => Number(b.directory) - Number(a.directory) || a.name.localeCompare(b.name));
+}
+function compactFolder(child) {
+  while (child.directory) {
+    const nested = fileChildren(child.files, child.key);
+    if (nested.length !== 1 || !nested[0].directory) break;
+    child = { ...nested[0], name: child.name + "/" + nested[0].name };
+  }
+  return child;
+}
 function breadcrumbs() {
   const host = $("breadcrumbs"); host.replaceChildren();
   host.append(button("All contexts", () => navigate({ scope: "", file: "", record: "", group: "", page: "0" })));
   const path = state.file ? fileLabel(state.file).split("/").slice(0, -1) : state.scope.split("/").filter(Boolean);
-  path.forEach((part, i) => {
-    host.append(el("span", "/", "muted"), button(part, () => navigate({ scope: path.slice(0, i + 1).join("/"), file: "", record: "", group: "", page: "0" })));
+  path.forEach((part) => {
+    host.append(el("span", "/", "muted"), el("span", part, "muted"));
   });
   if (state.file) host.append(el("span", "/", "muted"), button(basename(state.file), () => navigate({ record: "", group: "", page: "0" })));
   const record = byId.get(state.record);
   if (record) {
     const trail = [], seen = new Set([record.id]); let parent = byId.get(record.parentId) || byId.get(record.testId);
     while (parent && !seen.has(parent.id)) { seen.add(parent.id); trail.unshift(parent); parent = byId.get(parent.parentId) || byId.get(parent.testId); }
-    for (const r of trail) host.append(el("span", "/", "muted"), button(r.name, () => openRecord(r)));
+    for (const r of trail) host.append(el("span", "/", "muted"), button(r.name, () => {
+      if (r.kind !== "suite") { openRecord(r); return; }
+      suitesOpen.add(r.id); openFile(r.file);
+    }));
     host.append(el("span", "/", "muted"), el("strong", record.name));
   }
 }

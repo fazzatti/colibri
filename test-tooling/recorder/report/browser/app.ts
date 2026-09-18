@@ -8,7 +8,7 @@ function render() {
   $("summary-view").hidden = state.tab !== "summary";
   $("evidence").hidden = state.tab !== "evidence";
   $("profiles").hidden = state.tab !== "profiling";
-  const inputs = { search: "q", "test-status": "test", outcome: "outcome", chain: "chain", client: "client", method: "method", "profile-mode": "mode", "metric-set": "metrics" };
+  const inputs = { search: "q", "test-status": "test", outcome: "outcome", chain: "chain", client: "client", method: "method", "profile-mode": "mode" };
   for (const [id, key] of Object.entries(inputs)) $(id).value = state[key];
   const activeFilters = [state.test, state.outcome, state.chain, state.client, state.method].filter(Boolean).length;
   $("filter-summary").textContent = activeFilters ? "Filters (" + activeFilters + ")" : "Filters";
@@ -17,13 +17,33 @@ function render() {
   $("clear-context").hidden = !state.scope && !state.file && !state.record;
   $("filter-notice").textContent = state.q || state.test || state.outcome || state.chain || state.client || state.method
     ? "Filters active across report views." : "";
+  if (metricColumns.some(([key]) => metricRange(key).active)) $("filter-notice").textContent += " Measurement ranges active in Profiling.";
   const focused = document.activeElement;
+  const rangeId = focused?.id?.startsWith("range-") ? focused.id : "";
+  const cursor = rangeId ? [focused.selectionStart, focused.selectionEnd] : null;
+  const profileScroll = document.querySelector(".profile-scroll");
+  const scroll = rangeId && profileScroll ? [profileScroll.scrollLeft, profileScroll.scrollTop] : null;
   const restore = focused?.getAttribute("aria-label");
+  const identity = focused?.dataset.context || focused?.dataset.suite;
+  const identityKey = focused?.dataset.context ? "context" : "suite";
+  if (state.tab !== "summary") $("summary-view").replaceChildren();
+  if (state.tab !== "evidence") { $("detail").replaceChildren(); $("tree").replaceChildren(); }
+  if (state.tab !== "profiling") $("profile-content").replaceChildren();
   if (state.tab === "summary") summaryView();
   if (state.tab === "evidence") evidenceView();
   if (state.tab === "profiling") profileView();
-  if (focused && !focused.isConnected) {
-    const target = restore && [...document.querySelectorAll("button[aria-label]")].find((n) => n.getAttribute("aria-label") === restore);
+  for (const table of document.querySelectorAll("table")) {
+    const sample = table.querySelector("tbody tr"), headings = table.querySelectorAll("thead tr:first-child th");
+    if (sample) [...sample.children].forEach((td, i) => { if (td.classList.contains("num")) headings[i]?.classList.add("num"); });
+  }
+  if (rangeId && $(rangeId)) {
+    $(rangeId).focus({ preventScroll: true }); $(rangeId).setSelectionRange(...cursor);
+    const nextScroll = document.querySelector(".profile-scroll");
+    if (scroll && nextScroll) { nextScroll.scrollLeft = scroll[0]; nextScroll.scrollTop = scroll[1]; }
+  } else if (focused && !focused.isConnected) {
+    const target = identity
+      ? [...document.querySelectorAll("button[data-" + identityKey + "]")].find((n) => n.dataset[identityKey] === identity)
+      : restore && [...document.querySelectorAll("button[aria-label]")].find((n) => n.getAttribute("aria-label") === restore);
     if (target) target.focus();
     else { const heading = document.querySelector("section:not([hidden]) h2"); if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); } }
   }
@@ -33,13 +53,13 @@ for (const [id, key] of [["test-status", "test"], ["outcome", "outcome"], ["chai
   $(id).onchange = () => navigate({ [key]: $(id).value, page: "0", group: "" });
 }
 $("search").oninput = () => navigate({ q: $("search").value, page: "0", group: "" }, true);
-$("metric-set").onchange = () => {
-  const metrics = $("metric-set").value;
-  navigate({ metrics, sort: metricSets[metrics][0][0], page: "0" });
-};
 $("cross-files").onchange = () => navigate({ cross: $("cross-files").checked ? "1" : "", group: "", page: "0" });
 $("clear-context").onclick = () => navigate({ scope: "", file: "", record: "", group: "", page: "0" });
-$("clear-filters").onclick = () => navigate({ q: "", test: "", outcome: "", chain: "", client: "", method: "", group: "", page: "0" });
+$("clear-filters").onclick = () => {
+  const ranges = {};
+  for (const [key] of metricColumns) { ranges[key + "Min"] = ""; ranges[key + "Max"] = ""; }
+  navigate({ ...ranges, q: "", test: "", outcome: "", chain: "", client: "", method: "", group: "", page: "0" });
+};
 for (const field of ["client", "method"]) {
   for (const value of [...new Set(report.records.map((r) => r.execution?.[field]).filter(Boolean))].sort()) {
     const option = el("option", value); option.value = value; $(field).append(option);

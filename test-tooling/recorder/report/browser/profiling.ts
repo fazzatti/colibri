@@ -1,119 +1,98 @@
-/** Browsable operation groups and paginated execution measurements. */
+/** Individual pipeline calls by default, with explicit optional comparison groups. */
 export const profilingScript: string = String.raw`
-function measure(r, key) {
-  const e = r.execution, p = e.simulations.at(-1);
-  return ({ duration: r.durationMs, instructions: p?.instructions, reads: p?.readOnlyEntries,
-    writes: p?.readWriteEntries, readBytes: p?.diskReadBytes, writeBytes: p?.writeBytes,
-    fee: p?.minResourceFee, charged: e.feeCharged })[key];
-}
-const metricSets = {
-  timing: [["duration", "Duration (ms)"]],
-  resources: [["instructions", "Instructions (budget)"], ["reads", "Read-only entries"],
-    ["writes", "Read-write entries"], ["readBytes", "Disk read (bytes)"], ["writeBytes", "Write (bytes)"]],
-  fees: [["fee", "Minimum resource fee (stroops)"], ["charged", "Confirmed fee charged (stroops)"]]
-};
-function stats(values) {
-  values = values.filter((v) => typeof v === "number" && Number.isFinite(v)).sort((a, b) => a - b);
-  if (!values.length) return;
-  let mean = 0, m2 = 0;
-  values.forEach((v, i) => { const delta = v - mean; mean += delta / (i + 1); m2 += delta * (v - mean); });
-  return { count: values.length, min: values[0], max: values.at(-1), mean,
-    median: values[Math.ceil(values.length * .5) - 1], p95: values[Math.ceil(values.length * .95) - 1],
-    variance: m2 / values.length, deviation: Math.sqrt(m2 / values.length) };
-}
 function groupKey(r) {
   const e = r.execution;
   return JSON.stringify([state.cross ? null : r.file, e.network ?? null, e.client ?? null,
     e.contract ?? null, e.method ?? null, e.kind, e.operations, r.status, e.chain,
-    // Unknown identity is not evidence that two unrelated executions are comparable.
+    // Missing identity cannot establish that two calls are comparable.
     !e.network || (["read", "invoke"].includes(e.kind) && (!e.contract || !e.method)) || (!e.method && !e.operations.length) ? r.id : null]);
 }
 function operationName(r) { const e = r.execution; return e.kind + " " + (e.method || e.operations.join(", ") || "unknown operation"); }
-function executionTable(host, rows) {
-  const columns = metricSets[state.metrics];
-  const body = table(host, ["Execution / test", "File", "Pipeline / chain outcome", ...columns.map(([, title]) => title)]);
-  body.id = "profile-body";
-  const headings = body.parentNode.querySelectorAll("th");
+function callContext(r) {
+  const e = r.execution, text = [fileLabel(r.file), e.client || "Unnamed client", ownerTest(r)?.name].filter(Boolean).join(" · ");
+  const context = el("small", text, "context-label compact-context"); context.title = text;
+  return context;
+}
+function profileTable(host, groups = false) {
+  const titles = groups ? ["Call group", "Recorded calls", "Pipeline outcome", "Chain outcome"] : ["Recorded pipeline call", "Pipeline outcome", "Chain outcome"];
+  const columns = metricColumns.map(([key, title]) => [key, groups ? "Median " + title.toLowerCase() : title]);
+  if (groups) columns.splice(1, 0, ["range", "Duration min–max (ms)"]);
+  const body = table(host, [...titles, ...columns.map(([, title]) => title)]);
+  const node = body.parentNode; node.className = "profile-table";
+  node.parentNode.classList.add("profile-scroll"); node.parentNode.tabIndex = 0;
+  node.parentNode.setAttribute("aria-label", "Measurements table; scroll horizontally for all columns");
+  const headings = node.querySelectorAll("th"); node.style.setProperty("--columns", headings.length);
   columns.forEach(([key, title], i) => {
-    headings[i + 3].replaceChildren(button(title, () => navigate({ sort: key, desc: state.sort === key && state.desc ? "" : "1", page: "0" }), "text-button"));
-    headings[i + 3].setAttribute("aria-sort", state.sort === key ? state.desc ? "descending" : "ascending" : "none");
+    const th = headings[i + titles.length];
+    if (key === "range") { th.classList.add("num", "metric-column"); return; }
+    measurementHeading(th, key, title, groups);
+    measurementFilters(th, key, metricColumns.find(([id]) => id === key)[1]);
   });
-  const sorted = [...rows].sort((a, b) => {
-    const x = measure(a, state.sort), y = measure(b, state.sort);
-    if (x === undefined) return y === undefined ? 0 : 1;
-    if (y === undefined) return -1;
-    const comparison = ["fee", "charged"].includes(state.sort)
-      ? BigInt(x) < BigInt(y) ? -1 : BigInt(x) > BigInt(y) ? 1 : 0 : x - y;
-    return comparison * (state.desc ? -1 : 1);
-  });
+  if (groups) measurementHeading(headings[1], "count", "Recorded calls", true);
+  return body;
+}
+function executionTable(host, rows) {
+  const body = profileTable(host); body.id = "profile-body";
+  const sorted = [...rows].sort((a, b) => sortMetric(measure(a, state.sort), measure(b, state.sort), state.sort, state.desc));
   paginate(host, sorted, (r) => {
-    const row = el("tr"), name = el("div"); name.append(recordLink(r));
-    const test = ownerTest(r);
-    if (test) { const link = recordLink(test); link.classList.add("context-label"); name.append(link); }
-    cell(row, name); cell(row, button(fileLabel(r.file), () => openFile(r.file), "text-button"));
-    const outcome = el("div"); outcome.append(badge(r.status), el("small", r.execution.chain, "context-label")); cell(row, outcome);
-    for (const [key] of columns) { const v = measure(r, key); cell(row, typeof v === "number" ? number(v) : v, "num"); }
+    const row = el("tr"), name = el("div");
+    const link = recordLink(r); link.textContent = operationName(r); link.title = r.name;
+    name.append(link, callContext(r)); cell(row, name); actionRow(row, link);
+    cell(row, badge(r.status)); cell(row, r.execution.chain);
+    for (const [key] of metricColumns) { const td = cell(row, formatMetric(measure(r, key)), "num"); td.dataset.metric = key; }
     body.append(row);
   });
 }
-function metricDetails(host, rows) {
-  const body = table(host, ["Metric", "Samples / executions", "Median", "Min–max", "Standard deviation"]);
-  const more = el("details", undefined, "data-section"); more.append(el("summary", "More statistics: mean, p95 and variance"));
-  const advanced = table(more, ["Metric", "Mean", "p95", "Population variance (squared units)"]);
-  for (const [key, title] of [...metricSets.timing, ...metricSets.resources]) {
-    const s = stats(rows.map((r) => measure(r, key))), row = el("tr"), extra = el("tr");
-    cell(row, title); cell(row, (s?.count || 0) + " / " + rows.length, "num");
-    cell(row, number(s?.median), "num"); cell(row, s ? number(s.min) + "–" + number(s.max) : "—", "num"); cell(row, number(s?.deviation), "num"); body.append(row);
-    cell(extra, title); cell(extra, number(s?.mean), "num"); cell(extra, number(s?.p95), "num"); cell(extra, number(s?.variance), "num"); advanced.append(extra);
-  }
-  host.append(el("p", "Standard deviation describes spread in the metric's own units. Each sample count excludes missing values. A single sample cannot demonstrate repeatability; p95 is most useful with many samples."), more);
-  // Keep fee comparisons exact: do not coerce potentially large stroop integers to Number.
-  const fees = el("details", undefined, "data-section"); fees.append(el("summary", "Fee ranges (exact stroops)"));
-  const feeBody = table(fees, ["Metric", "Samples / executions", "Minimum", "Maximum"]);
-  for (const [key, title] of metricSets.fees) {
-    const values = rows.map((r) => measure(r, key)).filter((v) => v !== undefined).map(BigInt).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
-    const row = el("tr"); cell(row, title); cell(row, values.length + " / " + rows.length); cell(row, values[0]?.toString()); cell(row, values.at(-1)?.toString()); feeBody.append(row);
-  }
-  host.append(fees);
+function groupDefinition(host, members) {
+  const r = members[0], e = r.execution;
+  host.append(el("h3", operationName(r) + " · " + members.length + " recorded " + (members.length === 1 ? "call" : "calls")));
+  const facts = [
+    ["Files", state.cross ? [...new Set(members.map((item) => fileLabel(item.file)))].join(", ") : fileLabel(r.file)],
+    ["Network", e.network || "Unavailable — this call stays separate"], ["Client label", e.client || "Unnamed"],
+    ["Contract", e.contract || "Unavailable / not applicable"], ["Method", e.method || "Unavailable / not applicable"],
+    ["Kind / operation sequence", e.kind + " / " + e.operations.join(", ")],
+    ["Pipeline outcome", r.status], ["Chain outcome", e.chain]
+  ];
+  factsTable(host, facts);
+  host.append(el("p", "Every call below shares these recorded keys. Inputs may differ, and a client label does not prove object identity. These are observations, not an equivalent-workload benchmark."));
 }
 function profileView() {
   const host = $("profile-content"); host.replaceChildren();
-  const rows = report.records.filter((r) => r.execution && matches(r));
+  const candidates = report.records.filter((r) => r.execution && matches(r));
+  const rows = candidates.filter(withinRanges);
   $("profile-empty").hidden = rows.length > 0;
-  if (!rows.length) return;
+  $("profile-empty").textContent = metricColumns.some(([key]) => metricRange(key).invalid)
+    ? "Correct the highlighted measurement ranges below." : "No matching pipeline calls. Clear filters or select another context.";
+  $("group-explanation").hidden = state.mode !== "groups";
+  host.append(el("p", rows.length + " of " + candidates.length + " recorded pipeline calls match the measurement ranges. Ranges apply to individual calls before comparison groups are calculated.", "measurement-notice"));
   if (state.mode === "executions") { executionTable(host, rows); return; }
   const groups = new Map();
   for (const r of rows) { const key = groupKey(r); if (!groups.has(key)) groups.set(key, []); groups.get(key).push(r); }
   if (state.group && groups.has(state.group)) {
-    const members = groups.get(state.group), r = members[0], e = r.execution;
-    host.append(button("Back to operation groups", () => navigate({ group: "", page: "0" })), el("h3", operationName(r)));
-    const definition = el("dl");
-    for (const [key, value] of [["Files", state.cross ? "Across files (explicitly enabled)" : fileLabel(r.file)],
-      ["Network", e.network || "Unavailable — this execution stays separate"], ["Client", e.client || "Unnamed"],
-      ["Contract", e.contract || "Unavailable / not applicable"], ["Method", e.method || "Unavailable / not applicable"],
-      ["Kind / operations", e.kind + " / " + e.operations.join(", ")], ["Pipeline / chain", r.status + " / " + e.chain]]) definition.append(el("dt", key), el("dd", value));
-    host.append(definition, el("p", "These keys identify this group. Inputs may differ; measurements describe the captured executions, not an equivalent-workload benchmark."));
-    metricDetails(host, members); host.append(el("h3", "Executions in this group")); executionTable(host, members); return;
+    const members = groups.get(state.group);
+    host.append(button("Back to comparison groups", () => navigate({ group: "", page: "0" })));
+    groupDefinition(host, members); metricDetails(host, members);
+    host.append(el("h3", "Individual calls in this group")); executionTable(host, members); return;
   }
-  const body = table(host, ["Operation / context", "Executions", "Median (ms)", "Duration range (ms)", "Pipeline / chain outcome"]);
-  body.id = "group-body";
-  const headings = body.parentNode.querySelectorAll("th");
-  for (const [index, key, label] of [[0, "name", "Operation / context"], [1, "count", "Executions"], [2, "duration", "Median (ms)"]]) {
-    headings[index].replaceChildren(button(label, () => navigate({ order: key, reverse: state.order === key && state.reverse ? "" : "1", page: "0" }), "text-button"));
-    headings[index].setAttribute("aria-sort", state.order === key ? state.reverse ? "descending" : "ascending" : "none");
-  }
+  const body = profileTable(host, true); body.id = "group-body";
   const entries = [...groups].sort((a, b) => {
-    const metric = (members) => state.order === "count" ? members.length : stats(members.map((r) => r.durationMs))?.median ?? -1;
-    const comparison = state.order === "name" ? operationName(a[1][0]).localeCompare(operationName(b[1][0])) : metric(a[1]) - metric(b[1]);
-    return comparison * (state.reverse ? -1 : 1);
+    const value = (members) => state.order === "count" ? members.length : medianMetric(members, state.order);
+    return sortMetric(value(a[1]), value(b[1]), state.order, state.reverse);
   });
   paginate(host, entries, ([key, members]) => {
     const r = members[0], e = r.execution, row = el("tr"), name = el("div");
     const link = button(operationName(r), () => navigate({ group: key, page: "0" }), "text-button"); link.dataset.group = key;
-    name.append(link, el("small", [state.cross ? new Set(members.map((r) => r.file)).size + " files" : fileLabel(r.file), e.client || "Unnamed client", e.network || "Network unavailable", e.contract].filter(Boolean).join(" · "), "context-label"));
-    cell(row, name); cell(row, number(members.length), "num");
-    const s = stats(members.map((r) => r.durationMs)); cell(row, number(s?.median), "num"); cell(row, s ? number(s.min) + "–" + number(s.max) : "—", "num");
-    const outcome = el("div"); outcome.append(badge(r.status), el("small", e.chain, "context-label")); cell(row, outcome); body.append(row);
+    const context = el("small", [state.cross ? new Set(members.map((r) => r.file)).size + " files" : fileLabel(r.file), e.client || "Unnamed client", e.contract].filter(Boolean).join(" · "), "context-label compact-context"); context.title = context.textContent;
+    name.append(link, context); cell(row, name); actionRow(row, link);
+    cell(row, number(members.length), "num"); cell(row, badge(r.status)); cell(row, e.chain);
+    for (const [metric] of metricColumns) {
+      cell(row, formatMetric(medianMetric(members, metric)), "num");
+      if (metric === "duration") {
+        const values = metricValues(members, metric);
+        cell(row, values.length ? number(values[0]) + "–" + number(values.at(-1)) : "—", "num");
+      }
+    }
+    body.append(row);
   });
 }
 `;

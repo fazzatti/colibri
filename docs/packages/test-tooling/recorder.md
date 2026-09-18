@@ -152,47 +152,72 @@ requests.
 
 ## Read the HTML report
 
-**Summary** is the initial view. It shows counts for the selected context and a
-file table organized by relative directories. Expand a context or click its name
-to browse deeper. A file opens its tests in Evidence; failed/unknown counts open
-the corresponding filtered view. Run completeness and runner exit codes remain
-separate from selected test counts, including consolidated runs with reruns.
+**Summary** is the initial view. It shows counts and a file table organized by
+relative directories. Clicking anywhere on a context row expands or collapses
+its children in place; clicking a file opens its tests in Evidence. Run
+completeness and runner exit codes remain separate from selected test counts,
+including consolidated runs with reruns.
 
-**Evidence** follows contexts, files, suites, tests and captured observations.
-The file view lists tests with suite paths and separate shared setup/teardown.
-Select a test to inspect its captured calls and executions, then an execution
-for its pipeline and chain outcomes, owning test, hashes, stage timings,
-resources and authorization. Raw evidence sections start collapsed. Every list
-is paginated; no records disappear behind a fixed display limit. Copy buttons
-use the clipboard when permitted, with a text-selection fallback.
+**Evidence** uses the sidebar for folders and files. Folder rows only expand or
+collapse; there are no separate directory pages or duplicate “View” links.
+Single-child directory chains are combined, and the selected file has a filled
+highlight. With no file selected, the main panel shows a flat, searchable file
+table with full relative paths and result counts.
 
-Breadcrumbs, Clear context and the browser Back button preserve your location.
-The URL fragment records the current selection and filters, including when the
-HTML opens from disk. Search accepts test/file names, contract IDs and hashes.
-Test outcome, pipeline outcome and chain outcome are independent filters; an
-expected failed execution can belong to a passing test. Client/method filters
-and context apply across all three report views.
+Inside a file, suite rows expand inline to reveal tests and shared setup or
+teardown. Select a test for its chronological captured observations, then a
+pipeline call for its details. Overview, Measurements and Pipeline stages are
+visible tables; Inputs and result and Authorization have their own sections.
+Long payloads remain expandable. File, test and call lists are paginated without
+a fixed record limit. Hash copy buttons briefly change to **Copied**. If the
+clipboard is unavailable, a message beside that hash explains how to copy the
+selected text manually. Copy feedback does not carry across report views.
 
-**Profiling** starts with a compact operation-group table. Select a group to
-inspect its grouping keys, measurements and individual executions. Groups keep
-file, network, client, contract, method, kind, operation sequence and
-pipeline/chain outcomes distinct. Enable **Group across files** explicitly for
-cross-file comparisons. Missing network or operation identity keeps executions
-separate; missing measurements never become zero. Similar operations can have
-different inputs, so the statistics are descriptive, not an equivalent-workload
-benchmark. This HTML grouping is intentionally more specific than the portable
-`profileGroups(report)` helper's network/client/contract/method/kind grouping.
+Breadcrumbs, Clear context and browser Back/Forward preserve your location. The
+URL fragment records the current selection and filters, including when the HTML
+opens from disk. Search accepts test/file names, contract IDs and hashes. Test
+outcome, pipeline outcome and chain outcome are independent filters; an expected
+failed pipeline call can belong to a passing test. Client/method filters and
+context apply across all three report views.
 
-Each metric shows its available sample count, median, range and standard
-deviation in the metric's units. Mean, nearest-rank p95 and population variance
-(squared units) are under More statistics. Single samples do not establish
-repeatability. Resource measurements use the final simulation budget per
-execution; each simulation remains available in its evidence. Fee ranges use
-exact integer stroops and distinguish simulation estimates from confirmed fees.
+**Profiling** opens with **Individual pipeline calls**. Each row represents one
+observed pipeline invocation, not one test or necessarily one submitted
+transaction. A read can simulate without submitting; an invoke can simulate,
+sign and submit; a classic call can contain several Stellar operations.
 
-Choose **Individual executions** for sortable, paginated rows and switch between
-Timing, Resources and Fees columns. Each row links to its execution evidence,
-file and owning test. Filters apply to both grouped and individual measurements.
+Timing, resources and fees appear together: duration, instruction budget,
+read-only/read-write entries, disk read/write bytes, simulation minimum resource
+fee and confirmed fee charged. Every measurement heading sorts its column, and
+its min/max fields filter individual calls. Numeric filters apply only in
+Profiling and remain in the URL. Missing values stay unavailable, sort last in
+either direction and are excluded when a range is active. Invalid or reversed
+ranges show a correction message. **Clear filters** also clears these ranges.
+The table scrolls horizontally with sticky headings and a fixed call column.
+Pipeline and chain outcomes have separate columns.
+
+**Compare repeated calls** is an optional aggregate view. Groups keep file,
+network, client label, contract, method, kind, operation sequence and
+pipeline/chain outcomes distinct. Enable **Group across files** explicitly to
+remove the file boundary. Missing network or operation identity keeps calls
+separate. A group may contain only one call; its count means recorded pipeline
+invocations. Select a group to see the exact grouping keys, per-metric sample
+counts and its individual calls. Ranges filter calls before groups and their
+statistics are calculated.
+
+Group rows show medians for all measurements together and the duration range.
+Group details show available sample counts, nearest-rank medians, ranges and
+standard deviations. Mean, nearest-rank p95 and population variance (squared
+units) are under More statistics. Single samples do not establish repeatability.
+Resources use the last captured simulation budget per call, with every captured
+simulation available in the call evidence. Fees retain exact whole stroops for
+sorting, filtering, medians and ranges; their means and deviations are not
+calculated.
+
+Inputs can differ within a group, and client labels do not establish object
+identity. These statistics describe captured calls rather than an
+equivalent-workload benchmark. HTML grouping is intentionally more specific than
+the portable `profileGroups(report)` helper's
+network/client/contract/method/kind grouping.
 
 ## Capture and profiling options
 

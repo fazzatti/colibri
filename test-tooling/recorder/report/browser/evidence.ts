@@ -1,136 +1,185 @@
-/** Nested file, suite, test and execution evidence views. */
+/** File navigation, inline suites and structured test/call evidence. */
 export const evidenceScript: string = String.raw`
 function parentOf(r) { return byId.get(r.parentId) || byId.get(r.callId) || byId.get(r.testId); }
 function recordLink(r) {
   const node = button(r.name, () => openRecord(r), "text-button");
   node.dataset.record = r.id; return node;
 }
+function factsTable(host, facts) {
+  const node = el("table", undefined, "facts-table"), body = el("tbody");
+  for (const [key, value] of facts) {
+    const row = el("tr"), heading = el("th", key); heading.scope = "row"; row.append(heading);
+    cell(row, value); body.append(row);
+  }
+  node.append(body); host.append(node);
+}
 function recordTable(host, records, caption) {
   if (!records.length) return;
   host.append(el("h3", caption));
-  const body = table(host, ["Name / context", "Kind", "Outcome", "Duration (ms)"]);
+  const body = table(host, ["Observation", "Kind", "Outcome", "Started", "Duration (ms)"]);
   paginate(host, records, (r) => {
-    const row = el("tr"), name = el("div");
-    name.append(recordLink(r), el("small", (r.path || []).slice(0, -1).join(" / "), "context-label"));
-    cell(row, name); cell(row, r.kind); cell(row, badge(status(r))); cell(row, number(r.durationMs), "num");
-    body.append(row);
+    const row = el("tr"), link = recordLink(r); cell(row, link); actionRow(row, link);
+    cell(row, r.execution ? "Pipeline call" : r.kind); cell(row, badge(status(r)));
+    cell(row, r.startedAt); cell(row, number(r.durationMs), "num"); body.append(row);
   });
 }
 function sidebar() {
-  const host = $("tree"); host.replaceChildren();
-  host.append(el("h2", "Browse evidence"));
-  const selectedPath = state.file ? fileLabel(state.file) : state.scope;
-  const visible = new Set(report.records.filter((r) => matches(r, false)).map((r) => r.file));
+  const host = $("tree"), oldScroll = host.scrollTop; host.replaceChildren();
+  host.append(el("h2", "Test files"));
+  const selectedPath = state.file ? fileLabel(state.file) : "";
+  const reveal = sidebarFile !== state.file; sidebarFile = state.file;
+  const visible = files.filter((f) => f === state.file || report.records.some((r) => r.file === f && matches(r, false)));
   function level(path, parent) {
-    const children = new Map();
-    for (const f of files) {
-      if (!visible.has(f) && f !== state.file) continue;
-      const label = fileLabel(f);
-      if (path && !label.startsWith(path + "/")) continue;
-      const rest = path ? label.slice(path.length + 1) : label;
-      const name = rest.split("/")[0], directory = rest.includes("/");
-      children.set(name, { file: f, directory });
-    }
-    for (const [name, child] of [...children].sort(([a], [b]) => a.localeCompare(b))) {
-      const context = path ? path + "/" + name : name;
+    const list = el("ul", undefined, "file-tree");
+    for (const item of fileChildren(visible, path)) {
+      const child = compactFolder(item), branch = el("li");
       if (child.directory) {
-        const block = el("details"); block.open = selectedPath === context || selectedPath.startsWith(context + "/");
-        block.append(el("summary", name));
-        block.append(button("View " + name, () => navigate({ tab: "evidence", scope: context, file: "", record: "", page: "0" }), "text-button"));
-        // Populate a branch only when needed, keeping large reports responsive.
-        let built = false;
-        const populate = () => { if (!built && block.open) { built = true; level(context, block); } };
-        block.ontoggle = populate; populate(); parent.append(block);
+        if (reveal && selectedPath.startsWith(child.key + "/")) foldersOpen.add(child.key);
+        const open = foldersOpen.has(child.key), control = button("", () => {
+          if (foldersOpen.has(child.key)) foldersOpen.delete(child.key); else foldersOpen.add(child.key);
+          sidebar();
+          [...host.querySelectorAll("button[data-folder]")].find((n) => n.dataset.folder === child.key)?.focus({ preventScroll: true });
+        }, "tree-row");
+        disclosureLabel(control, child.name, open, "folder"); control.dataset.folder = child.key;
+        control.title = child.key; branch.append(control);
+        if (open) level(child.key, branch);
       } else {
-        const item = button(name, () => openFile(child.file), "file-link");
-        item.title = fileLabel(child.file); item.dataset.file = child.file;
-        if (child.file === state.file) item.setAttribute("aria-current", "page");
-        parent.append(item);
+        const control = button("", () => openFile(child.key), "tree-row file-link");
+        disclosureLabel(control, child.name, undefined, "file");
+        control.title = fileLabel(child.key); control.dataset.file = child.key;
+        if (child.key === state.file) control.setAttribute("aria-current", "page");
+        branch.append(control);
       }
+      list.append(branch);
     }
+    parent.append(list);
   }
-  level("", host);
+  level("", host); host.scrollTop = oldScroll;
   const current = host.querySelector("[aria-current]");
-  if (current && current.getBoundingClientRect().bottom > host.getBoundingClientRect().bottom) {
-    host.scrollTop += current.getBoundingClientRect().top - host.getBoundingClientRect().top - 40;
+  if (reveal && current) {
+    const item = current.getBoundingClientRect(), panel = host.getBoundingClientRect();
+    if (item.bottom > panel.bottom || item.top < panel.top) host.scrollTop += item.top - panel.top - 40;
   }
 }
-async function copyHash(hash, value) {
-  try { await navigator.clipboard.writeText(hash); $("toast").textContent = "Hash copied."; }
-  catch {
+async function copyHash(hash, value, control, feedback) {
+  control.disabled = true; feedback.textContent = "";
+  try {
+    await navigator.clipboard.writeText(hash);
+    control.textContent = "Copied"; feedback.textContent = "Hash copied."; feedback.className = "copy-feedback success";
+    setTimeout(() => { control.textContent = "Copy hash"; control.disabled = false; feedback.textContent = ""; }, 2000);
+  } catch {
     const range = document.createRange(); range.selectNodeContents(value);
     const selection = getSelection(); selection.removeAllRanges(); selection.addRange(range);
-    $("toast").textContent = "Hash selected. Press Ctrl+C or Command+C to copy.";
+    control.disabled = false; feedback.className = "copy-feedback failed";
+    feedback.textContent = "Clipboard unavailable. Hash selected — press Ctrl+C or Command+C to copy.";
   }
+}
+function hashRow(host, label, hash) {
+  if (!hash) return;
+  const row = el("div", undefined, "hash"), value = el("code", hash), feedback = el("span", undefined, "copy-feedback");
+  feedback.setAttribute("role", "status");
+  const control = button("Copy hash", () => copyHash(hash, value, control, feedback));
+  row.append(el("strong", label), value, control, feedback); host.append(row);
 }
 function executionDetail(host, r) {
   const e = r.execution;
-  host.append(el("h3", "Execution"));
-  const facts = el("dl");
-  for (const [key, value] of [["Kind", e.kind], ["Pipeline outcome", r.status], ["Chain outcome", e.chain],
+  const grid = el("div", undefined, "evidence-overview"), overview = el("section"), measurements = el("section");
+  overview.append(el("h3", "Overview"));
+  factsTable(overview, [["Kind", e.kind], ["Pipeline outcome", badge(r.status)], ["Chain outcome", e.chain],
+    ["Started", r.startedAt], ["Ended", r.endedAt || "Unavailable"],
     ["Network", e.network || "Unavailable"], ["Client", e.client || "Unnamed"], ["Contract", e.contract || "Unavailable"],
-    ["Method / operations", e.method || e.operations.join(", ") || "Unavailable"]]) {
-    facts.append(el("dt", key), el("dd", value));
-  }
-  host.append(facts);
+    ["Method / operations", e.method || e.operations.join(", ") || "Unavailable"]]);
   const test = ownerTest(r);
-  if (test) { const origin = el("p", "Owning test: "); origin.append(recordLink(test)); host.append(origin); }
-  for (const [label, hash] of [["Hash", e.hash], ["Inner hash", e.innerHash]]) {
-    if (!hash) continue;
-    const row = el("div", undefined, "hash"), value = el("code", hash);
-    row.append(el("strong", label), value, button("Copy " + label.toLowerCase(), () => copyHash(hash, value)));
-    host.append(row);
-  }
-  const stages = el("details", undefined, "data-section");
-  stages.append(el("summary", "Pipeline stages (" + e.stages.length + ")"));
-  const body = table(stages, ["Stage", "Outcome", "Duration (ms)"]);
-  for (const stage of e.stages) { const row = el("tr"); cell(row, stage.name); cell(row, badge(stage.status)); cell(row, number(stage.durationMs), "num"); body.append(row); }
-  host.append(stages);
-  jsonSection(host, "Simulation budgets (not actual usage)", e.simulations);
-  jsonSection(host, "Authorization", e.authorization);
+  if (test) { const origin = el("p", "Owning test: "); origin.append(recordLink(test)); overview.append(origin); }
+  measurements.append(el("h3", "Measurements"));
+  factsTable(measurements, metricColumns.map(([key, title]) => [title, formatMetric(measure(r, key))]));
+  measurements.append(el("p", "Resources and minimum resource fee come from the last captured simulation. They are budgets, not measured usage. — means unavailable.", "context-label"));
+  grid.append(overview, measurements); host.append(grid);
+  hashRow(host, "Transaction hash", e.hash); hashRow(host, "Inner hash", e.innerHash);
+  host.append(el("h3", "Pipeline stages (" + e.stages.length + ")"));
+  if (e.stages.length) {
+    const body = table(host, ["Stage", "Outcome", "Started", "Duration (ms)"]);
+    for (const stage of e.stages) {
+      const row = el("tr"); cell(row, stage.name); cell(row, badge(stage.status)); cell(row, stage.startedAt); cell(row, number(stage.durationMs), "num"); body.append(row);
+    }
+  } else host.append(el("p", "No pipeline stages captured."));
+  host.append(el("h3", "Inputs and result"));
+  if (r.data === undefined && !e.stages.some((s) => s.input !== undefined || s.output !== undefined)) host.append(el("p", "No inputs or result captured at this recording level."));
+  jsonSection(host, "Captured context and result", r.data);
+  jsonSection(host, "Stage inputs, outputs and errors", e.stages.filter((s) => s.input !== undefined || s.output !== undefined || s.error !== undefined));
   jsonSection(host, "Submitted transaction", e.submitted);
-  jsonSection(host, "Confirmed fees (stroops)", { feeCharged: e.feeCharged, resourceFees: e.resourceFees });
-  jsonSection(host, "Stage inputs and outputs", e.stages);
+  jsonSection(host, "All simulation estimates", e.simulations);
+  jsonSection(host, "Confirmed resource fee components (stroops)", e.resourceFees);
+  jsonSection(host, "Error", r.error);
+  host.append(el("h3", "Authorization"));
+  if (e.authorization === undefined) host.append(el("p", "Authorization details were not captured."));
+  else jsonSection(host, "Captured authorization details", e.authorization);
+}
+function fileTests(host, selected) {
+  const candidates = [...selected.tests, ...selected.records.filter((r) => !ownerTest(r) && r.kind !== "suite")];
+  const nodes = new Map();
+  for (const r of candidates) {
+    let current = r;
+    const seen = new Set();
+    while (current && current.file === state.file && !seen.has(current.id)) {
+      seen.add(current.id); nodes.set(current.id, current); current = parentOf(current);
+    }
+  }
+  // Suite rows expand in this table. Tests and shared observations open their evidence.
+  const children = new Map();
+  for (const r of nodes.values()) {
+    const parent = parentOf(r), key = parent && nodes.has(parent.id) ? parent.id : "";
+    if (!children.has(key)) children.set(key, []); children.get(key).push(r);
+  }
+  const visible = [], visited = new Set();
+  function level(parent, depth) {
+    for (const r of children.get(parent) || []) {
+      if (visited.has(r.id)) continue; visited.add(r.id);
+      visible.push({ r, depth });
+      if (r.kind === "suite" && suitesOpen.has(r.id)) level(r.id, depth + 1);
+    }
+  }
+  level("", 0);
+  host.append(el("h3", "Suites and tests"), el("p", "Expand a suite row to see its tests and shared setup. Select a test to inspect its captured calls."));
+  const body = table(host, ["Suite / test / observation", "Kind", "Outcome", "Duration (ms)"]);
+  body.id = "test-body";
+  paginate(host, visible, ({ r, depth }) => {
+    const row = el("tr"), suite = r.kind === "suite", control = button("", () => {
+      if (!suite) { openRecord(r); return; }
+      if (suitesOpen.has(r.id)) suitesOpen.delete(r.id); else suitesOpen.add(r.id);
+      render();
+    }, "row-button");
+    control.style.paddingInlineStart = (depth * 20 + 8) + "px";
+    disclosureLabel(control, r.name, suite ? suitesOpen.has(r.id) : undefined, suite ? "folder" : "file");
+    if (suite) { control.dataset.suite = r.id; control.setAttribute("aria-label", (suitesOpen.has(r.id) ? "Collapse " : "Expand ") + r.name); }
+    else control.dataset.record = r.id;
+    cell(row, control); actionRow(row, control); cell(row, r.kind); cell(row, badge(status(r))); cell(row, number(r.durationMs), "num"); body.append(row);
+  });
 }
 function evidenceView() {
   sidebar();
   const host = $("detail"); host.replaceChildren();
   const r = byId.get(state.record);
   if (r) {
-    host.append(el("h2", r.name));
-    const meta = el("p", r.kind + " · "); meta.append(badge(status(r))); host.append(meta);
-    host.append(el("p", fileLabel(r.file), "context-label"));
-    const facts = el("dl");
-    for (const [key, value] of [["Started", r.startedAt], ["Duration (ms)", number(r.durationMs)],
-      ["Runner outcome", r.runnerStatus || "Unavailable"], ["Observed outcome", r.status]]) facts.append(el("dt", key), el("dd", value));
-    host.append(facts);
+    host.append(el("h2", r.name), el("p", fileLabel(r.file), "context-label"));
     if (r.execution) executionDetail(host, r);
-    jsonSection(host, "Captured context and result", r.data);
-    jsonSection(host, "Error", r.error);
-    const children = report.records.filter((child) => parentOf(child)?.id === r.id)
-      .sort((a, b) => a.startedAt.localeCompare(b.startedAt));
-    recordTable(host, children, r.kind === "suite" ? "Tests and shared setup / teardown" : "Captured observations");
+    else {
+      const facts = [["Kind", r.kind], ["Started", r.startedAt], ["Duration (ms)", number(r.durationMs)], ["Observed outcome", badge(r.status)]];
+      if (r.kind === "test" || r.kind === "suite") facts.push(["Runner outcome", badge(r.runnerStatus || "unknown")]);
+      factsTable(host, facts); jsonSection(host, "Captured context and result", r.data); jsonSection(host, "Error", r.error);
+    }
+    const children = report.records.filter((child) => parentOf(child)?.id === r.id).sort((a, b) => a.startedAt.localeCompare(b.startedAt));
+    recordTable(host, children, "Captured calls and observations · chronological order");
     if (!children.length && !r.execution) host.append(el("p", "No child observations were captured for this item."));
     return;
   }
   if (!state.file) {
-    host.append(el("h2", state.scope || "Contexts"), el("p", "Choose a context or file to browse its suites and tests."));
-    contextFiles(host); return;
+    host.append(el("h2", "Test files"), el("p", "Select a file below or in the sidebar. Search filters this list by file, test or captured evidence."));
+    contextFiles(host, true); return;
   }
-  const selected = selection(), records = selected.records.filter((r) => r.file === state.file);
+  const selected = selection();
   host.append(el("h2", basename(state.file)), el("p", fileLabel(state.file), "context-label"));
-  metrics(host, records, selected.tests);
-  const suites = report.records.filter((item) => item.file === state.file && item.kind === "suite" && !parentOf(item));
-  if (suites.length) {
-    const strip = el("div", undefined, "suite-links");
-    strip.append(el("span", "Suites: ", "muted"));
-    for (const suite of suites) strip.append(recordLink(suite));
-    host.append(strip);
-  }
-  recordTable(host, selected.tests, "Tests by suite");
-  const shared = records.filter((item) => !ownerTest(item) && item.kind !== "suite" && !parentOf(item));
-  const hooks = records.filter((item) => item.kind === "hook" && !ownerTest(item));
-  recordTable(host, [...new Map([...shared, ...hooks].map((item) => [item.id, item])).values()], "Shared setup, teardown and file observations");
-  if (!records.length) host.append(el("p", "No matching evidence in this file. Clear filters to see all tests.", "empty"));
+  metrics(host, selected.records, selected.tests); fileTests(host, selected);
+  if (!selected.records.length) host.append(el("p", "No matching evidence in this file. Clear filters to see all tests.", "empty"));
 }
 `;
