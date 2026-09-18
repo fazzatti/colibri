@@ -675,11 +675,11 @@ describe("standalone HTML evidence report", () => {
     try {
       await page.goto(pathToFileURL(path).href);
       assert(
-        await page.locator('#file-body [data-file="token.test.ts"] svg.test')
+        await page.locator('#file-body [data-file="token.test.ts"] svg.file')
           .isVisible(),
       );
       await page.locator('#file-body [data-file="token.test.ts"]').click();
-      assert(await page.locator("#tree [aria-current] svg.test").isVisible());
+      assert(await page.locator("#tree [aria-current] svg.file").isVisible());
       assert(
         await page.locator('#test-body [data-record="test"] svg.test')
           .isVisible(),
@@ -767,6 +767,226 @@ describe("standalone HTML evidence report", () => {
       assert(!(await page.locator("#clear-context").isVisible()));
       assertEquals(await page.locator("#call-tabs").count(), 0);
       assertEquals(errors, []);
+    } finally {
+      await page.close();
+    }
+  });
+  it("links known networks, labels operations and exposes events and ledger measurements", async () => {
+    const report = fixture();
+    const network = "Test SDF Network ; September 2015";
+    const e = report.records[1].execution!;
+    e.network = network;
+    e.innerHash = "b".repeat(64);
+    e.events = {
+      count: 2,
+      contractCount: 1,
+      systemCount: 1,
+      diagnosticCount: 1,
+      omitted: 0,
+      items: [{
+        source: "operation",
+        operationIndex: 0,
+        type: "contract",
+        contract: "C".repeat(56),
+        topics: ["transfer"],
+        data: "<script>unsafe()</script>",
+      }],
+    };
+    e.simulations[0].events = {
+      count: 7,
+      contractCount: 7,
+      systemCount: 0,
+      diagnosticCount: 0,
+      omitted: 7,
+    };
+    e.ledgerChanges = {
+      created: 3,
+      updated: 4,
+      removed: 0,
+      restored: 1,
+      ttlExtended: 2,
+      ttlUnknown: 1,
+    };
+    e.resourceFees = { rentFeeCharged: "9007199254740993" };
+    report.records[2].execution!.network =
+      "Public Global Stellar Network ; September 2015";
+    report.records[2].execution!.resourceFees = {
+      rentFeeCharged: "9007199254740992",
+    };
+    report.records[2].execution!.operationDetails = [{
+      type: "invokeHostFunction",
+      hostFunction: "hostFunctionTypeCreateContractV2",
+    }];
+    report.records[3].execution!.network = "custom";
+    report.records[3].execution!.operationDetails = [{
+      type: "restoreFootprint",
+    }, { type: "extendFootprintTtl", extendTo: 500 }];
+    report.records.push(
+      ...["beforeAll", "afterEach"].map((name) => ({
+        id: name,
+        kind: "hook" as const,
+        name,
+        file: "token.test.ts",
+        status: "passed" as const,
+        startedAt: "2026-09-18T12:00:00Z",
+      })),
+    );
+    const path = join(directory, "transaction-evidence.html");
+    await Deno.writeTextFile(path, renderReport(report));
+    const page = await browser.newPage();
+    const errors: string[] = [];
+    page.on("pageerror", (err) => errors.push(err.message));
+    const open = async (id: string, detail = "stages") => {
+      await page.goto(
+        pathToFileURL(path).href + "#" +
+          new URLSearchParams({
+            tab: "evidence",
+            file: "token.test.ts",
+            record: id,
+            detail,
+          }),
+      );
+    };
+    try {
+      await open("beforeAll");
+      assert(await page.locator("#detail h2 svg.before").isVisible());
+      await open("afterEach");
+      assert(await page.locator("#detail h2 svg.after").isVisible());
+      await open("execution-0", "events");
+      assertEquals(
+        await page.locator(".hash a").first().getAttribute("href"),
+        "https://stellar.expert/explorer/testnet/tx/" + hash,
+      );
+      assertEquals(
+        await page.locator(".hash a").nth(1).getAttribute("href"),
+        "https://stellar.expert/explorer/testnet/tx/" + "b".repeat(64),
+      );
+      assertEquals(
+        await page.locator(".hash a").first().getAttribute("rel"),
+        "noopener noreferrer",
+      );
+      assertStringIncludes(
+        await page.locator(".facts-table").first().locator("tr").nth(1)
+          .innerText(),
+        "invokeHostFunction / balance",
+      );
+      assertStringIncludes(
+        await page.locator("#call-panel-events").innerText(),
+        "2 events: 1 contract, 1 system",
+      );
+      assertStringIncludes(
+        await page.locator("#call-panel-events").innerText(),
+        "7 payloads omitted",
+      );
+      assertStringIncludes(
+        await page.locator("#call-panel-events").innerText(),
+        "<script>unsafe()</script>",
+      );
+      assertEquals(await page.locator("#call-panel-events script").count(), 0);
+      await page.reload();
+      assertEquals(
+        await page.locator("#call-tab-events").getAttribute("aria-selected"),
+        "true",
+      );
+      await page.getByRole("tab", { name: "Events", exact: true }).focus();
+      await page.keyboard.press("Home");
+      await page.keyboard.press("End");
+      assertEquals(
+        await page.locator("#call-tab-events").getAttribute("aria-selected"),
+        "true",
+      );
+      await page.setViewportSize({ width: 390, height: 844 });
+      assert(
+        await page.evaluate(
+          "document.documentElement.scrollWidth <= innerWidth",
+        ),
+      );
+      await page.setViewportSize({ width: 1440, height: 960 });
+      await open("execution-1");
+      assertEquals(
+        await page.locator(".hash a").getAttribute("href"),
+        "https://stellar.expert/explorer/public/tx/" + hash,
+      );
+      assertStringIncludes(
+        await page.locator(".facts-table").first().innerText(),
+        "deploy contract (constructor)",
+      );
+      await open("execution-2");
+      assertEquals(await page.locator(".hash a").count(), 0);
+      assertStringIncludes(
+        await page.locator(".facts-table").first().innerText(),
+        "restoreFootprint / restore entries",
+      );
+      assertStringIncludes(
+        await page.locator(".facts-table").first().innerText(),
+        "current ledger + 500",
+      );
+      await page.locator("#profiling-tab").click();
+      assertEquals(
+        await page.locator('#profile-body [data-record="execution-0"]').locator(
+          "xpath=ancestor::tr",
+        ).locator('[data-metric="events"]').innerText(),
+        "2",
+      );
+      await page.getByRole("button", {
+        name: "Confirmed rent (stroops)",
+        exact: true,
+      }).click();
+      assertEquals(
+        await page.locator("#profile-body tr").first().locator("[data-record]")
+          .getAttribute("data-record"),
+        "execution-0",
+      );
+      await page.locator("#range-rentMin").fill("9007199254740993");
+      assertEquals(await page.locator("#profile-body tr").count(), 1);
+      await page.locator("#clear-filters").click();
+      await page.locator("#range-eventsMin").fill("1");
+      assertEquals(await page.locator("#profile-body tr").count(), 1);
+      await page.locator("#clear-filters").click();
+      await page.locator("#range-ttlMin").fill("3");
+      assertEquals(await page.locator("#profile-body tr").count(), 0);
+      assertEquals(errors, []);
+    } finally {
+      await page.close();
+    }
+  });
+  it("recovers operation labels from saved XDR JSON without inventing new evidence", async () => {
+    const report = fixture();
+    const calls = report.records.filter((r) => r.execution);
+    ["upload_contract_wasm", "create_contract", "invoke_contract"].forEach(
+      (name, i) => {
+        calls[i].execution!.method = undefined;
+        calls[i].data = {
+          input: {
+            parameters: [{
+              body: {
+                invoke_host_function: {
+                  host_function: {
+                    [name]: name === "invoke_contract"
+                      ? { function_name: "transfer" }
+                      : "bounded payload",
+                  },
+                },
+              },
+            }],
+          },
+        };
+      },
+    );
+    const path = join(directory, "legacy-operations.html");
+    await Deno.writeTextFile(path, renderReport(report));
+    const page = await browser.newPage();
+    try {
+      await page.goto(pathToFileURL(path).href + "#tab=profiling");
+      const rows = await page.locator("#profile-body").innerText();
+      assertStringIncludes(rows, "invokeHostFunction / upload WASM");
+      assertStringIncludes(rows, "invokeHostFunction / deploy contract");
+      assertStringIncludes(rows, "invokeHostFunction / transfer");
+      assertEquals(
+        await page.locator('#profile-body [data-metric="events"]')
+          .allTextContents(),
+        ["—", "—", "—"],
+      );
     } finally {
       await page.close();
     }

@@ -58,8 +58,10 @@ label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
 .row-name { overflow-wrap: anywhere; min-width: 0; }
 .arrow { width: 10px; flex: 0 0 10px; text-align: center; color: var(--muted); }
 .item-icon { flex: 0 0 12px; width: 12px; height: 14px; border: 1px solid var(--muted); border-radius: 1px; }
-.item-icon.test { flex: 0 0 16px; width: 16px; height: 16px; border: 0; border-radius: 0; color: currentColor; }
+svg.item-icon { flex: 0 0 16px; width: 16px; height: 16px; border: 0; border-radius: 0; color: currentColor; }
 .icon-label { display: inline-flex; align-items: baseline; gap: 8px; }
+.measurement-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 0 16px; }
+.event-contract { overflow-wrap: anywhere; max-width: 220px; }
 .icon-label .item-icon { align-self: center; }
 .item-icon.folder { height: 10px; position: relative; background: var(--bg); }
 .item-icon.folder::before { content: ""; position: absolute; width: 6px; height: 3px; border: 1px solid var(--muted); border-bottom: 0; left: -1px; top: -4px; }
@@ -100,6 +102,7 @@ th.num { white-space: normal; }
 .detail-panel { padding: 16px 0; }
 .detail-panel > .data-section:first-child { padding-top: 0; }
 .hash { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 20px 0; padding: 12px; background: var(--panel); border: 1px solid var(--line); }
+.hash a { color: var(--accent); min-width: 0; overflow-wrap: anywhere; }
 .hash code { overflow-wrap: anywhere; min-width: 0; }
 .hash button { min-width: 90px; }
 .copy-feedback { font-size: 12px; }

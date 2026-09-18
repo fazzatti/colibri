@@ -238,4 +238,59 @@ describe("actual Colibri clients and transactions", () => {
       assertEquals(failure.status, "failed");
     });
   }
+  it("captures unsuccessful simulation events without changing the pipeline error", async () => {
+    const rpc = new Server("https://rpc.example.org");
+    const response: Api.SimulateTransactionErrorResponse = {
+      _parsed: true,
+      id: "failed",
+      latestLedger: 100,
+      error: "simulation failed",
+      events: [
+        new xdr.DiagnosticEvent({
+          inSuccessfulContractCall: false,
+          event: new xdr.ContractEvent({
+            ext: xdr.ExtensionPoint.v0(),
+            contractId: null,
+            type: xdr.ContractEventType.contract,
+            body: xdr.ContractEventBody.v0(
+              new xdr.ContractEventV0({
+                topics: [],
+                data: xdr.ScVal.scvU32(7),
+              }),
+            ),
+          }),
+        }),
+      ],
+    };
+    using simulate = stub(
+      rpc,
+      "simulateTransaction",
+      () => Promise.resolve(response),
+    );
+    const recorder = new ExecutionRecorder({ events: "full" });
+    const spec = new Spec([
+      xdr.ScSpecEntry.scSpecEntryFunctionV0(
+        new xdr.ScSpecFunctionV0({
+          doc: "",
+          name: "balance",
+          inputs: [],
+          outputs: [xdr.ScSpecTypeDef.scSpecTypeU32()],
+        }),
+      ),
+    ]);
+    const client = recorder.observer().create(() =>
+      new Contract({ networkConfig, rpc, contractConfig: { contractId, spec } })
+    );
+    await assertRejects(() => client.read({ method: "balance" }));
+    const recorded = recorder.report();
+    const call = recorded.records.find((r) => r.execution)!;
+    assertEquals(call.status, "failed");
+    assertEquals(call.execution!.chain, "not-submitted");
+    assertEquals(call.execution!.events, undefined);
+    assertEquals(call.execution!.simulations.length, 1);
+    assertEquals(call.execution!.simulations[0].events!.diagnosticCount, 1);
+    assertEquals(call.execution!.simulations[0].events!.count, 0);
+    assertEquals(simulate.calls.length, 1);
+    assertEquals(recorded.diagnostics, []);
+  });
 });

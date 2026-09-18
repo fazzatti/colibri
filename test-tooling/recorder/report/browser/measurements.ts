@@ -4,9 +4,13 @@ function measure(r, key) {
   const e = r.execution, p = e.simulations.at(-1);
   return ({ duration: r.durationMs, instructions: p?.instructions, reads: p?.readOnlyEntries,
     writes: p?.readWriteEntries, readBytes: p?.diskReadBytes, writeBytes: p?.writeBytes,
-    fee: p?.minResourceFee, charged: e.feeCharged })[key];
+    fee: p?.minResourceFee, charged: e.feeCharged, rent: e.resourceFees?.rentFeeCharged,
+    events: e.events?.count, simEvents: p?.events?.count,
+    created: e.ledgerChanges?.created, updated: e.ledgerChanges?.updated, removed: e.ledgerChanges?.removed,
+    restored: e.ledgerChanges?.restored, ttl: e.ledgerChanges?.ttlExtended,
+    simCreated: p?.ledgerChanges?.created, simTtl: p?.ledgerChanges?.ttlExtended })[key];
 }
-const feeMetric = (key) => key === "fee" || key === "charged";
+const feeMetric = (key) => ["fee", "charged", "rent"].includes(key);
 const available = (value) => value !== undefined && value !== null;
 const formatMetric = (value) => typeof value === "number" ? number(value) : value ?? "—";
 function compareMetric(a, b, key) {

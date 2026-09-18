@@ -22,7 +22,7 @@ function contextFiles(host, flat = false) {
     }, "row-button");
     open.style.paddingInlineStart = (depth * 20 + 8) + "px";
     open.title = child.directory ? child.key : fileLabel(child.key);
-    disclosureLabel(open, child.name, child.directory ? expanded.has(child.key) : undefined, child.directory ? "folder" : "test");
+    disclosureLabel(open, child.name, child.directory ? expanded.has(child.key) : undefined, child.directory ? "folder" : "file");
     if (child.directory) {
       open.dataset.context = child.key;
       open.setAttribute("aria-label", (expanded.has(child.key) ? "Collapse " : "Expand ") + child.key);

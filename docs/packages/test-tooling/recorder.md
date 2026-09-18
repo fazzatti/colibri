@@ -39,6 +39,7 @@ import { TestRecorder } from "@colibri/test-tooling/recorder/deno";
 
 export const recorder = new TestRecorder({
   capture: "details",
+  events: "full",
   authorization: { level: "full", signatures: false },
   profiling: { timings: true, resources: true, fees: true },
   output: {
@@ -160,23 +161,28 @@ including consolidated runs with reruns.
 
 **Evidence** uses the sidebar for folders and files. Folder rows only expand or
 collapse; there are no separate directory pages or duplicate “View” links.
-Single-child directory chains are combined, test files and test cases use a
-test-tube icon, and the selected file has a filled highlight. With no file
-selected, the main panel shows a flat, searchable file table with full relative
-paths and result counts.
+Single-child directory chains are combined. Files use a file icon, test cases
+use a test-tube icon, and setup/teardown hooks use entering/leaving arrows, and
+the selected file has a filled highlight. With no file selected, the main panel
+shows a flat, searchable file table with full relative paths and result counts.
 
 Inside a file, suite rows expand inline to reveal tests and shared setup or
 teardown. Select a test for its chronological captured observations, then a
-pipeline call for its details. Overview and Measurements stay visible above
-three tabs: **Pipeline stages**, **Inputs and results**, and **Authorization**.
-The tab bar remains reachable while scrolling long evidence. Inputs/results and
-authorization open their main payload immediately; additional payloads remain
-expandable. Arrow keys and Home/End switch tabs, and the selected tab persists
-in the offline URL and browser history. Opening another call starts on Pipeline
-stages. File, test and call lists are paginated without a fixed record limit.
-Hash copy buttons briefly change to **Copied**. If the clipboard is unavailable,
-a message beside that hash explains how to copy the selected text manually. Copy
-feedback does not carry across report views.
+pipeline call for its details. Overview and Measurements stay visible above four
+tabs: **Pipeline stages**, **Inputs and results**, **Authorization**, and
+**Events**. The tab bar remains reachable while scrolling long evidence.
+Inputs/results and authorization open their main payload immediately; additional
+payloads remain expandable. Arrow keys and Home/End switch tabs, and the
+selected tab persists in the offline URL and browser history. Opening another
+call starts on Pipeline stages. File, test and call lists are paginated without
+a fixed record limit. Hash copy buttons briefly change to **Copied**. If the
+clipboard is unavailable, a message beside that hash explains how to copy the
+selected text manually. Copy feedback does not carry across report views. Valid
+transaction hashes link to Stellar Expert when the recorded network passphrase
+exactly matches Testnet or Mainnet; custom networks remain plain text.
+Method/operations appears directly after Kind and includes both the Stellar
+operation and method, or the WASM upload, contract deployment, restore or
+TTL-extension subtype.
 
 Clear context sits immediately beside the current breadcrumb. Breadcrumbs and
 browser Back/Forward preserve your location. The URL fragment records the
@@ -193,8 +199,10 @@ sign and submit; a classic call can contain several Stellar operations.
 
 Timing, resources and fees appear together: duration, instruction budget,
 read-only/read-write entries, disk read/write bytes, simulation minimum resource
-fee and confirmed fee charged. Every measurement heading sorts its column, and
-its min/max fields filter individual calls. Numeric filters apply only in
+fee, confirmed fee charged and rent, confirmed/simulated event counts, confirmed
+created/updated/removed/restored entry counts and TTL extensions, plus simulated
+created entries and TTL extensions. Every measurement heading sorts its column,
+and its min/max fields filter individual calls. Numeric filters apply only in
 Profiling and remain in the URL. Missing values stay unavailable, sort last in
 either direction and are excluded when a range is active. Invalid or reversed
 ranges show a correction message. **Clear filters** also clears these ranges.
@@ -233,11 +241,12 @@ network/client/contract/method/kind grouping.
 | `capture: "results"` (default) | Also retain results and errors.                                                                                                         |
 | `capture: "details"`           | Also retain operation parameters and supplied metadata.                                                                                 |
 | `capture: "trace"`             | Also retain bounded step input/output snapshots.                                                                                        |
+| `events`                       | `summary` (default) keeps counts, `full` adds bounded decoded payloads, and `none` disables event collection.                           |
 | `authorization.level`          | `none` (default), `summary` counts/types, or `full` invocation trees, addresses, nonces and expiration ledgers.                         |
 | `authorization.signatures`     | Explicit opt-in to encoded signed authorization entries; false by default.                                                              |
 | `profiling.timings`            | UTC timestamps and monotonic durations at observed pipeline/step boundaries.                                                            |
-| `profiling.resources`          | Simulation instruction/byte budgets and read-only/read-write footprint entry counts.                                                    |
-| `profiling.fees`               | Simulation minimum resource fee, submitted max fee and available confirmed charged fees, in stroops.                                    |
+| `profiling.resources`          | Simulation instruction/byte budgets, footprint counts, and available simulated/confirmed ledger changes.                                |
+| `profiling.fees`               | Simulation minimum resource fee, submitted max fee and confirmed charged fees including rent, in stroops.                               |
 | `limits`                       | Positive limits for records (10,000), snapshot depth (8), entries per container (100), and string length (4,096). Truncation is marked. |
 | `sanitize`                     | Optional additional sanitizer over normalized values, after built-in redaction.                                                         |
 
@@ -254,6 +263,48 @@ evidence. The no-op enforcement step does not create a second simulation sample.
 Confirmed resource fees are distinct from simulation estimates; rent is a
 component of fees, not an extra fee to add to their total. Missing measurements
 remain absent.
+
+## Events, rent and ledger changes
+
+`events: "full"` enables the **Events** tab's decoded payloads: contract
+address, topics and data, event type, operation index (when available), and
+transaction stage. Counts are retained even when the entry limit omits payloads.
+The configured sanitizer applies to all decoded event and ledger-change
+payloads. **Confirmed execution** and each **Simulation** have separate
+sections. Diagnostics and unsuccessful-call events remain visible but are
+excluded from the emitted-event count. Successful diagnostic wrappers are not
+counted again alongside their canonical confirmed events. Metadata v3 stores
+Soroban events on `sorobanMeta`; v4 stores operation and transaction events
+separately. The recorder reads one canonical metadata source, rather than adding
+duplicate RPC and diagnostic representations. See the
+[transaction metadata change in CAP-67](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0067.md).
+
+`profiling.resources` also captures transaction and operation ledger mutation
+records. Created, updated, removed and explicitly restored entries are counted,
+including TTL entries. STATE records are baselines, not updates.
+Transaction-level changes, including fee-related updates, are retained with
+their before/operation/after origin. A TTL extension requires an updated TTL
+entry with a known earlier live-until ledger and a strictly larger new value.
+Missing baselines are counted separately as `ttlUnknown` in the saved evidence;
+they are not assumed to be extensions. Counts describe mutation records rather
+than unique keys across operations. Detailed/trace capture includes bounded
+mutation payloads and TTL before/after values under **Inputs and results**.
+
+The RPC can return simulated `stateChanges`; these remain estimates and are
+never added to confirmed counts. Simulation supplies a minimum resource fee, not
+a separate rent quote. Confirmed rent comes from the metadata's resource-fee
+extension and is part of the charged fee, not an additional fee. All fees retain
+exact decimal stroops. See the official
+[simulation response](https://developers.stellar.org/docs/data/apis/rpc/api-reference/methods/simulateTransaction)
+and
+[transaction metadata schema](https://github.com/stellar/stellar-xdr/blob/main/Stellar-ledger.x).
+
+Old reports retain unavailable values for evidence they did not capture. Their
+saved operation parameters can still identify WASM uploads and deployments.
+Regenerating HTML cannot reconstruct missing events or ledger changes; run the
+tests with the updated recorder to collect them. In the Colibri checkout,
+`deno task test` records the full suite with full event payloads and profiling,
+and prints the new run's JSON/HTML paths under `artifacts/colibri/<run-id>/`.
 
 ## Observation boundaries
 

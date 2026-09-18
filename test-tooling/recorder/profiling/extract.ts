@@ -10,8 +10,18 @@ import type { Collector } from "@/recorder/runtime/collector.ts";
 import type {
   Evidence,
   ExecutionEvidence,
+  OperationEvidence,
   ResourceProfile,
 } from "@/recorder/types.ts";
+
+import {
+  confirmedEvents,
+  simulationEvents,
+} from "@/recorder/profiling/events.ts";
+import {
+  confirmedChanges,
+  simulationChanges,
+} from "@/recorder/profiling/ledger-changes.ts";
 
 /** Inspect only known public fields; never visit RPC or signer internals. */
 export function object(value: unknown): Record<string, unknown> {
@@ -41,10 +51,18 @@ export function operations(
 ): Evidence | undefined {
   const data = object(input);
   if (!Array.isArray(data.operations)) return;
+  delete execution.method;
+  delete execution.contract;
+  execution.operations = [];
+  execution.operationDetails = [];
   const decoded = data.operations.map((operation: unknown) => {
     if (!(operation instanceof xdr.Operation)) return "unknown";
     const op = Operation.fromXDRObject(operation);
     execution.operations.push(op.type);
+    const detail: OperationEvidence = { type: op.type };
+    if (op.type === "invokeHostFunction") detail.hostFunction = op.func.type;
+    if (op.type === "extendFootprintTtl") detail.extendTo = op.extendTo;
+    execution.operationDetails!.push(detail);
     if (
       op.type === "invokeHostFunction" &&
       op.func.type === "hostFunctionTypeInvokeContract"
@@ -53,6 +71,8 @@ export function operations(
       execution.contract = Address.fromScAddress(call.contractAddress)
         .toString();
       execution.method = call.functionName.toString();
+      detail.contract = execution.contract;
+      detail.method = execution.method;
     }
     return operation.toJson();
   });
@@ -65,9 +85,19 @@ export function simulation(
   collector: Collector,
 ): ResourceProfile | undefined {
   const data = object(value);
-  if (!(data.transactionData instanceof SorobanDataBuilder)) return;
+  if (
+    !(data.transactionData instanceof SorobanDataBuilder) &&
+    !Array.isArray(data.events) && !Array.isArray(data.stateChanges)
+  ) return;
   const profile: ResourceProfile = { stage };
-  if (collector.options.profiling?.resources) {
+  const events = simulationEvents(data.events, collector);
+  const changes = simulationChanges(data.stateChanges, collector);
+  if (events) profile.events = events;
+  if (changes) profile.ledgerChanges = changes;
+  if (
+    collector.options.profiling?.resources &&
+    data.transactionData instanceof SorobanDataBuilder
+  ) {
     const resources = data.transactionData.build().resources;
     Object.assign(profile, {
       instructions: resources.instructions,
@@ -153,6 +183,9 @@ export function submitted(
     execution.innerHash = xdr.encodeBytes(inner.hash(), "hex");
   }
   const envelope = inner.toEnvelope();
+  if (envelope.type === "envelopeTypeTx") {
+    operations(execution, { operations: envelope.v1.tx.operations }, collector);
+  }
   const resourceBudget = envelope.type === "envelopeTypeTx" &&
       envelope.v1.tx.ext.type === "sorobanData"
     ? envelope.v1.tx.ext.sorobanData.resources.toJson()
@@ -183,6 +216,10 @@ export function confirmed(
     txResult instanceof xdr.TransactionResult
   ) execution.feeCharged = txResult.feeCharged.toString();
   const meta = response.resultMetaXdr;
+  if (xdr.TransactionMeta.is(meta)) {
+    execution.events = confirmedEvents(meta, collector);
+    execution.ledgerChanges = confirmedChanges(meta, collector);
+  }
   if (collector.options.profiling?.fees && xdr.TransactionMeta.is(meta)) {
     const v = object(meta.value);
     const ext = object(object(v.sorobanMeta).ext);
@@ -210,7 +247,6 @@ export function failed(
     error.source !== "@colibri/core/processes/send-transaction"
   ) return;
   execution.chain = "confirmed-failed";
-  if (!collector.options.profiling?.fees) return;
   const data = object(object(error.meta).data);
   confirmed(
     {

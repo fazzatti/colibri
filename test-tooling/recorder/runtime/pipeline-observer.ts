@@ -132,6 +132,7 @@ export class PipelineObserver {
     this.stages.set(ctx, { invocation, record, started: performance.now() });
     invocation.record.execution!.stages.push(record);
     if (id === "build-transaction") {
+      operations(invocation.record.execution!, args[0], this.collector);
       const network = object(args[0]).networkPassphrase;
       if (typeof network === "string") {
         invocation.record.execution!.network = network;
@@ -172,6 +173,17 @@ export class PipelineObserver {
     stage.record.status = "failed";
     if (this.collector.options.capture !== "summary") {
       stage.record.error = this.collector.safe(error);
+    }
+    if (["simulate-transaction", "enforce-simulation"].includes(id)) {
+      const response =
+        object(object(object(error).meta).data).simulationResponse;
+      if (response && response !== stage.invocation.simulation) {
+        const profile = simulation(response, id, this.collector);
+        if (profile) {
+          stage.invocation.record.execution!.simulations.push(profile);
+        }
+        stage.invocation.simulation = response;
+      }
     }
     if (id === "send-transaction") {
       failed(error, stage.invocation.record.execution!, this.collector);

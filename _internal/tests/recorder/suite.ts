@@ -7,6 +7,7 @@ import {
 /** One configuration shared by every package test; the CLI supplies the run directory. */
 export const recorder = new TestRecorder({
   capture: "details",
+  events: "full",
   authorization: { level: "full", signatures: false },
   profiling: { timings: true, resources: true, fees: true },
   output: {

@@ -3,7 +3,7 @@ export const evidenceScript: string = String.raw`
 function parentOf(r) { return byId.get(r.parentId) || byId.get(r.callId) || byId.get(r.testId); }
 function recordLink(r) {
   const node = button(r.name, () => openRecord(r), "text-button");
-  if (r.kind === "test") { node.classList.add("icon-label"); node.replaceChildren(itemIcon("test"), el("span", r.name)); }
+  if (r.kind === "test" || r.kind === "hook") { node.classList.add("icon-label"); node.replaceChildren(itemIcon(recordIcon(r)), el("span", r.name)); }
   node.dataset.record = r.id; return node;
 }
 function factsTable(host, facts) {
@@ -46,7 +46,7 @@ function sidebar() {
         if (open) level(child.key, branch);
       } else {
         const control = button("", () => openFile(child.key), "tree-row file-link");
-        disclosureLabel(control, child.name, undefined, "test");
+        disclosureLabel(control, child.name, undefined, "file");
         control.title = fileLabel(child.key); control.dataset.file = child.key;
         if (child.key === state.file) control.setAttribute("aria-current", "page");
         branch.append(control);
@@ -75,32 +75,43 @@ async function copyHash(hash, value, control, feedback) {
     feedback.textContent = "Clipboard unavailable. Hash selected — press Ctrl+C or Command+C to copy.";
   }
 }
-function hashRow(host, label, hash) {
+function hashRow(host, label, hash, network) {
   if (!hash) return;
   const row = el("div", undefined, "hash"), value = el("code", hash), feedback = el("span", undefined, "copy-feedback");
   feedback.setAttribute("role", "status");
   const control = button("Copy hash", () => copyHash(hash, value, control, feedback));
-  row.append(el("strong", label), value, control, feedback); host.append(row);
+  const networks = { "Test SDF Network ; September 2015": "testnet", "Public Global Stellar Network ; September 2015": "public" };
+  let display = value;
+  if (Object.hasOwn(networks, network) && /^[a-fA-F0-9]{64}$/.test(hash)) {
+    const link = el("a"); link.href = "https://stellar.expert/explorer/" + networks[network] + "/tx/" + hash;
+    link.target = "_blank"; link.rel = "noopener noreferrer"; link.title = "Open transaction on Stellar Expert";
+    link.append(value); display = link;
+  }
+  row.append(el("strong", label), display, control, feedback); host.append(row);
 }
 function executionDetail(host, r) {
   const e = r.execution;
   const grid = el("div", undefined, "evidence-overview"), overview = el("section"), measurements = el("section");
   overview.append(el("h3", "Overview"));
-  factsTable(overview, [["Kind", e.kind], ["Pipeline outcome", badge(r.status)], ["Chain outcome", e.chain],
+  factsTable(overview, [["Kind", e.kind], ["Method / operations", operationLabel(r)], ["Pipeline outcome", badge(r.status)], ["Chain outcome", e.chain],
     ["Started", r.startedAt], ["Ended", r.endedAt || "Unavailable"],
-    ["Network", e.network || "Unavailable"], ["Client", e.client || "Unnamed"], ["Contract", e.contract || "Unavailable"],
-    ["Method / operations", e.method || e.operations.join(", ") || "Unavailable"]]);
+    ["Network", e.network || "Unavailable"], ["Client", e.client || "Unnamed"], ["Contract", e.contract || "Unavailable"]]);
   const test = ownerTest(r);
   if (test) { const origin = el("p", "Owning test: "); origin.append(recordLink(test)); overview.append(origin); }
   measurements.append(el("h3", "Measurements"));
-  factsTable(measurements, metricColumns.map(([key, title]) => [title, formatMetric(measure(r, key))]));
-  measurements.append(el("p", "Resources and minimum resource fee come from the last captured simulation. They are budgets, not measured usage. — means unavailable.", "context-label"));
+  const metrics = el("div", undefined, "measurement-grid");
+  const middle = Math.ceil(metricColumns.length / 2);
+  for (const columns of [metricColumns.slice(0, middle), metricColumns.slice(middle)]) {
+    const section = el("div"); factsTable(section, columns.map(([key, title]) => [title, formatMetric(measure(r, key))])); metrics.append(section);
+  }
+  measurements.append(metrics);
+  measurements.append(el("p", "Resources and minimum resource fee come from the last simulation; confirmed rent is included in the charged fee. Entry counts are transaction/operation mutation records, including TTL entries. — means unavailable, not zero.", "context-label"));
   grid.append(overview, measurements); host.append(grid);
-  hashRow(host, "Transaction hash", e.hash); hashRow(host, "Inner hash", e.innerHash);
+  hashRow(host, "Transaction hash", e.hash, e.network); hashRow(host, "Inner hash", e.innerHash, e.network);
   executionTabs(host, r);
 }
 function executionTabs(host, r) {
-  const e = r.execution, sections = [["stages", "Pipeline stages (" + e.stages.length + ")"], ["inputs", "Inputs and results"], ["authorization", "Authorization"]];
+  const e = r.execution, sections = [["stages", "Pipeline stages (" + e.stages.length + ")"], ["inputs", "Inputs and results"], ["authorization", "Authorization"], ["events", "Events"]];
   const tabs = el("div", undefined, "detail-tabs"); tabs.id = "call-tabs";
   tabs.setAttribute("role", "tablist"); tabs.setAttribute("aria-label", "Call evidence");
   host.append(tabs);
@@ -139,11 +150,35 @@ function executionTabs(host, r) {
   jsonSection(inputs, "Submitted transaction", e.submitted);
   jsonSection(inputs, "All simulation estimates", e.simulations);
   jsonSection(inputs, "Confirmed resource fee components (stroops)", e.resourceFees);
+  jsonSection(inputs, "Confirmed ledger changes", e.ledgerChanges);
   jsonSection(inputs, "Error", r.error, true);
+  eventPanel(panels.events, e);
   if (e.authorization === undefined) panels.authorization.append(el("p", "Authorization details were not captured."));
   else jsonSection(panels.authorization, "Captured authorization details", e.authorization, true);
 }
 
+function eventCollection(host, title, events) {
+  host.append(el("h3", title));
+  if (!events) { host.append(el("p", "Not captured. Re-record with event collection enabled.")); return; }
+  host.append(el("p", events.count + " events: " + events.contractCount + " contract, " + events.systemCount + " system. " + events.diagnosticCount + " diagnostic or unsuccessful-call events (excluded from the event count)."));
+  if (events.omitted) host.append(el("p", events.omitted + " payloads omitted by the recording level or entry limit."));
+  if (!Array.isArray(events.items)) { jsonSection(host, "Captured events", events.items, true); return; }
+  const body = table(host, ["#", "Source / type", "Contract", "Topics and data"]);
+  events.items.forEach((item, index) => {
+    const row = el("tr"); cell(row, index + 1, "num");
+    cell(row, [item?.source, item?.type, item?.stage, item?.operationIndex === undefined ? null : "operation " + (item.operationIndex + 1), item?.successful === false ? "unsuccessful call" : null].filter(Boolean).join(" / "));
+    cell(row, item?.contract || "—", "event-contract");
+    const data = el("div");
+    if (item && typeof item === "object") { data.append(el("strong", "Topics"), el("pre", JSON.stringify(item.topics, null, 2)), el("strong", "Data"), el("pre", JSON.stringify(item.data, null, 2))); }
+    else data.append(el("pre", JSON.stringify(item)));
+    cell(row, data); body.append(row);
+  });
+}
+function eventPanel(host, execution) {
+  host.append(el("p", "Confirmed events come from transaction metadata. Simulation events are previews and are never added to the confirmed count. Diagnostic wrappers are not counted twice."));
+  eventCollection(host, "Confirmed execution", execution.events);
+  execution.simulations.forEach((profile, index) => eventCollection(host, "Simulation " + (index + 1) + " · " + profile.stage, profile.events));
+}
 function fileTests(host, selected) {
   const candidates = [...selected.tests, ...selected.records.filter((r) => !ownerTest(r) && r.kind !== "suite")];
   const nodes = new Map();
@@ -179,7 +214,7 @@ function fileTests(host, selected) {
       render();
     }, "row-button");
     control.style.paddingInlineStart = (depth * 20 + 8) + "px";
-    disclosureLabel(control, r.name, suite ? suitesOpen.has(r.id) : undefined, suite ? "folder" : r.kind === "test" ? "test" : "file");
+    disclosureLabel(control, r.name, suite ? suitesOpen.has(r.id) : undefined, recordIcon(r));
     if (suite) { control.dataset.suite = r.id; control.setAttribute("aria-label", (suitesOpen.has(r.id) ? "Collapse " : "Expand ") + r.name); }
     else control.dataset.record = r.id;
     cell(row, control); actionRow(row, control); cell(row, r.kind); cell(row, badge(status(r))); cell(row, number(r.durationMs), "num"); body.append(row);
@@ -191,7 +226,7 @@ function evidenceView() {
   const r = byId.get(state.record);
   if (r) {
     const heading = el("h2", r.name);
-    if (r.kind === "test") { heading.classList.add("icon-label"); heading.prepend(itemIcon("test")); }
+    if (r.kind === "test" || r.kind === "hook") { heading.classList.add("icon-label"); heading.prepend(itemIcon(recordIcon(r))); }
     host.append(heading, el("p", fileLabel(r.file), "context-label"));
     if (r.execution) executionDetail(host, r);
     else {

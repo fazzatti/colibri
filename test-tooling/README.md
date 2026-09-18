@@ -344,6 +344,7 @@ import { TestRecorder } from "@colibri/test-tooling/recorder/deno";
 
 export const recorder = new TestRecorder({
   capture: "details",
+  events: "full",
   profiling: { timings: true, resources: true, fees: true },
   output: {
     json: { directory: "./artifacts/colibri" },
@@ -360,16 +361,17 @@ deno run -A jsr:@colibri/test-tooling/recorder/cli run \
 
 The runner writes JSON and a standalone HTML report even when tests fail. The
 report opens on Summary with expandable context/file rows. Evidence uses a file
-sidebar, inline suite rows and distinct test icons. Call stages, inputs/results
-and authorization have keyboard-accessible tabs below the overview and
+sidebar, inline suite rows and distinct test icons. Call stages, inputs/results,
+authorization and events have keyboard-accessible tabs below the overview and
 measurements. Clear context sits beside the breadcrumb; hash copy feedback stays
 beside the clicked button. Profiling starts with individual pipeline calls and
-shows timing, resources and fees together, with sortable measurement columns and
-min/max filters. Optional comparison groups expose their keys, sample counts and
-constituent calls. Breadcrumbs, offline links and browser Back preserve context;
-test, pipeline and chain outcomes remain distinct. Recorder imports are
-independent of Docker. Memory-only recording uses `ExecutionRecorder` from
-`/recorder`; portable rendering uses `/recorder/report`.
+shows timing, resources, fees, event counts and ledger changes together, with
+sortable measurement columns and min/max filters. Optional comparison groups
+expose their keys, sample counts and constituent calls. Breadcrumbs, offline
+links and browser Back preserve context; test, pipeline and chain outcomes
+remain distinct. Recorder imports are independent of Docker. Memory-only
+recording uses `ExecutionRecorder` from `/recorder`; portable rendering uses
+`/recorder/report`.
 
 **Observer API:** `create(factory, options?)`,
 `attach(clientOrPipeline, options?)`, `capture(callback, options?)`,

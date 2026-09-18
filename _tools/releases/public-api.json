@@ -306083,6 +306083,67 @@
         "kind": "variable"
       }
     ],
+    "EventEvidence": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "count",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "contractCount",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "systemCount",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "diagnosticCount",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "items",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Evidence",
+                "value": {
+                  "typeName": "Evidence"
+                }
+              }
+            },
+            {
+              "name": "omitted",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
     "Evidence": [
       {
         "declarationKind": "export",
@@ -306540,6 +306601,20 @@
               }
             },
             {
+              "name": "operationDetails",
+              "optional": true,
+              "tsType": {
+                "kind": "array",
+                "value": {
+                  "kind": "typeRef",
+                  "repr": "OperationEvidence",
+                  "value": {
+                    "typeName": "OperationEvidence"
+                  }
+                }
+              }
+            },
+            {
               "name": "chain",
               "tsType": {
                 "kind": "union",
@@ -306662,6 +306737,28 @@
                 "repr": "Evidence",
                 "value": {
                   "typeName": "Evidence"
+                }
+              }
+            },
+            {
+              "name": "events",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "EventEvidence",
+                "value": {
+                  "typeName": "EventEvidence"
+                }
+              }
+            },
+            {
+              "name": "ledgerChanges",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "LedgerChangesEvidence",
+                "value": {
+                  "typeName": "LedgerChangesEvidence"
                 }
               }
             }
@@ -306904,6 +307001,75 @@
         "kind": "interface"
       }
     ],
+    "LedgerChangesEvidence": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "created",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "updated",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "removed",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "restored",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "ttlExtended",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "ttlUnknown",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "items",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Evidence",
+                "value": {
+                  "typeName": "Evidence"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
     "ObservationOptions": [
       {
         "declarationKind": "export",
@@ -306968,6 +307134,60 @@
                     }
                   ]
                 }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "OperationEvidence": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "type",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "hostFunction",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "contract",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "method",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "extendTo",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
               }
             }
           ]
@@ -307152,6 +307372,39 @@
                     }
                   ]
                 }
+              }
+            },
+            {
+              "name": "events",
+              "optional": true,
+              "tsType": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "literal",
+                    "repr": "none",
+                    "value": {
+                      "kind": "string",
+                      "string": "none"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "summary",
+                    "value": {
+                      "kind": "string",
+                      "string": "summary"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "full",
+                    "value": {
+                      "kind": "string",
+                      "string": "full"
+                    }
+                  }
+                ]
               }
             },
             {
@@ -307468,6 +307721,28 @@
                 "repr": "Evidence",
                 "value": {
                   "typeName": "Evidence"
+                }
+              }
+            },
+            {
+              "name": "events",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "EventEvidence",
+                "value": {
+                  "typeName": "EventEvidence"
+                }
+              }
+            },
+            {
+              "name": "ledgerChanges",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "LedgerChangesEvidence",
+                "value": {
+                  "typeName": "LedgerChangesEvidence"
                 }
               }
             }
@@ -308772,6 +309047,67 @@
         "kind": "typeAlias"
       }
     ],
+    "EventEvidence": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "count",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "contractCount",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "systemCount",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "diagnosticCount",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "items",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Evidence",
+                "value": {
+                  "typeName": "Evidence"
+                }
+              }
+            },
+            {
+              "name": "omitted",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
     "Evidence": [
       {
         "declarationKind": "export",
@@ -309229,6 +309565,20 @@
               }
             },
             {
+              "name": "operationDetails",
+              "optional": true,
+              "tsType": {
+                "kind": "array",
+                "value": {
+                  "kind": "typeRef",
+                  "repr": "OperationEvidence",
+                  "value": {
+                    "typeName": "OperationEvidence"
+                  }
+                }
+              }
+            },
+            {
               "name": "chain",
               "tsType": {
                 "kind": "union",
@@ -309351,6 +309701,28 @@
                 "repr": "Evidence",
                 "value": {
                   "typeName": "Evidence"
+                }
+              }
+            },
+            {
+              "name": "events",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "EventEvidence",
+                "value": {
+                  "typeName": "EventEvidence"
+                }
+              }
+            },
+            {
+              "name": "ledgerChanges",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "LedgerChangesEvidence",
+                "value": {
+                  "typeName": "LedgerChangesEvidence"
                 }
               }
             }
@@ -310567,6 +310939,75 @@
         "kind": "interface"
       }
     ],
+    "LedgerChangesEvidence": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "created",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "updated",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "removed",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "restored",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "ttlExtended",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "ttlUnknown",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "items",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Evidence",
+                "value": {
+                  "typeName": "Evidence"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
     "ObservationOptions": [
       {
         "declarationKind": "export",
@@ -310631,6 +311072,60 @@
                     }
                   ]
                 }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "OperationEvidence": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "type",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "hostFunction",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "contract",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "method",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "extendTo",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
               }
             }
           ]
@@ -311246,6 +311741,39 @@
               }
             },
             {
+              "name": "events",
+              "optional": true,
+              "tsType": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "literal",
+                    "repr": "none",
+                    "value": {
+                      "kind": "string",
+                      "string": "none"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "summary",
+                    "value": {
+                      "kind": "string",
+                      "string": "summary"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "full",
+                    "value": {
+                      "kind": "string",
+                      "string": "full"
+                    }
+                  }
+                ]
+              }
+            },
+            {
               "name": "profiling",
               "optional": true,
               "tsType": {
@@ -311559,6 +312087,28 @@
                 "repr": "Evidence",
                 "value": {
                   "typeName": "Evidence"
+                }
+              }
+            },
+            {
+              "name": "events",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "EventEvidence",
+                "value": {
+                  "typeName": "EventEvidence"
+                }
+              }
+            },
+            {
+              "name": "ledgerChanges",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "LedgerChangesEvidence",
+                "value": {
+                  "typeName": "LedgerChangesEvidence"
                 }
               }
             }
@@ -312073,6 +312623,67 @@
     ]
   },
   "@colibri/test-tooling/recorder/report": {
+    "EventEvidence": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "count",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "contractCount",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "systemCount",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "diagnosticCount",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "items",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Evidence",
+                "value": {
+                  "typeName": "Evidence"
+                }
+              }
+            },
+            {
+              "name": "omitted",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
     "Evidence": [
       {
         "declarationKind": "export",
@@ -312530,6 +313141,20 @@
               }
             },
             {
+              "name": "operationDetails",
+              "optional": true,
+              "tsType": {
+                "kind": "array",
+                "value": {
+                  "kind": "typeRef",
+                  "repr": "OperationEvidence",
+                  "value": {
+                    "typeName": "OperationEvidence"
+                  }
+                }
+              }
+            },
+            {
               "name": "chain",
               "tsType": {
                 "kind": "union",
@@ -312654,6 +313279,97 @@
                   "typeName": "Evidence"
                 }
               }
+            },
+            {
+              "name": "events",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "EventEvidence",
+                "value": {
+                  "typeName": "EventEvidence"
+                }
+              }
+            },
+            {
+              "name": "ledgerChanges",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "LedgerChangesEvidence",
+                "value": {
+                  "typeName": "LedgerChangesEvidence"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "LedgerChangesEvidence": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "created",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "updated",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "removed",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "restored",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "ttlExtended",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "ttlUnknown",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "items",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Evidence",
+                "value": {
+                  "typeName": "Evidence"
+                }
+              }
             }
           ]
         },
@@ -312699,6 +313415,60 @@
           }
         },
         "kind": "function"
+      }
+    ],
+    "OperationEvidence": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "type",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "hostFunction",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "contract",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "method",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "extendTo",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
       }
     ],
     "ProfileGroup": [
@@ -313013,6 +313783,28 @@
                 "repr": "Evidence",
                 "value": {
                   "typeName": "Evidence"
+                }
+              }
+            },
+            {
+              "name": "events",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "EventEvidence",
+                "value": {
+                  "typeName": "EventEvidence"
+                }
+              }
+            },
+            {
+              "name": "ledgerChanges",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "LedgerChangesEvidence",
+                "value": {
+                  "typeName": "LedgerChangesEvidence"
                 }
               }
             }

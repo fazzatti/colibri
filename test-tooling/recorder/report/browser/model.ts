@@ -31,7 +31,11 @@ const metricColumns = [
   ["duration", "Duration (ms)"], ["instructions", "Instructions (budget)"],
   ["reads", "Read-only entries"], ["writes", "Read-write entries"],
   ["readBytes", "Disk read (bytes)"], ["writeBytes", "Write (bytes)"],
-  ["fee", "Minimum resource fee (stroops)"], ["charged", "Confirmed fee charged (stroops)"]
+  ["fee", "Minimum resource fee (stroops)"], ["charged", "Confirmed fee charged (stroops)"],
+  ["rent", "Confirmed rent (stroops)"], ["events", "Confirmed events"], ["simEvents", "Simulated events"],
+  ["created", "Created entries"], ["updated", "Updated entries"], ["removed", "Removed entries"],
+  ["restored", "Restored entries"], ["ttl", "TTL extensions"],
+  ["simCreated", "Simulated created entries"], ["simTtl", "Simulated TTL extensions"]
 ];
 for (const [key] of metricColumns) { defaults[key + "Min"] = ""; defaults[key + "Max"] = ""; }
 let state = { ...defaults };
@@ -43,7 +47,7 @@ function readState() {
   const params = new URLSearchParams(location.hash.slice(1));
   for (const key of Object.keys(defaults)) if (params.has(key)) state[key] = params.get(key);
   if (!["summary", "evidence", "profiling"].includes(state.tab)) state.tab = "summary";
-  if (!["stages", "inputs", "authorization"].includes(state.detail)) state.detail = "stages";
+  if (!["stages", "inputs", "authorization", "events"].includes(state.detail)) state.detail = "stages";
   if (!files.includes(state.file)) state.file = "";
   if (!byId.has(state.record)) state.record = "";
   if (!["groups", "executions"].includes(state.mode)) state.mode = "executions";
@@ -87,7 +91,7 @@ function matches(r, scoped = true) {
   const e = r.execution;
   const test = ownerTest(r);
   const text = [r.name, fileLabel(r.file), ...(r.path || []), test?.name,
-    e?.hash, e?.innerHash, e?.contract, e?.method, e?.client].join(" ").toLowerCase();
+    e?.hash, e?.innerHash, e?.contract, e?.method, e?.client, e ? operationLabel(r) : ""].join(" ").toLowerCase();
   return (!state.q || text.includes(state.q.toLowerCase())) &&
     (!state.test || (test && status(test) === state.test)) &&
     (!state.outcome || (e && r.status === state.outcome)) &&
@@ -148,15 +152,50 @@ function actionRow(row, control) {
   row.onclick = (event) => { if (!event.target.closest("button, a, input, select")) control.click(); };
 }
 function itemIcon(kind) {
-  if (kind === "test") {
+  const paths = {
+    test: "M14 2l8 8M16 4L5 15a4.24 4.24 0 0 0 6 6L22 10M9 11l6 6",
+    file: "M14 2H5v20h14V7zM14 2v5h5M8 12h8M8 16h6",
+    before: "M4 5v7h15M14 7l5 5-5 5",
+    after: "M20 5v7H5M10 7l-5 5 5 5"
+  };
+  if (paths[kind]) {
     const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    for (const [key, value] of Object.entries({ class: "item-icon test", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "1.6", "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false" })) icon.setAttribute(key, value);
+    for (const [key, value] of Object.entries({ class: "item-icon " + kind, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "1.6", "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false" })) icon.setAttribute(key, value);
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", "M14 2l8 8M16 4L5 15a4.24 4.24 0 0 0 6 6L22 10M9 11l6 6");
+    path.setAttribute("d", paths[kind]);
     icon.append(path); return icon;
   }
   const icon = el("span", undefined, "item-icon " + kind); icon.setAttribute("aria-hidden", "true");
   return icon;
+}
+function recordIcon(r) {
+  if (r.kind === "suite") return "folder";
+  if (r.kind === "test") return "test";
+  if (r.kind === "hook") return /^after/i.test(r.name) ? "after" : "before";
+  return "file";
+}
+// Older reports may retain the operation XDR JSON even without operationDetails.
+function operationDetails(r) {
+  const e = r.execution;
+  if (e.operationDetails?.length) return e.operationDetails;
+  const params = r.data?.input?.parameters || r.data?.parameters;
+  return e.operations.map((type, i) => {
+    const body = Array.isArray(params) ? params[i]?.body : undefined;
+    const host = body?.invoke_host_function?.host_function;
+    const hostNames = { invoke_contract: "hostFunctionTypeInvokeContract", create_contract: "hostFunctionTypeCreateContract", create_contract_v2: "hostFunctionTypeCreateContractV2", upload_contract_wasm: "hostFunctionTypeUploadContractWasm" };
+    const hostFunction = host && typeof host === "object" ? hostNames[Object.keys(host)[0]] : undefined;
+    return { type, hostFunction, method: host?.invoke_contract?.function_name || e.method, extendTo: body?.extend_footprint_ttl?.extend_to };
+  });
+}
+function operationLabel(r) {
+  const labels = { hostFunctionTypeCreateContract: "deploy contract", hostFunctionTypeCreateContractV2: "deploy contract (constructor)", hostFunctionTypeUploadContractWasm: "upload WASM", hostFunctionTypeInvokeContract: "invoke contract" };
+  const details = operationDetails(r);
+  return details.map((op) => {
+    if (op.type === "invokeHostFunction") return op.type + (op.method ? " / " + op.method : labels[op.hostFunction] ? " / " + labels[op.hostFunction] : "");
+    if (op.type === "restoreFootprint") return op.type + " / restore entries";
+    if (op.type === "extendFootprintTtl") return op.type + " / extend TTL" + (op.extendTo === undefined ? "" : " (target: current ledger + " + op.extendTo + ")");
+    return op.type;
+  }).join(", ") || r.execution.method || "Unavailable";
 }
 function disclosureLabel(control, name, open, kind) {
   const arrow = el("span", open === undefined ? "" : open ? "▾" : "▸", "arrow");

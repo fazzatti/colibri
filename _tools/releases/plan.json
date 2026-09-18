@@ -5,7 +5,7 @@
     "@colibri/test-tooling": {
       "bump": "minor",
       "reason": "Add opt-in test execution recording, Deno BDD integration, per-runtime journals, aggregation and offline HTML evidence/profiling reports.",
-      "apiReview": "Add independent recorder, recorder/deno, recorder/report and recorder/cli entrypoints. Existing Quickstart exports and behavior are unchanged. No Core or Convee API changes; observation uses existing public pipeline hooks."
+      "apiReview": "Add independent recorder, recorder/deno, recorder/report and recorder/cli entrypoints. Existing Quickstart exports and behavior are unchanged. No Core or Convee API changes; observation uses existing public pipeline hooks. Recorder evidence also includes optional event collection, operation subtypes, confirmed rent and simulated/confirmed ledger mutation measurements; existing report fields remain compatible."
     }
   }
 }

@@ -3,11 +3,11 @@ export const profilingScript: string = String.raw`
 function groupKey(r) {
   const e = r.execution;
   return JSON.stringify([state.cross ? null : r.file, e.network ?? null, e.client ?? null,
-    e.contract ?? null, e.method ?? null, e.kind, e.operations, r.status, e.chain,
+    e.contract ?? null, e.method ?? null, e.kind, operationDetails(r), r.status, e.chain,
     // Missing identity cannot establish that two calls are comparable.
     !e.network || (["read", "invoke"].includes(e.kind) && (!e.contract || !e.method)) || (!e.method && !e.operations.length) ? r.id : null]);
 }
-function operationName(r) { const e = r.execution; return e.kind + " " + (e.method || e.operations.join(", ") || "unknown operation"); }
+function operationName(r) { const e = r.execution; return e.kind + " " + operationLabel(r); }
 function callContext(r) {
   const e = r.execution, text = [fileLabel(r.file), e.client || "Unnamed client", ownerTest(r)?.name].filter(Boolean).join(" · ");
   const context = el("small", text, "context-label compact-context"); context.title = text;
@@ -50,7 +50,7 @@ function groupDefinition(host, members) {
     ["Files", state.cross ? [...new Set(members.map((item) => fileLabel(item.file)))].join(", ") : fileLabel(r.file)],
     ["Network", e.network || "Unavailable — this call stays separate"], ["Client label", e.client || "Unnamed"],
     ["Contract", e.contract || "Unavailable / not applicable"], ["Method", e.method || "Unavailable / not applicable"],
-    ["Kind / operation sequence", e.kind + " / " + e.operations.join(", ")],
+    ["Kind / operation sequence", e.kind + " / " + operationLabel(r)],
     ["Pipeline outcome", r.status], ["Chain outcome", e.chain]
   ];
   factsTable(host, facts);

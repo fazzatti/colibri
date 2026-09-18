@@ -10,6 +10,8 @@ export interface RecorderOptions {
   capture?: CaptureLevel;
   /** Authorization details to collect independently of capture level. */
   authorization?: { level: "none" | "summary" | "full"; signatures?: boolean };
+  /** Event counts by default; full adds bounded, sanitized event payloads. */
+  events?: "none" | "summary" | "full";
   /** Optional timing, resource budget and fee collection. */
   profiling?: { timings?: boolean; resources?: boolean; fees?: boolean };
   /** Positive bounds for retained evidence. */
@@ -97,6 +99,8 @@ export interface ExecutionEvidence {
   method?: string;
   /** Operation types in this transaction. */
   operations: string[];
+  /** Operation subtypes and targets, in transaction order. */
+  operationDetails?: OperationEvidence[];
   /** Chain outcome; unknown does not imply failure or success. */
   chain: "not-submitted" | "unknown" | "confirmed-success" | "confirmed-failed";
   /** Observed outer transaction hash, independent of confirmation. */
@@ -115,6 +119,55 @@ export interface ExecutionEvidence {
   feeCharged?: string;
   /** Confirmed resource fee components; rent is a subset. */
   resourceFees?: Evidence;
+  /** Events from confirmed metadata, separately from simulation and diagnostics. */
+  events?: EventEvidence;
+  /** Confirmed ledger mutations across transaction and operation metadata. */
+  ledgerChanges?: LedgerChangesEvidence;
+}
+/** One Stellar operation, including its Soroban host function when applicable. */
+export interface OperationEvidence {
+  /** Stellar operation type, such as invokeHostFunction or restoreFootprint. */
+  type: string;
+  /** Soroban host function discriminator. */
+  hostFunction?: string;
+  /** Invoked contract address. */
+  contract?: string;
+  /** Invoked contract method. */
+  method?: string;
+  /** Requested TTL extension, in ledgers from the current ledger. */
+  extendTo?: number;
+}
+/** Counts cover all observed events; payloads are optional and bounded. */
+export interface EventEvidence {
+  /** Contract plus system events; excludes diagnostics and unsuccessful calls. */
+  count: number;
+  /** Contract events from successful calls. Simulation does not imply commitment. */
+  contractCount: number;
+  /** System events, including transaction-level events when available. */
+  systemCount: number;
+  /** Diagnostic events and events from unsuccessful contract calls. */
+  diagnosticCount: number;
+  /** Bounded decoded payloads, passed through the configured sanitizer. */
+  items?: Evidence;
+  /** Number of payloads omitted by the event entry limit or summary mode. */
+  omitted: number;
+}
+/** Counts of transaction/operation mutation records, not distinct ledger keys. */
+export interface LedgerChangesEvidence {
+  /** Created-entry records, including TTL entries. */
+  created: number;
+  /** Updated-entry records. STATE baselines are excluded. */
+  updated: number;
+  /** Removed-entry records. */
+  removed: number;
+  /** Explicit restored-entry records. */
+  restored: number;
+  /** TTL updates with a known baseline and a larger live-until ledger. */
+  ttlExtended: number;
+  /** TTL updates without a baseline; never assumed to be extensions. */
+  ttlUnknown: number;
+  /** Bounded mutation details and TTL before/after values when captured. */
+  items?: Evidence;
 }
 /** Timing measures the observed hook boundary, not preceding plugins or RPC polling counts. */
 export interface StageEvidence {
@@ -151,6 +204,10 @@ export interface ResourceProfile {
   minResourceFee?: string;
   /** Separate restoration estimate when required. */
   restoration?: Evidence;
+  /** Simulated events, not committed emissions. */
+  events?: EventEvidence;
+  /** Simulated ledger mutations when the RPC provides stateChanges. */
+  ledgerChanges?: LedgerChangesEvidence;
 }
 /** Independent file fragment, persisted with monotonically increasing event sequence numbers. */
 export interface JournalEvent {
