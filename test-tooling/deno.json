@@ -1,13 +1,17 @@
 {
   "name": "@colibri/test-tooling",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "MIT",
   "imports": {
     "@/": "./",
     "dockerode": "npm:dockerode@3.3.3"
   },
   "exports": {
-    ".": "./mod.ts"
+    ".": "./mod.ts",
+    "./recorder": "./recorder/index.ts",
+    "./recorder/deno": "./recorder/deno/index.ts",
+    "./recorder/report": "./recorder/report/index.ts",
+    "./recorder/cli": "./recorder/cli/index.ts"
   },
   "lint": {
     "plugins": [

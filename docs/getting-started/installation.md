@@ -44,7 +44,7 @@ This will add imports similar to:
     "@colibri/build-verification": "jsr:@colibri/build-verification@^0.4.5",
     "@colibri/identicon": "jsr:@colibri/identicon@^1.2.0",
     "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^1.1.0",
-    "@colibri/test-tooling": "jsr:@colibri/test-tooling@^1.0.0",
+    "@colibri/test-tooling": "jsr:@colibri/test-tooling@^1.1.0",
     "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^1.0.1",
     "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^1.0.1",
     "@colibri/plugin-sep29": "jsr:@colibri/plugin-sep29@^1.0.1"

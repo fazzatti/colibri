@@ -21,3 +21,6 @@ _internal/contracts/*/local-bindings/
 
 
 .DS_Store
+
+# Local test evidence artifacts
+artifacts/colibri/

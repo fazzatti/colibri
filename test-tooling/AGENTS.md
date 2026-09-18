@@ -6,9 +6,9 @@ These instructions apply when editing `test-tooling/`.
 
 `test-tooling/` is intentionally different from the rest of the workspace:
 
-- it is Docker-backed
+- its Quickstart harness is Docker-backed; the recorder is independent of Docker
 - it models runtime infrastructure rather than transaction orchestration
-- it exposes a typed Quickstart harness instead of Colibri pipeline APIs
+- it exposes a typed Quickstart harness and observational test execution recording
 
 Follow the local patterns here instead of forcing this package to look exactly
 like `core/`.
@@ -24,7 +24,12 @@ The main public API is `StellarTestLedger`, a Quickstart harness that:
 - supports ephemeral and persistent storage
 
 Do not turn this package into a generic Colibri utility dump. Keep it centered
-on test infrastructure and Quickstart lifecycle management.
+on test infrastructure, Quickstart lifecycle management and execution evidence.
+
+The recorder lives under `recorder/` with separate in-memory, Deno, report and CLI
+entrypoints. Preserve callable client identity, original return/error behavior and
+explicit signing. Keep runner results separate from observed callback outcomes.
+Standalone HTML reports must work offline and safely render arbitrary evidence.
 
 ## Commands
 

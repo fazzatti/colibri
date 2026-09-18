@@ -20,3 +20,9 @@ Quickstart image. This is host-side tooling, not a browser library.
 
 See the [API and error reference](../reference/README.md) for exact exported
 symbols and complete error contexts.
+
+## Execution evidence
+
+[Record test evidence](test-tooling/recorder.md) covers contract and pipeline
+observation, per-file journals, JSON/HTML artifacts and transaction profiling.
+These entrypoints do not require Docker.

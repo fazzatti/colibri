@@ -330,3 +330,45 @@ subclasses exported from the package root:
 These errors include stable codes, a source of
 `@colibri/test-tooling/quickstart`, and metadata with the original cause and
 structured payload.
+
+## Test execution recorder
+
+Use `@colibri/test-tooling/recorder/deno` to configure a `TestRecorder`, then
+`recorder.recordTests(import.meta.url)` for familiar BDD helpers and an
+`observer`. Attach it to contract clients or classic/Soroban pipelines to
+collect results, authorization details and optional timings/resource/fee
+profiling.
+
+```ts
+import { TestRecorder } from "@colibri/test-tooling/recorder/deno";
+
+export const recorder = new TestRecorder({
+  capture: "details",
+  profiling: { timings: true, resources: true, fees: true },
+  output: {
+    json: { directory: "./artifacts/colibri" },
+    html: true,
+    summary: true,
+  },
+});
+```
+
+```sh
+deno run -A jsr:@colibri/test-tooling/recorder/cli run \
+  --config=tests/recording.ts -- -A --parallel tests
+```
+
+The runner writes JSON and a standalone HTML evidence/profiling report even when
+tests fail. Recorder imports are independent of Docker. Memory-only recording
+uses `ExecutionRecorder` from `/recorder`; portable rendering uses
+`/recorder/report`.
+
+**Observer API:** `create(factory, options?)`,
+`attach(clientOrPipeline, options?)`, `capture(callback, options?)`,
+`log(message, data?)`, `flush()`. `recorder.report()` returns a defensive
+in-memory snapshot. Capture is observational: client identities, returned values
+and thrown errors are preserved.
+
+See [Record test evidence](../docs/packages/test-tooling/recorder.md) for setup,
+configuration, aggregation, HTML navigation, profiling units and observation
+limits.

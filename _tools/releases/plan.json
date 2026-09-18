@@ -1,26 +1,11 @@
 {
   "schema": 1,
-  "base": "2a5ded08d6cac7ae452c083468575d1f70a20171",
+  "base": "3ef536d196884f66e7a38f0ee72a035d1f925070",
   "packages": {
-    "@colibri/core": {
-      "bump": "patch",
-      "reason": "Standardize internal error namespace imports as ERROR and align error references. Document CAP-40 signed-payload signer nomenclature.",
-      "apiReview": "Local namespace aliases change from E to ERROR. Existing exported names, constructor identities, signatures, error codes and behavior are preserved. The declaration snapshot changes only local namespace qualifiers; no API additions or removals. Existing Core dependency ranges remain sufficient."
-    },
-    "@colibri/plugin-fee-bump": {
-      "bump": "patch",
-      "reason": "Standardize internal error namespace imports as ERROR and align error references.",
-      "apiReview": "Local namespace aliases change from E to ERROR. Existing exported names, constructor identities, signatures, error codes and behavior are preserved. The declaration snapshot changes only local namespace qualifiers; no API additions or removals. Existing Core dependency ranges remain sufficient."
-    },
-    "@colibri/plugin-channel-accounts": {
-      "bump": "patch",
-      "reason": "Standardize internal error namespace imports as ERROR and align error references.",
-      "apiReview": "Local namespace aliases change from E to ERROR. Existing exported names, constructor identities, signatures, error codes and behavior are preserved. The declaration snapshot changes only local namespace qualifiers; no API additions or removals. Existing Core dependency ranges remain sufficient."
-    },
-    "@colibri/plugin-sep29": {
-      "bump": "patch",
-      "reason": "Standardize internal error namespace imports as ERROR and align error references.",
-      "apiReview": "Local namespace aliases change from E to ERROR. Existing exported names, constructor identities, signatures, error codes and behavior are preserved. The declaration snapshot changes only local namespace qualifiers; no API additions or removals. Existing Core dependency ranges remain sufficient."
+    "@colibri/test-tooling": {
+      "bump": "minor",
+      "reason": "Add opt-in test execution recording, Deno BDD integration, per-runtime journals, aggregation and offline HTML evidence/profiling reports.",
+      "apiReview": "Add independent recorder, recorder/deno, recorder/report and recorder/cli entrypoints. Existing Quickstart exports and behavior are unchanged. No Core or Convee API changes; observation uses existing public pipeline hooks."
     }
   }
 }
