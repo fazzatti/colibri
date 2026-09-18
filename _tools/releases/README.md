@@ -106,8 +106,15 @@ Intentional breaking changes require a major and an explicit migration review.
   package-specific tags. It revalidates the cumulative plan against the push's
   pre-change main commit (`github.event.before`), so an already-used plan cannot
   approve another push without renewed release review. It checks actual JSR
-  distributions after publication. A failure after publication requires a
-  corrective release; it cannot undo or overwrite an immutable package version.
+  distributions after publication. A defect in a published package requires a
+  corrective package release; immutable versions cannot be overwritten. A defect
+  in the verification tooling can be fixed and checked against the existing
+  published versions without bumping packages.
+- Tag detection includes React and every other workspace package. The
+  `test:compatibility-runner` guard executes the workflow's detection script
+  against the package inventory, checking both missing and existing tags. A
+  missing tag is created by the next successful main publication workflow;
+  existing tags are skipped.
 
 Deno's 24-hour dependency-age policy stays active. The exact reviewed Convee
 2.1.0 integration is exempted so new releases can be tested immediately. The

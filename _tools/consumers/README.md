@@ -217,9 +217,15 @@ artifact destination. To validate that tool using an already published baseline,
 run `check:consumers:published --versions-from-ref origin/main`.
 
 The npm registry check imports canonical `@jsr/colibri__…` package names to
-avoid alias-induced duplicate installations. Applications using aliases should
-inspect their dependency graph; JSR recommends pnpm where npm deduplication is
-problematic. See [JSR npm compatibility](https://jsr.io/docs/npm-compatibility).
+avoid alias-induced duplicate installations. Fixture preparation parses
+TypeScript and rewrites module specifiers only (imports, re-exports, import
+types and literal dynamic imports). Assertions, string literal types, comments
+and generated-code examples retain their original text. The same rewriter
+handles SDK and npm fixture aliases in candidate checks.
+`test:compatibility-runner` covers this boundary, including the real bindings
+README assertion. Applications using aliases should inspect their dependency
+graph; JSR recommends pnpm where npm deduplication is problematic. See
+[JSR npm compatibility](https://jsr.io/docs/npm-compatibility).
 
 Build Verification and Test Tooling remain Deno/Docker packages for this support
 policy. All their public entrypoints are type-checked; normal integration suites

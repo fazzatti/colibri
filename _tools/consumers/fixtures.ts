@@ -1,5 +1,6 @@
 /** One consumer inventory for candidate builds and actual published distributions. */
 import { resolve } from "node:path";
+import { rewriteImports } from "./declarations/imports.ts";
 export const fixtureRoot = resolve(import.meta.dirname!, "v1");
 
 export const consumerFiles = [
@@ -23,12 +24,24 @@ export async function copyConsumerFixtures(destination: string): Promise<void> {
   }
 }
 
-/** Rewrite fixture-only npm specifiers for installed TypeScript consumers. */
-export function installedFixture(source: string): string {
-  return source.replace(
-    /"npm:(react(?:-dom)?|@types\/react(?:-dom)?|@tanstack\/react-query|@stellar\/freighter-api|@creit.tech\/stellar-wallets-kit)@\^?[0-9.]+(\/[^"]*)?"/g,
-    (_match, name, subpath) => `"${name}${subpath ?? ""}"`,
-  )
-    .replaceAll('"stellar-sdk', '"@stellar/stellar-sdk')
-    .replaceAll('"convee"', '"@jsr/fifo__convee"');
+/** Rewrite module specifiers without changing fixture assertions or generated text. */
+export function installedFixture(
+  source: string,
+  packages: Record<string, string> = {},
+): string {
+  const aliases: Record<string, string> = {
+    "stellar-sdk": "@stellar/stellar-sdk",
+    convee: "@jsr/fifo__convee",
+    ...packages,
+  };
+  return rewriteImports(source, (specifier) => {
+    const alias = Object.keys(aliases).find((name) =>
+      specifier === name || specifier.startsWith(`${name}/`)
+    );
+    if (alias) return aliases[alias] + specifier.slice(alias.length);
+    return specifier.replace(
+      /^npm:(react(?:-dom)?|@types\/react(?:-dom)?|@tanstack\/react-query|@stellar\/freighter-api|@creit.tech\/stellar-wallets-kit)@\^?[0-9.]+(\/.*)?$/,
+      "$1$2",
+    );
+  });
 }
