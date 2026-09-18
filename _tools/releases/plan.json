@@ -1,24 +1,5 @@
 {
   "schema": 1,
-  "base": "3ef536d196884f66e7a38f0ee72a035d1f925070",
-  "packages": {
-    "@colibri/test-tooling": {
-      "bump": "minor",
-      "reason": "Add opt-in test execution recording, Deno and native Node BDD integration, per-runtime journals, aggregation and offline HTML evidence/profiling reports.",
-      "apiReview": "Add independent recorder, recorder/deno, recorder/node, recorder/report and recorder/cli entrypoints. The CLI and artifact writer support Node without Deno; native test callbacks and final runner outcomes remain separate. Existing Quickstart exports and behavior are unchanged. No Core or Convee API changes; observation uses existing public pipeline hooks. Recorder evidence also includes optional event collection, operation subtypes, confirmed rent and simulated/confirmed ledger mutation measurements; existing report fields remain compatible."
-    },
-    "@colibri/webauth": {
-      "bump": "minor",
-      "reason": "Support asynchronous Ed25519 envelope signers in SEP-10 with signed-response validation, renewed expiry checks and optional cancellation.",
-      "apiReview": "Add Sep10Signer and widen only SEP-10 account/client-domain inputs to SDK Keypair or Core EnvelopeSigner. Preserve synchronous keypairs, local signers, mixed arrays and SEP-45 authorization types. Add optional AbortSignal for pending SEP-10 flows; reject modified or unsigned wallet results."
-    },
-    "@colibri/react": {
-      "bump": "minor",
-      "reason": "Support asynchronous SEP-10 wallet authentication with cancellation tied to session and connection lifecycle.",
-      "apiReview": "Existing session and hook signatures remain compatible through the expanded WebAuth SEP-10 input. Pending approval is invalidated on logout, connection changes and disposal before token exchange; SEP-45 remains an explicit authorization-entry flow.",
-      "dependencies": {
-        "@colibri/webauth": "^1.2.0"
-      }
-    }
-  }
+  "base": "752754109c1094f1fbccb2cb30cc8afd821a3c5a",
+  "packages": {}
 }

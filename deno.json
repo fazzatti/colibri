@@ -54,7 +54,7 @@
     "test:browser-runner": "deno test -A --clean _tools/consumers/browser-fixture.integration.test.ts _tools/recorder/browser.integration.test.ts",
     "check:consumers:ci": "deno run -A _tools/consumers/ci/index.ts",
     "test:declarations": "deno test -A --check --clean _tools/consumers/declarations",
-    "test:compatibility-runner": "deno test -A --check --clean _tools/consumers/ci",
+    "test:compatibility-runner": "deno test -A --check --clean _tools/consumers/ci _tools/consumers/fixtures.unit.test.ts",
     "check:consumers": "deno run -A _tools/consumers/check.ts",
     "check:consumers:deno": "deno run -A _tools/consumers/deno.ts",
     "check:consumers:dependencies": "deno run -A _tools/consumers/dependencies.ts",

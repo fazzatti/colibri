@@ -1,4 +1,4 @@
-/** Rewrite only module specifiers in emitted declarations, preserving their types. */
+/** Rewrite module specifiers in TypeScript source or declarations, preserving literals. */
 import ts from "npm:typescript@5.9.3";
 
 export function rewriteImports(
@@ -19,12 +19,17 @@ export function rewriteImports(
         (ts.isImportDeclaration(parent) || ts.isExportDeclaration(parent)) &&
           parent.moduleSpecifier === node ||
         ts.isLiteralTypeNode(parent) && ts.isImportTypeNode(parent.parent) &&
-          parent.parent.argument === parent
+          parent.parent.argument === parent ||
+        ts.isCallExpression(parent) &&
+          parent.expression.kind === ts.SyntaxKind.ImportKeyword &&
+          parent.arguments[0] === node
       ) {
+        const resolved = resolve(node.text);
+        if (resolved === node.text) return;
         edits.push({
           start: node.getStart(file),
           end: node.end,
-          text: JSON.stringify(resolve(node.text)),
+          text: JSON.stringify(resolved),
         });
       }
     }

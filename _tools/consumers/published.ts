@@ -131,13 +131,15 @@ try {
       ),
     ),
   );
+  const npmAliases = Object.fromEntries(
+    inventory.map((pkg) => [pkg.name, npmName(pkg.name)]),
+  );
   for (const name of consumerFiles) {
-    let source = await Deno.readTextFile(resolve(temporary, name));
-    for (const pkg of inventory) {
-      source = source.replaceAll(`"${pkg.name}`, `"${npmName(pkg.name)}`);
-    }
-    source = installedFixture(source);
-    await Deno.writeTextFile(resolve(npm, name), source);
+    const source = await Deno.readTextFile(resolve(temporary, name));
+    await Deno.writeTextFile(
+      resolve(npm, name),
+      installedFixture(source, npmAliases),
+    );
   }
   await command("npx", [
     "--no-install",

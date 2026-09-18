@@ -68,6 +68,9 @@ jobs:
           check_package "contract-bindings" "contract-bindings"
           check_package "core" "core"
 
+          # Check React package
+          check_package "react" "react"
+
           # Check rpc-streamer package
           check_package "rpc-streamer" "rpc-streamer"
 
