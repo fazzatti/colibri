@@ -1,6 +1,8 @@
 import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { BUILD_VERIFICATION_PACKAGE_VERSION } from "@/core/evidence/accumulate.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 type PackageMetadata = {
   name?: unknown;

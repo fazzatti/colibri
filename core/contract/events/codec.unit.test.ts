@@ -1,9 +1,11 @@
 import { assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Spec } from "stellar-sdk/contract";
 import { xdr } from "stellar-sdk";
 import { validateEventValue } from "@/contract/events/codec.ts";
 import { INVALID_SPEC } from "@/contract/events/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const u32 = xdr.ScSpecTypeDef.scSpecTypeU32();
 const field = (name: string) =>

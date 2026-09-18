@@ -1,10 +1,12 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { parseClassicTransactionOutcome } from "@/processes/parse-classic-transaction-outcome/index.ts";
 import * as ERROR from "@/processes/parse-classic-transaction-outcome/error.ts";
 import type { SendTransactionOutput } from "@/processes/send-transaction/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const manageOfferSuccess = new xdr.ManageOfferSuccessResult({
   offersClaimed: [],

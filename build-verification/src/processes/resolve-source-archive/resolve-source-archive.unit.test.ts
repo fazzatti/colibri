@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import type { ResolvedVerificationSource } from "@/core/types/source.ts";
 import {
   MissingVerificationSourceError,
@@ -17,6 +17,8 @@ import {
 } from "@/processes/testing.test.ts";
 import { ResolveSourceArchiveUnexpectedError } from "@/processes/resolve-source-archive/error.ts";
 import { resolveSourceArchive } from "@/processes/resolve-source-archive/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("resolveSourceArchive", () => {
   it("passes terminal state through unchanged", async () => {

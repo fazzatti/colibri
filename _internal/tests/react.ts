@@ -7,6 +7,11 @@ import { createRoot } from "npm:react-dom@19.3.0/client";
 import { JSDOM } from "npm:jsdom@26.1.0";
 import { assert } from "@std/assert";
 export async function mountReact(node: ReactNode) {
+  const [major, minor] = Deno.version.deno.split(".").map(Number);
+  assert(
+    major > 2 || (major === 2 && minor >= 7),
+    "React tests require Deno 2.7 or newer (CI uses 2.7.11). Deno 2.6 has incompatible CommonJS globals/timers; update your local runtime before running these tests.",
+  );
   const dom = new JSDOM("<!doctype html><div id='root'></div>", {
     url: "http://localhost/",
   });

@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects, assertStrictEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   Asset,
@@ -23,6 +23,8 @@ import {
   SEP29_PLUGIN_ID,
   SEP29_PLUGIN_TARGET,
 } from "@/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("SEP-29 transaction inspection", () => {
   const source = LocalSigner.generateRandom().publicKey();

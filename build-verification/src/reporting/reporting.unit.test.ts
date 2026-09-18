@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { TEST_LIMITS, TEST_NOW, testEvidence } from "@/testing.test.ts";
 import {
   EvidenceWriteFailedError,
@@ -13,6 +13,8 @@ import {
   recordVerificationLog,
 } from "@/reporting/logger.ts";
 import type { VerificationLogEvent } from "@/core/types/result.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const event = (
   overrides: Partial<VerificationLogEvent> = {},

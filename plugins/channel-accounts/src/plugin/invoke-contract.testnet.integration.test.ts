@@ -1,6 +1,6 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { assertEquals, assertExists } from "@std/assert";
-import { beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   createInvokeContractPipeline,
   initializeWithFriendbot,
@@ -19,6 +19,10 @@ import {
 } from "stellar-sdk";
 import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
 import { ChannelAccounts, createChannelAccountsPlugin } from "@/index.ts";
+
+const { beforeAll, describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 const asEnvelopeXdr = (
   envelopeXdr: string | xdr.TransactionEnvelope,
@@ -105,7 +109,10 @@ describe(
         },
       });
 
-      const pipeline = createInvokeContractPipeline({ networkConfig });
+      const pipeline = suiteObserver.attach(
+        createInvokeContractPipeline({ networkConfig }),
+        { name: "pipeline" },
+      );
       pipeline.use(plugin);
       pipeline.use(feeBumpPlugin);
 

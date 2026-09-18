@@ -1,11 +1,13 @@
 import { assertStrictEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { assertSpyCalls, stub } from "@std/testing/mock";
 import {
   createLogger,
   type LoggerLike,
   LogLevel,
 } from "@/quickstart/logging.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Quickstart logging", () => {
   it("createLogger returns the provided logger unchanged", () => {

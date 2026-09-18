@@ -1,5 +1,5 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   decodeGitHubReleaseAsset,
   decodeGitHubRevision,
@@ -10,6 +10,8 @@ import {
   GitHubReleaseAssetResolutionFailedError,
   GitHubRevisionResolutionFailedError,
 } from "@/providers/source/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("GitHub response boundaries", () => {
   const bytes = (text: string) => new TextEncoder().encode(text);

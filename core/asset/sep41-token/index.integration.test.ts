@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertExists } from "@std/assert";
-import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { StellarTestLedger } from "@colibri/test-tooling";
 import { SEP41TokenContract } from "@/asset/sep41-token/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
@@ -23,6 +23,9 @@ import {
   rpc,
   type xdr,
 } from "stellar-sdk";
+
+const { afterAll, beforeAll, describe, it, observer: suiteObserver } =
+  recordColibriTests(import.meta.url);
 
 describe("SEP41TokenContract integration", disableSanitizeConfig, () => {
   const ledger = new StellarTestLedger({
@@ -81,26 +84,32 @@ describe("SEP41TokenContract integration", disableSanitizeConfig, () => {
       source: owner.address(),
       signers: [owner.signer()],
     };
-    const contract = new Contract({
-      networkConfig,
-      rpc: rpcServer,
-      contractConfig: {
-        wasm: await loadWasmFile(
-          "./_internal/tests/compiled-contracts/sep41_token_contract.wasm",
-        ),
-        spec: SEP41_TOKEN_SPEC,
-      },
-    });
+    const contract = suiteObserver.attach(
+      new Contract({
+        networkConfig,
+        rpc: rpcServer,
+        contractConfig: {
+          wasm: await loadWasmFile(
+            "./_internal/tests/compiled-contracts/sep41_token_contract.wasm",
+          ),
+          spec: SEP41_TOKEN_SPEC,
+        },
+      }),
+      { name: "contract" },
+    );
     await contract.uploadWasm(config);
     await contract.deploy({
       config,
       constructorArgs: { recipient: owner.address() },
     });
-    token = new SEP41TokenContract({
-      networkConfig,
-      rpc: rpcServer,
-      contractId: contract.getContractId() as ContractId,
-    });
+    token = suiteObserver.attach(
+      new SEP41TokenContract({
+        networkConfig,
+        rpc: rpcServer,
+        contractId: contract.getContractId() as ContractId,
+      }),
+      { name: "token" },
+    );
   });
 
   afterAll(async () => {

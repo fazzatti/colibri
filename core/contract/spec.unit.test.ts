@@ -1,5 +1,5 @@
 import { assertEquals, assertStrictEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Ok,
   type Result as NativeResult,
@@ -17,6 +17,10 @@ import {
   contractId,
 } from "colibri-internal/tests/binding-fixtures.ts";
 
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
+
 describe("public native spec compatibility", () => {
   it("retains constructor identity, static helpers and native instances", () => {
     assertStrictEquals(Spec, NativeSpec);
@@ -25,10 +29,13 @@ describe("public native spec compatibility", () => {
     const publicSpec: Spec = native;
     const roundTrip: NativeSpec = new Spec(publicSpec.entries);
     assertEquals(roundTrip.funcs(), native.funcs());
-    const contract = new Contract({
-      networkConfig: NetworkConfig.TestNet(),
-      contractConfig: { contractId, spec: publicSpec },
-    });
+    const contract = suiteObserver.attach(
+      new Contract({
+        networkConfig: NetworkConfig.TestNet(),
+        contractConfig: { contractId, spec: publicSpec },
+      }),
+      { name: "contract" },
+    );
     assertEquals(contract.events.list().length, 1);
     assertEquals(extractContractEventsFromSpec(native).list().length, 1);
   });

@@ -1,6 +1,8 @@
 import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { literal } from "@/generation/literal.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("generated constant literals", () => {
   it("round-trips nested JSON values, empty collections and own prototype-named keys", () => {

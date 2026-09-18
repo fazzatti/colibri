@@ -8,7 +8,12 @@ import { createElement as h, StrictMode, useState } from "npm:react@^19.1.1";
 import { createRoot } from "npm:react-dom@^19.1.1/client";
 import { dehydrate, QueryClient } from "npm:@tanstack/react-query@^5.87.4";
 import { NetworkConfig } from "@colibri/core/network";
-import { LocalSigner } from "@colibri/core";
+import { Account, Operation, TransactionBuilder } from "stellar-sdk/base";
+import {
+  type EnvelopeSigner,
+  isEnvelopeSigner,
+  LocalSigner,
+} from "@colibri/core";
 import { WebAuthClient, WebAuthToken } from "@colibri/webauth";
 import { createColibriConfig, type WalletConnection } from "@colibri/react";
 import { useTransaction, useWaitForTransaction } from "@colibri/react/rpc";
@@ -35,6 +40,21 @@ if (typeof document !== "undefined") {
   let rejectConnection: (() => void) | undefined;
   let approveMessage: (() => void) | undefined;
   let rejectMessage: (() => void) | undefined;
+  let approveChallenge: (() => void) | undefined;
+  let rejectChallenge: (() => void) | undefined;
+  let challengePrompts = 0;
+  let tokenExchanges = 0;
+  const authSigner: EnvelopeSigner = {
+    signerKey: signer.signerKey,
+    signsFor: signer.signsFor,
+    signTransaction: (tx) => {
+      challengePrompts++;
+      return new Promise((resolve, reject) => {
+        approveChallenge = () => resolve(signer.signTransaction(tx));
+        rejectChallenge = () => reject(new Error("User rejected challenge"));
+      });
+    },
+  };
   let changed: ((value: WalletConnection | null) => void) | undefined;
   const wallet = {
     id: "browser-wallet",
@@ -45,7 +65,7 @@ if (typeof document !== "undefined") {
           resolve({
             address,
             networkPassphrase: network.networkPassphrase,
-            signers: [],
+            signers: [authSigner],
             messageSigner: {
               publicKey: () => address,
               signMessage: () => {
@@ -73,12 +93,45 @@ if (typeof document !== "undefined") {
   const configs = ["first", "second"].map((scope) =>
     createColibriConfig({ network, connectors: [wallet], scope })
   );
-  // The exchange is deterministic; session storage and React/cache behavior are real.
+  // The server boundary is controlled; challenge validation, asynchronous
+  // wallet signing, token exchange and React session behavior are real.
+  const serverSigner = LocalSigner.generateRandom();
   const authClient = new WebAuthClient({
     network,
     homeDomain: "example.org",
-    signingKey: address,
+    signingKey: serverSigner.publicKey(),
     sep10: { endpoint: "https://example.org/auth" },
+    fetch: (input, init) => {
+      if (new Request(input, init).method === "POST") {
+        tokenExchanges++;
+        return Promise.resolve(Response.json({ token: credential.token }));
+      }
+      const now = Math.floor(Date.now() / 1000);
+      const challenge = new TransactionBuilder(
+        new Account(serverSigner.publicKey(), "-1"),
+        {
+          networkPassphrase: network.networkPassphrase,
+          fee: "100",
+          timebounds: { minTime: now - 1, maxTime: now + 900 },
+        },
+      ).addOperation(
+        Operation.manageData({
+          source: address,
+          name: "example.org auth",
+          value: btoa("n".repeat(48)),
+        }),
+      )
+        .addOperation(
+          Operation.manageData({
+            source: serverSigner.publicKey(),
+            name: "web_auth_domain",
+            value: "example.org",
+          }),
+        ).build();
+      return Promise.resolve(
+        Response.json({ transaction: serverSigner.signTransaction(challenge) }),
+      );
+    },
   });
   const credential = WebAuthToken.authenticated(
     `e30.${
@@ -98,7 +151,6 @@ if (typeof document !== "undefined") {
       webAuthDomain: "example.org",
     },
   );
-  authClient.authenticate = () => Promise.resolve(credential);
   const sessions = configs.map((config) =>
     createWebAuthSession(config, authClient)
   );
@@ -169,7 +221,10 @@ if (typeof document !== "undefined") {
       h("button", {
         onClick: () =>
           void handle(() =>
-            authentication.mutateAsync({ account: address, signer })
+            authentication.mutateAsync({
+              account: address,
+              signer: connection.signers.find(isEnvelopeSigner)!,
+            })
           ),
       }, "Authenticate"),
       h("output", { "data-testid": "session" }, sessionState.status),
@@ -205,6 +260,10 @@ if (typeof document !== "undefined") {
       approve: () => approve?.(),
       reject: () => rejectConnection?.(),
       approveMessage: () => approveMessage?.(),
+      approveChallenge: () => approveChallenge?.(),
+      rejectChallenge: () => rejectChallenge?.(),
+      authCounts: () => ({ challengePrompts, tokenExchanges }),
+      logout: () => sessions.forEach((session) => session.logout()),
       rejectMessage: () => rejectMessage?.(),
       disconnectNotification: () => {
         const stale = changed;

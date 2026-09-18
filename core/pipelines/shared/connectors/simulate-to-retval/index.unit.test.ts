@@ -1,9 +1,11 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { type SorobanDataBuilder, xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { simulateToRetval } from "@/pipelines/shared/connectors/simulate-to-retval/index.ts";
 import * as ERROR from "@/pipelines/shared/connectors/simulate-to-retval/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Shared pipeline connector simulateToRetval", () => {
   it("extracts the return value from a simulation output", async () => {

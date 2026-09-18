@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { BuildArtifactSnapshotFailedError } from "@/artifacts/error.ts";
 import type { BuildArtifactCandidate } from "@/artifacts/types.ts";
 import { TEST_LIMITS, TEST_NOW, testWasm } from "@/testing.test.ts";
@@ -13,6 +13,8 @@ import {
   WorkspaceInitializationFailedError,
 } from "@/processes/execute-contract-build/error.ts";
 import { executeContractBuild } from "@/processes/execute-contract-build/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const execution = () => ({
   exitCode: 0 as const,

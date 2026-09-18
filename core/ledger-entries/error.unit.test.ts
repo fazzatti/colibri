@@ -1,6 +1,8 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import * as ERROR from "@/ledger-entries/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("LedgerEntries errors", () => {
   it("exposes stable error codes through direct constructors", async () => {

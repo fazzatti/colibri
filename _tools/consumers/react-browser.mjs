@@ -115,11 +115,44 @@ export async function checkReactBrowser(page, rpc) {
     "StrictMode must not duplicate wallet subscriptions",
   );
   await click("Authenticate");
+  await text("session", "authenticating");
+  await page.waitForFunction(() =>
+    globalThis.colibriReactFixture.authCounts().challengePrompts === 1
+  );
+  assert.equal((await control("authCounts")).tokenExchanges, 0);
+  await control("approveChallenge");
   await text("session", "authenticated");
+  assert.equal((await control("authCounts")).tokenExchanges, 1);
   assert.equal(
     await control("credentialsStayPrivate"),
     true,
     "Credentials must stay out of DOM, dehydrated caches and browser storage",
+  );
+
+  await control("logout");
+  await click("Authenticate");
+  await text("session", "authenticating");
+  await page.waitForFunction(() =>
+    globalThis.colibriReactFixture.authCounts().challengePrompts === 2
+  );
+  await control("rejectChallenge");
+  await text("session", "anonymous");
+  await app.getByRole("alert").filter({ hasText: "Could not sign" }).waitFor();
+  assert.equal((await control("authCounts")).tokenExchanges, 1);
+  await click("Authenticate");
+  await text("session", "authenticating");
+  await page.waitForFunction(() =>
+    globalThis.colibriReactFixture.authCounts().challengePrompts === 3
+  );
+  await click("Disconnect");
+  await control("approveChallenge");
+  await text("session", "anonymous");
+  await app.getByRole("alert").filter({ hasText: "session changed" }).waitFor();
+  assert.equal((await control("authCounts")).tokenExchanges, 1);
+  await click("Connect");
+  await control("approve");
+  await page.waitForFunction(() =>
+    globalThis.colibriReactFixture.counts().subscriptions === 1
   );
 
   await click("Sign message");

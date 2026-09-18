@@ -1,5 +1,5 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Address, buildWithDelegatesEntry, Operation, xdr } from "stellar-sdk";
 import { Buffer } from "node:buffer";
 import { getAddressCredentialsFromAuthEntry } from "@/common/helpers/xdr/get-address-credentials-from-auth-entry.ts";
@@ -7,6 +7,8 @@ import { getAddressSignerFromAuthEntry } from "@/common/helpers/xdr/get-address-
 import { getAddressTypeFromAuthEntry } from "@/common/helpers/xdr/get-address-type-from-auth-entry.ts";
 import { getAuthEntrySignatures } from "@/common/helpers/xdr/get-auth-entry-signatures.ts";
 import { operationHasDelegatedAuthorization } from "@/common/helpers/xdr/operation-has-delegated-authorization.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const rootAddress = Address.contract(Buffer.alloc(32, 1));
 const delegateAddress = Address.account(Buffer.alloc(32, 2));

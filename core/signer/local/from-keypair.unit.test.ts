@@ -4,7 +4,7 @@ import {
   assertStrictEquals,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   Address,
@@ -19,6 +19,8 @@ import { normalizeBinaryData } from "@/common/helpers/binary.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import * as ERROR from "@/signer/local/error.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("LocalSigner.fromKeypair", () => {
   it("borrows the key without extracting secrets and targets only its own account", () => {

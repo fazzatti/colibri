@@ -4,7 +4,7 @@ import {
   assertRejects,
   assertStrictEquals,
 } from "@std/assert";
-import { afterEach, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { SEP41TokenContract } from "@/asset/sep41-token/index.ts";
 import * as ERROR from "@/asset/sep41-token/error.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
@@ -18,6 +18,10 @@ import {
   scValToNative,
   xdr,
 } from "stellar-sdk";
+
+const { afterEach, describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 const CONTRACT_ID =
   "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId;
@@ -45,11 +49,14 @@ describe("SEP41TokenContract", () => {
   const createToken = (
     options?: ConstructorParameters<typeof SEP41TokenContract>[0]["options"],
   ): SEP41TokenContract =>
-    new SEP41TokenContract({
-      networkConfig: NetworkConfig.TestNet(),
-      contractId: CONTRACT_ID,
-      options,
-    });
+    suiteObserver.attach(
+      new SEP41TokenContract({
+        networkConfig: NetworkConfig.TestNet(),
+        contractId: CONTRACT_ID,
+        options,
+      }),
+      { name: "SEP41TokenContract" },
+    );
 
   const replaceReadRaw = (
     token: SEP41TokenContract,

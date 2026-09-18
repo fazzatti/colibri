@@ -4,7 +4,7 @@ import {
   assertNotEquals,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { decodeBase64 } from "@std/encoding/base64";
 import { decode } from "fast-png";
 import { ColibriError } from "@colibri/core";
@@ -19,6 +19,8 @@ import type {
 import fixtures from "colibri-internal/identicon/vectors.json" with {
   type: "json",
 };
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const publicKey = fixtures.vectors[0].publicKey;
 

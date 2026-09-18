@@ -2,6 +2,15 @@
 
 This directory is not part of any published Colibri package.
 
+## Runtime prerequisite
+
+Use **Deno 2.7.11**, matching `.github/workflows/deno.yml`, for repository
+tests. The React DOM harness rejects Deno 2.6: its CommonJS global/timer
+behavior can stall `act()` until a session expires and produce a misleading
+authentication failure. Check `deno --version` before rerunning.
+Release/declaration tooling has its own Deno 2.9.6 requirement documented under
+`_tools/releases/`.
+
 ## Quickstart diagnostics
 
 Run the WebAuth lifecycle or Core SDEX suite with
@@ -33,5 +42,80 @@ dependencies; these tests are required and do not silently skip or switch
 providers on failure. Run the RPC Streamer integrations serially, as in CI, to
 avoid concurrent requests overwhelming the shared public archive endpoint.
 
+RPC Streamer archive `getLedgers` and `getEvents` reads retry HTTP 429, 502, 503
+and 504 at most twice, after one and two seconds. Each retry repeats the same
+request before any record is delivered. Exhaustion preserves the provider error;
+other errors, parsing, handlers and assertions are never retried. This policy
+belongs to repository tests and does not change the published streamer's
+behavior.
+
 These settings do not change the public `NetworkConfig.MainNet()` default, which
 remains `https://mainnet.sorobanrpc.com`.
+
+## Whole-suite execution evidence
+
+`deno task test`, `test:unit`, `test:integration`, and `test:file` run ordinary
+Deno tests without recorder output. Existing coverage settings are independent.
+Every package BDD file calls `recordColibriTests(import.meta.url)`; without the
+recorder CLI's environment, that adapter delegates to standard BDD helpers and
+its observers do nothing. No package runtime imports this test fixture.
+
+Use `test:record` when you want transaction evidence. Recording must be enabled
+while tests execute; aggregation cannot reconstruct an unrecorded run.
+
+```sh
+# Normal tests, without recorder artifacts:
+deno task test:unit
+deno task test:file core/contract/index.unit.test.ts
+
+# Explicit recording; the CLI runs tests and generates reports in one command:
+deno task test:record --ignore='_*/'
+
+# Record one file or only unit tests:
+deno task test:record core/contract/index.unit.test.ts
+deno task test:record --parallel --ignore='_*/' --ignore='**/*.integration.test.ts'
+```
+
+Full-suite recorded runs above are serial: the Mainnet archive suites share a
+provider that rate-limits concurrent requests. Use parallelism only for a
+selection that tolerates it. Recorded runs print
+`artifacts/colibri/<run-id>/report.html`. The adjacent JSON, runner results and
+runtime journals retain machine-readable evidence. Test assertions and runner
+exit codes are preserved. The profile contains observed pipeline executions;
+tests of isolated helpers still appear as tests, without invented
+transaction/resource measurements. Static factories that execute before
+returning a client have only their caller/test boundary available until that
+returned client is attached. Explicit `observer.log` adds evidence; ordinary
+console output remains in the test runner log.
+
+The shared settings capture detailed parameters/results, authorization trees
+without signatures, stage timings, simulated resource budgets and available
+fees. Edit this single fixture to change the repository's recording verbosity.
+Recorded timings include observer overhead; this report is diagnostic evidence,
+not an uninstrumented performance benchmark.
+
+Normal pull-request CI does not record evidence. To request a report, run CI
+manually with **record_evidence** enabled. That run records every package and
+all three build-verification shards. Each recording job uploads
+`test-evidence-<shard>` even after a test failure. The `test evidence` job
+publishes `colibri-test-evidence` containing a combined `report.html`,
+`report.json` and `sources.json`. Missing shards and partial runs stay visible;
+the merger never treats missing evidence as a passing test. Downloaded shard
+artifacts can be rebuilt without executing tests:
+
+```sh
+deno task test:record:merge artifacts/colibri-shards artifacts/colibri-report
+```
+
+Keep one downloaded artifact per child directory in `colibri-shards`. Duplicate
+run IDs are rejected. `test:recorder-tooling` guards adoption and CI shard
+coverage; `test:browser-runner` exercises the report in Chromium.
+
+## Parallel test isolation
+
+Deno parallel test workers share the OS working directory. Never call
+`Deno.chdir()` or `process.chdir()` inside package tests. For relative-path CLI
+unit tests, stub that worker's `process.cwd()`; for a real CLI subprocess, set
+`Deno.Command`'s `cwd` explicitly. This prevents child processes inheriting
+another test's temporary directory just before it is deleted. Browser fixtures
+also write screenshots into their own `Deno.makeTempDir()` directory.

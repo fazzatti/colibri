@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Buffer } from "node:buffer";
 import { Address, xdr } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
@@ -8,6 +8,8 @@ import { NetworkConfig } from "@/network/index.ts";
 import type { KeypairSigner } from "@/signer/types.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 import type { SorobanAuthorizationEntryLike } from "@/common/types/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 type MockSigner = KeypairSigner & {
   calls: number;

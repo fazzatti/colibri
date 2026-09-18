@@ -1,9 +1,11 @@
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { xdr } from "stellar-sdk";
 import { ensureXdrType } from "@/common/helpers/xdr/ensure-xdr-type.ts";
 import { FAILED_TO_PARSE_XDR } from "@/common/helpers/xdr/error.ts";
 import { loadLedgerFixtures } from "colibri-internal/tests/fixtures/rpc/get_ledgers/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("ensureXdrType", () => {
   // Use real fixture data for reliable XDR testing
@@ -14,7 +16,7 @@ describe("ensureXdrType", () => {
     // Parse the header from fixture
     const header = xdr.LedgerHeaderHistoryEntry.fromXdr(
       fixture.headerXdr,
-      "base64"
+      "base64",
     ).header;
 
     // Passing an already-parsed object should return the same object
@@ -32,7 +34,7 @@ describe("ensureXdrType", () => {
   it("should parse LedgerHeaderHistoryEntry from base64 string", () => {
     const result = ensureXdrType<xdr.LedgerHeaderHistoryEntry>(
       fixture.headerXdr,
-      xdr.LedgerHeaderHistoryEntry
+      xdr.LedgerHeaderHistoryEntry,
     );
     assertExists(result);
     // Verify we can access the header
@@ -42,8 +44,9 @@ describe("ensureXdrType", () => {
 
   it("should parse from Uint8Array", () => {
     // First decode base64 to Uint8Array
-    const binaryData = Uint8Array.from(atob(fixture.metadataXdr), (c) =>
-      c.charCodeAt(0)
+    const binaryData = Uint8Array.from(
+      atob(fixture.metadataXdr),
+      (c) => c.charCodeAt(0),
     );
 
     const result = ensureXdrType(binaryData, xdr.LedgerCloseMeta);
@@ -54,7 +57,7 @@ describe("ensureXdrType", () => {
   it("should throw for invalid base64 string", () => {
     assertThrows(
       () => ensureXdrType("not-valid-base64!!!", xdr.LedgerCloseMeta),
-      FAILED_TO_PARSE_XDR
+      FAILED_TO_PARSE_XDR,
     );
   });
 
@@ -62,7 +65,7 @@ describe("ensureXdrType", () => {
     // Valid base64 but invalid XDR structure
     assertThrows(
       () => ensureXdrType("AAAA", xdr.LedgerCloseMeta),
-      FAILED_TO_PARSE_XDR
+      FAILED_TO_PARSE_XDR,
     );
   });
 
@@ -79,7 +82,7 @@ describe("ensureXdrType", () => {
       // deno-lint-ignore no-explicit-any
       () => ensureXdrType("AAAA", mockXdrType as any),
       FAILED_TO_PARSE_XDR,
-      "unknown"
+      "unknown",
     );
   });
 
@@ -94,7 +97,7 @@ describe("ensureXdrType", () => {
     const error = assertThrows(
       // deno-lint-ignore no-explicit-any
       () => ensureXdrType("AAAA", mockXdrType as any),
-      FAILED_TO_PARSE_XDR
+      FAILED_TO_PARSE_XDR,
     );
 
     assertEquals(error.meta?.cause, null);

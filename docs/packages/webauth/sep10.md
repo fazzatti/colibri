@@ -80,3 +80,50 @@ For lower-level composition, the package exports `Sep10Client`, challenge types,
 and `verifySep10Challenge`. These are client-side tools; this package is not a
 JWT-issuing authentication server. See [JWTs](jwt.md) for what is validated at
 the end of the exchange.
+
+## Wallet and asynchronous signers
+
+`Sep10Signer` accepts a Stellar SDK `Keypair` or Core `EnvelopeSigner`,
+including wallets whose `signTransaction(transaction)` returns a promise.
+Existing Core keypair signers still work. Pass a signer array for multisig;
+signers run sequentially and each receives all earlier signatures. Account
+membership and signature weights are checked by the authentication server, not
+inferred from `signsFor()` on the client. An accepted `clientDomainSigner` must
+declare the exact G signing key discovered from that domain's TOML.
+
+Colibri verifies the challenge before prompting. It snapshots its body and
+signatures before calling the wallet, then rejects malformed XDR, changed
+transactions, removed/modified signatures, and missing or invalid signatures
+from the declared key with `SEP10_SIGNING_FAILED`. Only Ed25519 G signer keys
+are eligible; pre-authorized transactions, HashX and signed-payload signers do
+not prove SEP-10 account control. Challenge expiry is checked again after
+approval and immediately before exchange. The challenge is sent to the WebAuth
+endpoint; it is never submitted to Stellar.
+
+<!-- deno-check -->
+
+```ts
+import type { EnvelopeSigner } from "@colibri/core";
+import type { WebAuthClient } from "@colibri/webauth";
+
+// Supply an application-configured wallet signer; no secret key is required.
+export async function authenticateWallet(
+  client: WebAuthClient,
+  account: string,
+  signer: EnvelopeSigner,
+  signal?: AbortSignal,
+) {
+  return await client.authenticate({ account, signer, signal });
+}
+```
+
+An optional `signal` cancels a pending flow before another prompt or token
+exchange. It cannot dismiss the wallet's approval UI or recall an HTTP request
+already sent. The explicit signing step also accepts a fourth `signal` argument:
+`client.sep10.signChallenge(challenge, signer, clientDomainSigner, signal)`. A
+rejection is not retried. Start a new exchange explicitly after an expired
+challenge or rejected prompt. SEP-45 keeps its separate authorization-entry
+handler and client-domain signing contract.
+
+For the complete React wallet/session example, see
+[wallet authentication](../react/wallet-authentication.md).

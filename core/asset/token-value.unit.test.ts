@@ -1,10 +1,12 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { nativeToScVal } from "stellar-sdk";
 import { decodeTokenValue } from "@/asset/token-value.ts";
 import { MISSING_RETURN_VALUE as MissingSACValue } from "@/asset/sac/error.ts";
 import { MISSING_RETURN_VALUE as MissingSEP41Value } from "@/asset/sep41-token/error.ts";
 import { Method } from "@/asset/sac/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("shared token result decoding", () => {
   it("preserves native zero, empty, boolean, and bigint values", () => {

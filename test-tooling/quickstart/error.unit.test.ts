@@ -4,7 +4,7 @@ import {
   assertInstanceOf,
   assertStrictEquals,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Code,
   CONTAINER_ERROR,
@@ -15,6 +15,8 @@ import {
   QuickstartError,
   READINESS_ERROR,
 } from "@/quickstart/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Quickstart errors", () => {
   it("quickstart errors expose consistent metadata", () => {

@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   CommandPolicyRejectedError,
   OptionPolicyRejectedError,
@@ -19,6 +19,8 @@ import {
 } from "@/processes/testing.test.ts";
 import { ValidateBuildRecipeUnexpectedError } from "@/processes/validate-build-recipe/error.ts";
 import { validateBuildRecipe } from "@/processes/validate-build-recipe/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const acceptedPolicies = () => ({
   commandPolicy: {

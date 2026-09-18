@@ -1,6 +1,6 @@
 import { Buffer } from "node:buffer";
 import { assertEquals, assertNotStrictEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Address, Keypair, StrKey, xdr } from "stellar-sdk";
 import {
   buildSep45Challenge,
@@ -18,6 +18,8 @@ import {
   verifySep45Challenge,
 } from "@/sep45/verify-challenge.ts";
 import { Sep45Code, Sep45Error } from "@/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 type Fixture = ReturnType<typeof createWebAuthFixture>;
 

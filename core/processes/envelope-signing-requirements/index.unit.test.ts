@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   Keypair,
@@ -17,6 +17,8 @@ import { muxedAddressToBaseAccount } from "@/address/index.ts";
 import type { EnvelopeSigningRequirementsInput } from "@/processes/envelope-signing-requirements/types.ts";
 import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
 import { OperationThreshold } from "@/signer/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("EnvelopeSigningRequirements", () => {
   const { networkPassphrase } = NetworkConfig.TestNet();

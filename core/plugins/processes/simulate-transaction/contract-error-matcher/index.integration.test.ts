@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";
 import {
@@ -18,6 +18,10 @@ import {
   createContractErrorMatcherPlugin,
 } from "@/plugins/processes/simulate-transaction/contract-error-matcher/index.ts";
 import * as PLUGIN_ERRORS from "@/plugins/processes/simulate-transaction/contract-error-matcher/error.ts";
+
+const { beforeAll, describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 describe(
   "[Testnet] ContractErrorMatcherPlugin",
@@ -51,48 +55,60 @@ describe(
         "./_internal/tests/compiled-contracts/errors_contract.wasm",
       );
 
-      const deployedContract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasm,
-          spec: ERRORS_CONTRACT_SPEC,
-        },
-      });
+      const deployedContract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasm,
+            spec: ERRORS_CONTRACT_SPEC,
+          },
+        }),
+        { name: "deployedContract" },
+      );
 
       await deployedContract.uploadWasm(config);
       await deployedContract.deploy({ config });
 
-      targetContract = new Contract({
-        networkConfig,
-        rpc: deployedContract.rpc,
-        contractConfig: {
-          contractId: deployedContract.getContractId(),
-          spec: ERRORS_CONTRACT_SPEC,
-        },
-      });
+      targetContract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          rpc: deployedContract.rpc,
+          contractConfig: {
+            contractId: deployedContract.getContractId(),
+            spec: ERRORS_CONTRACT_SPEC,
+          },
+        }),
+        { name: "targetContract" },
+      );
 
       await deployedContract.deploy({ config });
 
-      matchingContract = new Contract({
-        networkConfig,
-        rpc: deployedContract.rpc,
-        contractConfig: {
-          contractId: deployedContract.getContractId(),
-          spec: ERRORS_CONTRACT_SPEC,
-        },
-      });
+      matchingContract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          rpc: deployedContract.rpc,
+          contractConfig: {
+            contractId: deployedContract.getContractId(),
+            spec: ERRORS_CONTRACT_SPEC,
+          },
+        }),
+        { name: "matchingContract" },
+      );
       matchingContract.invokePipe.use(
         createContractErrorMatcherPlugin(ErrorByCode),
       );
 
-      unmatchedContract = new Contract({
-        networkConfig,
-        rpc: deployedContract.rpc,
-        contractConfig: {
-          contractId: deployedContract.getContractId(),
-          spec: ERRORS_CONTRACT_SPEC,
-        },
-      });
+      unmatchedContract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          rpc: deployedContract.rpc,
+          contractConfig: {
+            contractId: deployedContract.getContractId(),
+            spec: ERRORS_CONTRACT_SPEC,
+          },
+        }),
+        { name: "unmatchedContract" },
+      );
       unmatchedContract.invokePipe.use(
         createContractErrorMatcherPlugin({
           999: { message: "Not the emitted error" },

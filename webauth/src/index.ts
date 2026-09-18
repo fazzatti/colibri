@@ -12,6 +12,7 @@ export * from "@/sep45/index.ts";
 export type {
   ContractAuthContext,
   Sep10AuthenticationOptions,
+  Sep10Signer,
   Sep45AuthenticationOptions,
   WebAuthAuthenticationOptions,
   WebAuthClientConfig,

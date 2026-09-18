@@ -1,8 +1,10 @@
 import { assertEquals, assertStringIncludes, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Asset, Keypair, xdr } from "stellar-sdk";
 import { UNKNOWN_TRUSTLINE_ASSET_TYPE } from "@/common/helpers/xdr/error.ts";
 import { parseTrustLineAsset } from "@/common/helpers/xdr/parse-trustline-asset.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("parseTrustLineAsset", () => {
   it("parses native assets", () => {

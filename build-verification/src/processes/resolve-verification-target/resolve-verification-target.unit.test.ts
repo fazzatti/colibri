@@ -1,11 +1,13 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { InvalidVerificationInputError } from "@/error/core.ts";
 import { MissingTargetNetworkError } from "@/providers/target/error.ts";
 import { processRequest } from "@/processes/testing.test.ts";
 import { TEST_LIMITS, TEST_NOW, testWasm } from "@/testing.test.ts";
 import { resolveVerificationTarget } from "@/processes/resolve-verification-target/index.ts";
 import { ResolveVerificationTargetUnexpectedError } from "@/processes/resolve-verification-target/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("resolveVerificationTarget", () => {
   it("resolves exact Wasm facts and seeds network evidence and logs", async () => {

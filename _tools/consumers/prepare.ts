@@ -46,7 +46,9 @@ export async function prepareArtifacts(
       "",
     );
     await Deno.mkdir(destination, { recursive: true });
-    const pending = inventory.filter((pkg) => !dockerPackages.has(pkg.name));
+    const pending = inventory.filter((pkg) =>
+      pkg.name === "@colibri/test-tooling" || !dockerPackages.has(pkg.name)
+    );
     const browserPackages: typeof inventory = [];
     // Packages can now compose several Colibri packages. Build dependencies first.
     const dependencies = new Map<string, string[]>();
@@ -134,12 +136,16 @@ export async function prepareArtifacts(
         scriptModule: false,
         compilerOptions: {
           target: "ES2023",
+          ...(pkg.name === "@colibri/test-tooling" ? { types: ["node"] } : {}),
           lib: ["ESNext", "DOM", "DOM.Iterable"],
         },
         package: {
           name: pkg.name,
           version: pkg.version,
           private: true,
+          ...(pkg.name === "@colibri/test-tooling"
+            ? { devDependencies: { "@types/node": "^22.12.0" } }
+            : {}),
           // dnt can infer a caret range from native types behind mapped packages.
           // Every direct SDK consumer in this compatibility lane must use one selection.
           dependencies: [...packageImports].some((name) =>
@@ -183,7 +189,12 @@ export async function prepareArtifacts(
       const target = resolve(destination, filename);
       await Deno.copyFile(resolve(outDir, filename), target);
       artifacts.set(pkg.name, target);
-      await replaceDeclarations(outDir, pkg.root, declarations);
+      // dnt roots the recorder-only artifact at recorder/, since the Docker
+      // entrypoint is deliberately excluded from this portable package build.
+      const declarationRoot = pkg.name === "@colibri/test-tooling"
+        ? `${pkg.root}/recorder`
+        : pkg.root;
+      await replaceDeclarations(outDir, declarationRoot, declarations);
       await command("npm", ["pack", "--ignore-scripts", "--quiet"], outDir);
       const declarationTarget = resolve(
         destination,

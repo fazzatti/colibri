@@ -15,7 +15,7 @@ import {
   useContractEvents,
 } from "@/events/subscription.ts";
 import { assert, assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { createElement } from "react";
 import {
   QueryClient,
@@ -49,6 +49,10 @@ import {
 } from "@/contracts/read/hooks.ts";
 import { useContractInvoke } from "@/contracts/invoke/hooks.ts";
 import { useSigners } from "@/signers/hooks.ts";
+
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 describe(
   "React application flow on local Stellar",
   disableSanitizeConfig,
@@ -59,6 +63,8 @@ describe(
         containerImageVersion: "testing",
         logLevel: "silent",
       });
+      let config: ReturnType<typeof createColibriConfig> | undefined;
+      let subscription: ReturnType<typeof createContractEvents> | undefined;
       let view: Awaited<ReturnType<typeof mountReact>> | undefined;
       const queryClient = new QueryClient({
         defaultOptions: {
@@ -82,17 +88,20 @@ describe(
           timeout: 30,
           signers: [signer],
         };
-        const deployed = new Contract({
-          networkConfig: network,
-          contractConfig: {
-            wasm: await loadWasmFile(
-              "./_internal/tests/compiled-contracts/bindings_demo_contract.wasm",
-            ),
-          },
-        });
+        const deployed = suiteObserver.attach(
+          new Contract({
+            networkConfig: network,
+            contractConfig: {
+              wasm: await loadWasmFile(
+                "./_internal/tests/compiled-contracts/bindings_demo_contract.wasm",
+              ),
+            },
+          }),
+          { name: "deployed" },
+        );
         await deployed.uploadWasm(transactionConfig);
         await deployed.deploy({ config: transactionConfig });
-        const config = createColibriConfig({
+        const applicationConfig = config = createColibriConfig({
           network,
           connectors: [{
             id: "local-test-wallet",
@@ -105,15 +114,18 @@ describe(
           }],
         });
         const rpc = new Server(details.rpcUrl, { allowHttp: true });
-        const subscription = createContractEvents(config, {
-          filters: [
-            new EventFilter({
-              contractIds: [deployed.getContractId() as `C${string}`],
-            }),
-          ],
-          startLedger: (await rpc.getLatestLedger()).sequence,
-          streaming: { waitLedgerIntervalMs: 100, pagingIntervalMs: 50 },
-        });
+        const eventSubscription = subscription = createContractEvents(
+          applicationConfig,
+          {
+            filters: [
+              new EventFilter({
+                contractIds: [deployed.getContractId() as `C${string}`],
+              }),
+            ],
+            startLedger: (await rpc.getLatestLedger()).sequence,
+            streaming: { waitLedgerIntervalMs: 100, pagingIntervalMs: 50 },
+          },
+        );
         let events!: ReturnType<typeof useContractEvents>;
         let classic!: ReturnType<typeof useClassicTransaction>;
         let soroban!: ReturnType<typeof useSorobanTransaction>;
@@ -132,9 +144,9 @@ describe(
         const Application = () => {
           current = useContract(() =>
             new Demo({
-              networkConfig: config.network,
+              networkConfig: applicationConfig.network,
               contractConfig: { contractId: deployed.getContractId() },
-            }), [config]);
+            }), [applicationConfig]);
           if (identity) {
             assertEquals(current, identity);
           }
@@ -142,7 +154,7 @@ describe(
           classic = useClassicTransaction();
           soroban = useSorobanTransaction();
           simulate = useSimulateSorobanTransaction();
-          events = useContractEvents(subscription);
+          events = useContractEvents(eventSubscription);
           connect = useConnect();
           disconnect = useDisconnect();
           const state = useConnection();
@@ -156,7 +168,7 @@ describe(
           invoke = useContractInvoke(current, "increment", {
             onSuccess: async () => {
               await queryClient.invalidateQueries({
-                queryKey: contractReadQueryOptions(config, {
+                queryKey: contractReadQueryOptions(applicationConfig, {
                   contract: current,
                   method: "getCount",
                   args: [],
@@ -188,7 +200,9 @@ describe(
         await act(async () => {
           await connect("local-test-wallet");
         });
-        await until(() => config.getSnapshot().status === "connected");
+        await until(() =>
+          applicationConfig.getSnapshot().status === "connected"
+        );
         let result!: Awaited<ReturnType<Demo["increment"]["invoke"]>>;
         await act(async () => {
           result = await invoke.mutateAsync({
@@ -200,13 +214,15 @@ describe(
         assert(result.ledger > 0);
         await until(() => Number(read.data) === 3);
         assert(view.document.body.textContent?.includes("connected:3"));
-        const granular = await readContract({
-          networkConfig: network,
-          contractId: deployed.getContractId() as `C${string}`,
-          spec: current.getSpec(),
-          method: "get_count",
+        await act(async () => {
+          const granular = await readContract({
+            networkConfig: network,
+            contractId: deployed.getContractId() as `C${string}`,
+            spec: current.getSpec(),
+            method: "get_count",
+          });
+          assertEquals(Number(granular), 3);
         });
-        assertEquals(Number(granular), 3);
         const operation = Operation.invokeContractFunction({
           contract: deployed.getContractId(),
           function: "increment",
@@ -220,7 +236,9 @@ describe(
           const simulation = await simulate.mutateAsync(prepared);
           assert(simulation.result);
         });
-        assertEquals(Number(await current.getCount.read()), 3);
+        await act(async () => {
+          assertEquals(Number(await current.getCount.read()), 3);
+        });
         await act(async () => {
           const outcome = await soroban.mutateAsync({
             operations: [operation],
@@ -228,7 +246,9 @@ describe(
           });
           assert(outcome.hash.length === 64);
         });
-        assertEquals(Number(await current.getCount.read()), 5);
+        await act(async () => {
+          assertEquals(Number(await current.getCount.read()), 5);
+        });
         await act(async () => {
           const outcome = await classic.mutateAsync({
             operations: [
@@ -250,10 +270,10 @@ describe(
         assertEquals(config.getSnapshot().status, "disconnected");
         await view.close();
         view = undefined;
-        subscription.destroy();
-        config.destroy();
       } finally {
         await view?.close();
+        subscription?.destroy();
+        config?.destroy();
         queryClient.clear();
         await ledger.stop();
         await ledger.destroy();

@@ -1,23 +1,33 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { assertEquals, assertExists, assertInstanceOf } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Asset, nativeToScVal, Operation, xdr } from "stellar-sdk";
 import { NetworkConfig } from "@/network/index.ts";
 import { createReadFromContractPipeline } from "@/pipelines/read-from-contract/index.ts";
 
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
+
 describe("[Testnet] ReadFromContract Pipeline", disableSanitizeConfig, () => {
   const networkConfig = NetworkConfig.TestNet();
   const xlmContractId = Asset.native().contractId(
-    networkConfig.networkPassphrase
+    networkConfig.networkPassphrase,
   );
 
   it("should create a pipeline", () => {
-    const readPipe = createReadFromContractPipeline({ networkConfig });
+    const readPipe = suiteObserver.attach(
+      createReadFromContractPipeline({ networkConfig }),
+      { name: "readPipe" },
+    );
     assertInstanceOf(readPipe, Object);
     assertEquals(readPipe.id, "ReadFromContractPipeline");
   });
   it("should read from a contract and return the contract returned value", async () => {
-    const readPipe = createReadFromContractPipeline({ networkConfig });
+    const readPipe = suiteObserver.attach(
+      createReadFromContractPipeline({ networkConfig }),
+      { name: "readPipe" },
+    );
     const decimalsOp = Operation.invokeContractFunction({
       function: "decimals",
       contract: xlmContractId,
@@ -32,7 +42,10 @@ describe("[Testnet] ReadFromContract Pipeline", disableSanitizeConfig, () => {
   });
 
   it("should read from a contract and return 'scvVoid' for no returned value", async () => {
-    const readPipe = createReadFromContractPipeline({ networkConfig });
+    const readPipe = suiteObserver.attach(
+      createReadFromContractPipeline({ networkConfig }),
+      { name: "readPipe" },
+    );
     const decimalsOp = Operation.invokeContractFunction({
       function: "transfer",
       contract: xlmContractId,

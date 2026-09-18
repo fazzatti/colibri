@@ -1,6 +1,8 @@
 import { assertEquals, assertNotStrictEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { generateRandomSalt } from "@/common/helpers/generate-random-salt.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("generateRandomSalt", () => {
   it("returns independent 32-byte Uint8Array salts", () => {

@@ -1,5 +1,5 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { NetworkConfig } from "@colibri/core";
 import { Server } from "stellar-sdk/rpc";
 import {
@@ -9,6 +9,8 @@ import {
 } from "@colibri/rpc-streamer";
 import type { EventStreamerConfig } from "@colibri/rpc-streamer";
 import { RPCStreamerError, RPCStreamerErrorCode as Code } from "@/errors.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("native streamer connections", () => {
   const url = "http://127.0.0.1:8000/rpc";

@@ -1,6 +1,6 @@
 import { Buffer } from "node:buffer";
 import { assert, assertEquals, assertExists, assertRejects } from "@std/assert";
-import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Contract,
   initializeWithFriendbot,
@@ -37,6 +37,9 @@ import {
   WebAuthCode,
   WebAuthError,
 } from "@/index.ts";
+
+const { afterAll, beforeAll, describe, it, observer: suiteObserver } =
+  recordColibriTests(import.meta.url);
 
 type AssertionMutation =
   | "challenge"
@@ -167,28 +170,34 @@ describe(
         signers: [admin.signer()],
       };
 
-      const webAuthContract = new Contract({
-        networkConfig: network,
-        contractConfig: {
-          wasm: await loadWasmFile(
-            "./_internal/tests/compiled-contracts/web_auth_contract.wasm",
-          ),
-          spec: WEB_AUTH_SPEC,
-        },
-      });
+      const webAuthContract = suiteObserver.attach(
+        new Contract({
+          networkConfig: network,
+          contractConfig: {
+            wasm: await loadWasmFile(
+              "./_internal/tests/compiled-contracts/web_auth_contract.wasm",
+            ),
+            spec: WEB_AUTH_SPEC,
+          },
+        }),
+        { name: "webAuthContract" },
+      );
       await webAuthContract.uploadWasm(transactionConfig);
       await webAuthContract.deploy({ config: transactionConfig });
 
       credential = await createTestPasskeyCredential();
-      const passkeyContract = new Contract({
-        networkConfig: network,
-        contractConfig: {
-          wasm: await loadWasmFile(
-            "./_internal/tests/compiled-contracts/passkey_account_contract.wasm",
-          ),
-          spec: PASSKEY_ACCOUNT_SPEC,
-        },
-      });
+      const passkeyContract = suiteObserver.attach(
+        new Contract({
+          networkConfig: network,
+          contractConfig: {
+            wasm: await loadWasmFile(
+              "./_internal/tests/compiled-contracts/passkey_account_contract.wasm",
+            ),
+            spec: PASSKEY_ACCOUNT_SPEC,
+          },
+        }),
+        { name: "passkeyContract" },
+      );
       await passkeyContract.uploadWasm(transactionConfig);
       await passkeyContract.deploy({
         config: transactionConfig,
@@ -206,15 +215,18 @@ describe(
         Array.from(credential.publicKey),
       );
 
-      const signaturelessContract = new Contract({
-        networkConfig: network,
-        contractConfig: {
-          wasm: await loadWasmFile(
-            "./_internal/tests/compiled-contracts/signatureless_account_contract.wasm",
-          ),
-          spec: SIGNATURELESS_ACCOUNT_SPEC,
-        },
-      });
+      const signaturelessContract = suiteObserver.attach(
+        new Contract({
+          networkConfig: network,
+          contractConfig: {
+            wasm: await loadWasmFile(
+              "./_internal/tests/compiled-contracts/signatureless_account_contract.wasm",
+            ),
+            spec: SIGNATURELESS_ACCOUNT_SPEC,
+          },
+        }),
+        { name: "signaturelessContract" },
+      );
       await signaturelessContract.uploadWasm(transactionConfig);
       await signaturelessContract.deploy({ config: transactionConfig });
       signaturelessAccount = signaturelessContract.getContractId();

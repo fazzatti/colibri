@@ -161,6 +161,7 @@ catalog.
 ## @colibri/test-tooling
 
 - [test-tooling/quickstart](test-tooling-quickstart.md) — 5 codes.
+- [test-tooling/recorder](test-tooling-recorder.md) — 2 codes.
 
 ## @colibri/webauth
 

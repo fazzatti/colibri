@@ -1,5 +1,5 @@
-import type { WebAuthCoreSigner, WebAuthSubmissionFormat } from "@/types.ts";
-import type { Keypair, Transaction } from "@/stellar-sdk-types.ts";
+import type { Sep10Signer, WebAuthSubmissionFormat } from "@/types.ts";
+import type { Transaction } from "@/stellar-sdk-types.ts";
 
 /** Inputs used by the pure SEP-10 challenge verifier. */
 export interface VerifySep10ChallengeInput {
@@ -64,12 +64,11 @@ export interface Sep10GetChallengeOptions {
 /** Options accepted by the SEP-10 full flow. */
 export interface Sep10AuthenticateOptions extends Sep10GetChallengeOptions {
   /** Account signer or signer set. */
-  signer:
-    | Keypair
-    | WebAuthCoreSigner
-    | Array<Keypair | WebAuthCoreSigner>;
+  signer: Sep10Signer | Sep10Signer[];
   /** Signer for an accepted client-domain operation. */
-  clientDomainSigner?: Keypair | WebAuthCoreSigner;
+  clientDomainSigner?: Sep10Signer;
+  /** Stop a pending flow before signing or token exchange; wallet prompts are application-owned. */
+  signal?: AbortSignal;
 }
 
 /** Direct SEP-10 protocol-client construction. */

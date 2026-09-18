@@ -1,7 +1,7 @@
 import { xdr } from "stellar-sdk";
 import { Spec } from "stellar-sdk/contract";
 import { assert, assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { extractContractSpec } from "@colibri/core";
 import { loadBindingSource } from "@/source/load.ts";
 import { generateBindings } from "@/generation/generate.ts";
@@ -15,6 +15,8 @@ import {
 } from "colibri-internal/tests/soroban-values-fixtures.ts";
 import { bindingSpec } from "colibri-internal/tests/binding-fixtures.ts";
 import { fileURLToPath } from "node:url";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const rootConfig = fileURLToPath(
   new URL("../../../deno.json", import.meta.url),

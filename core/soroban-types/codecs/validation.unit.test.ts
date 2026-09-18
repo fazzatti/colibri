@@ -1,6 +1,6 @@
 import { Address, StrKey } from "stellar-sdk";
 import { assert, assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import * as xdr from "stellar-sdk/xdr";
 import { Spec } from "stellar-sdk/contract";
 import {
@@ -26,6 +26,8 @@ import { createSorobanUnion } from "@/soroban-types/codecs/factories.ts";
 import { SorobanValueError } from "@/soroban-types/error.ts";
 import { SorobanCodec } from "@/soroban-types/codecs/codec.ts";
 import { union } from "colibri-internal/tests/soroban-values-fixtures.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Soroban schema validation", () => {
   it("orders optional wire containers consistently in both directions", () => {

@@ -1,6 +1,6 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { assert, assertEquals, assertExists } from "@std/assert";
-import { beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
@@ -22,6 +22,10 @@ import type { KeypairSigner } from "@/signer/types.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 import * as SACError from "@/asset/sac/error.ts";
 
+const { beforeAll, describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
+
 describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
   const networkConfig = NetworkConfig.TestNet();
 
@@ -34,7 +38,10 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
     networkConfig: NetworkConfig,
     config: TransactionConfig,
   ) => {
-    const pipe = createClassicTransactionPipeline({ networkConfig });
+    const pipe = suiteObserver.attach(
+      createClassicTransactionPipeline({ networkConfig }),
+      { name: "pipe" },
+    );
     const op = Operation.setOptions({
       source: publicKey,
       setFlags: (AuthRevocableFlag | AuthClawbackEnabledFlag) as AuthFlag,
@@ -49,7 +56,10 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
     networkConfig: NetworkConfig,
     config: TransactionConfig,
   ) => {
-    const pipe = createClassicTransactionPipeline({ networkConfig });
+    const pipe = suiteObserver.attach(
+      createClassicTransactionPipeline({ networkConfig }),
+      { name: "pipe" },
+    );
     const operations: xdr.Operation[] = [];
 
     for (const user of users) {
@@ -116,11 +126,14 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
 
   describe("Core features and initialization", () => {
     it("Instantiates SAC from classic asset identity", () => {
-      colibriSAC = StellarAssetContract.fromAsset({
-        code,
-        issuer: issuer.address(),
-        networkConfig,
-      });
+      colibriSAC = suiteObserver.attach(
+        StellarAssetContract.fromAsset({
+          code,
+          issuer: issuer.address(),
+          networkConfig,
+        }),
+        { name: "colibriSAC" },
+      );
 
       assertExists(colibriSAC);
       assertEquals(colibriSAC.code, code);
@@ -129,10 +142,13 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
     });
 
     it("Instantiates SAC from contract id only", () => {
-      const contractOnlySAC = StellarAssetContract.fromContractId({
-        contractId,
-        networkConfig,
-      });
+      const contractOnlySAC = suiteObserver.attach(
+        StellarAssetContract.fromContractId({
+          contractId,
+          networkConfig,
+        }),
+        { name: "contractOnlySAC" },
+      );
 
       assertExists(contractOnlySAC);
       assertEquals(contractOnlySAC.contractId, contractId);
@@ -141,7 +157,10 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
     });
 
     it("Instantiates SAC for native XLM using static method", () => {
-      const nativeSAC = StellarAssetContract.NativeXLM(networkConfig);
+      const nativeSAC = suiteObserver.attach(
+        StellarAssetContract.NativeXLM(networkConfig),
+        { name: "nativeSAC" },
+      );
 
       assertExists(nativeSAC);
       assertEquals(nativeSAC.code, "XLM");
@@ -155,22 +174,30 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
     });
 
     it("Deploys the SAC contract for a new asset", async () => {
-      colibriSAC = await StellarAssetContract.deploy({
-        code,
-        issuer: issuer.address(),
-        networkConfig,
-        config: txConfig,
-      });
+      colibriSAC = await suiteObserver.create(
+        () =>
+          StellarAssetContract.deploy({
+            code,
+            issuer: issuer.address(),
+            networkConfig,
+            config: txConfig,
+          }),
+        { name: "deploy SAC" },
+      );
       assertEquals(colibriSAC.contractId, contractId);
     });
 
     it("Handles attempting to deploy the SAC contract for a deployed asset", async () => {
-      const deployedSAC = await StellarAssetContract.deploy({
-        code,
-        issuer: issuer.address(),
-        networkConfig,
-        config: txConfig,
-      });
+      const deployedSAC = await suiteObserver.create(
+        () =>
+          StellarAssetContract.deploy({
+            code,
+            issuer: issuer.address(),
+            networkConfig,
+            config: txConfig,
+          }),
+        { name: "deploy SAC" },
+      );
       assertEquals(deployedSAC.contractId, contractId);
     });
 

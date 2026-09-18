@@ -1,7 +1,9 @@
 import { assert, assertEquals, assertExists } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import type { xdr } from "stellar-sdk";
 import { parseEvents } from "@/common/helpers/xdr/parse-events.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("parseEvents", () => {
   it("should parse events successfully", () => {

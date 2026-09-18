@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Account, TransactionBuilder } from "stellar-sdk/base";
 import { type EnvelopeSigner, LocalSigner, NetworkConfig } from "@colibri/core";
 import { createColibriConfig } from "@/context/config.ts";
@@ -9,6 +9,8 @@ import {
   createWalletEnvelopeSigner,
 } from "@/wallets/adapter.ts";
 import { ColibriReactError } from "@/errors/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 const network = NetworkConfig.TestNet();
 const key = LocalSigner.generateRandom();
 const address = key.publicKey();

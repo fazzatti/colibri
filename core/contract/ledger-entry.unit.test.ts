@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Address, xdr } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
 import { Contract } from "@/contract/index.ts";
@@ -7,6 +7,10 @@ import { NetworkConfig } from "@/network/index.ts";
 import { buildContractDataLedgerKey } from "@/ledger-entries/index.ts";
 import { LEDGER_ENTRY_NOT_FOUND } from "@/ledger-entries/error.ts";
 import * as ERROR from "@/contract/error.ts";
+
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 const contractId = "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM";
 const key = xdr.ScVal.scvSymbol("counter");
@@ -47,11 +51,14 @@ describe("Contract.getLedgerEntry", () => {
           });
         },
       } as unknown as Server;
-      const contract = new Contract({
-        networkConfig: NetworkConfig.TestNet(),
-        contractConfig: { contractId },
-        rpc,
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig: NetworkConfig.TestNet(),
+          contractConfig: { contractId },
+          rpc,
+        }),
+        { name: "contract" },
+      );
       // Extra properties from a JavaScript caller cannot redirect the lookup.
       const args = {
         key,
@@ -81,11 +88,14 @@ describe("Contract.getLedgerEntry", () => {
         return Promise.resolve({ entries: [], latestLedger: 10 });
       },
     } as unknown as Server;
-    const contract = new Contract({
-      networkConfig: NetworkConfig.TestNet(),
-      contractConfig: { contractId },
-      rpc,
-    });
+    const contract = suiteObserver.attach(
+      new Contract({
+        networkConfig: NetworkConfig.TestNet(),
+        contractConfig: { contractId },
+        rpc,
+      }),
+      { name: "contract" },
+    );
     await assertRejects(
       () => contract.getLedgerEntry({ key }),
       LEDGER_ENTRY_NOT_FOUND,
@@ -105,11 +115,14 @@ describe("Contract.getLedgerEntry", () => {
         return Promise.resolve({ entries: [], latestLedger: 10 });
       },
     } as unknown as Server;
-    const contract = new Contract({
-      networkConfig: NetworkConfig.TestNet(),
-      contractConfig: { wasmHash: "ab".repeat(32) },
-      rpc,
-    });
+    const contract = suiteObserver.attach(
+      new Contract({
+        networkConfig: NetworkConfig.TestNet(),
+        contractConfig: { wasmHash: "ab".repeat(32) },
+        rpc,
+      }),
+      { name: "contract" },
+    );
     await assertRejects(
       () => contract.getLedgerEntry({ key }),
       ERROR.MISSING_REQUIRED_PROPERTY,

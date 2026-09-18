@@ -5,7 +5,7 @@ import {
   assertRejects,
   assertStrictEquals,
 } from "@std/assert";
-import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { xdr } from "stellar-sdk";
 import { Contract } from "@/contract/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
@@ -15,6 +15,9 @@ import type { TransactionConfig } from "@/common/types/transaction-config/types.
 import { StellarTestLedger } from "@colibri/test-tooling";
 import { EXECUTABLE_REF_MANAGER_SPEC } from "colibri-internal/tests/specs/executable-ref-manager.ts";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
+
+const { afterAll, beforeAll, describe, it, observer: suiteObserver } =
+  recordColibriTests(import.meta.url);
 
 describe(
   "[Quickstart] loaded contract provenance",
@@ -54,18 +57,24 @@ describe(
       ));
       const hashes: string[] = [];
       for (const wasm of versions) {
-        const upload = new Contract({
-          networkConfig,
-          contractConfig: { wasm },
-        });
+        const upload = suiteObserver.attach(
+          new Contract({
+            networkConfig,
+            contractConfig: { wasm },
+          }),
+          { name: "upload" },
+        );
         assertEquals(upload.getLoadedSnapshot(), undefined);
         await upload.uploadWasm(config);
         hashes.push(upload.getWasmHash());
       }
-      const byHash = new Contract({
-        networkConfig,
-        contractConfig: { wasmHash: hashes[0] },
-      });
+      const byHash = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: { wasmHash: hashes[0] },
+        }),
+        { name: "byHash" },
+      );
       await byHash.loadSpecFromNetwork();
       const hashSnapshot = byHash.getLoadedSnapshot();
       assertExists(hashSnapshot);
@@ -76,15 +85,18 @@ describe(
       assertEquals(hashSnapshot.reference, undefined);
       assert(hashSnapshot.observedAtLedger > 0);
 
-      const manager = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasm: await Deno.readFile(
-            "_internal/tests/compiled-contracts/executable_ref_manager_contract.wasm",
-          ),
-          spec: EXECUTABLE_REF_MANAGER_SPEC,
-        },
-      });
+      const manager = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasm: await Deno.readFile(
+              "_internal/tests/compiled-contracts/executable_ref_manager_contract.wasm",
+            ),
+            spec: EXECUTABLE_REF_MANAGER_SPEC,
+          },
+        }),
+        { name: "manager" },
+      );
       await manager.uploadWasm(config);
       await manager.deploy({ config });
       const setVersion = (version: number) =>
@@ -97,22 +109,28 @@ describe(
           config,
         });
       await setVersion(1);
-      const byReference = new Contract({
-        networkConfig,
-        contractConfig: {
-          externalRef: { owner: manager.getContractId(), tag: "stable" },
-        },
-      });
+      const byReference = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            externalRef: { owner: manager.getContractId(), tag: "stable" },
+          },
+        }),
+        { name: "byReference" },
+      );
       await byReference.loadSpecFromNetwork();
       const first = byReference.getLoadedSnapshot();
       assertExists(first?.reference);
       assertEquals(first.wasmHash, hashes[0]);
       assertEquals(byReference.getWasm(), versions[0]);
       await byReference.deploy({ config });
-      const byId = new Contract({
-        networkConfig,
-        contractConfig: { contractId: byReference.getContractId() },
-      });
+      const byId = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: { contractId: byReference.getContractId() },
+        }),
+        { name: "byId" },
+      );
       await byId.loadSpecFromNetwork();
       assertEquals(
         byId.getLoadedSnapshot()?.contractId,

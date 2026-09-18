@@ -1,8 +1,10 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { fromDecimals, toDecimals } from "@/common/helpers/format-units.ts";
 import { ColibriError } from "@/error/index.ts";
 import * as ERROR from "@/common/helpers/format-units.error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("format-units", () => {
   describe("fromDecimals", () => {

@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Contract,
   DelegatedSigner,
@@ -18,6 +18,9 @@ import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";
 import { RECURSIVE_DELEGATE_ACCOUNT_SPEC } from "colibri-internal/tests/specs/recursive-delegate-account.ts";
 import { DELEGATED_ASSET_ACCOUNT_SPEC } from "colibri-internal/tests/specs/delegated-asset-account.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
+
+const { afterAll, beforeAll, describe, it, observer: suiteObserver } =
+  recordColibriTests(import.meta.url);
 
 type Topology = {
   contract: Contract;
@@ -73,14 +76,17 @@ describe(
     const deployRecursive = async (
       nestedDelegates: string[],
     ): Promise<Contract> => {
-      const contract = new Contract({
-        networkConfig: network,
-        rpc: countedRpc,
-        contractConfig: {
-          wasmHash: recursiveWasmHash,
-          spec: RECURSIVE_DELEGATE_ACCOUNT_SPEC,
-        },
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig: network,
+          rpc: countedRpc,
+          contractConfig: {
+            wasmHash: recursiveWasmHash,
+            spec: RECURSIVE_DELEGATE_ACCOUNT_SPEC,
+          },
+        }),
+        { name: "contract" },
+      );
       await contract.deploy({
         config,
         constructorArgs: { nested_delegates: nestedDelegates },
@@ -91,14 +97,17 @@ describe(
     const deployTop = async (
       nestedDelegates: string[],
     ): Promise<Contract> => {
-      const contract = new Contract({
-        networkConfig: network,
-        rpc: countedRpc,
-        contractConfig: {
-          wasmHash: assetWasmHash,
-          spec: DELEGATED_ASSET_ACCOUNT_SPEC,
-        },
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig: network,
+          rpc: countedRpc,
+          contractConfig: {
+            wasmHash: assetWasmHash,
+            spec: DELEGATED_ASSET_ACCOUNT_SPEC,
+          },
+        }),
+        { name: "contract" },
+      );
       await contract.deploy({
         config,
         constructorArgs: { nested_delegates: nestedDelegates },
@@ -186,29 +195,35 @@ describe(
         config,
       });
 
-      const recursiveTemplate = new Contract({
-        networkConfig: network,
-        rpc: countedRpc,
-        contractConfig: {
-          wasm: await loadWasmFile(
-            "./_internal/tests/compiled-contracts/recursive_delegate_account_contract.wasm",
-          ),
-          spec: RECURSIVE_DELEGATE_ACCOUNT_SPEC,
-        },
-      });
+      const recursiveTemplate = suiteObserver.attach(
+        new Contract({
+          networkConfig: network,
+          rpc: countedRpc,
+          contractConfig: {
+            wasm: await loadWasmFile(
+              "./_internal/tests/compiled-contracts/recursive_delegate_account_contract.wasm",
+            ),
+            spec: RECURSIVE_DELEGATE_ACCOUNT_SPEC,
+          },
+        }),
+        { name: "recursiveTemplate" },
+      );
       await recursiveTemplate.uploadWasm(config);
       recursiveWasmHash = recursiveTemplate.getWasmHash();
 
-      const assetTemplate = new Contract({
-        networkConfig: network,
-        rpc: countedRpc,
-        contractConfig: {
-          wasm: await loadWasmFile(
-            "./_internal/tests/compiled-contracts/delegated_asset_account_contract.wasm",
-          ),
-          spec: DELEGATED_ASSET_ACCOUNT_SPEC,
-        },
-      });
+      const assetTemplate = suiteObserver.attach(
+        new Contract({
+          networkConfig: network,
+          rpc: countedRpc,
+          contractConfig: {
+            wasm: await loadWasmFile(
+              "./_internal/tests/compiled-contracts/delegated_asset_account_contract.wasm",
+            ),
+            spec: DELEGATED_ASSET_ACCOUNT_SPEC,
+          },
+        }),
+        { name: "assetTemplate" },
+      );
       await assetTemplate.uploadWasm(config);
       assetWasmHash = assetTemplate.getWasmHash();
 

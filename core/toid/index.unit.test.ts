@@ -1,6 +1,8 @@
 import { assert, assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { createTOID, isTOID, parseTOID } from "@/toid/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("TOID Helpers", () => {
   describe("isTOID", () => {

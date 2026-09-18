@@ -5,7 +5,7 @@ import {
   assertStrictEquals,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Asset,
   getLiquidityPoolId,
@@ -25,13 +25,20 @@ import { BASE_FEE_TOO_LOW_ERROR } from "@/processes/build-transaction/error.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { PoolDepositByAssetArgs } from "@/markets/liquidity-pools/types.ts";
 
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
+
 describe("NativeLiquidityPool", () => {
   const signer = LocalSigner.generateRandom();
   const other = LocalSigner.generateRandom();
   const xlm = Asset.native();
   const usd = new Asset("USD", signer.publicKey());
   const networkConfig = NetworkConfig.TestNet();
-  const pool = new NativeLiquidityPool({ assets: [usd, xlm], networkConfig });
+  const pool = suiteObserver.attach(
+    new NativeLiquidityPool({ assets: [usd, xlm], networkConfig }),
+    { name: "pool" },
+  );
   const config: TransactionConfig = {
     source: signer.publicKey(),
     signers: [signer],
@@ -105,11 +112,14 @@ describe("NativeLiquidityPool", () => {
   });
 
   it("keeps position transport failures identified without swallowing key validation", async () => {
-    const unavailable = new NativeLiquidityPool({
-      assets: [xlm, usd],
-      networkConfig,
-      rpc: new Server("http://127.0.0.1:0", { allowHttp: true }),
-    });
+    const unavailable = suiteObserver.attach(
+      new NativeLiquidityPool({
+        assets: [xlm, usd],
+        networkConfig,
+        rpc: new Server("http://127.0.0.1:0", { allowHttp: true }),
+      }),
+      { name: "unavailable" },
+    );
     const error = await assertRejects(
       () => unavailable.getPosition(signer.publicKey()),
       ERROR.FAILED_TO_READ_POSITION,
@@ -132,36 +142,48 @@ describe("NativeLiquidityPool", () => {
     assert(pool.assetB.equals(usd));
     assert(pool.poolShareAsset.equals(native));
     assertEquals(
-      new NativeLiquidityPool({ assets: [xlm, usd], networkConfig }).poolId,
+      suiteObserver.attach(
+        new NativeLiquidityPool({ assets: [xlm, usd], networkConfig }),
+        { name: "client" },
+      ).poolId,
       pool.poolId,
     );
     assertEquals(typeof pool.transactionPipe, "function");
     assertStrictEquals(pool.networkConfig, networkConfig);
     const rpc = new Server(networkConfig.rpcUrl!);
-    const binding = new NativeLiquidityPool({
-      assets: [xlm, usd],
-      networkConfig,
-      rpc,
-    });
+    const binding = suiteObserver.attach(
+      new NativeLiquidityPool({
+        assets: [xlm, usd],
+        networkConfig,
+        rpc,
+      }),
+      { name: "binding" },
+    );
     assertStrictEquals(binding.rpc, rpc);
     assertStrictEquals(binding.ledgerEntries.rpc, rpc);
-    const local = new NativeLiquidityPool({
-      assets: [xlm, usd],
-      networkConfig: NetworkConfig.CustomNet({
-        networkPassphrase: "local",
-        rpcUrl: "http://localhost:8000",
-        allowHttp: true,
+    const local = suiteObserver.attach(
+      new NativeLiquidityPool({
+        assets: [xlm, usd],
+        networkConfig: NetworkConfig.CustomNet({
+          networkPassphrase: "local",
+          rpcUrl: "http://localhost:8000",
+          allowHttp: true,
+        }),
       }),
-    });
+      { name: "local" },
+    );
     assertEquals(local.rpc.serverURL.toString(), "http://localhost:8000/");
   });
 
   it("does not let mutable native asset instances change the bound pool identity", () => {
     const mutable = new Asset("USD", signer.publicKey());
-    const binding = new NativeLiquidityPool({
-      assets: [mutable, xlm],
-      networkConfig,
-    });
+    const binding = suiteObserver.attach(
+      new NativeLiquidityPool({
+        assets: [mutable, xlm],
+        networkConfig,
+      }),
+      { name: "binding" },
+    );
     Object.assign(mutable, { code: "EUR" });
     Object.assign(binding.assetB, { code: "GBP" });
     Object.assign(binding.poolShareAsset.assetB, { code: "CAD" });
@@ -171,27 +193,37 @@ describe("NativeLiquidityPool", () => {
 
   it("distinguishes invalid assets and unavailable RPC configuration", () => {
     assertThrows(
-      () => new NativeLiquidityPool({ assets: [xlm, xlm], networkConfig }),
+      () =>
+        suiteObserver.attach(
+          new NativeLiquidityPool({ assets: [xlm, xlm], networkConfig }),
+          { name: "client" },
+        ),
       ERROR.INVALID_ASSET_PAIR,
     );
     assertThrows(
       () =>
-        new NativeLiquidityPool({
-          assets: [xlm, usd],
-          networkConfig: NetworkConfig.TestNet({
-            rpcUrl: "http://localhost:8000",
+        suiteObserver.attach(
+          new NativeLiquidityPool({
+            assets: [xlm, usd],
+            networkConfig: NetworkConfig.TestNet({
+              rpcUrl: "http://localhost:8000",
+            }),
           }),
-        }),
+          { name: "client" },
+        ),
       ERROR.FAILED_TO_CREATE_RPC,
     );
     assertThrows(
       () =>
-        new NativeLiquidityPool({
-          assets: [xlm, usd],
-          networkConfig: NetworkConfig.CustomNet({
-            networkPassphrase: "local",
+        suiteObserver.attach(
+          new NativeLiquidityPool({
+            assets: [xlm, usd],
+            networkConfig: NetworkConfig.CustomNet({
+              networkPassphrase: "local",
+            }),
           }),
-        }),
+          { name: "client" },
+        ),
       ERROR.FAILED_TO_CREATE_RPC,
     );
   });
@@ -360,14 +392,17 @@ describe("NativeLiquidityPool", () => {
     const listener = Deno.listen({ hostname: "127.0.0.1", port: 0 });
     const port = listener.addr.port;
     listener.close();
-    const offline = new NativeLiquidityPool({
-      assets: [xlm, usd],
-      networkConfig: NetworkConfig.CustomNet({
-        networkPassphrase: "offline",
-        rpcUrl: `http://127.0.0.1:${port}`,
-        allowHttp: true,
+    const offline = suiteObserver.attach(
+      new NativeLiquidityPool({
+        assets: [xlm, usd],
+        networkConfig: NetworkConfig.CustomNet({
+          networkPassphrase: "offline",
+          rpcUrl: `http://127.0.0.1:${port}`,
+          allowHttp: true,
+        }),
       }),
-    });
+      { name: "offline" },
+    );
     const error = await assertRejects(
       () => offline.getState(),
       ERROR.FAILED_TO_READ_POOL,

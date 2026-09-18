@@ -3,7 +3,7 @@ import { func } from "colibri-internal/tests/soroban-values-fixtures.ts";
 import { eventEntry } from "colibri-internal/tests/binding-fixtures.ts";
 import type { GenerateBindingsOptions } from "@/types.ts";
 import { assert, assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { xdr } from "stellar-sdk";
 import { Spec } from "stellar-sdk/contract";
 import { extractContractSpec } from "@colibri/core";
@@ -19,6 +19,8 @@ import {
   union,
   valueSpec,
 } from "colibri-internal/tests/soroban-values-fixtures.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const numericEnum = (cases: Record<string, number>): xdr.ScSpecEntry =>
   xdr.ScSpecEntry.scSpecEntryUdtEnumV0(

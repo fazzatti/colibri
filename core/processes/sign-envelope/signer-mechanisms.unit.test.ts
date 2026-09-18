@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { stub } from "@std/testing/mock";
 import { Buffer } from "node:buffer";
 import {
@@ -25,6 +25,8 @@ import type {
   Ed25519SecretKey,
   PreAuthTx,
 } from "@/strkeys/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("signEnvelope signer mechanisms", () => {
   const networkPassphrase = Networks.TESTNET;

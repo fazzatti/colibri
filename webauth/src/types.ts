@@ -1,4 +1,8 @@
-import type { INetworkConfig, KeypairSigner } from "@colibri/core";
+import type {
+  EnvelopeSigner,
+  INetworkConfig,
+  KeypairSigner,
+} from "@colibri/core";
 import type { ContractAuthHandler } from "@/sep45/contract-auth.ts";
 import type {
   Keypair,
@@ -10,6 +14,15 @@ export type WebAuthCoreNetworkConfig = INetworkConfig;
 
 /** @internal Exact Core signer shape retained without re-exporting Core. */
 export type WebAuthCoreSigner = KeypairSigner;
+
+/** @internal Exact envelope capability retained without re-exporting Core. */
+export type WebAuthCoreEnvelopeSigner = EnvelopeSigner;
+
+/** SEP-10 Ed25519 signer: an SDK keypair or synchronous/asynchronous Core envelope signer.
+ * Envelope signers must return a G signer key and preserve the challenge body and signatures.
+ * The server verifies signer membership and multisig thresholds for the account.
+ */
+export type Sep10Signer = Keypair | WebAuthCoreEnvelopeSigner;
 
 /** WebAuth protocols implemented by Colibri. */
 export type WebAuthProtocol = "sep10" | "sep45";
@@ -48,16 +61,15 @@ export interface Sep10AuthenticationOptions {
   /** G or M account to authenticate. */
   account: string;
   /** Signer or signer set for the account. */
-  signer:
-    | Keypair
-    | WebAuthCoreSigner
-    | Array<Keypair | WebAuthCoreSigner>;
+  signer: Sep10Signer | Sep10Signer[];
   /** Optional ID memo, allowed only for G accounts. */
   memo?: string;
   /** Optional client domain. */
   clientDomain?: string;
   /** Signer for the accepted client-domain operation. */
-  clientDomainSigner?: Keypair | WebAuthCoreSigner;
+  clientDomainSigner?: Sep10Signer;
+  /** Stop a pending SEP-10 flow before prompting or exchanging the challenge. Does not dismiss a wallet prompt. */
+  signal?: AbortSignal;
 }
 
 /** SEP-45 authentication options. */

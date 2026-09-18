@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Asset, Keypair, Operation } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import { NetworkConfig } from "@/network/index.ts";
@@ -10,9 +10,15 @@ import { BASE_FEE_TOO_LOW_ERROR } from "@/processes/build-transaction/error.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
+
 describe("SDEX explicit operation boundaries", () => {
   const networkConfig = NetworkConfig.TestNet();
-  const sdex = new SDEX({ networkConfig });
+  const sdex = suiteObserver.attach(new SDEX({ networkConfig }), {
+    name: "sdex",
+  });
   const selling = new Asset("USD", Keypair.random().publicKey());
   const buying = Asset.native();
   // Intentionally invalid fee: real pipeline validation must reject
@@ -33,10 +39,13 @@ describe("SDEX explicit operation boundaries", () => {
   };
 
   it("wraps real offer lookup and cancellation transport failures without changing key validation", async () => {
-    const unavailable = new SDEX({
-      networkConfig,
-      rpc: new Server("http://127.0.0.1:0", { allowHttp: true }),
-    });
+    const unavailable = suiteObserver.attach(
+      new SDEX({
+        networkConfig,
+        rpc: new Server("http://127.0.0.1:0", { allowHttp: true }),
+      }),
+      { name: "unavailable" },
+    );
     const args = { seller: config.source as Ed25519PublicKey, offerId: "1" };
     for (
       const action of [
@@ -120,7 +129,11 @@ describe("SDEX explicit operation boundaries", () => {
   it("owns the existing callable transaction pipeline and accepts a native RPC server", () => {
     assertEquals(typeof sdex.transactionPipe, "function");
     const rpc = new Server(networkConfig.rpcUrl!);
-    assertEquals(new SDEX({ networkConfig, rpc }).ledgerEntries.rpc, rpc);
+    assertEquals(
+      suiteObserver.attach(new SDEX({ networkConfig, rpc }), { name: "client" })
+        .ledgerEntries.rpc,
+      rpc,
+    );
   });
 
   it("maps each native SDK construction failure to its own typed occurrence", async () => {

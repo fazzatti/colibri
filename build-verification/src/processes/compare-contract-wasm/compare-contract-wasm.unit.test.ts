@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { TEST_LIMITS, TEST_NOW, testWasm } from "@/testing.test.ts";
 import {
   artifactProcessState,
@@ -7,6 +7,8 @@ import {
 } from "@/processes/testing.test.ts";
 import { CompareContractWasmUnexpectedError } from "@/processes/compare-contract-wasm/error.ts";
 import { compareContractWasm } from "@/processes/compare-contract-wasm/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("compareContractWasm", () => {
   it("returns an already completed result unchanged", async () => {

@@ -1,7 +1,9 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { WebAuthCode, WebAuthError } from "@/error.ts";
 import { WebAuthTransport } from "@/transport.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("WebAuth response body boundary", () => {
   it("classifies fetch aborts without mistaking other DOM errors for timeouts", async () => {

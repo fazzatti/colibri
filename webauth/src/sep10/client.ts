@@ -1,9 +1,5 @@
-import {
-  isKeypairSigner,
-  normalizeBinaryData,
-  StellarToml,
-} from "@colibri/core";
-import { Keypair as StellarKeypair, xdr } from "stellar-sdk";
+import { StellarToml } from "@colibri/core";
+import { sep10SignerKey, signSep10Transaction } from "@/sep10/signing.ts";
 import { Sep10Challenge, Sep10SignedChallenge } from "@/sep10/challenge.ts";
 import {
   hasSep10ClientDomainOperation,
@@ -29,33 +25,13 @@ import {
 } from "@/error.ts";
 import { WebAuthToken } from "@/token.ts";
 import { WebAuthTransport } from "@/transport.ts";
-import type { WebAuthCoreSigner } from "@/types.ts";
+import type { Sep10Signer } from "@/types.ts";
 import { protocolForAccount } from "@/routing.ts";
-import type { Keypair, Transaction } from "@/stellar-sdk-types.ts";
 
 interface ResolvedSep10ClientConfig
   extends Omit<Sep10ClientConfig, "submissionFormat"> {
   transport: WebAuthTransport;
   submissionFormat: NonNullable<Sep10ClientConfig["submissionFormat"]>;
-}
-
-function signerPublicKey(signer: Keypair | WebAuthCoreSigner): string {
-  return signer.publicKey();
-}
-
-function signTransaction(
-  transaction: Transaction,
-  signer: Keypair | WebAuthCoreSigner,
-): void {
-  if (!isKeypairSigner(signer)) {
-    transaction.sign(signer);
-    return;
-  }
-  const signature = normalizeBinaryData(
-    signer.sign(normalizeBinaryData(transaction.hash())),
-  );
-  const hint = StellarKeypair.fromPublicKey(signer.publicKey()).signatureHint();
-  transaction.signatures.push(new xdr.DecoratedSignature({ hint, signature }));
 }
 
 /** Client implementation for explicit SEP-10 authentication. */
@@ -182,16 +158,11 @@ export class Sep10Client {
   }
 
   /** Signs a verified challenge without mutating it. */
-  // The explicit lifecycle remains promise-based even though current signers
-  // complete this transition synchronously.
-  // deno-lint-ignore require-await
   async signChallenge(
     challenge: Sep10Challenge,
-    signer:
-      | Keypair
-      | WebAuthCoreSigner
-      | Array<Keypair | WebAuthCoreSigner>,
-    clientDomainSigner?: Keypair | WebAuthCoreSigner,
+    signer: Sep10Signer | Sep10Signer[],
+    clientDomainSigner?: Sep10Signer,
+    signal?: AbortSignal,
   ): Promise<Sep10SignedChallenge> {
     if (!(challenge instanceof Sep10Challenge)) {
       throw new Sep10InvalidStateError({
@@ -204,25 +175,20 @@ export class Sep10Client {
         message: "SEP-10 requires at least one account signer",
       });
     }
-    const transaction = challenge.transaction;
+    // Revalidate immediately before approval, including challenges retained by
+    // callers between the explicit get/sign steps.
+    signal?.throwIfAborted();
+    this.#verifyCurrent(challenge.verified);
+    let transaction = challenge.transaction;
     try {
-      for (const accountSigner of signers) {
-        signTransaction(transaction, accountSigner);
-      }
       if (challenge.clientDomainAccount) {
         if (!clientDomainSigner) {
           throw new Sep10ClientDomainSignerMissingError({
             message: "Accepted SEP-10 client domain requires its signer",
           });
         }
-        const publicKey = signerPublicKey(clientDomainSigner);
-        const signsForDomain = isKeypairSigner(clientDomainSigner)
-          ? clientDomainSigner.signsFor(
-            challenge.clientDomainAccount as ReturnType<
-              WebAuthCoreSigner["publicKey"]
-            >,
-          )
-          : publicKey === challenge.clientDomainAccount;
+        const publicKey = sep10SignerKey(clientDomainSigner);
+        const signsForDomain = publicKey === challenge.clientDomainAccount;
         if (!signsForDomain) {
           throw new Sep10ClientDomainSigningKeyError({
             message: "Client-domain signer does not match the discovered key",
@@ -232,9 +198,25 @@ export class Sep10Client {
             },
           });
         }
-        signTransaction(transaction, clientDomainSigner);
+      }
+      // Resolve every signer identity before the first wallet approval. A
+      // multisig signer's membership/weight remains the server's responsibility.
+      for (const accountSigner of signers) sep10SignerKey(accountSigner);
+      for (const accountSigner of signers) {
+        transaction = await signSep10Transaction(transaction, accountSigner);
+        signal?.throwIfAborted();
+        this.#verifyCurrent(challenge.verified);
+      }
+      if (challenge.clientDomainAccount && clientDomainSigner) {
+        transaction = await signSep10Transaction(
+          transaction,
+          clientDomainSigner,
+        );
+        signal?.throwIfAborted();
+        this.#verifyCurrent(challenge.verified);
       }
     } catch (cause) {
+      signal?.throwIfAborted();
       if (cause instanceof Sep10Error) {
         throw cause;
       }
@@ -259,6 +241,7 @@ export class Sep10Client {
         message: "SEP-10 submission requires a signed challenge",
       });
     }
+    this.#verifyCurrent(challenge.verified);
     const response = await this.#config.transport.post(
       this.#config.endpoint,
       "transaction",
@@ -283,16 +266,30 @@ export class Sep10Client {
     });
   }
 
+  #verifyCurrent(verified: Sep10Challenge["verified"]): void {
+    verifySep10Challenge({
+      ...verified,
+      serverAccount: this.#config.serverAccount,
+      homeDomain: this.#config.homeDomain,
+      webAuthDomain: this.#config.webAuthDomain,
+      networkPassphrase: this.#config.networkPassphrase,
+    });
+  }
+
   /** Runs the complete SEP-10 challenge, signing, and exchange flow. */
   async authenticate(
     options: Sep10AuthenticateOptions,
   ): Promise<WebAuthToken> {
+    options.signal?.throwIfAborted();
     const challenge = await this.getChallenge(options);
+    options.signal?.throwIfAborted();
     const signed = await this.signChallenge(
       challenge,
       options.signer,
       options.clientDomainSigner,
+      options.signal,
     );
+    options.signal?.throwIfAborted();
     return await this.submitChallenge(signed);
   }
 }

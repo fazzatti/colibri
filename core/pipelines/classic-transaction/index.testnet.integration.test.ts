@@ -5,7 +5,7 @@ import {
   assertExists,
   assertInstanceOf,
 } from "@std/assert";
-import { beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Account, Asset, Claimant, MuxedAccount, Operation } from "stellar-sdk";
 import { NetworkConfig } from "@/network/index.ts";
 import { createClassicTransactionPipeline } from "@/pipelines/classic-transaction/index.ts";
@@ -15,6 +15,10 @@ import { LocalSigner } from "@/signer/local/index.ts";
 import { NativeAccount } from "@/account/native/index.ts";
 import type { ClassicTransactionOutput } from "@/pipelines/classic-transaction/types.ts";
 import type { MuxedAddress } from "@/strkeys/types.ts";
+
+const { beforeAll, describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 const assertConfirmedFee = (
   result: ClassicTransactionOutput,
@@ -56,13 +60,19 @@ describe(
     });
 
     it("should create a pipeline", () => {
-      const readPipe = createClassicTransactionPipeline({ networkConfig });
+      const readPipe = suiteObserver.attach(
+        createClassicTransactionPipeline({ networkConfig }),
+        { name: "readPipe" },
+      );
       assertInstanceOf(readPipe, Object);
       assertEquals(readPipe.id, "ClassicTransactionPipeline");
     });
 
     it("should execute a transaction with a classic operation", async () => {
-      const readPipe = createClassicTransactionPipeline({ networkConfig });
+      const readPipe = suiteObserver.attach(
+        createClassicTransactionPipeline({ networkConfig }),
+        { name: "readPipe" },
+      );
       const decimalsOp = Operation.setOptions({});
 
       const result = await readPipe.run({
@@ -79,9 +89,12 @@ describe(
     });
 
     it("returns protocol data from ordered runtime-typed outcomes", async () => {
-      const executeClassicTransaction = createClassicTransactionPipeline({
-        networkConfig,
-      });
+      const executeClassicTransaction = suiteObserver.attach(
+        createClassicTransactionPipeline({
+          networkConfig,
+        }),
+        { name: "executeClassicTransaction" },
+      );
 
       const result = await executeClassicTransaction({
         operations: [
@@ -113,9 +126,12 @@ describe(
         new Account(john.address(), "0"),
         "987",
       ).accountId() as MuxedAddress;
-      const executeClassicTransaction = createClassicTransactionPipeline({
-        networkConfig,
-      });
+      const executeClassicTransaction = suiteObserver.attach(
+        createClassicTransactionPipeline({
+          networkConfig,
+        }),
+        { name: "executeClassicTransaction" },
+      );
 
       const result = await executeClassicTransaction({
         operations: [Operation.manageData({
@@ -143,7 +159,10 @@ describe(
         fee: TransactionConfig["fee"],
         suffix: string,
       ) =>
-        createClassicTransactionPipeline({ networkConfig }).run({
+        suiteObserver.attach(
+          createClassicTransactionPipeline({ networkConfig }),
+          { name: "createClassicTransactionPipeline" },
+        ).run({
           operations: operationsFor(suffix),
           config: { ...txConfig, fee },
         });

@@ -51,7 +51,7 @@
     "release:api:check": "deno run -A _tools/releases/api.ts",
     "check:release-tooling": "deno check _tools/consumers/ci/index.ts _tools/releases/cli.ts _tools/releases/api.ts _tools/consumers/check.ts _tools/consumers/deno.ts _tools/consumers/dependencies.ts _tools/consumers/prepare.ts _tools/consumers/published.ts _tools/consumers/run.ts",
     "test:releases": "deno test -A --clean _tools/releases",
-    "test:browser-runner": "deno test -A --clean _tools/consumers/browser-fixture.integration.test.ts",
+    "test:browser-runner": "deno test -A --clean _tools/consumers/browser-fixture.integration.test.ts _tools/recorder/browser.integration.test.ts",
     "check:consumers:ci": "deno run -A _tools/consumers/ci/index.ts",
     "test:declarations": "deno test -A --check --clean _tools/consumers/declarations",
     "test:compatibility-runner": "deno test -A --check --clean _tools/consumers/ci",
@@ -92,7 +92,11 @@
     "test:file": "deno test -A --parallel --clean --ignore='_*/'",
     "check:bundles": "deno run -A _tools/bundles/check.ts",
     "test:bundle-tooling": "deno test -A _tools/bundles/metrics.unit.test.ts _tools/bundles/dependency-fixture.unit.test.ts",
-    "check:wallets": "deno run -A _tools/consumers/wallet-compatibility.ts"
+    "check:wallets": "deno run -A _tools/consumers/wallet-compatibility.ts",
+    "test:recorder:demo": "deno run -A test-tooling/recorder/cli/index.ts run --config=_internal/tests/recorder/recording.ts -- -A _internal/tests/recorder/demo.test.ts",
+    "test:record": "deno run -A test-tooling/recorder/cli/index.ts run --config=_internal/tests/recorder/suite.ts -- -A",
+    "test:record:merge": "deno run -A _tools/recorder/merge.ts",
+    "test:recorder-tooling": "deno test -A --clean --ignore='**/*.integration.test.ts' _tools/recorder"
   },
   "lint": {
     "plugins": [

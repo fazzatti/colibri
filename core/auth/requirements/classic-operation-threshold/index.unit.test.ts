@@ -1,5 +1,5 @@
 import { assertEquals, assertExists, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Asset,
   AuthClawbackEnabledFlag,
@@ -17,6 +17,8 @@ import {
   OperationThreshold,
   type SignatureRequirement,
 } from "@/signer/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const helperGetOpObj = (op: xdr.Operation) => {
   return Operation.fromXdrObject(op);

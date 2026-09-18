@@ -1,5 +1,5 @@
 // deno-lint-ignore-file require-await
-import { afterEach, beforeEach, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import { type Stub, stub } from "@std/testing/mock";
 import { Transaction, xdr } from "stellar-sdk";
@@ -7,6 +7,10 @@ import { Api, type Server } from "stellar-sdk/rpc";
 import { sendTransaction } from "@/processes/send-transaction/index.ts";
 import { SendTransactionStatus } from "@/processes/send-transaction/types.ts";
 import * as ERROR from "@/processes/send-transaction/error.ts";
+
+const { afterEach, beforeEach, describe, it } = recordColibriTests(
+  import.meta.url,
+);
 
 const withMockedDateNow = async <T>(
   values: number[],

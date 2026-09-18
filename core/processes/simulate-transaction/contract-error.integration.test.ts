@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertExists, assertRejects } from "@std/assert";
-import { beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";
 import {
@@ -13,6 +13,10 @@ import { NetworkConfig } from "@/network/index.ts";
 import * as ERROR from "@/processes/simulate-transaction/error.ts";
 import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
+
+const { beforeAll, describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 describe(
   "[Testnet] SimulateTransaction contract errors",
@@ -45,24 +49,30 @@ describe(
         "./_internal/tests/compiled-contracts/errors_contract.wasm",
       );
 
-      targetErrorsContract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasm,
-          spec: ERRORS_CONTRACT_SPEC,
-        },
-      });
+      targetErrorsContract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasm,
+            spec: ERRORS_CONTRACT_SPEC,
+          },
+        }),
+        { name: "targetErrorsContract" },
+      );
 
       await targetErrorsContract.uploadWasm(config);
       await targetErrorsContract.deploy({ config });
 
-      callerErrorsContract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasmHash: targetErrorsContract.getWasmHash(),
-          spec: ERRORS_CONTRACT_SPEC,
-        },
-      });
+      callerErrorsContract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasmHash: targetErrorsContract.getWasmHash(),
+            spec: ERRORS_CONTRACT_SPEC,
+          },
+        }),
+        { name: "callerErrorsContract" },
+      );
 
       await callerErrorsContract.deploy({ config });
     });

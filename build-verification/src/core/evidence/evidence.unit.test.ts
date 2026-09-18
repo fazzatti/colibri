@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertFalse } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { TEST_NOW, testImageDetails } from "@/testing.test.ts";
 import {
   accumulateVerificationEvidence,
@@ -12,6 +12,8 @@ import {
   imageDetailsForEvidence,
 } from "@/core/evidence/finalize.ts";
 import { isCompleteVerificationState } from "@/core/types/state.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("core verification evidence", () => {
   it("creates and immutably refines the package evidence seed", () => {

@@ -5,7 +5,7 @@ import {
   assertRejects,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { buildAuthorizationEntryPreimage, hash, xdr } from "stellar-sdk";
 import {
   createWebAuthFixture,
@@ -18,6 +18,8 @@ import {
   TEST_PASSKEY_ORIGIN,
   TEST_PASSKEY_RP_ID,
 } from "colibri-internal/tests/helpers/sep45/passkey.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 function derInteger(value: Uint8Array): Uint8Array {
   let first = 0;

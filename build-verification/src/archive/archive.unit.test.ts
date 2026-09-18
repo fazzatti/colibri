@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects, assertThrows } from "@std/assert";
-import { afterEach, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   gzipTestBytes,
   TEST_LIMITS,
@@ -28,6 +28,8 @@ import {
 } from "@/archive/extract.ts";
 import { assertArchiveLimit } from "@/archive/limits.ts";
 import { normalizeArchivePath } from "@/archive/paths.ts";
+
+const { afterEach, describe, it } = recordColibriTests(import.meta.url);
 
 const directories: string[] = [];
 const temporaryDirectory = async (): Promise<string> => {

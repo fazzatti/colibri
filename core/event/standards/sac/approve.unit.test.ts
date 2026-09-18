@@ -1,6 +1,6 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
-import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
+import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
 import {
   ApproveEvent,
@@ -9,14 +9,16 @@ import {
 import { EventType } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 
+const { describe, it } = recordColibriTests(import.meta.url);
+
 // Helper to create a mock Event
 function createMockEvent(
   topics: xdr.ScVal[],
   value: xdr.ScVal,
-  contractId?: string
+  contractId?: string,
 ): Event {
-  const contract =
-    contractId ?? "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+  const contract = contractId ??
+    "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
   return new Event({
     id: "0000000000000000000-0000000000",
@@ -36,7 +38,7 @@ function createMockEvent(
 const assetString =
   "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN";
 
-describe("ApproveEventSchema", () => {
+describe("SAC ApproveEventSchema", () => {
   it("should have correct structure per CAP-0046-06", () => {
     assertEquals(ApproveEventSchema.name, "approve");
     assertEquals(ApproveEventSchema.topics.length, 3);
@@ -51,7 +53,7 @@ describe("ApproveEventSchema", () => {
   });
 });
 
-describe("ApproveEvent", () => {
+describe("SAC ApproveEvent", () => {
   describe("is()", () => {
     it("should return true for valid SAC approve event", () => {
       const from = Keypair.random().publicKey();
@@ -66,7 +68,7 @@ describe("ApproveEvent", () => {
         xdr.ScVal.scvVec([
           nativeToScVal(1000000n, { type: "i128" }),
           xdr.ScVal.scvU32(50000),
-        ])
+        ]),
       );
 
       assertEquals(ApproveEvent.is(event), true);
@@ -85,7 +87,7 @@ describe("ApproveEvent", () => {
         xdr.ScVal.scvVec([
           nativeToScVal(1000000n, { type: "i128" }),
           xdr.ScVal.scvU32(50000),
-        ])
+        ]),
       );
 
       assertEquals(ApproveEvent.is(event), true);
@@ -103,7 +105,7 @@ describe("ApproveEvent", () => {
         xdr.ScVal.scvVec([
           nativeToScVal(1000000n, { type: "i128" }),
           xdr.ScVal.scvU32(50000),
-        ])
+        ]),
       );
 
       assertEquals(ApproveEvent.is(event), false);
@@ -120,7 +122,7 @@ describe("ApproveEvent", () => {
         xdr.ScVal.scvVec([
           nativeToScVal(1000000n, { type: "i128" }),
           xdr.ScVal.scvU32(50000),
-        ])
+        ]),
       );
 
       assertEquals(ApproveEvent.is(event), false);
@@ -143,7 +145,7 @@ describe("ApproveEvent", () => {
         xdr.ScVal.scvVec([
           nativeToScVal(amount, { type: "i128" }),
           xdr.ScVal.scvU32(liveUntilLedger),
-        ])
+        ]),
       );
 
       const approveEvent = ApproveEvent.fromEvent(event);
@@ -169,14 +171,14 @@ describe("ApproveEvent", () => {
         xdr.ScVal.scvVec([
           nativeToScVal(1000000n, { type: "i128" }),
           xdr.ScVal.scvU32(50000),
-        ])
+        ]),
       );
 
       const approveEvent = ApproveEvent.fromEvent(event);
       assertThrows(
         () => approveEvent.asset,
         Error,
-        "Invalid SEP-11 asset format: invalid-asset"
+        "Invalid SEP-11 asset format: invalid-asset",
       );
     });
   });
@@ -195,7 +197,7 @@ describe("ApproveEvent", () => {
         xdr.ScVal.scvVec([
           nativeToScVal(100n, { type: "i128" }),
           xdr.ScVal.scvU32(50000),
-        ])
+        ]),
       );
 
       const approveEvent = ApproveEvent.fromEvent(event);
@@ -220,7 +222,7 @@ describe("ApproveEvent", () => {
         xdr.ScVal.scvVec([
           nativeToScVal(100n, { type: "i128" }),
           xdr.ScVal.scvU32(50000),
-        ])
+        ]),
       );
 
       const approveEvent = ApproveEvent.fromEvent(event);

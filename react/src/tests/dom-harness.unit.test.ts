@@ -1,7 +1,9 @@
 import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { createElement, useEffect } from "react";
 import { mountReact } from "colibri-internal/tests/react.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("React DOM harness", () => {
   it("mounts through CommonJS React DOM and restores globals between views", async () => {

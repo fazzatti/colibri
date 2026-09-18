@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects, assertThrows } from "@std/assert";
-import { afterEach, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   ArtifactCollectionFailedError,
   ArtifactLimitExceededError,
@@ -16,6 +16,8 @@ import {
 } from "@/artifacts/collect.ts";
 import { selectBuildArtifactCandidate } from "@/artifacts/select.ts";
 import { TEST_LIMITS, testRecipe } from "@/testing.test.ts";
+
+const { afterEach, describe, it } = recordColibriTests(import.meta.url);
 
 const directories: string[] = [];
 const workspace = async (): Promise<string> => {

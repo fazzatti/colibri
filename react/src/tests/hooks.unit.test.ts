@@ -25,7 +25,7 @@ import {
   useContractEvents,
 } from "@/events/subscription.ts";
 import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { stub } from "@std/testing/mock";
 import { createElement } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -74,6 +74,8 @@ import { useSimulateSorobanTransaction } from "@/transactions/simulation/hook.ts
 import { useSignMessage } from "@/signers/hooks.ts";
 import { ColibriReactError } from "@/errors/index.ts";
 import type { ClassicTransactionPipeline } from "@colibri/core/classic-transaction";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 const address = "GALAXYVOIDAOPZTDLHILAJQKCVVFMD4IKLXLSZV5YHO7VY74IWZILUTO";
 const contractId = "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM";
 const network = NetworkConfig.TestNet();

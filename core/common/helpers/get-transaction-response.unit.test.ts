@@ -1,6 +1,6 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { Buffer } from "node:buffer";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Address, xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { ColibriError } from "@/error/index.ts";
@@ -8,6 +8,8 @@ import {
   getContractIdFromGetTransactionResponse,
   getWasmHashFromGetTransactionResponse,
 } from "@/common/helpers/get-transaction-response.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const makeResponse = (
   returnValue: xdr.ScVal,

@@ -10,7 +10,7 @@ import {
   assertRejects,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { TEST_LIMITS, testImageDetails } from "@/testing.test.ts";
 import type { ContractBuildPlan } from "@/runners/types.ts";
 import { buildDockerCommand } from "@/runners/docker/command.ts";
@@ -50,6 +50,8 @@ import {
   DockerBuildRunner,
   getDockerUserFromSourceOwner,
 } from "@/runners/docker/runner.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const plan = (
   overrides: Partial<ContractBuildPlan> = {},

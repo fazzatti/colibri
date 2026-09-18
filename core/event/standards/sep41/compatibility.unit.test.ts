@@ -1,5 +1,5 @@
 import { assertEquals, assertInstanceOf, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Event } from "@/event/event.ts";
 import { EventType } from "@/event/types.ts";
 import { ApproveEvent } from "@/event/standards/sep41/approve.ts";
@@ -11,6 +11,8 @@ import { SEP41Events } from "@/event/standards/sep41/index.ts";
 import * as ERROR from "@/event/error.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const CONTRACT_ID =
   "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId;
@@ -65,7 +67,7 @@ const amountTopics = (name: "burn" | "clawback"): xdr.ScVal[] => [
   new Address(from).toScVal(),
 ];
 
-describe("SEP-41 v0.5.1 event compatibility", () => {
+describe("SEP-41 SEP-41 v0.5.1 event compatibility", () => {
   it("reports the implemented SEP revision", () => {
     assertEquals(SEP41Events.VERSION, "0.5.1");
   });

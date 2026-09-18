@@ -1,8 +1,10 @@
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { assertEquals, assertStringIncludes, assertThrows } from "@std/assert";
 import { Keypair, xdr } from "stellar-sdk";
 import { parseMuxedAccount } from "@/common/helpers/xdr/parse-muxed-account.ts";
 import { UNKNOWN_MUXED_ACCOUNT_TYPE } from "@/common/helpers/xdr/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("parseMuxedAccount", () => {
   it("should parse regular Ed25519 account to G... address", () => {
@@ -19,7 +21,7 @@ describe("parseMuxedAccount", () => {
       new xdr.MuxedAccountMed25519({
         id: xdr.Uint64.fromString("12345"),
         ed25519: keypair.rawPublicKey(),
-      })
+      }),
     );
 
     const result = parseMuxedAccount(muxed);
@@ -36,7 +38,7 @@ describe("parseMuxedAccount", () => {
       // deno-lint-ignore no-explicit-any
       () => parseMuxedAccount(mockMuxed as any),
       UNKNOWN_MUXED_ACCOUNT_TYPE,
-      "Unknown muxed account type"
+      "Unknown muxed account type",
     );
   });
 });

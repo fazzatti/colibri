@@ -3,7 +3,7 @@ import {
   assertInstanceOf,
   assertStrictEquals,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { assertSpyCalls, stub } from "@std/testing/mock";
 import { plugin } from "convee";
 import { Operation, SorobanDataBuilder, Transaction, xdr } from "stellar-sdk";
@@ -17,6 +17,10 @@ import {
   bindingSpec,
   contractId,
 } from "colibri-internal/tests/binding-fixtures.ts";
+
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 describe("standalone contract reads", () => {
   it("builds argument-free and encoded calls through the default simulation pipeline", async () => {
@@ -86,6 +90,7 @@ describe("standalone contract reads", () => {
       });
     const pipeline = createReadFromContractPipeline({ networkConfig, rpc });
     pipeline.use(observer);
+    suiteObserver.attach(pipeline, { name: "pipeline" });
     assertEquals(
       await readContract({
         networkConfig,

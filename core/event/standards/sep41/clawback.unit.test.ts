@@ -1,5 +1,5 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
 import {
@@ -8,6 +8,8 @@ import {
 } from "@/event/standards/sep41/clawback.ts";
 import { EventType } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 // Helper to create a mock Event
 function createMockEvent(
@@ -33,7 +35,7 @@ function createMockEvent(
   });
 }
 
-describe("ClawbackEventSchema", () => {
+describe("SEP-41 ClawbackEventSchema", () => {
   it("should have correct structure per SEP-41", () => {
     assertEquals(ClawbackEventSchema.name, "clawback");
     assertEquals(ClawbackEventSchema.topics.length, 1);
@@ -44,7 +46,7 @@ describe("ClawbackEventSchema", () => {
   });
 });
 
-describe("ClawbackEvent", () => {
+describe("SEP-41 ClawbackEvent", () => {
   describe("is()", () => {
     it("should return true for valid clawback event", () => {
       const from = Keypair.random().publicKey();

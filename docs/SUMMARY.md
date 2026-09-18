@@ -18,6 +18,9 @@
 - [Common workflows](packages/react/convenience.md)
 - [Queries and caching](packages/react/queries.md)
 - [Wallets and sessions](packages/react/wallets-and-sessions.md)
+
+* [Wallet authentication](packages/react/wallet-authentication.md)
+
 - [Contracts and transactions](packages/react/contracts-and-transactions.md)
 - [Hooks](packages/react/hooks/README.md)
   - [useWallet](packages/react/hooks/use-wallet.md)
@@ -178,6 +181,7 @@
 - [Networks and services](packages/test-tooling/networks-services.md)
 - [Lifecycle, persistence, and reuse](packages/test-tooling/lifecycle.md)
 - [Docker configuration and errors](packages/test-tooling/configuration.md)
+- [Record test evidence](packages/test-tooling/recorder.md)
 
 ## Plugins
 
@@ -277,6 +281,7 @@
   - [react](reference/errors/react.md)
   - [rpc-streamer](reference/errors/rpc-streamer.md)
   - [test-tooling/quickstart](reference/errors/test-tooling-quickstart.md)
+  - [test-tooling/recorder](reference/errors/test-tooling-recorder.md)
   - [webauth](reference/errors/webauth.md)
 
 <!-- error-contexts:end -->

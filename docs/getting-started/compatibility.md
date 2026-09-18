@@ -81,15 +81,16 @@ extension coverage for every supported wallet/version.
 
 ## Supported and tested integrations
 
-| Surface                             | Compatibility boundary and CI checks                                                      |
-| ----------------------------------- | ----------------------------------------------------------------------------------------- |
-| Stellar JavaScript SDK              | `>=17.0.1 <18`; exact 17.0.1 and freshly resolved compatible 17.x                         |
-| Convee                              | Exact 2.1.0; public composition and plugin lifecycle fixtures                             |
-| Deno                                | Minimum 2.7.11 and 2.9.6; each runtime's bundled TypeScript compiler                      |
-| Node.js                             | Minimum 22.12.0, current patched 22.x, and 24.x LTS                                       |
-| TypeScript in npm consumers         | 5.9.3 and 6.0.3                                                                           |
-| Browsers                            | Playwright-pinned Chromium, Firefox, and WebKit; actual engine versions appear in CI logs |
-| Test Tooling and Build Verification | Deno and Docker integration; no Node/browser support promise from graduation alone        |
+| Surface                           | Compatibility boundary and CI checks                                                            |
+| --------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Stellar JavaScript SDK            | `>=17.0.1 <18`; exact 17.0.1 and freshly resolved compatible 17.x                               |
+| Convee                            | Exact 2.1.0; public composition and plugin lifecycle fixtures                                   |
+| Deno                              | Minimum 2.7.11 and 2.9.6; each runtime's bundled TypeScript compiler                            |
+| Node.js                           | Minimum 22.12.0, current patched 22.x, and 24.x LTS                                             |
+| TypeScript in npm consumers       | 5.9.3 and 6.0.3                                                                                 |
+| Browsers                          | Playwright-pinned Chromium, Firefox, and WebKit; actual engine versions appear in CI logs       |
+| Quickstart and Build Verification | Deno and Docker integration                                                                     |
+| Test execution recorder           | Deno BDD and Node native test runner; shared capture, aggregation, CLI and offline HTML reports |
 
 Use current patched supported runtimes in applications. The oldest runtime in
 the matrix is a compatibility fixture, not a security recommendation. Browser

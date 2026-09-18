@@ -1,6 +1,6 @@
 import * as xdr from "stellar-sdk/xdr";
 import { assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { stub } from "@std/testing/mock";
 import { type LiveStartOptions, RPCStreamer } from "@colibri/rpc-streamer";
 import {
@@ -12,6 +12,8 @@ import {
 import { createColibriConfig } from "@/context/config.ts";
 import { createContractEvents } from "@/events/subscription.ts";
 import { ColibriReactError } from "@/errors/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 const event = (index: number) =>
   new Event({
     id: createEventIdFromParts(1, 1, 1, index),

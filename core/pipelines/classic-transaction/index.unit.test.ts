@@ -1,5 +1,5 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { createRunContext, step } from "convee";
 import { Operation } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
@@ -20,6 +20,10 @@ import { NetworkType } from "@/network/types.ts";
 import { BUILD_TRANSACTION_STEP_ID } from "@/steps/index.ts";
 import { HashXSigner } from "@/signer/hash-x/index.ts";
 
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
+
 const seedStepOutput = async <Output>(
   context: ReturnType<typeof createRunContext>,
   stepId: string,
@@ -38,7 +42,10 @@ describe("createClassicTransactionPipeline", () => {
         type: NetworkType.TESTNET,
       });
 
-      const pipeline = createClassicTransactionPipeline({ networkConfig });
+      const pipeline = suiteObserver.attach(
+        createClassicTransactionPipeline({ networkConfig }),
+        { name: "pipeline" },
+      );
 
       assertEquals(pipeline.id, "ClassicTransactionPipeline");
     });
@@ -51,17 +58,23 @@ describe("createClassicTransactionPipeline", () => {
         type: NetworkType.TESTNET,
       });
 
-      const pipeline = createClassicTransactionPipeline({ networkConfig });
+      const pipeline = suiteObserver.attach(
+        createClassicTransactionPipeline({ networkConfig }),
+        { name: "pipeline" },
+      );
 
       assertEquals(pipeline.id, "ClassicTransactionPipeline");
     });
 
     it("preserves the caller input at the pipeline boundary", async () => {
       const networkConfig = NetworkConfig.TestNet();
-      const pipeline = createClassicTransactionPipeline({
-        networkConfig,
-        rpc: {} as Server,
-      });
+      const pipeline = suiteObserver.attach(
+        createClassicTransactionPipeline({
+          networkConfig,
+          rpc: {} as Server,
+        }),
+        { name: "pipeline" },
+      );
       const input: ClassicTransactionInput = {
         operations: [Operation.setOptions({})],
         config: {
@@ -203,9 +216,12 @@ describe("createClassicTransactionPipeline", () => {
     it("throws MISSING_ARG when networkConfig is missing", () => {
       assertThrows(
         () =>
-          createClassicTransactionPipeline({
-            networkConfig: undefined as unknown as NetworkConfig,
-          }),
+          suiteObserver.attach(
+            createClassicTransactionPipeline({
+              networkConfig: undefined as unknown as NetworkConfig,
+            }),
+            { name: "createClassicTransactionPipeline" },
+          ),
         ERROR.MISSING_ARG,
       );
     });
@@ -216,7 +232,11 @@ describe("createClassicTransactionPipeline", () => {
       } as NetworkConfig;
 
       assertThrows(
-        () => createClassicTransactionPipeline({ networkConfig }),
+        () =>
+          suiteObserver.attach(
+            createClassicTransactionPipeline({ networkConfig }),
+            { name: "createClassicTransactionPipeline" },
+          ),
         ERROR.MISSING_ARG,
       );
     });
@@ -227,7 +247,11 @@ describe("createClassicTransactionPipeline", () => {
       } as NetworkConfig;
 
       assertThrows(
-        () => createClassicTransactionPipeline({ networkConfig }),
+        () =>
+          suiteObserver.attach(
+            createClassicTransactionPipeline({ networkConfig }),
+            { name: "createClassicTransactionPipeline" },
+          ),
         ERROR.MISSING_RPC_URL,
       );
     });
@@ -236,7 +260,11 @@ describe("createClassicTransactionPipeline", () => {
       const networkConfig = {} as NetworkConfig;
 
       assertThrows(
-        () => createClassicTransactionPipeline({ networkConfig }),
+        () =>
+          suiteObserver.attach(
+            createClassicTransactionPipeline({ networkConfig }),
+            { name: "createClassicTransactionPipeline" },
+          ),
         ERROR.MISSING_ARG,
       );
     });
@@ -248,7 +276,11 @@ describe("createClassicTransactionPipeline", () => {
         type: NetworkType.TESTNET,
       });
       assertThrows(
-        () => createClassicTransactionPipeline({ networkConfig }),
+        () =>
+          suiteObserver.attach(
+            createClassicTransactionPipeline({ networkConfig }),
+            { name: "createClassicTransactionPipeline" },
+          ),
         ERROR.UNEXPECTED_ERROR,
       );
     });

@@ -6,7 +6,7 @@ import {
   assertExists,
   assertNotEquals,
 } from "@std/assert";
-import { beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Buffer } from "node:buffer";
 import { Contract } from "@/contract/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
@@ -17,18 +17,22 @@ import { StrKey } from "@/strkeys/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import { calculateContractId } from "@/common/helpers/calculate-contract-id.ts";
 
+const { beforeAll, describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
+
 // Salts must be 32 bytes (64 hex characters)
 const SALT_A = Buffer.from(
   "0000000000000000000000000000000000000000000000000000000000000001",
-  "hex"
+  "hex",
 );
 const SALT_B = Buffer.from(
   "0000000000000000000000000000000000000000000000000000000000000002",
-  "hex"
+  "hex",
 );
 const SALT_C = Buffer.from(
   "0000000000000000000000000000000000000000000000000000000000000003",
-  "hex"
+  "hex",
 );
 
 describe("[Testnet] Contract Salt Deployment", disableSanitizeConfig, () => {
@@ -53,15 +57,18 @@ describe("[Testnet] Contract Salt Deployment", disableSanitizeConfig, () => {
 
     // Upload the wasm once for all salt tests
     const wasm = await loadWasmFile(
-      "./_internal/tests/compiled-contracts/types_harness.wasm"
+      "./_internal/tests/compiled-contracts/types_harness.wasm",
     );
 
-    const contract = new Contract({
-      networkConfig,
-      contractConfig: {
-        wasm: wasm,
-      },
-    });
+    const contract = suiteObserver.attach(
+      new Contract({
+        networkConfig,
+        contractConfig: {
+          wasm: wasm,
+        },
+      }),
+      { name: "contract" },
+    );
 
     await contract.uploadWasm(config);
     wasmHash = contract.getWasmHash() as string;
@@ -73,15 +80,18 @@ describe("[Testnet] Contract Salt Deployment", disableSanitizeConfig, () => {
       const expectedContractId = calculateContractId(
         networkConfig.networkPassphrase,
         admin.address(),
-        SALT_A
+        SALT_A,
       );
 
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasmHash: wasmHash,
-        },
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasmHash: wasmHash,
+          },
+        }),
+        { name: "contract" },
+      );
 
       await contract.deploy({
         config: config,
@@ -100,15 +110,18 @@ describe("[Testnet] Contract Salt Deployment", disableSanitizeConfig, () => {
       const expectedContractId = calculateContractId(
         networkConfig.networkPassphrase,
         admin.address(),
-        SALT_B
+        SALT_B,
       );
 
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasmHash: wasmHash,
-        },
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasmHash: wasmHash,
+          },
+        }),
+        { name: "contract" },
+      );
 
       await contract.deploy({
         config: config,
@@ -127,15 +140,18 @@ describe("[Testnet] Contract Salt Deployment", disableSanitizeConfig, () => {
       const expectedContractId = calculateContractId(
         networkConfig.networkPassphrase,
         admin.address(),
-        SALT_C
+        SALT_C,
       );
 
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasmHash: wasmHash,
-        },
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasmHash: wasmHash,
+          },
+        }),
+        { name: "contract" },
+      );
 
       await contract.deploy({
         config: config,
@@ -153,17 +169,17 @@ describe("[Testnet] Contract Salt Deployment", disableSanitizeConfig, () => {
       const expectedContractIdA = calculateContractId(
         networkConfig.networkPassphrase,
         admin.address(),
-        SALT_A
+        SALT_A,
       );
       const expectedContractIdB = calculateContractId(
         networkConfig.networkPassphrase,
         admin.address(),
-        SALT_B
+        SALT_B,
       );
       const expectedContractIdC = calculateContractId(
         networkConfig.networkPassphrase,
         admin.address(),
-        SALT_C
+        SALT_C,
       );
 
       // All three should be different
@@ -175,12 +191,15 @@ describe("[Testnet] Contract Salt Deployment", disableSanitizeConfig, () => {
 
   describe("Deployment with random salt (no salt provided)", () => {
     it("deploys contract without salt and returns a random contract ID", async () => {
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasmHash: wasmHash,
-        },
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasmHash: wasmHash,
+          },
+        }),
+        { name: "contract" },
+      );
 
       await contract.deploy({
         config: config,
@@ -192,12 +211,15 @@ describe("[Testnet] Contract Salt Deployment", disableSanitizeConfig, () => {
       const contractId1 = contract.getContractId();
 
       // Deploy another contract without salt
-      const contract2 = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasmHash: wasmHash,
-        },
-      });
+      const contract2 = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasmHash: wasmHash,
+          },
+        }),
+        { name: "contract2" },
+      );
 
       await contract2.deploy({
         config: config,
@@ -217,25 +239,28 @@ describe("[Testnet] Contract Salt Deployment", disableSanitizeConfig, () => {
       const expectedContractIdA = calculateContractId(
         networkConfig.networkPassphrase,
         admin.address(),
-        SALT_A
+        SALT_A,
       );
       const expectedContractIdB = calculateContractId(
         networkConfig.networkPassphrase,
         admin.address(),
-        SALT_B
+        SALT_B,
       );
       const expectedContractIdC = calculateContractId(
         networkConfig.networkPassphrase,
         admin.address(),
-        SALT_C
+        SALT_C,
       );
 
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasmHash: wasmHash,
-        },
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasmHash: wasmHash,
+          },
+        }),
+        { name: "contract" },
+      );
 
       await contract.deploy({
         config: config,

@@ -1,5 +1,5 @@
 import { assertEquals, assertStrictEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   Asset,
@@ -15,6 +15,8 @@ import {
 } from "@/sponsorship/index.ts";
 import type { WrapSponsorshipArgs } from "@/sponsorship/types.ts";
 import type { MuxedAddress } from "@/strkeys/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("wrapSponsorship", () => {
   const sponsor = LocalSigner.generateRandom().publicKey();

@@ -1,9 +1,11 @@
 import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Buffer } from "node:buffer";
 import { Keypair, xdr } from "stellar-sdk";
 import { StrKey } from "@/strkeys/index.ts";
 import { StrkeyName, StrkeyPrefix } from "@/strkeys/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("StrKey", () => {
   describe("getStrkeyTypeName", () => {

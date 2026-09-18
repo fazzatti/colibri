@@ -1,6 +1,6 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { afterEach, beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import Dockerode from "dockerode";
 import {
   type ContractBuildRecipe,
@@ -18,6 +18,10 @@ import {
   BuildTimedOutError,
 } from "@/runners/docker/error.ts";
 import { resolveDockerOptions } from "@/runners/docker/connection.ts";
+
+const { afterEach, beforeAll, describe, it } = recordColibriTests(
+  import.meta.url,
+);
 
 const FIXTURE_ROOT = new URL(
   "../../_internal/build-verification/fixtures/",

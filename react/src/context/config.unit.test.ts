@@ -1,11 +1,13 @@
 import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { NetworkConfig } from "@colibri/core/network";
 import {
   createColibriConfig,
   type WalletConnection,
 } from "@/context/config.ts";
 import { ColibriReactError } from "@/errors/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 const network = NetworkConfig.TestNet();
 const connection: WalletConnection = {
   address: "G-test",

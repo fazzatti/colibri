@@ -1,5 +1,5 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Address, Keypair, xdr } from "stellar-sdk";
 import { getAddressTypeFromAuthEntry } from "@/common/helpers/xdr/get-address-type-from-auth-entry.ts";
 import {
@@ -8,6 +8,8 @@ import {
   FAILED_TO_GET_AUTH_ENTRY_ADDRESS_TYPE,
   MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_ADDRESS_TYPE,
 } from "@/common/helpers/xdr/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("getAddressTypeFromAuthEntry", () => {
   it("should get address type from auth entry", () => {

@@ -4,7 +4,7 @@ import {
   assertStrictEquals,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { stub } from "@std/testing/mock";
 import { Address, Operation, xdr } from "stellar-sdk";
 import { Spec } from "stellar-sdk/contract";
@@ -36,6 +36,10 @@ import {
 } from "colibri-internal/tests/soroban-values-fixtures.ts";
 import { bindingSpec } from "colibri-internal/tests/binding-fixtures.ts";
 import type { InvokeContractOutput } from "@/pipelines/invoke-contract/types.ts";
+
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 const contractId = "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM";
 const source = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
@@ -199,10 +203,13 @@ describe("Soroban value boundaries", () => {
   });
   it("preserves invocation operations, pipeline instances and result metadata", async () => {
     const spec = valueSpec();
-    const client = new Contract({
-      networkConfig: NetworkConfig.TestNet(),
-      contractConfig: { contractId, spec },
-    });
+    const client = suiteObserver.attach(
+      new Contract({
+        networkConfig: NetworkConfig.TestNet(),
+        contractConfig: { contractId, spec },
+      }),
+      { name: "client" },
+    );
     const raw = {
       role: "ADMIN",
       count: 7,
@@ -261,10 +268,13 @@ describe("Soroban value boundaries", () => {
   });
   it("normalizes constructor arguments without altering deployment operation semantics", async () => {
     const spec = valueSpec();
-    const client = new Contract({
-      networkConfig: NetworkConfig.TestNet(),
-      contractConfig: { wasmHash: "00".repeat(32), spec },
-    });
+    const client = suiteObserver.attach(
+      new Contract({
+        networkConfig: NetworkConfig.TestNet(),
+        contractConfig: { wasmHash: "00".repeat(32), spec },
+      }),
+      { name: "client" },
+    );
     const value = { role: "ADMIN", count: 7, key: { tag: "ExistingRoles" } };
     const salt = new Uint8Array(32);
     const expected = Operation.createCustomContract({
@@ -292,10 +302,13 @@ describe("Soroban value boundaries", () => {
     assertEquals(invoke.calls.length, 1);
   });
   it("adapts values to native raw invocation and accepts wrapped ledger keys", async () => {
-    const client = new Contract({
-      networkConfig: NetworkConfig.TestNet(),
-      contractConfig: { contractId },
-    });
+    const client = suiteObserver.attach(
+      new Contract({
+        networkConfig: NetworkConfig.TestNet(),
+        contractConfig: { contractId },
+      }),
+      { name: "client" },
+    );
     const encoded = xdr.ScVal.scvSymbol("ADMIN");
     const expected = Operation.invokeContractFunction({
       contract: contractId,

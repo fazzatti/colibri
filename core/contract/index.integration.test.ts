@@ -1,7 +1,7 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";
 import { assert, assertEquals, assertExists, assertRejects } from "@std/assert";
-import { beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Buffer } from "node:buffer";
 import { nativeToScVal, xdr } from "stellar-sdk";
 import { Contract } from "@/contract/index.ts";
@@ -17,6 +17,10 @@ import {
 import { StrKey } from "@/strkeys/index.ts";
 import * as ERROR from "@/contract/error.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
+
+const { beforeAll, describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 describe("[Testnet] Contract", disableSanitizeConfig, () => {
   const networkConfig = NetworkConfig.TestNet();
@@ -53,12 +57,15 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
       );
     });
     it("Initializes with WASM and upload binaries", async () => {
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasm: wasm,
-        },
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasm: wasm,
+          },
+        }),
+        { name: "contract" },
+      );
 
       await contract.uploadWasm(config);
       assertExists(contract);
@@ -68,12 +75,15 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
     });
 
     it("Initializes with wasm hash and deploys new instance without constructor args", async () => {
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasmHash: wasmHash,
-        },
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasmHash: wasmHash,
+          },
+        }),
+        { name: "contract" },
+      );
 
       await contract.deploy({
         config: config,
@@ -86,13 +96,16 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
     });
 
     it("Deploys a contract with constructor args", async () => {
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasm: wasmFt,
-          spec: FT_SPEC,
-        },
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasm: wasmFt,
+            spec: FT_SPEC,
+          },
+        }),
+        { name: "contract" },
+      );
 
       await contract.uploadWasm(config);
 
@@ -110,13 +123,16 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
     });
 
     it("Initializes with contract Id and reads from the contract functions", async () => {
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          contractId: typesHarnessContractId,
-          spec: TYPES_HARNESS_SPEC,
-        },
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            contractId: typesHarnessContractId,
+            spec: TYPES_HARNESS_SPEC,
+          },
+        }),
+        { name: "contract" },
+      );
 
       assertExists(contract);
       assertExists(contract.getContractId());
@@ -132,13 +148,16 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
     });
 
     it("Initializes with  contract Id and invokes functions from the contract", async () => {
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          contractId: typesHarnessContractId,
-          spec: TYPES_HARNESS_SPEC,
-        },
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            contractId: typesHarnessContractId,
+            spec: TYPES_HARNESS_SPEC,
+          },
+        }),
+        { name: "contract" },
+      );
 
       assertExists(contract);
       assertExists(contract.getContractId());
@@ -161,13 +180,16 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
     });
 
     it("Initializes with  contract Id and invokes functions from the contract without args", async () => {
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          contractId: typesHarnessContractId,
-          spec: TYPES_HARNESS_SPEC,
-        },
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            contractId: typesHarnessContractId,
+            spec: TYPES_HARNESS_SPEC,
+          },
+        }),
+        { name: "contract" },
+      );
 
       assertExists(contract);
       assertExists(contract.getContractId());
@@ -187,12 +209,15 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
     });
 
     it("Initializes with  contract wasmhash and loads spec the deployed contract", async () => {
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasmHash: wasmHash,
-        },
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasmHash: wasmHash,
+          },
+        }),
+        { name: "contract" },
+      );
 
       assertExists(contract);
       assertExists(contract.getWasmHash());
@@ -203,12 +228,15 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
     });
 
     it("Initializes with  contract id, loads the wasmhash and loads spec from the deployed contract, then interacts with it", async () => {
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          contractId: typesHarnessContractId,
-        },
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            contractId: typesHarnessContractId,
+          },
+        }),
+        { name: "contract" },
+      );
 
       assertExists(contract);
       assertExists(contract.getContractId());
@@ -232,12 +260,15 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
     describe("Errors", () => {
       it("throws FAILED_TO_UPLOAD_WASM for an invalid WASM buffer", async () => {
         const invalidWasm = Buffer.from("invalid wasm");
-        const contract = new Contract({
-          networkConfig,
-          contractConfig: {
-            wasm: invalidWasm,
-          },
-        });
+        const contract = suiteObserver.attach(
+          new Contract({
+            networkConfig,
+            contractConfig: {
+              wasm: invalidWasm,
+            },
+          }),
+          { name: "contract" },
+        );
 
         assertExists(contract);
 
@@ -255,12 +286,15 @@ describe("[Testnet] Contract", disableSanitizeConfig, () => {
 
       it("throws FAILED_TO_DEPLOY_CONTRACT for an invalid wasmhash buffer", async () => {
         const invalidWasmHash = "invalidwasmhash";
-        const contract = new Contract({
-          networkConfig,
-          contractConfig: {
-            wasmHash: invalidWasmHash,
-          },
-        });
+        const contract = suiteObserver.attach(
+          new Contract({
+            networkConfig,
+            contractConfig: {
+              wasmHash: invalidWasmHash,
+            },
+          }),
+          { name: "contract" },
+        );
 
         assertExists(contract);
 

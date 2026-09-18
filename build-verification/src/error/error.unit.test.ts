@@ -4,9 +4,11 @@ import {
   assertInstanceOf,
   assertStringIncludes,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { ColibriError } from "@colibri/core";
 import * as ERROR from "@/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const allErrors = (): ERROR.BuildVerificationError<ERROR.Code>[] => {
   const cause = new Error("cause");

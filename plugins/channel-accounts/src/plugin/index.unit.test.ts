@@ -4,7 +4,7 @@ import {
   assertExists,
   assertRejects,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { pipe, step } from "convee";
 import {
   CLASSIC_TRANSACTION_PIPELINE_ID,
@@ -26,6 +26,8 @@ import {
   createChannelAccountsPlugin,
   INVALID_NUMBER_OF_CHANNELS,
 } from "@/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("ChannelAccounts", () => {
   const CREATED_AT = 1_710_000_000;

@@ -4,7 +4,7 @@ import { Networks } from "stellar-sdk";
  * @description Unit tests for Ledger class
  */
 
-import { beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { expect } from "@std/expect";
 import { Ledger } from "@/ledger-parser/ledger/index.ts";
 import {
@@ -20,6 +20,8 @@ import {
 } from "@/ledger-parser/error.ts";
 import { type rpc, xdr } from "stellar-sdk";
 import { CAP83_EMPTY_TX_SET_LEDGER_CLOSE_META_RECORD_BASE64 } from "colibri-internal/tests/fixtures/cap83-empty-tx-set.ts";
+
+const { beforeAll, describe, it } = recordColibriTests(import.meta.url);
 
 describe("Ledger", () => {
   let fixtures: rpc.Api.RawLedgerResponse[];

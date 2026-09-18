@@ -1,12 +1,14 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
+  isNativeStellarAssetCanonicalString,
   isStellarAssetCanonicalString,
   parseStellarAssetCanonicalString,
-  isNativeStellarAssetCanonicalString,
   toStellarAssetCanonicalString,
 } from "@/asset/sep11/index.ts";
 import type { StellarAssetCanonicalString } from "@/asset/sep11/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("StellarAssetCanonicalString", () => {
   describe("isStellarAssetCanonicalString", () => {
@@ -17,54 +19,54 @@ describe("StellarAssetCanonicalString", () => {
     it("should return true for valid CODE:ISSUER format", () => {
       assertEquals(
         isStellarAssetCanonicalString(
-          "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+          "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
         ),
-        true
+        true,
       );
     });
 
     it("should return true for 4 character code", () => {
       assertEquals(
         isStellarAssetCanonicalString(
-          "KALE:GBDVX4VELCDSQ54KQJYTNHXAHFLBCA77ZY2USQBM4CSHTTV7DME7KALE"
+          "KALE:GBDVX4VELCDSQ54KQJYTNHXAHFLBCA77ZY2USQBM4CSHTTV7DME7KALE",
         ),
-        true
+        true,
       );
     });
 
     it("should return true for 12 character code", () => {
       assertEquals(
         isStellarAssetCanonicalString(
-          "ABCDEFGHIJKL:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+          "ABCDEFGHIJKL:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
         ),
-        true
+        true,
       );
     });
 
     it("should return true for 1 character code", () => {
       assertEquals(
         isStellarAssetCanonicalString(
-          "X:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+          "X:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
         ),
-        true
+        true,
       );
     });
 
     it("should return false for code longer than 12 characters", () => {
       assertEquals(
         isStellarAssetCanonicalString(
-          "ABCDEFGHIJKLM:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+          "ABCDEFGHIJKLM:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
         ),
-        false
+        false,
       );
     });
 
     it("should return false for empty code", () => {
       assertEquals(
         isStellarAssetCanonicalString(
-          ":GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+          ":GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
         ),
-        false
+        false,
       );
     });
 
@@ -90,24 +92,24 @@ describe("StellarAssetCanonicalString", () => {
     it("should return false for non-alphanumeric code", () => {
       assertEquals(
         isStellarAssetCanonicalString(
-          "USD-C:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+          "USD-C:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
         ),
-        false
+        false,
       );
       assertEquals(
         isStellarAssetCanonicalString(
-          "USD C:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+          "USD C:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
         ),
-        false
+        false,
       );
     });
 
     it("should return false for contract ID as issuer", () => {
       assertEquals(
         isStellarAssetCanonicalString(
-          "USDC:CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+          "USDC:CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
         ),
-        false
+        false,
       );
     });
   });
@@ -121,18 +123,18 @@ describe("StellarAssetCanonicalString", () => {
 
     it("should parse issued asset", () => {
       const result = parseStellarAssetCanonicalString(
-        "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+        "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
       );
       assertEquals(result.code, "USDC");
       assertEquals(
         result.issuer,
-        "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+        "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
       );
     });
 
     it("should parse 12 character code", () => {
       const result = parseStellarAssetCanonicalString(
-        "ABCDEFGHIJKL:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN" as StellarAssetCanonicalString
+        "ABCDEFGHIJKL:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN" as StellarAssetCanonicalString,
       );
       assertEquals(result.code, "ABCDEFGHIJKL");
     });
@@ -146,9 +148,9 @@ describe("StellarAssetCanonicalString", () => {
     it("should return false for issued asset", () => {
       assertEquals(
         isNativeStellarAssetCanonicalString(
-          "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+          "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
         ),
-        false
+        false,
       );
     });
   });
@@ -166,9 +168,9 @@ describe("StellarAssetCanonicalString", () => {
       assertEquals(
         toStellarAssetCanonicalString(
           "USDC",
-          "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+          "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
         ),
-        "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+        "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
       );
     });
 
@@ -176,7 +178,7 @@ describe("StellarAssetCanonicalString", () => {
       assertThrows(
         () => toStellarAssetCanonicalString("USDC"),
         Error,
-        "Issuer required for non-native asset: USDC"
+        "Issuer required for non-native asset: USDC",
       );
     });
 
@@ -184,7 +186,7 @@ describe("StellarAssetCanonicalString", () => {
       assertThrows(
         () => toStellarAssetCanonicalString("USDC", ""),
         Error,
-        "Issuer required for non-native asset: USDC"
+        "Issuer required for non-native asset: USDC",
       );
     });
   });

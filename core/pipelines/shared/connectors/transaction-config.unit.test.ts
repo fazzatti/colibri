@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Keypair, Networks, Operation, SorobanDataBuilder } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import { inputToBuild as classicInputToBuild } from "@/pipelines/classic-transaction/connectors.ts";
@@ -8,6 +8,8 @@ import { buildTransaction } from "@/processes/build-transaction/index.ts";
 import { assembleTransaction } from "@/processes/assemble-transaction/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("pipeline transaction configuration preservation", () => {
   const source = Keypair.random().publicKey() as Ed25519PublicKey;

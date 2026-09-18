@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   Address,
@@ -14,6 +14,8 @@ import { SIGNER_NOT_FOUND } from "@/processes/sign-envelope/error.ts";
 import { DelegatedSigner } from "@/signer/delegated/index.ts";
 import { OperationThreshold } from "@/signer/types.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("signEnvelope delegated signer compatibility", () => {
   it("ignores auth-entry-only signers and identifies them in diagnostics", async () => {

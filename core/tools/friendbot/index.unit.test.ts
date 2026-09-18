@@ -1,10 +1,12 @@
 import { assertEquals, assertRejects, assertStrictEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { stub } from "@std/testing/mock";
 import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
 import * as ERROR from "@/tools/friendbot/error.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 import { Server } from "stellar-sdk/rpc";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("initializeWithFriendbot", () => {
   const TEST_PUBLIC =

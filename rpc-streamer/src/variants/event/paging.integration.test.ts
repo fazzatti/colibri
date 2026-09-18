@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Asset, Operation, xdr } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import {
@@ -17,6 +17,9 @@ import { createEventStreamer } from "@/variants/event/index.ts";
 import { createLedgerStreamer } from "@/variants/ledger/index.ts";
 import { RPCStreamerError, RPCStreamerErrorCode } from "@/errors.ts";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
+
+const { afterAll, beforeAll, describe, it, observer: suiteObserver } =
+  recordColibriTests(import.meta.url);
 
 describe(
   "[Quickstart] live event paging regressions",
@@ -65,9 +68,12 @@ describe(
           },
         );
       }
-      const execute = createClassicTransactionPipeline({
-        networkConfig: network,
-      });
+      const execute = suiteObserver.attach(
+        createClassicTransactionPipeline({
+          networkConfig: network,
+        }),
+        { name: "execute" },
+      );
       for (let batch = 0; batch < 2; batch++) {
         const result = await execute({
           operations: Array.from({ length: 40 }, () =>

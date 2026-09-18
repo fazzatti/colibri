@@ -9,9 +9,11 @@
  * Run with: deno test core/sep1/index.integration.test.ts --allow-net
  */
 import { assert, assertEquals, assertExists } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { StellarToml } from "@/sep1/index.ts";
 import { StrKey } from "@/strkeys/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("StellarToml Integration", () => {
   describe("ultracapital.xyz", () => {
@@ -33,7 +35,7 @@ describe("StellarToml Integration", () => {
       // Version format check (e.g., "2.2.0")
       assert(
         /^\d+\.\d+\.\d+$/.test(toml.version),
-        `VERSION should be semver format, got: ${toml.version}`
+        `VERSION should be semver format, got: ${toml.version}`,
       );
     });
 
@@ -44,7 +46,7 @@ describe("StellarToml Integration", () => {
       assertEquals(
         toml.networkPassphrase,
         "Public Global Stellar Network ; September 2015",
-        "Should be on Stellar mainnet"
+        "Should be on Stellar mainnet",
       );
     });
 
@@ -54,7 +56,7 @@ describe("StellarToml Integration", () => {
       assertExists(toml.signingKey);
       assert(
         StrKey.isValidEd25519PublicKey(toml.signingKey),
-        `SIGNING_KEY should be a valid Stellar public key, got: ${toml.signingKey}`
+        `SIGNING_KEY should be a valid Stellar public key, got: ${toml.signingKey}`,
       );
     });
 
@@ -64,7 +66,7 @@ describe("StellarToml Integration", () => {
       assertExists(toml.webAuthEndpoint);
       assert(
         toml.webAuthEndpoint.startsWith("https://"),
-        "WEB_AUTH_ENDPOINT should be HTTPS"
+        "WEB_AUTH_ENDPOINT should be HTTPS",
       );
       assert(toml.hasWebAuth(), "Should support SEP-10 web auth");
 
@@ -81,7 +83,7 @@ describe("StellarToml Integration", () => {
       assertExists(toml.transferServer);
       assert(
         toml.transferServer.startsWith("https://"),
-        "TRANSFER_SERVER should be HTTPS"
+        "TRANSFER_SERVER should be HTTPS",
       );
       assert(toml.hasTransferServer(), "Should support SEP-6");
     });
@@ -92,7 +94,7 @@ describe("StellarToml Integration", () => {
       assertExists(toml.transferServerSep24);
       assert(
         toml.transferServerSep24.startsWith("https://"),
-        "TRANSFER_SERVER_SEP0024 should be HTTPS"
+        "TRANSFER_SERVER_SEP0024 should be HTTPS",
       );
       assert(toml.hasTransferServerSep24(), "Should support SEP-24");
     });
@@ -106,7 +108,7 @@ describe("StellarToml Integration", () => {
       for (const account of toml.accounts) {
         assert(
           StrKey.isValidEd25519PublicKey(account),
-          `Account should be valid public key, got: ${account}`
+          `Account should be valid public key, got: ${account}`,
         );
       }
     });
@@ -120,27 +122,27 @@ describe("StellarToml Integration", () => {
       assertExists(toml.documentation.ORG_NAME);
       assert(
         typeof toml.documentation.ORG_NAME === "string",
-        "ORG_NAME should be a string"
+        "ORG_NAME should be a string",
       );
 
       assertExists(toml.documentation.ORG_URL);
       assert(
         toml.documentation.ORG_URL.startsWith("https://"),
-        "ORG_URL should be HTTPS"
+        "ORG_URL should be HTTPS",
       );
 
       // Check optional but expected fields
       if (toml.documentation.ORG_LOGO) {
         assert(
           toml.documentation.ORG_LOGO.startsWith("https://"),
-          "ORG_LOGO should be HTTPS URL"
+          "ORG_LOGO should be HTTPS URL",
         );
       }
 
       if (toml.documentation.ORG_OFFICIAL_EMAIL) {
         assert(
           toml.documentation.ORG_OFFICIAL_EMAIL.includes("@"),
-          "ORG_OFFICIAL_EMAIL should be an email"
+          "ORG_OFFICIAL_EMAIL should be an email",
         );
       }
     });
@@ -155,14 +157,14 @@ describe("StellarToml Integration", () => {
         assertExists(currency.code, "Currency should have a code");
         assert(
           typeof currency.code === "string" && currency.code.length <= 12,
-          `Currency code should be string <= 12 chars, got: ${currency.code}`
+          `Currency code should be string <= 12 chars, got: ${currency.code}`,
         );
 
         // issuer should be valid if present
         if (currency.issuer) {
           assert(
             StrKey.isValidEd25519PublicKey(currency.issuer),
-            `Currency issuer should be valid public key, got: ${currency.issuer}`
+            `Currency issuer should be valid public key, got: ${currency.issuer}`,
           );
         }
 
@@ -170,7 +172,7 @@ describe("StellarToml Integration", () => {
         if (currency.status) {
           assert(
             ["live", "dead", "test", "private"].includes(currency.status),
-            `Currency status should be valid, got: ${currency.status}`
+            `Currency status should be valid, got: ${currency.status}`,
           );
         }
 
@@ -178,7 +180,7 @@ describe("StellarToml Integration", () => {
         if (currency.image) {
           assert(
             currency.image.startsWith("http"),
-            `Currency image should be URL, got: ${currency.image}`
+            `Currency image should be URL, got: ${currency.image}`,
           );
         }
       }
@@ -217,18 +219,18 @@ describe("StellarToml Integration", () => {
 
       // Check that anchored assets have proper metadata
       const anchoredCurrencies = toml.currencies.filter(
-        (c) => c.is_asset_anchored
+        (c) => c.is_asset_anchored,
       );
 
       for (const currency of anchoredCurrencies) {
         // If asset is anchored, should have anchor_asset info
         assertExists(
           currency.anchor_asset,
-          `Anchored currency ${currency.code} should have anchor_asset`
+          `Anchored currency ${currency.code} should have anchor_asset`,
         );
         assertExists(
           currency.anchor_asset_type,
-          `Anchored currency ${currency.code} should have anchor_asset_type`
+          `Anchored currency ${currency.code} should have anchor_asset_type`,
         );
 
         // anchor_asset_type should be valid
@@ -244,7 +246,7 @@ describe("StellarToml Integration", () => {
         ];
         assert(
           validTypes.includes(currency.anchor_asset_type!),
-          `anchor_asset_type should be valid, got: ${currency.anchor_asset_type}`
+          `anchor_asset_type should be valid, got: ${currency.anchor_asset_type}`,
         );
       }
     });

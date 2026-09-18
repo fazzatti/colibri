@@ -13,6 +13,11 @@ on:
   pull_request:
     branches: ["main", "dev"]
   workflow_dispatch:
+    inputs:
+      record_evidence:
+        description: Record transaction evidence and generate JSON/HTML reports
+        type: boolean
+        default: false
 
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
@@ -73,6 +78,9 @@ jobs:
           path: ${{ runner.temp }}/error-boundaries.json
           if-no-files-found: error
           retention-days: 7
+
+      - name: Test whole-suite recorder adoption and aggregation
+        run: deno task test:recorder-tooling
 
       - name: Test custom lint rules
         run: deno task test:lint-rules
@@ -171,7 +179,12 @@ jobs:
           COLIBRI_TEST_QUICKSTART_DIAGNOSTICS: ${{ (matrix.package == 'webauth' || matrix.package == 'core' || matrix.package == 'react') && '1' || '' }}
         run: |
           set -o pipefail
-          deno test -A --clean ${{ matrix.test_flags }} \
+          if [ "${{ inputs.record_evidence }}" = "true" ]; then
+            runner=(deno task test:record)
+          else
+            runner=(deno test -A)
+          fi
+          "${runner[@]}" --clean ${{ matrix.test_flags }} \
             --coverage=coverage/${{ matrix.package }} --coverage-raw-data-only \
             ${{ matrix.path }} 2>&1 | tee "${{ runner.temp }}/package-tests.log"
 
@@ -182,6 +195,15 @@ jobs:
           name: ${{ matrix.package }}-quickstart-diagnostics
           path: ${{ runner.temp }}/package-tests.log
           if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload ${{ matrix.package }} test evidence
+        if: always() && inputs.record_evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-evidence-${{ matrix.package }}
+          path: artifacts/colibri/
+          if-no-files-found: error
           retention-days: 7
 
       - name: Upload ${{ matrix.package }} coverage profile
@@ -225,10 +247,24 @@ jobs:
           deno-version: 2.7.11
 
       - name: Run build-verification ${{ matrix.shard }} tests
-        run: >-
-          deno test -A --clean ${{ matrix.test_flags }}
-          --coverage=coverage/build-verification-${{ matrix.shard }}
-          --coverage-raw-data-only ${{ matrix.test_paths }}
+        run: |
+          if [ "${{ inputs.record_evidence }}" = "true" ]; then
+            runner=(deno task test:record)
+          else
+            runner=(deno test -A)
+          fi
+          "${runner[@]}" --clean ${{ matrix.test_flags }} \
+            --coverage=coverage/build-verification-${{ matrix.shard }} \
+            --coverage-raw-data-only ${{ matrix.test_paths }}
+
+      - name: Upload build-verification ${{ matrix.shard }} test evidence
+        if: always() && inputs.record_evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-evidence-build-verification-${{ matrix.shard }}
+          path: artifacts/colibri/
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Upload build-verification ${{ matrix.shard }} coverage profile
         uses: actions/upload-artifact@v4
@@ -300,6 +336,35 @@ jobs:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  evidence:
+    name: test evidence
+    if: ${{ !cancelled() && inputs.record_evidence }}
+    needs: [package_tests, build_verification_tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.6
+      - name: Download every package and build-verification shard
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: test-evidence-*
+          path: artifacts/colibri-shards
+      - name: Build combined test evidence report
+        run: >-
+          deno task test:record:merge artifacts/colibri-shards artifacts/colibri-report
+          --expected=core,webauth,contract-bindings,react,identicon,rpc-streamer,plugin-fee-bump,plugin-channel-accounts,plugin-sep29,test-tooling,build-verification-local,build-verification-quickstart,build-verification-external
+      - name: Upload combined JSON and offline HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: colibri-test-evidence
+          path: artifacts/colibri-report/
+          if-no-files-found: error
+          retention-days: 7
+
   test:
     name: test
     if: ${{ always() }}
@@ -310,6 +375,7 @@ jobs:
       package_tests,
       build_verification_tests,
       coverage,
+      evidence,
     ]
     runs-on: ubuntu-latest
 
@@ -322,6 +388,8 @@ jobs:
           PACKAGE_TESTS_RESULT: ${{ needs.package_tests.result }}
           BUILD_VERIFICATION_TESTS_RESULT: ${{ needs.build_verification_tests.result }}
           COVERAGE_RESULT: ${{ needs.coverage.result }}
+          EVIDENCE_RESULT: ${{ needs.evidence.result }}
+          RECORD_EVIDENCE: ${{ inputs.record_evidence }}
         run: |
           test "$QUALITY_RESULT" = "success"
           test "$COMPATIBILITY_RESULT" = "success"
@@ -329,3 +397,8 @@ jobs:
           test "$PACKAGE_TESTS_RESULT" = "success"
           test "$BUILD_VERIFICATION_TESTS_RESULT" = "success"
           test "$COVERAGE_RESULT" = "success"
+          if [ "$RECORD_EVIDENCE" = "true" ]; then
+            test "$EVIDENCE_RESULT" = "success"
+          else
+            test "$EVIDENCE_RESULT" = "skipped"
+          fi

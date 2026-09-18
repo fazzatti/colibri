@@ -4,7 +4,7 @@ import {
   assertStrictEquals,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { NetworkConfig, StellarToml } from "@colibri/core";
 import {
   buildSep10Challenge,
@@ -14,6 +14,8 @@ import {
 import { WebAuthClient } from "@/client.ts";
 import { ContractAuth } from "@/sep45/contract-auth.ts";
 import { WebAuthCode, WebAuthError } from "@/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 function expectCode(fn: () => unknown, code: string): void {
   assertEquals(assertThrows(fn, WebAuthError).code, code);

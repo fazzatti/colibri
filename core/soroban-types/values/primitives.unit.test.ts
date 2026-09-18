@@ -1,5 +1,5 @@
 import { assertEquals, assertNotStrictEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Address, StrKey, xdr, XdrLargeInt } from "stellar-sdk";
 import * as V from "@/soroban-types/values/primitives.ts";
 import {
@@ -9,6 +9,8 @@ import {
 import { Code, SorobanValueError } from "@/soroban-types/error.ts";
 import * as S from "@/soroban-types/values/system.ts";
 import { sorobanTypeFromSpec } from "@/soroban-types/codecs/custom.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("validated Soroban primitives", () => {
   for (const signed of [false, true]) {

@@ -1,6 +1,6 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { assertEquals, assertExists, assertRejects } from "@std/assert";
-import { beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   initializeWithFriendbot,
   LocalSigner,
@@ -11,6 +11,8 @@ import {
 } from "@colibri/core";
 import { Server } from "stellar-sdk/rpc";
 import { ChannelAccounts } from "@/index.ts";
+
+const { beforeAll, describe, it } = recordColibriTests(import.meta.url);
 
 describe("[Testnet] ChannelAccounts integration", disableSanitizeConfig, () => {
   const sponsor = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());

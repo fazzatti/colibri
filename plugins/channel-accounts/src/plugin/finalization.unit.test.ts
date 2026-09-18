@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects, assertStrictEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { pipe, plugin, step } from "convee";
 import {
   type BuildTransactionInput,
@@ -13,6 +13,8 @@ import {
 } from "@colibri/core";
 import { Operation, type Transaction } from "stellar-sdk";
 import { createChannelAccountsPlugin } from "@/plugin/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 // Use the real runtime, channel pool and Colibri transaction builder. Supplying
 // a sequence explicitly makes these lifecycle checks independent of an RPC.

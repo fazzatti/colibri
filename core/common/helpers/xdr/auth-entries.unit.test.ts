@@ -1,6 +1,6 @@
 // ...existing code...
 import { assert, assertEquals, assertExists, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Address,
   buildWithDelegatesEntry,
@@ -24,6 +24,8 @@ import {
   UNSUPPORTED_AUTH_ENTRY_CREDENTIALS_FOR_PARAMS,
   UNSUPPORTED_AUTHORIZED_FUNCTION,
 } from "@/common/helpers/xdr/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Auth entry helpers", () => {
   describe("paramsToInvocation", () => {

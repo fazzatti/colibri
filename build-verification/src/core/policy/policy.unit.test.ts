@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertFalse } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { TEST_DIGEST, testImageDetails } from "@/testing.test.ts";
 import { DefaultBuildCommandPolicy } from "@/core/policy/build-command.ts";
 import { DefaultBuildOptionPolicy } from "@/core/policy/build-options.ts";
@@ -10,6 +10,8 @@ import {
   CommandPolicyRejectedError,
   OptionPolicyRejectedError,
 } from "@/core/policy/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("core verification policies", () => {
   it("accepts only the exact default Stellar contract-build command", () => {

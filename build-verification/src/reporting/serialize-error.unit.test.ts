@@ -3,9 +3,11 @@ import {
   assertStrictEquals,
   assertStringIncludes,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { ColibriError } from "@colibri/core";
 import { serializeBuildVerificationError } from "@/reporting/serialize-error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const serializedCause = (error: ColibriError): unknown =>
   (serializeBuildVerificationError(error).meta as Record<string, unknown>)

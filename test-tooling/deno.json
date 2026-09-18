@@ -1,13 +1,19 @@
 {
   "name": "@colibri/test-tooling",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "MIT",
   "imports": {
     "@/": "./",
-    "dockerode": "npm:dockerode@3.3.3"
+    "dockerode": "npm:dockerode@3.3.3",
+    "@std/testing/bdd": "jsr:@std/testing@^1.0.0/bdd"
   },
   "exports": {
-    ".": "./mod.ts"
+    ".": "./mod.ts",
+    "./recorder": "./recorder/index.ts",
+    "./recorder/deno": "./recorder/deno/index.ts",
+    "./recorder/report": "./recorder/report/index.ts",
+    "./recorder/cli": "./recorder/cli/index.ts",
+    "./recorder/node": "./recorder/node/index.ts"
   },
   "lint": {
     "plugins": [
@@ -23,7 +29,8 @@
       "./deno.json"
     ],
     "exclude": [
-      "./**/*.test.ts"
+      "./**/*.test.ts",
+      "./**/AGENTS.md"
     ]
   }
 }

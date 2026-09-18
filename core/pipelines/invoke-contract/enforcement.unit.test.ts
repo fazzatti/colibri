@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects, assertStrictEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { createRunContext, step } from "convee";
 import {
   Account,
@@ -29,6 +29,8 @@ import {
 import { NetworkConfig } from "@/network/index.ts";
 import { operationHasDelegatedAuthorization } from "@/common/helpers/xdr/operation-has-delegated-authorization.ts";
 import { EXPECTED_INVOKE_HOST_FUNCTION_OPERATION } from "@/pipelines/invoke-contract/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const source = "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P";
 const rootAddress = Address.contract(Buffer.alloc(32, 1));
