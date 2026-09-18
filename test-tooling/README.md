@@ -360,7 +360,9 @@ deno run -A jsr:@colibri/test-tooling/recorder/cli run \
 
 The runner writes JSON and a standalone HTML report even when tests fail. The
 report opens on Summary with expandable context/file rows. Evidence uses a file
-sidebar, inline suite rows and structured call details; hash copy feedback stays
+sidebar, inline suite rows and distinct test icons. Call stages, inputs/results
+and authorization have keyboard-accessible tabs below the overview and
+measurements. Clear context sits beside the breadcrumb; hash copy feedback stays
 beside the clicked button. Profiling starts with individual pipeline calls and
 shows timing, resources and fees together, with sortable measurement columns and
 min/max filters. Optional comparison groups expose their keys, sample counts and

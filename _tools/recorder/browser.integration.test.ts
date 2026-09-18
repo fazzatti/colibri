@@ -620,8 +620,6 @@ describe("standalone HTML evidence report", () => {
         const title of [
           "Overview",
           "Measurements",
-          "Inputs and result",
-          "Authorization",
         ]
       ) {
         assert(
@@ -646,6 +644,129 @@ describe("standalone HTML evidence report", () => {
       assertEquals(await page.locator(".copy-feedback:visible").count(), 0);
       await page.locator("#evidence-tab").click();
       assertEquals(await page.locator(".copy-feedback").innerText(), "");
+    } finally {
+      await page.close();
+    }
+  });
+  it("keeps context controls adjacent and navigates evidence tabs with mouse, keyboard and history", async () => {
+    const report = fixture();
+    report.records[1].execution!.stages = Array.from(
+      { length: 40 },
+      (_, index) => ({
+        name: "stage " + index,
+        startedAt: "2026-09-18T12:00:00Z",
+        status: "passed" as const,
+        durationMs: index,
+        input: { index },
+        output: { result: index },
+      }),
+    );
+    report.records[1].execution!.authorization = {
+      address: "GTEST",
+      invocations: ["balance"],
+    };
+    const path = join(directory, "detail-tabs.html");
+    await Deno.writeTextFile(path, renderReport(report));
+    const page = await browser.newPage({
+      viewport: { width: 1440, height: 960 },
+    });
+    const errors: string[] = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    try {
+      await page.goto(pathToFileURL(path).href);
+      assert(
+        await page.locator('#file-body [data-file="token.test.ts"] svg.test')
+          .isVisible(),
+      );
+      await page.locator('#file-body [data-file="token.test.ts"]').click();
+      assert(await page.locator("#tree [aria-current] svg.test").isVisible());
+      assert(
+        await page.locator('#test-body [data-record="test"] svg.test')
+          .isVisible(),
+      );
+      const breadcrumb = await page.locator("#breadcrumbs").boundingBox();
+      const clear = await page.locator("#clear-context").boundingBox();
+      assert(breadcrumb && clear);
+      assert(clear.x - (breadcrumb.x + breadcrumb.width) <= 16);
+      assert(clear.x >= breadcrumb.x + breadcrumb.width);
+      await page.locator('#detail [data-record="test"]').click();
+      assert(await page.locator("#detail h2 svg.test").isVisible());
+      await page.locator('#detail [data-record="execution-0"]').click();
+      assertEquals(
+        await page.getByRole("tablist", { name: "Call evidence" }).count(),
+        1,
+      );
+      assertEquals(await page.locator('[role="tabpanel"]:visible').count(), 1);
+      assert(await page.locator("#call-panel-stages").isVisible());
+      assertEquals(
+        await page.locator("#call-panel-stages tbody tr").count(),
+        40,
+      );
+      await page.evaluate("scrollTo(0, document.body.scrollHeight)");
+      const tabBounds = await page.locator("#call-tabs").boundingBox();
+      assert(tabBounds && tabBounds.y >= 0 && tabBounds.y < 960);
+      await page.getByRole("tab", { name: "Authorization", exact: true })
+        .click();
+      assert(await page.locator("#call-panel-authorization pre").isVisible());
+      assertStringIncludes(
+        await page.locator("#call-panel-authorization pre").innerText(),
+        "GTEST",
+      );
+      assert(!(await page.locator("#call-panel-stages").isVisible()));
+      await page.keyboard.press("Home");
+      assertEquals(
+        await page.locator("#call-tab-stages").getAttribute("aria-selected"),
+        "true",
+      );
+      await page.keyboard.press("ArrowRight");
+      assert(
+        await page.locator("#call-panel-inputs details").first().getAttribute(
+          "open",
+        ) !== null,
+      );
+      assert(await page.locator("#call-panel-inputs pre").first().isVisible());
+      assertStringIncludes(
+        await page.locator("#call-panel-inputs pre").first().innerText(),
+        "10000000",
+      );
+      await page.reload();
+      assertEquals(
+        await page.locator("#call-tab-inputs").getAttribute("aria-selected"),
+        "true",
+      );
+      await page.getByRole("tab", { name: "Authorization", exact: true })
+        .click();
+      await page.goBack();
+      assertEquals(
+        await page.locator("#call-tab-inputs").getAttribute("aria-selected"),
+        "true",
+      );
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.emulateMedia({ colorScheme: "dark" });
+      await page.getByRole("tab", { name: "Authorization", exact: true })
+        .click();
+      assert(await page.locator("#call-panel-authorization pre").isVisible());
+      assert(
+        await page.evaluate(
+          "document.documentElement.scrollWidth <= innerWidth",
+        ),
+      );
+      await page.locator("#profiling-tab").click();
+      await page.locator('#profile-body [data-record="execution-1"]').click();
+      assertEquals(
+        await page.locator("#call-tab-stages").getAttribute("aria-selected"),
+        "true",
+      );
+      await page.getByRole("tab", { name: "Authorization", exact: true })
+        .click();
+      assertStringIncludes(
+        await page.locator("#call-panel-authorization").innerText(),
+        "not captured",
+      );
+      await page.locator("#clear-context").click();
+      assert(!(await page.locator("#clear-context").isVisible()));
+      assertEquals(await page.locator("#call-tabs").count(), 0);
+      assertEquals(errors, []);
     } finally {
       await page.close();
     }

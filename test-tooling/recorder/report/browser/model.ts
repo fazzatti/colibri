@@ -25,7 +25,7 @@ const prefix = (files[0] || "").split("/").slice(0, -1);
 while (prefix.length && !files.every((f) => f.startsWith(prefix.join("/") + "/"))) prefix.pop();
 const fileLabel = (f) => prefix.length ? f.slice(prefix.join("/").length + 1) : f;
 const basename = (f) => fileLabel(f).split("/").at(-1);
-const defaults = { tab: "summary", scope: "", file: "", record: "", q: "",
+const defaults = { tab: "summary", scope: "", file: "", record: "", detail: "stages", q: "",
   test: "", outcome: "", chain: "", client: "", method: "", mode: "executions", cross: "", group: "", page: "0", sort: "duration", desc: "1", order: "duration", reverse: "1" };
 const metricColumns = [
   ["duration", "Duration (ms)"], ["instructions", "Instructions (budget)"],
@@ -43,6 +43,7 @@ function readState() {
   const params = new URLSearchParams(location.hash.slice(1));
   for (const key of Object.keys(defaults)) if (params.has(key)) state[key] = params.get(key);
   if (!["summary", "evidence", "profiling"].includes(state.tab)) state.tab = "summary";
+  if (!["stages", "inputs", "authorization"].includes(state.detail)) state.detail = "stages";
   if (!files.includes(state.file)) state.file = "";
   if (!byId.has(state.record)) state.record = "";
   if (!["groups", "executions"].includes(state.mode)) state.mode = "executions";
@@ -63,10 +64,10 @@ function navigate(change, replace = false) {
   if (newView) scrollTo(0, 0);
 }
 function openFile(file, tab = "evidence") {
-  navigate({ tab, scope: "", file, record: "", group: "", page: "0" });
+  navigate({ tab, scope: "", file, record: "", detail: "stages", group: "", page: "0" });
 }
 function openRecord(r) {
-  navigate({ tab: "evidence", scope: "", file: r.file, record: r.id, group: "", page: "0" });
+  navigate({ tab: "evidence", scope: "", file: r.file, record: r.id, detail: "stages", group: "", page: "0" });
 }
 function inScope(r) {
   const f = fileLabel(r.file);
@@ -109,9 +110,10 @@ function counts(records, tests = records.filter((r) => r.kind === "test")) {
     tests.filter((r) => status(r) === s).length), records.filter((r) => r.execution).length];
 }
 function badge(value) { return el("span", value, "badge " + value); }
-function jsonSection(parent, title, data) {
+function jsonSection(parent, title, data, open = false) {
   if (data === undefined) return;
   const block = el("details", undefined, "data-section");
+  block.open = open;
   block.append(el("summary", title), el("pre", JSON.stringify(data, null, 2)));
   parent.append(block);
 }
@@ -145,11 +147,21 @@ function actionRow(row, control) {
   row.classList.add("action-row");
   row.onclick = (event) => { if (!event.target.closest("button, a, input, select")) control.click(); };
 }
+function itemIcon(kind) {
+  if (kind === "test") {
+    const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    for (const [key, value] of Object.entries({ class: "item-icon test", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "1.6", "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false" })) icon.setAttribute(key, value);
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M14 2l8 8M16 4L5 15a4.24 4.24 0 0 0 6 6L22 10M9 11l6 6");
+    icon.append(path); return icon;
+  }
+  const icon = el("span", undefined, "item-icon " + kind); icon.setAttribute("aria-hidden", "true");
+  return icon;
+}
 function disclosureLabel(control, name, open, kind) {
   const arrow = el("span", open === undefined ? "" : open ? "▾" : "▸", "arrow");
   arrow.setAttribute("aria-hidden", "true");
-  const icon = el("span", undefined, "item-icon " + kind); icon.setAttribute("aria-hidden", "true");
-  control.replaceChildren(arrow, icon, el("span", name, "row-name"));
+  control.replaceChildren(arrow, itemIcon(kind), el("span", name, "row-name"));
   if (open !== undefined) control.setAttribute("aria-expanded", String(open));
 }
 function fileChildren(visible, path = "") {

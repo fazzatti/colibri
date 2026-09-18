@@ -160,25 +160,31 @@ including consolidated runs with reruns.
 
 **Evidence** uses the sidebar for folders and files. Folder rows only expand or
 collapse; there are no separate directory pages or duplicate “View” links.
-Single-child directory chains are combined, and the selected file has a filled
-highlight. With no file selected, the main panel shows a flat, searchable file
-table with full relative paths and result counts.
+Single-child directory chains are combined, test files and test cases use a
+test-tube icon, and the selected file has a filled highlight. With no file
+selected, the main panel shows a flat, searchable file table with full relative
+paths and result counts.
 
 Inside a file, suite rows expand inline to reveal tests and shared setup or
 teardown. Select a test for its chronological captured observations, then a
-pipeline call for its details. Overview, Measurements and Pipeline stages are
-visible tables; Inputs and result and Authorization have their own sections.
-Long payloads remain expandable. File, test and call lists are paginated without
-a fixed record limit. Hash copy buttons briefly change to **Copied**. If the
-clipboard is unavailable, a message beside that hash explains how to copy the
-selected text manually. Copy feedback does not carry across report views.
+pipeline call for its details. Overview and Measurements stay visible above
+three tabs: **Pipeline stages**, **Inputs and results**, and **Authorization**.
+The tab bar remains reachable while scrolling long evidence. Inputs/results and
+authorization open their main payload immediately; additional payloads remain
+expandable. Arrow keys and Home/End switch tabs, and the selected tab persists
+in the offline URL and browser history. Opening another call starts on Pipeline
+stages. File, test and call lists are paginated without a fixed record limit.
+Hash copy buttons briefly change to **Copied**. If the clipboard is unavailable,
+a message beside that hash explains how to copy the selected text manually. Copy
+feedback does not carry across report views.
 
-Breadcrumbs, Clear context and browser Back/Forward preserve your location. The
-URL fragment records the current selection and filters, including when the HTML
-opens from disk. Search accepts test/file names, contract IDs and hashes. Test
-outcome, pipeline outcome and chain outcome are independent filters; an expected
-failed pipeline call can belong to a passing test. Client/method filters and
-context apply across all three report views.
+Clear context sits immediately beside the current breadcrumb. Breadcrumbs and
+browser Back/Forward preserve your location. The URL fragment records the
+current selection and filters, including when the HTML opens from disk. Search
+accepts test/file names, contract IDs and hashes. Test outcome, pipeline outcome
+and chain outcome are independent filters; an expected failed pipeline call can
+belong to a passing test. Client/method filters and context apply across all
+three report views.
 
 **Profiling** opens with **Individual pipeline calls**. Each row represents one
 observed pipeline invocation, not one test or necessarily one submitted

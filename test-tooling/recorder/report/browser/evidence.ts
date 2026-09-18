@@ -3,6 +3,7 @@ export const evidenceScript: string = String.raw`
 function parentOf(r) { return byId.get(r.parentId) || byId.get(r.callId) || byId.get(r.testId); }
 function recordLink(r) {
   const node = button(r.name, () => openRecord(r), "text-button");
+  if (r.kind === "test") { node.classList.add("icon-label"); node.replaceChildren(itemIcon("test"), el("span", r.name)); }
   node.dataset.record = r.id; return node;
 }
 function factsTable(host, facts) {
@@ -45,7 +46,7 @@ function sidebar() {
         if (open) level(child.key, branch);
       } else {
         const control = button("", () => openFile(child.key), "tree-row file-link");
-        disclosureLabel(control, child.name, undefined, "file");
+        disclosureLabel(control, child.name, undefined, "test");
         control.title = fileLabel(child.key); control.dataset.file = child.key;
         if (child.key === state.file) control.setAttribute("aria-current", "page");
         branch.append(control);
@@ -96,25 +97,53 @@ function executionDetail(host, r) {
   measurements.append(el("p", "Resources and minimum resource fee come from the last captured simulation. They are budgets, not measured usage. — means unavailable.", "context-label"));
   grid.append(overview, measurements); host.append(grid);
   hashRow(host, "Transaction hash", e.hash); hashRow(host, "Inner hash", e.innerHash);
-  host.append(el("h3", "Pipeline stages (" + e.stages.length + ")"));
+  executionTabs(host, r);
+}
+function executionTabs(host, r) {
+  const e = r.execution, sections = [["stages", "Pipeline stages (" + e.stages.length + ")"], ["inputs", "Inputs and results"], ["authorization", "Authorization"]];
+  const tabs = el("div", undefined, "detail-tabs"); tabs.id = "call-tabs";
+  tabs.setAttribute("role", "tablist"); tabs.setAttribute("aria-label", "Call evidence");
+  host.append(tabs);
+  const panels = {};
+  function select(key) {
+    navigate({ detail: key });
+    $("call-tab-" + key).focus({ preventScroll: true });
+    $("call-tabs").scrollIntoView({ block: "nearest" });
+  }
+  sections.forEach(([key, title], index) => {
+    const selected = state.detail === key, control = button(title, () => select(key));
+    control.id = "call-tab-" + key; control.setAttribute("role", "tab");
+    control.setAttribute("aria-selected", String(selected)); control.setAttribute("aria-controls", "call-panel-" + key);
+    control.tabIndex = selected ? 0 : -1;
+    control.onkeydown = (event) => {
+      const next = { ArrowRight: (index + 1) % sections.length, ArrowLeft: (index + sections.length - 1) % sections.length, Home: 0, End: sections.length - 1 }[event.key];
+      if (next === undefined) return;
+      event.preventDefault(); select(sections[next][0]);
+    };
+    tabs.append(control);
+    const panel = el("div", undefined, "detail-panel"); panel.id = "call-panel-" + key;
+    panel.setAttribute("role", "tabpanel"); panel.setAttribute("aria-labelledby", control.id); panel.tabIndex = 0;
+    panel.hidden = !selected; panels[key] = panel; host.append(panel);
+  });
   if (e.stages.length) {
-    const body = table(host, ["Stage", "Outcome", "Started", "Duration (ms)"]);
+    const body = table(panels.stages, ["Stage", "Outcome", "Started", "Duration (ms)"]);
     for (const stage of e.stages) {
       const row = el("tr"); cell(row, stage.name); cell(row, badge(stage.status)); cell(row, stage.startedAt); cell(row, number(stage.durationMs), "num"); body.append(row);
     }
-  } else host.append(el("p", "No pipeline stages captured."));
-  host.append(el("h3", "Inputs and result"));
-  if (r.data === undefined && !e.stages.some((s) => s.input !== undefined || s.output !== undefined)) host.append(el("p", "No inputs or result captured at this recording level."));
-  jsonSection(host, "Captured context and result", r.data);
-  jsonSection(host, "Stage inputs, outputs and errors", e.stages.filter((s) => s.input !== undefined || s.output !== undefined || s.error !== undefined));
-  jsonSection(host, "Submitted transaction", e.submitted);
-  jsonSection(host, "All simulation estimates", e.simulations);
-  jsonSection(host, "Confirmed resource fee components (stroops)", e.resourceFees);
-  jsonSection(host, "Error", r.error);
-  host.append(el("h3", "Authorization"));
-  if (e.authorization === undefined) host.append(el("p", "Authorization details were not captured."));
-  else jsonSection(host, "Captured authorization details", e.authorization);
+  } else panels.stages.append(el("p", "No pipeline stages captured."));
+  const inputs = panels.inputs;
+  if (r.data === undefined && !e.stages.some((s) => s.input !== undefined || s.output !== undefined)) inputs.append(el("p", "No inputs or result captured at this recording level."));
+  jsonSection(inputs, "Captured context and result", r.data, true);
+  const stageData = e.stages.filter((s) => s.input !== undefined || s.output !== undefined || s.error !== undefined);
+  if (stageData.length) jsonSection(inputs, "Stage inputs, outputs and errors", stageData, r.data === undefined);
+  jsonSection(inputs, "Submitted transaction", e.submitted);
+  jsonSection(inputs, "All simulation estimates", e.simulations);
+  jsonSection(inputs, "Confirmed resource fee components (stroops)", e.resourceFees);
+  jsonSection(inputs, "Error", r.error, true);
+  if (e.authorization === undefined) panels.authorization.append(el("p", "Authorization details were not captured."));
+  else jsonSection(panels.authorization, "Captured authorization details", e.authorization, true);
 }
+
 function fileTests(host, selected) {
   const candidates = [...selected.tests, ...selected.records.filter((r) => !ownerTest(r) && r.kind !== "suite")];
   const nodes = new Map();
@@ -150,7 +179,7 @@ function fileTests(host, selected) {
       render();
     }, "row-button");
     control.style.paddingInlineStart = (depth * 20 + 8) + "px";
-    disclosureLabel(control, r.name, suite ? suitesOpen.has(r.id) : undefined, suite ? "folder" : "file");
+    disclosureLabel(control, r.name, suite ? suitesOpen.has(r.id) : undefined, suite ? "folder" : r.kind === "test" ? "test" : "file");
     if (suite) { control.dataset.suite = r.id; control.setAttribute("aria-label", (suitesOpen.has(r.id) ? "Collapse " : "Expand ") + r.name); }
     else control.dataset.record = r.id;
     cell(row, control); actionRow(row, control); cell(row, r.kind); cell(row, badge(status(r))); cell(row, number(r.durationMs), "num"); body.append(row);
@@ -161,7 +190,9 @@ function evidenceView() {
   const host = $("detail"); host.replaceChildren();
   const r = byId.get(state.record);
   if (r) {
-    host.append(el("h2", r.name), el("p", fileLabel(r.file), "context-label"));
+    const heading = el("h2", r.name);
+    if (r.kind === "test") { heading.classList.add("icon-label"); heading.prepend(itemIcon("test")); }
+    host.append(heading, el("p", fileLabel(r.file), "context-label"));
     if (r.execution) executionDetail(host, r);
     else {
       const facts = [["Kind", r.kind], ["Started", r.startedAt], ["Duration (ms)", number(r.durationMs)], ["Observed outcome", badge(r.status)]];
