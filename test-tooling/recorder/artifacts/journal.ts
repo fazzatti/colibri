@@ -1,3 +1,4 @@
+import { diagnosticMessage } from "@/recorder/runtime/diagnostic.ts";
 import { appendFileSync, mkdirSync } from "node:fs";
 import { env } from "node:process";
 import { join } from "node:path";
@@ -33,9 +34,7 @@ export class Journal {
       this.collector.pending.length = 0;
     } catch (error) {
       this.collector.diagnostic(
-        `Journal write failed: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Journal write failed: ${diagnosticMessage(error)}`,
       );
     }
   }

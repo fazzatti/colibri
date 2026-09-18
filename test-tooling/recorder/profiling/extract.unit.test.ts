@@ -1,3 +1,4 @@
+import { buildWithDelegatesEntry } from "stellar-sdk";
 import {
   assert,
   assertEquals,
@@ -168,6 +169,24 @@ describe("Stellar evidence", () => {
         subInvocations: [],
       }),
     });
+    const delegated = buildWithDelegatesEntry({
+      entry,
+      validUntilLedgerSeq: 110,
+      delegates: [{ address: contract }],
+    });
+    const limited = authorization(
+      [delegated, entry],
+      new Collector({
+        authorization: { level: "full" },
+        limits: { entries: 1 },
+      }),
+    );
+    assertEquals((limited as unknown[]).length, 1);
+    assertStringIncludes(JSON.stringify(limited), '"expiresAtLedger":110');
+    assertStringIncludes(
+      JSON.stringify(limited),
+      "sorobanCredentialsAddressWithDelegates",
+    );
     assertEquals(authorization([entry], new Collector()), undefined);
     const details = authorization(
       [entry],

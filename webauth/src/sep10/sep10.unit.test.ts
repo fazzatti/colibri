@@ -970,7 +970,12 @@ describe("SEP-10 WebAuth", () => {
     assertEquals(
       (
         await assertRejects(
-          () => client.signChallenge(challenge, failingSigner),
+          () =>
+            client.signChallenge(
+              challenge,
+              failingSigner,
+              fixture.clientDomain,
+            ),
           Sep10Error,
         )
       ).code,

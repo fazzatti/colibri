@@ -75,9 +75,10 @@ export function recordTests(
     const options = values.find((value) =>
       typeof value === "object" && value !== null
     ) as Record<string, unknown> | undefined;
-    const callback = values.find((value) => typeof value === "function") as
-      | Callback
-      | undefined;
+    const callback =
+      (values.find((value) => typeof value === "function") ?? options?.fn) as
+        | Callback
+        | undefined;
     return {
       args,
       name: String(
@@ -162,16 +163,24 @@ export function recordTests(
       record.status = ignored || info.ignored ? "skipped" : "registered";
       collector.guard(() => collector.emit(record));
       const wrap = (fn: Callback): Callback => {
-        if (kind === "test") return execute(record, fn);
-        return function (...params) {
-          const previous = parent;
-          parent = record;
-          try {
-            return fn.apply(this, params);
-          } finally {
-            parent = previous;
-          }
-        };
+        const wrapped = kind === "test"
+          ? execute(record, fn)
+          : function (this: unknown, ...params: unknown[]) {
+            const previous = parent;
+            parent = record;
+            try {
+              return fn.apply(this, params);
+            } finally {
+              parent = previous;
+            }
+          };
+        // std/testing uses callback names in its unnamed overloads. Wrapping
+        // must preserve those names so runner results and evidence agree.
+        Object.defineProperty(wrapped, "name", {
+          value: fn.name,
+          configurable: true,
+        });
+        return wrapped;
       };
       const mapped = args.map((value) => {
         if (typeof value === "function") return wrap(value as Callback);

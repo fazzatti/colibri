@@ -158,6 +158,15 @@ describe("transaction metadata evidence", () => {
       JSON.stringify(current.items),
       '"source":"transaction"',
     );
+    const noDiagnostics = meta3(
+      new xdr.SorobanTransactionMeta({
+        ext: fees(),
+        events: [event()],
+        returnValue: xdr.ScVal.scvVoid(),
+        diagnosticEvents: [],
+      }),
+    );
+    assertEquals(confirmedEvents(noDiagnostics, full())!.count, 1);
     assertEquals(confirmedEvents(meta3(null), full()), undefined);
     assertEquals(
       confirmedEvents(xdr.TransactionMeta.operations([]), full()),

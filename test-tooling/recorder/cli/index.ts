@@ -1,3 +1,4 @@
+import { diagnosticMessage } from "@/recorder/runtime/diagnostic.ts";
 import process from "node:process";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -39,7 +40,7 @@ if (
   try {
     process.exitCode = await main(process.argv.slice(2));
   } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
+    console.error(diagnosticMessage(error));
     process.exitCode = 1;
   }
 }

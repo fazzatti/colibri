@@ -3,7 +3,7 @@ import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { stub } from "@std/testing/mock";
 import { FakeTime } from "@std/testing/time";
 import { LocalSigner, NetworkConfig } from "@colibri/core";
-import { WebAuthClient, WebAuthToken } from "@colibri/webauth";
+import { ContractAuth, WebAuthClient, WebAuthToken } from "@colibri/webauth";
 import { createColibriConfig } from "@/context/config.ts";
 import { createWebAuthSession } from "@/webauth/session/session.ts";
 import { ColibriReactError } from "@/errors/index.ts";
@@ -65,6 +65,23 @@ describe("memory-only WebAuth sessions", () => {
     unsubscribe();
     session.destroy();
     config.destroy();
+  });
+  it("passes SEP-45 authorization options unchanged", async () => {
+    const { config, client, session } = setup();
+    const options = { account, authorize: ContractAuth.none() };
+    const authenticated = token();
+    using exchange = stub(
+      client,
+      "authenticate",
+      () => Promise.resolve(authenticated),
+    );
+    try {
+      await session.authenticate(options);
+      assertEquals(exchange.calls[0].args, [options]);
+    } finally {
+      session.destroy();
+      config.destroy();
+    }
   });
   it("logout and connection changes invalidate outstanding authentication", async () => {
     const { config, client, session } = setup();

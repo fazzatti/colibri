@@ -266,10 +266,16 @@ export function createApplicationSession(
 
 Within the same provider, `useSession(session)` returns the current state and
 `useWebAuth(session)` returns an authentication mutation. Call
-`authenticate.mutateAsync({ account, signer })` for SEP-10 with the existing
-Core keypair-signer contract, or supply the existing WebAuth SEP-45 `authorize`
-options for a contract account. See [WebAuth](../webauth.md) for complete
-protocol setup, challenge validation and authorization examples.
+`authenticate.mutateAsync({ account, signer })` for SEP-10 with an SDK keypair,
+Core local signer, or asynchronous Core envelope signer, or supply the existing
+WebAuth SEP-45 `authorize` options for a contract account. See
+[WebAuth](../webauth.md) for complete protocol setup, challenge validation and
+authorization examples.
+
+[Wallet authentication](wallet-authentication.md) shows a complete TSX flow with
+guarded wallet signers. A session aborts pending SEP-10 signing on logout,
+disconnect, account/network changes and disposal, before exchanging a late
+approval. It cannot dismiss wallet prompts or recall an exchange already sent.
 
 Read the token from `session.getSnapshot().token` or `useSession`; it is not
 placed in query/mutation result data. Token decoding alone cannot establish a

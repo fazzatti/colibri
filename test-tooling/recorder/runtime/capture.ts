@@ -55,7 +55,15 @@ export function capture<T>(
   }, () => {
     try {
       const value = callback();
-      if (value instanceof Promise) return value.then(success, failure) as T;
+      // Promise.resolve also assimilates promises from another realm and
+      // application-provided thenables. Only settled values may be attached.
+      if (
+        value !== null &&
+        (typeof value === "object" || typeof value === "function") &&
+        typeof (value as { then?: unknown }).then === "function"
+      ) {
+        return Promise.resolve(value).then(success, failure) as T;
+      }
       return success(value) as T;
     } catch (error) {
       return failure(error);

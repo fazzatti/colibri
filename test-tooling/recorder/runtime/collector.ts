@@ -1,3 +1,4 @@
+import { diagnosticMessage } from "@/recorder/runtime/diagnostic.ts";
 import { AsyncLocalStorage } from "node:async_hooks";
 import type {
   Attribution,
@@ -39,9 +40,7 @@ export class Collector {
       action();
     } catch (error) {
       this.diagnostic(
-        `Observation failed: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Observation failed: ${diagnosticMessage(error)}`,
       );
     }
   }

@@ -12,7 +12,7 @@ import { Collector } from "@/recorder/runtime/collector.ts";
 import { environment, Journal } from "@/recorder/artifacts/journal.ts";
 import { aggregate } from "@/recorder/artifacts/aggregate.ts";
 import { main } from "@/recorder/cli/index.ts";
-import { RecorderError } from "@/recorder/error.ts";
+import { INVALID_ARTIFACT, RecorderError } from "@/recorder/error.ts";
 import { reconcileJUnit } from "@/recorder/artifacts/deno-results.ts";
 
 const { describe, it } = recordColibriTests(import.meta.url);
@@ -96,8 +96,18 @@ describe("recorder artifacts and failure handling", () => {
       assert(!interrupted.complete);
       assertStringIncludes(interrupted.diagnostics.join(), "did not finish");
       assertEquals(await main(["aggregate", directory, "--html"]), 0);
+      assertEquals(await main(["aggregate", directory]), 0);
       await Deno.writeTextFile(join(directory, "manifest.json"), "{}");
       await assertRejects(() => aggregate(directory), RecorderError);
+      for (const value of ["{", "null", "[]", '"manifest"']) {
+        await Deno.writeTextFile(join(directory, "manifest.json"), value);
+        const error = await assertRejects(
+          () => aggregate(directory),
+          INVALID_ARTIFACT,
+        );
+        assertEquals(error.code, "TTO_REC_002");
+        if (value === "{") assert(error.cause instanceof SyntaxError);
+      }
       await assertRejects(() => main([]), RecorderError);
     }));
   it("marks duplicate full names ambiguous and decodes XML entities without resolving entities", () => {
@@ -125,7 +135,7 @@ describe("recorder artifacts and failure handling", () => {
     const escaped = second.report();
     reconcileJUnit(
       escaped,
-      '<testsuites><testcase classname="test.ts" name="A &amp; B &#34;quoted&#x22;"><skipped/></testcase></testsuites>',
+      `<testsuites><testcase classname='test.ts' name='A &amp; B &#34;quoted&#x22;'><skipped/></testcase></testsuites>`,
       "/tmp",
     );
     assertEquals(escaped.records[0].runnerStatus, "skipped");

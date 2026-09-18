@@ -36,10 +36,13 @@ describe("Node result reconciliation", () => {
     }
     let text = "";
     for await (const chunk of reporter(events())) text += chunk;
+    c.emit(c.record("log", "not a runner test", { file: "a.mjs" }));
     const report = c.report();
     reconcileNodeResults(report, text, "/tmp");
     assertEquals(report.diagnostics, []);
-    for (const record of report.records) {
+    for (
+      const record of report.records.filter((record) => record.kind === "test")
+    ) {
       assertEquals(record.status, "passed");
       assertEquals(record.runnerStatus, "failed");
       assertEquals(record.data, {

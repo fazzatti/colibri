@@ -2,13 +2,17 @@
 export const measurementsScript: string = String.raw`
 function measure(r, key) {
   const e = r.execution, p = e.simulations.at(-1);
-  return ({ duration: r.durationMs, instructions: p?.instructions, reads: p?.readOnlyEntries,
+  const value = ({ duration: r.durationMs, instructions: p?.instructions, reads: p?.readOnlyEntries,
     writes: p?.readWriteEntries, readBytes: p?.diskReadBytes, writeBytes: p?.writeBytes,
     fee: p?.minResourceFee, charged: e.feeCharged, rent: e.resourceFees?.rentFeeCharged,
     events: e.events?.count, simEvents: p?.events?.count,
     created: e.ledgerChanges?.created, updated: e.ledgerChanges?.updated, removed: e.ledgerChanges?.removed,
     restored: e.ledgerChanges?.restored, ttl: e.ledgerChanges?.ttlExtended,
     simCreated: p?.ledgerChanges?.created, simTtl: p?.ledgerChanges?.ttlExtended })[key];
+  // Artifacts are untrusted input: keep malformed measurements out of numeric
+  // sorting, statistics and range filters while retaining the raw evidence.
+  if (feeMetric(key)) return typeof value === "string" && /^\d+$/.test(value) ? value : undefined;
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : undefined;
 }
 const feeMetric = (key) => ["fee", "charged", "rent"].includes(key);
 const available = (value) => value !== undefined && value !== null;

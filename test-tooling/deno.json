@@ -4,7 +4,8 @@
   "license": "MIT",
   "imports": {
     "@/": "./",
-    "dockerode": "npm:dockerode@3.3.3"
+    "dockerode": "npm:dockerode@3.3.3",
+    "@std/testing/bdd": "jsr:@std/testing@^1.0.0/bdd"
   },
   "exports": {
     ".": "./mod.ts",

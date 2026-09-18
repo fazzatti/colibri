@@ -424,3 +424,9 @@ generate JSON/HTML. Recording must happen during execution; aggregation only
 rebuilds previously captured evidence. The shared configuration and CI artifact
 workflow are described in
 [`_internal/tests/README.md`](../_internal/tests/README.md).
+
+Recorder artifact validation reports malformed manifest JSON as `TTO_REC_002`.
+Captured callbacks and factories await native promises and custom thenables;
+rejections remain visible without changing the caller's error. HTML profiling
+keeps malformed fee measurements out of numeric sorting, filters and statistics
+while retaining the original evidence.

@@ -54,12 +54,17 @@ export function Authenticate({ session, request }: {
 
 ## Behavior
 
-SEP-10 uses WebAuth’s existing signer contract; an envelope-only wallet signer
-is not automatically adapted into that contract. SEP-45 retains its explicit
-`authorize` callback. Mutations do not retry automatically. Do not persist or
-dehydrate authentication mutation variables, which contain signing inputs.
-Observe ongoing validity with [useSession](use-session.md), since a completed
-mutation is not proof that its session is still active.
+SEP-10 accepts SDK keypairs and Core envelope signers, including asynchronous
+wallet approval. Use the current guarded signer from `useWallet().signers` or
+`useSigners()`. See the complete
+[wallet authentication example](../wallet-authentication.md). Logout,
+disconnect, account/network changes and session disposal invalidate pending
+approval; a late result cannot exchange a challenge or establish a session.
+SEP-45 retains its explicit `authorize` callback. Mutations do not retry
+automatically. Do not persist or dehydrate authentication mutation variables,
+which contain signing inputs. Observe ongoing validity with
+[useSession](use-session.md), since a completed mutation is not proof that its
+session is still active.
 
 ## See also
 

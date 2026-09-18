@@ -39,8 +39,8 @@ This will add imports similar to:
 {
   "imports": {
     "@colibri/core": "jsr:@colibri/core@^1.3.1",
-    "@colibri/react": "jsr:@colibri/react@^0.2.0",
-    "@colibri/webauth": "jsr:@colibri/webauth@^1.1.0",
+    "@colibri/react": "jsr:@colibri/react@^0.3.0",
+    "@colibri/webauth": "jsr:@colibri/webauth@^1.2.0",
     "@colibri/build-verification": "jsr:@colibri/build-verification@^0.4.5",
     "@colibri/identicon": "jsr:@colibri/identicon@^1.2.0",
     "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^1.1.0",

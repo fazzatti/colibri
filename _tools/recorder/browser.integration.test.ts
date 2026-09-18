@@ -509,6 +509,46 @@ describe("standalone HTML evidence report", () => {
       await page.close();
     }
   });
+  it("keeps malformed fees out of sorting, statistics and range filters", async () => {
+    const report = fixture();
+    report.records[1].execution!.simulations[0].minResourceFee = "not a fee";
+    report.records[2].execution!.feeCharged = "1.5";
+    report.records[3].execution!.resourceFees = { rentFeeCharged: "-1" };
+    const page = await browser.newPage();
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    try {
+      await page.setContent(renderReport(report));
+      await page.locator("#profiling-tab").click();
+      const sort = page.getByRole("button", {
+        name: "Minimum resource fee (stroops)",
+        exact: true,
+      });
+      for (let direction = 0; direction < 2; direction++) {
+        await sort.click();
+        assertEquals(
+          await page.locator('#profile-body tr:last-child [data-metric="fee"]')
+            .innerText(),
+          "—",
+        );
+      }
+      await page.locator("#range-feeMin").fill("0");
+      assertEquals(await page.locator("#profile-body tr").count(), 2);
+      await page.locator("#range-feeMin").fill("");
+      await page.locator("#profile-mode").selectOption("groups");
+      await page.locator("#group-body button[data-group]").click();
+      const fees = page.locator("#profile-content tr").filter({
+        has: page.getByRole("cell", {
+          name: "Minimum resource fee (stroops)",
+          exact: true,
+        }),
+      }).first();
+      assertStringIncludes(await fees.innerText(), "2 / 3");
+      assertEquals(errors, []);
+    } finally {
+      await page.close();
+    }
+  });
   it("filters every measurement with ranges, restores range state and keeps numeric columns aligned", async () => {
     const report = fixture();
     report.records[2].execution!.feeCharged = "9007199254740993";

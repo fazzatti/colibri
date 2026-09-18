@@ -28,3 +28,6 @@ export type { WebAuthProtocol } from "@/types.ts";
 
 /** Supported challenge submission body encodings. */
 export type { WebAuthSubmissionFormat } from "@/types.ts";
+
+/** Supported synchronous and asynchronous Ed25519 challenge signers. */
+export type { Sep10Signer } from "@/types.ts";

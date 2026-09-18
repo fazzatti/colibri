@@ -269446,44 +269446,19 @@
                 "value": [
                   {
                     "kind": "typeRef",
-                    "repr": "Keypair",
+                    "repr": "Sep10Signer",
                     "value": {
-                      "typeName": "Keypair"
+                      "typeName": "Sep10Signer"
                     }
                   },
                   {
-                    "kind": "typeRef",
-                    "repr": "WebAuthCoreSigner",
+                    "kind": "array",
                     "value": {
-                      "typeName": "WebAuthCoreSigner"
-                    }
-                  },
-                  {
-                    "kind": "typeRef",
-                    "repr": "Array",
-                    "value": {
-                      "typeName": "Array",
-                      "typeParams": [
-                        {
-                          "kind": "union",
-                          "value": [
-                            {
-                              "kind": "typeRef",
-                              "repr": "Keypair",
-                              "value": {
-                                "typeName": "Keypair"
-                              }
-                            },
-                            {
-                              "kind": "typeRef",
-                              "repr": "WebAuthCoreSigner",
-                              "value": {
-                                "typeName": "WebAuthCoreSigner"
-                              }
-                            }
-                          ]
-                        }
-                      ]
+                      "kind": "typeRef",
+                      "repr": "Sep10Signer",
+                      "value": {
+                        "typeName": "Sep10Signer"
+                      }
                     }
                   }
                 ]
@@ -269493,23 +269468,22 @@
               "name": "clientDomainSigner",
               "optional": true,
               "tsType": {
-                "kind": "union",
-                "value": [
-                  {
-                    "kind": "typeRef",
-                    "repr": "Keypair",
-                    "value": {
-                      "typeName": "Keypair"
-                    }
-                  },
-                  {
-                    "kind": "typeRef",
-                    "repr": "WebAuthCoreSigner",
-                    "value": {
-                      "typeName": "WebAuthCoreSigner"
-                    }
-                  }
-                ]
+                "kind": "typeRef",
+                "repr": "Sep10Signer",
+                "value": {
+                  "typeName": "Sep10Signer"
+                }
+              }
+            },
+            {
+              "name": "signal",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "AbortSignal",
+                "value": {
+                  "typeName": "AbortSignal"
+                }
               }
             }
           ]
@@ -269537,44 +269511,19 @@
                 "value": [
                   {
                     "kind": "typeRef",
-                    "repr": "Keypair",
+                    "repr": "Sep10Signer",
                     "value": {
-                      "typeName": "Keypair"
+                      "typeName": "Sep10Signer"
                     }
                   },
                   {
-                    "kind": "typeRef",
-                    "repr": "WebAuthCoreSigner",
+                    "kind": "array",
                     "value": {
-                      "typeName": "WebAuthCoreSigner"
-                    }
-                  },
-                  {
-                    "kind": "typeRef",
-                    "repr": "Array",
-                    "value": {
-                      "typeName": "Array",
-                      "typeParams": [
-                        {
-                          "kind": "union",
-                          "value": [
-                            {
-                              "kind": "typeRef",
-                              "repr": "Keypair",
-                              "value": {
-                                "typeName": "Keypair"
-                              }
-                            },
-                            {
-                              "kind": "typeRef",
-                              "repr": "WebAuthCoreSigner",
-                              "value": {
-                                "typeName": "WebAuthCoreSigner"
-                              }
-                            }
-                          ]
-                        }
-                      ]
+                      "kind": "typeRef",
+                      "repr": "Sep10Signer",
+                      "value": {
+                        "typeName": "Sep10Signer"
+                      }
                     }
                   }
                 ]
@@ -269602,23 +269551,22 @@
               "name": "clientDomainSigner",
               "optional": true,
               "tsType": {
-                "kind": "union",
-                "value": [
-                  {
-                    "kind": "typeRef",
-                    "repr": "Keypair",
-                    "value": {
-                      "typeName": "Keypair"
-                    }
-                  },
-                  {
-                    "kind": "typeRef",
-                    "repr": "WebAuthCoreSigner",
-                    "value": {
-                      "typeName": "WebAuthCoreSigner"
-                    }
-                  }
-                ]
+                "kind": "typeRef",
+                "repr": "Sep10Signer",
+                "value": {
+                  "typeName": "Sep10Signer"
+                }
+              }
+            },
+            {
+              "name": "signal",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "AbortSignal",
+                "value": {
+                  "typeName": "AbortSignal"
+                }
               }
             }
           ]
@@ -269950,44 +269898,19 @@
                       "value": [
                         {
                           "kind": "typeRef",
-                          "repr": "Keypair",
+                          "repr": "Sep10Signer",
                           "value": {
-                            "typeName": "Keypair"
+                            "typeName": "Sep10Signer"
                           }
                         },
                         {
-                          "kind": "typeRef",
-                          "repr": "WebAuthCoreSigner",
+                          "kind": "array",
                           "value": {
-                            "typeName": "WebAuthCoreSigner"
-                          }
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Array",
-                          "value": {
-                            "typeName": "Array",
-                            "typeParams": [
-                              {
-                                "kind": "union",
-                                "value": [
-                                  {
-                                    "kind": "typeRef",
-                                    "repr": "Keypair",
-                                    "value": {
-                                      "typeName": "Keypair"
-                                    }
-                                  },
-                                  {
-                                    "kind": "typeRef",
-                                    "repr": "WebAuthCoreSigner",
-                                    "value": {
-                                      "typeName": "WebAuthCoreSigner"
-                                    }
-                                  }
-                                ]
-                              }
-                            ]
+                            "kind": "typeRef",
+                            "repr": "Sep10Signer",
+                            "value": {
+                              "typeName": "Sep10Signer"
+                            }
                           }
                         }
                       ]
@@ -269998,23 +269921,23 @@
                     "name": "clientDomainSigner",
                     "optional": true,
                     "tsType": {
-                      "kind": "union",
-                      "value": [
-                        {
-                          "kind": "typeRef",
-                          "repr": "Keypair",
-                          "value": {
-                            "typeName": "Keypair"
-                          }
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "WebAuthCoreSigner",
-                          "value": {
-                            "typeName": "WebAuthCoreSigner"
-                          }
-                        }
-                      ]
+                      "kind": "typeRef",
+                      "repr": "Sep10Signer",
+                      "value": {
+                        "typeName": "Sep10Signer"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "signal",
+                    "optional": true,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "AbortSignal",
+                      "value": {
+                        "typeName": "AbortSignal"
+                      }
                     }
                   }
                 ],
@@ -270246,6 +270169,33 @@
           ]
         },
         "kind": "class"
+      }
+    ],
+    "Sep10Signer": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "Keypair",
+                "value": {
+                  "typeName": "Keypair"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "WebAuthCoreEnvelopeSigner",
+                "value": {
+                  "typeName": "WebAuthCoreEnvelopeSigner"
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
       }
     ],
     "Sep45AuthenticateOptions": [
@@ -272527,6 +272477,27 @@
                 "kind": "keyword",
                 "repr": "boolean",
                 "value": "boolean"
+              }
+            },
+            {
+              "accessibility": "private",
+              "name": "authentication",
+              "tsType": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "typeRef",
+                    "repr": "AbortController",
+                    "value": {
+                      "typeName": "AbortController"
+                    }
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "undefined",
+                    "value": "undefined"
+                  }
+                ]
               }
             },
             {
@@ -283456,44 +283427,19 @@
                 "value": [
                   {
                     "kind": "typeRef",
-                    "repr": "Keypair",
+                    "repr": "Sep10Signer",
                     "value": {
-                      "typeName": "Keypair"
+                      "typeName": "Sep10Signer"
                     }
                   },
                   {
-                    "kind": "typeRef",
-                    "repr": "WebAuthCoreSigner",
+                    "kind": "array",
                     "value": {
-                      "typeName": "WebAuthCoreSigner"
-                    }
-                  },
-                  {
-                    "kind": "typeRef",
-                    "repr": "Array",
-                    "value": {
-                      "typeName": "Array",
-                      "typeParams": [
-                        {
-                          "kind": "union",
-                          "value": [
-                            {
-                              "kind": "typeRef",
-                              "repr": "Keypair",
-                              "value": {
-                                "typeName": "Keypair"
-                              }
-                            },
-                            {
-                              "kind": "typeRef",
-                              "repr": "WebAuthCoreSigner",
-                              "value": {
-                                "typeName": "WebAuthCoreSigner"
-                              }
-                            }
-                          ]
-                        }
-                      ]
+                      "kind": "typeRef",
+                      "repr": "Sep10Signer",
+                      "value": {
+                        "typeName": "Sep10Signer"
+                      }
                     }
                   }
                 ]
@@ -283503,23 +283449,22 @@
               "name": "clientDomainSigner",
               "optional": true,
               "tsType": {
-                "kind": "union",
-                "value": [
-                  {
-                    "kind": "typeRef",
-                    "repr": "Keypair",
-                    "value": {
-                      "typeName": "Keypair"
-                    }
-                  },
-                  {
-                    "kind": "typeRef",
-                    "repr": "WebAuthCoreSigner",
-                    "value": {
-                      "typeName": "WebAuthCoreSigner"
-                    }
-                  }
-                ]
+                "kind": "typeRef",
+                "repr": "Sep10Signer",
+                "value": {
+                  "typeName": "Sep10Signer"
+                }
+              }
+            },
+            {
+              "name": "signal",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "AbortSignal",
+                "value": {
+                  "typeName": "AbortSignal"
+                }
               }
             }
           ]
@@ -283547,44 +283492,19 @@
                 "value": [
                   {
                     "kind": "typeRef",
-                    "repr": "Keypair",
+                    "repr": "Sep10Signer",
                     "value": {
-                      "typeName": "Keypair"
+                      "typeName": "Sep10Signer"
                     }
                   },
                   {
-                    "kind": "typeRef",
-                    "repr": "WebAuthCoreSigner",
+                    "kind": "array",
                     "value": {
-                      "typeName": "WebAuthCoreSigner"
-                    }
-                  },
-                  {
-                    "kind": "typeRef",
-                    "repr": "Array",
-                    "value": {
-                      "typeName": "Array",
-                      "typeParams": [
-                        {
-                          "kind": "union",
-                          "value": [
-                            {
-                              "kind": "typeRef",
-                              "repr": "Keypair",
-                              "value": {
-                                "typeName": "Keypair"
-                              }
-                            },
-                            {
-                              "kind": "typeRef",
-                              "repr": "WebAuthCoreSigner",
-                              "value": {
-                                "typeName": "WebAuthCoreSigner"
-                              }
-                            }
-                          ]
-                        }
-                      ]
+                      "kind": "typeRef",
+                      "repr": "Sep10Signer",
+                      "value": {
+                        "typeName": "Sep10Signer"
+                      }
                     }
                   }
                 ]
@@ -283612,23 +283532,22 @@
               "name": "clientDomainSigner",
               "optional": true,
               "tsType": {
-                "kind": "union",
-                "value": [
-                  {
-                    "kind": "typeRef",
-                    "repr": "Keypair",
-                    "value": {
-                      "typeName": "Keypair"
-                    }
-                  },
-                  {
-                    "kind": "typeRef",
-                    "repr": "WebAuthCoreSigner",
-                    "value": {
-                      "typeName": "WebAuthCoreSigner"
-                    }
-                  }
-                ]
+                "kind": "typeRef",
+                "repr": "Sep10Signer",
+                "value": {
+                  "typeName": "Sep10Signer"
+                }
+              }
+            },
+            {
+              "name": "signal",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "AbortSignal",
+                "value": {
+                  "typeName": "AbortSignal"
+                }
               }
             }
           ]
@@ -283960,44 +283879,19 @@
                       "value": [
                         {
                           "kind": "typeRef",
-                          "repr": "Keypair",
+                          "repr": "Sep10Signer",
                           "value": {
-                            "typeName": "Keypair"
+                            "typeName": "Sep10Signer"
                           }
                         },
                         {
-                          "kind": "typeRef",
-                          "repr": "WebAuthCoreSigner",
+                          "kind": "array",
                           "value": {
-                            "typeName": "WebAuthCoreSigner"
-                          }
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Array",
-                          "value": {
-                            "typeName": "Array",
-                            "typeParams": [
-                              {
-                                "kind": "union",
-                                "value": [
-                                  {
-                                    "kind": "typeRef",
-                                    "repr": "Keypair",
-                                    "value": {
-                                      "typeName": "Keypair"
-                                    }
-                                  },
-                                  {
-                                    "kind": "typeRef",
-                                    "repr": "WebAuthCoreSigner",
-                                    "value": {
-                                      "typeName": "WebAuthCoreSigner"
-                                    }
-                                  }
-                                ]
-                              }
-                            ]
+                            "kind": "typeRef",
+                            "repr": "Sep10Signer",
+                            "value": {
+                              "typeName": "Sep10Signer"
+                            }
                           }
                         }
                       ]
@@ -284008,23 +283902,23 @@
                     "name": "clientDomainSigner",
                     "optional": true,
                     "tsType": {
-                      "kind": "union",
-                      "value": [
-                        {
-                          "kind": "typeRef",
-                          "repr": "Keypair",
-                          "value": {
-                            "typeName": "Keypair"
-                          }
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "WebAuthCoreSigner",
-                          "value": {
-                            "typeName": "WebAuthCoreSigner"
-                          }
-                        }
-                      ]
+                      "kind": "typeRef",
+                      "repr": "Sep10Signer",
+                      "value": {
+                        "typeName": "Sep10Signer"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "signal",
+                    "optional": true,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "AbortSignal",
+                      "value": {
+                        "typeName": "AbortSignal"
+                      }
                     }
                   }
                 ],
@@ -284256,6 +284150,33 @@
           ]
         },
         "kind": "class"
+      }
+    ],
+    "Sep10Signer": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "Keypair",
+                "value": {
+                  "typeName": "Keypair"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "WebAuthCoreEnvelopeSigner",
+                "value": {
+                  "typeName": "WebAuthCoreEnvelopeSigner"
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
       }
     ],
     "Sep45AuthenticateOptions": [
@@ -286242,6 +286163,27 @@
                 "kind": "keyword",
                 "repr": "boolean",
                 "value": "boolean"
+              }
+            },
+            {
+              "accessibility": "private",
+              "name": "authentication",
+              "tsType": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "typeRef",
+                    "repr": "AbortController",
+                    "value": {
+                      "typeName": "AbortController"
+                    }
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "undefined",
+                    "value": "undefined"
+                  }
+                ]
               }
             },
             {
@@ -316943,44 +316885,19 @@
                 "value": [
                   {
                     "kind": "typeRef",
-                    "repr": "Keypair",
+                    "repr": "Sep10Signer",
                     "value": {
-                      "typeName": "Keypair"
+                      "typeName": "Sep10Signer"
                     }
                   },
                   {
-                    "kind": "typeRef",
-                    "repr": "WebAuthCoreSigner",
+                    "kind": "array",
                     "value": {
-                      "typeName": "WebAuthCoreSigner"
-                    }
-                  },
-                  {
-                    "kind": "typeRef",
-                    "repr": "Array",
-                    "value": {
-                      "typeName": "Array",
-                      "typeParams": [
-                        {
-                          "kind": "union",
-                          "value": [
-                            {
-                              "kind": "typeRef",
-                              "repr": "Keypair",
-                              "value": {
-                                "typeName": "Keypair"
-                              }
-                            },
-                            {
-                              "kind": "typeRef",
-                              "repr": "WebAuthCoreSigner",
-                              "value": {
-                                "typeName": "WebAuthCoreSigner"
-                              }
-                            }
-                          ]
-                        }
-                      ]
+                      "kind": "typeRef",
+                      "repr": "Sep10Signer",
+                      "value": {
+                        "typeName": "Sep10Signer"
+                      }
                     }
                   }
                 ]
@@ -316990,23 +316907,22 @@
               "name": "clientDomainSigner",
               "optional": true,
               "tsType": {
-                "kind": "union",
-                "value": [
-                  {
-                    "kind": "typeRef",
-                    "repr": "Keypair",
-                    "value": {
-                      "typeName": "Keypair"
-                    }
-                  },
-                  {
-                    "kind": "typeRef",
-                    "repr": "WebAuthCoreSigner",
-                    "value": {
-                      "typeName": "WebAuthCoreSigner"
-                    }
-                  }
-                ]
+                "kind": "typeRef",
+                "repr": "Sep10Signer",
+                "value": {
+                  "typeName": "Sep10Signer"
+                }
+              }
+            },
+            {
+              "name": "signal",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "AbortSignal",
+                "value": {
+                  "typeName": "AbortSignal"
+                }
               }
             }
           ]
@@ -317034,44 +316950,19 @@
                 "value": [
                   {
                     "kind": "typeRef",
-                    "repr": "Keypair",
+                    "repr": "Sep10Signer",
                     "value": {
-                      "typeName": "Keypair"
+                      "typeName": "Sep10Signer"
                     }
                   },
                   {
-                    "kind": "typeRef",
-                    "repr": "WebAuthCoreSigner",
+                    "kind": "array",
                     "value": {
-                      "typeName": "WebAuthCoreSigner"
-                    }
-                  },
-                  {
-                    "kind": "typeRef",
-                    "repr": "Array",
-                    "value": {
-                      "typeName": "Array",
-                      "typeParams": [
-                        {
-                          "kind": "union",
-                          "value": [
-                            {
-                              "kind": "typeRef",
-                              "repr": "Keypair",
-                              "value": {
-                                "typeName": "Keypair"
-                              }
-                            },
-                            {
-                              "kind": "typeRef",
-                              "repr": "WebAuthCoreSigner",
-                              "value": {
-                                "typeName": "WebAuthCoreSigner"
-                              }
-                            }
-                          ]
-                        }
-                      ]
+                      "kind": "typeRef",
+                      "repr": "Sep10Signer",
+                      "value": {
+                        "typeName": "Sep10Signer"
+                      }
                     }
                   }
                 ]
@@ -317099,23 +316990,22 @@
               "name": "clientDomainSigner",
               "optional": true,
               "tsType": {
-                "kind": "union",
-                "value": [
-                  {
-                    "kind": "typeRef",
-                    "repr": "Keypair",
-                    "value": {
-                      "typeName": "Keypair"
-                    }
-                  },
-                  {
-                    "kind": "typeRef",
-                    "repr": "WebAuthCoreSigner",
-                    "value": {
-                      "typeName": "WebAuthCoreSigner"
-                    }
-                  }
-                ]
+                "kind": "typeRef",
+                "repr": "Sep10Signer",
+                "value": {
+                  "typeName": "Sep10Signer"
+                }
+              }
+            },
+            {
+              "name": "signal",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "AbortSignal",
+                "value": {
+                  "typeName": "AbortSignal"
+                }
               }
             }
           ]
@@ -317447,44 +317337,19 @@
                       "value": [
                         {
                           "kind": "typeRef",
-                          "repr": "Keypair",
+                          "repr": "Sep10Signer",
                           "value": {
-                            "typeName": "Keypair"
+                            "typeName": "Sep10Signer"
                           }
                         },
                         {
-                          "kind": "typeRef",
-                          "repr": "WebAuthCoreSigner",
+                          "kind": "array",
                           "value": {
-                            "typeName": "WebAuthCoreSigner"
-                          }
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Array",
-                          "value": {
-                            "typeName": "Array",
-                            "typeParams": [
-                              {
-                                "kind": "union",
-                                "value": [
-                                  {
-                                    "kind": "typeRef",
-                                    "repr": "Keypair",
-                                    "value": {
-                                      "typeName": "Keypair"
-                                    }
-                                  },
-                                  {
-                                    "kind": "typeRef",
-                                    "repr": "WebAuthCoreSigner",
-                                    "value": {
-                                      "typeName": "WebAuthCoreSigner"
-                                    }
-                                  }
-                                ]
-                              }
-                            ]
+                            "kind": "typeRef",
+                            "repr": "Sep10Signer",
+                            "value": {
+                              "typeName": "Sep10Signer"
+                            }
                           }
                         }
                       ]
@@ -317495,23 +317360,23 @@
                     "name": "clientDomainSigner",
                     "optional": true,
                     "tsType": {
-                      "kind": "union",
-                      "value": [
-                        {
-                          "kind": "typeRef",
-                          "repr": "Keypair",
-                          "value": {
-                            "typeName": "Keypair"
-                          }
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "WebAuthCoreSigner",
-                          "value": {
-                            "typeName": "WebAuthCoreSigner"
-                          }
-                        }
-                      ]
+                      "kind": "typeRef",
+                      "repr": "Sep10Signer",
+                      "value": {
+                        "typeName": "Sep10Signer"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "signal",
+                    "optional": true,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "AbortSignal",
+                      "value": {
+                        "typeName": "AbortSignal"
+                      }
                     }
                   }
                 ],
@@ -319213,6 +319078,33 @@
           ]
         },
         "kind": "class"
+      }
+    ],
+    "Sep10Signer": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "Keypair",
+                "value": {
+                  "typeName": "Keypair"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "WebAuthCoreEnvelopeSigner",
+                "value": {
+                  "typeName": "WebAuthCoreEnvelopeSigner"
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
       }
     ],
     "Sep10SigningFailedError": [
@@ -325982,44 +325874,19 @@
                 "value": [
                   {
                     "kind": "typeRef",
-                    "repr": "Keypair",
+                    "repr": "Sep10Signer",
                     "value": {
-                      "typeName": "Keypair"
+                      "typeName": "Sep10Signer"
                     }
                   },
                   {
-                    "kind": "typeRef",
-                    "repr": "WebAuthCoreSigner",
+                    "kind": "array",
                     "value": {
-                      "typeName": "WebAuthCoreSigner"
-                    }
-                  },
-                  {
-                    "kind": "typeRef",
-                    "repr": "Array",
-                    "value": {
-                      "typeName": "Array",
-                      "typeParams": [
-                        {
-                          "kind": "union",
-                          "value": [
-                            {
-                              "kind": "typeRef",
-                              "repr": "Keypair",
-                              "value": {
-                                "typeName": "Keypair"
-                              }
-                            },
-                            {
-                              "kind": "typeRef",
-                              "repr": "WebAuthCoreSigner",
-                              "value": {
-                                "typeName": "WebAuthCoreSigner"
-                              }
-                            }
-                          ]
-                        }
-                      ]
+                      "kind": "typeRef",
+                      "repr": "Sep10Signer",
+                      "value": {
+                        "typeName": "Sep10Signer"
+                      }
                     }
                   }
                 ]
@@ -326029,23 +325896,22 @@
               "name": "clientDomainSigner",
               "optional": true,
               "tsType": {
-                "kind": "union",
-                "value": [
-                  {
-                    "kind": "typeRef",
-                    "repr": "Keypair",
-                    "value": {
-                      "typeName": "Keypair"
-                    }
-                  },
-                  {
-                    "kind": "typeRef",
-                    "repr": "WebAuthCoreSigner",
-                    "value": {
-                      "typeName": "WebAuthCoreSigner"
-                    }
-                  }
-                ]
+                "kind": "typeRef",
+                "repr": "Sep10Signer",
+                "value": {
+                  "typeName": "Sep10Signer"
+                }
+              }
+            },
+            {
+              "name": "signal",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "AbortSignal",
+                "value": {
+                  "typeName": "AbortSignal"
+                }
               }
             }
           ]
@@ -326377,44 +326243,19 @@
                       "value": [
                         {
                           "kind": "typeRef",
-                          "repr": "Keypair",
+                          "repr": "Sep10Signer",
                           "value": {
-                            "typeName": "Keypair"
+                            "typeName": "Sep10Signer"
                           }
                         },
                         {
-                          "kind": "typeRef",
-                          "repr": "WebAuthCoreSigner",
+                          "kind": "array",
                           "value": {
-                            "typeName": "WebAuthCoreSigner"
-                          }
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "Array",
-                          "value": {
-                            "typeName": "Array",
-                            "typeParams": [
-                              {
-                                "kind": "union",
-                                "value": [
-                                  {
-                                    "kind": "typeRef",
-                                    "repr": "Keypair",
-                                    "value": {
-                                      "typeName": "Keypair"
-                                    }
-                                  },
-                                  {
-                                    "kind": "typeRef",
-                                    "repr": "WebAuthCoreSigner",
-                                    "value": {
-                                      "typeName": "WebAuthCoreSigner"
-                                    }
-                                  }
-                                ]
-                              }
-                            ]
+                            "kind": "typeRef",
+                            "repr": "Sep10Signer",
+                            "value": {
+                              "typeName": "Sep10Signer"
+                            }
                           }
                         }
                       ]
@@ -326425,23 +326266,23 @@
                     "name": "clientDomainSigner",
                     "optional": true,
                     "tsType": {
-                      "kind": "union",
-                      "value": [
-                        {
-                          "kind": "typeRef",
-                          "repr": "Keypair",
-                          "value": {
-                            "typeName": "Keypair"
-                          }
-                        },
-                        {
-                          "kind": "typeRef",
-                          "repr": "WebAuthCoreSigner",
-                          "value": {
-                            "typeName": "WebAuthCoreSigner"
-                          }
-                        }
-                      ]
+                      "kind": "typeRef",
+                      "repr": "Sep10Signer",
+                      "value": {
+                        "typeName": "Sep10Signer"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "signal",
+                    "optional": true,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "AbortSignal",
+                      "value": {
+                        "typeName": "AbortSignal"
+                      }
                     }
                   }
                 ],
@@ -327022,6 +326863,33 @@
           ]
         },
         "kind": "class"
+      }
+    ],
+    "Sep10Signer": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "Keypair",
+                "value": {
+                  "typeName": "Keypair"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "WebAuthCoreEnvelopeSigner",
+                "value": {
+                  "typeName": "WebAuthCoreEnvelopeSigner"
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
       }
     ],
     "VerifiedSep10Challenge": [

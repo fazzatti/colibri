@@ -1,3 +1,4 @@
+import { diagnosticMessage } from "@/recorder/runtime/diagnostic.ts";
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { reconcileNodeResults } from "@/recorder/artifacts/node-results.ts";
 import { join } from "node:path";
@@ -24,11 +25,18 @@ export async function aggregate(
   directory: string,
   options: { html?: boolean } = {},
 ): Promise<RecorderReport> {
-  const manifest: RunManifest = JSON.parse(
-    await readFile(join(directory, "manifest.json"), "utf8"),
-  );
+  const text = await readFile(join(directory, "manifest.json"), "utf8");
+  let manifest: RunManifest;
+  try {
+    manifest = JSON.parse(text);
+  } catch (cause) {
+    throw new ERROR.INVALID_ARTIFACT("Invalid recorder run manifest JSON.", {
+      cause,
+    });
+  }
   if (
-    manifest.schemaVersion !== 1 || typeof manifest.runId !== "string" ||
+    !manifest || manifest.schemaVersion !== 1 ||
+    typeof manifest.runId !== "string" ||
     typeof manifest.cwd !== "string"
   ) throw new ERROR.INVALID_ARTIFACT("Invalid recorder run manifest.");
   const fragments = await readFragments(directory);
@@ -57,9 +65,7 @@ export async function aggregate(
   } catch (error) {
     report.complete = false;
     report.diagnostics.push(
-      `Runner reconciliation unavailable: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
+      `Runner reconciliation unavailable: ${diagnosticMessage(error)}`,
     );
   }
   if (report.records.some((record) => record.status === "running")) {

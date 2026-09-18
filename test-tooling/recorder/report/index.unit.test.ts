@@ -82,6 +82,10 @@ describe("portable reports", () => {
     assertEquals(group.executions, 1);
     assertEquals(group.instructions?.mean, 100);
     assertEquals(group.durationMs?.mean, 10);
+    record.durationMs = undefined;
+    c.emit(record);
+    assertEquals(profileGroups(c.report())[0].durationMs, undefined);
+    assertEquals(summarize(c.report()).unknown, 1);
   });
   it("uses runner statuses for leaf counts and keeps callback failures separate", () => {
     const c = new Collector();

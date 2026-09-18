@@ -84,6 +84,44 @@ describe("execution recording", () => {
     ]);
     assertEquals(recorder.report().diagnostics.length, 1);
   });
+  it("waits for non-native thenables and preserves their result or rejection", async () => {
+    const recorder = new ExecutionRecorder();
+    const observer = recorder.observer();
+    const pending = Promise.withResolvers<object>();
+    const client = {
+      readPipe: pipe([step(() => 1)], { id: "ReadFromContractPipeline" }),
+    };
+    const thenable: PromiseLike<object> = {
+      then: pending.promise.then.bind(pending.promise),
+    };
+    const created = observer.create(() => thenable);
+    assertEquals(recorder.report().records[0].status, "running");
+    pending.resolve(client);
+    assertStrictEquals(await created, client);
+    assertEquals(await client.readPipe(), 1);
+    assertEquals(recorder.report().records[0].status, "passed");
+    assertEquals(
+      recorder.report().records.filter((r) => r.execution).length,
+      1,
+    );
+
+    const original = new TypeError("thenable rejected");
+    const rejected: PromiseLike<never> = {
+      then: (resolve, reject) => Promise.reject(original).then(resolve, reject),
+    };
+    assertStrictEquals(
+      await assertRejects(() =>
+        Promise.resolve(observer.capture(() => rejected))
+      ),
+      original,
+    );
+    assertEquals(recorder.report().records.at(-1)?.status, "failed");
+    const plain = { then: "not callable" };
+    assertStrictEquals(observer.capture(() => plain), plain);
+    assertEquals(observer.capture(() => null), null);
+    const callable = Object.assign(() => {}, { then: thenable.then });
+    assertStrictEquals(await observer.capture(() => callable), client);
+  });
   it("does not recover a pipeline error and keeps recovered outputs distinct", async () => {
     const error = new TypeError("boom");
     const recorder = new ExecutionRecorder();
@@ -141,6 +179,15 @@ describe("execution recording", () => {
     observer.log("log", { data: 1 });
     assertEquals(recorder.report().diagnostics, [
       "Observation failed: redactor failed",
+    ]);
+    const primitive = new ExecutionRecorder({
+      sanitize: () => {
+        throw "redactor unavailable";
+      },
+    });
+    assertEquals(primitive.observer().capture(() => 9), 9);
+    assertEquals(primitive.report().diagnostics, [
+      "Observation failed: redactor unavailable",
     ]);
     const small = new ExecutionRecorder({
       limits: { records: 1 },

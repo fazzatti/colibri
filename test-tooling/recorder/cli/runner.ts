@@ -3,7 +3,7 @@ import { pathToFileURL } from "node:url";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import process from "node:process";
-import { spawn } from "node:child_process";
+import childProcess from "node:child_process";
 import type { RecorderOptions } from "@/recorder/types.ts";
 import { aggregate, type RunManifest } from "@/recorder/artifacts/aggregate.ts";
 import { summarize } from "@/recorder/report/aggregate.ts";
@@ -54,7 +54,7 @@ export async function runTests(
     await writeManifest();
     await nativeRunner.prepare(directory);
     exitCode = await new Promise<number>((resolve, reject) => {
-      const child = spawn(
+      const child = childProcess.spawn(
         process.execPath,
         nativeArguments(runtime, args, directory),
         {

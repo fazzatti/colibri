@@ -523,8 +523,12 @@ Tokens stay in the session, outside query data and browser storage. Disconnect,
 account/network changes, expiry and logout clear them and invalidate pending
 authentication. Logout does not revoke a server-side session. Authentication
 mutation variables contain signers and must not be persisted/dehydrated. SEP-10
-retains WebAuth's signer contract; an envelope-only adapter is insufficient.
-SEP-45 retains the explicit `authorize` callback.
+accepts SDK keypairs and Core envelope signers, including asynchronous wallet
+signers. Select a current guarded signer from `useWallet().signers` or
+`useSigners()` and pass it explicitly. Logout, disconnect, account/network
+changes and disposal invalidate pending approval before token exchange. See the
+[wallet authentication guide](https://fifo-docs.gitbook.io/colibri/packages/react/wallet-authentication)
+for a complete TSX example. SEP-45 retains the explicit `authorize` callback.
 
 See the
 [authentication recipes](https://github.com/fazzatti/colibri/blob/dev/docs/packages/react/wallets-and-sessions.md)

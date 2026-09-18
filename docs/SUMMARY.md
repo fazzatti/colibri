@@ -18,6 +18,9 @@
 - [Common workflows](packages/react/convenience.md)
 - [Queries and caching](packages/react/queries.md)
 - [Wallets and sessions](packages/react/wallets-and-sessions.md)
+
+* [Wallet authentication](packages/react/wallet-authentication.md)
+
 - [Contracts and transactions](packages/react/contracts-and-transactions.md)
 - [Hooks](packages/react/hooks/README.md)
   - [useWallet](packages/react/hooks/use-wallet.md)
