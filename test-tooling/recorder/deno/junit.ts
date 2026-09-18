@@ -96,10 +96,17 @@ function resolveResult(
   let key = JSON.stringify([filePath(record.file, cwd), name]);
   let entries = results.get(key);
   const matchingNames = registrations.filter((r) => fullName(r) === name);
+  // std/testing introduces a synthetic global suite for file-level hooks.
+  const runnerName = index.has(name) ? name : `global > ${name}`;
   // Deno sometimes reports wrapper locations. Fall back only to globally unique
   // full test paths, never registration order across concurrent files.
-  if (!entries && matchingNames.length === 1 && index.get(name)?.length === 1) {
-    key = index.get(name)![0];
+  if (
+    !entries && matchingNames.length === 1 &&
+    index.get(runnerName)?.length === 1 &&
+    (runnerName === name ||
+      !registrations.some((r) => fullName(r) === runnerName))
+  ) {
+    key = index.get(runnerName)![0];
     entries = results.get(key);
   }
   if (

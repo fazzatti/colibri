@@ -4,7 +4,7 @@ import {
   assertInstanceOf,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { xdr } from "stellar-sdk";
 import { Spec } from "stellar-sdk/contract";
 import {
@@ -37,6 +37,10 @@ import {
 } from "@/contract/interface/standards/definition.ts";
 import { claimsSep } from "@/contract/metadata/extract-sep-claims.ts";
 import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";
+
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 const WASM_HEADER = new Uint8Array([
   0x00,
@@ -956,11 +960,14 @@ describe("standard inspection", () => {
   });
 
   it("exposes the same granular and aggregate operations on Contract", () => {
-    const contract = new Contract({
-      networkConfig: NetworkConfig.TestNet(),
-      contractConfig: { wasm },
-      rpc: {} as never,
-    });
+    const contract = suiteObserver.attach(
+      new Contract({
+        networkConfig: NetworkConfig.TestNet(),
+        contractConfig: { wasm },
+        rpc: {} as never,
+      }),
+      { name: "contract" },
+    );
 
     assertEquals(contract.getMetadata().sections.length, 1);
     assertEquals(contract.getSepClaims().seps, [41, 50]);
@@ -972,11 +979,14 @@ describe("standard inspection", () => {
 
   it("uses an explicitly configured spec without requiring local Wasm", () => {
     const spec = new Spec([functionEntry({ name: "ping" })]);
-    const contract = new Contract({
-      networkConfig: NetworkConfig.TestNet(),
-      contractConfig: { wasmHash: "00", spec },
-      rpc: {} as never,
-    });
+    const contract = suiteObserver.attach(
+      new Contract({
+        networkConfig: NetworkConfig.TestNet(),
+        contractConfig: { wasmHash: "00", spec },
+        rpc: {} as never,
+      }),
+      { name: "contract" },
+    );
 
     assertEquals(contract.analyzeInterface(ping).matches, true);
     assertEquals(contract.matchesInterface(ping), true);

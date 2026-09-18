@@ -1,6 +1,6 @@
 import { assertEquals, assertInstanceOf, assertRejects } from "@std/assert";
 
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   Asset,
@@ -19,6 +19,8 @@ import type { AssembleTransactionInput } from "@/processes/assemble-transaction/
 import * as ERROR from "@/processes/assemble-transaction/error.ts";
 import { stub } from "@std/testing/mock";
 import type { BaseFee } from "@/common/types/transaction-config/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 // Helper function to create a test transaction
 const createTestTransaction = (

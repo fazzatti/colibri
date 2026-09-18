@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";
 import {
@@ -14,6 +14,10 @@ import * as SIM_ERRORS from "@/processes/simulate-transaction/error.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
+
+const { beforeAll, describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 describe(
   "[Testnet] Contract contract errors",
@@ -45,13 +49,16 @@ describe(
         "./_internal/tests/compiled-contracts/errors_contract.wasm",
       );
 
-      contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasm,
-          spec: ERRORS_CONTRACT_SPEC,
-        },
-      });
+      contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasm,
+            spec: ERRORS_CONTRACT_SPEC,
+          },
+        }),
+        { name: "contract" },
+      );
 
       await contract.loadContractErrorsFromWasm({ strategy: "any" });
       await contract.uploadWasm(config);

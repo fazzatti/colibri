@@ -1,6 +1,6 @@
 import { stub } from "@std/testing/mock";
 import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   type CliIO,
   cliNetwork,
@@ -10,6 +10,8 @@ import {
 import { runCli } from "@/cli/run.ts";
 import { BindingError } from "@/error.ts";
 import { contractId } from "colibri-internal/tests/binding-fixtures.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const wasm = "_internal/tests/compiled-contracts/types_harness.wasm";
 

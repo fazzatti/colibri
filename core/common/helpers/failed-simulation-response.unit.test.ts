@@ -4,12 +4,14 @@ import {
   assertInstanceOf,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Buffer } from "node:buffer";
 import { xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { getStellarAssetContractIdFromFailedSimulationResponse } from "@/common/helpers/failed-simulation-response.ts";
 import { ColibriError } from "@/error/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 function makeSimulationErrorResponse(
   values: xdr.ScVal[] | undefined,

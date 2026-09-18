@@ -1,6 +1,8 @@
 import { assert, assertFalse, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { isBooleanStrict, isTruthy } from "@/common/helpers/boolean.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Boolean Helpers", () => {
   describe("isBooleanStrict", () => {

@@ -28,7 +28,9 @@ export class Observer {
   /** Attach to a pipeline or a client exposing readPipe/invokePipe/transactionPipe. */
   attach<T>(target: T, options: ObservationOptions = {}): T {
     this.collector.guard(() => {
-      const data = object(target);
+      const outer = object(target);
+      // SAC and SEP-41 clients expose their underlying Core client publicly.
+      const data = object(outer.contract ?? target);
       const network = options.network ?? object(data.networkConfig);
       const candidates = typeof data.use === "function"
         ? [target]
@@ -37,7 +39,9 @@ export class Observer {
         );
       if (candidates.length === 0) {
         this.collector.diagnostic(
-          "Created value has no supported pipeline extension points; only construction was captured.",
+          `No supported pipeline extension points in ${this.file} (${
+            options.name ?? "unnamed client"
+          }); execution observation is unavailable.`,
         );
       }
       for (const candidate of candidates) {

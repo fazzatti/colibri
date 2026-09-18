@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { ConveeError, plugin } from "convee";
 import type {
   ResolveBuildImageInput,
@@ -42,6 +42,10 @@ import {
 } from "@/pipelines/build-verification/index.ts";
 import { pipelineTestDependencies } from "@/pipelines/build-verification/testing.test.ts";
 
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
+
 const request = () => ({
   mode: "outOfBand" as const,
   target: { wasm: testWasm(), label: "fixture" },
@@ -58,8 +62,11 @@ const request = () => ({
 
 describe("BuildVerificationPipeline", () => {
   it("has the exact stable pipeline, connector, and process-step order", () => {
-    const pipeline = createBuildVerificationPipeline(
-      pipelineTestDependencies(),
+    const pipeline = suiteObserver.attach(
+      createBuildVerificationPipeline(
+        pipelineTestDependencies(),
+      ),
+      { name: "pipeline" },
     );
     assertEquals(pipeline.id, BUILD_VERIFICATION_PIPELINE_ID);
     assertEquals(pipeline.steps.map(({ id }) => id), [
@@ -163,7 +170,10 @@ describe("BuildVerificationPipeline", () => {
         },
       },
     });
-    const result = await createBuildVerificationPipeline(dependencies).run(
+    const result = await suiteObserver.attach(
+      createBuildVerificationPipeline(dependencies),
+      { name: "createBuildVerificationPipeline" },
+    ).run(
       request(),
     );
     assertEquals(result.status, "verified");
@@ -197,18 +207,22 @@ describe("BuildVerificationPipeline", () => {
 
   it("returns mismatch as a completed result rather than an operational error", async () => {
     const base = pipelineTestDependencies();
-    const pipeline = createBuildVerificationPipeline(pipelineTestDependencies({
-      artifactCollector: {
-        snapshot: base.artifactCollector.snapshot,
-        collect: () =>
-          Promise.resolve([{
-            path: "/workspace/source/target/wasm32v1-none/release/fixture.wasm",
-            bytes: new Uint8Array([1, 2, 3]),
-            size: 3,
-            sha256: "different",
-          }]),
-      },
-    }));
+    const pipeline = suiteObserver.attach(
+      createBuildVerificationPipeline(pipelineTestDependencies({
+        artifactCollector: {
+          snapshot: base.artifactCollector.snapshot,
+          collect: () =>
+            Promise.resolve([{
+              path:
+                "/workspace/source/target/wasm32v1-none/release/fixture.wasm",
+              bytes: new Uint8Array([1, 2, 3]),
+              size: 3,
+              sha256: "different",
+            }]),
+        },
+      })),
+      { name: "pipeline" },
+    );
     assertEquals((await pipeline.run(request())).status, "mismatch");
   });
 
@@ -223,46 +237,50 @@ describe("BuildVerificationPipeline", () => {
       { key: "source_sha256", value: sourceHash },
     ]);
     const base = pipelineTestDependencies();
-    const pipeline = createBuildVerificationPipeline(pipelineTestDependencies({
-      targetResolver: {
-        resolve: () =>
-          Promise.resolve({
-            applicability: "wasm",
-            kind: "wasm",
-            wasm,
-            wasmHash: "strict-target-hash",
-            observedAt: TEST_NOW,
-          }),
-      },
-      sourceProvider: {
-        resolve: (input) => {
-          assertEquals(input.source, {
-            type: "url",
-            url: "https://example.com/source.tar",
-          });
-          return Promise.resolve({
-            content: "archive",
-            kind: "metadataUrl",
-            bytes: new Uint8Array([1]),
-            name: "source.tar",
-            format: "tar",
-            requestedLocator: "https://example.com/source.tar",
-            size: 1,
-            sha256: sourceHash,
-          });
+    const pipeline = suiteObserver.attach(
+      createBuildVerificationPipeline(pipelineTestDependencies({
+        targetResolver: {
+          resolve: () =>
+            Promise.resolve({
+              applicability: "wasm",
+              kind: "wasm",
+              wasm,
+              wasmHash: "strict-target-hash",
+              observedAt: TEST_NOW,
+            }),
         },
-      },
-      artifactCollector: {
-        snapshot: base.artifactCollector.snapshot,
-        collect: () =>
-          Promise.resolve([{
-            path: "/workspace/source/target/wasm32v1-none/release/fixture.wasm",
-            bytes: wasm,
-            size: wasm.length,
-            sha256: "strict-artifact-hash",
-          }]),
-      },
-    }));
+        sourceProvider: {
+          resolve: (input) => {
+            assertEquals(input.source, {
+              type: "url",
+              url: "https://example.com/source.tar",
+            });
+            return Promise.resolve({
+              content: "archive",
+              kind: "metadataUrl",
+              bytes: new Uint8Array([1]),
+              name: "source.tar",
+              format: "tar",
+              requestedLocator: "https://example.com/source.tar",
+              size: 1,
+              sha256: sourceHash,
+            });
+          },
+        },
+        artifactCollector: {
+          snapshot: base.artifactCollector.snapshot,
+          collect: () =>
+            Promise.resolve([{
+              path:
+                "/workspace/source/target/wasm32v1-none/release/fixture.wasm",
+              bytes: wasm,
+              size: wasm.length,
+              sha256: "strict-artifact-hash",
+            }]),
+        },
+      })),
+      { name: "pipeline" },
+    );
     const result = await pipeline.run({ target: { wasm } });
     assertEquals(result.status, "verified");
     assertEquals(result.evidence.mode, "strictSep58");
@@ -282,19 +300,22 @@ describe("BuildVerificationPipeline", () => {
         });
       },
     };
-    const sac = createBuildVerificationPipeline(pipelineTestDependencies({
-      targetResolver: {
-        resolve: () =>
-          Promise.resolve({
-            applicability: "stellarAssetContract",
-            kind: "contractId",
-            contractId:
-              "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-            observedAt: TEST_NOW,
-          }),
-      },
-      sourceProvider,
-    }));
+    const sac = suiteObserver.attach(
+      createBuildVerificationPipeline(pipelineTestDependencies({
+        targetResolver: {
+          resolve: () =>
+            Promise.resolve({
+              applicability: "stellarAssetContract",
+              kind: "contractId",
+              contractId:
+                "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              observedAt: TEST_NOW,
+            }),
+        },
+        sourceProvider,
+      })),
+      { name: "sac" },
+    );
     const sacResult = await sac.run({
       target: {
         contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
@@ -306,9 +327,12 @@ describe("BuildVerificationPipeline", () => {
     }
     assertEquals(laterBoundaryCalled, false);
 
-    const missing = createBuildVerificationPipeline(pipelineTestDependencies({
-      sourceProvider,
-    }));
+    const missing = suiteObserver.attach(
+      createBuildVerificationPipeline(pipelineTestDependencies({
+        sourceProvider,
+      })),
+      { name: "missing" },
+    );
     const missingResult = await missing.run({ target: { wasm: testWasm() } });
     assertEquals(missingResult.status, "notApplicable");
     if (missingResult.status === "notApplicable") {
@@ -331,22 +355,29 @@ describe("BuildVerificationPipeline", () => {
       id: "test-image-plugin",
       target: RESOLVE_BUILD_IMAGE_STEP_ID,
     });
-    const pipeline = createBuildVerificationPipeline(
-      pipelineTestDependencies(),
+    const pipeline = suiteObserver.attach(
+      createBuildVerificationPipeline(
+        pipelineTestDependencies(),
+      ),
+      { name: "pipeline" },
     );
+    const existingPlugins = [...pipeline.plugins];
     pipeline.use(imagePlugin);
     const result = await pipeline.run(request());
     assertEquals(result.status, "verified");
     assertEquals(calls, ["image-output"]);
-    assertEquals(pipeline.plugins.map(({ id }) => id), ["test-image-plugin"]);
+    assertEquals(pipeline.plugins, [...existingPlugins, imagePlugin]);
     pipeline.remove("test-image-plugin");
-    assertEquals(pipeline.plugins, []);
+    assertEquals(pipeline.plugins, existingPlugins);
   });
 
   it("runs plugins on every stable process target and the pipeline target", async () => {
     const calls: string[] = [];
-    const pipeline = createBuildVerificationPipeline(
-      pipelineTestDependencies(),
+    const pipeline = suiteObserver.attach(
+      createBuildVerificationPipeline(
+        pipelineTestDependencies(),
+      ),
+      { name: "pipeline" },
     );
     for (
       const target of [
@@ -390,8 +421,11 @@ describe("BuildVerificationPipeline", () => {
   });
 
   it("rejects unknown plugin targets through Convee", () => {
-    const pipeline = createBuildVerificationPipeline(
-      pipelineTestDependencies(),
+    const pipeline = suiteObserver.attach(
+      createBuildVerificationPipeline(
+        pipelineTestDependencies(),
+      ),
+      { name: "pipeline" },
     );
     const unknown = plugin({ id: "unknown", target: "not-a-step" })
       .onOutput((output: unknown) => output);
@@ -401,11 +435,14 @@ describe("BuildVerificationPipeline", () => {
   it("preserves typed process errors through the pipeline", async () => {
     await assertRejects(
       () =>
-        createBuildVerificationPipeline(pipelineTestDependencies({
-          targetResolver: {
-            resolve: () => Promise.reject(new MissingTargetNetworkError()),
-          },
-        })).run(request()),
+        suiteObserver.attach(
+          createBuildVerificationPipeline(pipelineTestDependencies({
+            targetResolver: {
+              resolve: () => Promise.reject(new MissingTargetNetworkError()),
+            },
+          })),
+          { name: "createBuildVerificationPipeline" },
+        ).run(request()),
       MissingTargetNetworkError,
     );
   });
@@ -427,7 +464,11 @@ describe("BuildVerificationPipeline", () => {
     for (const name of required) {
       const dependencies = { ...pipelineTestDependencies(), [name]: undefined };
       const error = assertThrows(
-        () => createBuildVerificationPipeline(dependencies as never),
+        () =>
+          suiteObserver.attach(
+            createBuildVerificationPipeline(dependencies as never),
+            { name: "createBuildVerificationPipeline" },
+          ),
         ProcessDependencyMissingError,
       );
       assertEquals(error.meta?.data.dependency, name);
@@ -441,7 +482,10 @@ describe("BuildVerificationPipeline", () => {
       },
     });
     assertThrows(
-      () => createBuildVerificationPipeline(dependencies),
+      () =>
+        suiteObserver.attach(createBuildVerificationPipeline(dependencies), {
+          name: "createBuildVerificationPipeline",
+        }),
       BuildVerificationPipelineConstructionError,
     );
   });

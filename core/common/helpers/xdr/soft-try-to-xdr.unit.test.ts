@@ -1,6 +1,8 @@
 import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { softTryToXDR } from "@/common/helpers/xdr/soft-try-to-xdr.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("softTryToXDR", () => {
   it("should convert to XDR successfully", () => {

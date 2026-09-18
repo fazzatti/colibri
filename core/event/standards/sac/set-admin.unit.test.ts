@@ -1,5 +1,5 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Address, Keypair, xdr } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
 import {
@@ -8,6 +8,8 @@ import {
 } from "@/event/standards/sac/set-admin.ts";
 import { EventType } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 // Helper to create a mock Event
 function createMockEvent(
@@ -36,7 +38,7 @@ function createMockEvent(
 const assetString =
   "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN";
 
-describe("SetAdminEventSchema", () => {
+describe("SAC SetAdminEventSchema", () => {
   it("should have correct structure per CAP-0046-06", () => {
     assertEquals(SetAdminEventSchema.name, "set_admin");
     assertEquals(SetAdminEventSchema.topics.length, 2);
@@ -49,7 +51,7 @@ describe("SetAdminEventSchema", () => {
   });
 });
 
-describe("SetAdminEvent", () => {
+describe("SAC SetAdminEvent", () => {
   describe("is()", () => {
     it("should return true for valid SAC set_admin event", () => {
       const admin = Keypair.random().publicKey();

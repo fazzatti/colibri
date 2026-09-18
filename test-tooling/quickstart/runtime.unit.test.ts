@@ -5,7 +5,7 @@ import {
   assertStrictEquals,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { stub } from "@std/testing/mock";
 import { EventEmitter } from "node:events";
 import type { Container, ContainerInfo } from "dockerode";
@@ -29,6 +29,8 @@ import {
   streamContainerLogs,
   waitForLedgerReady,
 } from "@/quickstart/runtime.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 type PullCallback = (
   error: unknown,

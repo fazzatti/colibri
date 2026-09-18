@@ -1,10 +1,12 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
 import { BurnEvent, BurnEventSchema } from "@/event/standards/sep41/burn.ts";
 import { EventType } from "@/event/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 // Helper to create a mock Event
 function createMockEvent(
@@ -30,7 +32,7 @@ function createMockEvent(
   });
 }
 
-describe("BurnEventSchema", () => {
+describe("SEP-41 BurnEventSchema", () => {
   it("should have correct structure per SEP-41", () => {
     assertEquals(BurnEventSchema.name, "burn");
     assertEquals(BurnEventSchema.topics.length, 1);
@@ -41,7 +43,7 @@ describe("BurnEventSchema", () => {
   });
 });
 
-describe("BurnEvent", () => {
+describe("SEP-41 BurnEvent", () => {
   describe("is()", () => {
     it("should return true for valid burn event", () => {
       const from = Keypair.random().publicKey();

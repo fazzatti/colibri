@@ -4,7 +4,7 @@ import {
   assertRejects,
   assertStrictEquals,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { stub } from "@std/testing/mock";
 import {
   Account,
@@ -26,6 +26,8 @@ import {
 } from "@colibri/core";
 import { Operation } from "stellar-sdk";
 import { ExecutionRecorder } from "@/recorder/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const contractId = Address.contract(new Uint8Array(32))
   .toString() as ContractId;

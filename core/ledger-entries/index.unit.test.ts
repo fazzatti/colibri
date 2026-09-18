@@ -5,7 +5,7 @@ import {
   assertRejects,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Buffer } from "node:buffer";
 import { Address, Asset, Keypair, xdr } from "stellar-sdk";
 import type { Api, Server } from "stellar-sdk/rpc";
@@ -36,6 +36,8 @@ import type {
   LiquidityPoolId,
   Sha256Hash,
 } from "@/strkeys/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const ACCOUNT_ID = Keypair.random().publicKey() as Ed25519PublicKey;
 const SECOND_ACCOUNT_ID = Keypair.random().publicKey() as Ed25519PublicKey;

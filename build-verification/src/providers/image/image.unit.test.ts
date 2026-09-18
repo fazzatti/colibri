@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { sha256Hex } from "@/core/comparison/index.ts";
 import { DefaultSourceRetrievalPolicy } from "@/core/policy/source-retrieval.ts";
 import {
@@ -19,6 +19,8 @@ import {
   OciContainerImageResolver,
   resolveContainerImage,
 } from "@/providers/image/oci.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const encode = (value: unknown): Uint8Array =>
   new TextEncoder().encode(

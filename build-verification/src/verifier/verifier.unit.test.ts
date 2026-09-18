@@ -1,5 +1,5 @@
 import { assertEquals, assertStrictEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { plugin } from "convee";
 import type {
   ResolveBuildImageInput,
@@ -26,6 +26,8 @@ import {
 } from "@/verifier/defaults.ts";
 import { verifyContractBuild } from "@/verifier/function.ts";
 import type { ContractBuildVerifierOptions } from "@/verifier/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const request = () => ({
   mode: "outOfBand" as const,

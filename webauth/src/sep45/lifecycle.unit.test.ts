@@ -5,7 +5,7 @@ import {
   assertRejects,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import type { AuthEntrySigner, KeypairSigner } from "@colibri/core";
 import {
   Address,
@@ -43,6 +43,8 @@ import {
 import type { Sep45Rpc } from "@/sep45/types.ts";
 import { verifySep45Challenge } from "@/sep45/verify-challenge.ts";
 import { Sep45Code, Sep45Error, WebAuthCode, WebAuthError } from "@/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 type Fixture = ReturnType<typeof createWebAuthFixture>;
 

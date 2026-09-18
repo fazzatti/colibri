@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   ImagePolicyRejectedError,
   ImageReferencePolicyRejectedError,
@@ -19,6 +19,8 @@ import {
 } from "@/processes/testing.test.ts";
 import { ResolveBuildImageUnexpectedError } from "@/processes/resolve-build-image/error.ts";
 import { resolveBuildImage } from "@/processes/resolve-build-image/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const imagePolicy = (
   overrides: Partial<ContainerImagePolicy> = {},

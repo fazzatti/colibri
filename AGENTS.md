@@ -36,8 +36,8 @@ Soroban packages:
   swapping a pooled channel into classic and invoke-contract runs.
 - `plugins/sep29/`: opt-in, RPC-first memo requirement checking, standalone or
   at the send-transaction step. No memo mutation or default installation.
-- `test-tooling/`: Quickstart helpers and observational test execution recording with
-  optional JSON/HTML evidence and profiling artifacts.
+- `test-tooling/`: Quickstart helpers and observational test execution recording
+  with optional JSON/HTML evidence and profiling artifacts.
 - `_internal/`: internal-only fixtures, env helpers, compiled WASM files, Rust
   contracts, and test-only support code. This directory is not a published
   package.
@@ -98,6 +98,15 @@ deno task check:package-versions
 deno task check:crap
 deno task test:unit
 ```
+
+Package tests obtain their BDD helpers from
+`recordColibriTests(import.meta.url)` in
+`colibri-internal/tests/recorder/suite.ts`. The shared adapter delegates to
+`@std/testing/bdd`; use its observer for supported clients and pipelines while
+keeping existing assertions and callable bindings. Repository tooling tests in
+`_tools/` remain separate from the package suite. The normal package test tasks
+produce JSON/HTML evidence; direct `deno test` remains unrecorded. See
+`_internal/tests/README.md` for configuration and CI artifacts.
 
 Strongly consider integration coverage when you touch behavior that depends on
 real runtime boundaries, especially:

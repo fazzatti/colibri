@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Operation, SorobanDataBuilder } from "stellar-sdk";
 import {
   getTransactionInclusionFee,
@@ -9,6 +9,8 @@ import { NetworkConfig } from "@/network/index.ts";
 import { buildTransaction } from "@/processes/build-transaction/index.ts";
 import type { BuildTransactionInput } from "@/processes/build-transaction/types.ts";
 import * as ERROR from "@/processes/build-transaction/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const source = "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P";
 const operations = [

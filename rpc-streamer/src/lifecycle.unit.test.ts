@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   archiveErrorAllowsSkipping,
   completeArchiveLedger,
@@ -10,6 +10,8 @@ import {
   createEventStreamer,
   createLedgerStreamer,
 } from "@colibri/rpc-streamer";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("cooperative stream lifecycle", () => {
   it("only skips archive errors when the application deliberately permits it", () => {

@@ -3,11 +3,13 @@
  * @description Unit tests for XDR helper error classes
  */
 
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { assertEquals, assertInstanceOf } from "@std/assert";
 import * as ERROR from "@/common/helpers/xdr/error.ts";
 import { Code, ERROR_XDR } from "@/common/helpers/xdr/error.ts";
 import { ColibriError } from "@/error/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("XDR Helper Errors", () => {
   it("uses a unique value for every error code", () => {

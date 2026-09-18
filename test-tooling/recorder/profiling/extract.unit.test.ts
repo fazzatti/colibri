@@ -4,7 +4,7 @@ import {
   assertExists,
   assertStringIncludes,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   Address,
@@ -31,6 +31,8 @@ import {
   submitted,
 } from "@/recorder/profiling/extract.ts";
 import type { ExecutionEvidence } from "@/recorder/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const contract = Address.contract(new Uint8Array(32)).toString();
 const execution = (): ExecutionEvidence => ({

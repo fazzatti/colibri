@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects, assertStrictEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   Address,
@@ -18,6 +18,8 @@ import type { SimulateTransactionOutput } from "@/processes/simulate-transaction
 import * as ERROR from "@/processes/enforce-simulation/error.ts";
 import * as SimulateErrors from "@/processes/simulate-transaction/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const source = "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P";
 const rootAddress = Address.contract(Buffer.alloc(32, 1));

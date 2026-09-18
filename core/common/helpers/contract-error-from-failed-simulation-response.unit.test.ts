@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Address, xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { Buffer } from "node:buffer";
@@ -8,6 +8,8 @@ import {
   parseFailedSimulationResponse,
 } from "@/common/helpers/contract-error-from-failed-simulation-response.ts";
 import type { ContractId } from "@/strkeys/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const ROOT_CONTRACT_BYTES = Uint8Array.from(Buffer.alloc(32, 1));
 const SUB_CONTRACT_BYTES = Uint8Array.from(Buffer.alloc(32, 2));

@@ -5,7 +5,7 @@ import {
   assertInstanceOf,
   assertRejects,
 } from "@std/assert";
-import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Ledger, NetworkConfig } from "@colibri/core";
 import { Server } from "stellar-sdk/rpc";
 import { loadLedgerFixtures } from "colibri-internal/tests/fixtures/rpc/get_ledgers/index.ts";
@@ -23,6 +23,10 @@ import {
 import type { StreamedTransaction } from "@/variants/transaction/types.ts";
 import type { StreamedOperation } from "@/variants/operation/types.ts";
 import { RPCStreamerError, RPCStreamerErrorCode } from "@/errors.ts";
+
+const { afterAll, beforeAll, describe, it } = recordColibriTests(
+  import.meta.url,
+);
 
 const fixtures = loadLedgerFixtures();
 const first = fixtures[2];

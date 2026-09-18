@@ -4,19 +4,21 @@ import {
   assertInstanceOf,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { xdr } from "stellar-sdk";
 import {
-  EventFilterError,
-  EVENT_HAS_NO_TOPICS,
-  FAILED_TO_CHECK_FILTER_SEGMENT,
   Code,
   ERROR_EVF,
+  EVENT_HAS_NO_TOPICS,
+  EventFilterError,
+  FAILED_TO_CHECK_FILTER_SEGMENT,
 } from "@/event/event-filter/error.ts";
 import { EventFilter } from "@/event/event-filter/index.ts";
 import type { TopicFilter } from "@/event/event-filter/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import { EventType } from "@/event/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("EventFilter Errors", () => {
   describe("Code enum", () => {
@@ -37,7 +39,7 @@ describe("EventFilter Errors", () => {
       assertEquals(error.message, "Event has no topics");
       assertEquals(
         error.details,
-        "The event does not contain any topics, but the filter requires topics to match."
+        "The event does not contain any topics, but the filter requires topics to match.",
       );
       assertEquals(error.source, "@colibri/core/events/event-filter");
     });
@@ -72,7 +74,7 @@ describe("EventFilter Errors", () => {
       const error = new FAILED_TO_CHECK_FILTER_SEGMENT(
         filterSegment,
         eventSegment,
-        cause
+        cause,
       );
 
       assertExists(error);
@@ -81,7 +83,7 @@ describe("EventFilter Errors", () => {
       assertEquals(error.code, Code.FAILED_TO_CHECK_FILTER_SEGMENT);
       assertEquals(
         error.message,
-        "Failed to check filter segment against event segment"
+        "Failed to check filter segment against event segment",
       );
       assertEquals(error.source, "@colibri/core/events/event-filter");
       assertEquals(error.domain, "events");
@@ -95,7 +97,7 @@ describe("EventFilter Errors", () => {
       const error = new FAILED_TO_CHECK_FILTER_SEGMENT(
         filterSegment,
         eventSegment,
-        cause
+        cause,
       );
 
       assertExists(error);
@@ -110,7 +112,7 @@ describe("EventFilter Errors", () => {
       const error = new FAILED_TO_CHECK_FILTER_SEGMENT(
         filterSegment,
         eventSegment,
-        cause
+        cause,
       );
 
       assertExists(error.meta);
@@ -133,7 +135,7 @@ describe("EventFilter Errors", () => {
       const error = new FAILED_TO_CHECK_FILTER_SEGMENT(
         filterSegment,
         eventSegment,
-        cause
+        cause,
       );
 
       assertExists(error.details);
@@ -148,7 +150,7 @@ describe("EventFilter Errors", () => {
       const error = new FAILED_TO_CHECK_FILTER_SEGMENT(
         filterSegment,
         eventSegment,
-        cause
+        cause,
       );
 
       assertExists(error.details);
@@ -164,7 +166,7 @@ describe("EventFilter Errors", () => {
       const error = new FAILED_TO_CHECK_FILTER_SEGMENT(
         filterSegment,
         eventSegment,
-        cause
+        cause,
       );
 
       assertEquals(error.diagnostic, undefined);
@@ -177,7 +179,7 @@ describe("EventFilter Errors", () => {
       assertEquals(ERROR_EVF[Code.EVENT_HAS_NO_TOPICS], EVENT_HAS_NO_TOPICS);
       assertEquals(
         ERROR_EVF[Code.FAILED_TO_CHECK_FILTER_SEGMENT],
-        FAILED_TO_CHECK_FILTER_SEGMENT
+        FAILED_TO_CHECK_FILTER_SEGMENT,
       );
     });
 
@@ -210,7 +212,7 @@ describe("EventFilter Errors", () => {
       const error = new FAILED_TO_CHECK_FILTER_SEGMENT(
         filterSegment,
         eventSegment,
-        cause
+        cause,
       );
 
       assertEquals(error.meta.cause, cause);
@@ -225,7 +227,7 @@ describe("EventFilter Errors", () => {
       const error = new FAILED_TO_CHECK_FILTER_SEGMENT(
         filterSegment,
         eventSegment,
-        cause
+        cause,
       );
 
       const data = error.meta.data as {
@@ -235,11 +237,11 @@ describe("EventFilter Errors", () => {
 
       assertEquals(
         data.filterSegment.toXdr("base64"),
-        filterSegment.toXdr("base64")
+        filterSegment.toXdr("base64"),
       );
       assertEquals(
         data.eventSegment.toXdr("base64"),
-        eventSegment.toXdr("base64")
+        eventSegment.toXdr("base64"),
       );
     });
   });
@@ -513,7 +515,7 @@ describe("EventFilter", () => {
 
       assertEquals(
         filter.matchesTopics([xdr.ScVal.scvSymbol("transfer")]),
-        true
+        true,
       );
       assertEquals(filter.matchesTopics([xdr.ScVal.scvSymbol("mint")]), true);
       assertEquals(filter.matchesTopics([xdr.ScVal.scvSymbol("burn")]), false);
@@ -564,7 +566,7 @@ describe("EventFilter", () => {
 
       assertThrows(
         () => filter.matchesTopics(topics),
-        FAILED_TO_CHECK_FILTER_SEGMENT
+        FAILED_TO_CHECK_FILTER_SEGMENT,
       );
     });
   });

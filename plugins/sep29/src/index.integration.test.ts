@@ -4,7 +4,7 @@ import {
   assertRejects,
   assertStrictEquals,
 } from "@std/assert";
-import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   Asset,
@@ -34,6 +34,9 @@ import { createSep29Plugin } from "@/index.ts";
 import { SEP29_MEMO_REQUIRED_DATA_NAME } from "@/types.ts";
 import * as ERROR from "@/error.ts";
 
+const { afterAll, beforeAll, describe, it, observer: suiteObserver } =
+  recordColibriTests(import.meta.url);
+
 describe("SEP-29 on Quickstart", disableSanitizeConfig, () => {
   const ledger = new StellarTestLedger({
     containerName: `colibri-sep29-${crypto.randomUUID()}`,
@@ -60,7 +63,10 @@ describe("SEP-29 on Quickstart", disableSanitizeConfig, () => {
     return builder.setTimeout(60).build();
   };
   const execute = () =>
-    createClassicTransactionPipeline({ networkConfig, rpc });
+    suiteObserver.attach(
+      createClassicTransactionPipeline({ networkConfig, rpc }),
+      { name: "createClassicTransactionPipeline" },
+    );
 
   beforeAll(async () => {
     await ledger.start();

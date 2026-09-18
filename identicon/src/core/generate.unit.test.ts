@@ -4,13 +4,15 @@ import {
   assertNotEquals,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { StrKey } from "stellar-sdk";
 import { generateIdenticon } from "@/core/generate.ts";
 import { IdenticonCode, IdenticonError } from "@/error/index.ts";
 import fixtures from "colibri-internal/identicon/vectors.json" with {
   type: "json",
 };
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("SEP-33 reference generation", () => {
   for (const vector of fixtures.vectors) {

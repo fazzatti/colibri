@@ -15,9 +15,11 @@ import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-c
 import { mainnetArchiveTestConfig } from "colibri-internal/tests/mainnet-archive-config.ts";
 
 import { assertEquals, assertExists } from "@std/assert";
-import { afterEach, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { type Event, EventFilter, EventType, SACEvents } from "@colibri/core";
 import { RPCStreamer } from "@colibri/rpc-streamer";
+
+const { afterEach, describe, it } = recordColibriTests(import.meta.url);
 
 // =============================================================================
 // Test Constants

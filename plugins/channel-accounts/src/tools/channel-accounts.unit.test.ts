@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   ColibriError,
   LocalSigner,
@@ -11,6 +11,8 @@ import {
 import * as ERROR from "@/shared/error.ts";
 import type { ChannelAccount } from "@/shared/types.ts";
 import { ChannelAccounts } from "@/tools/channel-accounts.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const sponsor = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
 const channel = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());

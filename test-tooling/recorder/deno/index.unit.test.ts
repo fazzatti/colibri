@@ -1,9 +1,11 @@
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { join } from "node:path";
 import { aggregate } from "@/recorder/deno/aggregate.ts";
 import { summarize } from "@/recorder/report/aggregate.ts";
 import { TestRecorder } from "@/recorder/deno/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const recorderModule = new URL("./index.ts", import.meta.url).href;
 const cli = new URL("../cli/index.ts", import.meta.url).pathname;
@@ -11,7 +13,16 @@ const config = new URL("../../../deno.json", import.meta.url).pathname;
 
 describe("Deno recorder lifecycle", () => {
   it("keeps memory-only configuration free from filesystem output", async () => {
-    const recorder = new TestRecorder();
+    // The outer repository suite may itself be recorded. Isolate the subject's
+    // environment while constructing it, then restore the outer run immediately.
+    const directory = Deno.env.get("COLIBRI_RECORDER_DIRECTORY");
+    Deno.env.delete("COLIBRI_RECORDER_DIRECTORY");
+    let recorder: TestRecorder;
+    try {
+      recorder = new TestRecorder();
+    } finally {
+      if (directory) Deno.env.set("COLIBRI_RECORDER_DIRECTORY", directory);
+    }
     assertEquals(recorder.directory, undefined);
     await recorder.flush();
     assertEquals(recorder.report().records, []);

@@ -4,11 +4,13 @@ import {
   assertStrictEquals,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Address, xdr } from "stellar-sdk/base";
 import { LocalSigner, NetworkConfig } from "@colibri/core";
 import { createWalletAuthEntrySigner } from "@/wallets/auth-entry/index.ts";
 import { ColibriReactError } from "@/errors/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const account = LocalSigner.generateRandom().publicKey();
 const other = LocalSigner.generateRandom().publicKey();

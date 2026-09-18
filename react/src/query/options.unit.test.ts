@@ -1,9 +1,11 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { NetworkConfig } from "@colibri/core/network";
 import { createColibriConfig } from "@/context/config.ts";
 import { ColibriReactError } from "@/errors/index.ts";
 import { colibriQueryKey, queryValue } from "@/query/options.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 const network = NetworkConfig.TestNet();
 describe("query identity and serialization", () => {
   it("keys bigint, bytes, maps, missing fields and sorted objects without collisions", () => {

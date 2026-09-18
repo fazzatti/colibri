@@ -15,7 +15,7 @@ import {
   useContractEvents,
 } from "@/events/subscription.ts";
 import { assert, assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { createElement } from "react";
 import {
   QueryClient,
@@ -49,6 +49,10 @@ import {
 } from "@/contracts/read/hooks.ts";
 import { useContractInvoke } from "@/contracts/invoke/hooks.ts";
 import { useSigners } from "@/signers/hooks.ts";
+
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 describe(
   "React application flow on local Stellar",
   disableSanitizeConfig,
@@ -82,14 +86,17 @@ describe(
           timeout: 30,
           signers: [signer],
         };
-        const deployed = new Contract({
-          networkConfig: network,
-          contractConfig: {
-            wasm: await loadWasmFile(
-              "./_internal/tests/compiled-contracts/bindings_demo_contract.wasm",
-            ),
-          },
-        });
+        const deployed = suiteObserver.attach(
+          new Contract({
+            networkConfig: network,
+            contractConfig: {
+              wasm: await loadWasmFile(
+                "./_internal/tests/compiled-contracts/bindings_demo_contract.wasm",
+              ),
+            },
+          }),
+          { name: "deployed" },
+        );
         await deployed.uploadWasm(transactionConfig);
         await deployed.deploy({ config: transactionConfig });
         const config = createColibriConfig({

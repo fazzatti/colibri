@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { stub } from "@std/testing/mock";
 import { FakeTime } from "@std/testing/time";
 import { LocalSigner, NetworkConfig } from "@colibri/core";
@@ -7,6 +7,8 @@ import { WebAuthClient, WebAuthToken } from "@colibri/webauth";
 import { createColibriConfig } from "@/context/config.ts";
 import { createWebAuthSession } from "@/webauth/session/session.ts";
 import { ColibriReactError } from "@/errors/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 const signer = LocalSigner.generateRandom();
 const account = signer.publicKey();
 const network = NetworkConfig.TestNet();

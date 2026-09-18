@@ -147,6 +147,44 @@ describe("standalone HTML evidence report", () => {
       await page.close();
     }
   });
+  it("browses thousands of records without hiding duplicate file basenames", async () => {
+    const report = fixture();
+    report.records = Array.from({ length: 3000 }, (_, index) => ({
+      ...report.records[0],
+      id: `test-${index}`,
+      name: `test ${index}`,
+      file: `file:///checkout/colibri/package-${
+        Math.floor(index / 100)
+      }/index.unit.test.ts`,
+    }));
+    const path = join(directory, "large.html");
+    await Deno.writeTextFile(path, renderReport(report));
+    const page = await browser.newPage();
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    try {
+      await page.goto(pathToFileURL(path).href);
+      assertEquals(await page.locator("#tree > details").count(), 30);
+      assertStringIncludes(
+        await page.locator("#tree > details > summary").first().innerText(),
+        "package-0/index.unit.test.ts",
+      );
+      assertEquals(await page.locator("#tree > details[open]").count(), 0);
+      await page.getByText("package-29/index.unit.test.ts (100)", {
+        exact: true,
+      }).click();
+      await page.locator('[data-record="test-2999"]').click();
+      assertStringIncludes(
+        await page.locator("#detail").innerText(),
+        "test 2999",
+      );
+      await page.locator("#search").fill("test 1999");
+      assertEquals(await page.locator("#tree button").count(), 1);
+      assertEquals(errors, []);
+    } finally {
+      await page.close();
+    }
+  });
   it("handles empty and incomplete artifacts", async () => {
     const report = fixture();
     report.records = [];

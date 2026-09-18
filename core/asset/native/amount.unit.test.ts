@@ -1,14 +1,21 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { StellarAsset } from "@/asset/native/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { fromDecimals, toDecimals } from "@/common/helpers/format-units.ts";
 import * as ERROR from "@/asset/native/amount.error.ts";
 
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
+
 describe("StellarAsset exact units", () => {
-  const asset = StellarAsset.NativeXLM({
-    networkConfig: NetworkConfig.TestNet(),
-  });
+  const asset = suiteObserver.attach(
+    StellarAsset.NativeXLM({
+      networkConfig: NetworkConfig.TestNet(),
+    }),
+    { name: "asset" },
+  );
   it("round-trips boundaries without number coercion or floating point", () => {
     for (
       const [decimal, units] of [

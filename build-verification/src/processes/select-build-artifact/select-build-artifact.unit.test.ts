@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   BuildArtifactAmbiguousError,
   BuildArtifactNotFoundError,
@@ -11,6 +11,8 @@ import {
 } from "@/processes/testing.test.ts";
 import { SelectBuildArtifactUnexpectedError } from "@/processes/select-build-artifact/error.ts";
 import { selectBuildArtifact } from "@/processes/select-build-artifact/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const artifact = (path: string) => {
   const bytes = testWasm();

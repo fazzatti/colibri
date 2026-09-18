@@ -1,9 +1,11 @@
 import { assertEquals, assertStrictEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { LocalSigner, NativeAccount } from "@colibri/core";
 import { ChannelAccountsPool } from "@/plugin/pool.ts";
 import { CHANNEL_NOT_ALLOCATED } from "@/shared/error.ts";
 import type { ChannelAccount } from "@/shared/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const createChannel = (): ChannelAccount =>
   NativeAccount.fromMasterSigner(LocalSigner.generateRandom());

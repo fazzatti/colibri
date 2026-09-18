@@ -4,7 +4,7 @@ import {
   assertExists,
   assertInstanceOf,
 } from "@std/assert";
-import { beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { Asset, nativeToScVal, Operation, xdr } from "stellar-sdk";
 import { NetworkConfig } from "@/network/index.ts";
@@ -15,6 +15,10 @@ import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 import { NativeAccount } from "@/account/native/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import type { InvokeContractOutput } from "@/pipelines/invoke-contract/types.ts";
+
+const { beforeAll, describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 const assertConfirmedSorobanFee = (
   result: InvokeContractOutput,
@@ -76,13 +80,19 @@ describe(
 
     describe("Basic tests", () => {
       it("should create a pipeline", () => {
-        const invokePipe = createInvokeContractPipeline({ networkConfig });
+        const invokePipe = suiteObserver.attach(
+          createInvokeContractPipeline({ networkConfig }),
+          { name: "invokePipe" },
+        );
         assertInstanceOf(invokePipe, Object);
         assertEquals(invokePipe.id, "InvokeContractPipeline");
       });
 
       it("should invoke a contract and return the output of the pipeline", async () => {
-        const invokePipe = createInvokeContractPipeline({ networkConfig });
+        const invokePipe = suiteObserver.attach(
+          createInvokeContractPipeline({ networkConfig }),
+          { name: "invokePipe" },
+        );
         const decimalsOp = Operation.invokeContractFunction({
           function: "decimals",
           contract: xlmContractId,
@@ -109,7 +119,10 @@ describe(
           });
 
         const runWithFee = (fee: TransactionConfig["fee"]) =>
-          createInvokeContractPipeline({ networkConfig }).run({
+          suiteObserver.attach(
+            createInvokeContractPipeline({ networkConfig }),
+            { name: "createInvokeContractPipeline" },
+          ).run({
             operations: [decimalsOperation()],
             config: { ...txConfig, fee },
           });
@@ -166,7 +179,10 @@ describe(
       });
 
       it("should handle envelope and soroban authorization", async () => {
-        const invokePipe = createInvokeContractPipeline({ networkConfig });
+        const invokePipe = suiteObserver.attach(
+          createInvokeContractPipeline({ networkConfig }),
+          { name: "invokePipe" },
+        );
         const transferOp = Operation.invokeContractFunction({
           function: "transfer",
           contract: xlmContractId,

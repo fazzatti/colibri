@@ -1,6 +1,6 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { assertEquals } from "@std/assert";
-import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Buffer } from "node:buffer";
 import {
   Contract,
@@ -16,6 +16,9 @@ import { StellarTestLedger } from "@colibri/test-tooling";
 import { EXECUTABLE_REF_MANAGER_SPEC } from "colibri-internal/tests/specs/executable-ref-manager.ts";
 import type { VerificationNetwork } from "@/core/index.ts";
 import { ContractBuildVerifier } from "@/verifier/index.ts";
+
+const { afterAll, beforeAll, describe, it, observer: suiteObserver } =
+  recordColibriTests(import.meta.url);
 
 const FIXTURE_ROOT = new URL(
   "../../_internal/build-verification/fixtures/",
@@ -95,29 +98,38 @@ beforeAll(async () => {
     { rpcUrl: network.rpcUrl, allowHttp: true },
   );
 
-  const v1Contract = new Contract({
-    networkConfig,
-    contractConfig: { wasm: Buffer.from(v1) },
-  });
+  const v1Contract = suiteObserver.attach(
+    new Contract({
+      networkConfig,
+      contractConfig: { wasm: Buffer.from(v1) },
+    }),
+    { name: "v1Contract" },
+  );
   await v1Contract.uploadWasm(transactionConfig);
   v1WasmHash = v1Contract.getWasmHash();
   await v1Contract.deploy({ config: transactionConfig });
   contractId = v1Contract.getContractId();
 
-  const v2Contract = new Contract({
-    networkConfig,
-    contractConfig: { wasm: Buffer.from(v2) },
-  });
+  const v2Contract = suiteObserver.attach(
+    new Contract({
+      networkConfig,
+      contractConfig: { wasm: Buffer.from(v2) },
+    }),
+    { name: "v2Contract" },
+  );
   await v2Contract.uploadWasm(transactionConfig);
   v2WasmHash = v2Contract.getWasmHash();
 
-  executableRefManager = new Contract({
-    networkConfig,
-    contractConfig: {
-      wasm: executableRefManagerWasm,
-      spec: EXECUTABLE_REF_MANAGER_SPEC,
-    },
-  });
+  executableRefManager = suiteObserver.attach(
+    new Contract({
+      networkConfig,
+      contractConfig: {
+        wasm: executableRefManagerWasm,
+        spec: EXECUTABLE_REF_MANAGER_SPEC,
+      },
+    }),
+    { name: "executableRefManager" },
+  );
   await executableRefManager.uploadWasm(transactionConfig);
   await executableRefManager.deploy({ config: transactionConfig });
 
@@ -178,10 +190,13 @@ describe("Quickstart build-verification targets", disableSanitizeConfig, () => {
     assertEquals(byContractGranular.evidence.target?.wasmHash, V1_HASH);
     assertEquals(byContractGranular.evidence.network?.input, "rpcUrl");
 
-    const deployed = new Contract({
-      networkConfig,
-      contractConfig: { contractId },
-    });
+    const deployed = suiteObserver.attach(
+      new Contract({
+        networkConfig,
+        contractConfig: { contractId },
+      }),
+      { name: "deployed" },
+    );
     await deployed.loadSpecFromNetwork();
     assertEquals(await deployed.read({ method: "version" }), 1);
     await deployed.invoke({
@@ -217,10 +232,13 @@ describe("Quickstart build-verification targets", disableSanitizeConfig, () => {
       owner: executableRefManager.getContractId(),
       tag: EXTERNAL_REF_TAG,
     } as const;
-    const externalContract = new Contract({
-      networkConfig,
-      contractConfig: { externalRef },
-    });
+    const externalContract = suiteObserver.attach(
+      new Contract({
+        networkConfig,
+        contractConfig: { externalRef },
+      }),
+      { name: "externalContract" },
+    );
     await externalContract.loadSpecFromNetwork();
     await externalContract.deploy({ config: transactionConfig });
     assertEquals(await externalContract.read({ method: "version" }), 1);

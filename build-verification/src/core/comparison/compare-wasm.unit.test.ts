@@ -1,6 +1,8 @@
 import { assert, assertEquals, assertFalse } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { compareWasmBytes, sha256Hex } from "@/core/comparison/compare-wasm.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("core comparison", () => {
   it("hashes exact bytes as lowercase SHA-256", async () => {

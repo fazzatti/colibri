@@ -1,6 +1,6 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { assertEquals, assertExists, assertInstanceOf } from "@std/assert";
-import { afterEach, beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Asset,
   FeeBumpTransaction,
@@ -22,6 +22,9 @@ import {
   steps,
   type TransactionConfig,
 } from "@colibri/core";
+
+const { afterEach, beforeAll, describe, it, observer: suiteObserver } =
+  recordColibriTests(import.meta.url);
 
 describe(
   "[Testnet] FeeBump Plugin",
@@ -62,9 +65,12 @@ describe(
         },
       );
 
-      invokePipe = createInvokeContractPipeline({
-        networkConfig,
-      });
+      invokePipe = suiteObserver.attach(
+        createInvokeContractPipeline({
+          networkConfig,
+        }),
+        { name: "invokePipe" },
+      );
     });
 
     afterEach(() => {
@@ -96,9 +102,7 @@ describe(
           },
         });
 
-        invokePipe = createInvokeContractPipeline({
-          networkConfig,
-        });
+        invokePipe = createInvokeContractPipeline({ networkConfig });
 
         assertEquals(invokePipe.plugins.length, 0);
         invokePipe.use(plugin);
@@ -112,6 +116,8 @@ describe(
         assertExists(attachedPlugin);
         assertEquals(attachedPlugin.id, FEE_BUMP_PLUGIN_ID);
         assertEquals(attachedPlugin.target, steps.SEND_TRANSACTION_STEP_ID);
+        // Inspect the plugin's own composition before adding observation plugins.
+        suiteObserver.attach(invokePipe, { name: "invokePipe" });
       });
     });
     describe("Execute", () => {
@@ -135,11 +141,11 @@ describe(
         assertExists(plugin);
         assertEquals(plugin.id, FEE_BUMP_PLUGIN_ID);
 
-        invokePipe = createInvokeContractPipeline({
-          networkConfig,
-        });
+        invokePipe = createInvokeContractPipeline({ networkConfig });
         assertEquals(invokePipe.plugins.length, 0);
         invokePipe.use(plugin);
+        // Install the recorder after the fee-bump plugin to observe its output.
+        suiteObserver.attach(invokePipe, { name: "invokePipe" });
 
         const decimalsOp = Operation.invokeContractFunction({
           function: "decimals",

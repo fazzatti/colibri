@@ -1,5 +1,5 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { realpathSync } from "node:fs";
 import { Code, DOCKER_CONFIGURATION_ERROR } from "@/quickstart/error.ts";
 import {
@@ -10,6 +10,8 @@ import {
   resolvePublishedPortHost,
   resolveSocketCandidatePaths,
 } from "@/quickstart/docker.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Quickstart Docker helpers", () => {
   it("parseDockerHost supports unix, npipe, plain paths, tcp, and https", () => {

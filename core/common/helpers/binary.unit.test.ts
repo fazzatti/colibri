@@ -1,6 +1,8 @@
 import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { normalizeBinaryData } from "@/common/helpers/binary.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("normalizeBinaryData", () => {
   it("preserves Uint8Array bytes", () => {

@@ -4,7 +4,7 @@ import {
   assertRejects,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { stub } from "@std/testing/mock";
 import { Buffer } from "node:buffer";
 import { Contract } from "@/contract/index.ts";
@@ -31,6 +31,10 @@ import {
   buildContractDataLedgerKey,
   buildContractInstanceLedgerKey,
 } from "@/ledger-entries/index.ts";
+
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 class TestContract extends Contract {
   public requireNoContractIdForTest(): void {
@@ -135,32 +139,38 @@ describe("Contract", () => {
   describe("construction", () => {
     it("instantiates a contract without rpc", () => {
       const mockWasm = Buffer.from("mock");
-      const contract = new Contract({
-        networkConfig: NetworkConfig.CustomNet({
-          type: NetworkType.TESTNET,
-          networkPassphrase: "Test Network",
-          rpcUrl: "https://rpc.testnet.stellar.org",
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig: NetworkConfig.CustomNet({
+            type: NetworkType.TESTNET,
+            networkPassphrase: "Test Network",
+            rpcUrl: "https://rpc.testnet.stellar.org",
+          }),
+          contractConfig: {
+            wasm: mockWasm,
+          },
         }),
-        contractConfig: {
-          wasm: mockWasm,
-        },
-      });
+        { name: "contract" },
+      );
       assertExists(contract);
     });
 
     it("instantiates a contract with an rpc", () => {
       const mockWasm = Buffer.from("mock");
       const mockRpc = {} as unknown as Server;
-      const contract = new Contract({
-        networkConfig: NetworkConfig.CustomNet({
-          type: NetworkType.TESTNET,
-          networkPassphrase: "Test Network",
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig: NetworkConfig.CustomNet({
+            type: NetworkType.TESTNET,
+            networkPassphrase: "Test Network",
+          }),
+          contractConfig: {
+            wasm: mockWasm,
+          },
+          rpc: mockRpc,
         }),
-        contractConfig: {
-          wasm: mockWasm,
-        },
-        rpc: mockRpc,
-      });
+        { name: "contract" },
+      );
       assertExists(contract);
 
       assertEquals(contract.getWasm(), Uint8Array.from(mockWasm));
@@ -172,29 +182,38 @@ describe("Contract", () => {
         type: NetworkType.TESTNET,
         networkPassphrase: "Test Network",
       });
-      const uint8Contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasm: new Uint8Array([1, 2, 3]),
-        },
-        rpc: mockRpc,
-      });
+      const uint8Contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasm: new Uint8Array([1, 2, 3]),
+          },
+          rpc: mockRpc,
+        }),
+        { name: "uint8Contract" },
+      );
       const arrayBuffer = new Uint8Array([4, 5, 6]).buffer;
-      const arrayBufferContract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasm: arrayBuffer,
-        },
-        rpc: mockRpc,
-      });
+      const arrayBufferContract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasm: arrayBuffer,
+          },
+          rpc: mockRpc,
+        }),
+        { name: "arrayBufferContract" },
+      );
       const source = new Uint8Array([0, 7, 8, 9, 0]);
-      const dataViewContract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasm: new DataView(source.buffer, 1, 3),
-        },
-        rpc: mockRpc,
-      });
+      const dataViewContract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasm: new DataView(source.buffer, 1, 3),
+          },
+          rpc: mockRpc,
+        }),
+        { name: "dataViewContract" },
+      );
 
       assertEquals([...uint8Contract.getWasm()], [1, 2, 3]);
       assertEquals([...arrayBufferContract.getWasm()], [4, 5, 6]);
@@ -208,20 +227,23 @@ describe("Contract", () => {
       const readPlugin = createContractErrorMatcherPlugin({
         3477: { message: "Known read error" },
       });
-      const contract = new Contract({
-        networkConfig: NetworkConfig.CustomNet({
-          type: NetworkType.TESTNET,
-          networkPassphrase: "Test Network",
-        }),
-        contractConfig: {
-          wasmHash: "mockHash",
-          plugins: {
-            invokePipe: [invokePlugin],
-            readPipe: [readPlugin],
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig: NetworkConfig.CustomNet({
+            type: NetworkType.TESTNET,
+            networkPassphrase: "Test Network",
+          }),
+          contractConfig: {
+            wasmHash: "mockHash",
+            plugins: {
+              invokePipe: [invokePlugin],
+              readPipe: [readPlugin],
+            },
           },
-        },
-        rpc: mockRpc,
-      });
+          rpc: mockRpc,
+        }),
+        { name: "contract" },
+      );
 
       assertEquals(
         (contract.invokePipe.plugins as readonly unknown[]).includes(
@@ -240,14 +262,17 @@ describe("Contract", () => {
         owner: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
         tag: new Uint8Array([0x72, 0x65, 0x6c, 0xff]),
       } as const;
-      const contract = new Contract({
-        networkConfig: NetworkConfig.CustomNet({
-          type: NetworkType.TESTNET,
-          networkPassphrase: "Test Network",
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig: NetworkConfig.CustomNet({
+            type: NetworkType.TESTNET,
+            networkPassphrase: "Test Network",
+          }),
+          contractConfig: { externalRef },
+          rpc: {} as Server,
         }),
-        contractConfig: { externalRef },
-        rpc: {} as Server,
-      });
+        { name: "contract" },
+      );
 
       assertEquals(contract.getExternalRef(), externalRef);
       assertThrows(
@@ -265,31 +290,40 @@ describe("Contract", () => {
       };
       assertThrows(
         () =>
-          new Contract({
-            networkConfig: undefined as unknown as NetworkConfig,
-            contractConfig,
-          }),
+          suiteObserver.attach(
+            new Contract({
+              networkConfig: undefined as unknown as NetworkConfig,
+              contractConfig,
+            }),
+            { name: "Contract" },
+          ),
         ERROR.MISSING_ARG,
       );
 
       assertThrows(
         () =>
-          new Contract({
-            networkConfig: {} as unknown as NetworkConfig,
-            contractConfig,
-          }),
+          suiteObserver.attach(
+            new Contract({
+              networkConfig: {} as unknown as NetworkConfig,
+              contractConfig,
+            }),
+            { name: "Contract" },
+          ),
         ERROR.MISSING_ARG,
       );
 
       assertThrows(
         () =>
-          new Contract({
-            networkConfig: {
-              type: NetworkType.TESTNET,
-              networkPassphrase: "Test Network",
-            } as unknown as NetworkConfig,
-            contractConfig: undefined as unknown as ContractConfig,
-          }),
+          suiteObserver.attach(
+            new Contract({
+              networkConfig: {
+                type: NetworkType.TESTNET,
+                networkPassphrase: "Test Network",
+              } as unknown as NetworkConfig,
+              contractConfig: undefined as unknown as ContractConfig,
+            }),
+            { name: "Contract" },
+          ),
         ERROR.MISSING_ARG,
       );
     });
@@ -298,15 +332,18 @@ describe("Contract", () => {
       const mockWasm = Buffer.from("mock");
       assertThrows(
         () =>
-          new Contract({
-            networkConfig: NetworkConfig.CustomNet({
-              type: NetworkType.TESTNET,
-              networkPassphrase: "Test Network",
+          suiteObserver.attach(
+            new Contract({
+              networkConfig: NetworkConfig.CustomNet({
+                type: NetworkType.TESTNET,
+                networkPassphrase: "Test Network",
+              }),
+              contractConfig: {
+                wasm: mockWasm,
+              },
             }),
-            contractConfig: {
-              wasm: mockWasm,
-            },
-          }),
+            { name: "Contract" },
+          ),
         ERROR.MISSING_RPC_URL,
       );
     });
@@ -314,14 +351,17 @@ describe("Contract", () => {
     it("throws INVALID_CONTRACT_CONFIG if contractConfig doesn't match the required shape", () => {
       assertThrows(
         () =>
-          new Contract({
-            networkConfig: NetworkConfig.CustomNet({
-              type: NetworkType.TESTNET,
-              networkPassphrase: "Test Network",
-              rpcUrl: "https://rpc.testnet.stellar.org",
+          suiteObserver.attach(
+            new Contract({
+              networkConfig: NetworkConfig.CustomNet({
+                type: NetworkType.TESTNET,
+                networkPassphrase: "Test Network",
+                rpcUrl: "https://rpc.testnet.stellar.org",
+              }),
+              contractConfig: {} as unknown as ContractConfig,
             }),
-            contractConfig: {} as unknown as ContractConfig,
-          }),
+            { name: "Contract" },
+          ),
         ERROR.INVALID_CONTRACT_CONFIG,
       );
     });
@@ -329,21 +369,24 @@ describe("Contract", () => {
     it("throws a unique error when mutually exclusive sources are combined", () => {
       assertThrows(
         () =>
-          new Contract({
-            networkConfig: NetworkConfig.CustomNet({
-              type: NetworkType.TESTNET,
-              networkPassphrase: "Test Network",
+          suiteObserver.attach(
+            new Contract({
+              networkConfig: NetworkConfig.CustomNet({
+                type: NetworkType.TESTNET,
+                networkPassphrase: "Test Network",
+              }),
+              contractConfig: {
+                wasmHash: "ab".repeat(32),
+                externalRef: {
+                  owner:
+                    "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                  tag: "release",
+                },
+              } as unknown as ContractConfig,
+              rpc: {} as Server,
             }),
-            contractConfig: {
-              wasmHash: "ab".repeat(32),
-              externalRef: {
-                owner:
-                  "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-                tag: "release",
-              },
-            } as unknown as ContractConfig,
-            rpc: {} as Server,
-          }),
+            { name: "Contract" },
+          ),
         ERROR.CONTRACT_CONFIG_SOURCES_CONFLICT,
       );
     });
@@ -351,27 +394,33 @@ describe("Contract", () => {
     it("throws MISSING_REQUIRED_PROPERTY if contract is missing required properties", () => {
       const mockWasm = Buffer.from("mock");
       const mockRpc = {} as unknown as Server;
-      const contractWithWasm = new Contract({
-        networkConfig: NetworkConfig.CustomNet({
-          type: NetworkType.TESTNET,
-          networkPassphrase: "Test Network",
+      const contractWithWasm = suiteObserver.attach(
+        new Contract({
+          networkConfig: NetworkConfig.CustomNet({
+            type: NetworkType.TESTNET,
+            networkPassphrase: "Test Network",
+          }),
+          contractConfig: {
+            wasm: mockWasm,
+          },
+          rpc: mockRpc,
         }),
-        contractConfig: {
-          wasm: mockWasm,
-        },
-        rpc: mockRpc,
-      });
+        { name: "contractWithWasm" },
+      );
 
-      const contractWithWasmHash = new Contract({
-        networkConfig: NetworkConfig.CustomNet({
-          type: NetworkType.TESTNET,
-          networkPassphrase: "Test Network",
+      const contractWithWasmHash = suiteObserver.attach(
+        new Contract({
+          networkConfig: NetworkConfig.CustomNet({
+            type: NetworkType.TESTNET,
+            networkPassphrase: "Test Network",
+          }),
+          contractConfig: {
+            wasmHash: "mockHash",
+          },
+          rpc: mockRpc,
         }),
-        contractConfig: {
-          wasmHash: "mockHash",
-        },
-        rpc: mockRpc,
-      });
+        { name: "contractWithWasmHash" },
+      );
 
       assertThrows(
         () => contractWithWasm.getWasmHash(),
@@ -403,39 +452,48 @@ describe("Contract", () => {
     const mockRpc = {} as unknown as Server;
 
     it("executes the protected unset-property helpers", () => {
-      const contract = new TestContract({
-        networkConfig,
-        contractConfig: {
-          wasm: Buffer.from("mock"),
-        },
-        rpc: mockRpc,
-      });
+      const contract = suiteObserver.attach(
+        new TestContract({
+          networkConfig,
+          contractConfig: {
+            wasm: Buffer.from("mock"),
+          },
+          rpc: mockRpc,
+        }),
+        { name: "contract" },
+      );
 
       contract.requireNoContractIdForTest();
       contract.requireNoSpecForTest();
 
-      const contractWithId = new TestContract({
-        networkConfig,
-        contractConfig: {
-          contractId:
-            "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId,
-        },
-        rpc: mockRpc,
-      });
+      const contractWithId = suiteObserver.attach(
+        new TestContract({
+          networkConfig,
+          contractConfig: {
+            contractId:
+              "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId,
+          },
+          rpc: mockRpc,
+        }),
+        { name: "contractWithId" },
+      );
 
       assertThrows(
         () => contractWithId.requireNoContractIdForTest(),
         ERROR.PROPERTY_ALREADY_SET,
       );
 
-      const contractWithSpec = new TestContract({
-        networkConfig,
-        contractConfig: {
-          wasmHash: "mockHash",
-          spec: ERRORS_CONTRACT_SPEC,
-        },
-        rpc: mockRpc,
-      });
+      const contractWithSpec = suiteObserver.attach(
+        new TestContract({
+          networkConfig,
+          contractConfig: {
+            wasmHash: "mockHash",
+            spec: ERRORS_CONTRACT_SPEC,
+          },
+          rpc: mockRpc,
+        }),
+        { name: "contractWithSpec" },
+      );
       assertThrows(
         () => contractWithSpec.requireNoSpecForTest(),
         ERROR.PROPERTY_ALREADY_SET,
@@ -447,11 +505,14 @@ describe("Contract", () => {
         owner: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
         tag: new Uint8Array([0x72, 0x65, 0x6c, 0xff]),
       } as const;
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: { externalRef },
-        rpc: mockRpc,
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: { externalRef },
+          rpc: mockRpc,
+        }),
+        { name: "contract" },
+      );
       const salt = new Uint8Array(32).fill(7);
       let operation:
         | ReturnType<typeof Operation.createCustomContract>
@@ -501,11 +562,14 @@ describe("Contract", () => {
         "./_internal/tests/compiled-contracts/bindings_demo_contract.wasm",
       );
       const hash = await sha256Hex(wasm);
-      const client = new Contract({
-        networkConfig,
-        contractConfig: { wasmHash: hash },
-        rpc: rpcWithLedgerEntries([contractCodeEntry(hash, wasm)]),
-      });
+      const client = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: { wasmHash: hash },
+          rpc: rpcWithLedgerEntries([contractCodeEntry(hash, wasm)]),
+        }),
+        { name: "client" },
+      );
       await client.loadContractEventsFromWasm();
       assertEquals([...client.getWasm()], [...wasm]);
       assertEquals(client.events.get("CountChanged").name, "CountChanged");
@@ -519,11 +583,14 @@ describe("Contract", () => {
       const tag = new Uint8Array([0x72, 0x65, 0x6c, 0xff]);
       const code = contractCodeEntry(hash, wasm);
 
-      const byHash = new Contract({
-        networkConfig,
-        contractConfig: { wasmHash: hash },
-        rpc: rpcWithLedgerEntries([code]),
-      });
+      const byHash = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: { wasmHash: hash },
+          rpc: rpcWithLedgerEntries([code]),
+        }),
+        { name: "byHash" },
+      );
       await byHash.loadSpecFromNetwork();
       assertEquals([...byHash.getWasm()], [...wasm]);
       assertExists(byHash.getSpec());
@@ -533,66 +600,81 @@ describe("Contract", () => {
         code.key.toXdr("base64"),
       );
 
-      const byContract = new Contract({
-        networkConfig,
-        contractConfig: { contractId: NETWORK_CONTRACT_ID },
-        rpc: rpcWithLedgerEntries([
-          contractInstanceEntry(
-            xdr.ContractExecutable.contractExecutableWasm(
-              xdr.decodeBytes(hash, "hex"),
+      const byContract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: { contractId: NETWORK_CONTRACT_ID },
+          rpc: rpcWithLedgerEntries([
+            contractInstanceEntry(
+              xdr.ContractExecutable.contractExecutableWasm(
+                xdr.decodeBytes(hash, "hex"),
+              ),
             ),
-          ),
-          code,
-        ]),
-      });
+            code,
+          ]),
+        }),
+        { name: "byContract" },
+      );
       await byContract.loadSpecFromNetwork();
       assertEquals(byContract.getWasmHash(), hash);
 
-      const byExternalRef = new Contract({
-        networkConfig,
-        contractConfig: {
-          externalRef: { owner: NETWORK_CONTRACT_ID, tag },
-        },
-        rpc: rpcWithLedgerEntries([
-          externalReferenceEntry(tag, hash),
-          code,
-        ]),
-      });
+      const byExternalRef = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            externalRef: { owner: NETWORK_CONTRACT_ID, tag },
+          },
+          rpc: rpcWithLedgerEntries([
+            externalReferenceEntry(tag, hash),
+            code,
+          ]),
+        }),
+        { name: "byExternalRef" },
+      );
       await byExternalRef.loadSpecFromNetwork();
       assertEquals([...byExternalRef.getWasm()], [...wasm]);
       assertEquals(byExternalRef.getWasmHash(), hash);
     });
 
     it("keeps network executable lookup failures occurrence-specific", async () => {
-      const localWasm = new Contract({
-        networkConfig,
-        contractConfig: { wasm: new Uint8Array([1]) },
-        rpc: rpcWithLedgerEntries([]),
-      });
+      const localWasm = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: { wasm: new Uint8Array([1]) },
+          rpc: rpcWithLedgerEntries([]),
+        }),
+        { name: "localWasm" },
+      );
       await assertRejects(
         () => localWasm.loadSpecFromNetwork(),
         ERROR.NETWORK_EXECUTABLE_NOT_AVAILABLE,
       );
 
-      const missingCode = new Contract({
-        networkConfig,
-        contractConfig: { wasmHash: "ab".repeat(32) },
-        rpc: rpcWithLedgerEntries([]),
-      });
+      const missingCode = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: { wasmHash: "ab".repeat(32) },
+          rpc: rpcWithLedgerEntries([]),
+        }),
+        { name: "missingCode" },
+      );
       await assertRejects(
         () => missingCode.loadSpecFromNetwork(),
         ERROR.CONTRACT_CODE_NOT_FOUND,
       );
 
-      const stellarAsset = new Contract({
-        networkConfig,
-        contractConfig: { contractId: NETWORK_CONTRACT_ID },
-        rpc: rpcWithLedgerEntries([
-          contractInstanceEntry(
-            xdr.ContractExecutable.contractExecutableStellarAsset(),
-          ),
-        ]),
-      });
+      const stellarAsset = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: { contractId: NETWORK_CONTRACT_ID },
+          rpc: rpcWithLedgerEntries([
+            contractInstanceEntry(
+              xdr.ContractExecutable.contractExecutableStellarAsset(),
+            ),
+          ]),
+        }),
+        { name: "stellarAsset" },
+      );
       await assertRejects(
         () => stellarAsset.loadSpecFromNetwork(),
         ERROR.STELLAR_ASSET_EXECUTABLE_HAS_NO_WASM,
@@ -600,14 +682,17 @@ describe("Contract", () => {
     });
 
     it("loads contract errors from an existing spec and installs the matcher on both owned pipelines", async () => {
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasmHash: "mockHash",
-          spec: ERRORS_CONTRACT_SPEC,
-        },
-        rpc: mockRpc,
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasmHash: "mockHash",
+            spec: ERRORS_CONTRACT_SPEC,
+          },
+          rpc: mockRpc,
+        }),
+        { name: "contract" },
+      );
 
       const errors = await contract.loadContractErrorsFromWasm({
         strategy: "any",
@@ -628,13 +713,16 @@ describe("Contract", () => {
       const wasm = await loadWasmFile(
         "./_internal/tests/compiled-contracts/errors_contract.wasm",
       );
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasm,
-        },
-        rpc: mockRpc,
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasm,
+          },
+          rpc: mockRpc,
+        }),
+        { name: "contract" },
+      );
 
       const errors = await contract.loadContractErrorsFromWasm({
         strategy: "any",
@@ -652,14 +740,17 @@ describe("Contract", () => {
     });
 
     it("loads contract errors from deployed wasm when no spec or local wasm is available", async () => {
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          contractId:
-            "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId,
-        },
-        rpc: mockRpc,
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            contractId:
+              "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId,
+          },
+          rpc: mockRpc,
+        }),
+        { name: "contract" },
+      );
       const loadSpecStub = stub(
         contract,
         "loadSpecFromNetwork",
@@ -681,15 +772,18 @@ describe("Contract", () => {
     });
 
     it("uses the bound contract id for contract-id error loading", async () => {
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          contractId:
-            "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId,
-          spec: ERRORS_CONTRACT_SPEC,
-        },
-        rpc: mockRpc,
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            contractId:
+              "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId,
+            spec: ERRORS_CONTRACT_SPEC,
+          },
+          rpc: mockRpc,
+        }),
+        { name: "contract" },
+      );
 
       const errors = await contract.loadContractErrorsFromWasm({
         strategy: "contract-id",
@@ -707,14 +801,17 @@ describe("Contract", () => {
     });
 
     it("uses an explicit contract id for contract-id error loading", async () => {
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasmHash: "mockHash",
-          spec: ERRORS_CONTRACT_SPEC,
-        },
-        rpc: mockRpc,
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasmHash: "mockHash",
+            spec: ERRORS_CONTRACT_SPEC,
+          },
+          rpc: mockRpc,
+        }),
+        { name: "contract" },
+      );
 
       const errors = await contract.loadContractErrorsFromWasm({
         strategy: "contract-id",
@@ -734,14 +831,17 @@ describe("Contract", () => {
     });
 
     it("loads contract errors for issued-from matching", async () => {
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasmHash: "mockHash",
-          spec: ERRORS_CONTRACT_SPEC,
-        },
-        rpc: mockRpc,
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasmHash: "mockHash",
+            spec: ERRORS_CONTRACT_SPEC,
+          },
+          rpc: mockRpc,
+        }),
+        { name: "contract" },
+      );
 
       const errors = await contract.loadContractErrorsFromWasm({
         strategy: "issued-from",
@@ -760,18 +860,21 @@ describe("Contract", () => {
     });
 
     it("does not install the matcher when the loaded spec has no contract errors", async () => {
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasmHash: "mockHash",
-          spec: new Spec(
-            ERRORS_CONTRACT_SPEC.entries.filter((entry) =>
-              entry.type !== "scSpecEntryUdtErrorEnumV0"
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasmHash: "mockHash",
+            spec: new Spec(
+              ERRORS_CONTRACT_SPEC.entries.filter((entry) =>
+                entry.type !== "scSpecEntryUdtErrorEnumV0"
+              ),
             ),
-          ),
-        },
-        rpc: mockRpc,
-      });
+          },
+          rpc: mockRpc,
+        }),
+        { name: "contract" },
+      );
 
       const errors = await contract.loadContractErrorsFromWasm({
         strategy: "any",
@@ -789,17 +892,20 @@ describe("Contract", () => {
     });
 
     it("throws when loading contract errors would add a second matcher to the invoke pipeline", async () => {
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasmHash: "mockHash",
-          spec: ERRORS_CONTRACT_SPEC,
-          plugins: {
-            invokePipe: [createContractErrorMatcherPlugin(ErrorByCode)],
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasmHash: "mockHash",
+            spec: ERRORS_CONTRACT_SPEC,
+            plugins: {
+              invokePipe: [createContractErrorMatcherPlugin(ErrorByCode)],
+            },
           },
-        },
-        rpc: mockRpc,
-      });
+          rpc: mockRpc,
+        }),
+        { name: "contract" },
+      );
 
       await assertRejects(
         async () =>
@@ -811,17 +917,20 @@ describe("Contract", () => {
     });
 
     it("throws when loading contract errors would add a second matcher to the read pipeline", async () => {
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          wasmHash: "mockHash",
-          spec: ERRORS_CONTRACT_SPEC,
-          plugins: {
-            readPipe: [createContractErrorMatcherPlugin(ErrorByCode)],
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            wasmHash: "mockHash",
+            spec: ERRORS_CONTRACT_SPEC,
+            plugins: {
+              readPipe: [createContractErrorMatcherPlugin(ErrorByCode)],
+            },
           },
-        },
-        rpc: mockRpc,
-      });
+          rpc: mockRpc,
+        }),
+        { name: "contract" },
+      );
 
       await assertRejects(
         async () =>
@@ -855,15 +964,18 @@ describe("Contract", () => {
         (_method: string, result: unknown) => result,
       );
       void [encode, decode];
-      const contract = new Contract({
-        networkConfig,
-        contractConfig: {
-          contractId:
-            "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId,
-          spec,
-        },
-        rpc: mockRpc,
-      });
+      const contract = suiteObserver.attach(
+        new Contract({
+          networkConfig,
+          contractConfig: {
+            contractId:
+              "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" as ContractId,
+            spec,
+          },
+          rpc: mockRpc,
+        }),
+        { name: "contract" },
+      );
 
       let runInput:
         | { operations: ReturnType<typeof Operation.invokeContractFunction>[] }

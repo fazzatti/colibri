@@ -4,7 +4,7 @@ import {
   assertInstanceOf,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Buffer } from "node:buffer";
 import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
 import {
@@ -24,6 +24,8 @@ import type {
   ScValParsed,
   ScValRecord,
 } from "@/common/helpers/xdr/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("ScVal Parser", () => {
   describe("parseScVal", () => {

@@ -1,5 +1,5 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   DuplicateSep58MetadataError,
   InvalidSep58MetadataError,
@@ -9,6 +9,8 @@ import { createContractBuildArguments } from "@/core/recipe/build-command.ts";
 import { parseOutOfBandRecipe } from "@/core/recipe/parse-out-of-band.ts";
 import { parseSep58Recipe } from "@/core/recipe/parse-sep58.ts";
 import { isContractBuildVerificationInput } from "@/core/recipe/validate.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const hash = "c".repeat(64);
 

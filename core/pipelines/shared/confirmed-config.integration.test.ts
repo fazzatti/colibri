@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   Asset,
@@ -27,6 +27,9 @@ import { getTransactionResourceFee } from "@/common/helpers/transaction-fee.ts";
 import { StellarTestLedger } from "@colibri/test-tooling";
 import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
+
+const { afterAll, beforeAll, describe, it, observer: suiteObserver } =
+  recordColibriTests(import.meta.url);
 
 describe(
   "[Quickstart] confirmed transaction configuration",
@@ -69,7 +72,10 @@ describe(
         const operationSource = operationSourceKind === "none"
           ? undefined
           : operationSigner.publicKey();
-        const execute = createInvokeContractPipeline({ networkConfig, rpc });
+        const execute = suiteObserver.attach(
+          createInvokeContractPipeline({ networkConfig, rpc }),
+          { name: "execute" },
+        );
         const before = Math.floor(Date.now() / 1000);
         const result = await execute({
           operations: [
@@ -103,7 +109,10 @@ describe(
     }
 
     it("preserves an explicit muxed operation source for the node to reject, rather than silently replacing it", async () => {
-      const execute = createInvokeContractPipeline({ networkConfig, rpc });
+      const execute = suiteObserver.attach(
+        createInvokeContractPipeline({ networkConfig, rpc }),
+        { name: "execute" },
+      );
       const operationSource = new MuxedAccount(
         new Account(operationSigner.publicKey(), "0"),
         "456",
@@ -128,7 +137,10 @@ describe(
     });
 
     it("confirms classic exact inclusion and finite timeout with an extra signer", async () => {
-      const execute = createClassicTransactionPipeline({ networkConfig, rpc });
+      const execute = suiteObserver.attach(
+        createClassicTransactionPipeline({ networkConfig, rpc }),
+        { name: "execute" },
+      );
       const before = Math.floor(Date.now() / 1000);
       const result = await execute({
         operations: [Operation.setOptions({}), Operation.setOptions({})],

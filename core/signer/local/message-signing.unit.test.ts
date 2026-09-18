@@ -1,11 +1,13 @@
 import { assertEquals, assertInstanceOf, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Keypair, xdr } from "stellar-sdk";
 import { LocalSigner } from "@/signer/local/index.ts";
 import { isMessageSigner, isSigner } from "@/common/type-guards/is-signer.ts";
 import type { MessageSigner } from "@/signer/types.ts";
 import * as ERROR from "@/signer/local/error.ts";
 import { toUint8Array } from "@/common/helpers/internal-bytes.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 const decodeBase64 = (value: string): Uint8Array =>
   xdr.decodeBytes(value, "base64");
 

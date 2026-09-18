@@ -1,7 +1,7 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import type { Buffer } from "node:buffer";
 import { Asset, Operation } from "stellar-sdk";
 import { StellarTestLedger } from "@colibri/test-tooling";
@@ -22,6 +22,9 @@ import { Contract } from "@/contract/index.ts";
 import * as ERROR from "@/ledger-entries/error.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
+
+const { afterAll, beforeAll, describe, it, observer: suiteObserver } =
+  recordColibriTests(import.meta.url);
 
 describe("LedgerEntries integration", disableSanitizeConfig, () => {
   const testLedger = new StellarTestLedger({
@@ -73,7 +76,10 @@ describe("LedgerEntries integration", disableSanitizeConfig, () => {
     networkConfig = NetworkConfig.CustomNet(
       await testLedger.getNetworkConfiguration(),
     );
-    classicPipe = createClassicTransactionPipeline({ networkConfig });
+    classicPipe = suiteObserver.attach(
+      createClassicTransactionPipeline({ networkConfig }),
+      { name: "classicPipe" },
+    );
     ledger = new LedgerEntries({ networkConfig });
     adminConfig = {
       fee: "10000000",
@@ -128,12 +134,15 @@ describe("LedgerEntries integration", disableSanitizeConfig, () => {
       "./_internal/tests/compiled-contracts/types_harness.wasm",
     );
 
-    const contract = new Contract({
-      networkConfig,
-      contractConfig: {
-        wasm: wasm as Buffer,
-      },
-    });
+    const contract = suiteObserver.attach(
+      new Contract({
+        networkConfig,
+        contractConfig: {
+          wasm: wasm as Buffer,
+        },
+      }),
+      { name: "contract" },
+    );
 
     await contract.uploadWasm(adminConfig);
     await contract.deploy({ config: adminConfig });

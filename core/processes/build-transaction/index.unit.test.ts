@@ -1,5 +1,5 @@
 import { assertEquals, assertInstanceOf } from "@std/assert";
-import { beforeEach, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import type { Server } from "stellar-sdk/rpc";
 import {
   Account,
@@ -16,6 +16,8 @@ import { buildTransaction } from "@/processes/build-transaction/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import type { BuildTransactionInput } from "@/processes/build-transaction/types.ts";
 import type { MuxedAddress } from "@/strkeys/types.ts";
+
+const { beforeEach, describe, it } = recordColibriTests(import.meta.url);
 
 let isGetAccountCalled = false;
 let loadedAccountAddress: string | undefined;

@@ -20,6 +20,10 @@ const number = (n) =>
 let selected, sortKey = "duration", descending = true, page = 0;
 const perPage = 50;
 const tests = report.records.filter((r) => r.kind === "test");
+const fileNames = [...new Set(report.records.map((r) => r.file))];
+const common = (fileNames[0] || "").split("/").slice(0, -1);
+while (common.length && !fileNames.every((file) => file.startsWith(common.join("/") + "/"))) common.pop();
+const fileLabel = (file) => common.length ? file.slice(common.join("/").length + 1) : file;
 for (
   const [name, value] of [
     ["Tests", tests.length],
@@ -47,7 +51,7 @@ for (const warning of report.diagnostics) {
 }
 function choices(id, values) {
   for (const value of [...new Set(values.filter(Boolean))].sort()) {
-    const option = el("option", value);
+    const option = el("option", id === "file" ? fileLabel(value) : value);
     option.value = value;
     $(id).append(option);
   }
@@ -180,11 +184,11 @@ function evidence() {
     files.set(r.file, items);
   }
   if (!files.size) host.append(el("p", "No matching evidence.", "empty"));
-  for (const [file, records] of files) {
+  for (const [file, records] of [...files].sort(([a], [b]) => a.localeCompare(b))) {
     const group = el("details");
-    group.open = true;
+    group.open = files.size <= 10;
     group.append(
-      el("summary", file.split("/").at(-1) + " (" + records.length + ")"),
+      el("summary", fileLabel(file) + " (" + records.length + ")"),
     );
     group.title = file;
     for (const record of records.slice(0, 200)) {

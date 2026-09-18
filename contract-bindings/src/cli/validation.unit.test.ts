@@ -1,9 +1,11 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { stub } from "@std/testing/mock";
 import { validateCliValue } from "@/cli/validation.ts";
 import { BindingError } from "@/error.ts";
 import { contractId } from "colibri-internal/tests/binding-fixtures.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("CLI field validation", () => {
   it("stops checking missing output parents at the filesystem root", async () => {

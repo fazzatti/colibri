@@ -1,6 +1,8 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { snapshot } from "@/recorder/serialization/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("evidence snapshots", () => {
   it("redacts secrets and skips getters and client traversal", () => {

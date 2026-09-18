@@ -1,10 +1,12 @@
 import { assert, assertEquals, assertStrictEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { ColibriError, GeneralCode, UnexpectedError } from "@/error/index.ts";
 import { UNEXPECTED_ERROR as ContractUnexpectedError } from "@/contract/error.ts";
 import { UNEXPECTED_ERROR as AssetUnexpectedError } from "@/asset/sac/error.ts";
 import { errorContext } from "@/common/helpers/error-context.ts";
 import { IsFalsyError } from "@/common/helpers/boolean.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 describe("Core concrete error compatibility", () => {
   it("keeps family identity, consumer extension points, fallback and reserved codes", () => {
     const cause = new Error("failure");

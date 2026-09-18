@@ -1,6 +1,6 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
-import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
+import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
 import {
   TransferEvent,
@@ -10,14 +10,16 @@ import { EventType } from "@/event/types.ts";
 import { isEventMuxedData } from "@/event/standards/cap67/index.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 
+const { describe, it } = recordColibriTests(import.meta.url);
+
 // Helper to create a mock Event
 function createMockEvent(
   topics: xdr.ScVal[],
   value: xdr.ScVal,
-  contractId?: string
+  contractId?: string,
 ): Event {
-  const contract =
-    contractId ?? "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+  const contract = contractId ??
+    "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
   return new Event({
     id: "0000000000000000000-0000000000",
@@ -34,7 +36,7 @@ function createMockEvent(
   });
 }
 
-describe("TransferEventSchema", () => {
+describe("SAC TransferEventSchema", () => {
   it("should have correct structure per CAP-0046-06", () => {
     assertEquals(TransferEventSchema.name, "transfer");
     assertEquals(TransferEventSchema.topics.length, 3);
@@ -49,7 +51,7 @@ describe("TransferEventSchema", () => {
   });
 });
 
-describe("TransferEvent", () => {
+describe("SAC TransferEvent", () => {
   const assetString =
     "KALE:GBDVX4VELCDSQ54KQJYTNHXAHFLBCA77ZY2USQBM4CSHTTV7DME7KALE";
 
@@ -64,7 +66,7 @@ describe("TransferEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(TransferEvent.is(event), true);
@@ -80,7 +82,7 @@ describe("TransferEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString("native"),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(TransferEvent.is(event), true);
@@ -95,7 +97,7 @@ describe("TransferEvent", () => {
           new Address(from).toScVal(),
           new Address(to).toScVal(),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(TransferEvent.is(event), false);
@@ -111,7 +113,7 @@ describe("TransferEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(TransferEvent.is(event), false);
@@ -139,7 +141,7 @@ describe("TransferEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        muxedValue
+        muxedValue,
       );
 
       assertEquals(TransferEvent.is(event), true);
@@ -154,7 +156,7 @@ describe("TransferEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(TransferEvent.is(event), false);
@@ -169,7 +171,7 @@ describe("TransferEvent", () => {
           xdr.ScVal.scvU32(456), // non-string type instead of address
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(TransferEvent.is(event), false);
@@ -185,7 +187,7 @@ describe("TransferEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvU32(789), // non-string type instead of asset string
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(TransferEvent.is(event), false);
@@ -201,7 +203,7 @@ describe("TransferEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        xdr.ScVal.scvString("invalid") // not i128 or muxed map
+        xdr.ScVal.scvString("invalid"), // not i128 or muxed map
       );
 
       assertEquals(TransferEvent.is(event), false);
@@ -220,7 +222,7 @@ describe("TransferEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(amount, { type: "i128" })
+        nativeToScVal(amount, { type: "i128" }),
       );
 
       const transferEvent = TransferEvent.fromEvent(event);
@@ -242,14 +244,14 @@ describe("TransferEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString("invalid-asset"),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       const transferEvent = TransferEvent.fromEvent(event);
       assertThrows(
         () => transferEvent.asset,
         Error,
-        "Invalid SEP-11 asset format: invalid-asset"
+        "Invalid SEP-11 asset format: invalid-asset",
       );
     });
 
@@ -262,13 +264,13 @@ describe("TransferEvent", () => {
           new Address(from).toScVal(),
           new Address(to).toScVal(),
         ],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       assertThrows(
         () => TransferEvent.fromEvent(event),
         Error,
-        "does not match transfer schema"
+        "does not match transfer schema",
       );
     });
   });
@@ -284,7 +286,7 @@ describe("TransferEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       const transferEvent = TransferEvent.fromEvent(event);
@@ -306,7 +308,7 @@ describe("TransferEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       const transferEvent = TransferEvent.fromEvent(event);
@@ -327,7 +329,7 @@ describe("TransferEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       const transferEvent = TransferEvent.fromEvent(event);
@@ -347,7 +349,7 @@ describe("TransferEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(5000n, { type: "i128" })
+        nativeToScVal(5000n, { type: "i128" }),
       );
 
       const transferEvent = TransferEvent.fromEvent(event);
@@ -372,7 +374,7 @@ describe("TransferEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(1000n, { type: "i128" })
+        nativeToScVal(1000n, { type: "i128" }),
       );
 
       const transferEvent = TransferEvent.fromEvent(event);
@@ -385,7 +387,7 @@ describe("TransferEvent", () => {
       assertThrows(
         () => transferEvent.amount,
         Error,
-        "Invalid transfer event data format"
+        "Invalid transfer event data format",
       );
     });
   });
@@ -425,7 +427,7 @@ describe("TransferEvent", () => {
   });
 });
 
-describe("isTransferMuxedData", () => {
+describe("SAC isTransferMuxedData", () => {
   it("should return true for muxed data structure", () => {
     const data = { amount: 100n, to_muxed_id: 12345n };
     assertEquals(isEventMuxedData(data), true);

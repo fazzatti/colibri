@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { stub } from "@std/testing/mock";
 import { createElement } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -39,6 +39,8 @@ import { useSignMessage } from "@/signers/hooks.ts";
 import { useSimulateSorobanTransaction } from "@/transactions/simulation/hook.ts";
 import { useIdenticon } from "@/identicon/hooks.ts";
 import { ColibriReactError, ReactCode } from "@/errors/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const network = NetworkConfig.TestNet();
 const signer = LocalSigner.generateRandom();

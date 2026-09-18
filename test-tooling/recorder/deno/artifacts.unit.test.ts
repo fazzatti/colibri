@@ -5,7 +5,7 @@ import {
   assertStringIncludes,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { join } from "node:path";
 import { stub } from "@std/testing/mock";
 import { Collector } from "@/recorder/runtime/collector.ts";
@@ -14,6 +14,8 @@ import { aggregate } from "@/recorder/deno/aggregate.ts";
 import { main } from "@/recorder/cli/index.ts";
 import { RecorderError } from "@/recorder/error.ts";
 import { reconcileJUnit } from "@/recorder/deno/junit.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 async function temporary(
   fn: (directory: string) => Promise<void>,
@@ -127,6 +129,20 @@ describe("recorder artifacts and failure handling", () => {
       "/tmp",
     );
     assertEquals(escaped.records[0].runnerStatus, "skipped");
+  });
+  it("matches std BDD's synthetic global suite for file-level hooks", () => {
+    const collector = new Collector();
+    const record = collector.record("test", "works", { file: "test.ts" });
+    record.path = ["suite", "works"];
+    collector.emit(record);
+    const report = collector.report();
+    reconcileJUnit(
+      report,
+      '<testsuites><testcase classname="wrapper.ts" name="global &gt; suite &gt; works"/></testsuites>',
+      "/tmp",
+    );
+    assertEquals(report.records[0].runnerStatus, "passed");
+    assertEquals(report.diagnostics, []);
   });
   it("rejects a non-directory journal location and malformed testcase attributes", () =>
     temporary(async (directory) => {

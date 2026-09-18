@@ -1,7 +1,9 @@
 import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Keypair, Networks } from "stellar-sdk";
 import { calculateContractId } from "@/common/helpers/calculate-contract-id.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("calculateContractId", () => {
   const source = Keypair.fromRawEd25519Seed(new Uint8Array(32)).publicKey();

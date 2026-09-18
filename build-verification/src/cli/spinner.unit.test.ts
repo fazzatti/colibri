@@ -1,5 +1,5 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import type {
   BuildVerificationStage,
   VerificationLogEvent,
@@ -8,6 +8,8 @@ import {
   createBuildVerificationSpinner,
   formatBuildVerificationSpinnerStatus,
 } from "@/cli/spinner.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const event = (stage: BuildVerificationStage): VerificationLogEvent => ({
   timestamp: "2026-09-01T12:00:00.000Z",

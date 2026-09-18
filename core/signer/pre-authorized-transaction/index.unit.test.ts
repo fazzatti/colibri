@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertFalse, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { stub } from "@std/testing/mock";
 import { Buffer } from "node:buffer";
 import {
@@ -14,6 +14,8 @@ import { PreAuthorizedTransactionSigner } from "@/signer/pre-authorized-transact
 import * as ERROR from "@/signer/pre-authorized-transaction/error.ts";
 import { StrKey } from "@/strkeys/index.ts";
 import type { Ed25519PublicKey, PreAuthTx } from "@/strkeys/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("PreAuthorizedTransactionSigner", () => {
   const account = Keypair.random().publicKey() as Ed25519PublicKey;

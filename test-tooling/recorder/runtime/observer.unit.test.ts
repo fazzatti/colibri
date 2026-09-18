@@ -5,12 +5,14 @@ import {
   assertStrictEquals,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { createRunContext, pipe, plugin, step } from "convee";
 import { ExecutionRecorder } from "@/recorder/index.ts";
 import { Collector } from "@/recorder/runtime/collector.ts";
 import { Observer } from "@/recorder/runtime/observer.ts";
 import { RecorderError } from "@/recorder/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("execution recording", () => {
   it("observes the existing pipeline without changing values or identity", async () => {
@@ -40,6 +42,17 @@ describe("execution recording", () => {
     });
     report.records.length = 0;
     assert(recorder.report().records.length > 0);
+  });
+  it("observes public contract wrappers without replacing their identity", async () => {
+    const recorder = new ExecutionRecorder();
+    const pipeline = pipe([step(() => 17)], { id: "ReadFromContractPipeline" });
+    const wrapper = { contract: { readPipe: pipeline } };
+    assertStrictEquals(recorder.observer().attach(wrapper), wrapper);
+    assertEquals(await wrapper.contract.readPipe(), 17);
+    assertEquals(
+      recorder.report().records.filter((r) => r.execution).length,
+      1,
+    );
   });
   it("preserves synchronous construction errors and expected async rejections", async () => {
     const recorder = new ExecutionRecorder();

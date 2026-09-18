@@ -1,6 +1,8 @@
 import { assert, assertEquals, assertNotEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { ColibriReactError, ReactCode, ReactErrors } from "@/errors/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("react concrete failures", () => {
   it("exports a distinct constructor for every stable code and preserves context", () => {

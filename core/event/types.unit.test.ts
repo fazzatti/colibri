@@ -1,10 +1,12 @@
 import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import type {
   EventSchema,
   FieldTypeFor,
   TopicFilterArgs,
 } from "@/event/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 type TypesEqual<Left, Right> = (<Type>() => Type extends Left ? 1 : 2) extends
   (<Type>() => Type extends Right ? 1 : 2) ? true

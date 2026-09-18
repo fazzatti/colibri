@@ -372,3 +372,11 @@ and thrown errors are preserved.
 See [Record test evidence](../docs/packages/test-tooling/recorder.md) for setup,
 configuration, aggregation, HTML navigation, profiling units and observation
 limits.
+
+### Colibri repository suite
+
+From a Colibri checkout, `deno task test:unit` records all package unit tests;
+`deno task test` includes the existing Docker and network integrations. Each run
+prints its offline HTML report path. The shared configuration and CI artifact
+workflow are described in
+[`_internal/tests/README.md`](../_internal/tests/README.md).

@@ -5,9 +5,11 @@ import {
   loadMultiVersionFixtures,
 } from "colibri-internal/tests/fixtures/rpc/get_ledgers/index.ts";
 import { assertEquals, assertExists } from "@std/assert";
-import { afterEach, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import type { Ledger } from "@colibri/core";
 import { RPCStreamer } from "@/streamer.ts";
+
+const { afterEach, describe, it } = recordColibriTests(import.meta.url);
 
 // =============================================================================
 // Fixtures - Load known ledger data from standardized fixtures

@@ -9,7 +9,7 @@
 // deno-lint-ignore-file no-explicit-any
 
 import { Networks } from "stellar-sdk";
-import { beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { expect } from "@std/expect";
 import { Ledger } from "@/ledger-parser/ledger/index.ts";
 import { Transaction } from "@/ledger-parser/transaction/index.ts";
@@ -19,6 +19,8 @@ import {
 } from "colibri-internal/tests/fixtures/rpc/get_ledgers/index.ts";
 import { INVALID_TRANSACTION_INDEX } from "@/ledger-parser/error.ts";
 import { Keypair, type rpc, xdr } from "stellar-sdk";
+
+const { beforeAll, describe, it } = recordColibriTests(import.meta.url);
 
 describe("Transaction", () => {
   let v2Fixtures: rpc.Api.RawLedgerResponse[];

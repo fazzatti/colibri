@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertNotEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { createElement } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NetworkConfig } from "@colibri/core/network";
@@ -12,6 +12,8 @@ import {
   useContractRead,
 } from "@/contracts/read/hooks.ts";
 import { specFingerprint } from "@/contracts/fingerprint.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 const config = createColibriConfig({ network: NetworkConfig.TestNet() });
 function client() {
   let calls = 0;

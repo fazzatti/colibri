@@ -5,7 +5,7 @@ import {
   assertStrictEquals,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Spec } from "stellar-sdk/contract";
 import { Address, StrKey, xdr } from "stellar-sdk";
 import {
@@ -34,6 +34,10 @@ import {
   eventEntry,
   symbol,
 } from "colibri-internal/tests/binding-fixtures.ts";
+
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 function event(
   value: xdr.ScVal = xdr.ScVal.scvMap([
@@ -393,10 +397,13 @@ describe("spec-aware contract events", () => {
       "_internal/tests/compiled-contracts/fungible_token_contract.wasm",
     );
     assertEquals(extractContractEventsFromWasm(wasm).list(), []);
-    const contract = new Contract({
-      networkConfig: NetworkConfig.TestNet(),
-      contractConfig: { wasm },
-    });
+    const contract = suiteObserver.attach(
+      new Contract({
+        networkConfig: NetworkConfig.TestNet(),
+        contractConfig: { wasm },
+      }),
+      { name: "contract" },
+    );
     assertThrows(() => contract.events);
     const registry = await contract.loadContractEventsFromWasm();
     assertStrictEquals(contract.events, registry);

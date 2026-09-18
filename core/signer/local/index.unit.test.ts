@@ -6,7 +6,7 @@ import {
   assertThrows,
 } from "@std/assert";
 import { Buffer } from "node:buffer";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   Asset,
@@ -25,6 +25,10 @@ import type {
   Ed25519SecretKey,
 } from "@/strkeys/types.ts";
 import * as ERROR from "@/signer/local/error.ts";
+
+const { describe, it } = recordColibriTests(
+  import.meta.url,
+);
 
 describe("LocalSigner", () => {
   const TEST_SECRET =

@@ -1,5 +1,5 @@
 import { assertEquals, assertStrictEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Asset } from "stellar-sdk";
 import { createFeeBumpPlugin } from "@colibri/plugin-fee-bump";
 import { createChannelAccountsPlugin } from "@colibri/plugin-channel-accounts";
@@ -10,6 +10,8 @@ import { SDEX } from "@/markets/sdex/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
 import { NativeAccount } from "@/account/native/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Native transaction clients preserve pipeline plugin composition", () => {
   it("attaches the actual plugins in constructor order and retains the callable pipeline", () => {

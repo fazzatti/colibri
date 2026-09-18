@@ -6,7 +6,7 @@ import {
   assertStrictEquals,
 } from "@std/assert";
 
-import { afterAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   createClassicTransactionPipeline,
   initializeWithFriendbot,
@@ -21,6 +21,10 @@ import { StellarTestLedger } from "@/quickstart/index.ts";
 import { findContainerByName } from "@/quickstart/runtime.ts";
 import type { Container } from "dockerode";
 import { Asset, Operation } from "stellar-sdk";
+
+const { afterAll, describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 describe("StellarTestLedger", () => {
   const logLevel: LogLevelDesc = "silent";
@@ -132,7 +136,10 @@ describe("StellarTestLedger", () => {
           },
         );
 
-        const pipeline = createClassicTransactionPipeline({ networkConfig });
+        const pipeline = suiteObserver.attach(
+          createClassicTransactionPipeline({ networkConfig }),
+          { name: "pipeline" },
+        );
         const result = await pipeline.run({
           operations: [
             Operation.payment({

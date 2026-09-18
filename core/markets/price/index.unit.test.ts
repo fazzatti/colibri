@@ -1,9 +1,11 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Asset, Keypair, Operation } from "stellar-sdk";
 import { StellarPrice, type StellarPriceRatio } from "@/markets/price/index.ts";
 import * as ERROR from "@/markets/price/error.ts";
 import { ColibriError } from "@/error/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("StellarPrice", () => {
   it("constructs exact quote-per-base prices directly from quantities", () => {

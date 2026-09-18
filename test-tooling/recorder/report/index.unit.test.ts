@@ -4,7 +4,7 @@ import {
   assertStringIncludes,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   mergeFragments,
   profileGroups,
@@ -15,6 +15,8 @@ import {
 import { Collector } from "@/recorder/runtime/collector.ts";
 import { reconcileJUnit } from "@/recorder/deno/junit.ts";
 import { RecorderError } from "@/recorder/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("portable reports", () => {
   it("merges updates, preserves truncation evidence and rejects mixed runs", () => {

@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { afterEach, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import {
@@ -51,6 +51,8 @@ import {
   UnsupportedSourceError,
 } from "@/providers/source/error.ts";
 import type { SourceRetrievalPolicy } from "@/core/index.ts";
+
+const { afterEach, describe, it } = recordColibriTests(import.meta.url);
 
 const directories: string[] = [];
 const temporaryDirectory = async (): Promise<string> => {

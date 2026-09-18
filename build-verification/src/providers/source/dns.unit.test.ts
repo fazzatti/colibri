@@ -5,7 +5,7 @@ import {
   assertStrictEquals,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { collectSourceDnsAddresses } from "@/providers/source/dns.ts";
 import {
   SourceDnsEmptyError,
@@ -13,6 +13,8 @@ import {
 } from "@/providers/source/error.ts";
 import { DenoSourceAddressResolver } from "@/providers/source/http.ts";
 import { Code } from "@/error/base.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("source DNS outcome classification", () => {
   it("deduplicates successful address families in lookup order", () => {

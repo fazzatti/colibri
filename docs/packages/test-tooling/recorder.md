@@ -12,6 +12,21 @@ Colibri read pipelines with explicitly stubbed RPC responses; no network calls
 or funded accounts are needed. Open the printed `report.html` path to inspect
 three resource budget samples, an expected error, and an ignored test.
 
+## Inspect Colibri's full suite
+
+In a Colibri checkout, `deno task test:unit` generates a report for all package
+unit tests. `deno task test` also runs the existing Docker and network
+integrations; those require the same Docker services and endpoint access as
+before. Use `deno task test:file <test-path>` for one suite. Each command prints
+its HTML path.
+
+CI uploads each shard's evidence even after failures, then publishes the
+combined `colibri-test-evidence` artifact. Download it and open `report.html`;
+`sources.json` lists its constituent runs. Failed, missing and incomplete
+results remain visible. Recorded durations include observation overhead.
+Isolated helper tests have test results but no transaction profile unless they
+actually execute an attached pipeline.
+
 ## Configure once
 
 Create a shared test configuration. Each Deno test-file runtime imports its own
@@ -81,7 +96,7 @@ The fragment above uses application fixtures (`contractId`, `spec`, `id`). See
 | Helper                                 | Purpose                                                                                                                                                                                                                                  |
 | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `observer.create(factory, options?)`   | Record construction, automatically attach supported returned clients/pipelines, preserve synchronous constructors and errors. Async factories are supported. Activity inside a factory before attachment is outside the plugin boundary. |
-| `observer.attach(value, options?)`     | Attach once to an existing pipeline, or a client exposing `readPipe`, `invokePipe`, or `transactionPipe`. Return the same object.                                                                                                        |
+| `observer.attach(value, options?)`     | Attach once to an existing pipeline, or a client exposing `readPipe`, `invokePipe`, or `transactionPipe`, including SAC/SEP-41 wrappers with a public `contract`. Return the same object.                                                |
 | `observer.capture(callback, options?)` | Optional caller boundary for exact returned values and encoding/decoding errors outside a pipeline. Labels are optional.                                                                                                                 |
 | `observer.log(message, data?)`         | Add an explicit evidence item. Global console output is not intercepted.                                                                                                                                                                 |
 | `observer.flush()`                     | Await pending journal writes without closing the observer.                                                                                                                                                                               |

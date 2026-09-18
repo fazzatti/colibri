@@ -84,16 +84,19 @@
     "check:executable-ref-fixture": "deno run -A _tools/build-executable-ref-fixture.ts --check",
     "build:build-verification-fixtures": "deno run -A _tools/build-build-verification-fixtures.ts",
     "check:build-verification-fixtures": "deno run -A _tools/build-build-verification-fixtures.ts --check",
-    "test": "deno test -A --parallel --clean --ignore='_*/' --coverage=coverage",
-    "test:unit": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.integration.test.ts' --ignore='**/*.testnet.integration.test.ts' --coverage=coverage",
-    "test:integration": "deno test -A --parallel --clean --ignore='_*/' --ignore='**/*.unit.test.ts' --coverage=coverage",
+    "test": "deno task test:record --parallel --clean --ignore='_*/' --coverage=coverage",
+    "test:unit": "deno task test:record --parallel --clean --ignore='_*/' --ignore='**/*.integration.test.ts' --ignore='**/*.testnet.integration.test.ts' --coverage=coverage",
+    "test:integration": "deno task test:record --parallel --clean --ignore='_*/' --ignore='**/*.unit.test.ts' --coverage=coverage",
     "test:lint-rules": "deno test --clean _tools/lint",
     "test:architecture": "deno test --allow-read --allow-write --allow-env --allow-sys=cpus --clean _tools/architecture",
-    "test:file": "deno test -A --parallel --clean --ignore='_*/'",
+    "test:file": "deno task test:record --parallel --clean --ignore='_*/'",
     "check:bundles": "deno run -A _tools/bundles/check.ts",
     "test:bundle-tooling": "deno test -A _tools/bundles/metrics.unit.test.ts _tools/bundles/dependency-fixture.unit.test.ts",
     "check:wallets": "deno run -A _tools/consumers/wallet-compatibility.ts",
-    "test:recorder:demo": "deno run -A test-tooling/recorder/cli/index.ts run --config=_internal/tests/recorder/recording.ts -- -A _internal/tests/recorder/demo.test.ts"
+    "test:recorder:demo": "deno run -A test-tooling/recorder/cli/index.ts run --config=_internal/tests/recorder/recording.ts -- -A _internal/tests/recorder/demo.test.ts",
+    "test:record": "deno run -A test-tooling/recorder/cli/index.ts run --config=_internal/tests/recorder/suite.ts -- -A",
+    "test:record:merge": "deno run -A _tools/recorder/merge.ts",
+    "test:recorder-tooling": "deno test -A --clean --ignore='**/*.integration.test.ts' _tools/recorder"
   },
   "lint": {
     "plugins": [

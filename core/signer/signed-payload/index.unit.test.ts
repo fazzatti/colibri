@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertFalse, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { stub } from "@std/testing/mock";
 import { Buffer } from "node:buffer";
 import {
@@ -16,6 +16,8 @@ import { LocalSigner } from "@/signer/local/index.ts";
 import { Ed25519SignedPayloadSigner } from "@/signer/signed-payload/index.ts";
 import * as ERROR from "@/signer/signed-payload/error.ts";
 import type { Ed25519PublicKey, SignedPayload } from "@/strkeys/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Ed25519SignedPayloadSigner", () => {
   const keypair = Keypair.random();

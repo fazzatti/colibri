@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertExists } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   Asset,
@@ -13,6 +13,8 @@ import { buildToSimulate } from "@/pipelines/shared/connectors/build-to-simulate
 import { buildToEnvelopeSigningRequirements } from "@/pipelines/shared/connectors/build-to-envelope-signing-req.ts";
 import { assembleToEnvelopeSigningRequirements } from "@/pipelines/shared/connectors/assemble-to-envelope-signing-req.ts";
 import { isTransaction } from "@/common/type-guards/is-transaction.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Shared pipeline connectors", () => {
   const sourceKp = Keypair.random();
@@ -29,7 +31,7 @@ describe("Shared pipeline connectors", () => {
             destination: Keypair.random().publicKey(),
             asset: Asset.native(),
             amount: "10",
-          })
+          }),
         )
         .setTimeout(30)
         .build();
@@ -53,7 +55,7 @@ describe("Shared pipeline connectors", () => {
             destination: Keypair.random().publicKey(),
             asset: Asset.native(),
             amount: "10",
-          })
+          }),
         )
         .setTimeout(30)
         .build();
@@ -77,7 +79,7 @@ describe("Shared pipeline connectors", () => {
             destination: Keypair.random().publicKey(),
             asset: Asset.native(),
             amount: "10",
-          })
+          }),
         )
         .setTimeout(30)
         .build();

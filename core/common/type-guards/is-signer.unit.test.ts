@@ -1,5 +1,5 @@
 import { assert, assertFalse } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   isAuthEntrySigner,
   isEnvelopeSigner,
@@ -7,6 +7,8 @@ import {
   isPreAuthTransactionSigner,
   isSigner,
 } from "@/common/type-guards/is-signer.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("signer type guards", () => {
   const signsFor = () => true;

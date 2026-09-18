@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { InvalidTargetWasmError } from "@/error/core.ts";
 import {
   completeProcessState,
@@ -13,6 +13,8 @@ import {
 } from "@/testing.test.ts";
 import { ParseContractMetadataUnexpectedError } from "@/processes/parse-contract-metadata/error.ts";
 import { parseContractMetadata } from "@/processes/parse-contract-metadata/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("parseContractMetadata", () => {
   it("passes terminal state through unchanged", async () => {

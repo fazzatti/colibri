@@ -1,6 +1,8 @@
 import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { defaultClassName } from "@/cli/naming.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("bindings CLI class names", () => {
   it("uses the local filename in PascalCase without guessing from ABI members", () => {

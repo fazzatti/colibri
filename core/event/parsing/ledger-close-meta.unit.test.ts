@@ -1,6 +1,6 @@
 // deno-lint-ignore-file require-await no-explicit-any
 import { assertEquals, assertExists, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { xdr } from "stellar-sdk";
 import {
   isIncludedInFilters,
@@ -16,6 +16,8 @@ import type { Buffer } from "node:buffer";
 import type { BoundedArray } from "@/common/helpers/bounded-array.ts";
 import type { TopicFilter } from "@/event/event-filter/types.ts";
 import type { Api } from "stellar-sdk/rpc";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 // =============================================================================
 // Mock Helpers

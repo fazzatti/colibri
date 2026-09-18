@@ -4,9 +4,11 @@ import {
   assertObjectMatch,
   assertStrictEquals,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { ColibriError } from "@/error/index.ts";
 import type { BaseMeta, ColibriErrorShape, Diagnostic } from "@/error/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("ColibriError", () => {
   describe("constructor", () => {

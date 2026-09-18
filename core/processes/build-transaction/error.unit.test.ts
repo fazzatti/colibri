@@ -1,6 +1,6 @@
 import { assertRejects } from "@std/assert";
 
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Account, MuxedAccount, Operation, type xdr } from "stellar-sdk";
 import { buildTransaction } from "@/processes/build-transaction/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
@@ -12,6 +12,8 @@ import type { Server } from "stellar-sdk/rpc";
 import * as ERROR from "@/processes/build-transaction/error.ts";
 import type { BaseFee } from "@/common/types/transaction-config/types.ts";
 import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const mockRpc = {
   getAccount: (address: string) => {

@@ -1,5 +1,5 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { xdr } from "stellar-sdk";
 import { Spec } from "stellar-sdk/contract";
 import {
@@ -34,6 +34,8 @@ import {
   union,
   valueSpec,
 } from "colibri-internal/tests/soroban-values-fixtures.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Soroban composed and custom values", () => {
   it("accepts prototype-free records with the same validation and encoding as ordinary structs", () => {

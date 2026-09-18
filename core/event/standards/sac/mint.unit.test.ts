@@ -1,20 +1,22 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
-import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
+import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
 import { MintEvent, MintEventSchema } from "@/event/standards/sac/mint.ts";
 import { EventType } from "@/event/types.ts";
 import { isEventMuxedData } from "@/event/standards/cap67/index.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 
+const { describe, it } = recordColibriTests(import.meta.url);
+
 // Helper to create a mock Event
 function createMockEvent(
   topics: xdr.ScVal[],
   value: xdr.ScVal,
-  contractId?: string
+  contractId?: string,
 ): Event {
-  const contract =
-    contractId ?? "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+  const contract = contractId ??
+    "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
   return new Event({
     id: "0000000000000000000-0000000000",
@@ -31,7 +33,7 @@ function createMockEvent(
   });
 }
 
-describe("MintEventSchema", () => {
+describe("SAC MintEventSchema", () => {
   it("should have correct structure per CAP-0067", () => {
     assertEquals(MintEventSchema.name, "mint");
     assertEquals(MintEventSchema.topics.length, 2);
@@ -44,7 +46,7 @@ describe("MintEventSchema", () => {
   });
 });
 
-describe("MintEvent", () => {
+describe("SAC MintEvent", () => {
   const assetString =
     "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN";
 
@@ -57,7 +59,7 @@ describe("MintEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(MintEvent.is(event), true);
@@ -71,7 +73,7 @@ describe("MintEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString("native"),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(MintEvent.is(event), true);
@@ -81,7 +83,7 @@ describe("MintEvent", () => {
       const to = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("mint"), new Address(to).toScVal()],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(MintEvent.is(event), false);
@@ -95,7 +97,7 @@ describe("MintEvent", () => {
           new Address(to).toScVal(),
           // missing asset topic
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(MintEvent.is(event), false);
@@ -109,7 +111,7 @@ describe("MintEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(MintEvent.is(event), false);
@@ -135,7 +137,7 @@ describe("MintEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        muxedValue
+        muxedValue,
       );
 
       assertEquals(MintEvent.is(event), true);
@@ -148,7 +150,7 @@ describe("MintEvent", () => {
           xdr.ScVal.scvU32(123), // non-string type instead of address
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(MintEvent.is(event), false);
@@ -162,7 +164,7 @@ describe("MintEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvU32(456), // non-string type instead of asset string
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       assertEquals(MintEvent.is(event), false);
@@ -176,7 +178,7 @@ describe("MintEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        xdr.ScVal.scvString("invalid") // not i128 or muxed map
+        xdr.ScVal.scvString("invalid"), // not i128 or muxed map
       );
 
       assertEquals(MintEvent.is(event), false);
@@ -193,7 +195,7 @@ describe("MintEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(amount, { type: "i128" })
+        nativeToScVal(amount, { type: "i128" }),
       );
 
       const mintEvent = MintEvent.fromEvent(event);
@@ -212,14 +214,14 @@ describe("MintEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString("invalid-asset"),
         ],
-        nativeToScVal(1000000n, { type: "i128" })
+        nativeToScVal(1000000n, { type: "i128" }),
       );
 
       const mintEvent = MintEvent.fromEvent(event);
       assertThrows(
         () => mintEvent.asset,
         Error,
-        "Invalid SEP-11 asset format: invalid-asset"
+        "Invalid SEP-11 asset format: invalid-asset",
       );
     });
 
@@ -227,13 +229,13 @@ describe("MintEvent", () => {
       const to = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("mint"), new Address(to).toScVal()],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       assertThrows(
         () => MintEvent.fromEvent(event),
         Error,
-        "does not match mint schema"
+        "does not match mint schema",
       );
     });
   });
@@ -247,7 +249,7 @@ describe("MintEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       const mintEvent = MintEvent.fromEvent(event);
@@ -265,7 +267,7 @@ describe("MintEvent", () => {
           new Address(contractId).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(100n, { type: "i128" })
+        nativeToScVal(100n, { type: "i128" }),
       );
 
       const mintEvent = MintEvent.fromEvent(event);
@@ -285,7 +287,7 @@ describe("MintEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(5000n, { type: "i128" })
+        nativeToScVal(5000n, { type: "i128" }),
       );
 
       const mintEvent = MintEvent.fromEvent(event);
@@ -308,7 +310,7 @@ describe("MintEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(1000n, { type: "i128" })
+        nativeToScVal(1000n, { type: "i128" }),
       );
 
       const mintEvent = MintEvent.fromEvent(event);
@@ -324,7 +326,7 @@ describe("MintEvent", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString(assetString),
         ],
-        nativeToScVal(1000n, { type: "i128" })
+        nativeToScVal(1000n, { type: "i128" }),
       );
 
       const mintEvent = MintEvent.fromEvent(event);
@@ -337,7 +339,7 @@ describe("MintEvent", () => {
       assertThrows(
         () => mintEvent.amount,
         Error,
-        "Invalid mint event data format"
+        "Invalid mint event data format",
       );
     });
   });
@@ -364,7 +366,7 @@ describe("MintEvent", () => {
   });
 });
 
-describe("isMintMuxedData", () => {
+describe("SAC isMintMuxedData", () => {
   it("should return true for muxed data structure", () => {
     const data = { amount: 100n, to_muxed_id: 12345n };
     assertEquals(isEventMuxedData(data), true);

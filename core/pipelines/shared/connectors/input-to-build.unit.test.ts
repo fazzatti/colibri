@@ -1,9 +1,11 @@
 import { assertEquals, assertStrictEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Memo, Networks, Operation } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import { createInputToBuild } from "@/pipelines/shared/connectors/input-to-build.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("transaction input memo forwarding", () => {
   it("preserves the native Memo object for every SDK memo type", () => {

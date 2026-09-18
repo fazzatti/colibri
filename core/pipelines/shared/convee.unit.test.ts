@@ -4,7 +4,7 @@ import {
   assertRejects,
   assertStrictEquals,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { pipe, plugin, step } from "convee";
 import { Keypair, Operation, Transaction } from "stellar-sdk";
 import { LocalSigner } from "@/signer/local/index.ts";
@@ -19,6 +19,10 @@ import {
 } from "@/steps/index.ts";
 import { buildToEnvelopeSigningRequirements } from "@/pipelines/shared/connectors/build-to-envelope-signing-req.ts";
 import { createEnvSignReqToSignEnvelope } from "@/pipelines/shared/connectors/envelope-signing-req-to-sign-envelope.ts";
+
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 type OfflineSigningInput = {
   build: BuildTransactionInput & { sequence: string };
@@ -90,7 +94,9 @@ describe("Convee compatibility", () => {
   });
 
   it("preserves per-run context and all envelope requirements during concurrent signing", async () => {
-    const sign = createOfflineSigningPipeline();
+    const sign = suiteObserver.attach(createOfflineSigningPipeline(), {
+      name: "sign",
+    });
     const observed: Transaction[] = [];
     const observer = plugin({
       id: "observe-built-transactions",
@@ -134,7 +140,9 @@ describe("Convee compatibility", () => {
   });
 
   it("preserves Colibri error identity through an error hook and remains reusable", async () => {
-    const sign = createOfflineSigningPipeline();
+    const sign = suiteObserver.attach(createOfflineSigningPipeline(), {
+      name: "sign",
+    });
     const errors: Error[] = [];
     const observer = plugin({ id: "observe-signing-error" }).onError(
       (error: Error) => {

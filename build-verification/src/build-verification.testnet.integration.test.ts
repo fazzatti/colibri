@@ -1,6 +1,6 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { assertEquals } from "@std/assert";
-import { beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Buffer } from "node:buffer";
 import {
   Contract,
@@ -11,6 +11,10 @@ import {
   type TransactionConfig,
 } from "@colibri/core";
 import { ContractBuildVerifier } from "@/verifier/index.ts";
+
+const { beforeAll, describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 const FIXTURE_ROOT = new URL(
   "../../_internal/build-verification/fixtures/",
@@ -48,10 +52,13 @@ beforeAll(async () => {
     { rpcUrl: networkConfig.rpcUrl, allowHttp: false },
   );
 
-  const contract = new Contract({
-    networkConfig,
-    contractConfig: { wasm: Buffer.from(wasm) },
-  });
+  const contract = suiteObserver.attach(
+    new Contract({
+      networkConfig,
+      contractConfig: { wasm: Buffer.from(wasm) },
+    }),
+    { name: "contract" },
+  );
   await contract.uploadWasm(transactionConfig);
   wasmHash = contract.getWasmHash();
   await contract.deploy({ config: transactionConfig });

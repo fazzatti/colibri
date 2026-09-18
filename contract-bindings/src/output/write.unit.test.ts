@@ -1,10 +1,12 @@
 import { stub } from "@std/testing/mock";
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { writeBindings } from "@/output/write.ts";
 import { generateBindings } from "@/generation/generate.ts";
 import { BindingError } from "@/error.ts";
 import { bindingSpec } from "colibri-internal/tests/binding-fixtures.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("bindings output", () => {
   it("preserves existing conveniences and scaffolds when disabling their generation", async () => {

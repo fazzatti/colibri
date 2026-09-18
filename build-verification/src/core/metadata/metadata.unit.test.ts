@@ -1,5 +1,5 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { xdr } from "stellar-sdk";
 import {
   InvalidTargetWasmError,
@@ -19,6 +19,8 @@ import {
   hasSep58Metadata,
   metadataEntriesForEvidence,
 } from "@/core/metadata/parse.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const rawSection = (bytes: Uint8Array): Uint8Array => {
   const name = new TextEncoder().encode("contractmetav0");

@@ -1,11 +1,13 @@
 import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Spec } from "@colibri/core";
 import { generateBindings } from "@/generation/generate.ts";
 import { writeBindings } from "@/output/write.ts";
 import { bindingSpec } from "colibri-internal/tests/binding-fixtures.ts";
 import { func } from "colibri-internal/tests/soroban-values-fixtures.ts";
 import { fileURLToPath } from "node:url";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("generated method clients", () => {
   it("keeps typed arguments, binding, dispatch, metadata and failures through Core", async () => {

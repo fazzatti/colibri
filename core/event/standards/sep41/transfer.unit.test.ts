@@ -1,5 +1,5 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
 import { Event } from "@/event/event.ts";
 import {
@@ -9,6 +9,8 @@ import {
 import { EventType } from "@/event/types.ts";
 import { isEventMuxedData } from "@/event/standards/cap67/index.ts";
 import type { ContractId } from "@/strkeys/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 // Helper to create a mock Event
 function createMockEvent(
@@ -34,7 +36,7 @@ function createMockEvent(
   });
 }
 
-describe("TransferEventSchema", () => {
+describe("SEP-41 TransferEventSchema", () => {
   it("should have correct structure per SEP-41", () => {
     assertEquals(TransferEventSchema.name, "transfer");
     assertEquals(TransferEventSchema.topics.length, 2);
@@ -47,7 +49,7 @@ describe("TransferEventSchema", () => {
   });
 });
 
-describe("TransferEvent", () => {
+describe("SEP-41 TransferEvent", () => {
   describe("is()", () => {
     it("should return true for valid transfer event", () => {
       const from = Keypair.random().publicKey();
@@ -402,7 +404,7 @@ describe("TransferEvent", () => {
   });
 });
 
-describe("isTransferMuxedData", () => {
+describe("SEP-41 isTransferMuxedData", () => {
   it("should return true for muxed data structure", () => {
     const data = { amount: 100n, to_muxed_id: 12345n };
     assertEquals(isEventMuxedData(data), true);

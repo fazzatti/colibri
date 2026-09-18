@@ -4,12 +4,14 @@ import {
   assertInstanceOf,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Claimant, xdr } from "stellar-sdk";
 import { ClaimableBalancePredicates as P } from "@/claimable-balance/index.ts";
 import * as ERROR from "@/claimable-balance/error.ts";
 import { validateClaimPredicate } from "@/claimable-balance/validate.ts";
 import type { ClaimPredicate } from "@/claimable-balance/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("ClaimableBalancePredicates", () => {
   it("composes lists as balanced native trees without changing condition order", () => {

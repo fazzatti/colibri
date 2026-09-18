@@ -1,6 +1,6 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { assertEquals, assertExists } from "@std/assert";
-import { beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Account, Operation, TransactionBuilder, type xdr } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
@@ -17,6 +17,10 @@ import { StrKey } from "@/strkeys/index.ts";
 import type { Ed25519PublicKey } from "@/strkeys/types.ts";
 import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
 
+const { beforeAll, describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
+
 describe(
   "[Testnet] Classic transaction signer mechanisms",
   disableSanitizeConfig,
@@ -25,7 +29,10 @@ describe(
     const rpc = new Server(networkConfig.rpcUrl, {
       allowHttp: networkConfig.allowHttp,
     });
-    const pipeline = createClassicTransactionPipeline({ networkConfig, rpc });
+    const pipeline = suiteObserver.attach(
+      createClassicTransactionPipeline({ networkConfig, rpc }),
+      { name: "pipeline" },
+    );
     const hashXAccount = LocalSigner.generateRandom();
     const signedPayloadAccount = LocalSigner.generateRandom();
     const preAuthAccount = LocalSigner.generateRandom();

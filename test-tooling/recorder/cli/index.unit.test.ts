@@ -1,10 +1,12 @@
 import { assertEquals, assertRejects, assertStringIncludes } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { join } from "node:path";
 import { main } from "@/recorder/cli/index.ts";
 import { runTests } from "@/recorder/cli/runner.ts";
 import { RecorderError } from "@/recorder/error.ts";
 import { stub } from "@std/testing/mock";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("recorder command", () => {
   it("rejects invalid configuration and preserves a successful memory-only test exit", async () => {

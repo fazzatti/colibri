@@ -1,5 +1,5 @@
 import { assertEquals, assertStrictEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Account, Keypair, Networks, TransactionBuilder } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { ColibriError } from "@/error/index.ts";
@@ -20,6 +20,8 @@ import {
   getOperationsFromTransaction,
   getTransactionTimeout,
 } from "@/common/helpers/transaction.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const context = {
   domain: "helpers" as const,

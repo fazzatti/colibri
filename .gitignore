@@ -24,3 +24,5 @@ _internal/contracts/*/local-bindings/
 
 # Local test evidence artifacts
 artifacts/colibri/
+artifacts/colibri-shards/
+artifacts/colibri-report/

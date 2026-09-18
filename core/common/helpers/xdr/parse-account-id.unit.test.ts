@@ -1,14 +1,16 @@
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { assertEquals } from "@std/assert";
 import { Keypair, StrKey, xdr } from "stellar-sdk";
 import { parseAccountId } from "@/common/helpers/xdr/parse-account-id.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("parseAccountId", () => {
   it("should parse AccountID to G... address", () => {
     const keypair = Keypair.random();
     // Create AccountID using PublicKey type
     const publicKey = xdr.PublicKey.publicKeyTypeEd25519(
-      keypair.rawPublicKey()
+      keypair.rawPublicKey(),
     );
 
     const result = parseAccountId(publicKey);

@@ -1,5 +1,5 @@
 import { assertEquals, assertInstanceOf } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { ColibriError } from "@colibri/core";
 import {
   CHANNEL_NOT_ALLOCATED,
@@ -9,6 +9,8 @@ import {
   MISSING_ARG,
   UNEXPECTED_ERROR,
 } from "@/shared/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Channel accounts errors", () => {
   it("constructs UNEXPECTED_ERROR with the original cause", () => {

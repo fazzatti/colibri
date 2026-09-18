@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import type { Api, Server } from "stellar-sdk/rpc";
 import {
   Account,
@@ -13,6 +13,8 @@ import { simulateTransaction } from "@/processes/simulate-transaction/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import type { SimulateTransactionInput } from "@/processes/simulate-transaction/types.ts";
 import * as ERROR from "@/processes/simulate-transaction/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 // Helper function to create a test transaction
 const createTestTransaction = () => {

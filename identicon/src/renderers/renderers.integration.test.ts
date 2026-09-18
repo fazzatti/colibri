@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { decodeBase64 } from "@std/encoding/base64";
 import { decode } from "fast-png";
 import { Resvg } from "resvg-test";
@@ -8,6 +8,8 @@ import { Identicon } from "@/identicon.ts";
 import fixtures from "colibri-internal/identicon/vectors.json" with {
   type: "json",
 };
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Real PNG and SVG rendering", () => {
   for (const vector of fixtures.vectors) {
