@@ -57,6 +57,10 @@ describe("portable reports", () => {
       standardDeviation: Math.sqrt(2 / 3),
     });
     const c = new Collector();
+    // Test and log records must not inflate transaction sample counts.
+    c.emit(c.record("test", "owner", { file: "test.ts" }));
+    c.emit(c.record("log", "setup", { file: "test.ts" }));
+    assertEquals(profileGroups(c.report()), []);
     const record = c.record("execution", "read", { file: "test.ts" });
     record.durationMs = 10;
     record.execution = {
@@ -75,6 +79,7 @@ describe("portable reports", () => {
     };
     c.emit(record);
     const group = profileGroups(c.report())[0];
+    assertEquals(group.executions, 1);
     assertEquals(group.instructions?.mean, 100);
     assertEquals(group.durationMs?.mean, 10);
   });

@@ -358,10 +358,13 @@ deno run -A jsr:@colibri/test-tooling/recorder/cli run \
   --config=tests/recording.ts -- -A --parallel tests
 ```
 
-The runner writes JSON and a standalone HTML evidence/profiling report even when
-tests fail. Recorder imports are independent of Docker. Memory-only recording
-uses `ExecutionRecorder` from `/recorder`; portable rendering uses
-`/recorder/report`.
+The runner writes JSON and a standalone HTML report even when tests fail. The
+report opens on Summary with context/file tables, then supports nested Evidence
+navigation and Profiling with explorable operation groups or individual
+executions. Breadcrumbs, offline links and browser Back preserve context; test,
+pipeline and chain outcomes remain distinct. Recorder imports are independent of
+Docker. Memory-only recording uses `ExecutionRecorder` from `/recorder`;
+portable rendering uses `/recorder/report`.
 
 **Observer API:** `create(factory, options?)`,
 `attach(clientOrPipeline, options?)`, `capture(callback, options?)`,

@@ -73,128 +73,348 @@ describe("standalone HTML evidence report", () => {
     await browser.close();
     await Deno.remove(directory, { recursive: true });
   });
-  it("works from file URLs, renders hostile strings safely and filters/sorts profiles", async () => {
+  it("opens on Summary and follows file, test and execution evidence offline", async () => {
+    const report = fixture();
     const path = join(directory, "report.html");
-    await Deno.writeTextFile(path, renderReport(fixture()));
+    await Deno.writeTextFile(path, renderReport(report));
     const page = await browser.newPage({
       viewport: { width: 1440, height: 960 },
     });
-    const errors: string[] = [];
-    const requests: string[] = [];
-    page.on("pageerror", (error) => errors.push(error.message));
-    page.on("request", (request) => requests.push(request.url()));
+    const errors: string[] = [], requests: string[] = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    page.on("request", (r) => requests.push(r.url()));
     try {
       await page.goto(pathToFileURL(path).href);
-      assertEquals(await page.locator("#tree button").count(), 4);
+      assertEquals(
+        await page.locator("#summary-tab").getAttribute("aria-pressed"),
+        "true",
+      );
+      assert(await page.locator("#summary-view").isVisible());
+      await page.locator("#file-body").getByRole("button", {
+        name: "token.test.ts",
+        exact: true,
+      }).click();
+      assert(await page.locator("#evidence").isVisible());
+      await page.locator('#detail [data-record="test"]').click();
+      await page.locator('#detail [data-record="execution-0"]').click();
       assertEquals(
         await page.evaluate(() => Reflect.get(globalThis, "pwned")),
         undefined,
       );
-      await page.locator('[data-record="execution-0"]').click();
       await page.getByRole("button", { name: "Copy hash", exact: true })
         .click();
       await page.locator("#toast").filter({ hasText: "Hash" }).waitFor();
       assertStringIncludes(await page.locator("#toast").innerText(), "Hash");
-      await page.getByRole("button", { name: "Profiling", exact: true })
-        .click();
+      const deepLink = page.url();
+      await page.reload();
+      assertEquals(page.url(), deepLink);
+      assertStringIncludes(
+        await page.locator("#detail h2").innerText(),
+        "</script>",
+      );
+      await page.locator("#profiling-tab").click();
+      assertEquals(await page.locator("#group-body tr").count(), 1);
+      await page.locator("#group-body button[data-group]").click();
+      assertStringIncludes(
+        await page.locator("#profile-content").innerText(),
+        "Standard deviation",
+      );
+      assertStringIncludes(
+        await page.locator("#profile-content").innerText(),
+        "1,200",
+      );
+      assertEquals(
+        await page.locator("#profile-content details[open]").count(),
+        0,
+      );
+      await page.locator("#profile-mode").selectOption("executions");
       assertEquals(await page.locator("#profile-body tr").count(), 3);
       assertEquals(
-        await page.locator("#profile-body tr:first-child td").nth(5)
+        await page.locator("#profile-body tr:first-child td").last()
           .innerText(),
         "30",
       );
       await page.getByRole("button", { name: "Duration (ms)", exact: true })
         .click();
       assertEquals(
-        await page.locator("#profile-body tr:first-child td").nth(5)
+        await page.locator("#profile-body tr:first-child td").last()
           .innerText(),
         "10",
+      );
+      await page.locator("#metric-set").selectOption("resources");
+      assertStringIncludes(
+        await page.locator("#profile-content").innerText(),
+        "Read-only entries",
+      );
+      await page.locator("#metric-set").selectOption("fees");
+      assertStringIncludes(
+        await page.locator("#profile-content").innerText(),
+        "Confirmed fee charged",
       );
       await page.locator("#search").fill("no matches");
       assert(await page.locator("#profile-empty").isVisible());
       await page.locator("#search").fill("CDEMO");
-      assertEquals(await page.locator("#profile-body tr").count(), 3);
+      await page.locator("#advanced-filters > summary").click();
       await page.locator("#client").selectOption("token");
       await page.locator("#method").selectOption("balance");
+      assertEquals(await page.locator("#profile-body tr").count(), 3);
+      await page.locator('#profile-body [data-record="execution-1"]').click();
       assertStringIncludes(
-        await page.locator("#groups").innerText(),
-        "Variance",
+        await page.locator("#breadcrumbs").innerText(),
+        "reads a balance",
       );
-      assertStringIncludes(await page.locator("#groups").innerText(), "1,200");
+      await page.goBack();
+      assert(await page.locator("#profiles").isVisible());
+      assertEquals(await page.locator("#search").inputValue(), "CDEMO");
+      await page.goForward();
+      assertEquals(
+        await page.locator("#detail h2").innerText(),
+        "read balance",
+      );
+      await page.goBack();
+      assert(await page.locator("#profiles").isVisible());
       await page.screenshot({
         path: "/private/tmp/colibri-recorder-profiling.png",
         fullPage: true,
       });
-      await page.getByRole("button", { name: "Evidence", exact: true }).click();
-      await page.locator('[data-record="execution-1"]').click();
-      await page.screenshot({
-        path: "/private/tmp/colibri-recorder-evidence.png",
-        fullPage: true,
-      });
       await page.setViewportSize({ width: 390, height: 844 });
       await page.emulateMedia({ colorScheme: "dark" });
+      await page.locator("#evidence-tab").click();
       assert(
-        await page.getByRole("heading", { name: "read balance", exact: true })
+        await page.getByRole("heading", {
+          name: report.records[1].name,
+          exact: true,
+        })
           .isVisible(),
+      );
+      assert(
+        await page.evaluate(
+          "document.documentElement.scrollWidth <= innerWidth",
+        ),
       );
       await page.screenshot({
         path: "/private/tmp/colibri-recorder-mobile.png",
         fullPage: true,
       });
       assertEquals(errors, []);
-      assertEquals(requests, [pathToFileURL(path).href]);
+      assertEquals(requests.filter((r) => !r.startsWith("file:")), []);
     } finally {
       await page.close();
     }
   });
-  it("browses thousands of records without hiding duplicate file basenames", async () => {
+  it("reaches records beyond 200, restores pagination and browses duplicate file basenames", async () => {
     const report = fixture();
     report.records = Array.from({ length: 3000 }, (_, index) => ({
       ...report.records[0],
       id: `test-${index}`,
       name: `test ${index}`,
       file: `file:///checkout/colibri/package-${
-        Math.floor(index / 100)
+        Math.floor(index / 300)
       }/index.unit.test.ts`,
     }));
     const path = join(directory, "large.html");
     await Deno.writeTextFile(path, renderReport(report));
     const page = await browser.newPage();
     const errors: string[] = [];
-    page.on("pageerror", (error) => errors.push(error.message));
+    page.on("pageerror", (e) => errors.push(e.message));
     try {
       await page.goto(pathToFileURL(path).href);
-      assertEquals(await page.locator("#tree > details").count(), 30);
-      assertStringIncludes(
-        await page.locator("#tree > details > summary").first().innerText(),
-        "package-0/index.unit.test.ts",
-      );
-      assertEquals(await page.locator("#tree > details[open]").count(), 0);
-      await page.getByText("package-29/index.unit.test.ts (100)", {
-        exact: true,
-      }).click();
+      assertEquals(await page.locator("#file-body tr").count(), 10);
+      await page.getByRole("button", { name: "Expand package-9", exact: true })
+        .click();
+      await page.locator(
+        '#file-body button[title="package-9/index.unit.test.ts"]',
+      ).click();
+      for (let i = 0; i < 5; i++) {
+        await page.getByRole("button", { name: "Next page", exact: true })
+          .click();
+      }
       await page.locator('[data-record="test-2999"]').click();
       assertStringIncludes(
         await page.locator("#detail").innerText(),
         "test 2999",
       );
+      await page.goBack();
+      assert(await page.locator('[data-record="test-2999"]').isVisible());
+      await page.locator("#clear-context").click();
       await page.locator("#search").fill("test 1999");
-      assertEquals(await page.locator("#tree button").count(), 1);
+      await page.locator("#file-body").getByRole("button", {
+        name: "Expand package-6",
+        exact: true,
+      }).click();
+      await page.locator(
+        '#file-body button[title="package-6/index.unit.test.ts"]',
+      ).click();
+      assertEquals(
+        await page.locator("#detail button[data-record]").count(),
+        1,
+      );
+      await page.locator('[data-record="test-1999"]').focus();
+      await page.keyboard.press("Enter");
+      assertStringIncludes(
+        await page.locator("#detail h2").innerText(),
+        "test 1999",
+      );
       assertEquals(errors, []);
     } finally {
       await page.close();
     }
   });
-  it("handles empty and incomplete artifacts", async () => {
+  it("separates group files, operation sequences, outcomes and unknown identities", async () => {
+    const report = fixture();
+    const original = report.records[1];
+    const variant = (
+      id: string,
+      change: Partial<typeof original>,
+      execution: object = {},
+    ) => ({
+      ...original,
+      ...change,
+      id,
+      execution: { ...original.execution!, ...execution },
+    });
+    report.records.push(
+      { ...report.records[0], id: "other-test", file: "other.test.ts" },
+      variant("other-file", { file: "other.test.ts", testId: "other-test" }),
+      variant("failed", { status: "failed" }),
+      variant("chain-failed", {}, { chain: "confirmed-failed" }),
+      variant("unknown-1", {}, { network: undefined }),
+      variant("unknown-2", {}, { network: undefined }),
+      variant("unknown-contract-1", {}, { contract: undefined }),
+      variant("unknown-contract-2", {}, { contract: undefined }),
+      variant("classic-1", {}, {
+        kind: "classic",
+        method: undefined,
+        operations: ["payment"],
+      }),
+      variant("classic-2", {}, {
+        kind: "classic",
+        method: undefined,
+        operations: ["manageData"],
+      }),
+    );
+    const page = await browser.newPage();
+    try {
+      await page.setContent(renderReport(report));
+      await page.locator("#profiling-tab").click();
+      assertEquals(await page.locator("#group-body tr").count(), 10);
+      await page.locator("#cross-files").check();
+      assertEquals(await page.locator("#group-body tr").count(), 9);
+      await page.locator("#advanced-filters > summary").click();
+      await page.locator("#test-status").selectOption("passed");
+      await page.locator("#outcome").selectOption("failed");
+      assertEquals(await page.locator("#group-body tr").count(), 1);
+      await page.locator("#summary-tab").click();
+      assertStringIncludes(
+        await page.locator("#summary-view .metrics").innerText(),
+        "1",
+      );
+      await page.locator("#clear-filters").click();
+      await page.locator("#profiling-tab").click();
+      await page.locator("#chain").selectOption("confirmed-failed");
+      assertEquals(await page.locator("#group-body tr").count(), 1);
+    } finally {
+      await page.close();
+    }
+  });
+  it("keeps shared hooks under their suite and relates nested observations to their test", async () => {
+    const report = fixture();
+    const test = report.records[0];
+    test.parentId = "suite";
+    report.records.push({
+      ...test,
+      id: "suite",
+      kind: "suite",
+      parentId: undefined,
+      name: "Token suite",
+    }, {
+      ...test,
+      id: "hook",
+      kind: "hook",
+      parentId: "suite",
+      name: "beforeAll",
+    }, {
+      ...test,
+      id: "hook-log",
+      kind: "log",
+      parentId: undefined,
+      testId: "hook",
+      name: "setup evidence",
+    });
+    const page = await browser.newPage();
+    try {
+      await page.setContent(renderReport(report));
+      await page.locator('#file-body button[title="token.test.ts"]').click();
+      await page.locator('#detail [data-record="suite"]').click();
+      assertEquals(
+        await page.locator('#detail [data-record="hook"]').count(),
+        1,
+      );
+      await page.locator('#detail [data-record="hook"]').click();
+      await page.locator('#detail [data-record="hook-log"]').click();
+      assertStringIncludes(
+        await page.locator("#breadcrumbs").innerText(),
+        "beforeAll",
+      );
+      assertStringIncludes(
+        await page.locator("#detail").innerText(),
+        "setup evidence",
+      );
+    } finally {
+      await page.close();
+    }
+  });
+  it("keeps missing measurements absent and fee ordering exact", async () => {
+    const report = fixture();
+    report.records[1].durationMs = undefined;
+    report.records[1].execution!.simulations = [];
+    report.records[2].execution!.simulations[0].minResourceFee =
+      "9007199254740993";
+    report.records[3].execution!.simulations[0].minResourceFee =
+      "9007199254740992";
+    const page = await browser.newPage();
+    try {
+      await page.setContent(renderReport(report));
+      await page.locator("#profiling-tab").click();
+      await page.locator("#group-body button[data-group]").click();
+      const instructions = page.locator("#profile-content tr").filter({
+        has: page.getByRole("cell", {
+          name: "Instructions (budget)",
+          exact: true,
+        }),
+      }).first();
+      assertStringIncludes(await instructions.innerText(), "2 / 3");
+      await page.locator("#profile-mode").selectOption("executions");
+      await page.locator("#metric-set").selectOption("fees");
+      assertEquals(
+        await page.locator("#profile-body tr:first-child td").nth(3)
+          .innerText(),
+        "9007199254740993",
+      );
+      assertEquals(
+        await page.locator("#profile-body tr:last-child td").nth(3).innerText(),
+        "—",
+      );
+      assertEquals(
+        await page.locator("#profile-body tr:first-child td").nth(4)
+          .innerText(),
+        "—",
+      );
+    } finally {
+      await page.close();
+    }
+  });
+  it("handles empty, incomplete and nonzero-source artifacts without implying success", async () => {
     const report = fixture();
     report.records = [];
     report.complete = false;
+    report.exitCode = 1;
     report.diagnostics = ["Interrupted run"];
     const page = await browser.newPage();
     try {
       await page.setContent(renderReport(report));
       assertStringIncludes(
-        await page.locator("#tree").innerText(),
+        await page.locator("#summary-view").innerText(),
         "No matching evidence",
       );
       assertStringIncludes(
@@ -204,6 +424,15 @@ describe("standalone HTML evidence report", () => {
       assertStringIncludes(
         await page.locator("#warnings").innerText(),
         "Interrupted",
+      );
+      assertStringIncludes(
+        await page.locator("#warnings").innerText(),
+        "code 1",
+      );
+      await page.locator("#evidence-tab").click();
+      assertStringIncludes(
+        await page.locator("#detail").innerText(),
+        "Choose a context",
       );
     } finally {
       await page.close();

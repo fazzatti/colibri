@@ -1,0 +1,148 @@
+/** Shared indexes and navigation for the offline report. Values enter the DOM as text. */
+export const modelScript: string = String.raw`
+"use strict";
+const report = JSON.parse(document.getElementById("evidence-data").textContent);
+const $ = (id) => document.getElementById(id);
+const el = (tag, text, cls) => {
+  const node = document.createElement(tag);
+  if (text !== undefined) node.textContent = text;
+  if (cls) node.className = cls;
+  return node;
+};
+const button = (text, action, cls) => {
+  const node = el("button", text, cls);
+  node.type = "button";
+  node.onclick = action;
+  return node;
+};
+const number = (n) => n === undefined || n === null ? "—" :
+  Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
+const status = (r) => r.kind === "test" || r.kind === "suite"
+  ? r.runnerStatus || "unknown" : r.status;
+const byId = new Map(report.records.map((r) => [r.id, r]));
+const files = [...new Set(report.records.map((r) => r.file))].sort();
+const prefix = (files[0] || "").split("/").slice(0, -1);
+while (prefix.length && !files.every((f) => f.startsWith(prefix.join("/") + "/"))) prefix.pop();
+const fileLabel = (f) => prefix.length ? f.slice(prefix.join("/").length + 1) : f;
+const basename = (f) => fileLabel(f).split("/").at(-1);
+const defaults = { tab: "summary", scope: "", file: "", record: "", q: "",
+  test: "", outcome: "", chain: "", client: "", method: "", mode: "groups",
+  metrics: "timing", cross: "", group: "", page: "0", sort: "duration", desc: "1", order: "duration", reverse: "1" };
+let state = { ...defaults }, expanded = new Set();
+const pageSize = 50;
+function readState() {
+  state = { ...defaults };
+  const params = new URLSearchParams(location.hash.slice(1));
+  for (const key of Object.keys(defaults)) if (params.has(key)) state[key] = params.get(key);
+  if (!["summary", "evidence", "profiling"].includes(state.tab)) state.tab = "summary";
+  if (!files.includes(state.file)) state.file = "";
+  if (!byId.has(state.record)) state.record = "";
+  if (!["groups", "executions"].includes(state.mode)) state.mode = "groups";
+  if (!["timing", "resources", "fees"].includes(state.metrics)) state.metrics = "timing";
+  state.page = String(Math.max(0, Number.parseInt(state.page) || 0));
+}
+function navigate(change, replace = false) {
+  state = { ...state, ...change };
+  const params = new URLSearchParams();
+  for (const key of Object.keys(defaults)) if (state[key] !== defaults[key]) params.set(key, state[key]);
+  const hash = "#" + params;
+  const position = { scroll: [scrollX, scrollY] };
+  history.replaceState(position, "");
+  history[replace ? "replaceState" : "pushState"](position, "", hash);
+  render();
+}
+function openFile(file, tab = "evidence") {
+  navigate({ tab, scope: "", file, record: "", group: "", page: "0" });
+}
+function openRecord(r) {
+  navigate({ tab: "evidence", scope: "", file: r.file, record: r.id, group: "", page: "0" });
+}
+function inScope(r) {
+  const f = fileLabel(r.file);
+  return (!state.file || r.file === state.file) &&
+    (!state.scope || f.startsWith(state.scope + "/"));
+}
+function ownerTest(r) {
+  const seen = new Set();
+  while (r && !seen.has(r.id)) {
+    if (r.kind === "test") return r;
+    seen.add(r.id);
+    r = byId.get(r.testId) || byId.get(r.parentId) || byId.get(r.callId);
+  }
+}
+function matches(r, scoped = true) {
+  if (scoped && !inScope(r)) return false;
+  const e = r.execution;
+  const test = ownerTest(r);
+  const text = [r.name, fileLabel(r.file), ...(r.path || []), test?.name,
+    e?.hash, e?.innerHash, e?.contract, e?.method, e?.client].join(" ").toLowerCase();
+  return (!state.q || text.includes(state.q.toLowerCase())) &&
+    (!state.test || (test && status(test) === state.test)) &&
+    (!state.outcome || (e && r.status === state.outcome)) &&
+    (!state.chain || e?.chain === state.chain) &&
+    (!state.client || e?.client === state.client) &&
+    (!state.method || e?.method === state.method);
+}
+function selection() {
+  const records = report.records.filter((r) => matches(r));
+  // Execution searches/filters retain their owning tests in the counts and lists.
+  const tests = new Map(records.filter((r) => r.kind === "test").map((r) => [r.id, r]));
+  for (const r of records) {
+    const test = ownerTest(r);
+    if (test) tests.set(test.id, test);
+  }
+  return { records, tests: [...tests.values()] };
+}
+function counts(records, tests = records.filter((r) => r.kind === "test")) {
+  return [tests.length, ...["passed", "failed", "skipped", "unknown"].map((s) =>
+    tests.filter((r) => status(r) === s).length), records.filter((r) => r.execution).length];
+}
+function badge(value) { return el("span", value, "badge " + value); }
+function jsonSection(parent, title, data) {
+  if (data === undefined) return;
+  const block = el("details", undefined, "data-section");
+  block.append(el("summary", title), el("pre", JSON.stringify(data, null, 2)));
+  parent.append(block);
+}
+function table(host, headings) {
+  const scroll = el("div", undefined, "table-scroll");
+  const node = el("table"), head = el("tr");
+  for (const label of headings) { const th = el("th", label); th.scope = "col"; head.append(th); }
+  const thead = el("thead"); thead.append(head); node.append(thead);
+  const body = el("tbody"); node.append(body); scroll.append(node); host.append(scroll);
+  return body;
+}
+function cell(row, value, cls) {
+  const td = el("td", undefined, cls);
+  td.append(value instanceof Node ? value : document.createTextNode(value ?? "—"));
+  row.append(td); return td;
+}
+function paginate(host, rows, draw) {
+  const pages = Math.max(1, Math.ceil(rows.length / pageSize));
+  const page = Math.min(Number(state.page), pages - 1);
+  for (const r of rows.slice(page * pageSize, (page + 1) * pageSize)) draw(r);
+  const pager = el("div", undefined, "pager");
+  const previous = button("Previous page", () => navigate({ page: String(page - 1) }));
+  const next = button("Next page", () => navigate({ page: String(page + 1) }));
+  previous.disabled = page === 0; next.disabled = page + 1 >= pages;
+  pager.append(previous, el("span", rows.length ?
+    (page * pageSize + 1) + "–" + Math.min((page + 1) * pageSize, rows.length) + " of " + rows.length : "0 results"), next);
+  host.append(pager);
+}
+function breadcrumbs() {
+  const host = $("breadcrumbs"); host.replaceChildren();
+  host.append(button("All contexts", () => navigate({ scope: "", file: "", record: "", group: "", page: "0" })));
+  const path = state.file ? fileLabel(state.file).split("/").slice(0, -1) : state.scope.split("/").filter(Boolean);
+  path.forEach((part, i) => {
+    host.append(el("span", "/", "muted"), button(part, () => navigate({ scope: path.slice(0, i + 1).join("/"), file: "", record: "", group: "", page: "0" })));
+  });
+  if (state.file) host.append(el("span", "/", "muted"), button(basename(state.file), () => navigate({ record: "", group: "", page: "0" })));
+  const record = byId.get(state.record);
+  if (record) {
+    const trail = [], seen = new Set([record.id]); let parent = byId.get(record.parentId) || byId.get(record.testId);
+    while (parent && !seen.has(parent.id)) { seen.add(parent.id); trail.unshift(parent); parent = byId.get(parent.parentId) || byId.get(parent.testId); }
+    for (const r of trail) host.append(el("span", "/", "muted"), button(r.name, () => openRecord(r)));
+    host.append(el("span", "/", "muted"), el("strong", record.name));
+  }
+}
+`;
