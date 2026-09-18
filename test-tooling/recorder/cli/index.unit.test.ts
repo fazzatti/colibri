@@ -6,6 +6,7 @@ import { runTests } from "@/recorder/cli/runner.ts";
 import { RecorderError } from "@/recorder/error.ts";
 import { EventEmitter } from "node:events";
 import childProcess from "node:child_process";
+import process from "node:process";
 import { stub } from "@std/testing/mock";
 
 const { describe, it } = recordColibriTests(import.meta.url);
@@ -80,6 +81,9 @@ describe("recorder command", () => {
   it("retains JSON or HTML and reports interrupted or unlaunchable runners", async () => {
     const directory = await Deno.makeTempDir();
     const previous = Deno.cwd();
+    // Deno's parallel workers share the OS cwd. Stub this worker's Node API
+    // instead, so another worker cannot inherit a directory we later remove.
+    using _cwd = stub(process, "cwd", () => directory);
     let outcome: number | null | Error = 0;
     using log = stub(console, "log");
     using fail = stub(console, "error");
@@ -100,7 +104,6 @@ describe("recorder command", () => {
       }) as typeof childProcess.spawn,
     );
     try {
-      Deno.chdir(directory);
       for (
         const output of [
           { html: true },
@@ -119,6 +122,12 @@ describe("recorder command", () => {
       assertEquals(log.calls.length, 2);
       assertStringIncludes(log.calls[0].args[0], "report.html");
       assertStringIncludes(log.calls[1].args[0], "report.json");
+      assertStringIncludes(
+        log.calls[0].args[0],
+        join(directory, "artifacts", "colibri"),
+      );
+      assertStringIncludes(log.calls[1].args[0], join(directory, "json"));
+      assertEquals(Deno.cwd(), previous);
       const config = join(directory, "interrupted.ts");
       await Deno.writeTextFile(config, "export const recorder={options:{}};");
       outcome = null;
@@ -129,7 +138,6 @@ describe("recorder command", () => {
       assertEquals(fail.calls[0].args[1], outcome);
       assertEquals(spawn.calls.length, 5);
     } finally {
-      Deno.chdir(previous);
       await Deno.remove(directory, { recursive: true });
     }
   });

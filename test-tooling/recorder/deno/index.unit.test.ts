@@ -10,6 +10,7 @@ const { describe, it } = recordColibriTests(import.meta.url);
 const recorderModule = new URL("./index.ts", import.meta.url).href;
 const cli = new URL("../cli/index.ts", import.meta.url).pathname;
 const config = new URL("../../../deno.json", import.meta.url).pathname;
+const cwd = new URL("../../../", import.meta.url).pathname;
 
 describe("Deno recorder lifecycle", () => {
   it("keeps memory-only configuration free from filesystem output", async () => {
@@ -52,6 +53,7 @@ afterAll(() => Deno.writeTextFile(${
       );
       const child = await new Deno.Command(Deno.execPath(), {
         args: ["test", "-A", "--no-check", "--config=" + config, file],
+        cwd,
         stdout: "piped",
         stderr: "piped",
         env: { COLIBRI_RECORDER_DIRECTORY: "" },
@@ -116,6 +118,7 @@ it({suite,fn:function namedOption() {}});
 `,
       );
       const child = await new Deno.Command(Deno.execPath(), {
+        cwd,
         args: [
           "run",
           "-A",

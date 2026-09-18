@@ -42,6 +42,13 @@ dependencies; these tests are required and do not silently skip or switch
 providers on failure. Run the RPC Streamer integrations serially, as in CI, to
 avoid concurrent requests overwhelming the shared public archive endpoint.
 
+RPC Streamer archive `getLedgers` and `getEvents` reads retry HTTP 429, 502, 503
+and 504 at most twice, after one and two seconds. Each retry repeats the same
+request before any record is delivered. Exhaustion preserves the provider error;
+other errors, parsing, handlers and assertions are never retried. This policy
+belongs to repository tests and does not change the published streamer's
+behavior.
+
 These settings do not change the public `NetworkConfig.MainNet()` default, which
 remains `https://mainnet.sorobanrpc.com`.
 
@@ -103,3 +110,12 @@ deno task test:record:merge artifacts/colibri-shards artifacts/colibri-report
 Keep one downloaded artifact per child directory in `colibri-shards`. Duplicate
 run IDs are rejected. `test:recorder-tooling` guards adoption and CI shard
 coverage; `test:browser-runner` exercises the report in Chromium.
+
+## Parallel test isolation
+
+Deno parallel test workers share the OS working directory. Never call
+`Deno.chdir()` or `process.chdir()` inside package tests. For relative-path CLI
+unit tests, stub that worker's `process.cwd()`; for a real CLI subprocess, set
+`Deno.Command`'s `cwd` explicitly. This prevents child processes inheriting
+another test's temporary directory just before it is deleted. Browser fixtures
+also write screenshots into their own `Deno.makeTempDir()` directory.

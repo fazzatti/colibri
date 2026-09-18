@@ -202,7 +202,7 @@ describe("standalone HTML evidence report", () => {
       await page.goBack();
       assert(await page.locator("#profiles").isVisible());
       await page.screenshot({
-        path: "/private/tmp/colibri-recorder-profiling.png",
+        path: join(directory, "profiling.png"),
         fullPage: true,
       });
       await page.setViewportSize({ width: 390, height: 844 });
@@ -221,7 +221,7 @@ describe("standalone HTML evidence report", () => {
         ),
       );
       await page.screenshot({
-        path: "/private/tmp/colibri-recorder-mobile.png",
+        path: join(directory, "mobile.png"),
         fullPage: true,
       });
       assertEquals(errors, []);
