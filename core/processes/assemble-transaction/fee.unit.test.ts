@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   Operation,
@@ -15,6 +15,8 @@ import type { TransactionFee } from "@/common/types/transaction-config/types.ts"
 import { NetworkConfig } from "@/network/index.ts";
 import * as ERROR from "@/processes/assemble-transaction/error.ts";
 import { assembleTransaction } from "@/processes/assemble-transaction/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const source = "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P";
 

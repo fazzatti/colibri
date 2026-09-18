@@ -20,3 +20,11 @@ Quickstart image. This is host-side tooling, not a browser library.
 
 See the [API and error reference](../reference/README.md) for exact exported
 symbols and complete error contexts.
+
+## Execution evidence
+
+[Record test evidence](test-tooling/recorder.md) covers contract and pipeline
+observation, per-file journals, JSON/HTML artifacts and transaction profiling.
+Use `/recorder/deno` with Deno BDD or `/recorder/node` with Node's native test
+runner. Both share the same recorder settings and artifact/report formats;
+neither requires Docker.

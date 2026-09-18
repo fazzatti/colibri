@@ -44,6 +44,7 @@ export type {
   Sep10Client,
   Sep10GetChallengeOptions,
   Sep10SignedChallenge,
+  Sep10Signer,
   Sep45AuthenticateOptions,
   Sep45AuthenticationOptions,
   Sep45AuthorizeChallengeOptions,

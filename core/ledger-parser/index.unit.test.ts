@@ -8,26 +8,28 @@
  * - operation/index.unit.test.ts - Operation class tests
  */
 
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { expect } from "@std/expect";
-import { Ledger, Transaction, Operation } from "@/ledger-parser/index.ts";
+import { Ledger, Operation, Transaction } from "@/ledger-parser/index.ts";
 import {
+  getLedgerFixture,
   loadLedgerFixtures,
   loadMultiVersionFixtures,
   loadV2Fixtures,
-  getLedgerFixture,
 } from "colibri-internal/tests/fixtures/rpc/get_ledgers/index.ts";
 import {
-  INVALID_LEDGER_ENTRY,
-  INVALID_HEADER_XDR,
-  INVALID_METADATA_XDR,
-  UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
-  INVALID_TRANSACTION_INDEX,
-  INVALID_OPERATION_INDEX,
-  UNSUPPORTED_OPERATION_TYPE,
-  ERROR_LDP,
   Code,
+  ERROR_LDP,
+  INVALID_HEADER_XDR,
+  INVALID_LEDGER_ENTRY,
+  INVALID_METADATA_XDR,
+  INVALID_OPERATION_INDEX,
+  INVALID_TRANSACTION_INDEX,
+  UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
+  UNSUPPORTED_OPERATION_TYPE,
 } from "@/ledger-parser/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("LedgerParser", () => {
   describe("Module Exports", () => {
@@ -113,16 +115,16 @@ describe("LedgerParser", () => {
       expect(ERROR_LDP[Code.INVALID_HEADER_XDR]).toBe(INVALID_HEADER_XDR);
       expect(ERROR_LDP[Code.INVALID_METADATA_XDR]).toBe(INVALID_METADATA_XDR);
       expect(ERROR_LDP[Code.UNSUPPORTED_LEDGER_CLOSE_META_VERSION]).toBe(
-        UNSUPPORTED_LEDGER_CLOSE_META_VERSION
+        UNSUPPORTED_LEDGER_CLOSE_META_VERSION,
       );
       expect(ERROR_LDP[Code.INVALID_TRANSACTION_INDEX]).toBe(
-        INVALID_TRANSACTION_INDEX
+        INVALID_TRANSACTION_INDEX,
       );
       expect(ERROR_LDP[Code.INVALID_OPERATION_INDEX]).toBe(
-        INVALID_OPERATION_INDEX
+        INVALID_OPERATION_INDEX,
       );
       expect(ERROR_LDP[Code.UNSUPPORTED_OPERATION_TYPE]).toBe(
-        UNSUPPORTED_OPERATION_TYPE
+        UNSUPPORTED_OPERATION_TYPE,
       );
     });
   });

@@ -1,7 +1,7 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Buffer } from "node:buffer";
-import { xdr, Keypair, Address, nativeToScVal } from "stellar-sdk";
+import { Address, Keypair, nativeToScVal, xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { Event } from "@/event/event.ts";
 import { EventTemplate } from "@/event/template.ts";
@@ -9,6 +9,8 @@ import { EventFilter } from "@/event/event-filter/index.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import { EventType } from "@/event/types.ts";
 import type { EventSchema } from "@/event/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 // ============================================================================
 // Test Schemas
@@ -146,7 +148,7 @@ const TEST_CONTRACT_ID =
 function createMockEvent(
   topics: xdr.ScVal[],
   value: xdr.ScVal,
-  contractId: string = TEST_CONTRACT_ID
+  contractId: string = TEST_CONTRACT_ID,
 ): Event {
   return new Event({
     id: "0000000000000000000-0000000000",
@@ -166,7 +168,7 @@ function createMockEvent(
 function createMockEventResponse(
   topics: xdr.ScVal[],
   value: xdr.ScVal,
-  contractId: string = TEST_CONTRACT_ID
+  contractId: string = TEST_CONTRACT_ID,
 ): Api.EventResponse {
   // Create a mock contractId object that has a contractId() method like Contract
   const mockContractId = {
@@ -192,13 +194,13 @@ function createMockEventResponse(
 // Tests
 // ============================================================================
 
-describe("EventTemplate", () => {
+describe("Template EventTemplate", () => {
   describe("is()", () => {
     it("should return true for matching event", () => {
       const userAddress = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("simple"), new Address(userAddress).toScVal()],
-        nativeToScVal(1000n, { type: "i128" })
+        nativeToScVal(1000n, { type: "i128" }),
       );
 
       assertEquals(SimpleEvent.is(event), true);
@@ -207,7 +209,7 @@ describe("EventTemplate", () => {
     it("should return false for wrong topic count", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("simple")], // missing user topic
-        nativeToScVal(1000n, { type: "i128" })
+        nativeToScVal(1000n, { type: "i128" }),
       );
 
       assertEquals(SimpleEvent.is(event), false);
@@ -217,7 +219,7 @@ describe("EventTemplate", () => {
       const userAddress = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("wrong_name"), new Address(userAddress).toScVal()],
-        nativeToScVal(1000n, { type: "i128" })
+        nativeToScVal(1000n, { type: "i128" }),
       );
 
       assertEquals(SimpleEvent.is(event), false);
@@ -229,7 +231,7 @@ describe("EventTemplate", () => {
           xdr.ScVal.scvSymbol("simple"),
           xdr.ScVal.scvU32(123), // should be address
         ],
-        nativeToScVal(1000n, { type: "i128" })
+        nativeToScVal(1000n, { type: "i128" }),
       );
 
       assertEquals(SimpleEvent.is(event), false);
@@ -239,7 +241,7 @@ describe("EventTemplate", () => {
       const userAddress = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("simple"), new Address(userAddress).toScVal()],
-        xdr.ScVal.scvString("not a bigint") // should be i128
+        xdr.ScVal.scvString("not a bigint"), // should be i128
       );
 
       assertEquals(SimpleEvent.is(event), false);
@@ -255,7 +257,7 @@ describe("EventTemplate", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvBool(true),
         ],
-        xdr.ScVal.scvU32(42)
+        xdr.ScVal.scvU32(42),
       );
 
       assertEquals(MultiTopicEvent.is(event), true);
@@ -271,7 +273,7 @@ describe("EventTemplate", () => {
           new Address(to).toScVal(),
           xdr.ScVal.scvString("not a bool"), // should be bool
         ],
-        xdr.ScVal.scvU32(42)
+        xdr.ScVal.scvU32(42),
       );
 
       assertEquals(MultiTopicEvent.is(event), false);
@@ -284,7 +286,7 @@ describe("EventTemplate", () => {
           xdr.ScVal.scvSymbol("bytes_event"),
           xdr.ScVal.scvBytes(Buffer.from(bytes)),
         ],
-        xdr.ScVal.scvBytes(Buffer.from(bytes))
+        xdr.ScVal.scvBytes(Buffer.from(bytes)),
       );
 
       assertEquals(BytesEvent.is(event), true);
@@ -296,7 +298,7 @@ describe("EventTemplate", () => {
           xdr.ScVal.scvSymbol("bytes_event"),
           xdr.ScVal.scvString("not bytes"), // should be bytes
         ],
-        xdr.ScVal.scvBytes(Buffer.from([1, 2, 3]))
+        xdr.ScVal.scvBytes(Buffer.from([1, 2, 3])),
       );
 
       assertEquals(BytesEvent.is(event), false);
@@ -308,7 +310,7 @@ describe("EventTemplate", () => {
           xdr.ScVal.scvSymbol("bigint_event"),
           xdr.ScVal.scvTimepoint(xdr.Uint64(BigInt(1700000000))),
         ],
-        nativeToScVal(BigInt("12345678901234567890"), { type: "u256" })
+        nativeToScVal(BigInt("12345678901234567890"), { type: "u256" }),
       );
 
       assertEquals(BigIntEvent.is(event), true);
@@ -320,7 +322,7 @@ describe("EventTemplate", () => {
           xdr.ScVal.scvSymbol("bigint_event"),
           xdr.ScVal.scvU32(123), // should be timepoint (bigint)
         ],
-        nativeToScVal(BigInt("12345"), { type: "u256" })
+        nativeToScVal(BigInt("12345"), { type: "u256" }),
       );
 
       assertEquals(BigIntEvent.is(event), false);
@@ -329,7 +331,7 @@ describe("EventTemplate", () => {
     it("should validate vec type", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("vec_event")],
-        xdr.ScVal.scvVec([xdr.ScVal.scvU32(1), xdr.ScVal.scvU32(2)])
+        xdr.ScVal.scvVec([xdr.ScVal.scvU32(1), xdr.ScVal.scvU32(2)]),
       );
 
       assertEquals(VecEvent.is(event), true);
@@ -338,7 +340,7 @@ describe("EventTemplate", () => {
     it("should return false for wrong vec type", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("vec_event")],
-        xdr.ScVal.scvU32(123) // should be vec
+        xdr.ScVal.scvU32(123), // should be vec
       );
 
       assertEquals(VecEvent.is(event), false);
@@ -352,7 +354,7 @@ describe("EventTemplate", () => {
             key: xdr.ScVal.scvSymbol("key"),
             val: xdr.ScVal.scvU32(123),
           }),
-        ])
+        ]),
       );
 
       assertEquals(MapEvent.is(event), true);
@@ -361,7 +363,7 @@ describe("EventTemplate", () => {
     it("should return false for wrong map type", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("map_event")],
-        xdr.ScVal.scvVec([xdr.ScVal.scvU32(1)]) // should be map
+        xdr.ScVal.scvVec([xdr.ScVal.scvU32(1)]), // should be map
       );
 
       assertEquals(MapEvent.is(event), false);
@@ -373,7 +375,7 @@ describe("EventTemplate", () => {
       const userAddress = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("simple"), new Address(userAddress).toScVal()],
-        nativeToScVal(1000n, { type: "i128" })
+        nativeToScVal(1000n, { type: "i128" }),
       );
 
       const simpleEvent = SimpleEvent.fromEvent(event);
@@ -384,7 +386,7 @@ describe("EventTemplate", () => {
       const userAddress = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("simple"), new Address(userAddress).toScVal()],
-        nativeToScVal(1000n, { type: "i128" })
+        nativeToScVal(1000n, { type: "i128" }),
       );
 
       const simpleEvent = SimpleEvent.fromEvent(event);
@@ -395,7 +397,7 @@ describe("EventTemplate", () => {
       const userAddress = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("simple"), new Address(userAddress).toScVal()],
-        nativeToScVal(1000n, { type: "i128" })
+        nativeToScVal(1000n, { type: "i128" }),
       );
 
       const simpleEvent = SimpleEvent.fromEvent(event);
@@ -404,7 +406,7 @@ describe("EventTemplate", () => {
         // deno-lint-ignore no-explicit-any
         () => (simpleEvent as any).get("unknown_field"),
         Error,
-        "Unknown field: unknown_field"
+        "Unknown field: unknown_field",
       );
     });
   });
@@ -414,7 +416,7 @@ describe("EventTemplate", () => {
       const userAddress = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("simple"), new Address(userAddress).toScVal()],
-        nativeToScVal(1000n, { type: "i128" })
+        nativeToScVal(1000n, { type: "i128" }),
       );
 
       const simpleEvent = SimpleEvent.fromEvent(event);
@@ -427,13 +429,13 @@ describe("EventTemplate", () => {
     it("should throw for non-matching event", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("wrong_name")],
-        xdr.ScVal.scvU32(123)
+        xdr.ScVal.scvU32(123),
       );
 
       assertThrows(
         () => SimpleEvent.fromEvent(event),
         Error,
-        'Event does not match simple schema. Expected 2 topics with name "simple".'
+        'Event does not match simple schema. Expected 2 topics with name "simple".',
       );
     });
   });
@@ -443,7 +445,7 @@ describe("EventTemplate", () => {
       const userAddress = Keypair.random().publicKey();
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("simple"), new Address(userAddress).toScVal()],
-        nativeToScVal(1000n, { type: "i128" })
+        nativeToScVal(1000n, { type: "i128" }),
       );
 
       const simpleEvent = SimpleEvent.tryFromEvent(event);
@@ -455,7 +457,7 @@ describe("EventTemplate", () => {
     it("should return undefined for non-matching event", () => {
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("wrong_name")],
-        xdr.ScVal.scvU32(123)
+        xdr.ScVal.scvU32(123),
       );
 
       const result = SimpleEvent.tryFromEvent(event);
@@ -468,7 +470,7 @@ describe("EventTemplate", () => {
       const userAddress = Keypair.random().publicKey();
       const response = createMockEventResponse(
         [xdr.ScVal.scvSymbol("simple"), new Address(userAddress).toScVal()],
-        nativeToScVal(1000n, { type: "i128" })
+        nativeToScVal(1000n, { type: "i128" }),
       );
 
       const simpleEvent = SimpleEvent.fromEventResponse(response);
@@ -481,13 +483,13 @@ describe("EventTemplate", () => {
     it("should throw for non-matching EventResponse", () => {
       const response = createMockEventResponse(
         [xdr.ScVal.scvSymbol("wrong_name")],
-        xdr.ScVal.scvU32(123)
+        xdr.ScVal.scvU32(123),
       );
 
       assertThrows(
         () => SimpleEvent.fromEventResponse(response),
         Error,
-        'Event does not match simple schema. Expected 2 topics with name "simple".'
+        'Event does not match simple schema. Expected 2 topics with name "simple".',
       );
     });
   });
@@ -497,7 +499,7 @@ describe("EventTemplate", () => {
       const userAddress = Keypair.random().publicKey();
       const response = createMockEventResponse(
         [xdr.ScVal.scvSymbol("simple"), new Address(userAddress).toScVal()],
-        nativeToScVal(1000n, { type: "i128" })
+        nativeToScVal(1000n, { type: "i128" }),
       );
 
       const simpleEvent = SimpleEvent.tryFromEventResponse(response);
@@ -509,7 +511,7 @@ describe("EventTemplate", () => {
     it("should return undefined for non-matching EventResponse", () => {
       const response = createMockEventResponse(
         [xdr.ScVal.scvSymbol("wrong_name")],
-        xdr.ScVal.scvU32(123)
+        xdr.ScVal.scvU32(123),
       );
 
       const result = SimpleEvent.tryFromEventResponse(response);
@@ -633,7 +635,7 @@ describe("EventTemplate", () => {
       assertThrows(
         () => UnsupportedEvent.toTopicFilter({ bignum: 12345n }),
         Error,
-        "Cannot convert value to ScVal for type: u128"
+        "Cannot convert value to ScVal for type: u128",
       );
     });
   });
@@ -744,7 +746,7 @@ describe("EventTemplate", () => {
           xdr.ScVal.scvString("hello"),
           xdr.ScVal.scvSymbol("sym"),
         ],
-        xdr.ScVal.scvI32(-42)
+        xdr.ScVal.scvI32(-42),
       );
 
       assertEquals(AllTypesEvent.is(event), true);
@@ -765,7 +767,7 @@ describe("EventTemplate", () => {
 
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("unknown")],
-        xdr.ScVal.scvVoid()
+        xdr.ScVal.scvVoid(),
       );
 
       // The default case in validateFieldType returns true
@@ -787,7 +789,7 @@ describe("EventTemplate", () => {
 
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("u64_event")],
-        nativeToScVal(BigInt("18446744073709551615"), { type: "u64" })
+        nativeToScVal(BigInt("18446744073709551615"), { type: "u64" }),
       );
 
       assertEquals(U64Event.is(event), true);
@@ -806,7 +808,7 @@ describe("EventTemplate", () => {
 
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("i64_event")],
-        nativeToScVal(BigInt("-9223372036854775808"), { type: "i64" })
+        nativeToScVal(BigInt("-9223372036854775808"), { type: "i64" }),
       );
 
       assertEquals(I64Event.is(event), true);
@@ -827,7 +829,7 @@ describe("EventTemplate", () => {
         [xdr.ScVal.scvSymbol("u128_event")],
         nativeToScVal(BigInt("340282366920938463463374607431768211455"), {
           type: "u128",
-        })
+        }),
       );
 
       assertEquals(U128Event.is(event), true);
@@ -848,7 +850,7 @@ describe("EventTemplate", () => {
         [xdr.ScVal.scvSymbol("i128_event")],
         nativeToScVal(BigInt("-170141183460469231731687303715884105728"), {
           type: "i128",
-        })
+        }),
       );
 
       assertEquals(I128Event.is(event), true);
@@ -867,7 +869,7 @@ describe("EventTemplate", () => {
 
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("i256_event")],
-        nativeToScVal(BigInt("-12345678901234567890"), { type: "i256" })
+        nativeToScVal(BigInt("-12345678901234567890"), { type: "i256" }),
       );
 
       assertEquals(I256Event.is(event), true);
@@ -886,7 +888,7 @@ describe("EventTemplate", () => {
 
       const event = createMockEvent(
         [xdr.ScVal.scvSymbol("duration_event")],
-        xdr.ScVal.scvDuration(xdr.Uint64(BigInt(3600)))
+        xdr.ScVal.scvDuration(xdr.Uint64(BigInt(3600))),
       );
 
       assertEquals(DurationEvent.is(event), true);
@@ -907,7 +909,7 @@ describe("EventTemplate", () => {
             key: xdr.ScVal.scvU32(2),
             val: xdr.ScVal.scvString("two"),
           }),
-        ])
+        ]),
       );
 
       assertEquals(MapEvent.is(event), true);
@@ -922,7 +924,7 @@ describe("EventTemplate", () => {
             key: xdr.ScVal.scvSymbol("key1"),
             val: xdr.ScVal.scvString("value1"),
           }),
-        ])
+        ]),
       );
 
       assertEquals(MapEvent.is(event), true);

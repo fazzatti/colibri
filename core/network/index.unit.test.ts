@@ -1,8 +1,10 @@
 import { assert, assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { NetworkPassphrase, NetworkType } from "@/network/types.ts";
 import * as ERROR from "@/network/error.ts";
 import { isNetworkConfig, NetworkConfig } from "@/network/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Network", () => {
   describe("Default Network Configurations", () => {

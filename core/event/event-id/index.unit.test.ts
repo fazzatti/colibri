@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertFalse, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   createEventId,
   createEventIdFromParts,
@@ -8,6 +8,8 @@ import {
 } from "@/event/event-id/index.ts";
 import type { TOID } from "@/toid/types.ts";
 import * as ERROR from "@/event/event-id/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 // =============================================================================
 // Tests: isEventId

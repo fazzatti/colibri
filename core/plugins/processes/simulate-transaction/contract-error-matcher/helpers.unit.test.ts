@@ -1,5 +1,5 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";
 import {
   ErrorByCode,
@@ -15,6 +15,8 @@ import {
   bindingSpec,
   errorEntry,
 } from "colibri-internal/tests/binding-fixtures.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("contract error matcher helpers", () => {
   it("extracts the error map from a contract spec", () => {

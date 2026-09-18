@@ -1,7 +1,9 @@
 import { assert, assertEquals, assertExists, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { xdr } from "stellar-sdk";
 import { parseErrorResult } from "@/common/helpers/xdr/parse-error-result.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("parseErrorResult", () => {
   it("should return null for undefined error result", () => {

@@ -1,5 +1,5 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Buffer } from "node:buffer";
 import { Keypair, xdr } from "stellar-sdk";
 import type { LedgerKeyLike } from "@/common/types/index.ts";
@@ -27,6 +27,8 @@ import type {
   ContractId,
   Ed25519PublicKey,
 } from "@/strkeys/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const ACCOUNT_ID = Keypair.random().publicKey() as Ed25519PublicKey;
 const CONTRACT_ID = StrKey.encodeContract(Buffer.alloc(32, 3)) as ContractId;

@@ -5,7 +5,7 @@ import {
   assertStrictEquals,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Address, xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import {
@@ -35,6 +35,8 @@ import {
   TargetProviderUnexpectedError,
   TargetRpcInitializationFailedError,
 } from "@/providers/target/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const contractId = (fill: number): string =>
   StrKey.encodeContract(Buffer.alloc(32, fill));

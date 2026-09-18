@@ -1,7 +1,7 @@
 import { createWalletSigner } from "@/wallets/signer/index.ts";
 import { createWalletAuthEntrySigner } from "@/wallets/auth-entry/index.ts";
 import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   type KitEvent,
   KitEventType,
@@ -19,6 +19,8 @@ import { createColibriConfig } from "@/context/config.ts";
 import { ColibriReactError } from "@/errors/index.ts";
 import { createStellarWalletsKitConnector } from "@/ecosystem/stellar-wallets-kit/connector.ts";
 import type { StellarWalletsKitApi } from "@/ecosystem/stellar-wallets-kit/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const network = NetworkConfig.TestNet();
 const key = LocalSigner.generateRandom();

@@ -4,7 +4,7 @@ import {
   assertNotStrictEquals,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   FeeBumpTransaction,
   Networks,
@@ -15,6 +15,8 @@ import { Ledger } from "@/ledger-parser/ledger/index.ts";
 import { Transaction } from "@/ledger-parser/transaction/index.ts";
 import * as ERROR from "@/ledger-parser/error.ts";
 import { getLedgerFixture } from "colibri-internal/tests/fixtures/rpc/get_ledgers/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Native transaction context", () => {
   const ledger = Ledger.fromEntry(getLedgerFixture(60661500)!);

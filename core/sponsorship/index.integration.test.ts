@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   Asset,
@@ -23,6 +23,9 @@ import { wrapSponsorship } from "@/sponsorship/index.ts";
 import { SignEnvelopeErrors } from "@/processes/sign-envelope/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
+
+const { afterAll, beforeAll, describe, it, observer: suiteObserver } =
+  recordColibriTests(import.meta.url);
 
 describe("reserve sponsorship on Quickstart", disableSanitizeConfig, () => {
   const ledger = new StellarTestLedger({
@@ -65,7 +68,10 @@ describe("reserve sponsorship on Quickstart", disableSanitizeConfig, () => {
       sponsor.publicKey(),
       { rpcUrl: networkConfig.rpcUrl!, allowHttp: true },
     );
-    execute = createClassicTransactionPipeline({ networkConfig });
+    execute = suiteObserver.attach(
+      createClassicTransactionPipeline({ networkConfig }),
+      { name: "execute" },
+    );
     config = {
       source: sponsor.publicKey(),
       signers: [sponsor, holder],

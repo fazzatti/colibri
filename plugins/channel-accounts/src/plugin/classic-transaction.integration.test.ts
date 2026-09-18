@@ -1,6 +1,6 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { assertEquals, assertExists } from "@std/assert";
-import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   createClassicTransactionPipeline,
   initializeWithFriendbot,
@@ -25,6 +25,9 @@ import {
   ChannelAccounts,
   createChannelAccountsPlugin,
 } from "@/index.ts";
+
+const { afterAll, beforeAll, describe, it, observer: suiteObserver } =
+  recordColibriTests(import.meta.url);
 
 const asEnvelopeXdr = (
   envelopeXdr: string | xdr.TransactionEnvelope,
@@ -149,10 +152,13 @@ describe(
           },
         });
 
-        const pipeline = createClassicTransactionPipeline({
-          networkConfig,
-          rpc,
-        });
+        const pipeline = suiteObserver.attach(
+          createClassicTransactionPipeline({
+            networkConfig,
+            rpc,
+          }),
+          { name: "pipeline" },
+        );
         pipeline.use(plugin);
         pipeline.use(feeBumpPlugin);
 
@@ -209,10 +215,13 @@ describe(
           },
         });
 
-        const pipeline = createClassicTransactionPipeline({
-          networkConfig,
-          rpc,
-        });
+        const pipeline = suiteObserver.attach(
+          createClassicTransactionPipeline({
+            networkConfig,
+            rpc,
+          }),
+          { name: "pipeline" },
+        );
         pipeline.use(plugin);
         pipeline.use(feeBumpPlugin);
 
@@ -268,7 +277,9 @@ describe(
           followUpResult.response.envelopeXdr,
           networkConfig.networkPassphrase,
         );
-        const followUpInnerTransaction = getInnerTransaction(followUpTransaction);
+        const followUpInnerTransaction = getInnerTransaction(
+          followUpTransaction,
+        );
 
         assertEquals(
           channels

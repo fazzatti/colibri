@@ -1,10 +1,12 @@
-import { assert, assertFalse, assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { assert, assertEquals, assertFalse, assertThrows } from "@std/assert";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
-  isBoundedArray,
   asBoundedArray,
   type BoundedArray,
+  isBoundedArray,
 } from "@/common/helpers/bounded-array.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("BoundedArray", () => {
   describe("compile-time type constraints", () => {
@@ -51,11 +53,11 @@ describe("BoundedArray", () => {
       assertEquals(arr.indexOf(2), 1);
       assertEquals(
         arr.map((x) => x * 2),
-        [2, 4]
+        [2, 4],
       );
       assertEquals(
         arr.filter((x) => x > 1),
-        [2]
+        [2],
       );
     });
 
@@ -203,11 +205,11 @@ describe("BoundedArray", () => {
 
         assertEquals(
           arr.map((x) => x * 2),
-          [2, 4, 6]
+          [2, 4, 6],
         );
         assertEquals(
           arr.filter((x) => x > 1),
-          [2, 3]
+          [2, 3],
         );
         assert(arr.includes(2));
       });
@@ -218,7 +220,7 @@ describe("BoundedArray", () => {
         assertThrows(
           () => asBoundedArray([], 1, 3),
           Error,
-          "Array length 0 not in bounds [1, 3]"
+          "Array length 0 not in bounds [1, 3]",
         );
       });
 
@@ -226,7 +228,7 @@ describe("BoundedArray", () => {
         assertThrows(
           () => asBoundedArray([1], 2, 5),
           Error,
-          "Array length 1 not in bounds [2, 5]"
+          "Array length 1 not in bounds [2, 5]",
         );
       });
 
@@ -234,7 +236,7 @@ describe("BoundedArray", () => {
         assertThrows(
           () => asBoundedArray([1, 2, 3, 4], 1, 3),
           Error,
-          "Array length 4 not in bounds [1, 3]"
+          "Array length 4 not in bounds [1, 3]",
         );
       });
 
@@ -242,7 +244,7 @@ describe("BoundedArray", () => {
         assertThrows(
           () => asBoundedArray([1, 2], 5, 3),
           Error,
-          "Array length 2 not in bounds [5, 3]"
+          "Array length 2 not in bounds [5, 3]",
         );
       });
 
@@ -250,7 +252,7 @@ describe("BoundedArray", () => {
         assertThrows(
           () => asBoundedArray([1, 2], -1, 3),
           Error,
-          "Array length 2 not in bounds [-1, 3]"
+          "Array length 2 not in bounds [-1, 3]",
         );
       });
     });

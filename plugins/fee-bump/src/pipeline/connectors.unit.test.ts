@@ -1,13 +1,13 @@
-import { assertEquals, assertRejects, assertExists } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { assertEquals, assertExists, assertRejects } from "@std/assert";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { createRunContext, step } from "convee";
 import {
   ColibriError,
+  type EnvelopeSigningRequirementsOutput,
+  type FeeBumpConfig,
   LocalSigner,
   NativeAccount,
   steps,
-  type EnvelopeSigningRequirementsOutput,
-  type FeeBumpConfig,
   type WrapFeeBumpOutput,
 } from "@colibri/core";
 import {
@@ -16,6 +16,8 @@ import {
   wrapFeeBumpToEnvelopeSigningRequirements,
 } from "@/pipeline/connectors.ts";
 import type { FeeBumpPipelineInput } from "@/pipeline/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const seedStepOutput = async <Output>(
   context: ReturnType<typeof createRunContext>,
@@ -35,7 +37,9 @@ describe("fee-bump pipeline connectors", () => {
   };
 
   it("converts fee-bump pipeline input to wrap-fee-bump input", () => {
-    const transaction = { id: "tx" } as unknown as FeeBumpPipelineInput["transaction"];
+    const transaction = {
+      id: "tx",
+    } as unknown as FeeBumpPipelineInput["transaction"];
 
     const connector = inputToBuild("Test Network", feeBumpConfig);
     const result = connector({ transaction });

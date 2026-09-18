@@ -4,7 +4,7 @@ import {
   assertStrictEquals,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { stub } from "@std/testing/mock";
 import { xdr } from "stellar-sdk";
 import { Contract } from "@/contract/index.ts";
@@ -17,6 +17,10 @@ import {
   bindingSpec,
   contractId,
 } from "colibri-internal/tests/binding-fixtures.ts";
+
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 class TypedContract extends Contract {
   decode<Value>(method: string, result: InvokeContractOutput) {
@@ -35,10 +39,16 @@ const successfulResult = (
 });
 
 const client = (withSpec = true): TypedContract =>
-  new TypedContract({
-    networkConfig: NetworkConfig.TestNet(),
-    contractConfig: { contractId, spec: withSpec ? bindingSpec() : undefined },
-  });
+  suiteObserver.attach(
+    new TypedContract({
+      networkConfig: NetworkConfig.TestNet(),
+      contractConfig: {
+        contractId,
+        spec: withSpec ? bindingSpec() : undefined,
+      },
+    }),
+    { name: "TypedContract" },
+  );
 
 describe("Contract invocation decoding", () => {
   it("decodes the value while preserving every raw field without mutation", () => {

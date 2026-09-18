@@ -1,11 +1,13 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { NetworkConfig } from "@colibri/core";
 import { Networks } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import { getLedgerFixture } from "colibri-internal/tests/fixtures/rpc/get_ledgers/index.ts";
 import { createLedgerParser } from "@/variants/ledger/parser.ts";
 import { RPCStreamerError, RPCStreamerErrorCode as Code } from "@/errors.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Ledger network context over native RPC transport", () => {
   const entry = getLedgerFixture(30000000)!;

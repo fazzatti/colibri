@@ -37,7 +37,9 @@ export async function emitDeclarations(
   source: string,
   inventory: WorkspacePackage[],
 ): Promise<Map<string, string>> {
-  const packages = inventory.filter((pkg) => !dockerPackages.has(pkg.name)).map(
+  const packages = inventory.filter((pkg) =>
+    pkg.name === "@colibri/test-tooling" || !dockerPackages.has(pkg.name)
+  ).map(
     (pkg) => ({
       ...pkg,
       exports: Object.fromEntries(

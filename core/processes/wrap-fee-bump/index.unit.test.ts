@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { assert, assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   MuxedAccount,
@@ -19,6 +19,8 @@ import type {
   FeeBumpConfig,
 } from "@/common/types/transaction-config/types.ts";
 import type { Ed25519PublicKey, MuxedAddress } from "@/strkeys/types.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("WrapFeeBump", () => {
   const { networkPassphrase } = NetworkConfig.TestNet();
@@ -132,7 +134,7 @@ describe("WrapFeeBump", () => {
       assertEquals(result.feeSource, muxedSource);
     });
   });
-  describe("Errors", () => {
+  describe("Wrapping errors", () => {
     it("throws UNEXPECTED_ERROR for unexpected errors", () => {
       const inner = assembleTransaction(alice, [Operation.setOptions({})]);
       const feebump = TransactionBuilder.buildFeeBumpTransaction(
@@ -174,7 +176,7 @@ describe("WrapFeeBump", () => {
     });
   });
 
-  describe("Errors", () => {
+  describe("Input validation errors", () => {
     it("throws NOT_A_TRANSACTION for invalid input", () => {
       assertThrows(
         () =>

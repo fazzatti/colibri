@@ -1,8 +1,10 @@
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { assertEquals, assertThrows } from "@std/assert";
 import { Asset, Keypair } from "stellar-sdk";
 import { parseAsset } from "@/common/helpers/xdr/parse-asset.ts";
 import { UNKNOWN_ASSET_TYPE } from "@/common/helpers/xdr/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("parseAsset", () => {
   it("should parse native asset", () => {
@@ -46,7 +48,7 @@ describe("parseAsset", () => {
       // deno-lint-ignore no-explicit-any
       () => parseAsset(mockAsset as any),
       UNKNOWN_ASSET_TYPE,
-      "Unknown asset type"
+      "Unknown asset type",
     );
   });
 });

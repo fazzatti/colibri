@@ -1,6 +1,6 @@
 // deno-lint-ignore-file require-await
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { beforeEach, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import type { Buffer } from "node:buffer";
 import {
   Account,
@@ -15,6 +15,8 @@ import * as ERROR from "@/processes/sign-envelope/error.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { type KeypairSigner, OperationThreshold } from "@/signer/types.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
+
+const { beforeEach, describe, it } = recordColibriTests(import.meta.url);
 
 describe("SignEnvelope", () => {
   const { networkPassphrase } = NetworkConfig.TestNet();

@@ -1,10 +1,12 @@
 import { Code } from "@/error.ts";
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { createTerminalIO } from "@/cli/terminal.ts";
 import { BindingError } from "@/error.ts";
 import { validateCliValue } from "@/cli/validation.ts";
 import { contractId } from "colibri-internal/tests/binding-fixtures.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 function terminal(chunks: (string | Error)[], tty = true) {
   const raw: boolean[] = [];

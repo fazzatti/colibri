@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Address, xdr } from "stellar-sdk";
 import type { Api, Server } from "stellar-sdk/rpc";
 import {
@@ -13,6 +13,8 @@ import {
   bindingSpec,
   contractId,
 } from "colibri-internal/tests/binding-fixtures.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("binding sources", () => {
   it("clones specs and hashes local Wasm without a network", async () => {

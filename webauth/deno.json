@@ -1,6 +1,6 @@
 {
   "name": "@colibri/webauth",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "exports": {
     ".": "./mod.ts",
     "./sep10": "./src/sep10/index.ts",

@@ -1,5 +1,5 @@
 import { assertEquals, assertStrictEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { createRunContext, step, type StepThis } from "convee";
 import {
   artifactProcessState,
@@ -50,6 +50,8 @@ import {
 import { PipelineStepOutputMissingError } from "@/pipelines/build-verification/error.ts";
 import { getRequiredBuildVerificationStepOutput } from "@/pipelines/build-verification/runtime.ts";
 import { pipelineTestDependencies } from "@/pipelines/build-verification/testing.test.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const runtime = (snapshot: { output?: unknown } | undefined): StepThis =>
   ({

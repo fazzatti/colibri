@@ -7,7 +7,7 @@ import {
   assertRejects,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Keypair, StrKey } from "stellar-sdk";
 import {
   Sep10Code,
@@ -21,6 +21,8 @@ import { protocolForAccount } from "@/routing.ts";
 import { WebAuthToken } from "@/token.ts";
 import { WebAuthTransport } from "@/transport.ts";
 import { testJwt } from "colibri-internal/tests/helpers/webauth/fixtures.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const MUXED_ACCOUNT =
   "MAQAA5L65LSYH7CQ3VTJ7F3HHLGCL3DSLAR2Y47263D56MNNGHSQSAAAAAAAAAAE2LP26";

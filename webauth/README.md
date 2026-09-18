@@ -55,6 +55,26 @@ Use `client.supports("sep10")`, `client.supports("sep45")`, or
 before authenticating. If the selected protocol was not advertised, the client
 fails without trying the other protocol.
 
+## Asynchronous wallet signing
+
+SEP-10 accepts `Sep10Signer`: an SDK `Keypair` or a Core `EnvelopeSigner` whose
+`signTransaction()` can be asynchronous. Core local keypair signers and mixed
+multisig arrays remain supported. Signers run sequentially; a wallet must retain
+the challenge body and existing signatures and add a valid signature matching
+its G signer key. An async `clientDomainSigner` must match the discovered domain
+key. The server checks account signer weights.
+
+Approval never submits the challenge on-chain. Malformed or changed envelopes
+are rejected, expiry is rechecked after approval and before exchange, and an
+optional `signal` prevents a cancelled flow from proceeding to another prompt or
+exchange. Cancellation cannot close an external wallet prompt or undo a request
+already sent. SEP-45 retains its authorization-entry API.
+
+See the
+[SEP-10 guide](https://fifo-docs.gitbook.io/colibri/packages/webauth/sep10) and
+[React wallet example](https://fifo-docs.gitbook.io/colibri/packages/react/wallet-authentication)
+for usage and validation details.
+
 ## Explicit SEP-10
 
 ```ts

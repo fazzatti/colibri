@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Address, Keypair, Networks, xdr } from "stellar-sdk";
 import { Buffer } from "node:buffer";
 import { DelegatedSigner } from "@/signer/delegated/index.ts";
@@ -11,6 +11,8 @@ import type {
   Ed25519SecretKey,
 } from "@/strkeys/types.ts";
 import * as ERROR from "@/signer/delegated/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const makeInvocation = (address: Address) =>
   new xdr.SorobanAuthorizedInvocation({

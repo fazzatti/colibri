@@ -1,10 +1,15 @@
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
-import { mainnetArchiveTestConfig } from "colibri-internal/tests/mainnet-archive-config.ts";
+import {
+  mainnetArchiveTestConfig,
+  mainnetArchiveTestRpc,
+} from "colibri-internal/tests/mainnet-archive-config.ts";
 import { assertEquals, assertExists } from "@std/assert";
-import { afterEach, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { type Event, EventFilter, EventType, SACEvents } from "@colibri/core";
 import { xdr } from "stellar-sdk";
 import { RPCStreamer } from "@/streamer.ts";
+
+const { afterEach, describe, it } = recordColibriTests(import.meta.url);
 
 // =============================================================================
 // Test Constants
@@ -57,7 +62,7 @@ describe(
       if (streamer) {
         streamer.stop();
         // Give the shared public archive endpoint space between test cases.
-        // CI also runs these test files serially; no failures are retried or skipped.
+        // CI runs these files serially; only transient archive HTTP reads retry.
         if (streamer.archiveRpc) {
           await new Promise((resolve) => setTimeout(resolve, 1_000));
         }
@@ -207,7 +212,7 @@ describe(
 
         streamer = RPCStreamer.event({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: networkConfig.archiveRpcUrl,
+          archiveRpc: mainnetArchiveTestRpc,
           options: {
             skipLedgerWaitIfBehind: true,
           },
@@ -230,7 +235,7 @@ describe(
 
         streamer = RPCStreamer.event({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: networkConfig.archiveRpcUrl,
+          archiveRpc: mainnetArchiveTestRpc,
           filters: [filter],
           options: {
             skipLedgerWaitIfBehind: true,
@@ -260,7 +265,7 @@ describe(
 
         streamer = RPCStreamer.event({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: networkConfig.archiveRpcUrl,
+          archiveRpc: mainnetArchiveTestRpc,
           filters: [filter],
           options: {
             skipLedgerWaitIfBehind: true,
@@ -295,7 +300,7 @@ describe(
 
         streamer = RPCStreamer.event({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: networkConfig.archiveRpcUrl,
+          archiveRpc: mainnetArchiveTestRpc,
           filters: [filter],
           options: {
             skipLedgerWaitIfBehind: true,
@@ -326,7 +331,7 @@ describe(
 
         streamer = RPCStreamer.event({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: networkConfig.archiveRpcUrl,
+          archiveRpc: mainnetArchiveTestRpc,
           filters: [filter],
           options: {
             skipLedgerWaitIfBehind: true,
@@ -352,7 +357,7 @@ describe(
 
         streamer = RPCStreamer.event({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: networkConfig.archiveRpcUrl,
+          archiveRpc: mainnetArchiveTestRpc,
           options: {
             skipLedgerWaitIfBehind: true,
           },
@@ -384,7 +389,7 @@ describe(
 
         streamer = RPCStreamer.event({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: networkConfig.archiveRpcUrl,
+          archiveRpc: mainnetArchiveTestRpc,
           filters: [filter],
           options: {
             skipLedgerWaitIfBehind: true,
@@ -419,7 +424,7 @@ describe(
 
         streamer = RPCStreamer.event({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: networkConfig.archiveRpcUrl,
+          archiveRpc: mainnetArchiveTestRpc,
           options: {
             skipLedgerWaitIfBehind: true,
           },
@@ -448,7 +453,7 @@ describe(
 
         streamer = RPCStreamer.event({
           rpcUrl: networkConfig.rpcUrl,
-          archiveRpcUrl: networkConfig.archiveRpcUrl,
+          archiveRpc: mainnetArchiveTestRpc,
           options: {
             skipLedgerWaitIfBehind: true,
           },

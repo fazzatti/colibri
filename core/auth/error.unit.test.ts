@@ -1,6 +1,8 @@
 import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { AuthError } from "@/auth/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 class TEST_AUTH_ERROR extends AuthError<"AUTH_TEST", { authId: string }> {
   constructor(cause?: Error) {

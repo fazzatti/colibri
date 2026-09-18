@@ -1,5 +1,5 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { createRunContext, step } from "convee";
 import { Operation, SorobanDataBuilder, xdr } from "stellar-sdk";
 import type { Server } from "stellar-sdk/rpc";
@@ -25,6 +25,10 @@ import {
   SIMULATE_TRANSACTION_STEP_ID,
 } from "@/steps/index.ts";
 
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
+
 const seedStepOutput = async <Output>(
   context: ReturnType<typeof createRunContext>,
   stepId: string,
@@ -43,7 +47,10 @@ describe("createInvokeContractPipeline", () => {
         type: NetworkType.TESTNET,
       });
 
-      const pipeline = createInvokeContractPipeline({ networkConfig });
+      const pipeline = suiteObserver.attach(
+        createInvokeContractPipeline({ networkConfig }),
+        { name: "pipeline" },
+      );
 
       assertEquals(pipeline.id, "InvokeContractPipeline");
     });
@@ -56,7 +63,10 @@ describe("createInvokeContractPipeline", () => {
         type: NetworkType.TESTNET,
       });
 
-      const pipeline = createInvokeContractPipeline({ networkConfig });
+      const pipeline = suiteObserver.attach(
+        createInvokeContractPipeline({ networkConfig }),
+        { name: "pipeline" },
+      );
 
       assertEquals(pipeline.id, "InvokeContractPipeline");
     });
@@ -380,9 +390,12 @@ describe("createInvokeContractPipeline", () => {
     it("throws MISSING_ARG when networkConfig is missing", () => {
       assertThrows(
         () =>
-          createInvokeContractPipeline({
-            networkConfig: undefined as unknown as NetworkConfig,
-          }),
+          suiteObserver.attach(
+            createInvokeContractPipeline({
+              networkConfig: undefined as unknown as NetworkConfig,
+            }),
+            { name: "createInvokeContractPipeline" },
+          ),
         ERROR.MISSING_ARG,
       );
     });
@@ -393,7 +406,11 @@ describe("createInvokeContractPipeline", () => {
       } as NetworkConfig;
 
       assertThrows(
-        () => createInvokeContractPipeline({ networkConfig }),
+        () =>
+          suiteObserver.attach(
+            createInvokeContractPipeline({ networkConfig }),
+            { name: "createInvokeContractPipeline" },
+          ),
         ERROR.MISSING_ARG,
       );
     });
@@ -404,7 +421,11 @@ describe("createInvokeContractPipeline", () => {
       } as NetworkConfig;
 
       assertThrows(
-        () => createInvokeContractPipeline({ networkConfig }),
+        () =>
+          suiteObserver.attach(
+            createInvokeContractPipeline({ networkConfig }),
+            { name: "createInvokeContractPipeline" },
+          ),
         ERROR.MISSING_RPC_URL,
       );
     });
@@ -413,7 +434,11 @@ describe("createInvokeContractPipeline", () => {
       const networkConfig = {} as NetworkConfig;
 
       assertThrows(
-        () => createInvokeContractPipeline({ networkConfig }),
+        () =>
+          suiteObserver.attach(
+            createInvokeContractPipeline({ networkConfig }),
+            { name: "createInvokeContractPipeline" },
+          ),
         ERROR.MISSING_ARG,
       );
     });
@@ -425,7 +450,11 @@ describe("createInvokeContractPipeline", () => {
         type: NetworkType.TESTNET,
       });
       assertThrows(
-        () => createInvokeContractPipeline({ networkConfig }),
+        () =>
+          suiteObserver.attach(
+            createInvokeContractPipeline({ networkConfig }),
+            { name: "createInvokeContractPipeline" },
+          ),
         ERROR.UNEXPECTED_ERROR,
       );
     });

@@ -5,7 +5,7 @@ import {
   assertRejects,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   Asset,
@@ -30,6 +30,8 @@ import {
   verifySep10Challenge,
 } from "@/sep10/verify-challenge.ts";
 import { Sep10Code, Sep10Error, WebAuthCode, WebAuthError } from "@/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 function expectCode(fn: () => unknown, code: string): void {
   assertEquals(assertThrows(fn, Sep10Error).code, code);
@@ -968,7 +970,12 @@ describe("SEP-10 WebAuth", () => {
     assertEquals(
       (
         await assertRejects(
-          () => client.signChallenge(challenge, failingSigner),
+          () =>
+            client.signChallenge(
+              challenge,
+              failingSigner,
+              fixture.clientDomain,
+            ),
           Sep10Error,
         )
       ).code,

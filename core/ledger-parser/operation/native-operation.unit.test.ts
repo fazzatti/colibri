@@ -1,5 +1,5 @@
 import { assertEquals, assertInstanceOf, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Asset,
   Keypair,
@@ -10,6 +10,8 @@ import { Ledger } from "@/ledger-parser/ledger/index.ts";
 import { Operation } from "@/ledger-parser/operation/index.ts";
 import * as ERROR from "@/ledger-parser/error.ts";
 import { getLedgerFixture } from "colibri-internal/tests/fixtures/rpc/get_ledgers/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Ledger operation native SDK conversion", () => {
   const transaction =

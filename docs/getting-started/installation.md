@@ -10,8 +10,8 @@ Deno-first TypeScript projects.
 - Node.js 22.12.0 or supported 22.x/24.x LTS when consuming Colibri through npm
   or a Node-based bundler
 - A reachable Docker daemon such as Docker Desktop or OrbStack if you plan to
-  use `@colibri/test-tooling` or the built-in `@colibri/build-verification`
-  runner
+  use `StellarTestLedger` from `@colibri/test-tooling` or the built-in
+  `@colibri/build-verification` runner; the execution recorder needs no Docker
 
 ## Installing Packages
 
@@ -39,12 +39,12 @@ This will add imports similar to:
 {
   "imports": {
     "@colibri/core": "jsr:@colibri/core@^1.3.1",
-    "@colibri/react": "jsr:@colibri/react@^0.2.0",
-    "@colibri/webauth": "jsr:@colibri/webauth@^1.1.0",
+    "@colibri/react": "jsr:@colibri/react@^0.3.0",
+    "@colibri/webauth": "jsr:@colibri/webauth@^1.2.0",
     "@colibri/build-verification": "jsr:@colibri/build-verification@^0.4.5",
     "@colibri/identicon": "jsr:@colibri/identicon@^1.2.0",
     "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^1.1.0",
-    "@colibri/test-tooling": "jsr:@colibri/test-tooling@^1.0.0",
+    "@colibri/test-tooling": "jsr:@colibri/test-tooling@^1.1.0",
     "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^1.0.1",
     "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^1.0.1",
     "@colibri/plugin-sep29": "jsr:@colibri/plugin-sep29@^1.0.1"

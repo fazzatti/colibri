@@ -5,7 +5,7 @@ import {
   assertRejects,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import type { Api, Server } from "stellar-sdk/rpc";
 import { pipe, step } from "convee";
 import {
@@ -32,6 +32,10 @@ import {
   type Transaction,
   TransactionBuilder,
 } from "stellar-sdk";
+
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 type PluginInput = SendTransactionInput;
 
@@ -100,16 +104,18 @@ describe("FeeBump Plugin", () => {
 
     it("attaches the plugin to the invoke pipeline", () => {
       const plugin = createPlugin();
-      const invokePipe = createInvokeContractPipeline({ networkConfig });
+      const invokePipe = suiteObserver.attach(
+        createInvokeContractPipeline({ networkConfig }),
+        { name: "invokePipe" },
+      );
 
+      const existingPlugins = Array.from(invokePipe.plugins);
       invokePipe.use(plugin);
 
       assertExists(invokePipe);
       assertEquals(invokePipe.id, INVOKE_CONTRACT_PIPELINE_ID);
-      assertEquals(invokePipe.plugins.length, 1);
-      const [attachedPlugin] = Array.from(
-        invokePipe.plugins as unknown as readonly (typeof plugin)[],
-      );
+      assertEquals(invokePipe.plugins.length, existingPlugins.length + 1);
+      const attachedPlugin = invokePipe.plugins.at(-1) as typeof plugin | undefined;
       assertExists(attachedPlugin);
       assertEquals(attachedPlugin.id, FEE_BUMP_PLUGIN_ID);
       assertEquals(attachedPlugin.target, FEE_BUMP_PLUGIN_TARGET);

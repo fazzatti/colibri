@@ -5,7 +5,7 @@ import {
   assertStrictEquals,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { createElement, StrictMode } from "react";
 import {
   dehydrate,
@@ -35,6 +35,8 @@ import {
   ReactNetworkMismatchError,
   ReactUnsupportedCapabilityError,
 } from "@/errors/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 const key = LocalSigner.generateRandom();
 const address = key.publicKey();
 const network = NetworkConfig.TestNet();

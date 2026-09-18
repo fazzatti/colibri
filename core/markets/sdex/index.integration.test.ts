@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Asset, Operation, TransactionBuilder, type xdr } from "stellar-sdk";
 import { StellarTestLedger } from "@colibri/test-tooling";
 import { createChannelAccountsPlugin } from "@colibri/plugin-channel-accounts";
@@ -12,6 +12,11 @@ import { LocalSigner } from "@/signer/local/index.ts";
 import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { ClassicTransactionOutput } from "@/pipelines/classic-transaction/types.ts";
+
+const { afterAll, beforeAll, describe, it, observer: suiteObserver } =
+  recordColibriTests(
+    import.meta.url,
+  );
 
 describe(
   "SDEX native exchange workflows on Quickstart",
@@ -90,7 +95,9 @@ describe(
         issuer.publicKey(),
         { rpcUrl: networkConfig.rpcUrl!, allowHttp: true },
       );
-      sdex = new SDEX({ networkConfig });
+      sdex = suiteObserver.attach(new SDEX({ networkConfig }), {
+        name: "sdex",
+      });
       await sdex.transactionPipe({
         operations: [maker, taker].map((signer) =>
           Operation.createAccount({
@@ -322,7 +329,9 @@ describe(
     });
 
     it("keeps offers owned by the trader when a channel plugin supplies the envelope source", async () => {
-      const channelSdex = new SDEX({ networkConfig });
+      const channelSdex = suiteObserver.attach(new SDEX({ networkConfig }), {
+        name: "channelSdex",
+      });
       channelSdex.transactionPipe.use(createChannelAccountsPlugin({
         channels: [NativeAccount.fromMasterSigner(issuer)],
       }));

@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
-import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Asset, Operation } from "stellar-sdk";
 import {
   createClassicTransactionPipeline,
@@ -12,6 +12,9 @@ import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-c
 import { RPCStreamer } from "@/streamer.ts";
 import type { StreamedTransaction } from "@/variants/transaction/types.ts";
 import type { StreamedOperation } from "@/variants/operation/types.ts";
+
+const { afterAll, beforeAll, describe, it, observer: suiteObserver } =
+  recordColibriTests(import.meta.url);
 
 describe(
   "[Quickstart] confirmed transaction and operation streams",
@@ -41,7 +44,10 @@ describe(
           },
         );
       }
-      const execute = createClassicTransactionPipeline({ networkConfig });
+      const execute = suiteObserver.attach(
+        createClassicTransactionPipeline({ networkConfig }),
+        { name: "execute" },
+      );
       for (let i = 0; i < 2; i++) {
         const result = await execute({
           operations: Array.from({ length: 3 }, () =>

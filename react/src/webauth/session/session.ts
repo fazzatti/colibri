@@ -26,6 +26,7 @@ export class WebAuthSession {
   private timer: ReturnType<typeof setTimeout> | undefined;
   private unsubscribe: () => void;
   private disposed = false;
+  private authentication: AbortController | undefined;
   /** Bind authentication to a provider and an existing unified SEP-10/45 client. */
   constructor(readonly config: ColibriConfig, readonly client: WebAuthClient) {
     if (client.network.networkPassphrase !== config.network.networkPassphrase) {
@@ -78,9 +79,19 @@ export class WebAuthSession {
     }
     this.logout();
     const revision = this.revision;
+    const authentication = this.authentication = new AbortController();
     this.set({ status: "authenticating" });
     try {
-      const token = await this.client.authenticate(options);
+      const token = await this.client.authenticate(
+        "signer" in options
+          ? {
+            ...options,
+            signal: options.signal
+              ? AbortSignal.any([options.signal, authentication.signal])
+              : authentication.signal,
+          }
+          : options,
+      );
       if (revision !== this.revision) {
         throw new ReactConnectionChangedError(
           "The session changed during authentication",
@@ -106,6 +117,12 @@ export class WebAuthSession {
   /** Forget local credentials and invalidate outstanding authentication. Does not revoke server-side sessions. */
   logout = (): void => {
     ++this.revision;
+    this.authentication?.abort(
+      new ReactConnectionChangedError(
+        "The session changed during authentication",
+      ),
+    );
+    this.authentication = undefined;
     clearTimeout(this.timer);
     this.timer = undefined;
     this.set(anonymous);

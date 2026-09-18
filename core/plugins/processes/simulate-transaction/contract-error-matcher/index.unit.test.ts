@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { pipe, step } from "convee";
 import {
   Account,
@@ -28,6 +28,8 @@ import {
 import * as PLUGIN_ERRORS from "@/plugins/processes/simulate-transaction/contract-error-matcher/error.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import { ERRORS_CONTRACT_SPEC } from "colibri-internal/tests/specs/errors-contract.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const ROOT_CONTRACT_ID = Address.contract(Buffer.alloc(32, 1))
   .toString() as ContractId;

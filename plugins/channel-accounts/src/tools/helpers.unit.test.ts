@@ -4,7 +4,7 @@ import {
   assertInstanceOf,
   assertNotStrictEquals,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Buffer } from "node:buffer";
 import { Keypair, xdr } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
@@ -25,6 +25,8 @@ import {
   resolveRpc,
   sponsorCanSignChannel,
 } from "@/tools/helpers.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const sponsor = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
 const channel = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
@@ -65,12 +67,14 @@ describe("ChannelAccounts helpers", () => {
     const rpc = {
       getAccountEntry() {
         return Promise.resolve({
-          signers: [new xdr.Signer({
-            weight: 1,
-            key: xdr.SignerKey.signerKeyTypeEd25519(
-              StrKey.decodeEd25519PublicKey(sponsor.address()),
-            ),
-          })],
+          signers: [
+            new xdr.Signer({
+              weight: 1,
+              key: xdr.SignerKey.signerKeyTypeEd25519(
+                StrKey.decodeEd25519PublicKey(sponsor.address()),
+              ),
+            }),
+          ],
         });
       },
     } as unknown as Server;

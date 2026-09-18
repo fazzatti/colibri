@@ -5,7 +5,7 @@ import {
   assertStrictEquals,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Asset, Claimant, Memo, Operation } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
 import { StellarAsset } from "@/asset/native/index.ts";
@@ -16,6 +16,10 @@ import { LocalSigner } from "@/signer/local/index.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import { BASE_FEE_TOO_LOW_ERROR } from "@/processes/build-transaction/error.ts";
 import { INVALID_ACCOUNT_ID } from "@/ledger-entries/error.ts";
+
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 describe("StellarAsset", () => {
   const issuer = LocalSigner.generateRandom();
@@ -32,10 +36,13 @@ describe("StellarAsset", () => {
   };
 
   it("exposes native identity, exact units and an explicitly separate SAC binding", () => {
-    const usd = StellarAsset.fromCanonical({
-      canonical: `USD:${issuer.publicKey()}`,
-      networkConfig,
-    });
+    const usd = suiteObserver.attach(
+      StellarAsset.fromCanonical({
+        canonical: `USD:${issuer.publicKey()}`,
+        networkConfig,
+      }),
+      { name: "usd" },
+    );
     assertEquals(usd.code, "USD");
     assertEquals(usd.issuer, issuer.publicKey());
     assertEquals(usd.symbol(), "USD");
@@ -44,17 +51,27 @@ describe("StellarAsset", () => {
     assertEquals(usd.toString(), `USD:${issuer.publicKey()}`);
     assertEquals(usd.parseAmount("1.25"), 12_500_000n);
     assertEquals(usd.formatAmount(12_500_000n), "1.25");
-    const xlm = StellarAsset.NativeXLM({ networkConfig });
+    const xlm = suiteObserver.attach(
+      StellarAsset.NativeXLM({ networkConfig }),
+      { name: "xlm" },
+    );
     assertEquals(xlm.isNative(), true);
     assertEquals(xlm.issuer, undefined);
     assertEquals(xlm.toString(), "native");
     assertEquals(
-      StellarAsset.fromCanonical({ canonical: "native", networkConfig }).asset
+      suiteObserver.attach(
+        StellarAsset.fromCanonical({ canonical: "native", networkConfig }),
+        { name: "client" },
+      ).asset
         .equals(xlm.asset),
       true,
     );
     assertThrows(
-      () => StellarAsset.fromCanonical({ canonical: "USD", networkConfig }),
+      () =>
+        suiteObserver.attach(
+          StellarAsset.fromCanonical({ canonical: "USD", networkConfig }),
+          { name: "client" },
+        ),
       ERROR.INVALID_CANONICAL_ASSET,
     );
     for (const value of [usd, xlm]) {
@@ -71,7 +88,10 @@ describe("StellarAsset", () => {
 
   it("keeps issuer balances undefined and wraps only actual account transport failures", async () => {
     const rpc = new Server("http://127.0.0.1:0", { allowHttp: true });
-    const usd = new StellarAsset({ asset, networkConfig, rpc });
+    const usd = suiteObserver.attach(
+      new StellarAsset({ asset, networkConfig, rpc }),
+      { name: "usd" },
+    );
     await assertRejects(
       () => usd.balance({ id: issuer.publicKey() }),
       ERROR.ISSUER_BALANCE_UNDEFINED,
@@ -80,7 +100,10 @@ describe("StellarAsset", () => {
       () => usd.balance({ id: holder.publicKey() }),
       ERROR.READ_TRUSTLINE_FAILED,
     );
-    const xlm = StellarAsset.NativeXLM({ networkConfig, rpc });
+    const xlm = suiteObserver.attach(
+      StellarAsset.NativeXLM({ networkConfig, rpc }),
+      { name: "xlm" },
+    );
     const error = await assertRejects(
       () => xlm.balance({ id: holder.publicKey() }),
       ERROR.READ_BALANCE_FAILED,
@@ -97,11 +120,14 @@ describe("StellarAsset", () => {
       ...networkConfig,
       networkPassphrase: 42,
     } as unknown as NetworkConfig;
-    const invalid = new StellarAsset({
-      asset,
-      networkConfig: invalidNetwork,
-      rpc: new Server(networkConfig.rpcUrl!),
-    });
+    const invalid = suiteObserver.attach(
+      new StellarAsset({
+        asset,
+        networkConfig: invalidNetwork,
+        rpc: new Server(networkConfig.rpcUrl!),
+      }),
+      { name: "invalid" },
+    );
     const error = assertThrows(
       () => invalid.toContract(),
       ERROR.SAC_BINDING_FAILED,
@@ -111,7 +137,10 @@ describe("StellarAsset", () => {
   });
 
   it("mints and burns using explicit issuer payment endpoints", async () => {
-    const usd = new StellarAsset({ asset, networkConfig });
+    const usd = suiteObserver.attach(
+      new StellarAsset({ asset, networkConfig }),
+      { name: "usd" },
+    );
     const issue = await assertRejects(
       () => usd.mint({ destination: holder.publicKey(), amount: "2", config }),
       BASE_FEE_TOO_LOW_ERROR,
@@ -142,7 +171,10 @@ describe("StellarAsset", () => {
         }),
       ),
     );
-    const xlm = StellarAsset.NativeXLM({ networkConfig });
+    const xlm = suiteObserver.attach(
+      StellarAsset.NativeXLM({ networkConfig }),
+      { name: "xlm" },
+    );
     await assertRejects(
       () => xlm.mint({ destination: holder.publicKey(), amount: "1", config }),
       ERROR.NATIVE_MINT,
@@ -155,7 +187,10 @@ describe("StellarAsset", () => {
 
   it("retains native Asset and RPC instances and exposes the existing owned pipeline", () => {
     const rpc = new Server(networkConfig.rpcUrl!);
-    const usd = new StellarAsset({ asset, networkConfig, rpc });
+    const usd = suiteObserver.attach(
+      new StellarAsset({ asset, networkConfig, rpc }),
+      { name: "usd" },
+    );
     assertStrictEquals(usd.asset, asset);
     assertStrictEquals(usd.rpc, rpc);
     assertStrictEquals(usd.ledgerEntries.rpc, rpc);
@@ -166,33 +201,45 @@ describe("StellarAsset", () => {
     assertEquals("issue" in usd, false);
     assertEquals("redeem" in usd, false);
     assertEquals(
-      new StellarAsset({
-        code: "USD",
-        issuer: issuer.publicKey(),
-        networkConfig,
-      }).asset.equals(asset),
+      suiteObserver.attach(
+        new StellarAsset({
+          code: "USD",
+          issuer: issuer.publicKey(),
+          networkConfig,
+        }),
+        { name: "client" },
+      ).asset.equals(asset),
       true,
     );
     assertEquals(
-      new StellarAsset({ code: "XLM", issuer: "native", networkConfig }).asset
+      suiteObserver.attach(
+        new StellarAsset({ code: "XLM", issuer: "native", networkConfig }),
+        { name: "client" },
+      ).asset
         .isNative(),
       true,
     );
-    const local = new StellarAsset({
-      asset,
-      networkConfig: NetworkConfig.TestNet({
-        rpcUrl: "http://localhost:8000/rpc",
-        allowHttp: true,
+    const local = suiteObserver.attach(
+      new StellarAsset({
+        asset,
+        networkConfig: NetworkConfig.TestNet({
+          rpcUrl: "http://localhost:8000/rpc",
+          allowHttp: true,
+        }),
       }),
-    });
+      { name: "local" },
+    );
     assertEquals(local.rpc.serverURL.toString(), "http://localhost:8000/rpc");
-    const custom = new StellarAsset({
-      asset,
-      networkConfig: NetworkConfig.CustomNet({
-        networkPassphrase: "custom",
-        rpcUrl: "https://localhost:8443/rpc",
+    const custom = suiteObserver.attach(
+      new StellarAsset({
+        asset,
+        networkConfig: NetworkConfig.CustomNet({
+          networkPassphrase: "custom",
+          rpcUrl: "https://localhost:8443/rpc",
+        }),
       }),
-    });
+      { name: "custom" },
+    );
     assertEquals(custom.rpc.serverURL.toString(), "https://localhost:8443/rpc");
   });
 
@@ -200,55 +247,75 @@ describe("StellarAsset", () => {
     for (const code of ["USD", "USDC", "xlm", ""]) {
       assertThrows(
         () =>
-          new StellarAsset(
-            {
-              code,
-              issuer: "native",
-              networkConfig,
-            } as unknown as StellarAssetArgs,
+          suiteObserver.attach(
+            new StellarAsset(
+              {
+                code,
+                issuer: "native",
+                networkConfig,
+              } as unknown as StellarAssetArgs,
+            ),
+            { name: "client" },
           ),
         ERROR.NATIVE_ASSET_CODE_MISMATCH,
       );
     }
     assertEquals(
-      new StellarAsset({
-        code: "XLM",
-        issuer: issuer.publicKey(),
-        networkConfig,
-      }).asset.isNative(),
+      suiteObserver.attach(
+        new StellarAsset({
+          code: "XLM",
+          issuer: issuer.publicKey(),
+          networkConfig,
+        }),
+        { name: "client" },
+      ).asset.isNative(),
       false,
     );
     assertThrows(
       () =>
-        new StellarAsset({
-          code: "TOO_LONG_ASSET_CODE",
-          issuer: issuer.publicKey(),
-          networkConfig,
-        }),
+        suiteObserver.attach(
+          new StellarAsset({
+            code: "TOO_LONG_ASSET_CODE",
+            issuer: issuer.publicKey(),
+            networkConfig,
+          }),
+          { name: "client" },
+        ),
       ERROR.INVALID_ASSET,
     );
     assertThrows(
       () =>
-        new StellarAsset({
-          asset,
-          networkConfig: NetworkConfig.CustomNet({ networkPassphrase: "test" }),
-        }),
+        suiteObserver.attach(
+          new StellarAsset({
+            asset,
+            networkConfig: NetworkConfig.CustomNet({
+              networkPassphrase: "test",
+            }),
+          }),
+          { name: "client" },
+        ),
       ERROR.MISSING_RPC_URL,
     );
     assertThrows(
       () =>
-        new StellarAsset({
-          asset,
-          networkConfig: NetworkConfig.TestNet({
-            rpcUrl: "http://localhost:8000",
+        suiteObserver.attach(
+          new StellarAsset({
+            asset,
+            networkConfig: NetworkConfig.TestNet({
+              rpcUrl: "http://localhost:8000",
+            }),
           }),
-        }),
+          { name: "client" },
+        ),
       ERROR.INVALID_RPC,
     );
   });
 
   it("returns no issuer/trustline for native XLM and rejects its issuer-only operations distinctly", async () => {
-    const xlm = new StellarAsset({ asset: Asset.native(), networkConfig });
+    const xlm = suiteObserver.attach(
+      new StellarAsset({ asset: Asset.native(), networkConfig }),
+      { name: "xlm" },
+    );
     assertEquals(await xlm.getIssuer(), null);
     assertEquals(await xlm.getTrustline(holder.publicKey()), null);
     await assertRejects(
@@ -269,13 +336,19 @@ describe("StellarAsset", () => {
       ERROR.NATIVE_CLAWBACK,
     );
     await assertRejects(
-      () => new StellarAsset({ asset, networkConfig }).getTrustline("Ginvalid"),
+      () =>
+        suiteObserver.attach(new StellarAsset({ asset, networkConfig }), {
+          name: "client",
+        }).getTrustline("Ginvalid"),
       INVALID_ACCOUNT_ID,
     );
   });
 
   it("wraps each SDK operation-construction failure at its own typed site", async () => {
-    const usd = new StellarAsset({ asset, networkConfig });
+    const usd = suiteObserver.attach(
+      new StellarAsset({ asset, networkConfig }),
+      { name: "usd" },
+    );
     const errors = [
       await assertRejects(
         () => usd.changeTrust({ limit: "-1", config }),
@@ -306,7 +379,10 @@ describe("StellarAsset", () => {
     // Port zero cannot serve an RPC endpoint. This uses native HTTP transport,
     // not a mock server or an overridden LedgerEntries method.
     const rpc = new Server("http://127.0.0.1:0", { allowHttp: true });
-    const usd = new StellarAsset({ asset, networkConfig, rpc });
+    const usd = suiteObserver.attach(
+      new StellarAsset({ asset, networkConfig, rpc }),
+      { name: "usd" },
+    );
     const issuerError = await assertRejects(
       () => usd.getIssuer(),
       ERROR.READ_ISSUER_FAILED,
@@ -320,7 +396,10 @@ describe("StellarAsset", () => {
   });
 
   it("executes the real pipeline and preserves the constructed operation/config at its fee-validation boundary", async () => {
-    const usd = new StellarAsset({ asset, networkConfig });
+    const usd = suiteObserver.attach(
+      new StellarAsset({ asset, networkConfig }),
+      { name: "usd" },
+    );
     // A genuinely invalid fee reaches the real builder and stops before RPC.
     // Nothing is mocked: the typed process error retains its actual input.
     const defaults = [
@@ -447,7 +526,10 @@ describe("StellarAsset", () => {
   });
 
   it("authorizes with issuer-owned flags and rejects unsupported authorization distinctly", async () => {
-    const usd = new StellarAsset({ asset, networkConfig });
+    const usd = suiteObserver.attach(
+      new StellarAsset({ asset, networkConfig }),
+      { name: "usd" },
+    );
     const error = await assertRejects(
       () =>
         usd.setAuthorized({ id: holder.publicKey(), authorize: true, config }),
@@ -464,7 +546,9 @@ describe("StellarAsset", () => {
     );
     await assertRejects(
       () =>
-        StellarAsset.NativeXLM({ networkConfig }).setAuthorized({
+        suiteObserver.attach(StellarAsset.NativeXLM({ networkConfig }), {
+          name: "client",
+        }).setAuthorized({
           id: holder.publicKey(),
           authorize: false,
           config,
@@ -475,11 +559,14 @@ describe("StellarAsset", () => {
       () => usd.setAuthorized({ id: "Ginvalid", authorize: true, config }),
       ERROR.TRUSTLINE_FLAGS_FAILED,
     );
-    const offline = new StellarAsset({
-      asset,
-      networkConfig,
-      rpc: new Server("http://127.0.0.1:0", { allowHttp: true }),
-    });
+    const offline = suiteObserver.attach(
+      new StellarAsset({
+        asset,
+        networkConfig,
+        rpc: new Server("http://127.0.0.1:0", { allowHttp: true }),
+      }),
+      { name: "offline" },
+    );
     await assertRejects(
       () =>
         offline.setAuthorized({
@@ -494,7 +581,10 @@ describe("StellarAsset", () => {
   it("creates bound-asset claimable balances through the real pipeline with default and explicit sources", async () => {
     const claimants = [new Claimant(other.publicKey())];
     for (const nativeAsset of [asset, Asset.native()]) {
-      const token = new StellarAsset({ asset: nativeAsset, networkConfig });
+      const token = suiteObserver.attach(
+        new StellarAsset({ asset: nativeAsset, networkConfig }),
+        { name: "token" },
+      );
       for (const source of [undefined, other.publicKey()]) {
         const error = await assertRejects(
           () =>

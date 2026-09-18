@@ -1,4 +1,5 @@
 /** Execute installed artifacts with the selected real Node/TypeScript/browser runtime. */
+import { checkNodeRecorder } from "../recorder/node-consumer.ts";
 import { consumerFiles, installedFixture } from "./fixtures.ts";
 import { checkGeneratedBindings } from "./generated-bindings.ts";
 import { resolve } from "node:path";
@@ -40,6 +41,7 @@ export async function runArtifacts(
       ),
       `@stellar/stellar-sdk@${manifest.sdk}`,
       `typescript@${typescript}`,
+      "@types/node@^22.12.0",
       "esbuild@0.28.2",
       "react-dom@^19.1.1",
       "@types/react@^19.1.13",
@@ -118,6 +120,7 @@ export async function runArtifacts(
       await command("node", ["browser.mjs"], consumer);
     }
     if (!browsers) {
+      await checkNodeRecorder(consumer);
       const core = manifest.packages.find((pkg: { name: string }) =>
         pkg.name === "@colibri/core"
       );

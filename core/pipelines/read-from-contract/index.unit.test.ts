@@ -1,5 +1,5 @@
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Operation } from "stellar-sdk";
 import { NetworkConfig } from "@/network/index.ts";
 import * as ERROR from "@/pipelines/read-from-contract/error.ts";
@@ -7,6 +7,10 @@ import { createReadFromContractPipeline } from "@/pipelines/read-from-contract/i
 import { inputToBuild } from "@/pipelines/read-from-contract/connectors.ts";
 import type { ReadFromContractInput } from "@/pipelines/read-from-contract/types.ts";
 import { NetworkType } from "@/network/types.ts";
+
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 describe("createReadFromContractPipeline", () => {
   describe("Construction", () => {
@@ -17,7 +21,10 @@ describe("createReadFromContractPipeline", () => {
         type: NetworkType.TESTNET,
       });
 
-      const pipeline = createReadFromContractPipeline({ networkConfig });
+      const pipeline = suiteObserver.attach(
+        createReadFromContractPipeline({ networkConfig }),
+        { name: "pipeline" },
+      );
 
       assertEquals(pipeline.id, "ReadFromContractPipeline");
     });
@@ -30,7 +37,10 @@ describe("createReadFromContractPipeline", () => {
         type: NetworkType.TESTNET,
       });
 
-      const pipeline = createReadFromContractPipeline({ networkConfig });
+      const pipeline = suiteObserver.attach(
+        createReadFromContractPipeline({ networkConfig }),
+        { name: "pipeline" },
+      );
 
       assertEquals(pipeline.id, "ReadFromContractPipeline");
     });
@@ -58,9 +68,12 @@ describe("createReadFromContractPipeline", () => {
     it("throws MISSING_ARG when networkConfig is missing", () => {
       assertThrows(
         () =>
-          createReadFromContractPipeline({
-            networkConfig: undefined as unknown as NetworkConfig,
-          }),
+          suiteObserver.attach(
+            createReadFromContractPipeline({
+              networkConfig: undefined as unknown as NetworkConfig,
+            }),
+            { name: "createReadFromContractPipeline" },
+          ),
         ERROR.MISSING_ARG,
       );
     });
@@ -71,7 +84,11 @@ describe("createReadFromContractPipeline", () => {
       } as NetworkConfig;
 
       assertThrows(
-        () => createReadFromContractPipeline({ networkConfig }),
+        () =>
+          suiteObserver.attach(
+            createReadFromContractPipeline({ networkConfig }),
+            { name: "createReadFromContractPipeline" },
+          ),
         ERROR.MISSING_ARG,
       );
     });
@@ -82,7 +99,11 @@ describe("createReadFromContractPipeline", () => {
       } as NetworkConfig;
 
       assertThrows(
-        () => createReadFromContractPipeline({ networkConfig }),
+        () =>
+          suiteObserver.attach(
+            createReadFromContractPipeline({ networkConfig }),
+            { name: "createReadFromContractPipeline" },
+          ),
         ERROR.MISSING_RPC_URL,
       );
     });
@@ -91,7 +112,11 @@ describe("createReadFromContractPipeline", () => {
       const networkConfig = {} as NetworkConfig;
 
       assertThrows(
-        () => createReadFromContractPipeline({ networkConfig }),
+        () =>
+          suiteObserver.attach(
+            createReadFromContractPipeline({ networkConfig }),
+            { name: "createReadFromContractPipeline" },
+          ),
         ERROR.MISSING_ARG,
       );
     });
@@ -103,7 +128,11 @@ describe("createReadFromContractPipeline", () => {
         type: NetworkType.TESTNET,
       });
       assertThrows(
-        () => createReadFromContractPipeline({ networkConfig }),
+        () =>
+          suiteObserver.attach(
+            createReadFromContractPipeline({ networkConfig }),
+            { name: "createReadFromContractPipeline" },
+          ),
         ERROR.UNEXPECTED_ERROR,
       );
     });

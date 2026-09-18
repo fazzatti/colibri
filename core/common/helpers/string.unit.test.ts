@@ -1,11 +1,13 @@
 import { assert, assertEquals, assertFalse, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
-  isString,
-  isNonBlank,
   dropNonPrintable,
+  isNonBlank,
+  isString,
   nonBlankString,
 } from "@/common/helpers/string.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("String Helpers", () => {
   describe("isString", () => {

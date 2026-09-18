@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { assertEquals, assertRejects, assertStrictEquals } from "@std/assert";
-import { afterEach, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { StellarAssetContract } from "@/asset/sac/index.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
@@ -12,6 +12,10 @@ import { Asset, nativeToScVal, type TransactionBuilder } from "stellar-sdk";
 import { Method } from "@/asset/sac/types.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 
+const { afterEach, describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
+
 describe("StellarAssetContract initialization", () => {
   const networkConfig = NetworkConfig.TestNet();
   const issuer = LocalSigner.generateRandom();
@@ -21,7 +25,10 @@ describe("StellarAssetContract initialization", () => {
 
   describe("NativeXLM static factory", () => {
     it("creates a SAC instance for native XLM from network config", () => {
-      const sac = StellarAssetContract.NativeXLM(networkConfig);
+      const sac = suiteObserver.attach(
+        StellarAssetContract.NativeXLM(networkConfig),
+        { name: "sac" },
+      );
 
       assertEquals(sac.code, "XLM");
       assertEquals(sac.isNativeXLM(), true);
@@ -32,10 +39,13 @@ describe("StellarAssetContract initialization", () => {
     });
 
     it("accepts runtime options when creating the native XLM SAC", () => {
-      const sac = StellarAssetContract.NativeXLM({
-        networkConfig,
-        options: { cache: { enabled: false } },
-      });
+      const sac = suiteObserver.attach(
+        StellarAssetContract.NativeXLM({
+          networkConfig,
+          options: { cache: { enabled: false } },
+        }),
+        { name: "sac" },
+      );
 
       assertEquals(sac.code, "XLM");
       assertEquals(sac.isNativeXLM(), true);
@@ -44,11 +54,14 @@ describe("StellarAssetContract initialization", () => {
 
   describe("construction helpers", () => {
     it("creates a SAC instance from asset identity", () => {
-      const sac = StellarAssetContract.fromAsset({
-        code: "TEST",
-        issuer: issuer.publicKey(),
-        networkConfig,
-      });
+      const sac = suiteObserver.attach(
+        StellarAssetContract.fromAsset({
+          code: "TEST",
+          issuer: issuer.publicKey(),
+          networkConfig,
+        }),
+        { name: "sac" },
+      );
 
       assertEquals(sac.code, "TEST");
       assertEquals(sac.contractId, contractId);
@@ -56,20 +69,26 @@ describe("StellarAssetContract initialization", () => {
     });
 
     it("creates a SAC instance from a stellar-sdk Asset", () => {
-      const sac = StellarAssetContract.fromAsset({
-        asset: new Asset("TEST", issuer.publicKey()),
-        networkConfig,
-      });
+      const sac = suiteObserver.attach(
+        StellarAssetContract.fromAsset({
+          asset: new Asset("TEST", issuer.publicKey()),
+          networkConfig,
+        }),
+        { name: "sac" },
+      );
 
       assertEquals(sac.code, "TEST");
       assertEquals(sac.contractId, contractId);
     });
 
     it("creates a SAC instance from the native stellar-sdk Asset", () => {
-      const sac = StellarAssetContract.fromAsset({
-        asset: Asset.native(),
-        networkConfig,
-      });
+      const sac = suiteObserver.attach(
+        StellarAssetContract.fromAsset({
+          asset: Asset.native(),
+          networkConfig,
+        }),
+        { name: "sac" },
+      );
 
       assertEquals(sac.code, "XLM");
       assertEquals(
@@ -80,10 +99,13 @@ describe("StellarAssetContract initialization", () => {
     });
 
     it("creates a SAC instance from a contract id", () => {
-      const sac = new StellarAssetContract({
-        contractId,
-        networkConfig,
-      });
+      const sac = suiteObserver.attach(
+        new StellarAssetContract({
+          contractId,
+          networkConfig,
+        }),
+        { name: "sac" },
+      );
 
       assertEquals(sac.contractId, contractId);
       assertEquals(sac.code, undefined);
@@ -91,10 +113,13 @@ describe("StellarAssetContract initialization", () => {
     });
 
     it("creates a SAC instance from contract id through the static helper", () => {
-      const sac = StellarAssetContract.fromContractId({
-        contractId,
-        networkConfig,
-      });
+      const sac = suiteObserver.attach(
+        StellarAssetContract.fromContractId({
+          contractId,
+          networkConfig,
+        }),
+        { name: "sac" },
+      );
 
       assertEquals(sac.contractId, contractId);
       assertEquals(sac.code, undefined);
@@ -121,12 +146,16 @@ describe("StellarAssetContract initialization", () => {
       });
 
       try {
-        const sac = await StellarAssetContract.deploy({
-          code: "TEST",
-          issuer: issuer.publicKey(),
-          networkConfig,
-          config: txConfig,
-        });
+        const sac = await suiteObserver.create(
+          () =>
+            StellarAssetContract.deploy({
+              code: "TEST",
+              issuer: issuer.publicKey(),
+              networkConfig,
+              config: txConfig,
+            }),
+          { name: "deploy SAC" },
+        );
 
         assertEquals(sac.code, "TEST");
         assertEquals(sac.contractId, contractId);
@@ -180,11 +209,14 @@ describe("StellarAssetContract memoized descriptive reads", () => {
   };
 
   it("memoizes descriptive reads when cache is enabled", async () => {
-    const sac = StellarAssetContract.fromContractId({
-      contractId,
-      networkConfig,
-      options: { cache: { enabled: true } },
-    });
+    const sac = suiteObserver.attach(
+      StellarAssetContract.fromContractId({
+        contractId,
+        networkConfig,
+        options: { cache: { enabled: true } },
+      }),
+      { name: "sac" },
+    );
 
     let readCount = 0;
     mockReadRaw(sac, ({ method }) => {
@@ -213,11 +245,14 @@ describe("StellarAssetContract memoized descriptive reads", () => {
   });
 
   it("skips descriptive read memoization when cache is disabled", async () => {
-    const sac = StellarAssetContract.fromContractId({
-      contractId,
-      networkConfig,
-      options: { cache: { enabled: false } },
-    });
+    const sac = suiteObserver.attach(
+      StellarAssetContract.fromContractId({
+        contractId,
+        networkConfig,
+        options: { cache: { enabled: false } },
+      }),
+      { name: "sac" },
+    );
 
     let readCount = 0;
     mockReadRaw(sac, ({ method }) => {
@@ -247,11 +282,14 @@ describe("StellarAssetContract memoized descriptive reads", () => {
   });
 
   it("recomputes descriptive reads when the TTL expires", async () => {
-    const sac = StellarAssetContract.fromContractId({
-      contractId,
-      networkConfig,
-      options: { cache: { ttl: 0 } },
-    });
+    const sac = suiteObserver.attach(
+      StellarAssetContract.fromContractId({
+        contractId,
+        networkConfig,
+        options: { cache: { ttl: 0 } },
+      }),
+      { name: "sac" },
+    );
 
     let readCount = 0;
     mockReadRaw(sac, () => {
@@ -266,10 +304,13 @@ describe("StellarAssetContract memoized descriptive reads", () => {
   });
 
   it("evicts rejected descriptive reads by default", async () => {
-    const sac = StellarAssetContract.fromContractId({
-      contractId,
-      networkConfig,
-    });
+    const sac = suiteObserver.attach(
+      StellarAssetContract.fromContractId({
+        contractId,
+        networkConfig,
+      }),
+      { name: "sac" },
+    );
 
     let readCount = 0;
     mockReadRaw(sac, () => {
@@ -287,11 +328,14 @@ describe("StellarAssetContract memoized descriptive reads", () => {
   });
 
   it("can cache rejected descriptive reads when configured", async () => {
-    const sac = StellarAssetContract.fromContractId({
-      contractId,
-      networkConfig,
-      options: { cache: { cacheRejected: true } },
-    });
+    const sac = suiteObserver.attach(
+      StellarAssetContract.fromContractId({
+        contractId,
+        networkConfig,
+        options: { cache: { cacheRejected: true } },
+      }),
+      { name: "sac" },
+    );
 
     let readCount = 0;
     mockReadRaw(sac, () => {
@@ -348,10 +392,13 @@ describe("StellarAssetContract token invocations", () => {
   };
 
   it("invokes trust with the CAP-0073 address argument", async () => {
-    const sac = StellarAssetContract.fromContractId({
-      contractId,
-      networkConfig,
-    });
+    const sac = suiteObserver.attach(
+      StellarAssetContract.fromContractId({
+        contractId,
+        networkConfig,
+      }),
+      { name: "sac" },
+    );
     const address = LocalSigner.generateRandom().publicKey();
     const auth = [] as any;
     let receivedArgs: any;
@@ -440,12 +487,15 @@ describe("StellarAssetContract deployment error handling", () => {
   };
 
   it("throws MISSING_ARG when private deploy lacks code metadata", async () => {
-    const sac = StellarAssetContract.fromContractId({
-      contractId: new Asset("TEST", issuer.publicKey()).contractId(
-        networkConfig.networkPassphrase,
-      ) as ContractId,
-      networkConfig,
-    });
+    const sac = suiteObserver.attach(
+      StellarAssetContract.fromContractId({
+        contractId: new Asset("TEST", issuer.publicKey()).contractId(
+          networkConfig.networkPassphrase,
+        ) as ContractId,
+        networkConfig,
+      }),
+      { name: "sac" },
+    );
 
     const error = await assertRejects(
       () => invokePrivateDeploy(sac),
@@ -459,12 +509,15 @@ describe("StellarAssetContract deployment error handling", () => {
   });
 
   it("throws MISSING_ARG when private deploy lacks issuer metadata", async () => {
-    const sac = StellarAssetContract.fromContractId({
-      contractId: new Asset("TEST", issuer.publicKey()).contractId(
-        networkConfig.networkPassphrase,
-      ) as ContractId,
-      networkConfig,
-    });
+    const sac = suiteObserver.attach(
+      StellarAssetContract.fromContractId({
+        contractId: new Asset("TEST", issuer.publicKey()).contractId(
+          networkConfig.networkPassphrase,
+        ) as ContractId,
+        networkConfig,
+      }),
+      { name: "sac" },
+    );
 
     Object.defineProperty(sac, "code", {
       value: "TEST",
@@ -484,11 +537,14 @@ describe("StellarAssetContract deployment error handling", () => {
   });
 
   it("throws FAILED_TO_DEPLOY_CONTRACT when a non-SIMULATION_FAILED error occurs", async () => {
-    const sac = StellarAssetContract.fromAsset({
-      code: "TEST",
-      issuer: issuer.publicKey(),
-      networkConfig,
-    });
+    const sac = suiteObserver.attach(
+      StellarAssetContract.fromAsset({
+        code: "TEST",
+        issuer: issuer.publicKey(),
+        networkConfig,
+      }),
+      { name: "sac" },
+    );
 
     const genericError = new Error("Some unexpected network error");
 
@@ -509,11 +565,14 @@ describe("StellarAssetContract deployment error handling", () => {
   });
 
   it("throws FAILED_TO_DEPLOY_CONTRACT when the simulation helper throws internally", async () => {
-    const sac = StellarAssetContract.fromAsset({
-      code: "TEST",
-      issuer: issuer.publicKey(),
-      networkConfig,
-    });
+    const sac = suiteObserver.attach(
+      StellarAssetContract.fromAsset({
+        code: "TEST",
+        issuer: issuer.publicKey(),
+        networkConfig,
+      }),
+      { name: "sac" },
+    );
 
     const simulationFailedError = new SIMULATION_FAILED(createMockInput(), {
       error: "Some simulation error",
@@ -537,11 +596,14 @@ describe("StellarAssetContract deployment error handling", () => {
   });
 
   it("throws FAILED_TO_DEPLOY_CONTRACT when simulation errors do not indicate an existing SAC", async () => {
-    const sac = StellarAssetContract.fromAsset({
-      code: "TEST",
-      issuer: issuer.publicKey(),
-      networkConfig,
-    });
+    const sac = suiteObserver.attach(
+      StellarAssetContract.fromAsset({
+        code: "TEST",
+        issuer: issuer.publicKey(),
+        networkConfig,
+      }),
+      { name: "sac" },
+    );
 
     const simulationFailedError = new SIMULATION_FAILED(createMockInput(), {
       error: "Some simulation error",

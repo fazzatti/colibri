@@ -3026,12 +3026,12 @@
           "jsr:@colibri/core@1"
         ]
       },
-      "jsr:@colibri/react@0.2.0": {
+      "jsr:@colibri/react@0.3.0": {
         "dependencies": [
           "jsr:@colibri/core@^1.2.0",
           "jsr:@colibri/identicon@^1.1.0",
           "jsr:@colibri/rpc-streamer@1",
-          "jsr:@colibri/webauth@1",
+          "jsr:@colibri/webauth@^1.2.0",
           "npm:@creit.tech/stellar-wallets-kit@^2.6.0",
           "npm:@noble/hashes@^2.2.0",
           "npm:@stellar/freighter-api@^6.0.1",
@@ -3045,12 +3045,13 @@
           "jsr:@colibri/core@1"
         ]
       },
-      "jsr:@colibri/test-tooling@1.0.0": {
+      "jsr:@colibri/test-tooling@1.1.0": {
         "dependencies": [
+          "jsr:@std/testing@1",
           "npm:dockerode@3.3.3"
         ]
       },
-      "jsr:@colibri/webauth@1.1.0": {
+      "jsr:@colibri/webauth@1.2.0": {
         "dependencies": [
           "jsr:@colibri/core@1"
         ]

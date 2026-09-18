@@ -3,9 +3,11 @@
  */
 
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { memoize } from "@/common/decorators/memoize/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 // =============================================================================
 // Test Fixtures
@@ -1171,7 +1173,7 @@ describe("memoize decorator", disableSanitizeConfig, () => {
         // Manually manipulate timestamp to force expiry
         const symbols = Object.getOwnPropertySymbols(instance);
         const timestampsMapSymbol = symbols.find((s) =>
-          s.description?.includes("timestamps"),
+          s.description?.includes("timestamps")
         ); // plural!
         if (timestampsMapSymbol) {
           // deno-lint-ignore no-explicit-any
@@ -1262,7 +1264,7 @@ describe("memoize decorator", disableSanitizeConfig, () => {
         // Find the timestamp symbol by iterating over the instance's symbols
         const symbols = Object.getOwnPropertySymbols(instance);
         const timestampSymbol = symbols.find((s) =>
-          s.description?.includes("timestamp"),
+          s.description?.includes("timestamp")
         );
         if (timestampSymbol) {
           // Set timestamp to 6 seconds ago (past the 5000ms TTL)

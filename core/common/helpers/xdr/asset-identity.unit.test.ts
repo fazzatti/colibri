@@ -1,10 +1,12 @@
 import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Asset, Keypair } from "stellar-sdk";
 import { toStellarAssetCanonicalString } from "@/asset/sep11/index.ts";
 import { parseAsset } from "@/common/helpers/xdr/parse-asset.ts";
 import { parseChangeTrustAsset } from "@/common/helpers/xdr/parse-change-trust-asset.ts";
 import { parseTrustLineAsset } from "@/common/helpers/xdr/parse-trustline-asset.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("native and issued asset identity", () => {
   it("preserves code and issuer in every asset XDR parser, including native-looking codes", () => {

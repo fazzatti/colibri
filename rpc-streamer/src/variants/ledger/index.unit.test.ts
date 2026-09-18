@@ -1,9 +1,11 @@
 // deno-lint-ignore-file require-await no-explicit-any
 import { assertEquals } from "@std/assert";
-import { afterEach, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { type Stub, stub } from "@std/testing/mock";
 import { Ledger, NetworkConfig } from "@colibri/core";
 import { createLedgerStreamer } from "@/variants/ledger/index.ts";
+
+const { afterEach, describe, it } = recordColibriTests(import.meta.url);
 
 // =============================================================================
 // Test Constants

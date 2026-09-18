@@ -1,10 +1,12 @@
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { assertEquals, assertThrows } from "@std/assert";
 import * as SorobanType from "@/soroban-types/types/index.ts";
 import { SorobanValueError } from "@/soroban-types/error.ts";
 import { Spec } from "@/contract/spec.ts";
 import * as xdr from "stellar-sdk/xdr";
 import { valueSpec } from "colibri-internal/tests/soroban-values-fixtures.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 type RbacStorage = SorobanType.Custom<{
   kind: "enum";

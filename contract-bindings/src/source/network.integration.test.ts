@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Contract,
   Event,
@@ -20,6 +20,10 @@ import { generateBindings } from "@/generation/generate.ts";
 import { writeBindings } from "@/output/write.ts";
 import { pathToFileURL } from "node:url";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
+
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 describe(
   "[Quickstart] generated clients and network sources",
@@ -70,14 +74,17 @@ describe(
           const exports = await import(
             pathToFileURL(`${directory}/${name}/index.ts`).href
           );
-          const upload = new Contract({
-            networkConfig,
-            contractConfig: {
-              wasm: await Deno.readFile(
-                `_internal/tests/compiled-contracts/${fixture}.wasm`,
-              ),
-            },
-          });
+          const upload = suiteObserver.attach(
+            new Contract({
+              networkConfig,
+              contractConfig: {
+                wasm: await Deno.readFile(
+                  `_internal/tests/compiled-contracts/${fixture}.wasm`,
+                ),
+              },
+            }),
+            { name: "upload" },
+          );
           await upload.uploadWasm(config);
           await upload.deploy({ config });
           const contractId = upload.getContractId();

@@ -1,9 +1,14 @@
 import { assertStrictEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { ColibriError, StrKey } from "@colibri/core";
 import { ColibriError as GranularError } from "@colibri/core/errors";
 import { StrKey as GranularStrKey } from "@colibri/core/strkey";
-import { Code, type ERROR_HLP_UNT } from "@/common/helpers/format-units.error.ts";
+import {
+  Code,
+  type ERROR_HLP_UNT,
+} from "@/common/helpers/format-units.error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("granular public entrypoints", () => {
   it("shares root implementations without wrapping their constructors", () => {

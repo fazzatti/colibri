@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertExists, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Asset, Keypair } from "stellar-sdk";
 import { NativeAccount } from "@/account/native/index.ts";
 import { LocalSigner } from "@/signer/local/index.ts";
@@ -8,6 +8,8 @@ import type { MuxedId } from "@/account/native/types.ts";
 import type { WithSigner } from "@/account/types.ts";
 
 import * as ERROR from "@/account/native/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("NativeAccount", () => {
   const TEST_ADDRESS =

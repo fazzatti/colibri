@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Contract, NetworkConfig, Spec } from "@colibri/core";
 import { xdr } from "stellar-sdk";
 import { methodBindings, methodName } from "@/generation/method-clients.ts";
@@ -10,6 +10,10 @@ import {
   errorEntry,
 } from "colibri-internal/tests/binding-fixtures.ts";
 import { func } from "colibri-internal/tests/soroban-values-fixtures.ts";
+
+const { describe, it, observer: suiteObserver } = recordColibriTests(
+  import.meta.url,
+);
 
 describe("method client generation", () => {
   it("uses camelCase and documents collisions without claiming another method's name", () => {
@@ -52,10 +56,13 @@ describe("method client generation", () => {
   });
 
   it("protects all current Contract instance fields and prototype members", () => {
-    const contract = new Contract({
-      networkConfig: NetworkConfig.TestNet(),
-      contractConfig: { contractId },
-    });
+    const contract = suiteObserver.attach(
+      new Contract({
+        networkConfig: NetworkConfig.TestNet(),
+        contractConfig: { contractId },
+      }),
+      { name: "contract" },
+    );
     for (
       const name of new Set([
         ...Object.getOwnPropertyNames(contract),

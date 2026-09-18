@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   Keypair,
@@ -16,6 +16,8 @@ import {
   setTransactionFee,
 } from "@/common/helpers/transaction-fee.ts";
 import { NetworkConfig } from "@/network/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const source = "GB3MXH633VRECLZRUAR3QCLQJDMXNYNHKZCO6FJEWXVWSUEIS7NU376P";
 

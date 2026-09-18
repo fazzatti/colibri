@@ -3,7 +3,7 @@ import {
   assertNotStrictEquals,
   assertStrictEquals,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { assertSpyCalls, stub } from "@std/testing/mock";
 import {
   Contract,
@@ -20,6 +20,8 @@ import {
   DemoSpec,
 } from "colibri-internal/tests/generated-bindings/demo/index.ts";
 import { contractId } from "colibri-internal/tests/binding-fixtures.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const networkConfig = NetworkConfig.TestNet();
 const options: DemoInvocation = {

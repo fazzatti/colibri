@@ -22,3 +22,9 @@ signer support.
 
 See the [API and error reference](../reference/README.md) for exact exported
 symbols and complete error contexts.
+
+SEP-10's `Sep10Signer` supports asynchronous Core envelope signers through both
+`authenticate()` and `sep10.signChallenge()`. See
+[wallet signing](webauth/sep10.md#wallet-and-asynchronous-signers) for
+verification, cancellation and multisig semantics. SEP-45 authorization handlers
+remain a separate capability.

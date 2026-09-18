@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertExists, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   Asset,
@@ -11,11 +11,13 @@ import {
   TransactionBuilder,
 } from "stellar-sdk";
 import {
-  getTransactionTimeout,
   getOperationsFromTransaction,
   getOperationType,
   getOperationTypesFromTransaction,
+  getTransactionTimeout,
 } from "@/common/helpers/transaction.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Transaction Helpers", () => {
   const sourceKp = Keypair.random();
@@ -32,7 +34,7 @@ describe("Transaction Helpers", () => {
             destination: Keypair.random().publicKey(),
             asset: Asset.native(),
             amount: "10",
-          })
+          }),
         )
         .setTimeout(30)
         .build();
@@ -52,7 +54,7 @@ describe("Transaction Helpers", () => {
             destination: Keypair.random().publicKey(),
             asset: Asset.native(),
             amount: "10",
-          })
+          }),
         )
         .setTimeout(30)
         .build();
@@ -72,7 +74,7 @@ describe("Transaction Helpers", () => {
             destination: Keypair.random().publicKey(),
             asset: Asset.native(),
             amount: "10",
-          })
+          }),
         )
         .setTimeout(0)
         .build();
@@ -91,7 +93,7 @@ describe("Transaction Helpers", () => {
             destination: Keypair.random().publicKey(),
             asset: Asset.native(),
             amount: "10",
-          })
+          }),
         )
         .setTimeout(30)
         .build();
@@ -100,7 +102,7 @@ describe("Transaction Helpers", () => {
         sourceKp,
         "200",
         innerTx,
-        Networks.TESTNET
+        Networks.TESTNET,
       );
 
       const timeout = getTransactionTimeout(feeBumpTx);
@@ -126,7 +128,7 @@ describe("Transaction Helpers", () => {
             destination: Keypair.random().publicKey(),
             asset: Asset.native(),
             amount: "10",
-          })
+          }),
         )
         .setTimeout(30)
         .build();
@@ -148,14 +150,14 @@ describe("Transaction Helpers", () => {
             destination: Keypair.random().publicKey(),
             asset: Asset.native(),
             amount: "10",
-          })
+          }),
         )
         .addOperation(
           Operation.payment({
             destination: Keypair.random().publicKey(),
             asset: Asset.native(),
             amount: "5",
-          })
+          }),
         )
         .setTimeout(30)
         .build();
@@ -183,7 +185,7 @@ describe("Transaction Helpers", () => {
             destination: Keypair.random().publicKey(),
             asset: Asset.native(),
             amount: "10",
-          })
+          }),
         )
         .setTimeout(30)
         .build();
@@ -206,7 +208,7 @@ describe("Transaction Helpers", () => {
             destination: Keypair.random().publicKey(),
             asset: Asset.native(),
             amount: "10",
-          })
+          }),
         )
         .addOperation(Operation.setOptions({}))
         .setTimeout(30)

@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   Account,
   Address,
@@ -15,6 +15,8 @@ import {
 } from "stellar-sdk";
 import { assembleTransaction } from "@/processes/assemble-transaction/index.ts";
 import { setTransactionFee } from "@/common/helpers/transaction-fee.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("native transaction preservation matrix", () => {
   it("changes only auth and resources when assembling, and only the fee when repricing", async () => {

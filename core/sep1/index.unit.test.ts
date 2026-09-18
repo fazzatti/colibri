@@ -4,9 +4,11 @@ import {
   assertStringIncludes,
   assertThrows,
 } from "@std/assert";
-import { beforeEach, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { StellarToml } from "@/sep1/index.ts";
 import * as ERROR from "@/sep1/error.ts";
+
+const { beforeEach, describe, it } = recordColibriTests(import.meta.url);
 
 // Valid test keys (these are not real keys, just properly formatted)
 const VALID_PUBLIC_KEY =

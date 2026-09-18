@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Spec } from "stellar-sdk/contract";
 import {
   ContractStandards,
@@ -7,6 +7,8 @@ import {
   matchesContractInterface,
 } from "@/mod.ts";
 import { loadWasmFile } from "colibri-internal/util/load-wasm-file.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("SEP-57 Rust ABI compatibility", () => {
   it("matches the independent Rust-generated Identity Claims specification", async () => {

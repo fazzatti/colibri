@@ -1,8 +1,10 @@
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { assertEquals, assertStringIncludes, assertThrows } from "@std/assert";
 import { Asset, Keypair, xdr } from "stellar-sdk";
 import { parseChangeTrustAsset } from "@/common/helpers/xdr/parse-change-trust-asset.ts";
 import { UNKNOWN_CHANGE_TRUST_ASSET_TYPE } from "@/common/helpers/xdr/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("parseChangeTrustAsset", () => {
   it("should parse native asset", () => {

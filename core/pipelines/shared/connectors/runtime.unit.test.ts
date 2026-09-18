@@ -1,8 +1,10 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import type { StepThis } from "convee";
 import { getRequiredStepOutput } from "@/pipelines/shared/connectors/runtime.ts";
 import { ColibriError } from "@/error/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const createRuntime = (
   snapshot: { output?: unknown } | undefined,

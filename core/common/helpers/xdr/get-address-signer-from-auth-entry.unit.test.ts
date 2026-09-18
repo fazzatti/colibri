@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertExists, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Buffer } from "node:buffer";
 import { Address, Keypair, xdr } from "stellar-sdk";
 import { getAddressSignerFromAuthEntry } from "@/common/helpers/xdr/get-address-signer-from-auth-entry.ts";
@@ -10,6 +10,8 @@ import {
   MISSING_AUTH_ENTRY_ADDRESS_CREDENTIALS_FOR_SIGNER,
 } from "@/common/helpers/xdr/error.ts";
 import { StrKey } from "@/strkeys/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("getAddressSignerFromAuthEntry", () => {
   it("should extract signer from auth entry", () => {

@@ -1,10 +1,12 @@
 import { assert, assertEquals, assertNotEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   SorobanErrors,
   SorobanValueError,
   SorobanValueErrorCode,
 } from "@/soroban-types/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("core concrete failures", () => {
   it("exports a distinct constructor for every stable code and preserves context", () => {

@@ -5,7 +5,7 @@ import {
   assertStringIncludes,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { ColibriError } from "@colibri/core";
 import type {
   ContractBuildVerificationInput,
@@ -47,6 +47,8 @@ import {
   EvidenceWriteFailedError,
   LogWriteFailedError,
 } from "@/reporting/error.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const harness = (overrides: Partial<BuildVerificationCliIo> = {}) => {
   const stdout: string[] = [];

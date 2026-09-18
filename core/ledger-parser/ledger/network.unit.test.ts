@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertThrows } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import {
   FeeBumpTransaction,
   Networks,
@@ -11,6 +11,8 @@ import { NetworkConfig } from "@/network/index.ts";
 import { matchTransactionEnvelopes } from "@/ledger-parser/ledger/match-envelopes.ts";
 import * as ERROR from "@/ledger-parser/error.ts";
 import { loadLedgerFixtures } from "colibri-internal/tests/fixtures/rpc/get_ledgers/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 const fixtures = loadLedgerFixtures();
 

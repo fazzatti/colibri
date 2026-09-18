@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
-import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { Asset, Operation } from "stellar-sdk";
 import { StellarTestLedger } from "@colibri/test-tooling";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
@@ -14,6 +14,11 @@ import { LocalSigner } from "@/signer/local/index.ts";
 import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
 import type { TransactionConfig } from "@/common/types/transaction-config/types.ts";
 import type { ClassicTransactionOutput } from "@/pipelines/classic-transaction/types.ts";
+
+const { afterAll, beforeAll, describe, it, observer: suiteObserver } =
+  recordColibriTests(
+    import.meta.url,
+  );
 
 describe(
   "NativeLiquidityPool confirmed ledger workflows",
@@ -43,7 +48,10 @@ describe(
       const networkConfig = NetworkConfig.CustomNet(
         await ledger.getNetworkConfiguration(),
       );
-      pool = new NativeLiquidityPool({ assets: [usd, xlm], networkConfig });
+      pool = suiteObserver.attach(
+        new NativeLiquidityPool({ assets: [usd, xlm], networkConfig }),
+        { name: "pool" },
+      );
       await initializeWithFriendbot(
         networkConfig.friendbotUrl!,
         issuer.publicKey(),
@@ -95,10 +103,13 @@ describe(
     });
 
     it("distinguishes absent and empty positions before any deposit", async () => {
-      const absent = new NativeLiquidityPool({
-        assets: [xlm, new Asset("ABSENT", issuer.publicKey())],
-        networkConfig: pool.networkConfig,
-      });
+      const absent = suiteObserver.attach(
+        new NativeLiquidityPool({
+          assets: [xlm, new Asset("ABSENT", issuer.publicKey())],
+          networkConfig: pool.networkConfig,
+        }),
+        { name: "absent" },
+      );
       await assertRejects(
         () => absent.getPosition(provider.publicKey()),
         POSITION_POOL_MISSING,

@@ -1,11 +1,13 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import { stub } from "@std/testing/mock"; // Add this import
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { MuxedAccount } from "stellar-sdk";
 import { muxedAddressToBaseAccount } from "@/address/muxed-to-base-account/index.ts";
 import * as ERROR from "@/address/muxed-to-base-account/error.ts";
 import type { MuxedAddress } from "@/strkeys/types.ts";
 import { StrKey } from "@/strkeys/index.ts";
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("Transformer muxedAddressToBaseAccount", () => {
   it("converts a valid muxed address to a valid Ed25519 Public Key", async () => {

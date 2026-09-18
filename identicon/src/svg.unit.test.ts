@@ -4,7 +4,7 @@ import {
   assertStrictEquals,
   assertThrows,
 } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { ColibriError } from "@colibri/core/errors";
 import {
   Identicon,
@@ -16,6 +16,8 @@ import { StrKey } from "stellar-sdk";
 import fixtures from "colibri-internal/identicon/vectors.json" with {
   type: "json",
 };
+
+const { describe, it } = recordColibriTests(import.meta.url);
 
 describe("SVG-only public renderer", () => {
   it("shares the root function and matches the class for all hue bytes and both address types", () => {
