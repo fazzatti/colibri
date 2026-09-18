@@ -49,30 +49,34 @@ function setup(timings = true) {
 describe("Node BDD observation boundaries", () => {
   it("preserves native arguments, return values and callback attribution during overlapping calls", async () => {
     const s = setup(), opts = { concurrency: true };
+    let callbackThis: unknown, callbackContext: unknown;
     assertEquals(
       s.api.describe("suite", opts, () => {
-        s.api.it("one", async function (this: unknown) {
+        s.api.it("one", async function (this: unknown, context) {
+          // Native Node test callbacks return void; observe the receiver and
+          // context separately to verify that the adapter forwards them.
+          callbackThis = this;
+          callbackContext = context;
           s.observer.log("one start");
           await Promise.resolve();
           s.observer.log("one end");
-          return this;
         });
         s.api.it("two", () => {
           s.observer.log("two");
-          return 2;
         });
       }) as unknown,
       "native return",
     );
     assertStrictEquals(s.calls[0].args[1], opts);
     await s.callback(0)();
-    const receiver = { identity: 1 };
+    const receiver = { identity: 1 }, context = { name: "one" };
     const [one, two] = await Promise.all([
-      s.callback(1).call(receiver),
+      s.callback(1).call(receiver, context),
       s.callback(2)(),
     ]);
-    assertStrictEquals(one, receiver);
-    assertEquals(two, 2);
+    assertStrictEquals(callbackThis, receiver);
+    assertStrictEquals(callbackContext, context);
+    assertEquals([one, two], [undefined, undefined]);
     const records = s.c.report().records,
       tests = records.filter((r) => r.kind === "test");
     assertEquals(tests.map((r) => r.path), [["suite", "one"], [

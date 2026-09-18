@@ -133,7 +133,12 @@ it({suite,fn:function namedOption() {}});
         stdout: "piped",
         stderr: "piped",
       }).output();
-      assertEquals(child.code, 1, new TextDecoder().decode(child.stderr));
+      const stdout = new TextDecoder().decode(child.stdout);
+      const output = stdout + new TextDecoder().decode(child.stderr);
+      assertEquals(child.code, 1, output);
+      // A failing fixture must still finish aggregation. An early CLI failure
+      // also exits with 1, so surface its output before reading the artifacts.
+      assertStringIncludes(stdout, "Colibri report:", output);
       const runs = [...Deno.readDirSync(artifacts)];
       assertEquals(runs.length, 1);
       const path = join(artifacts, runs[0].name);
