@@ -1,11 +1,11 @@
 /**
  * @module
- * Deno BDD recording and per-runtime artifact journals.
+ * Node BDD recording and per-runtime artifact journals.
  */
 import { join } from "node:path";
 import { Collector } from "@/recorder/runtime/collector.ts";
 import { Observer } from "@/recorder/runtime/observer.ts";
-import { type RecordedTests, recordTests } from "@/recorder/deno/bdd.ts";
+import { type RecordedTests, recordTests } from "@/recorder/node/bdd.ts";
 import { environment, Journal } from "@/recorder/artifacts/journal.ts";
 import type { RecorderOptions, RecorderReport } from "@/recorder/types.ts";
 
@@ -30,7 +30,7 @@ export class TestRecorder {
       (root ? join(root, this.collector.runId) : undefined);
     this.journal = new Journal(this.collector, this.directory);
   }
-  /** Preserve the std/testing BDD API and expose automatically attributed observers. */
+  /** Preserve the node:test BDD API and expose automatically attributed observers. */
   recordTests(file: string): RecordedTests {
     let tests = this.files.get(file);
     if (!tests) {
@@ -57,9 +57,8 @@ export type {
   RecordedHook,
   RecordedIt,
   RecordedTests,
-} from "@/recorder/deno/bdd.ts";
+} from "@/recorder/node/bdd.ts";
 export { aggregate } from "@/recorder/artifacts/aggregate.ts";
 export type * from "@/recorder/types.ts";
 
-export type { DescribeArgs, ItArgs, TestSuite } from "@std/testing/bdd";
 export type { TestObserver } from "@/recorder/types.ts";

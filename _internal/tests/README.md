@@ -38,37 +38,39 @@ remains `https://mainnet.sorobanrpc.com`.
 
 ## Whole-suite execution evidence
 
-`deno task test`, `test:unit`, `test:integration`, and `test:file` now run
-through one recorder configuration in `recorder/suite.ts`. Every package BDD
-file calls `recordColibriTests(import.meta.url)`; tests creating Core clients or
-pipelines attach their file observer to the original object. The fixture adapter
-leaves direct `deno test` runs unrecorded, with standard BDD behavior, unless
-the recorder CLI supplies a run directory. No package runtime imports this test
-fixture.
+`deno task test`, `test:unit`, `test:integration`, and `test:file` run ordinary
+Deno tests without recorder output. Existing coverage settings are independent.
+Every package BDD file calls `recordColibriTests(import.meta.url)`; without the
+recorder CLI's environment, that adapter delegates to standard BDD helpers and
+its observers do nothing. No package runtime imports this test fixture.
+
+Use `test:record` when you want transaction evidence. Recording must be enabled
+while tests execute; aggregation cannot reconstruct an unrecorded run.
 
 ```sh
-# Entire package suite, including its existing Docker/network integrations:
-deno task test
-
-# Faster inspection without Docker/network integrations:
+# Normal tests, without recorder artifacts:
 deno task test:unit
+deno task test:file core/contract/index.unit.test.ts
 
-# One suite, with the same recording configuration:
-deno task test:file core/contract/index.integration.test.ts
+# Explicit recording; the CLI runs tests and generates reports in one command:
+deno task test:record --ignore='_*/'
 
-# Custom selection; arguments are passed to Deno's test runner:
-deno task test:record --parallel core plugins/fee-bump
+# Record one file or only unit tests:
+deno task test:record core/contract/index.unit.test.ts
+deno task test:record --parallel --ignore='_*/' --ignore='**/*.integration.test.ts'
 ```
 
-Each invocation prints `artifacts/colibri/<run-id>/report.html`. Open it
-directly from disk. The adjacent JSON, JUnit and runtime journals retain
-machine-readable evidence. Test assertions and runner exit codes are preserved.
-The profile contains observed pipeline executions; tests of isolated helpers
-still appear as tests, without invented transaction/resource measurements.
-Static factories that execute before returning a client have only their
-caller/test boundary available until that returned client is attached. Explicit
-`observer.log` adds evidence; ordinary console output remains in the test runner
-log.
+Full-suite recorded runs above are serial: the Mainnet archive suites share a
+provider that rate-limits concurrent requests. Use parallelism only for a
+selection that tolerates it. Recorded runs print
+`artifacts/colibri/<run-id>/report.html`. The adjacent JSON, runner results and
+runtime journals retain machine-readable evidence. Test assertions and runner
+exit codes are preserved. The profile contains observed pipeline executions;
+tests of isolated helpers still appear as tests, without invented
+transaction/resource measurements. Static factories that execute before
+returning a client have only their caller/test boundary available until that
+returned client is attached. Explicit `observer.log` adds evidence; ordinary
+console output remains in the test runner log.
 
 The shared settings capture detailed parameters/results, authorization trees
 without signatures, stage timings, simulated resource budgets and available
@@ -76,12 +78,14 @@ fees. Edit this single fixture to change the repository's recording verbosity.
 Recorded timings include observer overhead; this report is diagnostic evidence,
 not an uninstrumented performance benchmark.
 
-CI records every package and all three build-verification shards in their
-existing jobs. Each job uploads `test-evidence-<shard>` even after a test
-failure. The `test evidence` job publishes `colibri-test-evidence` containing a
-combined `report.html`, `report.json` and `sources.json`. Missing shards and
-partial runs stay visible; the merger never treats missing evidence as a passing
-test. Downloaded shard artifacts can be rebuilt without executing tests:
+Normal pull-request CI does not record evidence. To request a report, run CI
+manually with **record_evidence** enabled. That run records every package and
+all three build-verification shards. Each recording job uploads
+`test-evidence-<shard>` even after a test failure. The `test evidence` job
+publishes `colibri-test-evidence` containing a combined `report.html`,
+`report.json` and `sources.json`. Missing shards and partial runs stay visible;
+the merger never treats missing evidence as a passing test. Downloaded shard
+artifacts can be rebuilt without executing tests:
 
 ```sh
 deno task test:record:merge artifacts/colibri-shards artifacts/colibri-report

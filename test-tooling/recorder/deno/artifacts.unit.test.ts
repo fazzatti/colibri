@@ -9,11 +9,11 @@ import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { join } from "node:path";
 import { stub } from "@std/testing/mock";
 import { Collector } from "@/recorder/runtime/collector.ts";
-import { environment, Journal } from "@/recorder/deno/journal.ts";
-import { aggregate } from "@/recorder/deno/aggregate.ts";
+import { environment, Journal } from "@/recorder/artifacts/journal.ts";
+import { aggregate } from "@/recorder/artifacts/aggregate.ts";
 import { main } from "@/recorder/cli/index.ts";
 import { RecorderError } from "@/recorder/error.ts";
-import { reconcileJUnit } from "@/recorder/deno/junit.ts";
+import { reconcileJUnit } from "@/recorder/artifacts/deno-results.ts";
 
 const { describe, it } = recordColibriTests(import.meta.url);
 
@@ -153,7 +153,8 @@ describe("recorder artifacts and failure handling", () => {
       await Deno.writeTextFile(join(directory, "fragments"), "not a directory");
       await assertRejects(
         () => aggregate(directory),
-        Deno.errors.NotADirectory,
+        Error,
+        "ENOTDIR",
       );
       assertThrows(
         () =>

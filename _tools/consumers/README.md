@@ -132,6 +132,16 @@ copied into disposable directories without tests, internal fixtures, tools, or
 node_modules. npm artifacts retain Core and Convee as shared dependencies; they
 do not embed private copies of those runtime/type identities.
 
+## Node recorder compatibility
+
+The installed Node lanes also execute `_tools/recorder/node-consumer.mjs`
+through the recorder's public npm entrypoints. Real `node:test` workers exercise
+concurrent files, hooks, failures, skipped tests, timeouts, contract/pipeline
+observation, artifact generation and aggregation. The same fixture runs against
+dnt and JSR-declaration artifacts. It does not launch Deno or submit
+transactions. The root Docker harness and Deno BDD adapter remain outside this
+portable graph; the Node adapter, shared recorder, report and CLI are included.
+
 ## Minimum dependency and historical checks
 
 Fetch all release tags. For each declared Core dependency, the checker selects

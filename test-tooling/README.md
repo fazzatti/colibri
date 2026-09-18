@@ -2,8 +2,8 @@
 
 Version 1.x follows Colibri's
 [compatibility and independent release policy](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility).
-The supported execution environment is Deno with Docker; graduation does not add
-Node or browser support.
+The Quickstart harness runs on Deno with Docker. The independent execution
+recorder supports Deno and Node/npm through dedicated runner adapters.
 
 Test infrastructure helpers for Colibri packages.
 
@@ -333,11 +333,11 @@ structured payload.
 
 ## Test execution recorder
 
-Use `@colibri/test-tooling/recorder/deno` to configure a `TestRecorder`, then
-`recorder.recordTests(import.meta.url)` for familiar BDD helpers and an
-`observer`. Attach it to contract clients or classic/Soroban pipelines to
-collect results, authorization details and optional timings/resource/fee
-profiling.
+Use `@colibri/test-tooling/recorder/deno` or `/recorder/node` to configure a
+`TestRecorder` for Deno or Node, then `recorder.recordTests(import.meta.url)`
+for familiar BDD helpers and an `observer`. Attach it to contract clients or
+classic/Soroban pipelines to collect results, authorization details and optional
+timings/resource/fee profiling.
 
 ```ts
 import { TestRecorder } from "@colibri/test-tooling/recorder/deno";
@@ -383,10 +383,44 @@ See [Record test evidence](../docs/packages/test-tooling/recorder.md) for setup,
 configuration, aggregation, HTML navigation, profiling units and observation
 limits.
 
+### Node / npm
+
+Install with `npx jsr add @colibri/test-tooling`. Import `TestRecorder` from
+`@colibri/test-tooling/recorder/node` on Node 22.12+ (or Node 24). The same
+configuration, observer, profiling and report APIs work with native `node:test`.
+It supplies `beforeAll`/`afterAll` plus Node's `before`/`after` aliases; native
+Node test options, concurrency, skips, TODOs and callback-style tests remain
+owned by Node. It does not require a Deno installation.
+
+The shared CLI exports `main(args)`, so an npm script can use a small ESM entry
+file (`recorder.mjs`):
+
+```js
+import { main } from "@colibri/test-tooling/recorder/cli";
+process.exitCode = await main(process.argv.slice(2));
+```
+
+```sh
+node recorder.mjs run --config=tests/recording.mjs -- tests/token.test.mjs
+node recorder.mjs aggregate artifacts/colibri/<run-id> --html
+```
+
+Use `/recorder/node` in `recording.mjs`; keep the configuration shown above.
+Arguments after `--` are native Node runner arguments. The CLI owns reporter
+output and uses separate test-file workers; watch mode and disabled file
+isolation are rejected. JSON/HTML generation, summary-only temporary output,
+per-worker journals and final test-result reconciliation match the Deno
+workflow. This adapter targets `node:test`; Jest and Vitest have different
+lifecycle APIs. See the
+[Node walkthrough](../docs/packages/test-tooling/recorder.md#node-and-npm) for a
+complete file layout.
+
 ### Colibri repository suite
 
-From a Colibri checkout, `deno task test:unit` records all package unit tests;
-`deno task test` includes the existing Docker and network integrations. Each run
-prints its offline HTML report path. The shared configuration and CI artifact
+From a Colibri checkout, normal `test`, `test:unit`, `test:integration`, and
+`test:file` tasks do not record evidence. Use
+`deno task test:record <test-paths>` to collect evidence and automatically
+generate JSON/HTML. Recording must happen during execution; aggregation only
+rebuilds previously captured evidence. The shared configuration and CI artifact
 workflow are described in
 [`_internal/tests/README.md`](../_internal/tests/README.md).

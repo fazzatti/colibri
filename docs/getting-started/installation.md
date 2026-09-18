@@ -10,8 +10,8 @@ Deno-first TypeScript projects.
 - Node.js 22.12.0 or supported 22.x/24.x LTS when consuming Colibri through npm
   or a Node-based bundler
 - A reachable Docker daemon such as Docker Desktop or OrbStack if you plan to
-  use `@colibri/test-tooling` or the built-in `@colibri/build-verification`
-  runner
+  use `StellarTestLedger` from `@colibri/test-tooling` or the built-in
+  `@colibri/build-verification` runner; the execution recorder needs no Docker
 
 ## Installing Packages
 

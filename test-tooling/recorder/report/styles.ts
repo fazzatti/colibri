@@ -92,7 +92,10 @@ th.num { white-space: normal; }
 .action-row .row-button { min-height: 44px; }
 #file-body > tr > td:first-child, #test-body > tr > td:first-child { min-width: 250px; }
 .pager { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 12px 0; }
-.evidence-overview { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+.event-filters { align-items: end; }
+.event-filters label { display: grid; gap: 4px; min-width: 0; max-width: 100%; }
+.event-filters select { width: 100%; min-width: 0; max-width: 32rem; }
+.event-match-count { color: var(--muted); font-size: 12px; }
 .facts-table { border: 1px solid var(--line); background: var(--panel); table-layout: fixed; }
 .facts-table th { width: 36%; }
 .facts-table th, .facts-table td { overflow-wrap: anywhere; padding: 8px 12px; }

@@ -13,7 +13,7 @@ import {
   summarize,
 } from "@/recorder/report/index.ts";
 import { Collector } from "@/recorder/runtime/collector.ts";
-import { reconcileJUnit } from "@/recorder/deno/junit.ts";
+import { reconcileJUnit } from "@/recorder/artifacts/deno-results.ts";
 import { RecorderError } from "@/recorder/error.ts";
 
 const { describe, it } = recordColibriTests(import.meta.url);

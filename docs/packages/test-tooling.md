@@ -25,4 +25,6 @@ symbols and complete error contexts.
 
 [Record test evidence](test-tooling/recorder.md) covers contract and pipeline
 observation, per-file journals, JSON/HTML artifacts and transaction profiling.
-These entrypoints do not require Docker.
+Use `/recorder/deno` with Deno BDD or `/recorder/node` with Node's native test
+runner. Both share the same recorder settings and artifact/report formats;
+neither requires Docker.

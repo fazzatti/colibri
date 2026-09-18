@@ -13,6 +13,11 @@ on:
   pull_request:
     branches: ["main", "dev"]
   workflow_dispatch:
+    inputs:
+      record_evidence:
+        description: Record transaction evidence and generate JSON/HTML reports
+        type: boolean
+        default: false
 
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
@@ -174,7 +179,12 @@ jobs:
           COLIBRI_TEST_QUICKSTART_DIAGNOSTICS: ${{ (matrix.package == 'webauth' || matrix.package == 'core' || matrix.package == 'react') && '1' || '' }}
         run: |
           set -o pipefail
-          deno task test:record --clean ${{ matrix.test_flags }} \
+          if [ "${{ inputs.record_evidence }}" = "true" ]; then
+            runner=(deno task test:record)
+          else
+            runner=(deno test -A)
+          fi
+          "${runner[@]}" --clean ${{ matrix.test_flags }} \
             --coverage=coverage/${{ matrix.package }} --coverage-raw-data-only \
             ${{ matrix.path }} 2>&1 | tee "${{ runner.temp }}/package-tests.log"
 
@@ -188,7 +198,7 @@ jobs:
           retention-days: 7
 
       - name: Upload ${{ matrix.package }} test evidence
-        if: always()
+        if: always() && inputs.record_evidence
         uses: actions/upload-artifact@v4
         with:
           name: test-evidence-${{ matrix.package }}
@@ -237,13 +247,18 @@ jobs:
           deno-version: 2.7.11
 
       - name: Run build-verification ${{ matrix.shard }} tests
-        run: >-
-          deno task test:record --clean ${{ matrix.test_flags }}
-          --coverage=coverage/build-verification-${{ matrix.shard }}
-          --coverage-raw-data-only ${{ matrix.test_paths }}
+        run: |
+          if [ "${{ inputs.record_evidence }}" = "true" ]; then
+            runner=(deno task test:record)
+          else
+            runner=(deno test -A)
+          fi
+          "${runner[@]}" --clean ${{ matrix.test_flags }} \
+            --coverage=coverage/build-verification-${{ matrix.shard }} \
+            --coverage-raw-data-only ${{ matrix.test_paths }}
 
       - name: Upload build-verification ${{ matrix.shard }} test evidence
-        if: always()
+        if: always() && inputs.record_evidence
         uses: actions/upload-artifact@v4
         with:
           name: test-evidence-build-verification-${{ matrix.shard }}
@@ -323,7 +338,7 @@ jobs:
 
   evidence:
     name: test evidence
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && inputs.record_evidence }}
     needs: [package_tests, build_verification_tests]
     runs-on: ubuntu-latest
     steps:
@@ -374,6 +389,7 @@ jobs:
           BUILD_VERIFICATION_TESTS_RESULT: ${{ needs.build_verification_tests.result }}
           COVERAGE_RESULT: ${{ needs.coverage.result }}
           EVIDENCE_RESULT: ${{ needs.evidence.result }}
+          RECORD_EVIDENCE: ${{ inputs.record_evidence }}
         run: |
           test "$QUALITY_RESULT" = "success"
           test "$COMPATIBILITY_RESULT" = "success"
@@ -381,4 +397,8 @@ jobs:
           test "$PACKAGE_TESTS_RESULT" = "success"
           test "$BUILD_VERIFICATION_TESTS_RESULT" = "success"
           test "$COVERAGE_RESULT" = "success"
-          test "$EVIDENCE_RESULT" = "success"
+          if [ "$RECORD_EVIDENCE" = "true" ]; then
+            test "$EVIDENCE_RESULT" = "success"
+          else
+            test "$EVIDENCE_RESULT" = "skipped"
+          fi

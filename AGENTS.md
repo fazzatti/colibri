@@ -104,9 +104,10 @@ Package tests obtain their BDD helpers from
 `colibri-internal/tests/recorder/suite.ts`. The shared adapter delegates to
 `@std/testing/bdd`; use its observer for supported clients and pipelines while
 keeping existing assertions and callable bindings. Repository tooling tests in
-`_tools/` remain separate from the package suite. The normal package test tasks
-produce JSON/HTML evidence; direct `deno test` remains unrecorded. See
-`_internal/tests/README.md` for configuration and CI artifacts.
+`_tools/` remain separate from the package suite. Normal package test tasks and
+direct `deno test` remain unrecorded. Use `deno task test:record` to explicitly
+collect JSON/HTML evidence. See `_internal/tests/README.md` for configuration
+and CI artifacts.
 
 Strongly consider integration coverage when you touch behavior that depends on
 real runtime boundaries, especially:

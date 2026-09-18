@@ -19,7 +19,7 @@ export const dockerPackages = new Set([
 export const denoOnlyEntrypoints = new Set([
   "@colibri/contract-bindings/cli",
   "@colibri/test-tooling/recorder/deno",
-  "@colibri/test-tooling/recorder/cli",
+  "@colibri/test-tooling",
 ]);
 export const playwrightVersion = "1.61.0";
 

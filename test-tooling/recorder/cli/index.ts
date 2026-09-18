@@ -1,9 +1,12 @@
+import process from "node:process";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 /**
  * @module
- * Run instrumented Deno tests and rebuild JSON/HTML artifacts.
+ * Run instrumented Deno or Node tests and rebuild JSON/HTML artifacts.
  */
 import { runTests } from "@/recorder/cli/runner.ts";
-import { aggregate } from "@/recorder/deno/aggregate.ts";
+import { aggregate } from "@/recorder/artifacts/aggregate.ts";
 import * as ERROR from "@/recorder/error.ts";
 
 /** Execute recorder CLI commands, returning the original test exit code. */
@@ -26,14 +29,17 @@ export async function main(args: string[]): Promise<number> {
     }
   }
   throw new ERROR.INVALID_CONFIGURATION(
-    "Usage: recorder run --config=tests/recording.ts -- -A --parallel tests | recorder aggregate <run-directory> [--html]",
+    "Usage: recorder run --config=<recording-module> -- <native test arguments> | recorder aggregate <run-directory> [--html]",
   );
 }
-if (import.meta.main) {
+if (
+  import.meta.main || process.argv[1] &&
+    pathToFileURL(resolve(process.argv[1])).href === import.meta.url
+) {
   try {
-    Deno.exitCode = await main(Deno.args);
+    process.exitCode = await main(process.argv.slice(2));
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
-    Deno.exitCode = 1;
+    process.exitCode = 1;
   }
 }

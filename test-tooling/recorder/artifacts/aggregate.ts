@@ -1,7 +1,9 @@
+import { readdir, readFile, writeFile } from "node:fs/promises";
+import { reconcileNodeResults } from "@/recorder/artifacts/node-results.ts";
 import { join } from "node:path";
 import { mergeFragments } from "@/recorder/report/aggregate.ts";
 import { renderReport } from "@/recorder/report/index.ts";
-import { reconcileJUnit } from "@/recorder/deno/junit.ts";
+import { reconcileJUnit } from "@/recorder/artifacts/deno-results.ts";
 import type { RecorderReport } from "@/recorder/types.ts";
 import * as ERROR from "@/recorder/error.ts";
 
@@ -14,6 +16,8 @@ export interface RunManifest {
   endedAt?: string;
   exitCode?: number;
   html?: boolean;
+  /** Native test runner used to produce the results; absent in legacy Deno runs. */
+  runtime?: "deno" | "node";
 }
 /** Rebuild a report from artifacts only, including failed or interrupted runs. */
 export async function aggregate(
@@ -21,7 +25,7 @@ export async function aggregate(
   options: { html?: boolean } = {},
 ): Promise<RecorderReport> {
   const manifest: RunManifest = JSON.parse(
-    await Deno.readTextFile(join(directory, "manifest.json")),
+    await readFile(join(directory, "manifest.json"), "utf8"),
   );
   if (
     manifest.schemaVersion !== 1 || typeof manifest.runId !== "string" ||
@@ -37,11 +41,19 @@ export async function aggregate(
     );
   }
   try {
-    reconcileJUnit(
-      report,
-      await Deno.readTextFile(join(directory, "runner.junit.xml")),
-      manifest.cwd,
-    );
+    if (manifest.runtime === "node") {
+      reconcileNodeResults(
+        report,
+        await readFile(join(directory, "runner.node.jsonl"), "utf8"),
+        manifest.cwd,
+      );
+    } else {
+      reconcileJUnit(
+        report,
+        await readFile(join(directory, "runner.junit.xml"), "utf8"),
+        manifest.cwd,
+      );
+    }
   } catch (error) {
     report.complete = false;
     report.diagnostics.push(
@@ -57,12 +69,12 @@ export async function aggregate(
     );
   }
   if (report.diagnostics.length) report.complete = false;
-  await Deno.writeTextFile(
+  await writeFile(
     join(directory, "report.json"),
     JSON.stringify(report, null, 2) + "\n",
   );
   if (options.html ?? manifest.html) {
-    await Deno.writeTextFile(
+    await writeFile(
       join(directory, "report.html"),
       renderReport(report),
     );
@@ -73,15 +85,19 @@ export async function aggregate(
 async function readFragments(directory: string): Promise<string[]> {
   const fragments: string[] = [];
   try {
-    for await (const entry of Deno.readDir(join(directory, "fragments"))) {
-      if (entry.isFile && entry.name.endsWith(".jsonl")) {
+    for (
+      const entry of await readdir(join(directory, "fragments"), {
+        withFileTypes: true,
+      })
+    ) {
+      if (entry.isFile() && entry.name.endsWith(".jsonl")) {
         fragments.push(
-          await Deno.readTextFile(join(directory, "fragments", entry.name)),
+          await readFile(join(directory, "fragments", entry.name), "utf8"),
         );
       }
     }
   } catch (error) {
-    if (!(error instanceof Deno.errors.NotFound)) throw error;
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
   }
   return fragments;
 }

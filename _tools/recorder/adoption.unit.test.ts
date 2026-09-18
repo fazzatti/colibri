@@ -4,6 +4,7 @@ import { parse } from "yaml";
 import { readPackageInventory } from "../package-inventory.ts";
 import { root } from "../consumers/environment.ts";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 describe("whole-suite recorder adoption", () => {
   it("routes every package BDD suite through the shared file-aware adapter", async () => {
@@ -33,7 +34,43 @@ describe("whole-suite recorder adoption", () => {
       "The inventory must include the complete package suite",
     );
   });
-  it("records every CI shard, uploads failures and aggregates all expected artifacts", async () => {
+  it("keeps normal commands unrecorded and the inactive adapter free of artifacts", async () => {
+    const config = JSON.parse(await Deno.readTextFile(join(root, "deno.json")));
+    for (const task of ["test", "test:unit", "test:integration", "test:file"]) {
+      assert(config.tasks[task].startsWith("deno test -A"));
+      assert(!config.tasks[task].includes("test:record"));
+    }
+    const directory = await Deno.makeTempDir();
+    try {
+      const source = `import {recordColibriTests} from ${
+        JSON.stringify(
+          pathToFileURL(join(root, "_internal/tests/recorder/suite.ts")).href,
+        )
+      };
+const {it,observer}=recordColibriTests(import.meta.url);it("unrecorded",async()=>{const value={};if(observer.attach(value)!==value)throw Error("changed identity");observer.log("ignored");await observer.flush();});`;
+      await Deno.writeTextFile(join(directory, "plain.test.ts"), source);
+      const child = await new Deno.Command(Deno.execPath(), {
+        args: [
+          "test",
+          "-A",
+          "--config",
+          join(root, "deno.json"),
+          "plain.test.ts",
+        ],
+        cwd: directory,
+        env: { COLIBRI_RECORDER_DIRECTORY: "" },
+        stdout: "piped",
+        stderr: "piped",
+      }).output();
+      assertEquals(child.code, 0, new TextDecoder().decode(child.stderr));
+      assertEquals(Array.from(Deno.readDirSync(directory), (e) => e.name), [
+        "plain.test.ts",
+      ]);
+    } finally {
+      await Deno.remove(directory, { recursive: true });
+    }
+  });
+  it("records CI shards only when requested and aggregates all expected artifacts", async () => {
     const workflow = parse(
       await Deno.readTextFile(join(root, ".github/workflows/deno.yml")),
     ) as {
@@ -60,7 +97,7 @@ describe("whole-suite recorder adoption", () => {
       const upload = job.steps.find((step) =>
         step.with?.name?.startsWith("test-evidence-")
       );
-      assertEquals(upload?.if, "always()");
+      assertEquals(upload?.if, "always() && inputs.record_evidence");
       for (const shard of job.strategy!.matrix.include) {
         expected.add(shard.package ?? `build-verification-${shard.shard}`);
       }

@@ -27,8 +27,8 @@ The main public API is `StellarTestLedger`, a Quickstart harness that:
 Do not turn this package into a generic Colibri utility dump. Keep it centered
 on test infrastructure, Quickstart lifecycle management and execution evidence.
 
-The recorder lives under `recorder/` with separate in-memory, Deno, report and
-CLI entrypoints. Preserve callable client identity, original return/error
+The recorder lives under `recorder/` with separate in-memory, Deno, Node, report
+and CLI entrypoints. Preserve callable client identity, original return/error
 behavior and explicit signing. Keep runner results separate from observed
 callback outcomes. Standalone HTML reports must work offline and safely render
 arbitrary evidence.

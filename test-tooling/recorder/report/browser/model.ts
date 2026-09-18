@@ -25,7 +25,7 @@ const prefix = (files[0] || "").split("/").slice(0, -1);
 while (prefix.length && !files.every((f) => f.startsWith(prefix.join("/") + "/"))) prefix.pop();
 const fileLabel = (f) => prefix.length ? f.slice(prefix.join("/").length + 1) : f;
 const basename = (f) => fileLabel(f).split("/").at(-1);
-const defaults = { tab: "summary", scope: "", file: "", record: "", detail: "stages", q: "",
+const defaults = { eventType: "", eventOrigin: "", eventContract: "", tab: "summary", scope: "", file: "", record: "", detail: "stages", q: "",
   test: "", outcome: "", chain: "", client: "", method: "", mode: "executions", cross: "", group: "", page: "0", sort: "duration", desc: "1", order: "duration", reverse: "1" };
 const metricColumns = [
   ["duration", "Duration (ms)"], ["instructions", "Instructions (budget)"],
@@ -47,7 +47,9 @@ function readState() {
   const params = new URLSearchParams(location.hash.slice(1));
   for (const key of Object.keys(defaults)) if (params.has(key)) state[key] = params.get(key);
   if (!["summary", "evidence", "profiling"].includes(state.tab)) state.tab = "summary";
-  if (!["stages", "inputs", "authorization", "events"].includes(state.detail)) state.detail = "stages";
+  if (!["measurements", "stages", "inputs", "authorization", "events"].includes(state.detail)) state.detail = "stages";
+  if (!["", "contract", "diagnostic", "system"].includes(state.eventType)) state.eventType = "";
+  if (!["", "confirmed", "simulation"].includes(state.eventOrigin)) state.eventOrigin = "";
   if (!files.includes(state.file)) state.file = "";
   if (!byId.has(state.record)) state.record = "";
   if (!["groups", "executions"].includes(state.mode)) state.mode = "executions";
@@ -71,7 +73,7 @@ function openFile(file, tab = "evidence") {
   navigate({ tab, scope: "", file, record: "", detail: "stages", group: "", page: "0" });
 }
 function openRecord(r) {
-  navigate({ tab: "evidence", scope: "", file: r.file, record: r.id, detail: "stages", group: "", page: "0" });
+  navigate({ tab: "evidence", scope: "", file: r.file, record: r.id, eventType: "", eventOrigin: "", eventContract: "", detail: "stages", group: "", page: "0" });
 }
 function inScope(r) {
   const f = fileLabel(r.file);

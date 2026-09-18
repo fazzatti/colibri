@@ -1,10 +1,12 @@
+import { appendFileSync, mkdirSync } from "node:fs";
+import { env } from "node:process";
 import { join } from "node:path";
 import type { Collector } from "@/recorder/runtime/collector.ts";
 
 /** Optional environment lookup does not require --allow-env for memory-only use. */
 export function environment(name: string): string | undefined {
   try {
-    return Deno.env.get(name);
+    return env[name];
   } catch {
     return undefined;
   }
@@ -21,13 +23,12 @@ export class Journal {
   flushSync(): void {
     if (!this.directory || !this.collector.pending.length) return;
     try {
-      Deno.mkdirSync(join(this.directory, "fragments"), { recursive: true });
-      Deno.writeTextFileSync(
+      mkdirSync(join(this.directory, "fragments"), { recursive: true });
+      appendFileSync(
         join(this.directory, "fragments", `${this.collector.fragmentId}.jsonl`),
         this.collector.pending.map((event) => JSON.stringify(event)).join(
           "\n",
         ) + "\n",
-        { append: true },
       );
       this.collector.pending.length = 0;
     } catch (error) {

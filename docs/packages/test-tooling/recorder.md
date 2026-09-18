@@ -14,22 +14,26 @@ three resource budget samples, an expected error, and an ignored test.
 
 ## Inspect Colibri's full suite
 
-In a Colibri checkout, `deno task test:unit` generates a report for all package
-unit tests. `deno task test` also runs the existing Docker and network
-integrations; those require the same Docker services and endpoint access as
-before. Use `deno task test:file <test-path>` for one suite. Each command prints
-its HTML path.
+In a Colibri checkout, normal `test`, `test:unit`, `test:integration`, and
+`test:file` tasks run without recorder artifacts. Coverage remains independent.
+For evidence, use `deno task test:record <test-paths>`; it runs the selected
+tests and generates the configured JSON/HTML automatically. Use
+`deno task test:record --ignore='_*/'` for the complete suite, including its
+existing Docker/network integrations. Serial execution avoids concurrent
+requests to the shared Mainnet archive provider.
 
-CI uploads each shard's evidence even after failures, then publishes the
-combined `colibri-test-evidence` artifact. Download it and open `report.html`;
-`sources.json` lists its constituent runs. Failed, missing and incomplete
-results remain visible. Recorded durations include observation overhead.
-Isolated helper tests have test results but no transaction profile unless they
-actually execute an attached pipeline.
+Recording must happen during execution. Running an aggregation command later
+cannot recover evidence that was never captured. Normal pull-request CI also
+runs without recording; manually enable **record_evidence** to upload each
+shard's evidence and the combined `colibri-test-evidence` artifact. Download
+that artifact and open `report.html`; `sources.json` lists its runs. Failed,
+missing and incomplete results remain visible. Recorded durations include
+observation overhead. Helper tests have results but no transaction profile
+unless they execute an attached pipeline.
 
 ## Configure once
 
-Create a shared test configuration. Each Deno test-file runtime imports its own
+Create a shared test configuration. Each test-file worker imports its own
 instance; the CLI supplies a common run ID and combines the resulting journals.
 
 <!-- deno-check -->
@@ -55,6 +59,80 @@ uses temporary fragments for aggregation and removes them when neither JSON nor
 HTML is retained. `recorder.report()` returns a defensive snapshot. Use the CLI
 for final runner results and HTML; ordinary `deno test` plus JSON configuration
 writes fragments only.
+
+## Node and npm
+
+Install the same package with `npx jsr add @colibri/test-tooling`. Node 22.12+
+and Node 24 use `@colibri/test-tooling/recorder/node`, with no Deno executable.
+Both adapters share capture settings, observers, profiling, sanitization,
+limits, journals, aggregation and HTML reports. Their BDD registrations follow
+their native runner: `node:test` on Node and `@std/testing/bdd` on Deno. Node
+supports concurrent tests, `only`, `skip`, `todo`, callback-style tests and
+native hook options; `ignore` aliases `skip`, and `beforeAll`/`afterAll` also
+have Node's `before`/`after` aliases. Node suites use nested callbacks rather
+than Deno's flat `TestSuite` argument syntax. Jest/Vitest adapters are not
+included.
+
+For TypeScript consumers, install `@types/node` and include `"node"` in your
+`compilerOptions.types` (TypeScript 6 requires explicit selection).
+
+Save these three files (JavaScript ESM needs no TypeScript loader):
+
+```js
+// tests/recording.mjs
+import { TestRecorder } from "@colibri/test-tooling/recorder/node";
+export const recorder = new TestRecorder({
+  capture: "details",
+  events: "full",
+  authorization: { level: "full", signatures: false },
+  profiling: { timings: true, resources: true, fees: true },
+  output: {
+    json: { directory: "./artifacts/colibri" },
+    html: true,
+    summary: true,
+  },
+});
+```
+
+```js
+// tests/example.test.mjs
+import assert from "node:assert/strict";
+import { recorder } from "./recording.mjs";
+const { describe, it, observer } = recorder.recordTests(import.meta.url);
+describe("Example", () => {
+  it("captures a result", () => {
+    const value = observer.capture(() => 7n);
+    assert.equal(value, 7n);
+  });
+});
+```
+
+```js
+// recorder.mjs — the same CLI API supports run and aggregate.
+import { main } from "@colibri/test-tooling/recorder/cli";
+process.exitCode = await main(process.argv.slice(2));
+```
+
+```sh
+node recorder.mjs run --config=tests/recording.mjs -- tests/example.test.mjs
+node recorder.mjs aggregate artifacts/colibri/<run-id> --html
+```
+
+An npm `test:record` script can contain the first command. Arguments after `--`
+are passed to Node's native runner, including `--test-concurrency` and
+`--test-name-pattern`. For TypeScript, configure the loader supported by your
+Node version (for example `--import=tsx` with an application-installed loader).
+The configuration module uses the CLI process's loader; tests use the child
+runner's arguments. The recorder owns `--test-reporter` and its destinations;
+watch mode and disabled file isolation are rejected so a run has one final
+result. Existing stdout/stderr remain visible through Node's normal reporter.
+
+Node writes `runner.node.jsonl` instead of Deno's `runner.junit.xml`. Both
+produce the same report schema, separate observed callback status from final
+runner status, aggregate after test failures, and preserve the runner's exit
+code. In particular, a passing body followed by failing teardown stays failed.
+Files with identical suite/test names are reconciled by worker file and full
+path. Ambiguous names within one file remain unknown, not guessed.
 
 ## Observe clients and pipelines
 
@@ -168,21 +246,29 @@ shows a flat, searchable file table with full relative paths and result counts.
 
 Inside a file, suite rows expand inline to reveal tests and shared setup or
 teardown. Select a test for its chronological captured observations, then a
-pipeline call for its details. Overview and Measurements stay visible above four
-tabs: **Pipeline stages**, **Inputs and results**, **Authorization**, and
-**Events**. The tab bar remains reachable while scrolling long evidence.
-Inputs/results and authorization open their main payload immediately; additional
-payloads remain expandable. Arrow keys and Home/End switch tabs, and the
-selected tab persists in the offline URL and browser history. Opening another
-call starts on Pipeline stages. File, test and call lists are paginated without
-a fixed record limit. Hash copy buttons briefly change to **Copied**. If the
-clipboard is unavailable, a message beside that hash explains how to copy the
-selected text manually. Copy feedback does not carry across report views. Valid
-transaction hashes link to Stellar Expert when the recorded network passphrase
-exactly matches Testnet or Mainnet; custom networks remain plain text.
-Method/operations appears directly after Kind and includes both the Stellar
-operation and method, or the WASM upload, contract deployment, restore or
-TTL-extension subtype.
+pipeline call for its details. Overview and hashes stay visible above five tabs:
+**Measurements**, **Pipeline stages**, **Inputs and results**,
+**Authorization**, and **Events**. Measurements contains timing, resources, fees
+and ledger effects, including their detailed captured payloads. The tab bar
+remains reachable while scrolling long evidence. Inputs/results and
+authorization open their main payload immediately; additional payloads remain
+expandable. Arrow keys and Home/End switch tabs, and the selected tab persists
+in the offline URL and browser history. Opening another call starts on Pipeline
+stages. File, test and call lists are paginated without a fixed record limit.
+Hash copy buttons briefly change to **Copied**. If the clipboard is unavailable,
+a message beside that hash explains how to copy the selected text manually. Copy
+feedback does not carry across report views. Valid transaction hashes link to
+Stellar Expert when the recorded network passphrase exactly matches Testnet or
+Mainnet; custom networks remain plain text. Method/operations appears directly
+after Kind and includes both the Stellar operation and method, or the WASM
+upload, contract deployment, restore or TTL-extension subtype.
+
+The Events tab filters payloads by type (contract, system, or diagnostic/
+unsuccessful), contract ID, and confirmed execution versus simulation. Filters
+combine, survive reload/back navigation, and reset when opening a different
+call. Counts show the number of matching captured payloads alongside original
+collection totals; omitted payloads cannot be recovered by filtering. Confirmed
+and simulated collections remain separate, including in empty results.
 
 Clear context sits immediately beside the current breadcrumb. Breadcrumbs and
 browser Back/Forward preserve your location. The URL fragment records the
@@ -331,5 +417,5 @@ and prints the new run's JSON/HTML paths under `artifacts/colibri/<run-id>/`.
 
 For custom runners, use `ExecutionRecorder` from
 `@colibri/test-tooling/recorder`. Rendering and statistics are available from
-`@colibri/test-tooling/recorder/report`; Deno integration and the CLI remain
-separate entrypoints.
+`@colibri/test-tooling/recorder/report`; Deno and Node integration and the
+shared CLI have separate entrypoints.

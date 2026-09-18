@@ -314112,6 +314112,2200 @@
       }
     ]
   },
+  "@colibri/test-tooling/recorder/node": {
+    "aggregate": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "isAsync": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "directory",
+              "optional": false,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "kind": "assign",
+              "left": {
+                "kind": "identifier",
+                "name": "options",
+                "optional": false,
+                "tsType": {
+                  "kind": "typeLiteral",
+                  "value": {
+                    "properties": [
+                      {
+                        "name": "html",
+                        "optional": true,
+                        "tsType": {
+                          "kind": "keyword",
+                          "repr": "boolean",
+                          "value": "boolean"
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "right": "[UNSUPPORTED]"
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "Promise",
+            "value": {
+              "typeName": "Promise",
+              "typeParams": [
+                {
+                  "kind": "typeRef",
+                  "repr": "RecorderReport",
+                  "value": {
+                    "typeName": "RecorderReport"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "Attribution": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "file",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "testId",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "callId",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "CaptureLevel": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "literal",
+                "repr": "summary",
+                "value": {
+                  "kind": "string",
+                  "string": "summary"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "results",
+                "value": {
+                  "kind": "string",
+                  "string": "results"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "details",
+                "value": {
+                  "kind": "string",
+                  "string": "details"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "trace",
+                "value": {
+                  "kind": "string",
+                  "string": "trace"
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "EventEvidence": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "count",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "contractCount",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "systemCount",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "diagnosticCount",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "items",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Evidence",
+                "value": {
+                  "typeName": "Evidence"
+                }
+              }
+            },
+            {
+              "name": "omitted",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "Evidence": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "keyword",
+                "repr": "null",
+                "value": "null"
+              },
+              {
+                "kind": "keyword",
+                "repr": "boolean",
+                "value": "boolean"
+              },
+              {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              },
+              {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              },
+              {
+                "kind": "array",
+                "value": {
+                  "kind": "typeRef",
+                  "repr": "Evidence",
+                  "value": {
+                    "typeName": "Evidence"
+                  }
+                }
+              },
+              {
+                "kind": "typeLiteral",
+                "value": {
+                  "indexSignatures": [
+                    {
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "key",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "keyword",
+                            "repr": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Evidence",
+                        "value": {
+                          "typeName": "Evidence"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "EvidenceRecord": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "id",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "kind",
+              "tsType": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "literal",
+                    "repr": "suite",
+                    "value": {
+                      "kind": "string",
+                      "string": "suite"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "test",
+                    "value": {
+                      "kind": "string",
+                      "string": "test"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "hook",
+                    "value": {
+                      "kind": "string",
+                      "string": "hook"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "create",
+                    "value": {
+                      "kind": "string",
+                      "string": "create"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "call",
+                    "value": {
+                      "kind": "string",
+                      "string": "call"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "execution",
+                    "value": {
+                      "kind": "string",
+                      "string": "execution"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "log",
+                    "value": {
+                      "kind": "string",
+                      "string": "log"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "file",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "parentId",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "testId",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "callId",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "name",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "path",
+              "optional": true,
+              "tsType": {
+                "kind": "array",
+                "value": {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                }
+              }
+            },
+            {
+              "name": "status",
+              "tsType": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "literal",
+                    "repr": "registered",
+                    "value": {
+                      "kind": "string",
+                      "string": "registered"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "running",
+                    "value": {
+                      "kind": "string",
+                      "string": "running"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "passed",
+                    "value": {
+                      "kind": "string",
+                      "string": "passed"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "failed",
+                    "value": {
+                      "kind": "string",
+                      "string": "failed"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "skipped",
+                    "value": {
+                      "kind": "string",
+                      "string": "skipped"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "unknown",
+                    "value": {
+                      "kind": "string",
+                      "string": "unknown"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "runnerStatus",
+              "optional": true,
+              "tsType": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "literal",
+                    "repr": "passed",
+                    "value": {
+                      "kind": "string",
+                      "string": "passed"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "failed",
+                    "value": {
+                      "kind": "string",
+                      "string": "failed"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "skipped",
+                    "value": {
+                      "kind": "string",
+                      "string": "skipped"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "unknown",
+                    "value": {
+                      "kind": "string",
+                      "string": "unknown"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "startedAt",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "endedAt",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "durationMs",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "data",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Evidence",
+                "value": {
+                  "typeName": "Evidence"
+                }
+              }
+            },
+            {
+              "name": "error",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Evidence",
+                "value": {
+                  "typeName": "Evidence"
+                }
+              }
+            },
+            {
+              "name": "execution",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ExecutionEvidence",
+                "value": {
+                  "typeName": "ExecutionEvidence"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ExecutionEvidence": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "kind",
+              "tsType": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "literal",
+                    "repr": "read",
+                    "value": {
+                      "kind": "string",
+                      "string": "read"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "invoke",
+                    "value": {
+                      "kind": "string",
+                      "string": "invoke"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "classic",
+                    "value": {
+                      "kind": "string",
+                      "string": "classic"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "custom",
+                    "value": {
+                      "kind": "string",
+                      "string": "custom"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "client",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "network",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "contract",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "method",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "operations",
+              "tsType": {
+                "kind": "array",
+                "value": {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                }
+              }
+            },
+            {
+              "name": "operationDetails",
+              "optional": true,
+              "tsType": {
+                "kind": "array",
+                "value": {
+                  "kind": "typeRef",
+                  "repr": "OperationEvidence",
+                  "value": {
+                    "typeName": "OperationEvidence"
+                  }
+                }
+              }
+            },
+            {
+              "name": "chain",
+              "tsType": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "literal",
+                    "repr": "not-submitted",
+                    "value": {
+                      "kind": "string",
+                      "string": "not-submitted"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "unknown",
+                    "value": {
+                      "kind": "string",
+                      "string": "unknown"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "confirmed-success",
+                    "value": {
+                      "kind": "string",
+                      "string": "confirmed-success"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "confirmed-failed",
+                    "value": {
+                      "kind": "string",
+                      "string": "confirmed-failed"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "hash",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "innerHash",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "stages",
+              "tsType": {
+                "kind": "array",
+                "value": {
+                  "kind": "typeRef",
+                  "repr": "StageEvidence",
+                  "value": {
+                    "typeName": "StageEvidence"
+                  }
+                }
+              }
+            },
+            {
+              "name": "simulations",
+              "tsType": {
+                "kind": "array",
+                "value": {
+                  "kind": "typeRef",
+                  "repr": "ResourceProfile",
+                  "value": {
+                    "typeName": "ResourceProfile"
+                  }
+                }
+              }
+            },
+            {
+              "name": "submitted",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Evidence",
+                "value": {
+                  "typeName": "Evidence"
+                }
+              }
+            },
+            {
+              "name": "authorization",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Evidence",
+                "value": {
+                  "typeName": "Evidence"
+                }
+              }
+            },
+            {
+              "name": "feeCharged",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "resourceFees",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Evidence",
+                "value": {
+                  "typeName": "Evidence"
+                }
+              }
+            },
+            {
+              "name": "events",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "EventEvidence",
+                "value": {
+                  "typeName": "EventEvidence"
+                }
+              }
+            },
+            {
+              "name": "ledgerChanges",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "LedgerChangesEvidence",
+                "value": {
+                  "typeName": "LedgerChangesEvidence"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "JournalEvent": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "schemaVersion",
+              "tsType": {
+                "kind": "literal",
+                "repr": "1",
+                "value": {
+                  "kind": "number",
+                  "number": 1
+                }
+              }
+            },
+            {
+              "name": "runId",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "fragmentId",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "sequence",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "record",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "EvidenceRecord",
+                "value": {
+                  "typeName": "EvidenceRecord"
+                }
+              }
+            },
+            {
+              "name": "diagnostic",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "LedgerChangesEvidence": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "created",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "updated",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "removed",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "restored",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "ttlExtended",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "ttlUnknown",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "items",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Evidence",
+                "value": {
+                  "typeName": "Evidence"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ObservationOptions": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "name",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "metadata",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Record",
+                "value": {
+                  "typeName": "Record",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    },
+                    {
+                      "kind": "keyword",
+                      "repr": "unknown",
+                      "value": "unknown"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "network",
+              "optional": true,
+              "tsType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "networkPassphrase",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    },
+                    {
+                      "name": "rpcUrl",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "OperationEvidence": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "type",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "hostFunction",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "contract",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "method",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "extendTo",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "RecordedDescribe": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "intersection",
+            "value": [
+              {
+                "kind": "typeQuery",
+                "repr": "bdd.describe",
+                "value": "bdd.describe"
+              },
+              {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "ignore",
+                      "tsType": {
+                        "kind": "typeQuery",
+                        "repr": "bdd.describe.skip",
+                        "value": "bdd.describe.skip"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "RecordedHook": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeQuery",
+            "repr": "bdd.before",
+            "value": "bdd.before"
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "RecordedIt": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "intersection",
+            "value": [
+              {
+                "kind": "typeQuery",
+                "repr": "bdd.it",
+                "value": "bdd.it"
+              },
+              {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "ignore",
+                      "tsType": {
+                        "kind": "typeQuery",
+                        "repr": "bdd.it.skip",
+                        "value": "bdd.it.skip"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "RecordedTests": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "describe",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "RecordedDescribe",
+                "value": {
+                  "typeName": "RecordedDescribe"
+                }
+              }
+            },
+            {
+              "name": "it",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "RecordedIt",
+                "value": {
+                  "typeName": "RecordedIt"
+                }
+              }
+            },
+            {
+              "name": "beforeAll",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "RecordedHook",
+                "value": {
+                  "typeName": "RecordedHook"
+                }
+              }
+            },
+            {
+              "name": "afterAll",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "RecordedHook",
+                "value": {
+                  "typeName": "RecordedHook"
+                }
+              }
+            },
+            {
+              "name": "beforeEach",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "RecordedHook",
+                "value": {
+                  "typeName": "RecordedHook"
+                }
+              }
+            },
+            {
+              "name": "afterEach",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "RecordedHook",
+                "value": {
+                  "typeName": "RecordedHook"
+                }
+              }
+            },
+            {
+              "name": "before",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "RecordedHook",
+                "value": {
+                  "typeName": "RecordedHook"
+                }
+              }
+            },
+            {
+              "name": "after",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "RecordedHook",
+                "value": {
+                  "typeName": "RecordedHook"
+                }
+              }
+            },
+            {
+              "name": "observer",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "TestObserver",
+                "value": {
+                  "typeName": "TestObserver"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "RecorderOptions": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "capture",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "CaptureLevel",
+                "value": {
+                  "typeName": "CaptureLevel"
+                }
+              }
+            },
+            {
+              "name": "authorization",
+              "optional": true,
+              "tsType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "level",
+                      "tsType": {
+                        "kind": "union",
+                        "value": [
+                          {
+                            "kind": "literal",
+                            "repr": "none",
+                            "value": {
+                              "kind": "string",
+                              "string": "none"
+                            }
+                          },
+                          {
+                            "kind": "literal",
+                            "repr": "summary",
+                            "value": {
+                              "kind": "string",
+                              "string": "summary"
+                            }
+                          },
+                          {
+                            "kind": "literal",
+                            "repr": "full",
+                            "value": {
+                              "kind": "string",
+                              "string": "full"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "signatures",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "boolean",
+                        "value": "boolean"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "events",
+              "optional": true,
+              "tsType": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "literal",
+                    "repr": "none",
+                    "value": {
+                      "kind": "string",
+                      "string": "none"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "summary",
+                    "value": {
+                      "kind": "string",
+                      "string": "summary"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "full",
+                    "value": {
+                      "kind": "string",
+                      "string": "full"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "profiling",
+              "optional": true,
+              "tsType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "timings",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "boolean",
+                        "value": "boolean"
+                      }
+                    },
+                    {
+                      "name": "resources",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "boolean",
+                        "value": "boolean"
+                      }
+                    },
+                    {
+                      "name": "fees",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "boolean",
+                        "value": "boolean"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "limits",
+              "optional": true,
+              "tsType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "records",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    },
+                    {
+                      "name": "depth",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    },
+                    {
+                      "name": "entries",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    },
+                    {
+                      "name": "stringLength",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "sanitize",
+              "optional": true,
+              "tsType": {
+                "kind": "fnOrConstructor",
+                "value": {
+                  "constructor": false,
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "value",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Evidence",
+                        "value": {
+                          "typeName": "Evidence"
+                        }
+                      }
+                    }
+                  ],
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Evidence",
+                    "value": {
+                      "typeName": "Evidence"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "output",
+              "optional": true,
+              "tsType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "summary",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "boolean",
+                        "value": "boolean"
+                      }
+                    },
+                    {
+                      "name": "json",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "typeLiteral",
+                        "value": {
+                          "properties": [
+                            {
+                              "name": "directory",
+                              "tsType": {
+                                "kind": "keyword",
+                                "repr": "string",
+                                "value": "string"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "name": "html",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "boolean",
+                        "value": "boolean"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "RecorderReport": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "schemaVersion",
+              "tsType": {
+                "kind": "literal",
+                "repr": "1",
+                "value": {
+                  "kind": "number",
+                  "number": 1
+                }
+              }
+            },
+            {
+              "name": "runId",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "records",
+              "tsType": {
+                "kind": "array",
+                "value": {
+                  "kind": "typeRef",
+                  "repr": "EvidenceRecord",
+                  "value": {
+                    "typeName": "EvidenceRecord"
+                  }
+                }
+              }
+            },
+            {
+              "name": "diagnostics",
+              "tsType": {
+                "kind": "array",
+                "value": {
+                  "kind": "keyword",
+                  "repr": "string",
+                  "value": "string"
+                }
+              }
+            },
+            {
+              "name": "exitCode",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "complete",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "boolean",
+                "value": "boolean"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourceProfile": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "stage",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "instructions",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "writeBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "readOnlyEntries",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "readWriteEntries",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "minResourceFee",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "restoration",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Evidence",
+                "value": {
+                  "typeName": "Evidence"
+                }
+              }
+            },
+            {
+              "name": "events",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "EventEvidence",
+                "value": {
+                  "typeName": "EventEvidence"
+                }
+              }
+            },
+            {
+              "name": "ledgerChanges",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "LedgerChangesEvidence",
+                "value": {
+                  "typeName": "LedgerChangesEvidence"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "StageEvidence": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "name",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "startedAt",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "durationMs",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "status",
+              "tsType": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "literal",
+                    "repr": "running",
+                    "value": {
+                      "kind": "string",
+                      "string": "running"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "passed",
+                    "value": {
+                      "kind": "string",
+                      "string": "passed"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "failed",
+                    "value": {
+                      "kind": "string",
+                      "string": "failed"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "input",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Evidence",
+                "value": {
+                  "typeName": "Evidence"
+                }
+              }
+            },
+            {
+              "name": "output",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Evidence",
+                "value": {
+                  "typeName": "Evidence"
+                }
+              }
+            },
+            {
+              "name": "error",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Evidence",
+                "value": {
+                  "typeName": "Evidence"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "TestObserver": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "methods": [
+            {
+              "kind": "method",
+              "name": "create",
+              "params": [
+                {
+                  "kind": "identifier",
+                  "name": "factory",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "T",
+                        "value": {
+                          "typeName": "T"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "identifier",
+                  "name": "options",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "ObservationOptions",
+                    "value": {
+                      "typeName": "ObservationOptions"
+                    }
+                  }
+                }
+              ],
+              "returnType": {
+                "kind": "typeRef",
+                "repr": "T",
+                "value": {
+                  "typeName": "T"
+                }
+              },
+              "typeParams": [
+                {
+                  "name": "T"
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "attach",
+              "params": [
+                {
+                  "kind": "identifier",
+                  "name": "target",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "T",
+                    "value": {
+                      "typeName": "T"
+                    }
+                  }
+                },
+                {
+                  "kind": "identifier",
+                  "name": "options",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "ObservationOptions",
+                    "value": {
+                      "typeName": "ObservationOptions"
+                    }
+                  }
+                }
+              ],
+              "returnType": {
+                "kind": "typeRef",
+                "repr": "T",
+                "value": {
+                  "typeName": "T"
+                }
+              },
+              "typeParams": [
+                {
+                  "name": "T"
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "capture",
+              "params": [
+                {
+                  "kind": "identifier",
+                  "name": "callback",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "T",
+                        "value": {
+                          "typeName": "T"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "identifier",
+                  "name": "options",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "ObservationOptions",
+                    "value": {
+                      "typeName": "ObservationOptions"
+                    }
+                  }
+                }
+              ],
+              "returnType": {
+                "kind": "typeRef",
+                "repr": "T",
+                "value": {
+                  "typeName": "T"
+                }
+              },
+              "typeParams": [
+                {
+                  "name": "T"
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "log",
+              "params": [
+                {
+                  "kind": "identifier",
+                  "name": "message",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                },
+                {
+                  "kind": "identifier",
+                  "name": "data",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "unknown",
+                    "value": "unknown"
+                  }
+                }
+              ],
+              "returnType": {
+                "kind": "keyword",
+                "repr": "void",
+                "value": "void"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "flush",
+              "params": [],
+              "returnType": {
+                "kind": "typeRef",
+                "repr": "Promise",
+                "value": {
+                  "typeName": "Promise",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "void",
+                      "value": "void"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "properties": [
+            {
+              "name": "file",
+              "readonly": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "TestRecorder": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "constructors": [
+            {
+              "hasBody": true,
+              "name": "constructor",
+              "params": [
+                {
+                  "kind": "assign",
+                  "left": {
+                    "kind": "identifier",
+                    "name": "options",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "RecorderOptions",
+                      "value": {
+                        "typeName": "RecorderOptions"
+                      }
+                    }
+                  },
+                  "right": "[UNSUPPORTED]"
+                }
+              ]
+            }
+          ],
+          "methods": [
+            {
+              "functionDef": {
+                "hasBody": true,
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "file",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  }
+                ],
+                "returnType": {
+                  "kind": "typeRef",
+                  "repr": "RecordedTests",
+                  "value": {
+                    "typeName": "RecordedTests"
+                  }
+                }
+              },
+              "kind": "method",
+              "name": "recordTests"
+            },
+            {
+              "functionDef": {
+                "hasBody": true,
+                "params": [],
+                "returnType": {
+                  "kind": "typeRef",
+                  "repr": "RecorderReport",
+                  "value": {
+                    "typeName": "RecorderReport"
+                  }
+                }
+              },
+              "kind": "method",
+              "name": "report"
+            },
+            {
+              "functionDef": {
+                "hasBody": true,
+                "params": [],
+                "returnType": {
+                  "kind": "typeRef",
+                  "repr": "Promise",
+                  "value": {
+                    "typeName": "Promise",
+                    "typeParams": [
+                      {
+                        "kind": "keyword",
+                        "repr": "void",
+                        "value": "void"
+                      }
+                    ]
+                  }
+                }
+              },
+              "kind": "method",
+              "name": "flush"
+            }
+          ],
+          "properties": [
+            {
+              "accessibility": "private",
+              "name": "collector",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Collector",
+                "value": {
+                  "typeName": "Collector"
+                }
+              }
+            },
+            {
+              "name": "options",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "RecorderOptions",
+                "value": {
+                  "typeName": "RecorderOptions"
+                }
+              }
+            },
+            {
+              "name": "directory",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "accessibility": "private",
+              "name": "journal",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Journal",
+                "value": {
+                  "typeName": "Journal"
+                }
+              }
+            },
+            {
+              "accessibility": "private",
+              "name": "files",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Map",
+                "value": {
+                  "typeName": "Map",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    },
+                    {
+                      "kind": "typeRef",
+                      "repr": "RecordedTests",
+                      "value": {
+                        "typeName": "RecordedTests"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kind": "class"
+      }
+    ]
+  },
   "@colibri/webauth": {
     "AuthEntrySigner": [
       {

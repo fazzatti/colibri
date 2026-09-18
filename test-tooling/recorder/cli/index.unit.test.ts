@@ -29,20 +29,24 @@ describe("recorder command", () => {
       await Deno.writeTextFile(test, "export {};");
       using log = stub(console, "log");
       assertEquals(
-        await main(["run", `--config=${config}`, "--", "--no-check", test]),
+        await main([
+          "run",
+          `--config=${config}`,
+          "--",
+          "--no-check",
+          "--quiet",
+          test,
+        ]),
         0,
       );
       assertEquals(log.calls.length, 1);
       using fail = stub(console, "error");
-      // A failing report write still fails the command even after a successful child.
-      using write = stub(
-        Deno,
-        "writeTextFile",
-        (_path, _data, _options) =>
-          Promise.reject(new TypeError("write failed")),
+      // A child can pass and still leave an unwritable report destination.
+      await Deno.writeTextFile(
+        test,
+        `const dir=Deno.env.get("COLIBRI_RECORDER_DIRECTORY"); await Deno.mkdir(dir+"/report.json");`,
       );
-      assertEquals(await runTests(config, [test]), 1);
-      assertEquals(write.calls.length, 1);
+      assertEquals(await runTests(config, ["-A", "--quiet", test]), 1);
       assertEquals(fail.calls.length, 1);
     } finally {
       await Deno.remove(directory, { recursive: true });

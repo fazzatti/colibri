@@ -11,7 +11,8 @@
     "./recorder": "./recorder/index.ts",
     "./recorder/deno": "./recorder/deno/index.ts",
     "./recorder/report": "./recorder/report/index.ts",
-    "./recorder/cli": "./recorder/cli/index.ts"
+    "./recorder/cli": "./recorder/cli/index.ts",
+    "./recorder/node": "./recorder/node/index.ts"
   },
   "lint": {
     "plugins": [
@@ -27,7 +28,8 @@
       "./deno.json"
     ],
     "exclude": [
-      "./**/*.test.ts"
+      "./**/*.test.ts",
+      "./**/AGENTS.md"
     ]
   }
 }

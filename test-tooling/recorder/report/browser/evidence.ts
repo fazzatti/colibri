@@ -91,13 +91,18 @@ function hashRow(host, label, hash, network) {
 }
 function executionDetail(host, r) {
   const e = r.execution;
-  const grid = el("div", undefined, "evidence-overview"), overview = el("section"), measurements = el("section");
+  const overview = el("section");
   overview.append(el("h3", "Overview"));
   factsTable(overview, [["Kind", e.kind], ["Method / operations", operationLabel(r)], ["Pipeline outcome", badge(r.status)], ["Chain outcome", e.chain],
     ["Started", r.startedAt], ["Ended", r.endedAt || "Unavailable"],
     ["Network", e.network || "Unavailable"], ["Client", e.client || "Unnamed"], ["Contract", e.contract || "Unavailable"]]);
   const test = ownerTest(r);
   if (test) { const origin = el("p", "Owning test: "); origin.append(recordLink(test)); overview.append(origin); }
+  host.append(overview);
+  hashRow(host, "Transaction hash", e.hash, e.network); hashRow(host, "Inner hash", e.innerHash, e.network);
+  executionTabs(host, r);
+}
+function measurementPanel(measurements, r) {
   measurements.append(el("h3", "Measurements"));
   const metrics = el("div", undefined, "measurement-grid");
   const middle = Math.ceil(metricColumns.length / 2);
@@ -106,12 +111,10 @@ function executionDetail(host, r) {
   }
   measurements.append(metrics);
   measurements.append(el("p", "Resources and minimum resource fee come from the last simulation; confirmed rent is included in the charged fee. Entry counts are transaction/operation mutation records, including TTL entries. — means unavailable, not zero.", "context-label"));
-  grid.append(overview, measurements); host.append(grid);
-  hashRow(host, "Transaction hash", e.hash, e.network); hashRow(host, "Inner hash", e.innerHash, e.network);
-  executionTabs(host, r);
+
 }
 function executionTabs(host, r) {
-  const e = r.execution, sections = [["stages", "Pipeline stages (" + e.stages.length + ")"], ["inputs", "Inputs and results"], ["authorization", "Authorization"], ["events", "Events"]];
+  const e = r.execution, sections = [["measurements", "Measurements"], ["stages", "Pipeline stages (" + e.stages.length + ")"], ["inputs", "Inputs and results"], ["authorization", "Authorization"], ["events", "Events"]];
   const tabs = el("div", undefined, "detail-tabs"); tabs.id = "call-tabs";
   tabs.setAttribute("role", "tablist"); tabs.setAttribute("aria-label", "Call evidence");
   host.append(tabs);
@@ -142,43 +145,22 @@ function executionTabs(host, r) {
       const row = el("tr"); cell(row, stage.name); cell(row, badge(stage.status)); cell(row, stage.startedAt); cell(row, number(stage.durationMs), "num"); body.append(row);
     }
   } else panels.stages.append(el("p", "No pipeline stages captured."));
+  measurementPanel(panels.measurements, r);
   const inputs = panels.inputs;
   if (r.data === undefined && !e.stages.some((s) => s.input !== undefined || s.output !== undefined)) inputs.append(el("p", "No inputs or result captured at this recording level."));
   jsonSection(inputs, "Captured context and result", r.data, true);
   const stageData = e.stages.filter((s) => s.input !== undefined || s.output !== undefined || s.error !== undefined);
   if (stageData.length) jsonSection(inputs, "Stage inputs, outputs and errors", stageData, r.data === undefined);
   jsonSection(inputs, "Submitted transaction", e.submitted);
-  jsonSection(inputs, "All simulation estimates", e.simulations);
-  jsonSection(inputs, "Confirmed resource fee components (stroops)", e.resourceFees);
-  jsonSection(inputs, "Confirmed ledger changes", e.ledgerChanges);
+  jsonSection(panels.measurements, "All simulation estimates", e.simulations);
+  jsonSection(panels.measurements, "Confirmed resource fee components (stroops)", e.resourceFees);
+  jsonSection(panels.measurements, "Confirmed ledger changes", e.ledgerChanges);
   jsonSection(inputs, "Error", r.error, true);
   eventPanel(panels.events, e);
   if (e.authorization === undefined) panels.authorization.append(el("p", "Authorization details were not captured."));
   else jsonSection(panels.authorization, "Captured authorization details", e.authorization, true);
 }
 
-function eventCollection(host, title, events) {
-  host.append(el("h3", title));
-  if (!events) { host.append(el("p", "Not captured. Re-record with event collection enabled.")); return; }
-  host.append(el("p", events.count + " events: " + events.contractCount + " contract, " + events.systemCount + " system. " + events.diagnosticCount + " diagnostic or unsuccessful-call events (excluded from the event count)."));
-  if (events.omitted) host.append(el("p", events.omitted + " payloads omitted by the recording level or entry limit."));
-  if (!Array.isArray(events.items)) { jsonSection(host, "Captured events", events.items, true); return; }
-  const body = table(host, ["#", "Source / type", "Contract", "Topics and data"]);
-  events.items.forEach((item, index) => {
-    const row = el("tr"); cell(row, index + 1, "num");
-    cell(row, [item?.source, item?.type, item?.stage, item?.operationIndex === undefined ? null : "operation " + (item.operationIndex + 1), item?.successful === false ? "unsuccessful call" : null].filter(Boolean).join(" / "));
-    cell(row, item?.contract || "—", "event-contract");
-    const data = el("div");
-    if (item && typeof item === "object") { data.append(el("strong", "Topics"), el("pre", JSON.stringify(item.topics, null, 2)), el("strong", "Data"), el("pre", JSON.stringify(item.data, null, 2))); }
-    else data.append(el("pre", JSON.stringify(item)));
-    cell(row, data); body.append(row);
-  });
-}
-function eventPanel(host, execution) {
-  host.append(el("p", "Confirmed events come from transaction metadata. Simulation events are previews and are never added to the confirmed count. Diagnostic wrappers are not counted twice."));
-  eventCollection(host, "Confirmed execution", execution.events);
-  execution.simulations.forEach((profile, index) => eventCollection(host, "Simulation " + (index + 1) + " · " + profile.stage, profile.events));
-}
 function fileTests(host, selected) {
   const candidates = [...selected.tests, ...selected.records.filter((r) => !ownerTest(r) && r.kind !== "suite")];
   const nodes = new Map();

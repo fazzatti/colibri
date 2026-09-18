@@ -619,7 +619,6 @@ describe("standalone HTML evidence report", () => {
       for (
         const title of [
           "Overview",
-          "Measurements",
         ]
       ) {
         assert(
@@ -715,9 +714,12 @@ describe("standalone HTML evidence report", () => {
       assert(!(await page.locator("#call-panel-stages").isVisible()));
       await page.keyboard.press("Home");
       assertEquals(
-        await page.locator("#call-tab-stages").getAttribute("aria-selected"),
+        await page.locator("#call-tab-measurements").getAttribute(
+          "aria-selected",
+        ),
         "true",
       );
+      await page.keyboard.press("ArrowRight");
       await page.keyboard.press("ArrowRight");
       assert(
         await page.locator("#call-panel-inputs details").first().getAttribute(
@@ -790,6 +792,18 @@ describe("standalone HTML evidence report", () => {
         contract: "C".repeat(56),
         topics: ["transfer"],
         data: "<script>unsafe()</script>",
+      }, {
+        source: "diagnostic",
+        type: "contract",
+        contract: "D".repeat(56),
+        successful: false,
+        topics: ["failed call"],
+        data: "diagnostic payload",
+      }, {
+        source: "transaction",
+        type: "system",
+        topics: ["fee"],
+        data: "system payload",
       }],
     };
     e.simulations[0].events = {
@@ -883,6 +897,67 @@ describe("standalone HTML evidence report", () => {
         "<script>unsafe()</script>",
       );
       assertEquals(await page.locator("#call-panel-events script").count(), 0);
+      assertEquals(await page.locator(".event-rows tr").count(), 3);
+      await page.getByLabel("Event type", { exact: true }).selectOption(
+        "diagnostic",
+      );
+      assertEquals(await page.locator(".event-rows tr").count(), 1);
+      assertStringIncludes(
+        await page.locator(".event-rows").innerText(),
+        "diagnostic payload",
+      );
+      await page.getByLabel("Event contract", { exact: true }).selectOption(
+        "C".repeat(56),
+      );
+      assertEquals(await page.locator(".event-rows tr").count(), 0);
+      assertStringIncludes(
+        await page.locator("#call-panel-events").innerText(),
+        "No events match",
+      );
+      await page.getByLabel("Event type", { exact: true }).selectOption(
+        "contract",
+      );
+      assertEquals(await page.locator(".event-rows tr").count(), 1);
+      await page.getByLabel("Event origin", { exact: true }).selectOption(
+        "confirmed",
+      );
+      assert(
+        !(await page.locator("#call-panel-events").innerText()).includes(
+          "7 payloads omitted",
+        ),
+      );
+      await page.reload();
+      assertEquals(
+        await page.getByLabel("Event contract", { exact: true }).inputValue(),
+        "C".repeat(56),
+      );
+      assertEquals(
+        await page.getByLabel("Event type", { exact: true }).inputValue(),
+        "contract",
+      );
+      await page.getByRole("button", { name: "Clear event filters" }).click();
+      assertEquals(await page.locator(".event-rows tr").count(), 3);
+      await page.getByLabel("Event type", { exact: true }).selectOption(
+        "system",
+      );
+      assertStringIncludes(
+        await page.locator(".event-rows").innerText(),
+        "system payload",
+      );
+      await page.getByLabel("Event origin", { exact: true }).selectOption(
+        "simulation",
+      );
+      assertEquals(await page.locator(".event-rows tr").count(), 0);
+      await page.getByRole("button", { name: "Clear event filters" }).click();
+      await page.getByRole("tab", { name: "Measurements", exact: true })
+        .click();
+      assert(await page.locator("#call-panel-measurements").isVisible());
+      assertStringIncludes(
+        await page.locator("#call-panel-measurements").innerText(),
+        "9007199254740993",
+      );
+      assert(!(await page.locator("#call-panel-events").isVisible()));
+      await page.getByRole("tab", { name: "Events", exact: true }).click();
       await page.reload();
       assertEquals(
         await page.locator("#call-tab-events").getAttribute("aria-selected"),

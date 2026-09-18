@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { join } from "node:path";
-import { aggregate } from "@/recorder/deno/aggregate.ts";
+import { aggregate } from "@/recorder/artifacts/aggregate.ts";
 import { summarize } from "@/recorder/report/aggregate.ts";
 import { TestRecorder } from "@/recorder/deno/index.ts";
 
