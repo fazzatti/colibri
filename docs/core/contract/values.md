@@ -228,3 +228,61 @@ manually. Raw `readRaw()`/`invokeRaw()` interfaces and direct Stellar SDK calls
 receive `value.toScVal()`. Other JavaScript APIs expecting a primitive receive
 `value.value`. Existing standalone helper constructors still work; the namespace
 is the primary API for new code and generated declarations.
+
+## Runtime specification codecs and results
+
+Use
+[`sorobanTypeFromSpec(spec, type)`](https://jsr.io/@colibri/core/doc/values/~/sorobanTypeFromSpec)
+when a tool learns a function's type from its ABI at runtime. The spec must also
+contain any referenced custom declarations. Use
+[`createSorobanType(spec, name)`](https://jsr.io/@colibri/core/doc/values/~/createSorobanType)
+when you already know a custom declaration's name. These codecs validate and
+convert values locally; they do not invoke a contract.
+
+For results obtained through a native SDK call,
+[`decodeSorobanResult(spec, method, scVal)`](https://jsr.io/@colibri/core/doc/values/~/decodeSorobanResult)
+decodes using the method's output declaration, including native SDK `Result`
+objects. Normal [`read` and `invoke`](invocation.md) already do this; do not
+decode their plain results a second time. Without generated TypeScript types,
+the result is `unknown` and needs application-level narrowing.
+
+This complete offline example declares a tiny ABI to make the wire conversion
+visible. Save it as `runtime-codec.ts` and run `deno run runtime-codec.ts` after
+installing [Core and Stellar SDK](../../getting-started/installation.md). In an
+application, obtain the real spec through [spec loading](deployment.md) or
+[bindings](../../packages/contract-bindings.md).
+
+<!-- deno-check -->
+
+```ts
+import {
+  decodeSorobanResult,
+  encodeSorobanArguments,
+  sorobanTypeFromSpec,
+  Spec,
+} from "@colibri/core";
+import { xdr } from "npm:@stellar/stellar-sdk";
+
+const spec = new Spec([
+  xdr.ScSpecEntry.scSpecEntryFunctionV0(
+    new xdr.ScSpecFunctionV0({
+      name: "count",
+      doc: "",
+      inputs: [],
+      outputs: [xdr.ScSpecTypeDef.scSpecTypeU32()],
+    }),
+  ),
+]);
+const outputType = spec.getFunc("count").outputs[0];
+const codec = sorobanTypeFromSpec(spec, outputType);
+const wireValue = codec.encode(7);
+const decoded = decodeSorobanResult(spec, "count", wireValue);
+if (typeof decoded !== "number") throw new Error("Expected a count");
+console.log(decoded); // 7
+console.log(encodeSorobanArguments(spec, "count", {})); // []
+```
+
+Use the ABI that produced the value; refreshing a spec after an upgrade does not
+make an old result compatible with the new declaration. For statically known
+clients, [generated factories](#use-generated-factories) remain the more direct
+way to retain exact field and variant types.

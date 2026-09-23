@@ -117,6 +117,16 @@ const signer = LocalSigner.fromSecret("S...");
 signer.addTarget("CABC..." as ContractId);
 ```
 
+[`getTargets()`](https://jsr.io/@colibri/core/doc/~/LocalSigner.prototype.getTargets)
+lists the configured targets;
+[`removeTarget(target)`](https://jsr.io/@colibri/core/doc/~/LocalSigner.prototype.removeTarget)
+removes an added target from subsequent `signsFor` selection. A `LocalSigner`
+cannot remove its own public key; that raises `CANNOT_REMOVE_MASTER_TARGET` in
+[the LocalSigner errors](../../reference/errors/core-signer-local.md). The other
+target-based [signer implementations](README.md) expose the same management
+operations. Changing this local routing list does not add or revoke an on-chain
+signer.
+
 ## Fee Bump Example
 
 ```ts

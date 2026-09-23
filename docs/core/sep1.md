@@ -58,6 +58,60 @@ const toml = StellarToml.fromString(tomlContent, {}, "anchor.example.com");
 | `validators`                  | `Validator[]`             | Listed validators                                          |
 | `raw`                         | `Record<string, unknown>` | Raw parsed TOML                                            |
 
+Additional advertised metadata includes `federationServer`,
+`uriRequestSigningKey`, `horizonUrl`, `version`, `documentation` and
+`principals`. See the
+[complete facade reference](https://jsr.io/@colibri/core/doc/~/StellarToml) for
+their types; accessing a field does not contact its advertised service.
+
+### Find currencies and advertised services
+
+Use the lookup helpers instead of filtering the raw `currencies` array yourself:
+
+| Helper                                             | Result                                                                                 |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `findCurrency(code, issuer?)`                      | First currency with that exact code and, when supplied, issuer; otherwise `undefined`. |
+| `findCurrenciesByTemplate(pattern)`                | Currencies whose stored `code_template` equals that exact string.                      |
+| `getCurrenciesByStatus(status)`                    | Currencies marked `live`, `dead`, `test` or `private`.                                 |
+| `hasFederation()`                                  | Whether `FEDERATION_SERVER` is advertised.                                             |
+| `hasTransferServer()` / `hasTransferServerSep24()` | Whether the SEP-6 / SEP-24 endpoint is advertised.                                     |
+
+Template lookup does not expand wildcard characters or match issued asset codes
+against a pattern. Service predicates check advertised fields, not reachability
+or protocol compliance. A currency code alone does not establish
+[asset identity](asset/stellar-asset.md); supply its issuer when it matters.
+
+This complete example is offline. Install [Core](overview.md), save it as
+`discovery.ts`, and run `deno run discovery.ts`:
+
+<!-- deno-check -->
+
+```ts
+import { StellarToml } from "@colibri/core";
+
+const issuer = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
+const toml = StellarToml.fromString(`
+FEDERATION_SERVER = "https://anchor.example.com/federation"
+TRANSFER_SERVER_SEP0024 = "https://anchor.example.com/sep24"
+[[CURRENCIES]]
+code = "USD"
+issuer = "${issuer}"
+status = "live"
+[[CURRENCIES]]
+code_template = "CORN????????"
+status = "test"
+`);
+
+console.log(toml.findCurrency("USD", issuer)?.status); // live
+console.log(toml.findCurrenciesByTemplate("CORN????????").length); // 1
+console.log(toml.getCurrenciesByStatus("live").length); // 1
+console.log(toml.hasFederation(), toml.hasTransferServerSep24()); // true true
+```
+
+For remote documents, obtain this same facade with
+[`fromDomain`](#fromdomaindomain-options) or React's
+[`useStellarToml`](../packages/react/hooks/use-stellar-toml.md).
+
 ### `hasWebAuth()`
 
 Check if the TOML has [SEP-10](../packages/webauth/sep10.md) web authentication

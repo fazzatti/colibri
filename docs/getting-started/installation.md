@@ -40,7 +40,7 @@ This will add imports similar to:
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^1.4.0",
+    "@colibri/core": "jsr:@colibri/core@^1.4.1",
     "@colibri/react": "jsr:@colibri/react@^0.4.0",
     "@colibri/webauth": "jsr:@colibri/webauth@^1.2.0",
     "@colibri/build-verification": "jsr:@colibri/build-verification@^0.4.5",

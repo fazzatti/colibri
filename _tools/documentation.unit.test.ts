@@ -228,6 +228,9 @@ describe("GitBook documentation validation", () => {
           "[Codes](errors/README.md)\n" +
           "`[Install](../getting-started/installation.md)`\n" +
           "<!-- [Install](../getting-started/installation.md) -->\n" +
+          "![Install](../getting-started/installation.md)\n\n" +
+          "[unused]: ../getting-started/installation.md\n\n" +
+          "    [Install](../getting-started/installation.md)\n\n" +
           "~~~md\n[Install](../getting-started/installation.md)\n~~~\n" +
           "````md\n```md\n[Install](../getting-started/installation.md)\n```\n````\n",
       );
@@ -267,6 +270,87 @@ describe("GitBook documentation validation", () => {
         result.output,
         "Broken heading link: docs/README.md -> core/error.md#missing",
       );
+    });
+  });
+
+  it("accepts titles and full, collapsed and shortcut references as child links", async () => {
+    await withFixture(async ({ write, run }) => {
+      await write("docs/README.md", "# Start\n\n[Configuration](config.md)\n");
+      await write(
+        "docs/config.md",
+        "# Configuration\n\n[Resources](resources.md)\n",
+      );
+      await write("docs/resources.md", "# Resources\n\n## Padding\n");
+      // The sidebar must resolve references across the whole document as well.
+      await write(
+        "docs/SUMMARY.md",
+        "# Contents\n\n- [Start](README.md)\n" +
+          "- [Installation](getting-started/installation.md)\n" +
+          "- [Errors](core/error.md)\n- [API](reference/README.md)\n" +
+          "- [Configuration][config]\n  - [Resources][]\n\n" +
+          '[config]: config.md "Configuration"\n[resources]: resources.md\n\n' +
+          "<!-- error-contexts:start -->\n<!-- error-contexts:end -->\n",
+      );
+      const generated = await run("--write");
+      assertEquals(generated.code, 0, generated.output);
+      const forms = [
+        '[`Resource[]`](resources.md#padding "details")',
+        "[Resources](<resources.md#padding> 'details')",
+        "[Resources](resources.md#padding (details))",
+        '[Resources][resource guide]\n\n[Resource Guide]: resources.md#padding\n  "details"',
+        "[Resources][]\n\n[resources]: resources.md#padding",
+        "[Resources]\n\n[Resources]: resources.md#padding",
+      ];
+      for (const form of forms) {
+        await write("docs/config.md", `# Configuration\n\n${form}\n`);
+        const result = await run();
+        assertEquals(result.code, 0, `${form}\n${result.output}`);
+      }
+    });
+  });
+
+  it("validates titled and reference destinations instead of silently skipping them", async () => {
+    await withFixture(async ({ write, run }) => {
+      await write(
+        "docs/README.md",
+        '# Start\n\n[Missing](missing.md "details")\n' +
+          "[Heading][heading]\n[Outside][]\n\n" +
+          '[heading]: core/error.md#missing "heading title"\n' +
+          "[outside]: ../core/mod.ts\n",
+      );
+      const result = await run();
+      assertEquals(result.code, 1);
+      for (
+        const message of [
+          "Broken link: docs/README.md -> missing.md",
+          "Broken heading link: docs/README.md -> core/error.md#missing",
+          "Link leaves GitBook: docs/README.md -> ../core/mod.ts",
+        ]
+      ) assertStringIncludes(result.output, message);
+    });
+  });
+
+  it("accepts escaped and balanced parentheses and angle-wrapped destinations", async () => {
+    await withFixture(async ({ write, run }) => {
+      await write("docs/guide(advanced).md", "# Advanced\n");
+      await write("docs/guide with spaces.md", "# Spaces\n");
+      await write(
+        "docs/README.md",
+        "# Start\n\n[Advanced](guide(advanced).md)\n" +
+          "[Escaped](guide\\(advanced\\).md)\n" +
+          '[Spaces](<guide with spaces.md> "details")\n',
+      );
+      await write(
+        "docs/SUMMARY.md",
+        "# Contents\n\n- [Start](README.md)\n" +
+          "- [Installation](getting-started/installation.md)\n" +
+          "- [Errors](core/error.md)\n- [API](reference/README.md)\n" +
+          "- [Advanced](guide(advanced).md)\n" +
+          "- [Spaces](<guide with spaces.md>)\n" +
+          "<!-- error-contexts:start -->\n<!-- error-contexts:end -->\n",
+      );
+      const result = await run("--write");
+      assertEquals(result.code, 0, result.output);
     });
   });
 

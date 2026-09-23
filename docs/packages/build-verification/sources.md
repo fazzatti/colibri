@@ -72,6 +72,10 @@ committed recipes.
 
 ## Out-of-band recipes
 
+For private direct URLs, configure
+[download headers](#authenticated-url-downloads). For a custom source provider,
+see [provider composition](architecture.md#compose-a-source-provider).
+
 ```typescript
 await verifier.verify({
   mode: "outOfBand",
@@ -100,3 +104,53 @@ The default build command and option policies deliberately constrain execution.
 Allowing a network or a custom image does not disable the other policies. If
 your recipe is rejected, inspect its policy decision instead of silently
 changing the recipe until some build passes. See [policies](policies.md).
+
+## Authenticated URL downloads
+
+[`ContractBuildVerifier`](../build-verification.md) accepts `urlHeaders` for
+direct `{ type: "url", url }` source downloads. These headers are separate from
+`githubToken`, which applies to the GitHub source variants. The default provider
+also uses URL retrieval for a source discovered from strict-mode metadata.
+
+This script verifies a caller-supplied target Wasm against its committed
+[SEP-58 recipe](targets.md). Supply the exact source archive URL and target
+file; set `SOURCE_TOKEN` in your environment. After
+[installation](../build-verification.md), save it as `verify-source.ts` and run
+`deno run -A verify-source.ts https://source.example.com/source.tar.gz target.wasm`.
+Replace the example URL with your service. The default runner needs
+[Docker and host permissions](cli.md#machine-readable-use).
+
+<!-- deno-check -->
+
+```ts
+import { ContractBuildVerifier } from "@colibri/build-verification";
+
+const [url, targetPath] = Deno.args;
+const token = Deno.env.get("SOURCE_TOKEN");
+if (!url || !targetPath || !token) {
+  throw new Error("Supply a URL, target Wasm path and SOURCE_TOKEN");
+}
+const verifier = new ContractBuildVerifier({
+  urlHeaders: { Authorization: `Bearer ${token}` },
+});
+const result = await verifier.verify({
+  target: { wasm: await Deno.readFile(targetPath) },
+  source: { type: "url", url },
+});
+console.log(result.status);
+```
+
+The [retrieval policy](policies.md) still validates every destination. On a
+cross-origin redirect, recognized credential headers such as `Authorization`,
+`Cookie` and `X-Api-Key` are removed permanently for that retrieval, even if a
+later redirect returns to the original origin. Detection uses header names; it
+cannot recognize a secret placed in an arbitrary custom header. Use a direct
+authenticated endpoint when the destination requires those credentials. Headers
+do not bypass the committed source hash or enable
+[build-container networking](policies.md#host-downloads-versus-build-network).
+Keep a verifier's headers scoped to the source service they belong to; do not
+reuse that credential configuration for unrelated URLs.
+
+See the
+[option reference](https://jsr.io/@colibri/build-verification/doc/~/ContractBuildVerifierOptions)
+for custom transports and provider configuration.

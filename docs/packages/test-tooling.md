@@ -29,3 +29,7 @@ observation, per-file journals, JSON/HTML artifacts and transaction profiling.
 Use `/recorder/deno` with Deno BDD or `/recorder/node` with Node's native test
 runner. Both share the same recorder settings and artifact/report formats;
 neither requires Docker.
+
+For a custom runner or an existing in-memory report, use
+[programmatic rendering and summaries](test-tooling/recorder.md#render-and-summarize-reports-programmatically)
+through the portable `/recorder/report` entrypoint.

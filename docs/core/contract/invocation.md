@@ -2,6 +2,11 @@
 
 [Contract overview](../contract.md)
 
+Named calls decode their results automatically. If you call the native SDK
+directly, see
+[runtime ABI decoding](values.md#runtime-specification-codecs-and-results) for
+the corresponding argument and result helpers.
+
 ## Core Methods
 
 The following are fragments using a configured `contract`, a signer, and the

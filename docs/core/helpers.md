@@ -70,3 +70,21 @@ Use the [Core API index](https://jsr.io/@colibri/core/doc) for exact individual
 helper signatures and
 [all helper error contexts](../reference/errors/README.md). Do not assume a
 parse/type guard proves on-chain existence or authorization.
+
+## Inspection helper index
+
+These helpers complement the high-level guides. The linked references define
+their accepted native SDK inputs and return types.
+
+| Task                          | Helpers and related guide                                                                                                                                                                                                                                                                                                                                                            |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Inspect built envelopes       | [`getOperationsFromTransaction`](https://jsr.io/@colibri/core/doc/~/getOperationsFromTransaction), [`getOperationType`](https://jsr.io/@colibri/core/doc/~/getOperationType), [`getOperationTypesFromTransaction`](https://jsr.io/@colibri/core/doc/~/getOperationTypesFromTransaction); distinguish these native SDK envelopes from [ledger inspection wrappers](ledger-parser.md). |
+| Inspect remaining validity    | [`getTransactionTimeout`](https://jsr.io/@colibri/core/doc/~/getTransactionTimeout) returns remaining seconds or milliseconds, or `undefined` without a maximum time; see [transaction validity](transaction-config.md#timeout).                                                                                                                                                     |
+| Classify envelopes            | [`isTransaction`](https://jsr.io/@colibri/core/doc/~/isTransaction), [`isFeeBumpTransaction`](https://jsr.io/@colibri/core/doc/~/isFeeBumpTransaction), [`isSmartContractTransaction`](https://jsr.io/@colibri/core/doc/~/isSmartContractTransaction); see [fee bumps](../packages/plugins/fee-bump.md).                                                                             |
+| Inspect authorization entries | [`getAddressCredentialsFromAuthEntry`](https://jsr.io/@colibri/core/doc/~/getAddressCredentialsFromAuthEntry), [`getAddressTypeFromAuthEntry`](https://jsr.io/@colibri/core/doc/~/getAddressTypeFromAuthEntry), [`getAuthEntrySignatures`](https://jsr.io/@colibri/core/doc/~/getAuthEntrySignatures); see [authorization layers](authorization.md).                                 |
+| Decode untyped XDR values     | [`parseScVal`](https://jsr.io/@colibri/core/doc/~/parseScVal), [`parseScVals`](https://jsr.io/@colibri/core/doc/~/parseScVals), [`getScValTypeName`](https://jsr.io/@colibri/core/doc/~/getScValTypeName); use [spec codecs](contract/values.md#runtime-specification-codecs-and-results) for ABI-aware validation.                                                                  |
+| Name spec-derived events      | [`contractEventBindings`](https://jsr.io/@colibri/core/doc/~/contractEventBindings) maps ABI names to safe registry properties; see [contract events](contract/events.md).                                                                                                                                                                                                           |
+
+For decoded contract state, use [LedgerEntries](ledger-entries/contracts.md) or
+[`Contract.getLedgerEntry`](contract/invocation.md#getledgerentry). Methods
+marked `@internal` in the source are not alternative consumer entrypoints.

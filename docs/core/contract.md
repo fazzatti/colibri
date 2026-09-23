@@ -10,6 +10,11 @@ deploy a new instance. Function reads use simulation; writes use the transaction
 pipeline. [`getLedgerEntry()`](contract/invocation.md#getledgerentry) reads
 stored contract data directly through RPC.
 
+For predictable instance addresses, see
+[deployment salts and ID calculation](contract/deployment.md#deterministic-deployment-addresses).
+For tools that receive their ABI at runtime, see
+[runtime codecs and result decoding](contract/values.md#runtime-specification-codecs-and-results).
+
 Write calls accept [TransactionConfig](transaction-config.md), including
 [signers](signer/README.md),
 [fee strategies](transaction-config.md#fee-strategies), and optional

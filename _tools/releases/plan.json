@@ -1,5 +1,10 @@
 {
   "schema": 1,
   "base": "59a7ccaef865cedcfbd77469fef0c561d7d9fbad",
-  "packages": {}
+  "packages": {
+    "@colibri/core": {
+      "bump": "patch",
+      "reason": "Correct the published README event-extraction example to decode LedgerCloseMeta before parsing and link its complete guide. Documentation only; no runtime, declaration or dependency-minimum changes."
+    }
+  }
 }

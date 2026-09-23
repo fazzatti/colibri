@@ -97,7 +97,9 @@ Wasm is a separate [ledger-entry lookup](ledger-entries/contracts.md).
 
 The parser does not query RPC itself, submit transactions, or provide an event
 subscription. Use [RPC Streamer](../packages/rpc-streamer/ledgers.md) for
-repeated reads and [event tools](../events/overview.md) for event extraction.
+repeated reads and
+[offline event extraction](../events/overview.md#extract-events-from-saved-ledger-metadata)
+for callbacks over metadata you already have.
 
 See [parser errors](../reference/errors/core-ledger-parser.md) and the
 [API reference](https://jsr.io/@colibri/core/doc/~/Ledger).
