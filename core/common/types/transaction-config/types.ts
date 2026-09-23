@@ -107,7 +107,12 @@ export type TransactionFee =
   | {
     base?: never;
     inclusion?: never;
-    /** Maximum total transaction fee, including Soroban resource fees. */
+    /**
+     * Maximum total transaction fee, including adjusted Soroban resource fees.
+     * Resource growth reduces the remaining inclusion bid; fewer than 100
+     * stroops of inclusion for a Soroban invocation fails final assembly.
+     * A separately configured fee-bump envelope has its own outer bid.
+     */
     max: MaxFee;
   };
 
@@ -115,6 +120,12 @@ export type TransactionFee =
  * Subset of transaction configuration required to build a fee-bump envelope.
  */
 export type FeeBumpConfig = {
+  /**
+   * Outer inclusion bid per operation in stroops. The SDK adds the inner
+   * resource fee and counts one extra operation for the wrapper. Choosing a
+   * fee bump intentionally uses this bid independently of the inner fee max,
+   * while preserving the inner resource declarations and resource fee.
+   */
   fee: BaseFee;
   source: TransactionConfig["source"];
   signers: (EnvelopeSigner | PreAuthTransactionSigner)[];

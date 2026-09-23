@@ -51,10 +51,70 @@ those limits does not automatically increase the fee. `resourceFee` includes
 non-refundable and refundable components and excludes the inclusion fee.
 Additional non-refundable charges can consume existing refundable headroom.
 
+### Choose manual control or calculated pricing
+
+Manual configuration is an intentional choice for applications that already know
+which declarations to adjust and whether the existing resource fee covers them.
+Only the selected fields change. For example, increasing instructions alone
+leaves the declared resource fee unchanged; setting `resourceFee` alone leaves
+CPU and byte limits unchanged. Percentage padding calculates an addition to that
+field's simulation value, without pricing changes to other fields.
+
+This complete configuration example requires only `@colibri/core`. Pass the
+chosen object as an invocation's `config.resources`. The application chooses an
+instruction override that covers its final simulation recommendation:
+
+<!-- deno-check -->
+
+```ts
+import type { TransactionResources } from "@colibri/core";
+
+export const manualResources: TransactionResources = {
+  override: { instructions: 12_000_000 },
+  padding: { writeBytes: { amount: 10 } },
+};
+// The declared resource fee is unchanged. The application has chosen to keep it.
+```
+
 Manual configuration performs no settings reads or automatic repricing. The
-network enforces its current ceilings; the calculator below can check explicitly
-supplied ceilings in advance. `config.fee.max` still caps the final transaction
-fee including adjusted resources, with at least 100 stroops left for inclusion.
+caller supplies any required fee increase and chooses budgets within the
+network's limits. Use `calculateResourcePadding` below when you want the utility
+to price CPU/byte growth and produce the resource-fee addition. It also checks
+the explicitly supplied network ceilings. Both approaches use the same final
+assembly and transaction-fee validation.
+
+### Combining resources with the transaction fee
+
+The final envelope bid is **adjusted resource fee + inclusion bid**. Resource
+overrides and padding are resolved before the existing `config.fee` strategy:
+
+- A string or `{ base }` preserves the per-operation inclusion bid. Soroban
+  invocations have one operation, so their total rises with the resource fee.
+- `{ inclusion }` preserves the exact inclusion bid and adds the adjusted
+  resource fee.
+- `{ max }` fixes the total envelope bid. The adjusted resource fee consumes
+  part of that total, leaving the remainder for inclusion. It never raises the
+  maximum automatically.
+
+For example, a final simulation resource fee of 30,000 stroops plus
+`padding.resourceFee: { amount: "5000" }` produces:
+
+| `config.fee`                 | Adjusted resource fee | Inclusion bid | Total envelope bid |
+| ---------------------------- | --------------------: | ------------: | -----------------: |
+| `"100"` or `{ base: "100" }` |                35,000 |           100 |             35,100 |
+| `{ inclusion: "300" }`       |                35,000 |           300 |             35,300 |
+| `{ max: "50000" }`           |                35,000 |        15,000 |             50,000 |
+
+With these resources, `{ max: "35100" }` leaves exactly the minimum 100 stroops
+for inclusion; `{ max: "35099" }` fails with `ASM_013` before envelope signing.
+Fixed padding, percentage padding, overrides and calculator-generated padding
+all follow these rules. Omitting `resources` preserves existing fee behavior.
+The network's eventual charge can be lower than the submitted bid.
+
+A [fee-bump envelope](../packages/plugins/fee-bump.md) is a separate,
+intentional fee decision. Its configured outer bid can exceed the inner
+transaction's `max`, while preserving the inner resource declarations and
+resource fee.
 
 ## Read settings and calculate padding explicitly
 

@@ -55,8 +55,13 @@ export interface ResourcePadding {
  *
  * A field cannot appear in both branches. Overrides below recommendations,
  * invalid amounts and XDR overflow fail locally. Resource changes never invoke
- * the fee calculator or fetch network settings implicitly; callers own fee
- * sufficiency and network ceilings, or can use calculateResourcePadding.
+ * the fee calculator or fetch network settings implicitly. Manual callers
+ * intentionally control each field: CPU/byte changes alone leave resourceFee
+ * unchanged, including percentage padding. Callers choose sufficient fees and
+ * network-valid budgets, or explicitly use calculateResourcePadding to price
+ * resource growth. The existing transaction fee strategy is then applied to
+ * the adjusted resource fee: base/inclusion preserve their inclusion bid,
+ * while max reserves the remainder of its fixed total for inclusion.
  * Classic transaction pipelines reject this configuration.
  */
 export interface TransactionResources {

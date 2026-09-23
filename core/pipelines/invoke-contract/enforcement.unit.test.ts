@@ -31,6 +31,11 @@ import { NetworkConfig } from "@/network/index.ts";
 import { operationHasDelegatedAuthorization } from "@/common/helpers/xdr/operation-has-delegated-authorization.ts";
 import { EXPECTED_INVOKE_HOST_FUNCTION_OPERATION } from "@/pipelines/invoke-contract/error.ts";
 import { assembleTransaction } from "@/processes/assemble-transaction/index.ts";
+import { assembleForEnforcement } from "@/processes/assemble-for-enforcement/index.ts";
+import {
+  getTransactionInclusionFee,
+  getTransactionResourceFee,
+} from "@/common/helpers/transaction-fee.ts";
 
 const { describe, it } = recordColibriTests(import.meta.url);
 
@@ -145,6 +150,10 @@ describe("invoke-contract enforcement connectors", () => {
       entry,
     );
     assertEquals("resources" in preliminary, false);
+    const intermediate = await assembleForEnforcement(preliminary);
+    assertEquals(intermediate.fee, "500");
+    assertEquals(getTransactionResourceFee(intermediate), 100n);
+    assertEquals(getTransactionInclusionFee(intermediate), 400n);
     const ordinary = await signAuthEntriesToAssemble().runWith({
       context: { parent: context },
     }, entry);
@@ -153,6 +162,8 @@ describe("invoke-contract enforcement connectors", () => {
       context: { parent: context },
     }, final);
     const assembled = await assembleTransaction(assembly);
+    assertEquals(assembled.fee, "500");
+    assertEquals(getTransactionInclusionFee(assembled), 290n);
     assertEquals(assembled.tx.ext.type, "sorobanData");
     if (assembled.tx.ext.type !== "sorobanData") return;
     assertEquals(assembled.tx.ext.sorobanData.resources.instructions, 143);

@@ -83,9 +83,21 @@ validation, fee semantics and complete examples. The lower-level `resourceFee`
 assembly argument remains supported, but cannot accompany the new `resources`
 argument.
 
+String/base and exact-inclusion strategies preserve their inclusion bid when
+resources change, so the envelope total grows with the resource fee. With `max`,
+resource growth instead reduces the remaining inclusion bid and fails with
+`ASM_013` if fewer than 100 stroops remain. Manual CPU/byte adjustments leave
+the resource fee unchanged unless the caller also adjusts it. This is
+intentional direct control; use the calculator when you want resource growth
+priced. See the
+[combined examples](resources.md#combining-resources-with-the-transaction-fee).
+
 The fee encoded in the submitted envelope is a bid. Stellar can charge less than
 that bid when surge pricing does not require the entire amount. A maximum
 therefore guarantees an upper bound, not the exact amount ultimately charged.
+This bound applies to the transaction being built. Choosing a
+[fee-bump wrapper](../packages/plugins/fee-bump.md) supplies a separate outer
+inclusion bid, which can intentionally exceed the inner transaction's `max`.
 
 ### Muxed Sources
 

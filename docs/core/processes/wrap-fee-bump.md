@@ -70,6 +70,13 @@ base fee of 150, producing a 450-stroop outer total. A Soroban inner transaction
 with 205 stroops of inclusion and 5,000 of resources can use an outer base fee
 of 205, producing a 5,410-stroop outer total.
 
+Choosing a fee bump intentionally supplies a separate outer inclusion bid. An
+inner transaction's `{ max }` limits its own envelope, including any resource
+overrides or padding, and does not limit this outer bid. Wrapping preserves the
+inner resource fee and budgets exactly; it does not reprice manual resource
+changes. See the
+[combined resource example](../../packages/plugins/fee-bump.md#resource-controls-and-inner-fee-limits).
+
 ### After Creation
 
 The fee bump transaction must then be signed by the fee bump source before
