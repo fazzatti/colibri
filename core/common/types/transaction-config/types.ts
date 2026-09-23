@@ -1,4 +1,5 @@
 import type { Memo as NativeMemo } from "stellar-sdk";
+import type { TransactionResources } from "@/common/types/transaction-config/resources.ts";
 import type {
   EnvelopeSigner,
   PreAuthTransactionSigner,
@@ -18,6 +19,8 @@ export type Memo = NativeMemo;
  * Transaction-level configuration shared by Colibri transaction builders.
  */
 export type TransactionConfig = {
+  /** Optional Soroban overrides/padding applied after final simulation, without automatic fee calculation. */
+  resources?: TransactionResources;
   /** Fee value or explicit fee strategy applied to the transaction. */
   fee: BaseFee | TransactionFee;
   /** G-address, or an M-address for classic transactions. Soroban invocations require a G-address. */

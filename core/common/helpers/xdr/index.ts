@@ -12,6 +12,7 @@ import { operationHasDelegatedAuthorization } from "@/common/helpers/xdr/operati
 import { softTryToXDR } from "@/common/helpers/xdr/soft-try-to-xdr.ts";
 import { parseEvents } from "@/common/helpers/xdr/parse-events.ts";
 import { parseErrorResult } from "@/common/helpers/xdr/parse-error-result.ts";
+import { parseTransactionFailure } from "@/common/helpers/xdr/transaction-failure.ts";
 
 /** Aggregated XDR helper namespace. */
 export const xdr = {
@@ -27,6 +28,7 @@ export const xdr = {
   softTryToXDR,
   parseEvents,
   parseErrorResult,
+  parseTransactionFailure,
 };
 
 export * from "@/common/helpers/xdr/ensure-xdr-type.ts";
@@ -42,6 +44,7 @@ export * from "@/common/helpers/xdr/operation-has-delegated-authorization.ts";
 export * from "@/common/helpers/xdr/soft-try-to-xdr.ts";
 export * from "@/common/helpers/xdr/parse-events.ts";
 export * from "@/common/helpers/xdr/parse-error-result.ts";
+export * from "@/common/helpers/xdr/transaction-failure.ts";
 export * from "@/common/helpers/xdr/scval.ts";
 
 export type * from "@/common/helpers/xdr/types.ts";

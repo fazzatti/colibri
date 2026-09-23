@@ -54,6 +54,11 @@ describe("dependency direction", () => {
   it("keeps Core execution layers pointing inward", async () => {
     const forbiddenDependencies = [
       {
+        source: "../../../core/resources/**/*.ts",
+        target:
+          "../../../core/{steps,pipelines,processes,plugins,contract}/**/*.ts",
+      },
+      {
         source: "../../../core/processes/**/*.ts",
         target: "../../../core/{steps,pipelines,plugins}/**/*.ts",
       },

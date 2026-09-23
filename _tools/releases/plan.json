@@ -1,5 +1,17 @@
 {
   "schema": 1,
-  "base": "752754109c1094f1fbccb2cb30cc8afd821a3c5a",
-  "packages": {}
+  "base": "04ad8c3e480f660613ef87192a0217d48f7bfd54",
+  "packages": {
+    "@colibri/core": {
+      "bump": "minor",
+      "reason": "Add optional Soroban resource overrides/padding, an explicit network-settings reader and external calculator, and additive transaction-failure diagnostics.",
+      "apiReview": "Existing configurations, constructors, legacy assembly resourceFee arguments and parsed error strings remain valid. New opt-in resource policies run after final simulation without implicit fee repricing; error codes and Convee dependency ownership are unchanged. New readable failure details are additive optional metadata."
+    },
+    "@colibri/react": {
+      "bump": "minor",
+      "reason": "Expose the new resource configuration types alongside TransactionConfig in the contract entrypoints.",
+      "apiReview": "Additive type-only exports close the existing TransactionConfig documentation surface; hook behavior and defaults are unchanged. Core 1.4.0 is required because earlier Core releases do not export these types.",
+      "dependencies": { "@colibri/core": "^1.4.0" }
+    }
+  }
 }
