@@ -18,11 +18,11 @@ const result = await signEnvelope({
 
 ## Input
 
-| Property                | Type                                | Required | Description         |
-| ----------------------- | ----------------------------------- | -------- | ------------------- |
-| `transaction`           | `Transaction \| FeeBumpTransaction` | Yes      | Transaction to sign |
-| `signatureRequirements` | `SignatureRequirement[]`            | Yes      | Required signatures |
-| `signers`               | `Signer[]`                          | Yes      | Available signers   |
+| Property                | Type                                                  | Required | Description         |
+| ----------------------- | ----------------------------------------------------- | -------- | ------------------- |
+| `transaction`           | `Transaction \| FeeBumpTransaction`                   | Yes      | Transaction to sign |
+| `signatureRequirements` | [`SignatureRequirement[]`](../authorization.md)       | Yes      | Required signatures |
+| `signers`               | [`Signer[]`](../signer/README.md#signer-capabilities) | Yes      | Available signers   |
 
 ## Output
 

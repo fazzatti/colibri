@@ -10,10 +10,11 @@ ABI declaration references that error type. Supply a prepared `errors` object in
 the constructor to customize messages. Automatic matching is installed once,
 scoped to the contract ID when present, or to root-invocation errors before an
 ID is available. Use `errors: false` when supplying your own matcher through
-`contractConfig.plugins`. Other constructor plugins keep their Core semantics.
-Spread the original entry when customizing a message to retain its metadata. For
-example, this fragment assumes your generated `TokenErrors` declares code `7`
-and your application supplies `networkConfig` and `contractId`:
+[`contractConfig.plugins`](../../core/contract/plugins.md#known-contract-errors).
+Other constructor plugins keep their Core semantics. Spread the original entry
+when customizing a message to retain its metadata. For example, this fragment
+assumes your generated `TokenErrors` declares code `7` and your application
+supplies `networkConfig` and `contractId`:
 
 ```ts
 import { Token, TokenErrors } from "./token-client/index.ts";
@@ -35,14 +36,15 @@ const token = new Token({
 Prepare the map before constructing the client; there is no additional mutable
 error-installation method. Matched errors surface `name` and `category` in
 `error.meta.data.match`. Core's spec/WASM helpers and
-`Contract.loadContractErrorsFromWasm()` preserve these fields too; manually
-supplied maps may omit them.
+[`Contract.loadContractErrorsFromWasm()`](../../core/contract/plugins.md#known-contract-errors)
+preserve these fields too; manually supplied maps may omit them.
 
 `token.events.Transfer` is a Core event definition when that name is declared in
 the ABI. Its `toTopicFilter` and `toEventFilter` accept only indexed fields.
 `fromEvent` validates exact topic count and types and single-value, vector, or
-map payloads. The resulting `ContractEvent` retains the original ledger,
-transaction, and raw-XDR information alongside typed `fields` and `get()`.
+map payloads. The resulting [`ContractEvent`](../../core/contract/events.md)
+retains the original ledger, transaction, and raw-XDR information alongside
+typed `fields` and `get()`.
 
 For a declared `Transfer` event with an indexed `from` field and an `amount`
 payload field, use the definition directly. Here `event` is an

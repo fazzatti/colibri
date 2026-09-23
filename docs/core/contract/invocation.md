@@ -2,17 +2,25 @@
 
 [Contract overview](../contract.md)
 
+Named calls decode their results automatically. If you call the native SDK
+directly, see
+[runtime ABI decoding](values.md#runtime-specification-codecs-and-results) for
+the corresponding argument and result helpers.
+
 ## Core Methods
 
 The following are fragments using a configured `contract`, a signer, and the
 application's addresses. Before named-argument `read()`/`invoke()`, provide a
-`spec` during construction or call `loadSpecFromNetwork()` (or
-`loadSpecFromWasm()` for local bytes). See the
+`spec` during construction or call
+[`loadSpecFromNetwork()`](deployment.md#loadspecfromnetwork) (or
+[`loadSpecFromWasm()`](deployment.md#uploadwasm) for local bytes). See the
 [complete contract tutorial](../../getting-started/contract-call.md).
 
 ### `invoke()`
 
-Use this for state-changing methods:
+Use this for state-changing methods. Supply
+[TransactionConfig](../transaction-config.md) for the source, fee and signers,
+with optional [resource controls](../resources.md):
 
 ```ts
 const result = await contract.invoke({
@@ -32,16 +40,19 @@ const result = await contract.invoke({
 ```
 
 `Contract.invoke()` returns the processed transaction, including its raw
-`returnValue`. Generated bindings also expose a typed `value`, decoded by Core
-through an internal subclass helper. The helper is protected and is not part of
-the public instance API. `invokeRaw()` continues to return the raw result.
+`returnValue`.
+[Generated bindings](../../packages/contract-bindings/generated-client.md) also
+expose a typed `value`, decoded by Core through an internal subclass helper. The
+helper is protected and is not part of the public instance API. `invokeRaw()`
+continues to return the raw result.
 
-If this decoding fails after a successful transaction, Core raises `CONTR_021`.
-The error retains the original result in `meta.data.result`, the method name in
-`meta.data.method`, and the original failure in `meta.cause`. Inspect that
-result and the loaded spec before deciding the next action; decoding does not
-retry or resubmit the transaction. An absent return value becomes `undefined`,
-while an encoded Soroban void result becomes `null`.
+If this decoding fails after a successful transaction, Core raises
+[`CONTR_021`](../../reference/errors/core-contract.md). The error retains the
+original result in `meta.data.result`, the method name in `meta.data.method`,
+and the original failure in `meta.cause`. Inspect that result and the loaded
+spec before deciding the next action; decoding does not retry or resubmit the
+transaction. An absent return value becomes `undefined`, while an encoded
+Soroban void result becomes `null`.
 
 ### `read()`
 
@@ -65,8 +76,9 @@ Use the raw variants when you already have encoded ScVal arguments.
 Read a stored contract-data entry directly through the client's RPC connection.
 The client supplies its contract ID; you supply the encoded ScVal key and
 `"persistent"` or `"temporary"` durability. Persistent is the default. No spec,
-source account, signer or simulation is needed. Generated clients inherit this
-method from `Contract`.
+source account, signer or simulation is needed.
+[Generated clients](../../packages/contract-bindings/generated-client.md)
+inherit this method from [`Contract`](../contract.md).
 
 This complete Deno example takes a Testnet contract ID and a symbol key as its
 two arguments. For other key shapes, supply the corresponding encoded ScVal:
@@ -93,18 +105,23 @@ console.log(entry.value, entry.lastModifiedLedgerSeq, entry.liveUntilLedgerSeq);
 console.log(entry.valueScVal);
 ```
 
-The result and failure behavior are those of `LedgerEntries.contractData()`:
-parsed key/value data, raw XDR and ledger metadata, with
-`LEDGER_ENTRY_NOT_FOUND` when the entry is absent. A client without a deployed
-contract ID raises `MISSING_REQUIRED_PROPERTY` before contacting RPC. The method
-does not infer a storage schema or run a getter's default/computed behavior.
-Instance storage is a map inside the shared instance entry, rather than a third
-contract-data durability; use `LedgerEntries.contractInstance()` for that path.
-See [contract data](../ledger-entries/contracts.md).
+The result and failure behavior are those of
+[`LedgerEntries.contractData()`](../ledger-entries/contracts.md): parsed
+key/value data, raw XDR and ledger metadata, with
+[`LEDGER_ENTRY_NOT_FOUND`](../../reference/errors/core-ledger-entries.md) when
+the entry is absent. A client without a deployed contract ID raises
+[`MISSING_REQUIRED_PROPERTY`](../../reference/errors/core-contract.md) before
+contacting RPC. The method does not infer a storage schema or run a getter's
+default/computed behavior. Instance storage is a map inside the shared instance
+entry, rather than a third contract-data durability; use
+[`LedgerEntries.contractInstance()`](../ledger-entries/contracts.md) for that
+path. See [contract data](../ledger-entries/contracts.md).
 
 ## Using Pipeline Factories Directly
 
-If you want the raw flow without the `Contract` client:
+Use the [read pipeline](../pipelines/read-from-contract.md) or
+[invoke pipeline](../pipelines/invoke-contract.md) for the raw flow without the
+[`Contract`](../contract.md) client:
 
 ```ts
 import {

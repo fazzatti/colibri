@@ -38,6 +38,10 @@ console.log(greeting);
 submit a transaction or persist changes. A successful read is not evidence that
 a later write will succeed: state and authorization can differ.
 
+See [reading and invoking](../core/contract/invocation.md) for both call shapes
+and [validated values](../core/contract/values.md) for optional argument
+validation.
+
 ## Submit a write
 
 With the funded signer and network setup from the
@@ -61,7 +65,10 @@ console.log(result.hash, result.returnValue);
 The example cap is 1,000,000 stroops (0.1 XLM), not a guarantee of actual cost.
 Assembly fails if the simulated resources leave insufficient inclusion fee.
 Network conditions and the method's resources determine whether the cap works.
-For real application writes, choose the cap intentionally.
+For real application writes, choose the cap intentionally using
+[TransactionConfig fee strategies](../core/transaction-config.md#fee-strategies).
+Use [resource controls](../core/resources.md) when adjusting the Soroban
+budgets.
 
 Use `readRaw()`/`invokeRaw()` or the pipeline factories when you already have
 encoded ScVal arguments. See

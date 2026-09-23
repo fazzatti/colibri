@@ -37,18 +37,18 @@ const muxedSourceTransaction = await buildTransaction({
 
 ## Input
 
-| Property            | Type                       | Required           | Description                                          |
-| ------------------- | -------------------------- | ------------------ | ---------------------------------------------------- |
-| `operations`        | `xdr.Operation[]`          | Yes                | Operations added to the transaction                  |
-| `source`            | `TransactionSource`        | Yes                | Source G-address or M-address                        |
-| `baseFee`           | `BaseFee`                  | One fee input      | Existing Stellar SDK per-operation base-fee behavior |
-| `transactionFee`    | `TransactionFee`           | One fee input      | Explicit `base`, `inclusion`, or `max` strategy      |
-| `networkPassphrase` | `string`                   | Yes                | Network passphrase                                   |
-| `rpc`               | `Server`                   | One sequence input | RPC used to load the account sequence                |
-| `sequence`          | `string`                   | One sequence input | Explicit source-account sequence                     |
-| `sorobanData`       | `SorobanTransactionData`   | No                 | Pre-built Soroban data                               |
-| `memo`              | `Memo`                     | No                 | Transaction memo                                     |
-| `preconditions`     | `TransactionPreconditions` | No                 | Time bounds, ledger bounds, and signer requirements  |
+| Property            | Type                                                          | Required           | Description                                          |
+| ------------------- | ------------------------------------------------------------- | ------------------ | ---------------------------------------------------- |
+| `operations`        | `xdr.Operation[]`                                             | Yes                | Operations added to the transaction                  |
+| `source`            | [`TransactionSource`](../transaction-config.md#muxed-sources) | Yes                | Source G-address or M-address                        |
+| `baseFee`           | [`BaseFee`](../transaction-config.md#fee-strategies)          | One fee input      | Existing Stellar SDK per-operation base-fee behavior |
+| `transactionFee`    | [`TransactionFee`](../transaction-config.md#fee-strategies)   | One fee input      | Explicit `base`, `inclusion`, or `max` strategy      |
+| `networkPassphrase` | `string`                                                      | Yes                | Network passphrase                                   |
+| `rpc`               | `Server`                                                      | One sequence input | RPC used to load the account sequence                |
+| `sequence`          | `string`                                                      | One sequence input | Explicit source-account sequence                     |
+| `sorobanData`       | `SorobanTransactionData`                                      | No                 | Pre-built Soroban data                               |
+| `memo`              | `Memo`                                                        | No                 | Transaction memo                                     |
+| `preconditions`     | `TransactionPreconditions`                                    | No                 | Time bounds, ledger bounds, and signer requirements  |
 
 Exactly one of `baseFee` or `transactionFee` is required. Either `rpc` or
 `sequence` must also be provided. When `rpc` is selected, the process loads the
@@ -71,22 +71,23 @@ follows the same envelope behavior without an RPC lookup.
 
 Exact classic inclusion and maximum fees must be at least 100 stroops per
 operation. Resource-inclusive totals must fit Stellar's unsigned 32-bit
-transaction-fee field. The invoke-contract pipeline recalculates the final
-amount from the latest simulation data during assembly.
+transaction-fee field. The
+[invoke-contract pipeline](../pipelines/invoke-contract.md) recalculates the
+final amount from the latest simulation data during assembly.
 
 ### Preconditions
 
 The `preconditions` object supports:
 
-| Property                      | Type               | Description                                               |
-| ----------------------------- | ------------------ | --------------------------------------------------------- |
-| `timeBounds`                  | `TimeBounds`       | Explicit time bounds (`minTime`, `maxTime`)               |
-| `timeoutSeconds`              | `number`           | Timeout from now; cannot be combined with `timeBounds`    |
-| `ledgerBounds`                | `LedgerBounds`     | Ledger bounds (`minLedger`, `maxLedger`)                  |
-| `minAccountSequence`          | `string`           | Minimum account sequence                                  |
-| `minAccountSequenceAge`       | `bigint`           | Minimum sequence age in seconds                           |
-| `minAccountSequenceLedgerGap` | `number`           | Minimum gap from the last sequence change                 |
-| `extraSigners`                | `ExtraSignerKey[]` | Additional required `G...`, `X...`, or `P...` signer keys |
+| Property                      | Type                                | Description                                               |
+| ----------------------------- | ----------------------------------- | --------------------------------------------------------- |
+| `timeBounds`                  | `TimeBounds`                        | Explicit time bounds (`minTime`, `maxTime`)               |
+| `timeoutSeconds`              | `number`                            | Timeout from now; cannot be combined with `timeBounds`    |
+| `ledgerBounds`                | `LedgerBounds`                      | Ledger bounds (`minLedger`, `maxLedger`)                  |
+| `minAccountSequence`          | `string`                            | Minimum account sequence                                  |
+| `minAccountSequenceAge`       | `bigint`                            | Minimum sequence age in seconds                           |
+| `minAccountSequenceLedgerGap` | `number`                            | Minimum gap from the last sequence change                 |
+| `extraSigners`                | [`ExtraSignerKey[]`](../strkeys.md) | Additional required `G...`, `X...`, or `P...` signer keys |
 
 ## Output
 

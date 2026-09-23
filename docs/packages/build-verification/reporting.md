@@ -30,11 +30,12 @@ console.log(result.status);
 
 ## Results versus failures
 
-`verified`, `mismatch`, and `notApplicable` are completed result variants.
-Operational errors throw a `BuildVerificationError`; do not label a failed
-download or timed-out build as a mismatch. The error can carry partial evidence
-and logs from stages that finished. The CLI writes failure reports automatically
-when report paths are supplied; API consumers can create a
+[`verified`, `mismatch`, and `notApplicable`](targets.md#interpret-the-result)
+are completed result variants. Operational errors throw a
+`BuildVerificationError`; do not label a failed download or timed-out build as a
+mismatch. The error can carry partial evidence and logs from stages that
+finished. The [CLI](cli.md#evidence-logs-and-cli) writes failure reports
+automatically when report paths are supplied; API consumers can create a
 `BuildVerificationFailureReport` and pass it to `writeVerificationEvidence`.
 
 `writeVerificationLogs(path, events, { format: "text" })` chooses readable text;
@@ -44,11 +45,11 @@ makes them fail the verification workflow.
 
 ## Evidence boundaries
 
-Inspect recipe provenance (`onChainSep58Metadata` versus `callerSupplied`),
-source archive hash and resolved revision, image manifest/runtime digest,
-selected artifact hash, byte comparison, and runner capabilities.
-Provenance/SBOM observations do not assert a cryptographic signature was checked
-when it was not.
+Inspect [recipe provenance](sources.md#recipe-semantics) (`onChainSep58Metadata`
+versus `callerSupplied`), source archive hash and resolved revision, image
+manifest/runtime digest, selected artifact hash, byte comparison, and runner
+capabilities. Provenance/SBOM observations do not assert a cryptographic
+signature was checked when it was not.
 
 Built-in evidence omits raw source/Wasm bytes and sensitive retrieval
 credentials. Build stdout/stderr are retained within limits: arbitrary build

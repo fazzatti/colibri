@@ -14,7 +14,11 @@ commits, pushes, or chooses a compatibility policy on your behalf. Native
    override only when a minimum dependency must change.
 3. Run `deno task release:plan` to inspect the cumulative target versions and
    `deno task release:apply` to apply them. Re-running apply does not bump
-   twice.
+   twice. After a candidate version changes, regenerate the frozen dependency
+   fixture using the [isolated bundle workflow](../bundles/README.md#run),
+   review its diff, and run `deno task test:bundle-tooling`. A
+   documentation-only patch still changes the package identity recorded in that
+   fixture.
 4. Update consumer documentation and run `deno task release:api:update` if
    public declarations changed. Review that generated diff; do not accept it
    merely because a tool generated it.

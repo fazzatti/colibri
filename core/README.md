@@ -1081,26 +1081,31 @@ including parsing from ledger metadata and filtering.
 
 Parse contract events directly from `LedgerCloseMeta` XDR structures:
 
+<!-- deno-check -->
+
 ```ts
-import { parseEventsFromLedgerCloseMeta } from "jsr:@colibri/core";
+import {
+  type EventFilter,
+  parseEventsFromLedgerCloseMeta,
+} from "@colibri/core";
+import { xdr } from "npm:@stellar/stellar-sdk";
 
-await parseEventsFromLedgerCloseMeta(
-  metadataXdr, // LedgerCloseMeta XDR string
-  async (event) => {
-    // EventHandler callback
-    console.log(event);
-  },
-  filters, // optional EventFilter[]
-);
-
-// Each event includes:
-// - id: unique event identifier
-// - type: "contract" | "system"
-// - ledger: ledger sequence number
-// - contractId: the emitting contract (with address helper)
-// - topic: decoded topic values
-// - value: the event payload
+export async function printLedgerEvents(
+  metadataBase64: string,
+  filters?: EventFilter[],
+) {
+  const metadata = xdr.LedgerCloseMeta.fromXdr(metadataBase64, "base64");
+  await parseEventsFromLedgerCloseMeta(metadata, (event) => {
+    console.log(event.id, event.ledger, event.value);
+  }, filters);
+}
 ```
+
+The parser receives a decoded `xdr.LedgerCloseMeta`, not a serialized string.
+See
+[offline event extraction](https://github.com/fazzatti/colibri/blob/dev/docs/events/overview.md#extract-events-from-saved-ledger-metadata)
+for supported metadata versions, successful-call filtering and a complete
+file-based script.
 
 ### Event filtering
 

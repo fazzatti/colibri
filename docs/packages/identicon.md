@@ -8,7 +8,8 @@ account has never been funded or the contract has not been deployed.
 
 ## Installation and rendering
 
-Create SVG, PNG or data URLs with a local `Identicon` instance. Start with
+Create SVG, PNG or data URLs with a local [`Identicon`](identicon/rendering.md)
+instance. Start with
 [installation and rendering](identicon/rendering.md#installation-and-rendering)
 for a complete script.
 
@@ -25,11 +26,13 @@ Choose size, padding, background and monochrome rendering explicitly. See
 
 ## Custom renderers
 
-Use `generateIdenticon` to access the immutable cell matrix and color for your
-own renderer. See [custom renderers](identicon/custom-renderers.md).
+Use [`generateIdenticon`](identicon/custom-renderers.md) to access the immutable
+cell matrix and color for your own renderer. See
+[custom renderers](identicon/custom-renderers.md).
 
 ## Errors and compatibility
 
-Handle `IdenticonError` by code and understand the reference algorithm's byte
-offset. See [errors and compatibility](identicon/errors-and-compatibility.md)
-and the [API reference](https://jsr.io/@colibri/identicon/doc).
+Handle [`IdenticonError`](identicon/errors-and-compatibility.md) by code and
+understand the reference algorithm's byte offset. See
+[errors and compatibility](identicon/errors-and-compatibility.md) and the
+[API reference](https://jsr.io/@colibri/identicon/doc).

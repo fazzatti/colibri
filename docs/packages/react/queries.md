@@ -1,9 +1,9 @@
 # Queries and caching
 
-Query hooks share the TanStack QueryClient supplied by `ColibriQueryProvider` or
-the application's own provider. Mount it as shown in
-[setup and providers](setup.md). Queries observe data; mutations run only when
-the application calls `mutate` or `mutateAsync`.
+Query hooks share the TanStack QueryClient supplied by
+[`ColibriQueryProvider`](setup.md) or the application's own provider. Mount it
+as shown in [setup and providers](setup.md). Queries observe data; mutations run
+only when the application calls `mutate` or `mutateAsync`.
 
 ## Query controls
 
@@ -19,9 +19,10 @@ present. `enabled: false` is not input validation and does not prevent an
 explicit `refetch()` call. Supply valid arguments before manually fetching. A
 disabled query can be pending without fetching; account for that in loading UI.
 
-`useContractRead({ contract: undefined, ... })` has a stronger missing-client
-guard: it uses `skipToken`, so manual refetch cannot execute either. Supplying
-`enabled: true` cannot bypass this guard. Pass the loaded client to enable it.
+[`useContractRead({ contract: undefined, ... })`](hooks/use-contract-read.md)
+has a stronger missing-client guard: it uses `skipToken`, so manual refetch
+cannot execute either. Supplying `enabled: true` cannot bypass this guard. Pass
+the loaded client to enable it.
 
 [`useContractReadSpec`](hooks/use-contract-read-spec.md) takes a separate
 decoder instead of `select`. Decoding happens per observer, while the cache
@@ -43,10 +44,13 @@ is a cache-key representation, not a serializer for query results.
 
 ## Prefetch and invalidate
 
-Use `contractReadQueryOptions(config, options)` to produce the same key and
-executor as `useContractRead(options)`. Prefetch with that object and invalidate
-its `queryKey` after an action changes the underlying data. The library cannot
-infer which other accounts or contracts a transaction changed.
+Use
+[`contractReadQueryOptions(config, options)`](hooks/use-contract-read-spec.md)
+to produce the same key and executor as
+[`useContractRead(options)`](hooks/use-contract-read.md). Prefetch with that
+object and invalidate its `queryKey` after an action changes the underlying
+data. The library cannot infer which other accounts or contracts a transaction
+changed.
 
 This complete helper accepts the same typed options as the hook:
 
@@ -81,7 +85,9 @@ application query features without importing React runtime code from that entry.
 
 ## Token precision caching
 
-`useBalance` and `useTokenMetadata` share SEP-41 decimals under the
+[`useBalance`](hooks/use-balance.md) and
+[`useTokenMetadata`](hooks/use-token-metadata.md) share
+[SEP-41](../../core/asset/sep-41-token-contract.md) decimals under the
 `token-decimals` feature key for five minutes. Their outer queries keep their
 own freshness settings. Invalidate that shared key after a known token upgrade,
 then refresh any balance/metadata queries that already contain the old

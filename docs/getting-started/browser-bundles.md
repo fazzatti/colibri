@@ -5,7 +5,8 @@ utilities. Identicon 1.1 adds a renderer for applications that only need SVG.
 Use these public entrypoints to keep transaction, RPC and PNG encoding code out
 of those consumers.
 
-Install `@colibri/core` and `@colibri/identicon` as described in
+Install [`@colibri/core`](../core/overview.md) and
+[`@colibri/identicon`](../packages/identicon.md) as described in
 [Installation](installation.md). Subpaths belong to those packages; they are not
 separate dependencies.
 
@@ -27,11 +28,12 @@ try {
 }
 ```
 
-`ColibriError` and `StrKey` are the same implementations exported by the Core
-root. Mixing supported imports preserves constructor identity and `instanceof`.
-The SVG function produces exactly the same string and structured validation
-errors as `new Identicon(address).toSvg(options)`. It shares the generator,
-option validation and SVG renderer, and does not import PNG encoding. The class
+[`ColibriError`](../core/error.md) and [`StrKey`](../core/strkeys.md) are the
+same implementations exported by the Core root. Mixing supported imports
+preserves constructor identity and `instanceof`. The SVG function produces
+exactly the same string and structured validation errors as
+`new Identicon(address).toSvg(options)`. It shares the generator, option
+validation and SVG renderer, and does not import PNG encoding. The class
 continues to support synchronous PNG and data URLs.
 
 The full Core root retains some initialization even when most exports are
@@ -54,17 +56,18 @@ const value = SorobanType.Symbol.from(role);
 console.log(value.toXdr("base64"));
 ```
 
-The root's named `SorobanType` namespace remains convenient for contract
-clients. Deno 2.9.6 retains the whole forwarded namespace when using
-`import { SorobanType } from "@colibri/core/values"`; the direct namespace
-import above lets it discard unused members. Both forms share the same codec and
-error implementations. Production checks measure both forms through Deno and
-Rollup. See [Soroban types](../core/contract/values.md) for validation and
-custom schemas.
+The root's named [`SorobanType`](../core/contract/values.md) namespace remains
+convenient for contract clients. Deno 2.9.6 retains the whole forwarded
+namespace when using `import { SorobanType } from "@colibri/core/values"`; the
+direct namespace import above lets it discard unused members. Both forms share
+the same codec and error implementations. Production checks measure both forms
+through Deno and Rollup. See [Soroban types](../core/contract/values.md) for
+validation and custom schemas.
 
 ## Contract specs through Core
 
-Generated clients can import their spec constructor and result type from Core:
+[Generated clients](../packages/contract-bindings/generated-client.md) can
+import their spec constructor and result type from Core:
 
 <!-- deno-check -->
 
@@ -100,10 +103,13 @@ do not use.
 
 Use React's feature entrypoints in the [React guide](../packages/react.md).
 Provider/connection and pure query utilities avoid transaction and contract
-runtime imports. `useContractReadSpec` uses the standalone Core read action; its
-retained pipeline builds and simulates without signing or sending. `useContract`
-and generated-helper invocation preserve the supplied class and its complete
-pipelines, so that client's own runtime cost still applies.
+runtime imports.
+[`useContractReadSpec`](../packages/react/hooks/use-contract-read-spec.md) uses
+the standalone Core read action; its retained pipeline builds and simulates
+without signing or sending.
+[`useContract`](../packages/react/hooks/use-contract.md) and generated-helper
+invocation preserve the supplied class and its complete pipelines, so that
+client's own runtime cost still applies.
 
 Assets and WebAuth defer heavier capabilities until used. The production bundle
 check reports both standalone totals and split builds' initial/complete graphs.

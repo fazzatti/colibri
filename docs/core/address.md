@@ -1,8 +1,9 @@
 # Addresses and account identities
 
-Use `StrKey` for validation and branding, `NativeAccount` for classic account
-identities, and the `address` namespace for muxed-address normalization. Parsing
-an address is local: it does not prove that an account or contract exists.
+Use [`StrKey`](strkeys.md) for validation and branding,
+[`NativeAccount`](account.md) for classic account identities, and the `address`
+namespace for muxed-address normalization. Parsing an address is local: it does
+not prove that an account or contract exists.
 
 <!-- deno-check -->
 
@@ -30,7 +31,8 @@ key. Do not discard that ID when the destination service needs it.
 
 ## Related concepts
 
-- [Account](account.md): the `NativeAccount` constructor and muxed ID options.
+- [Account](account.md): the [`NativeAccount`](account.md) constructor and muxed
+  ID options.
 - [StrKeys](strkeys.md): validation and branded address types.
 - [Authorization](authorization.md): account requirements versus exact signer
   keys.

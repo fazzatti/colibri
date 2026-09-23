@@ -1,7 +1,8 @@
 # Stream ledgers
 
 Choose ledger streaming to inspect the transactions and operations in a ledger,
-rather than only matching events. The handler receives Core's lazy `Ledger`.
+rather than only matching events. The handler receives Core's lazy
+[`Ledger`](../../core/ledger-parser.md).
 
 Install the packages from the [overview](../rpc-streamer.md), save this as
 `ledgers.ts`, and run `deno run --allow-net ledgers.ts`.
@@ -28,11 +29,11 @@ ledger variant into a batch ingestor.
 
 ## Network identity
 
-Ledger, transaction and operation streams use the supplied `NetworkConfig`
-passphrase. With a URL or native RPC client, they discover it through
-`getNetwork()` and cache successful discovery per RPC connection. Live and
-archive clients must serve the intended network. Discovery failures retain their
-cause and are not cached as successful results.
+Ledger, transaction and operation streams use the supplied
+[`NetworkConfig`](../../core/network.md) passphrase. With a URL or native RPC
+client, they discover it through `getNetwork()` and cache successful discovery
+per RPC connection. Live and archive clients must serve the intended network.
+Discovery failures retain their cause and are not cached as successful results.
 
 This context lets Core associate envelopes with execution results by hash
 instead of assuming transaction-set order is execution order. It does not change

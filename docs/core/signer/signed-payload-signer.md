@@ -47,6 +47,9 @@ transaction. The transaction hash would depend on the `P...` precondition that
 it is being used to construct. For `extraSigners`, use a payload chosen before
 the transaction is built.
 
+Configure the key and signer with
+[TransactionConfig](../transaction-config.md#signers).
+
 ## Exact Extra Signer
 
 ```ts

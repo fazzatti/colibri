@@ -114,6 +114,9 @@ When migrating from the 0.x `NetworkProviders` helpers, supply the endpoints you
 used explicitly as above. The default Mainnet RPC and the SDF Testnet/Futurenet
 configurations are unchanged.
 
+A network identifies the ledger and endpoints. Each write separately supplies
+[TransactionConfig](transaction-config.md) for its source, fees and signers.
+
 ## Using NetworkConfig In Pipelines
 
 <!-- deno-check -->

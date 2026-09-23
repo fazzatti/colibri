@@ -25,7 +25,8 @@ ledger because the transaction application order is assigned by the network.
 TOIDs and Colibri event IDs are related, but they are not the same value.
 
 - A `TOID` identifies an operation.
-- An `EventId` identifies one event emitted by an operation.
+- An [`EventId`](../events/overview.md) identifies one event emitted by an
+  operation.
 - Colibri event IDs are formatted as
   `19-character TOID + "-" + 10-character event index`.
 

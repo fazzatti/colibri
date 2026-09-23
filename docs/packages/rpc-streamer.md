@@ -28,12 +28,16 @@ deno add jsr:@colibri/rpc-streamer jsr:@colibri/core
   replacing the control loop.
 - [Errors](../reference/errors/rpc-streamer.md): every declared `RPC_*` code.
 
-`RPCStreamer.event()` and `createEventStreamer()` are equivalent factories;
-`RPCStreamer.ledger()` and `createLedgerStreamer()` are the ledger equivalents.
-`RPCStreamer.transaction()`/`createTransactionStreamer()` and
-`RPCStreamer.operation()`/`createOperationStreamer()` add transaction and
-operation callbacks. All variants return the generic `RPCStreamer<T>`, not a
-separate lifecycle API. Existing event and ledger callback types are unchanged.
+[`RPCStreamer.event()`](rpc-streamer/events.md) and
+[`createEventStreamer()`](rpc-streamer/events.md) are equivalent factories;
+[`RPCStreamer.ledger()`](rpc-streamer/ledgers.md) and
+[`createLedgerStreamer()`](rpc-streamer/ledgers.md) are the ledger equivalents.
+[`RPCStreamer.transaction()`](rpc-streamer/transactions-and-operations.md)/[`createTransactionStreamer()`](rpc-streamer/transactions-and-operations.md)
+and
+[`RPCStreamer.operation()`](rpc-streamer/transactions-and-operations.md)/[`createOperationStreamer()`](rpc-streamer/transactions-and-operations.md)
+add transaction and operation callbacks. All variants return the generic
+`RPCStreamer<T>`, not a separate lifecycle API. Existing event and ledger
+callback types are unchanged.
 
 See the [generated API reference](https://jsr.io/@colibri/rpc-streamer/doc) for
 exact signatures and the

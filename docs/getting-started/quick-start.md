@@ -1,8 +1,13 @@
 # Quick start: send a Testnet payment
 
-This complete script creates two disposable signers, funds their accounts with
-Friendbot, and sends one test XLM through Colibri's classic pipeline. It uses
+This complete script creates two disposable
+[signers](../core/signer/local-signer.md), funds their accounts with
+[Friendbot](../core/tools/friendbot.md), and sends one test XLM through
+Colibri’s [classic pipeline](../core/pipelines/classic-transaction.md). It uses
 Testnet only; do not replace the network with Mainnet while learning.
+
+The write uses [TransactionConfig](../core/transaction-config.md) for its
+source, fees and signers.
 
 ## Install and run
 

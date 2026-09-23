@@ -61,7 +61,8 @@ type SendTransactionOutput = {
 2. **Checks initial status**:
    - `PENDING` — Proceeds to polling
    - `DUPLICATE` — Transaction already submitted, throws error
-   - `TRY_AGAIN_LATER` — Network busy, throws error
+   - [`TRY_AGAIN_LATER`](../../reference/errors/core-processes-send-transaction.md)
+     — Network busy, throws error
    - `ERROR` — Transaction invalid, throws with error details and diagnostic
      events
 3. **Calculates wait time** — If `useTransactionTimeoutIfAvailable` is true and
@@ -79,16 +80,17 @@ The process will poll until one of these conditions:
 - Transaction status becomes `SUCCESS` or `FAILED`
 - The calculated wait time is exceeded
 - If timeout is exceeded while status is still `NOT_FOUND`, throws
-  `TRANSACTION_NOT_FOUND`
+  [`TRANSACTION_NOT_FOUND`](../../reference/errors/core-processes-send-transaction.md)
 
 ## Errors
 
-`STX_007` and `STX_010` include optional `meta.data.failure` with transaction
-and operation result codes, declared resource limits, available diagnostic
-counters, and available declared/charged fees. Existing metadata remains
-available; immediate failures also retain `resultXDR`. Missing diagnostic
-counters or fee components are not guessed. See
-[resource diagnostics](../resources.md#diagnose-failures).
+[`STX_007`](../../reference/errors/core-processes-send-transaction.md) and
+[`STX_010`](../../reference/errors/core-processes-send-transaction.md) include
+optional `meta.data.failure` with transaction and operation result codes,
+declared resource limits, available diagnostic counters, and available
+declared/charged fees. Existing metadata remains available; immediate failures
+also retain `resultXDR`. Missing diagnostic counters or fee components are not
+guessed. See [resource diagnostics](../resources.md#diagnose-failures).
 
 See
 [every code for this context](../../reference/errors/core-processes-send-transaction.md)

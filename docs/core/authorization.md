@@ -31,19 +31,21 @@ decoded SDK operation and returns an address/threshold requirement, or
 source is represented as `"source-account"`; muxed sources are normalized to
 their base key.
 
-`envelopeSigningRequirements({ transaction })` combines the transaction source
-with operation requirements, deduplicates account addresses, and keeps the
-highest threshold. Fee bumps produce a low-threshold requirement for the outer
-fee source. These are requirements, not a network lookup of account signer
-weights and not proof that a supplied signature will pass network validation.
+[`envelopeSigningRequirements({ transaction })`](processes/envelope-signing-requirements.md)
+combines the transaction source with operation requirements, deduplicates
+account addresses, and keeps the highest threshold. Fee bumps produce a
+low-threshold requirement for the outer fee source. These are requirements, not
+a network lookup of account signer weights and not proof that a supplied
+signature will pass network validation.
 
 ## Delegated authorization
 
-Assemble `DelegatedSigner` topology before invoking a pipeline. Only the
-top-level signer belongs in the pipeline's list; it recursively authorizes its
-`nestedDelegates`. Completed operation XDR, not the presence of a signer in a
-list, triggers the extra assembly and enforcing simulation. Ordinary entries
-pass through those steps without an extra RPC simulation.
+Assemble [`DelegatedSigner`](signer/delegated-signer.md) topology before
+invoking a pipeline. Only the top-level signer belongs in the pipeline's list;
+it recursively authorizes its `nestedDelegates`. Completed operation XDR, not
+the presence of a signer in a list, triggers the extra assembly and enforcing
+simulation. Ordinary entries pass through those steps without an extra RPC
+simulation.
 
 Read [delegated signers](signer/delegated-signer.md),
 [the invoke sequence](pipelines/invoke-contract.md), and
@@ -52,4 +54,5 @@ Read [delegated signers](signer/delegated-signer.md),
 For smart-account WebAuth, the separate
 [SEP-45 handler](../packages/webauth/sep45.md) delegates contract-specific
 authorization to the application. Core's transaction capability does not imply
-that every credential type is accepted in a SEP-45 server challenge.
+that every credential type is accepted in a
+[SEP-45](../packages/webauth/sep45.md) server challenge.

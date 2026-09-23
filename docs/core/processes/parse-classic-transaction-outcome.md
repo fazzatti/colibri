@@ -17,8 +17,8 @@ console.log(outcome.operations);
 
 ## Input
 
-The input is a successful `SendTransactionOutput`, including the parsed
-`response.resultXdr` returned by Stellar RPC.
+The input is a successful [`SendTransactionOutput`](send-transaction.md),
+including the parsed `response.resultXdr` returned by Stellar RPC.
 
 ## Output
 

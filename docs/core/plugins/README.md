@@ -1,7 +1,7 @@
 # Core Plugins
 
-Core plugins are built into `@colibri/core` and extend Colibri's internal
-pipelines without requiring a separate plugin package.
+Core plugins are built into [`@colibri/core`](../overview.md) and extend
+Colibri's internal pipelines without requiring a separate plugin package.
 
 Use core plugins when you want to customize the behavior of built-in steps such
 as `simulate-transaction` while keeping the standard pipeline flow.
@@ -40,7 +40,7 @@ invokeContract.use(
 Some core plugins also have higher-level client helpers. For contract error
 matching, call `contract.loadContractErrorsFromWasm(...)` to derive the mapping
 from a loaded contract spec or WASM, or pass plugins intentionally through
-`ContractConfig.plugins`.
+[`ContractConfig.plugins`](../contract/plugins.md#known-contract-errors).
 
 ## Related Pages
 

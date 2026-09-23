@@ -38,4 +38,5 @@ console.log(returnValue);
 ## Typical Use Cases
 
 - reading balances, metadata, and configuration from Soroban contracts
-- low-level read orchestration beneath `Contract.read(...)`
+- low-level read orchestration beneath
+  [`Contract.read(...)`](../contract/invocation.md#read)

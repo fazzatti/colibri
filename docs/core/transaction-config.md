@@ -2,7 +2,15 @@
 
 `TransactionConfig` is the standard write-transaction configuration used across
 Colibri pipelines and high-level clients. The same shape supports classic
-transactions, Soroban invocations, and delegated authorization.
+transactions, Soroban invocations, and
+[delegated authorization](signer/delegated-signer.md).
+
+Choose [fee strategies](#fee-strategies) for the envelope bid and
+[resource overrides or padding](resources.md) for Soroban resource declarations.
+The
+[external resource calculator](resources.md#read-settings-and-calculate-padding-explicitly)
+can produce padding from explicitly supplied simulation data and network
+settings.
 
 ```ts
 type TransactionConfig = {
@@ -29,15 +37,20 @@ type MaxFee = `${number}`;
 
 ## Properties
 
-| Property       | Type                        | Description                                                            |
-| -------------- | --------------------------- | ---------------------------------------------------------------------- |
-| `fee`          | `BaseFee \| TransactionFee` | String base fee or one explicit fee strategy                           |
-| `source`       | `TransactionSource`         | Transaction source as a G-address or M-address                         |
-| `timeout`      | `number`                    | Transaction timeout in seconds                                         |
-| `memo`         | Native SDK `Memo`           | Optional transaction memo, forwarded unchanged                         |
-| `signers`      | `Signer[]`                  | Signers used by the selected transaction flow                          |
-| `extraSigners` | `ExtraSignerKey[]`          | Exact `G...`, `X...`, or `P...` signer-key preconditions               |
-| `resources`    | `TransactionResources`      | Optional Soroban resource overrides and padding after final simulation |
+| Property                                                | Type                                                               | Description                                                            |
+| ------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| [`fee`](#fee-strategies)                                | `BaseFee \| TransactionFee`                                        | String base fee or one explicit fee strategy                           |
+| [`source`](#muxed-sources)                              | `TransactionSource`                                                | Transaction source as a G-address or M-address                         |
+| [`timeout`](#timeout)                                   | `number`                                                           | Transaction timeout in seconds                                         |
+| [`memo`](#memos)                                        | Native SDK `Memo`                                                  | Optional transaction memo, forwarded unchanged                         |
+| [`signers`](#signers)                                   | [`Signer[]`](signer/README.md#signer-capabilities)                 | Signers used by the selected transaction flow                          |
+| [`extraSigners`](#signers)                              | [`ExtraSignerKey[]`](strkeys.md)                                   | Exact `G...`, `X...`, or `P...` signer-key preconditions               |
+| [`resources`](resources.md#choose-overrides-or-padding) | [`TransactionResources`](resources.md#choose-overrides-or-padding) | Optional Soroban resource overrides and padding after final simulation |
+
+### Timeout
+
+`timeout` is forwarded to the builder and preserved through Soroban assembly.
+Set it to `0` only when you intentionally want no upper time bound.
 
 ### Memos
 
@@ -50,14 +63,6 @@ rules. No recipient-specific policy is enabled automatically. Install the opt-in
 receiving accounts that advertise the requirement.
 
 ### Fee Strategies
-
-`timeout` is forwarded to the builder and preserved through Soroban assembly.
-Set it to `0` only when you intentionally want no upper time bound.
-
-Classic transactions support `G...` and `M...` sources. Stellar Core prohibits
-muxed transaction and operation sources for Soroban `invokeHostFunction`
-transactions; use a `G...` source there. A fee bump can still use an `M...`
-outer fee source.
 
 `fee` accepts the existing string form or an object that selects exactly one
 strategy:
@@ -76,20 +81,24 @@ deserialized data.
 For a Soroban `max` strategy, final assembly reads the resource fee from the
 latest simulation result and uses the remaining capacity as the inclusion fee.
 The maximum must cover the adjusted resource fee plus at least 100 stroops. Use
-`resources.override` for absolute declarations or `resources.padding` for
-fixed/percentage additions. The external calculator can explicitly price the
-resource growth. See [transaction resources](resources.md) for units,
-validation, fee semantics and complete examples. The lower-level `resourceFee`
-assembly argument remains supported, but cannot accompany the new `resources`
-argument.
+[`resources.override`](resources.md#choose-overrides-or-padding) for absolute
+declarations or [`resources.padding`](resources.md#choose-overrides-or-padding)
+for fixed/percentage additions. The
+[external calculator](resources.md#read-settings-and-calculate-padding-explicitly)
+can explicitly price the resource growth. See
+[transaction resources](resources.md) for units, validation, fee semantics and
+complete examples. The lower-level `resourceFee` assembly argument remains
+supported, but cannot accompany the new `resources` argument.
 
 String/base and exact-inclusion strategies preserve their inclusion bid when
 resources change, so the envelope total grows with the resource fee. With `max`,
 resource growth instead reduces the remaining inclusion bid and fails with
-`ASM_013` if fewer than 100 stroops remain. Manual CPU/byte adjustments leave
-the resource fee unchanged unless the caller also adjusts it. This is
-intentional direct control; use the calculator when you want resource growth
-priced. See the
+[`ASM_013`](../reference/errors/core-processes-assemble-transaction.md) if fewer
+than 100 stroops remain. Manual CPU/byte adjustments leave the resource fee
+unchanged unless the caller also adjusts it. This is intentional direct control;
+use the
+[calculator](resources.md#read-settings-and-calculate-padding-explicitly) when
+you want resource growth priced. See the
 [combined examples](resources.md#combining-resources-with-the-transaction-fee).
 
 The fee encoded in the submitted envelope is a bid. Stellar can charge less than
@@ -101,8 +110,15 @@ inclusion bid, which can intentionally exceed the inner transaction's `max`.
 
 ### Muxed Sources
 
-Both `TransactionConfig.source` and `FeeBumpConfig.source` accept muxed
-addresses. Colibri loads sequence state from the M-address's underlying
+Classic transactions support [G-address and M-address sources](address.md).
+Stellar Core prohibits muxed transaction and operation sources for Soroban
+`invokeHostFunction` transactions; use a G-address source there. A
+[fee bump](../packages/plugins/fee-bump.md#configuration) can still use an
+M-address outer fee source.
+
+Both `TransactionConfig.source` and
+[`FeeBumpConfig.source`](../packages/plugins/fee-bump.md#configuration) accept
+muxed addresses. Colibri loads sequence state from the M-address's underlying
 G-account, keeps the M-address in the transaction or fee-bump envelope, and
 resolves signing requirements against the underlying G-account. The muxed ID is
 routing information; it is not an independent on-chain signer.
@@ -126,14 +142,19 @@ const sorobanConfig: TransactionConfig = {
 ## Signers
 
 One list can contain envelope signers, authorization-entry signers such as
-`DelegatedSigner`, or signers that support both capabilities. The relevant
-signing process narrows each value with `isEnvelopeSigner(...)`,
-`isPreAuthTransactionSigner(...)`, or `isAuthEntrySigner(...)` before invoking
+[`DelegatedSigner`](signer/delegated-signer.md), or signers that support both
+capabilities. The relevant signing process narrows each value with
+[`isEnvelopeSigner(...)`](signer/README.md#signer-capabilities),
+[`isPreAuthTransactionSigner(...)`](signer/README.md#signer-capabilities), or
+[`isAuthEntrySigner(...)`](signer/README.md#signer-capabilities) before invoking
 the capability.
 
-Native Stellar SDK keypairs can be adapted with `LocalSigner.fromKeypair()`. The
-configuration still contains `Signer[]`; raw Keypair objects are not accepted.
-This complete, offline example constructs a configuration using the convenience:
+Native Stellar SDK keypairs can be adapted with
+[`LocalSigner.fromKeypair()`](signer/local-signer.md#from-a-stellar-sdk-keypair).
+The configuration still contains
+[`Signer[]`](signer/README.md#signer-capabilities); raw Keypair objects are not
+accepted. This complete, offline example constructs a configuration using the
+convenience:
 
 <!-- deno-check -->
 

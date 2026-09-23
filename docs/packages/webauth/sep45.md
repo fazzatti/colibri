@@ -59,10 +59,11 @@ const colibri = ContractAuth.fromSigner(authEntrySigner);
 const signatureless = ContractAuth.none();
 ```
 
-`ContractAuth.fromSigner(...)` accepts Core's `AuthEntrySigner` capability and
-adapts its complete returned entry to the SEP-45 handler boundary. Colibri does
-not otherwise constrain its contract-specific contents; enforcing simulation and
-the server remain authoritative.
+`ContractAuth.fromSigner(...)` accepts Core's
+[`AuthEntrySigner`](../../core/signer/README.md#signer-capabilities) capability
+and adapts its complete returned entry to the SEP-45 handler boundary. Colibri
+does not otherwise constrain its contract-specific contents; enforcing
+simulation and the server remain authoritative.
 
 The explicit lifecycle uses immutable states:
 
@@ -100,3 +101,50 @@ Six ledgers is an approximate convenience default, not a guaranteed wall-clock
 deadline. The server's expiration is the upper bound even if you request more
 ledgers. Slow user interaction or ledger advancement can invalidate the
 challenge; request a fresh one rather than submitting an expired entry.
+
+## Standalone verification and simulation
+
+The [`/sep45` entrypoint](https://jsr.io/@colibri/webauth/doc/sep45) also
+exposes individual checks for applications that already own challenge transport.
+[`verifySep45Challenge`](https://jsr.io/@colibri/webauth/doc/sep45/~/verifySep45Challenge)
+performs its verification locally. The caller must provide trusted discovery
+values, the requested account/domain and a current ledger sequence; copying
+those expectations from an untrusted response defeats their purpose.
+
+This complete adapter function accepts application-supplied verification inputs.
+It performs no HTTP/RPC calls and returns selected verified fields or a typed
+error:
+
+<!-- deno-check -->
+
+```ts
+import {
+  verifySep45Challenge,
+  type VerifySep45ChallengeInput,
+} from "@colibri/webauth/sep45";
+
+export function inspectReceivedChallenge(input: VerifySep45ChallengeInput) {
+  const verified = verifySep45Challenge(input);
+  return { account: verified.account, extensions: verified.extensionArguments };
+}
+```
+
+Obtain the expected server key, WebAuth contract and domains through
+[trusted discovery](../webauth/discovery.md); the input reference lists every
+required field. Decoding entries with
+[`decodeSep45AuthorizationEntries`](https://jsr.io/@colibri/webauth/doc/sep45/~/decodeSep45AuthorizationEntries)
+alone does not perform those checks.
+
+[`simulateSep45Challenge`](https://jsr.io/@colibri/webauth/doc/sep45/~/simulateSep45Challenge)
+accepts an authorized challenge and explicit RPC, network and WebAuth-contract
+options, then returns a simulation receipt. It performs enforcing simulation and
+includes
+[`validateSep45Footprint`](https://jsr.io/@colibri/webauth/doc/sep45/~/validateSep45Footprint).
+The standalone footprint helper checks only the supplied read-write allowlist;
+it does not verify a challenge, check its expiry or simulate it.
+
+Prefer the [explicit client lifecycle](#explicit-sep-45) when continuing to
+authorization and submission. Its immutable challenge states carry client-owned
+provenance checks: a pure verification result or simulation receipt is not a
+replacement for the state expected by `authorizeChallenge` or `submitChallenge`.
+These helpers do not issue a JWT or implement an authentication server.

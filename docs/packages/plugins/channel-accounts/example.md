@@ -2,7 +2,11 @@
 
 This complete Testnet example creates one sponsored channel, uses its sequence
 for a payment whose operation source remains the sponsor, and closes it. All
-keys are disposable. The fee-bump source pays the outer fee.
+keys are disposable. The [fee-bump source](../fee-bump.md#configuration) pays
+the outer fee. The inner payment uses
+[TransactionConfig](../../../core/transaction-config.md);
+[reserve sponsorship](../../../core/sponsorship.md) covers the channel account’s
+reserve.
 
 ```sh
 deno add jsr:@colibri/core jsr:@colibri/plugin-channel-accounts jsr:@colibri/plugin-fee-bump npm:@stellar/stellar-sdk

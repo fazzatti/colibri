@@ -31,8 +31,9 @@ before safe extraction, and the rebuilt Wasm is selected without guessing.
 | `{ externalRef: { owner, tag } }` | CAP-85 owner/tag mapping, then its code         | Yes             |
 
 Each form optionally accepts `label`. Choose one form, not a mixture. `tag` can
-be text or bytes as defined by Core's `ExternalExecutableRef`. A contract whose
-executable is a reference follows the same resolution path automatically.
+be text or bytes as defined by Core's
+[`ExternalExecutableRef`](../../core/contract/configuration.md). A contract
+whose executable is a reference follows the same resolution path automatically.
 
 An owner/tag mapping and a deployed contract's executable can change. Evidence
 records the resolved hash and ledger observations; it proves the bytes observed
@@ -77,10 +78,13 @@ verification. A `verified` result is byte equality after rebuilding; it is not
 an audit of the contract, an attestation, or proof that its logic is safe.
 
 For a one-shot call, `verifyContractBuild(input, options?)` uses the same
-workflow as the reusable `ContractBuildVerifier`. Reuse a verifier when several
-runs share network, policies, providers, runner, or reporting configuration.
+workflow as the reusable [`ContractBuildVerifier`](../build-verification.md).
+Reuse a verifier when several runs share network, policies, providers, runner,
+or reporting configuration.
 
 In `0.3.0`, the former catch-all `INVALID_CLI_ARGUMENTS` (`BLDV_031`) code was
-replaced by occurrence-specific CLI errors in the `BLDV_106` through `BLDV_131`
-range. Consumers should handle the precise error code; there is no single
-replacement for every formerly invalid CLI argument.
+replaced by occurrence-specific CLI errors in the
+[`BLDV_106`](../../reference/errors/build-verification-cli.md) through
+[`BLDV_131`](../../reference/errors/build-verification-cli.md) range. Consumers
+should handle the precise error code; there is no single replacement for every
+formerly invalid CLI argument.

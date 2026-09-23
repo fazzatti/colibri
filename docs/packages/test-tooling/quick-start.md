@@ -26,8 +26,8 @@ try {
 }
 ```
 
-By default, `StellarTestLedger` starts a local standalone Quickstart container
-with:
+By default, [`StellarTestLedger`](../test-tooling.md) starts a local standalone
+Quickstart container with:
 
 - `containerImageVersion: "latest"`
 - `network: NetworkEnv.LOCAL`
@@ -40,8 +40,9 @@ enabled services. For the default local setup, that means Horizon, Soroban RPC,
 and Friendbot are ready before `start()` resolves.
 
 To use the result with Core, pass the returned network details into
-`NetworkConfig.CustomNet(details)`. Run all application work inside the `try`
-block before cleanup. `getNetworkDetails()` returns the selected service URLs
+[`NetworkConfig.CustomNet(details)`](../../core/network.md#custom-configuration).
+Run all application work inside the `try` block before cleanup.
+[`getNetworkDetails()`](networks-services.md) returns the selected service URLs
 and passphrase; it does not create or fund a transaction signer for you.
 
 Use unique `containerName` values when running independent suites concurrently.

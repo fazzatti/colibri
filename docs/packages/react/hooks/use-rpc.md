@@ -2,7 +2,7 @@
 
 Access a memoized Stellar RPC client for advanced calls.
 
-Import from `@colibri/react/rpc`. Requires `ColibriProvider`; see
+Import from `@colibri/react/rpc`. Requires [`ColibriProvider`](../setup.md); see
 [setup](../setup.md). No QueryClient is needed for this hook.
 
 ## Parameters and result
@@ -43,9 +43,9 @@ export function ReadLedger() {
 ## Behavior
 
 The client follows the provider RPC URL and `allowHttp` setting. A missing URL
-throws `REACT_002`. Construction makes no request. Calls through this client do
-not automatically use the query cache; prefer
-[useLatestLedger](use-latest-ledger.md) for a reactive ledger query.
+throws [`REACT_002`](../../../reference/errors/react.md). Construction makes no
+request. Calls through this client do not automatically use the query cache;
+prefer [useLatestLedger](use-latest-ledger.md) for a reactive ledger query.
 
 ## See also
 

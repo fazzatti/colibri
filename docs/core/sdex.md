@@ -5,8 +5,12 @@ Colibri's existing transaction pipeline. It accepts native Stellar SDK `Asset`
 objects and returns the pipeline's confirmed, runtime-typed operation outcomes.
 It does not require a separate order representation.
 
-Install `@colibri/core` and `@stellar/stellar-sdk` using the
+Install [`@colibri/core`](overview.md) and `@stellar/stellar-sdk` using the
 [installation guide](../getting-started/installation.md).
+
+Offer methods take [TransactionConfig](transaction-config.md) and use the
+[classic transaction pipeline](pipelines/classic-transaction.md).
+[Fee bids](transaction-config.md#fee-strategies) are separate from offer prices.
 
 ## Sell an asset, inspect the result, and cancel its remainder
 
@@ -222,10 +226,10 @@ be base or quote.
   before plugins run, so channel allocation cannot change the offer owner.
   Include the necessary signer for every source. `cancelOffer` explicitly uses
   its `seller` as the operation source.
-- `transactionPipe` is the existing callable classic transaction pipeline.
-  Attach plugins to this original binding with
-  `sdex.transactionPipe.use(plugin)`; subsequent class writes use it. Do not
-  replace it with the return from `.use`.
+- `transactionPipe` is the existing callable
+  [classic transaction pipeline](pipelines/classic-transaction.md). Attach
+  plugins to this original binding with `sdex.transactionPipe.use(plugin)`;
+  subsequent class writes use it. Do not replace it with the return from `.use`.
 - Reads use the configured RPC server; they do not submit transactions or pass
   through write-pipeline plugins. Constructor `rpc` accepts a native SDK server.
 
@@ -240,13 +244,15 @@ instead of assuming a create method must yield an ID.
 `getOffer({ seller, offerId })` returns a decoded ledger entry or `null` when
 the known key is absent. Like the other asynchronous reads, validation and
 transport failures reject its promise. Use string or bigint IDs for large
-values; unsafe numeric IDs are rejected with `SDEX_009` before RPC access rather
-than rounded. Cancellation of an absent offer reports `SDEX_006`. A native RPC
-transport failure reports `SDEX_010`, retaining its original cause; it is never
-interpreted as an absent offer. Construction failures have distinct `SDEXErrors`
-codes and preserve native SDK causes; ledger-read and pipeline failures retain
-their existing Colibri codes. Exact-price input failures use
-`StellarPriceErrors`.
+values; unsafe numeric IDs are rejected with
+[`SDEX_009`](../reference/errors/core-markets-sdex.md) before RPC access rather
+than rounded. Cancellation of an absent offer reports
+[`SDEX_006`](../reference/errors/core-markets-sdex.md). A native RPC transport
+failure reports [`SDEX_010`](../reference/errors/core-markets-sdex.md),
+retaining its original cause; it is never interpreted as an absent offer.
+Construction failures have distinct `SDEXErrors` codes and preserve native SDK
+causes; ledger-read and pipeline failures retain their existing Colibri codes.
+Exact-price input failures use `StellarPriceErrors`.
 
 There is no account-offer listing, full order book, history, best-price routing,
 or path discovery in this class. RPC known-key reads are not a market indexer.
@@ -258,7 +264,8 @@ reserves, and the choice of financial limits.
 [Transaction outcomes](pipelines/classic-transaction.md)
 
 Constructor `plugins: { transactionPipe: [plugin] }` installs the same plugins
-on `sdex.transactionPipe` before the first write, as with `StellarAsset`. Memos
-belong in each write's `config.memo`; channel and fee-bump plugins retain native
-operation sources. See the
+on `sdex.transactionPipe` before the first write, as with
+[`StellarAsset`](asset/stellar-asset.md). Memos belong in each write's
+`config.memo`; channel and fee-bump plugins retain native operation sources. See
+the
 [complete asset plugin example](asset/stellar-asset.md#sources-plugins-and-native-interoperability).

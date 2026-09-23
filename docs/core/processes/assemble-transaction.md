@@ -23,14 +23,14 @@ the incoming transaction.
 
 ## Input
 
-| Property         | Type                          | Required | Description                                                                                                   |
-| ---------------- | ----------------------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
-| `transaction`    | `Transaction`                 | Yes      | Original built transaction                                                                                    |
-| `authEntries`    | `SorobanAuthorizationEntry[]` | No       | Signed or unsigned authorization entries                                                                      |
-| `sorobanData`    | `SorobanDataBuilder`          | No       | Latest simulation footprint, limits, and resource fee                                                         |
-| `transactionFee` | `TransactionFee`              | No       | Explicit `base`, `inclusion`, or `max` strategy                                                               |
-| `resourceFee`    | `string`                      | No       | Overrides the resource fee embedded in the provided Soroban data                                              |
-| `resources`      | `TransactionResources`        | No       | Applies overrides/padding to final simulation data; mutually exclusive with the legacy `resourceFee` argument |
+| Property         | Type                                                                  | Required | Description                                                                                                   |
+| ---------------- | --------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
+| `transaction`    | `Transaction`                                                         | Yes      | Original built transaction                                                                                    |
+| `authEntries`    | `SorobanAuthorizationEntry[]`                                         | No       | Signed or unsigned authorization entries                                                                      |
+| `sorobanData`    | `SorobanDataBuilder`                                                  | No       | Latest simulation footprint, limits, and resource fee                                                         |
+| `transactionFee` | [`TransactionFee`](../transaction-config.md#fee-strategies)           | No       | Explicit `base`, `inclusion`, or `max` strategy                                                               |
+| `resourceFee`    | `string`                                                              | No       | Overrides the resource fee embedded in the provided Soroban data                                              |
+| `resources`      | [`TransactionResources`](../resources.md#choose-overrides-or-padding) | No       | Applies overrides/padding to final simulation data; mutually exclusive with the legacy `resourceFee` argument |
 
 ## Fee Assembly
 

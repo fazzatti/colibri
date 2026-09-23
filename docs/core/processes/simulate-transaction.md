@@ -44,7 +44,7 @@ The response includes:
    transaction
 2. **Checks for simulation error** — If RPC returns an error response, parses
    diagnostic events and throws either `SIMULATION_FAILED` or
-   `CONTRACT_ERROR_SIMULATION_FAILED`
+   [`CONTRACT_ERROR_SIMULATION_FAILED`](../../reference/errors/core-processes-simulate-transaction.md)
 3. **Handles restore response** — If ledger entries need restoration, returns a
    `SimulateTransactionRestoreResponse`. You'll need to restore the entries
    before the main transaction can succeed.
@@ -57,8 +57,9 @@ response structure, ensuring you always know what state your transaction is in.
 ## Contract Error Diagnostics
 
 When RPC reports a failed simulation with `Error(Contract, #code)`,
-`simulateTransaction` throws `CONTRACT_ERROR_SIMULATION_FAILED` instead of the
-generic simulation error.
+`simulateTransaction` throws
+[`CONTRACT_ERROR_SIMULATION_FAILED`](../../reference/errors/core-processes-simulate-transaction.md)
+instead of the generic simulation error.
 
 The error contains parsed metadata:
 
@@ -87,9 +88,9 @@ identify from the simulation diagnostics. Each item includes:
 | `eventIndex` | Position in the parsed diagnostic event list     |
 | `data`       | Parsed diagnostic event data                     |
 
-Use `parseFailedSimulationResponse(...)` if you already have a failed RPC
-simulation response and want to inspect the same parsed shape without running
-the process.
+Use [`parseFailedSimulationResponse(...)`](#contract-error-diagnostics) if you
+already have a failed RPC simulation response and want to inspect the same
+parsed shape without running the process.
 
 ```ts
 import { parseFailedSimulationResponse } from "@colibri/core";

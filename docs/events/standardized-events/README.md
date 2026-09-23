@@ -25,13 +25,14 @@ format. This means:
 Both standards define the same event types (transfer, mint, burn, etc.), but
 with one key difference:
 
-- **SAC events** include the SEP-11 asset string (e.g., `"USDC:GABC..."`) as a
-  topic
-- **SEP-41 events** do not include the asset string (you identify the token by
-  contract ID)
+- **SAC events** include the [SEP-11](../../core/asset/sep-11.md) asset string
+  (e.g., `"USDC:GABC..."`) as a topic
+- **[SEP-41](sep-41.md) events** do not include the asset string (you identify
+  the token by contract ID)
 
-SAC is used by Stellar's built-in contracts that wrap classic assets. SEP-41 is
-the interface that custom Soroban token contracts implement.
+SAC is used by Stellar's built-in contracts that wrap classic assets.
+[SEP-41](sep-41.md) is the interface that custom Soroban token contracts
+implement.
 
 ## Usage
 

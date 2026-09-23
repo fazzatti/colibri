@@ -8,7 +8,8 @@ with `.read()`, or transaction submission through Core's pipeline with
 `.invoke()`.
 
 This fragment assumes your generated `Token` class declares `balance` and
-`transfer`, and that the addresses and transaction configuration are supplied by
+`transfer`, and that the addresses and
+[transaction configuration](../../core/transaction-config.md) are supplied by
 your application:
 
 ```ts
@@ -21,12 +22,12 @@ console.log(balance, result.value, result.hash);
 ```
 
 Reads accept the method's argument object directly. Invocations take one object
-with `methodArgs`, `config`, and optional `auth`, just like generic `invoke`
-without `method`. Argument-free functions use `.read()` and can omit
-`methodArgs` from `.invoke({ config })`. Helpers remain bound to their client
-when destructured. They delegate to the existing generic `client.read()` and
-`client.invoke()` methods, which remain available with their existing call
-shape.
+with `methodArgs`, `config`, and optional [`auth`](../../core/authorization.md),
+just like generic `invoke` without `method`. Argument-free functions use
+`.read()` and can omit `methodArgs` from `.invoke({ config })`. Helpers remain
+bound to their client when destructured. They delegate to the existing generic
+`client.read()` and `client.invoke()` methods, which remain available with their
+existing call shape.
 
 Property names use camelCase: `grant_role` becomes `client.grantRole`, and
 `get_URL` becomes `client.getUrl`. Names that collide after casing or with a
@@ -70,25 +71,26 @@ values, such as `GrantRole = "grant_role"`. Both `ContractMethods.GrantRole` and
 collisions fail generation. Alias this import when combining several generated
 clients in one module.
 
-The generated class inherits `getLedgerEntry({ key, durability })` from Core for
-direct contract-data reads. It supplies its contract ID and RPC automatically;
-provide an encoded ScVal key and persistent/temporary durability (persistent by
-default). It returns the existing ledger helper's parsed entry and raw metadata,
-without a generated storage schema. See
+The generated class inherits
+[`getLedgerEntry({ key, durability })`](../../core/contract/invocation.md#getledgerentry)
+from Core for direct contract-data reads. It supplies its contract ID and RPC
+automatically; provide an encoded ScVal key and persistent/temporary durability
+(persistent by default). It returns the existing ledger helper's parsed entry
+and raw metadata, without a generated storage schema. See
 [direct ledger reads](../../core/contract/invocation.md#getledgerentry).
 
 ## Validated contract values
 
 Newly generated inputs accept raw values and
 [validated Soroban helpers](../../core/contract/values.md). Output aliases such
-as `SorobanType.U32` retain plain result shapes. Custom types use
-`SorobanType.Custom` schemas, with struct/tuple fields or tagged/u32 enum
-variants. Matching factories reuse the embedded spec. Numeric codes and
-validation live on one factory. Each custom declaration has a `NameArgs` alias
-for the values accepted by its factory, while method arguments retain their
-`MethodInput` names. Method input fields reuse the custom `NameArgs` aliases. If
-`NameArgs` collides with a contract type, the factory alias uses
-`NameValueArgs`.
+as [`SorobanType.U32`](../../core/contract/values.md) retain plain result
+shapes. Custom types use [`SorobanType.Custom`](../../core/contract/values.md)
+schemas, with struct/tuple fields or tagged/u32 enum variants. Matching
+factories reuse the embedded spec. Numeric codes and validation live on one
+factory. Each custom declaration has a `NameArgs` alias for the values accepted
+by its factory, while method arguments retain their `MethodInput` names. Method
+input fields reuse the custom `NameArgs` aliases. If `NameArgs` collides with a
+contract type, the factory alias uses `NameValueArgs`.
 
 For example, if your spec declares a `TtlConfig` struct with `threshold` and
 `extend_to` U32 fields, the generated declarations can be used like this:

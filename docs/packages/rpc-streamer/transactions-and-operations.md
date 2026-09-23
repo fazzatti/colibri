@@ -3,7 +3,8 @@
 `RPCStreamer.transaction()` and `RPCStreamer.operation()` are additive variants:
 event and ledger streaming continue unchanged. Both new variants read complete
 ledgers through native RPC `getLedgers`, then emit records in transaction and
-operation order. They work with the same live, archive, and automatic modes.
+operation order. They work with the same
+[live, archive, and automatic modes](modes.md).
 
 ## Follow transactions
 
@@ -33,9 +34,9 @@ console.log("Resume from ledger:", transactions.nextLedger);
 ```
 
 Every transaction is included, successful or failed. `transaction` is the
-existing Core ledger-parser transaction, retaining its result code, fee, and
-operation access. Hashes are read from ledger transaction results, not
-calculated using an assumed network passphrase.
+existing [Core ledger-parser transaction](../../core/ledger-parser.md),
+retaining its result code, fee, and operation access. Hashes are read from
+ledger transaction results, not calculated using an assumed network passphrase.
 
 ## Handle native operations
 

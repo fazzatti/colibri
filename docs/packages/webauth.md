@@ -1,17 +1,18 @@
 # WebAuth
 
-`@colibri/webauth` provides one client for SEP-10 classic-account and SEP-45
-contract-account authentication. It returns a JWT, not an asset token. Routing
-is explicit and never falls back to another protocol.
+`@colibri/webauth` provides one client for [SEP-10](webauth/sep10.md)
+classic-account and [SEP-45](webauth/sep45.md) contract-account authentication.
+It returns a JWT, not an asset token. Routing is explicit and never falls back
+to another protocol.
 
 ```sh
 deno add jsr:@colibri/webauth jsr:@colibri/core npm:@stellar/stellar-sdk
 ```
 
-Colibri implements SEP-45 v0.1.1 with legacy address credentials.
-Server-provided address-v2 or delegated challenge credentials are not accepted.
-This is a WebAuth compatibility boundary, separate from Core's transaction
-signer support.
+Colibri implements [SEP-45](webauth/sep45.md) v0.1.1 with legacy address
+credentials. Server-provided address-v2 or delegated challenge credentials are
+not accepted. This is a WebAuth compatibility boundary, separate from Core's
+transaction signer support.
 
 ## Guides
 
@@ -23,8 +24,9 @@ signer support.
 See the [API and error reference](../reference/README.md) for exact exported
 symbols and complete error contexts.
 
-SEP-10's `Sep10Signer` supports asynchronous Core envelope signers through both
-`authenticate()` and `sep10.signChallenge()`. See
+[SEP-10](webauth/sep10.md)'s [`Sep10Signer`](webauth/sep10.md) supports
+asynchronous Core envelope signers through both `authenticate()` and
+`sep10.signChallenge()`. See
 [wallet signing](webauth/sep10.md#wallet-and-asynchronous-signers) for
-verification, cancellation and multisig semantics. SEP-45 authorization handlers
-remain a separate capability.
+verification, cancellation and multisig semantics. [SEP-45](webauth/sep45.md)
+authorization handlers remain a separate capability.

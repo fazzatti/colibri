@@ -388,9 +388,10 @@ and
 Old reports retain unavailable values for evidence they did not capture. Their
 saved operation parameters can still identify WASM uploads and deployments.
 Regenerating HTML cannot reconstruct missing events or ledger changes; run the
-tests with the updated recorder to collect them. In the Colibri checkout,
-`deno task test` records the full suite with full event payloads and profiling,
-and prints the new run's JSON/HTML paths under `artifacts/colibri/<run-id>/`.
+tests with the updated recorder to collect them. In the Colibri checkout, use
+[`deno task test:record`](#inspect-colibris-full-suite) for recording and the
+printed JSON/HTML paths under `artifacts/colibri/<run-id>/`. Normal test tasks
+remain unrecorded.
 
 ## Observation boundaries
 
@@ -420,11 +421,74 @@ For custom runners, use `ExecutionRecorder` from
 `@colibri/test-tooling/recorder/report`; Deno and Node integration and the
 shared CLI have separate entrypoints.
 
+## Render and summarize reports programmatically
+
+The portable
+[report entrypoint](https://jsr.io/@colibri/test-tooling/doc/recorder/report)
+provides `renderReport(report)` for a standalone HTML string and
+`summarize(report)` for test/execution counts. They work with a
+[`RecorderReport`](https://jsr.io/@colibri/test-tooling/doc/recorder/report/~/RecorderReport)
+from the in-memory recorder or a runner adapter. Neither function writes files
+or starts Docker.
+
+After [installing Test Tooling](../test-tooling.md), save this complete offline
+example as `report.ts` and run `deno run --allow-write=./report.html report.ts`:
+
+<!-- deno-check -->
+
+```ts
+import { ExecutionRecorder } from "@colibri/test-tooling/recorder";
+import { renderReport, summarize } from "@colibri/test-tooling/recorder/report";
+
+const recorder = new ExecutionRecorder({ capture: "details" });
+const observer = recorder.observer("example.ts");
+await observer.capture(async () => 7n);
+const report = recorder.report();
+await Deno.writeTextFile("./report.html", renderReport(report));
+console.log(summarize(report));
+```
+
+This records one callback, not a registered test or an on-chain transaction. The
+report remains incomplete until a runner adapter supplies completion.
+`summarize` counts leaf test records by final `runnerStatus`; absent runner
+outcomes stay `unknown`, even if observed callbacks passed. Use the
+[Deno/Node adapters](#node-and-npm) and CLI when you need native-runner
+reconciliation, including failures in teardown.
+
+For custom journal storage, the following fragment assumes `runId` is the
+recorded run's ID and `fragmentTexts` contains its complete JSONL journal
+strings, in sequence within each fragment:
+
+```ts
+import {
+  mergeFragments,
+  renderReport,
+} from "@colibri/test-tooling/recorder/report";
+
+const report = mergeFragments(runId, fragmentTexts);
+const html = renderReport(report);
+```
+
+[`mergeFragments`](https://jsr.io/@colibri/test-tooling/doc/recorder/report/~/mergeFragments)
+rejects mismatched schemas/run IDs and missing or duplicate journal sequences.
+It reports a truncated final line as incomplete evidence. Its result always
+starts with `complete: false`; merging journals alone cannot establish final
+runner status. Use the [CLI aggregation workflow](#node-and-npm) for adapter
+artifacts instead of setting completion manually.
+
+For numerical analysis, the same entrypoint exposes
+[`profileGroups`](https://jsr.io/@colibri/test-tooling/doc/recorder/report/~/profileGroups)
+and
+[`statistics`](https://jsr.io/@colibri/test-tooling/doc/recorder/report/~/statistics).
+Keep their grouping and sample counts distinct from the HTML view's richer
+grouping, as explained in [the HTML report guide](#read-the-html-report).
+
 ### Artifact and asynchronous boundaries
 
-Malformed manifest JSON is rejected as `TTO_REC_002`, preserving its parse
-failure as the cause. The offline report treats malformed numeric measurements
-as unavailable for sorting, filtering and statistics; raw evidence is retained.
-`observer.capture()` and `observer.create()` observe settlement of custom
-thenables as well as native promises, including rejections and deferred client
-attachment.
+Malformed manifest JSON is rejected as
+[`TTO_REC_002`](../../reference/errors/test-tooling-recorder.md), preserving its
+parse failure as the cause. The offline report treats malformed numeric
+measurements as unavailable for sorting, filtering and statistics; raw evidence
+is retained. `observer.capture()` and `observer.create()` observe settlement of
+custom thenables as well as native promises, including rejections and deferred
+client attachment.

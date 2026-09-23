@@ -1,9 +1,11 @@
 # useSignMessage
 
-Request a SEP-53 signature from the connection’s optional message signer.
+Request a [SEP-53](../../../core/signer/message-signing.md) signature from the
+connection’s optional message signer.
 
-Import from `@colibri/react/signers`. Use under both `ColibriProvider` and
-`QueryClientProvider`; see [setup](../setup.md).
+Import from `@colibri/react/signers`. Use under both
+[`ColibriProvider`](../setup.md) and [`QueryClientProvider`](../setup.md); see
+[setup](../setup.md).
 
 ## Parameters and result
 
@@ -40,8 +42,9 @@ export function SignMessage({ message }: { message: string }) {
 
 The connector must explicitly provide `messageSigner`; envelope-signing support
 alone is insufficient. The current connection is checked before and after the
-prompt. No automatic retry occurs. Use the signature with a matching SEP-53
-verifier; message signing is separate from [WebAuth](use-web-auth.md).
+prompt. No automatic retry occurs. Use the signature with a matching
+[SEP-53](../../../core/signer/message-signing.md) verifier; message signing is
+separate from [WebAuth](use-web-auth.md).
 
 ## See also
 

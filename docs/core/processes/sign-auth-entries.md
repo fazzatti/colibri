@@ -20,14 +20,14 @@ const result = await signAuthEntries({
 
 ## Input
 
-| Property            | Type                          | Required | Description                               |
-| ------------------- | ----------------------------- | -------- | ----------------------------------------- |
-| `auth`              | `SorobanAuthorizationEntry[]` | Yes      | Authorization entries from simulation     |
-| `signers`           | `Signer[]`                    | Yes      | Signers narrowed by auth-entry capability |
-| `rpc`               | `Server`                      | Yes      | RPC server (to get current ledger)        |
-| `networkPassphrase` | `string`                      | Yes      | Network passphrase                        |
-| `validity`          | `LedgerValidity`              | —        | How long signatures are valid             |
-| `removeUnsigned`    | `boolean`                     | —        | Remove entries that couldn't be signed    |
+| Property                      | Type                                                  | Required | Description                               |
+| ----------------------------- | ----------------------------------------------------- | -------- | ----------------------------------------- |
+| [`auth`](../authorization.md) | `SorobanAuthorizationEntry[]`                         | Yes      | Authorization entries from simulation     |
+| `signers`                     | [`Signer[]`](../signer/README.md#signer-capabilities) | Yes      | Signers narrowed by auth-entry capability |
+| `rpc`                         | `Server`                                              | Yes      | RPC server (to get current ledger)        |
+| `networkPassphrase`           | `string`                                              | Yes      | Network passphrase                        |
+| `validity`                    | `LedgerValidity`                                      | —        | How long signatures are valid             |
+| `removeUnsigned`              | `boolean`                                             | —        | Remove entries that couldn't be signed    |
 
 ### Validity Options
 
@@ -76,8 +76,9 @@ the provided signers.
 - **Muxed account addresses** — Skipped
 
 5. **Signs matching entries** — For each signable address entry, finds an
-   `AuthEntrySigner` where `signsFor(requiredSigner)` is true and asks it to
-   return the complete authorized entry
+   [`AuthEntrySigner`](../signer/README.md#signer-capabilities) where
+   `signsFor(requiredSigner)` is true and asks it to return the complete
+   authorized entry
 6. **Handles `removeUnsigned`** — If `true`, entries without a matching signer
    are removed from output; if `false` (default), they're included unsigned
 

@@ -15,12 +15,15 @@ enum `category` remain available independently of a customized message.
 
 The matcher plugin does that mapping at the simulation boundary:
 
-1. `simulateTransaction` identifies a failed simulation with a contract error.
-2. Colibri throws `CONTRACT_ERROR_SIMULATION_FAILED` with parsed diagnostic
-   metadata.
+1. [`simulateTransaction`](../processes/simulate-transaction.md) identifies a
+   failed simulation with a contract error.
+2. Colibri throws
+   [`CONTRACT_ERROR_SIMULATION_FAILED`](../../reference/errors/core-processes-simulate-transaction.md)
+   with parsed diagnostic metadata.
 3. The plugin checks the error code surfaced by RPC against your known error
    map, using the parsed stack to identify the matching diagnostic event.
-4. If a match is found, it throws `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED`.
+4. If a match is found, it throws
+   [`KNOWN_CONTRACT_ERROR_SIMULATION_FAILED`](../../reference/errors/core-plugins-processes-simulate-transaction-contract-error-matcher.md).
 
 The original simulation error remains available as `error.meta.cause`, so you
 can still inspect the raw simulation response and parsed diagnostic stack.
@@ -69,8 +72,9 @@ try {
 
 ## Use With `Contract`
 
-For the high-level `Contract` client, use `loadContractErrorsFromWasm(...)` when
-the contract spec or WASM contains error enum cases. Colibri derives the
+For the high-level [`Contract`](../contract.md) client, use
+[`loadContractErrorsFromWasm(...)`](../contract/plugins.md#known-contract-errors)
+when the contract spec or WASM contains error enum cases. Colibri derives the
 error-code map and installs the matcher on both owned pipelines.
 
 ```ts
@@ -94,10 +98,11 @@ await contract.invoke({
 ```
 
 This path is the simplest option when a generated contract client or application
-owns one `Contract` instance and wants consistent error mapping for both reads
-and writes. The loader uses the already loaded spec when available; otherwise it
-loads the spec from local WASM or from deployed WASM through RPC. It throws if
-the built-in matcher is already attached to either owned pipeline.
+owns one [`Contract`](../contract.md) instance and wants consistent error
+mapping for both reads and writes. The loader uses the already loaded spec when
+available; otherwise it loads the spec from local WASM or from deployed WASM
+through RPC. It throws if the built-in matcher is already attached to either
+owned pipeline.
 
 If you already have WASM bytes and only need the plain mapping, use
 `extractContractErrorMapFromWasm(...)`:
@@ -118,8 +123,9 @@ The extracted map uses the contract error enum case name as `message`. If an
 error enum case has a non-empty doc string in the compiled spec, that text is
 included as `details`. It also preserves the original case name as `name` and
 declaring enum name as `category`. `extractContractErrorMapFromSpec(...)` and
-`Contract.loadContractErrorsFromWasm(...)` use the same extraction. Category is
-the exact enum name, not an inferred business classification.
+[`Contract.loadContractErrorsFromWasm(...)`](../contract/plugins.md#known-contract-errors)
+use the same extraction. Category is the exact enum name, not an inferred
+business classification.
 
 For a contract error enum like:
 
@@ -144,14 +150,18 @@ const errors = {
 ```
 
 Manual maps may omit `name` and `category`, or provide their own values. Both
-fields are carried into `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED.meta.data.match`
+fields are carried into
+[`KNOWN_CONTRACT_ERROR_SIMULATION_FAILED.meta.data.match`](../../reference/errors/core-plugins-processes-simulate-transaction-contract-error-matcher.md)
 for every matching strategy. Matching still uses numeric codes and the selected
 contract/invocation scope; categories do not resolve duplicate numeric codes in
 a spec. Extraction rejects those duplicates.
 
-Use the public `ContractErrorMap` type for these mappings.
-`KnownContractErrorMap` remains a deprecated alias with the same shape, so
-existing consumers can migrate their type imports without changing map values.
+Use the public
+[`ContractErrorMap`](../contract/plugins.md#known-contract-errors) type for
+these mappings.
+[`KnownContractErrorMap`](../contract/plugins.md#known-contract-errors) remains
+a deprecated alias with the same shape, so existing consumers can migrate their
+type imports without changing map values.
 
 This complete example loads metadata and prepares a customized matcher without
 submitting a transaction. Supply your own `contract.wasm`:
@@ -189,8 +199,9 @@ function reportFailure(error: unknown): void {
 void reportFailure;
 ```
 
-For constructor-time plugin setup, use `contractConfig.plugins` and choose the
-target pipeline explicitly:
+For constructor-time plugin setup, use
+[`contractConfig.plugins`](../contract/plugins.md#known-contract-errors) and
+choose the target pipeline explicitly:
 
 ```ts
 import { createContractErrorMatcherPlugin } from "@colibri/core";
@@ -291,7 +302,8 @@ the diagnostic stack.
 
 ## Inspecting The Error
 
-`KNOWN_CONTRACT_ERROR_SIMULATION_FAILED` contains a compact selected match:
+[`KNOWN_CONTRACT_ERROR_SIMULATION_FAILED`](../../reference/errors/core-plugins-processes-simulate-transaction-contract-error-matcher.md)
+contains a compact selected match:
 
 ```ts
 console.log(error.meta.data.match);
@@ -310,8 +322,9 @@ The match includes:
 | `strategy`     | Matcher strategy that matched                            |
 | `matcherIndex` | Index of the matcher entry that matched                  |
 
-When `details` is present, `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED` also uses it
-as `error.diagnostic.rootCause`.
+When `details` is present,
+[`KNOWN_CONTRACT_ERROR_SIMULATION_FAILED`](../../reference/errors/core-plugins-processes-simulate-transaction-contract-error-matcher.md)
+also uses it as `error.diagnostic.rootCause`.
 
 ```ts
 if (error instanceof KNOWN_CONTRACT_ERROR_SIMULATION_FAILED) {
@@ -342,16 +355,16 @@ function inspect(error: unknown): void {
 }
 ```
 
-Pass a caught value into this helper. Checking only `ColibriError.is(error)` and
-a code string does not narrow generic `meta.data` to the specific match type;
-the exported constructor does.
+Pass a caught value into this helper. Checking only
+[`ColibriError.is(error)`](../error.md) and a code string does not narrow
+generic `meta.data` to the specific match type; the exported constructor does.
 
 ## Related APIs
 
 - `createContractErrorMatcherPlugin(...)`
 - `extractContractErrorMapFromWasm(...)`
-- `ContractConfig.plugins`
-- `Contract.loadContractErrorsFromWasm(...)`
-- `CONTRACT_ERROR_SIMULATION_FAILED`
-- `KNOWN_CONTRACT_ERROR_SIMULATION_FAILED`
-- `parseFailedSimulationResponse(...)`
+- [`ContractConfig.plugins`](../contract/plugins.md#known-contract-errors)
+- [`Contract.loadContractErrorsFromWasm(...)`](../contract/plugins.md#known-contract-errors)
+- [`CONTRACT_ERROR_SIMULATION_FAILED`](../../reference/errors/core-processes-simulate-transaction.md)
+- [`KNOWN_CONTRACT_ERROR_SIMULATION_FAILED`](../../reference/errors/core-plugins-processes-simulate-transaction-contract-error-matcher.md)
+- [`parseFailedSimulationResponse(...)`](../../core/processes/simulate-transaction.md#contract-error-diagnostics)

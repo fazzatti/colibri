@@ -3,8 +3,9 @@
 Clear the active connection and request wallet-side disconnection when
 supported.
 
-Import from `@colibri/react`. Requires `ColibriProvider`; see
-[setup](../setup.md). No QueryClient is needed for this hook.
+Import from [`@colibri/react`](../../react.md). Requires
+[`ColibriProvider`](../setup.md); see [setup](../setup.md). No QueryClient is
+needed for this hook.
 
 ## Parameters and result
 

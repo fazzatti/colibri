@@ -49,8 +49,9 @@ required by the current standard.
 
 ## Transfer And Burn
 
-Every write accepts a normal Colibri `TransactionConfig` and optional
-preassembled Soroban authorization entries.
+Every write accepts a normal Colibri
+[`TransactionConfig`](../transaction-config.md) and optional preassembled
+Soroban authorization entries.
 
 ```ts
 await token.transfer({
@@ -106,11 +107,12 @@ The implementing contract and network enforce the valid expiration range.
 
 SEP-41 intentionally does not define mint, clawback, pause, administrator, or
 other policy functions. `SEP41TokenContract` therefore does not imply a common
-signature for them. The underlying `Contract` is public as `token.contract`.
+signature for them. The underlying [`Contract`](../contract.md) is public as
+`token.contract`.
 
-If a specification is available, configure and use a general `Contract`. For a
-small custom extension, encode the exact arguments and use the public raw escape
-hatch:
+If a specification is available, configure and use a general
+[`Contract`](../contract.md). For a small custom extension, encode the exact
+arguments and use the public raw escape hatch:
 
 ```ts
 import { nativeToScVal } from "stellar-sdk";

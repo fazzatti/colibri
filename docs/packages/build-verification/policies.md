@@ -18,12 +18,12 @@
   and daemon log persistence is disabled for build containers.
 - Disposable build containers use `colibri-build-verification-<unique-id>`
   names. Configure `docker.containerNamePrefix` in the API, or
-  `--container-name-prefix` in the CLI, to replace only the prefix; Colibri
-  always appends the unique suffix.
+  `--container-name-prefix` in the [CLI](cli.md#flag-reference), to replace only
+  the prefix; Colibri always appends the unique suffix.
 - The runner executes only. Artifact collection and selection are separate
   boundaries.
-- Evidence records provenance and SBOM observations without claiming an
-  unverified signature is valid.
+- [Evidence](reporting.md#evidence-boundaries) records provenance and SBOM
+  observations without claiming an unverified signature is valid.
 
 Use disposable workers or VMs for hosted verification of untrusted source.
 Container isolation alone is intended for the local developer workflow.
@@ -77,4 +77,5 @@ proof that a signature was verified.
 
 `docker.containerNamePrefix` changes only the human-readable name prefix.
 Colibri always appends a unique execution ID and never reuses a prior build
-container. It is independent of Quickstart's reusable named-ledger lifecycle.
+container. It is independent of
+[Quickstart’s reusable named-ledger lifecycle](../test-tooling/lifecycle.md).

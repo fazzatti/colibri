@@ -2,23 +2,27 @@
 
 Authenticate on demand through a shared WebAuth session.
 
-Import from `@colibri/react/webauth`. Use under both `ColibriProvider` and
-`QueryClientProvider`; see [setup](../setup.md).
+Import from `@colibri/react/webauth`. Use under both
+[`ColibriProvider`](../setup.md) and [`QueryClientProvider`](../setup.md); see
+[setup](../setup.md).
 
 ## Parameters and result
 
-- `session`: the application-owned `WebAuthSession`.
+- `session`: the application-owned
+  [`WebAuthSession`](../wallets-and-sessions.md#webauth).
 - `options?`: mutation callbacks and controls.
-- Call the mutation with `WebAuthAuthenticationOptions`, including the account
-  and explicit protocol-specific signing/authorization inputs.
+- Call the mutation with
+  [`WebAuthAuthenticationOptions`](../../webauth/discovery.md), including the
+  account and explicit protocol-specific signing/authorization inputs.
 
 **Returns:** A `void` mutation result; successful credentials live in the
 session, not mutation result data.
 
 ## Example
 
-The parent supplies a stable session and the appropriate SEP-10 or SEP-45
-request. See the [protocol guides](../../webauth.md) before constructing the
+The parent supplies a stable session and the appropriate
+[SEP-10](../../webauth/sep10.md) or [SEP-45](../../webauth/sep45.md) request.
+See the [protocol guides](../../webauth.md) before constructing the
 authentication inputs.
 
 <!-- deno-check @colibri/react -->
@@ -54,15 +58,15 @@ export function Authenticate({ session, request }: {
 
 ## Behavior
 
-SEP-10 accepts SDK keypairs and Core envelope signers, including asynchronous
-wallet approval. Use the current guarded signer from `useWallet().signers` or
-`useSigners()`. See the complete
+[SEP-10](../../webauth/sep10.md) accepts SDK keypairs and Core envelope signers,
+including asynchronous wallet approval. Use the current guarded signer from
+`useWallet().signers` or [`useSigners()`](use-signers.md). See the complete
 [wallet authentication example](../wallet-authentication.md). Logout,
 disconnect, account/network changes and session disposal invalidate pending
 approval; a late result cannot exchange a challenge or establish a session.
-SEP-45 retains its explicit `authorize` callback. Mutations do not retry
-automatically. Do not persist or dehydrate authentication mutation variables,
-which contain signing inputs. Observe ongoing validity with
+[SEP-45](../../webauth/sep45.md) retains its explicit `authorize` callback.
+Mutations do not retry automatically. Do not persist or dehydrate authentication
+mutation variables, which contain signing inputs. Observe ongoing validity with
 [useSession](use-session.md), since a completed mutation is not proof that its
 session is still active.
 

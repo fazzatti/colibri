@@ -18,8 +18,8 @@ when the API accepts a Stellar signer StrKey.
 ## Account Signer
 
 Register the signer's raw digest on the account in an earlier `setOptions`
-transaction. `StrKey.decodeSha256Hash(...)` converts the `X...` identity into
-the exact SDK input:
+transaction. [`StrKey.decodeSha256Hash(...)`](../strkeys.md) converts the `X...`
+identity into the exact SDK input:
 
 ```ts
 import { Operation } from "npm:@stellar/stellar-sdk";
@@ -51,6 +51,10 @@ that reveals the preimage.
 
 Hash-X reveals the preimage in the submitted envelope. If the `X...` key is a
 persistent account signer, remove or rotate it after disclosure.
+
+Supply the key through
+[TransactionConfig.extraSigners](../transaction-config.md#signers) and include
+its signer in the same configuration.
 
 ## Exact Extra Signer
 

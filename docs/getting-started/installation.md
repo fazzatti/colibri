@@ -10,8 +10,10 @@ Deno-first TypeScript projects.
 - Node.js 22.12.0 or supported 22.x/24.x LTS when consuming Colibri through npm
   or a Node-based bundler
 - A reachable Docker daemon such as Docker Desktop or OrbStack if you plan to
-  use `StellarTestLedger` from `@colibri/test-tooling` or the built-in
-  `@colibri/build-verification` runner; the execution recorder needs no Docker
+  use [`StellarTestLedger`](../packages/test-tooling.md) from
+  [`@colibri/test-tooling`](../packages/test-tooling.md) or the built-in
+  [`@colibri/build-verification`](../packages/build-verification.md) runner; the
+  execution recorder needs no Docker
 
 ## Installing Packages
 
@@ -38,7 +40,7 @@ This will add imports similar to:
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^1.4.0",
+    "@colibri/core": "jsr:@colibri/core@^1.4.1",
     "@colibri/react": "jsr:@colibri/react@^0.4.0",
     "@colibri/webauth": "jsr:@colibri/webauth@^1.2.0",
     "@colibri/build-verification": "jsr:@colibri/build-verification@^0.4.5",
@@ -90,8 +92,9 @@ compatible SDK versions throughout your application.
 ### [@colibri/core](../core/overview.md)
 
 The main toolkit package. It includes account helpers, contract clients,
-transaction config types, typed errors, process functions, step factories, and
-the built-in pipeline factories such as `createInvokeContractPipeline(...)`.
+[transaction config](../core/transaction-config.md) types, typed errors, process
+functions, step factories, and the built-in pipeline factories such as
+[`createInvokeContractPipeline(...)`](../core/pipelines/invoke-contract.md).
 
 ### [@colibri/rpc-streamer](../packages/rpc-streamer.md)
 
@@ -99,8 +102,9 @@ Streaming helpers for live and historical Stellar RPC ingestion.
 
 ### [@colibri/webauth](../packages/webauth.md)
 
-Unified SEP-10 and SEP-45 Web Authentication with automatic account routing,
-explicit protocol clients, and contract authorization hooks.
+Unified [SEP-10](../packages/webauth/sep10.md) and
+[SEP-45](../packages/webauth/sep45.md) Web Authentication with automatic account
+routing, explicit protocol clients, and contract authorization hooks.
 
 ### [@colibri/build-verification](../packages/build-verification.md)
 
@@ -110,22 +114,24 @@ execution, and typed evidence.
 
 ### [@colibri/identicon](../packages/identicon.md)
 
-Local SEP-33 identicons for Stellar G-addresses, with reference-compatible
-patterns, SVG and PNG rendering, data URLs, and immutable matrix/color data.
+Local [SEP-33](../packages/identicon.md) identicons for Stellar G-addresses,
+with reference-compatible patterns, SVG and PNG rendering, data URLs, and
+immutable matrix/color data.
 
 ### [@colibri/test-tooling](../packages/test-tooling.md)
 
-Docker-backed integration helpers centered on `StellarTestLedger`.
+Docker-backed integration helpers centered on
+[`StellarTestLedger`](../packages/test-tooling.md).
 
 ### [Plugins](../packages/plugins/README.md)
 
 Plugins extend pipeline step behavior for specific use cases:
 
-| Plugin                                                      | Package                            | Description                                        |
-| ----------------------------------------------------------- | ---------------------------------- | -------------------------------------------------- |
-| [Fee Bump](../packages/plugins/fee-bump.md)                 | `@colibri/plugin-fee-bump`         | Wrap outgoing transactions in a fee-bump envelope  |
-| [Channel Accounts](../packages/plugins/channel-accounts.md) | `@colibri/plugin-channel-accounts` | Reuse sponsored channel accounts across write runs |
-| [SEP-29](../packages/plugins/sep29.md)                      | `@colibri/plugin-sep29`            | Opt-in memo requirements checked through RPC       |
+| Plugin                                                      | Package                                                                       | Description                                        |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------- |
+| [Fee Bump](../packages/plugins/fee-bump.md)                 | [`@colibri/plugin-fee-bump`](../packages/plugins/fee-bump.md)                 | Wrap outgoing transactions in a fee-bump envelope  |
+| [Channel Accounts](../packages/plugins/channel-accounts.md) | [`@colibri/plugin-channel-accounts`](../packages/plugins/channel-accounts.md) | Reuse sponsored channel accounts across write runs |
+| [SEP-29](../packages/plugins/sep29.md)                      | [`@colibri/plugin-sep29`](../packages/plugins/sep29.md)                       | Opt-in memo requirements checked through RPC       |
 
 ## Stellar SDK Dependency
 

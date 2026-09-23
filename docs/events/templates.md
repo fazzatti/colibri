@@ -1,12 +1,13 @@
 # Parse events with a schema
 
-Core's `Event` normalizes an RPC event into IDs, ledger/transaction context,
-parsed topics/value, and retained ScVals. `EventTemplate` adds a schema and
-named field access. It does not establish trust in the emitting contract.
+Core's [`Event`](overview.md) normalizes an RPC event into IDs,
+ledger/transaction context, parsed topics/value, and retained ScVals.
+`EventTemplate` adds a schema and named field access. It does not establish
+trust in the emitting contract.
 
 ## Standard event parsing
 
-Inside a handler receiving a Core `Event`, use a known template:
+Inside a handler receiving a Core [`Event`](overview.md), use a known template:
 
 ```ts
 const transfer = SACEvents.TransferEvent.tryFromEvent(event);
@@ -18,8 +19,8 @@ if (transfer) {
 `tryFromEvent` returns `undefined` for a mismatch. `is(event)` checks the
 schema, and `fromEvent(event)` throws if it does not match. Use
 `fromEventResponse` when starting with the underlying SDK's RPC event response
-instead of a Core `Event`. The retained `scvalTopics` and `scvalValue` are
-available for raw inspection.
+instead of a Core [`Event`](overview.md). The retained `scvalTopics` and
+`scvalValue` are available for raw inspection.
 
 ## Define a custom event
 

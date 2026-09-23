@@ -4,11 +4,12 @@
 
 ## Evidence, logs, and CLI
 
-`writeVerificationEvidence(...)` writes stable completed evidence or a
-structured failure report. `writeVerificationLogs(...)` writes bounded JSONL or
-text logs. Structured evidence omits raw source/Wasm bytes and sensitive
-retrieval credentials. Build stdout/stderr can still contain anything printed by
-the build itself; review [reporting boundaries](reporting.md) before sharing.
+[`writeVerificationEvidence(...)`](reporting.md) writes stable completed
+evidence or a structured failure report.
+[`writeVerificationLogs(...)`](reporting.md) writes bounded JSONL or text logs.
+Structured evidence omits raw source/Wasm bytes and sensitive retrieval
+credentials. Build stdout/stderr can still contain anything printed by the build
+itself; review [reporting boundaries](reporting.md) before sharing.
 
 Run the package directly from JSR:
 

@@ -1,12 +1,14 @@
 # Contract Bindings
 
-`@colibri/contract-bindings` turns a Soroban contract spec into a `Contract`
-subclass with typed per-method `.read()` and `.invoke()` helpers, embedded spec
-entries, a Colibri error map, and typed event definitions. Generated clients
-require Core 1.1 or a compatible 1.x release. The CLI runs on Deno; the renderer
-and generated clients can be used from supported Deno, Node or browser projects.
-See the [runtime compatibility policy](../getting-started/compatibility.md) and
-the [package API reference](https://jsr.io/@colibri/contract-bindings/doc).
+`@colibri/contract-bindings` turns a Soroban contract spec into a
+[`Contract`](../core/contract.md) subclass with typed per-method `.read()` and
+`.invoke()` helpers, embedded spec entries, a Colibri error map, and typed event
+definitions. [Generated clients](contract-bindings/generated-client.md) require
+Core 1.1 or a compatible 1.x release. The CLI runs on Deno; the renderer and
+[generated clients](contract-bindings/generated-client.md) can be used from
+supported Deno, Node or browser projects. See the
+[runtime compatibility policy](../getting-started/compatibility.md) and the
+[package API reference](https://jsr.io/@colibri/contract-bindings/doc).
 
 ## Choose a source and output
 
@@ -28,7 +30,8 @@ emitted files, dependencies and regeneration rules.
 
 ## Import Colibri conveniences
 
-Generated clients include a `colibri.ts` convenience module by default. See
+[Generated clients](contract-bindings/generated-client.md) include a
+`colibri.ts` convenience module by default. See
 [Core conveniences](contract-bindings/output.md#import-colibri-conveniences) for
 its exports and usage.
 

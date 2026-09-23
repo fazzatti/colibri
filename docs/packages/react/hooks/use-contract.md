@@ -16,7 +16,8 @@ full API.
 
 The client must satisfy the public structural `ContractIdentity`; it need not
 inherit the exact Core class installed by React. Existing SDK facades and
-generated clients from compatible Core minors can retain their own pipelines.
+[generated clients](../../contract-bindings/generated-client.md) from compatible
+Core minors can retain their own pipelines.
 
 ## Example
 
@@ -48,8 +49,8 @@ export function ContractAddress({ network, contractId }: {
 The factory is React `useMemo` work: keep it free of requests, prompts and
 subscriptions. React may repeat construction or discard a memo. For a lifetime
 owned independently of React, construct the client outside rendering and pass it
-to the read/invoke hooks. Replace `Contract` with your generated subclass to
-retain its helper types.
+to the read/invoke hooks. Replace [`Contract`](../../../core/contract.md) with
+your generated subclass to retain its helper types.
 
 ## See also
 
