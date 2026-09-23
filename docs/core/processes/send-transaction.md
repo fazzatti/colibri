@@ -83,6 +83,13 @@ The process will poll until one of these conditions:
 
 ## Errors
 
+`STX_007` and `STX_010` include optional `meta.data.failure` with transaction
+and operation result codes, declared resource limits, available diagnostic
+counters, and available declared/charged fees. Existing metadata remains
+available; immediate failures also retain `resultXDR`. Missing diagnostic
+counters or fee components are not guessed. See
+[resource diagnostics](../resources.md#diagnose-failures).
+
 See
 [every code for this context](../../reference/errors/core-processes-send-transaction.md)
 and the [error-handling guide](../../core/error.md). Failures from lower-level

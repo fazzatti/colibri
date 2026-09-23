@@ -121,6 +121,7 @@ catalog.
 - [core/processes/simulate-transaction](core-processes-simulate-transaction.md)
   — 5 codes.
 - [core/processes/wrap-fee-bump](core-processes-wrap-fee-bump.md) — 6 codes.
+- [core/resources](core-resources.md) — 6 codes.
 - [core/sep1](core-sep1.md) — 8 codes.
 - [core/signer/delegated](core-signer-delegated.md) — 3 codes.
 - [core/signer/hash-x](core-signer-hash-x.md) — 9 codes.

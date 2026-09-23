@@ -92,6 +92,9 @@ export const signAuthEntriesToAssemble = () =>
       authEntries,
       transaction,
       sorobanData,
+      ...(inputStep.config.resources !== undefined
+        ? { resources: inputStep.config.resources }
+        : {}),
       ...transactionFee,
     };
   }, { id: "invoke-contract-sign-auth-to-assemble" as const });
@@ -175,6 +178,9 @@ export const enforceSimulationToAssemble = () =>
       authEntries,
       transaction,
       sorobanData: simulationOutput.transactionData,
+      ...(inputStep.config.resources !== undefined
+        ? { resources: inputStep.config.resources }
+        : {}),
       ...transactionFee,
     };
   }, { id: "invoke-contract-enforce-simulation-to-assemble" as const });

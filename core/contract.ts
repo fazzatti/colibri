@@ -7,6 +7,7 @@ export type * from "@/contract/types.ts";
 export { Spec } from "@/contract/spec.ts";
 
 // Shared public types are erased from JavaScript consumer bundles.
+export type * from "@/common/types/transaction-config/resources.ts";
 export type {
   AnyContractErrorMatcher,
   AuthEntrySigner,

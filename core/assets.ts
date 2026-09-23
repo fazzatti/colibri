@@ -3,6 +3,7 @@
  * @module
  */
 export * from "@/asset/index.ts";
+export type * from "@/common/types/transaction-config/resources.ts";
 export type {
   AccountFlagsView,
   AccountLedgerEntry,

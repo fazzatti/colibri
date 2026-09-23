@@ -41745,6 +41745,17 @@
                     "repr": "string",
                     "value": "string"
                   }
+                },
+                {
+                  "name": "resources",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "TransactionResources",
+                    "value": {
+                      "typeName": "TransactionResources"
+                    }
+                  }
                 }
               ]
             }
@@ -43750,6 +43761,172 @@
           }
         },
         "kind": "function"
+      }
+    ],
+    "CalculatedResourcePadding": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "instructions",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAmount",
+                "value": {
+                  "typeName": "ResourceAmount",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAmount",
+                "value": {
+                  "typeName": "ResourceAmount",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "writeBytes",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAmount",
+                "value": {
+                  "typeName": "ResourceAmount",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "resourceFee",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAmount",
+                "value": {
+                  "typeName": "ResourceAmount",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "calculateResourcePadding": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "input",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "CalculateResourcePaddingInput",
+                "value": {
+                  "typeName": "CalculateResourcePaddingInput"
+                }
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "ResourcePaddingCalculation",
+            "value": {
+              "typeName": "ResourcePaddingCalculation"
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "CalculateResourcePaddingInput": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "simulation",
+              "tsType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "transactionData",
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "NativeResourceDataBuilder",
+                        "value": {
+                          "typeName": "NativeResourceDataBuilder"
+                        }
+                      }
+                    },
+                    {
+                      "name": "latestLedger",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "settings",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "NetworkResourceSettings",
+                "value": {
+                  "typeName": "NetworkResourceSettings"
+                }
+              }
+            },
+            {
+              "name": "padding",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourcePaddingRequest",
+                "value": {
+                  "typeName": "ResourcePaddingRequest"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
       }
     ],
     "CancelOfferArgs": [
@@ -58103,6 +58280,42 @@
         "kind": "typeAlias"
       }
     ],
+    "FailedResourceUsage": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "declared",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "used",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "exceededBy",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
     "FailedSimulationResponseCode": [
       {
         "declarationKind": "export",
@@ -59752,6 +59965,72 @@
           }
         },
         "kind": "function"
+      }
+    ],
+    "getNetworkResourceSettings": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "isAsync": true,
+          "params": [
+            {
+              "kind": "object",
+              "optional": false,
+              "props": [
+                {
+                  "key": "rpc",
+                  "kind": "assign",
+                  "value": null
+                }
+              ],
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "GetNetworkResourceSettingsInput",
+                "value": {
+                  "typeName": "GetNetworkResourceSettingsInput"
+                }
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "Promise",
+            "value": {
+              "typeName": "Promise",
+              "typeParams": [
+                {
+                  "kind": "typeRef",
+                  "repr": "NetworkResourceSettings",
+                  "value": {
+                    "typeName": "NetworkResourceSettings"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "GetNetworkResourceSettingsInput": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "rpc",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceSettingsRpc",
+                "value": {
+                  "typeName": "ResourceSettingsRpc"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
       }
     ],
     "GetOfferArgs": [
@@ -70324,6 +70603,124 @@
         "kind": "enum"
       }
     ],
+    "NetworkResourceSettings": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "networkPassphrase",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "protocolVersion",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "latestLedger",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "limits",
+              "tsType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "instructions",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    },
+                    {
+                      "name": "diskReadBytes",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    },
+                    {
+                      "name": "writeBytes",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    },
+                    {
+                      "name": "memoryBytes",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    },
+                    {
+                      "name": "footprintEntries",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "fees",
+              "tsType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "perInstructionIncrement",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    },
+                    {
+                      "name": "perDiskRead1KB",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    },
+                    {
+                      "name": "perWrite1KB",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
     "NetworkType": [
       {
         "declarationKind": "export",
@@ -71689,6 +72086,41 @@
         "kind": "class"
       }
     ],
+    "OperationFailure": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "index",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "type",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "code",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
     "operationHasDelegatedAuthorization": [
       {
         "declarationKind": "export",
@@ -73003,6 +73435,36 @@
                   }
                 }
               ]
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "parseTransactionFailure": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "evidence",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "TransactionFailureEvidence",
+                "value": {
+                  "typeName": "TransactionFailureEvidence"
+                }
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "TransactionFailureDetails",
+            "value": {
+              "typeName": "TransactionFailureDetails"
             }
           }
         },
@@ -74646,6 +75108,461 @@
                 }
               }
             ]
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceAdjustment": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "ResourceAmount",
+                "value": {
+                  "typeName": "ResourceAmount",
+                  "typeParams": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "T",
+                      "value": {
+                        "typeName": "T"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "ResourcePercent",
+                "value": {
+                  "typeName": "ResourcePercent"
+                }
+              }
+            ]
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                ]
+              },
+              "name": "T"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceAmount": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "amount",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "T",
+                    "value": {
+                      "typeName": "T"
+                    }
+                  }
+                },
+                {
+                  "name": "percent",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "never",
+                    "value": "never"
+                  }
+                }
+              ]
+            }
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                ]
+              },
+              "name": "T"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceErrors": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "kind": "const",
+          "tsType": {
+            "kind": "typeQuery",
+            "repr": "ERROR",
+            "value": "ERROR"
+          }
+        },
+        "kind": "variable"
+      }
+    ],
+    "ResourceOverrides": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "instructions",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "writeBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "resourceFee",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourcePadding": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "instructions",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "writeBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "resourceFee",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourcePaddingCalculation": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "padding",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "CalculatedResourcePadding",
+                "value": {
+                  "typeName": "CalculatedResourcePadding"
+                }
+              }
+            },
+            {
+              "name": "breakdown",
+              "tsType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "nonRefundableFee",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    },
+                    {
+                      "name": "refundableFee",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    },
+                    {
+                      "name": "resourceFee",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "simulationDataXdr",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "simulationLedger",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "settingsLedger",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "protocolVersion",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "networkPassphrase",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourcePaddingRequest": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "intersection",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "Omit",
+                "value": {
+                  "typeName": "Omit",
+                  "typeParams": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "ResourcePadding",
+                      "value": {
+                        "typeName": "ResourcePadding"
+                      }
+                    },
+                    {
+                      "kind": "literal",
+                      "repr": "resourceFee",
+                      "value": {
+                        "kind": "string",
+                        "string": "resourceFee"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "refundableFee",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "ResourceAdjustment",
+                        "value": {
+                          "typeName": "ResourceAdjustment",
+                          "typeParams": [
+                            {
+                              "kind": "keyword",
+                              "repr": "string",
+                              "value": "string"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourcePercent": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "amount",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "never",
+                    "value": "never"
+                  }
+                },
+                {
+                  "name": "percent",
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceSettingsRpc": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "NativeResourceSettingsRpc",
+            "value": {
+              "typeName": "NativeResourceSettingsRpc"
+            }
           }
         },
         "kind": "typeAlias"
@@ -98556,6 +99473,17 @@
             "value": {
               "properties": [
                 {
+                  "name": "resources",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "TransactionResources",
+                    "value": {
+                      "typeName": "TransactionResources"
+                    }
+                  }
+                },
+                {
                   "name": "fee",
                   "tsType": {
                     "kind": "union",
@@ -98653,6 +99581,252 @@
           }
         },
         "kind": "typeAlias"
+      }
+    ],
+    "TransactionFailureDetails": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "transactionCode",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "innerTransactionCode",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "operations",
+              "optional": true,
+              "tsType": {
+                "kind": "array",
+                "value": {
+                  "kind": "typeRef",
+                  "repr": "OperationFailure",
+                  "value": {
+                    "typeName": "OperationFailure"
+                  }
+                }
+              }
+            },
+            {
+              "name": "resources",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Partial",
+                "value": {
+                  "typeName": "Partial",
+                  "typeParams": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "Record",
+                      "value": {
+                        "typeName": "Record",
+                        "typeParams": [
+                          {
+                            "kind": "union",
+                            "value": [
+                              {
+                                "kind": "literal",
+                                "repr": "instructions",
+                                "value": {
+                                  "kind": "string",
+                                  "string": "instructions"
+                                }
+                              },
+                              {
+                                "kind": "literal",
+                                "repr": "diskReadBytes",
+                                "value": {
+                                  "kind": "string",
+                                  "string": "diskReadBytes"
+                                }
+                              },
+                              {
+                                "kind": "literal",
+                                "repr": "writeBytes",
+                                "value": {
+                                  "kind": "string",
+                                  "string": "writeBytes"
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "kind": "typeRef",
+                            "repr": "FailedResourceUsage",
+                            "value": {
+                              "typeName": "FailedResourceUsage"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "fees",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "TransactionFailureFees",
+                "value": {
+                  "typeName": "TransactionFailureFees"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "TransactionFailureEvidence": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "transaction",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "NativeFailureTransaction",
+                "value": {
+                  "typeName": "NativeFailureTransaction"
+                }
+              }
+            },
+            {
+              "name": "result",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "NativeFailureResult",
+                "value": {
+                  "typeName": "NativeFailureResult"
+                }
+              }
+            },
+            {
+              "name": "resultMeta",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "NativeFailureMeta",
+                "value": {
+                  "typeName": "NativeFailureMeta"
+                }
+              }
+            },
+            {
+              "name": "diagnosticEvents",
+              "optional": true,
+              "tsType": {
+                "kind": "typeOperator",
+                "value": {
+                  "operator": "readonly",
+                  "tsType": {
+                    "kind": "array",
+                    "value": {
+                      "kind": "typeRef",
+                      "repr": "NativeFailureEvent",
+                      "value": {
+                        "typeName": "NativeFailureEvent"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "TransactionFailureFees": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "declaredTotalFee",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "declaredResourceFee",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "declaredInclusionFee",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "chargedFee",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "nonRefundableFeeCharged",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "refundableFeeCharged",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "rentFeeCharged",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
       }
     ],
     "TransactionFee": [
@@ -98850,6 +100024,38 @@
           }
         },
         "kind": "typeAlias"
+      }
+    ],
+    "TransactionResources": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "override",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceOverrides",
+                "value": {
+                  "typeName": "ResourceOverrides"
+                }
+              }
+            },
+            {
+              "name": "padding",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourcePadding",
+                "value": {
+                  "typeName": "ResourcePadding"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
       }
     ],
     "TransactionSource": [
@@ -100140,6 +101346,9 @@
                 },
                 {
                   "name": "parseErrorResult"
+                },
+                {
+                  "name": "parseTransactionFailure"
                 }
               ]
             }
@@ -113316,6 +114525,393 @@
         }
       ]
     },
+    "ResourceErrors::members": {
+      "BELOW_RECOMMENDATION": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "resource",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "configured",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "bigint",
+                      "value": "bigint"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "recommended",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "bigint",
+                      "value": "bigint"
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "ResourceError"
+          },
+          "kind": "class"
+        }
+      ],
+      "Code": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "members": [
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "RES_001",
+                  "value": {
+                    "kind": "string",
+                    "string": "RES_001"
+                  }
+                },
+                "name": "INVALID_CONFIGURATION"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "RES_002",
+                  "value": {
+                    "kind": "string",
+                    "string": "RES_002"
+                  }
+                },
+                "name": "BELOW_RECOMMENDATION"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "RES_003",
+                  "value": {
+                    "kind": "string",
+                    "string": "RES_003"
+                  }
+                },
+                "name": "LIMIT_EXCEEDED"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "RES_004",
+                  "value": {
+                    "kind": "string",
+                    "string": "RES_004"
+                  }
+                },
+                "name": "MISSING_SIMULATION"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "RES_005",
+                  "value": {
+                    "kind": "string",
+                    "string": "RES_005"
+                  }
+                },
+                "name": "UNSUPPORTED_TRANSACTION"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "RES_006",
+                  "value": {
+                    "kind": "string",
+                    "string": "RES_006"
+                  }
+                },
+                "name": "SETTINGS_UNAVAILABLE"
+              }
+            ]
+          },
+          "kind": "enum"
+        }
+      ],
+      "ERROR_RES": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "kind": "const",
+            "tsType": {
+              "kind": "typeLiteral",
+              "value": {
+                "properties": [
+                  {
+                    "computed": true,
+                    "name": "[\"RES_001\" as Code.INVALID_CONFIGURATION]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"RES_002\" as Code.BELOW_RECOMMENDATION]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"RES_003\" as Code.LIMIT_EXCEEDED]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"RES_004\" as Code.MISSING_SIMULATION]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"RES_005\" as Code.UNSUPPORTED_TRANSACTION]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"RES_006\" as Code.SETTINGS_UNAVAILABLE]"
+                  }
+                ]
+              }
+            }
+          },
+          "kind": "variable"
+        }
+      ],
+      "INVALID_CONFIGURATION": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "field",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "value",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "unknown",
+                      "value": "unknown"
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "ResourceError"
+          },
+          "kind": "class"
+        }
+      ],
+      "LIMIT_EXCEEDED": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "resource",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "requested",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "bigint",
+                      "value": "bigint"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "maximum",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "bigint",
+                      "value": "bigint"
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "ResourceError"
+          },
+          "kind": "class"
+        }
+      ],
+      "MISSING_SIMULATION": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": []
+              }
+            ],
+            "extends": "ResourceError"
+          },
+          "kind": "class"
+        }
+      ],
+      "ResourceError": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "code",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "Code",
+                      "value": {
+                        "typeName": "Code"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "message",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "data",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "unknown",
+                      "value": "unknown"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "cause",
+                    "optional": true,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "unknown",
+                      "value": "unknown"
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "ColibriError",
+            "isAbstract": true,
+            "superTypeParams": [
+              {
+                "kind": "typeRef",
+                "repr": "Code",
+                "value": {
+                  "typeName": "Code"
+                }
+              }
+            ]
+          },
+          "kind": "class"
+        }
+      ],
+      "SETTINGS_UNAVAILABLE": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "setting",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "cause",
+                    "optional": true,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "unknown",
+                      "value": "unknown"
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "ResourceError"
+          },
+          "kind": "class"
+        }
+      ],
+      "UNSUPPORTED_TRANSACTION": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": []
+              }
+            ],
+            "extends": "ResourceError"
+          },
+          "kind": "class"
+        }
+      ]
+    },
     "ASM_ERRORS::members": {
       "AssembleTransactionError": [
         {
@@ -116262,6 +117858,26 @@
                                 }
                               },
                               {
+                                "name": "resultXDR",
+                                "optional": true,
+                                "tsType": {
+                                  "kind": "keyword",
+                                  "repr": "string",
+                                  "value": "string"
+                                }
+                              },
+                              {
+                                "name": "failure",
+                                "optional": true,
+                                "tsType": {
+                                  "kind": "typeRef",
+                                  "repr": "TransactionFailureDetails",
+                                  "value": {
+                                    "typeName": "TransactionFailureDetails"
+                                  }
+                                }
+                              },
+                              {
                                 "name": "diagnosticEvents",
                                 "tsType": {
                                   "kind": "typeRef",
@@ -116618,6 +118234,17 @@
                                   "kind": "keyword",
                                   "repr": "string",
                                   "value": "string"
+                                }
+                              },
+                              {
+                                "name": "failure",
+                                "optional": true,
+                                "tsType": {
+                                  "kind": "typeRef",
+                                  "repr": "TransactionFailureDetails",
+                                  "value": {
+                                    "typeName": "TransactionFailureDetails"
+                                  }
                                 }
                               }
                             ]
@@ -123375,6 +125002,26 @@
                                 }
                               },
                               {
+                                "name": "resultXDR",
+                                "optional": true,
+                                "tsType": {
+                                  "kind": "keyword",
+                                  "repr": "string",
+                                  "value": "string"
+                                }
+                              },
+                              {
+                                "name": "failure",
+                                "optional": true,
+                                "tsType": {
+                                  "kind": "typeRef",
+                                  "repr": "TransactionFailureDetails",
+                                  "value": {
+                                    "typeName": "TransactionFailureDetails"
+                                  }
+                                }
+                              },
+                              {
                                 "name": "diagnosticEvents",
                                 "tsType": {
                                   "kind": "typeRef",
@@ -123731,6 +125378,17 @@
                                   "kind": "keyword",
                                   "repr": "string",
                                   "value": "string"
+                                }
+                              },
+                              {
+                                "name": "failure",
+                                "optional": true,
+                                "tsType": {
+                                  "kind": "typeRef",
+                                  "repr": "TransactionFailureDetails",
+                                  "value": {
+                                    "typeName": "TransactionFailureDetails"
+                                  }
                                 }
                               }
                             ]
@@ -169173,6 +170831,276 @@
         "kind": "typeAlias"
       }
     ],
+    "ResourceAdjustment": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "ResourceAmount",
+                "value": {
+                  "typeName": "ResourceAmount",
+                  "typeParams": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "T",
+                      "value": {
+                        "typeName": "T"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "ResourcePercent",
+                "value": {
+                  "typeName": "ResourcePercent"
+                }
+              }
+            ]
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                ]
+              },
+              "name": "T"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceAmount": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "amount",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "T",
+                    "value": {
+                      "typeName": "T"
+                    }
+                  }
+                },
+                {
+                  "name": "percent",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "never",
+                    "value": "never"
+                  }
+                }
+              ]
+            }
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                ]
+              },
+              "name": "T"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceOverrides": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "instructions",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "writeBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "resourceFee",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourcePadding": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "instructions",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "writeBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "resourceFee",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourcePercent": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "amount",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "never",
+                    "value": "never"
+                  }
+                },
+                {
+                  "name": "percent",
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
     "RPCConfig": [
       {
         "declarationKind": "export",
@@ -171163,6 +173091,17 @@
             "value": {
               "properties": [
                 {
+                  "name": "resources",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "TransactionResources",
+                    "value": {
+                      "typeName": "TransactionResources"
+                    }
+                  }
+                },
+                {
                   "name": "fee",
                   "tsType": {
                     "kind": "union",
@@ -171363,6 +173302,38 @@
           }
         },
         "kind": "typeAlias"
+      }
+    ],
+    "TransactionResources": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "override",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceOverrides",
+                "value": {
+                  "typeName": "ResourceOverrides"
+                }
+              }
+            },
+            {
+              "name": "padding",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourcePadding",
+                "value": {
+                  "typeName": "ResourcePadding"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
       }
     ],
     "TransactionSource": [
@@ -174634,6 +176605,276 @@
         "kind": "typeAlias"
       }
     ],
+    "ResourceAdjustment": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "ResourceAmount",
+                "value": {
+                  "typeName": "ResourceAmount",
+                  "typeParams": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "T",
+                      "value": {
+                        "typeName": "T"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "ResourcePercent",
+                "value": {
+                  "typeName": "ResourcePercent"
+                }
+              }
+            ]
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                ]
+              },
+              "name": "T"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceAmount": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "amount",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "T",
+                    "value": {
+                      "typeName": "T"
+                    }
+                  }
+                },
+                {
+                  "name": "percent",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "never",
+                    "value": "never"
+                  }
+                }
+              ]
+            }
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                ]
+              },
+              "name": "T"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceOverrides": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "instructions",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "writeBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "resourceFee",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourcePadding": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "instructions",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "writeBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "resourceFee",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourcePercent": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "amount",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "never",
+                    "value": "never"
+                  }
+                },
+                {
+                  "name": "percent",
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
     "Sha256Hash": [
       {
         "declarationKind": "export",
@@ -174791,6 +177032,17 @@
             "kind": "typeLiteral",
             "value": {
               "properties": [
+                {
+                  "name": "resources",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "TransactionResources",
+                    "value": {
+                      "typeName": "TransactionResources"
+                    }
+                  }
+                },
                 {
                   "name": "fee",
                   "tsType": {
@@ -174994,6 +177246,38 @@
         "kind": "typeAlias"
       }
     ],
+    "TransactionResources": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "override",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceOverrides",
+                "value": {
+                  "typeName": "ResourceOverrides"
+                }
+              }
+            },
+            {
+              "name": "padding",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourcePadding",
+                "value": {
+                  "typeName": "ResourcePadding"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
     "TransactionSource": [
       {
         "declarationKind": "export",
@@ -175036,6 +177320,172 @@
     ]
   },
   "@colibri/core/soroban-transaction": {
+    "CalculatedResourcePadding": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "instructions",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAmount",
+                "value": {
+                  "typeName": "ResourceAmount",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAmount",
+                "value": {
+                  "typeName": "ResourceAmount",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "writeBytes",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAmount",
+                "value": {
+                  "typeName": "ResourceAmount",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "resourceFee",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAmount",
+                "value": {
+                  "typeName": "ResourceAmount",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "calculateResourcePadding": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "input",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "CalculateResourcePaddingInput",
+                "value": {
+                  "typeName": "CalculateResourcePaddingInput"
+                }
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "ResourcePaddingCalculation",
+            "value": {
+              "typeName": "ResourcePaddingCalculation"
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "CalculateResourcePaddingInput": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "simulation",
+              "tsType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "transactionData",
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "NativeResourceDataBuilder",
+                        "value": {
+                          "typeName": "NativeResourceDataBuilder"
+                        }
+                      }
+                    },
+                    {
+                      "name": "latestLedger",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "settings",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "NetworkResourceSettings",
+                "value": {
+                  "typeName": "NetworkResourceSettings"
+                }
+              }
+            },
+            {
+              "name": "padding",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourcePaddingRequest",
+                "value": {
+                  "typeName": "ResourcePaddingRequest"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
     "createInvokeContractPipeline": [
       {
         "declarationKind": "export",
@@ -175152,6 +177602,72 @@
         "kind": "variable"
       }
     ],
+    "getNetworkResourceSettings": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "isAsync": true,
+          "params": [
+            {
+              "kind": "object",
+              "optional": false,
+              "props": [
+                {
+                  "key": "rpc",
+                  "kind": "assign",
+                  "value": null
+                }
+              ],
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "GetNetworkResourceSettingsInput",
+                "value": {
+                  "typeName": "GetNetworkResourceSettingsInput"
+                }
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "Promise",
+            "value": {
+              "typeName": "Promise",
+              "typeParams": [
+                {
+                  "kind": "typeRef",
+                  "repr": "NetworkResourceSettings",
+                  "value": {
+                    "typeName": "NetworkResourceSettings"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "GetNetworkResourceSettingsInput": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "rpc",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceSettingsRpc",
+                "value": {
+                  "typeName": "ResourceSettingsRpc"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
     "INVOKE_CONTRACT_PIPELINE_ID": [
       {
         "declarationKind": "export",
@@ -175243,7 +177759,999 @@
         },
         "kind": "typeAlias"
       }
-    ]
+    ],
+    "NetworkResourceSettings": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "networkPassphrase",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "protocolVersion",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "latestLedger",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "limits",
+              "tsType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "instructions",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    },
+                    {
+                      "name": "diskReadBytes",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    },
+                    {
+                      "name": "writeBytes",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    },
+                    {
+                      "name": "memoryBytes",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    },
+                    {
+                      "name": "footprintEntries",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "number",
+                        "value": "number"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "fees",
+              "tsType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "perInstructionIncrement",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    },
+                    {
+                      "name": "perDiskRead1KB",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    },
+                    {
+                      "name": "perWrite1KB",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourceAdjustment": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "ResourceAmount",
+                "value": {
+                  "typeName": "ResourceAmount",
+                  "typeParams": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "T",
+                      "value": {
+                        "typeName": "T"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "ResourcePercent",
+                "value": {
+                  "typeName": "ResourcePercent"
+                }
+              }
+            ]
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                ]
+              },
+              "name": "T"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceAmount": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "amount",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "T",
+                    "value": {
+                      "typeName": "T"
+                    }
+                  }
+                },
+                {
+                  "name": "percent",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "never",
+                    "value": "never"
+                  }
+                }
+              ]
+            }
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                ]
+              },
+              "name": "T"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceErrors": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "kind": "const",
+          "tsType": {
+            "kind": "typeQuery",
+            "repr": "ERROR",
+            "value": "ERROR"
+          }
+        },
+        "kind": "variable"
+      }
+    ],
+    "ResourceOverrides": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "instructions",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "writeBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "resourceFee",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourcePadding": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "instructions",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "writeBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "resourceFee",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourcePaddingCalculation": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "padding",
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "CalculatedResourcePadding",
+                "value": {
+                  "typeName": "CalculatedResourcePadding"
+                }
+              }
+            },
+            {
+              "name": "breakdown",
+              "tsType": {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "nonRefundableFee",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    },
+                    {
+                      "name": "refundableFee",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    },
+                    {
+                      "name": "resourceFee",
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "simulationDataXdr",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "simulationLedger",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "settingsLedger",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "protocolVersion",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "networkPassphrase",
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourcePaddingRequest": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "intersection",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "Omit",
+                "value": {
+                  "typeName": "Omit",
+                  "typeParams": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "ResourcePadding",
+                      "value": {
+                        "typeName": "ResourcePadding"
+                      }
+                    },
+                    {
+                      "kind": "literal",
+                      "repr": "resourceFee",
+                      "value": {
+                        "kind": "string",
+                        "string": "resourceFee"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "refundableFee",
+                      "optional": true,
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "ResourceAdjustment",
+                        "value": {
+                          "typeName": "ResourceAdjustment",
+                          "typeParams": [
+                            {
+                              "kind": "keyword",
+                              "repr": "string",
+                              "value": "string"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourcePercent": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "amount",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "never",
+                    "value": "never"
+                  }
+                },
+                {
+                  "name": "percent",
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceSettingsRpc": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "NativeResourceSettingsRpc",
+            "value": {
+              "typeName": "NativeResourceSettingsRpc"
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "TransactionResources": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "override",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceOverrides",
+                "value": {
+                  "typeName": "ResourceOverrides"
+                }
+              }
+            },
+            {
+              "name": "padding",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourcePadding",
+                "value": {
+                  "typeName": "ResourcePadding"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourceErrors::members": {
+      "BELOW_RECOMMENDATION": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "resource",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "configured",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "bigint",
+                      "value": "bigint"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "recommended",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "bigint",
+                      "value": "bigint"
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "ResourceError"
+          },
+          "kind": "class"
+        }
+      ],
+      "Code": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "members": [
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "RES_001",
+                  "value": {
+                    "kind": "string",
+                    "string": "RES_001"
+                  }
+                },
+                "name": "INVALID_CONFIGURATION"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "RES_002",
+                  "value": {
+                    "kind": "string",
+                    "string": "RES_002"
+                  }
+                },
+                "name": "BELOW_RECOMMENDATION"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "RES_003",
+                  "value": {
+                    "kind": "string",
+                    "string": "RES_003"
+                  }
+                },
+                "name": "LIMIT_EXCEEDED"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "RES_004",
+                  "value": {
+                    "kind": "string",
+                    "string": "RES_004"
+                  }
+                },
+                "name": "MISSING_SIMULATION"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "RES_005",
+                  "value": {
+                    "kind": "string",
+                    "string": "RES_005"
+                  }
+                },
+                "name": "UNSUPPORTED_TRANSACTION"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "RES_006",
+                  "value": {
+                    "kind": "string",
+                    "string": "RES_006"
+                  }
+                },
+                "name": "SETTINGS_UNAVAILABLE"
+              }
+            ]
+          },
+          "kind": "enum"
+        }
+      ],
+      "ERROR_RES": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "kind": "const",
+            "tsType": {
+              "kind": "typeLiteral",
+              "value": {
+                "properties": [
+                  {
+                    "computed": true,
+                    "name": "[\"RES_001\" as Code.INVALID_CONFIGURATION]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"RES_002\" as Code.BELOW_RECOMMENDATION]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"RES_003\" as Code.LIMIT_EXCEEDED]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"RES_004\" as Code.MISSING_SIMULATION]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"RES_005\" as Code.UNSUPPORTED_TRANSACTION]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"RES_006\" as Code.SETTINGS_UNAVAILABLE]"
+                  }
+                ]
+              }
+            }
+          },
+          "kind": "variable"
+        }
+      ],
+      "INVALID_CONFIGURATION": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "field",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "value",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "unknown",
+                      "value": "unknown"
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "ResourceError"
+          },
+          "kind": "class"
+        }
+      ],
+      "LIMIT_EXCEEDED": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "resource",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "requested",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "bigint",
+                      "value": "bigint"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "maximum",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "bigint",
+                      "value": "bigint"
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "ResourceError"
+          },
+          "kind": "class"
+        }
+      ],
+      "MISSING_SIMULATION": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": []
+              }
+            ],
+            "extends": "ResourceError"
+          },
+          "kind": "class"
+        }
+      ],
+      "ResourceError": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "code",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "typeRef",
+                      "repr": "Code",
+                      "value": {
+                        "typeName": "Code"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "message",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "data",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "unknown",
+                      "value": "unknown"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "cause",
+                    "optional": true,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "unknown",
+                      "value": "unknown"
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "ColibriError",
+            "isAbstract": true,
+            "superTypeParams": [
+              {
+                "kind": "typeRef",
+                "repr": "Code",
+                "value": {
+                  "typeName": "Code"
+                }
+              }
+            ]
+          },
+          "kind": "class"
+        }
+      ],
+      "SETTINGS_UNAVAILABLE": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "setting",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "cause",
+                    "optional": true,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "unknown",
+                      "value": "unknown"
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "ResourceError"
+          },
+          "kind": "class"
+        }
+      ],
+      "UNSUPPORTED_TRANSACTION": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": []
+              }
+            ],
+            "extends": "ResourceError"
+          },
+          "kind": "class"
+        }
+      ]
+    }
   },
   "@colibri/core/simulation": {
     "simulateTransaction": [
@@ -188541,6 +192049,276 @@
         "kind": "typeAlias"
       }
     ],
+    "ResourceAdjustment": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "ResourceAmount",
+                "value": {
+                  "typeName": "ResourceAmount",
+                  "typeParams": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "T",
+                      "value": {
+                        "typeName": "T"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "ResourcePercent",
+                "value": {
+                  "typeName": "ResourcePercent"
+                }
+              }
+            ]
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                ]
+              },
+              "name": "T"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceAmount": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "amount",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "T",
+                    "value": {
+                      "typeName": "T"
+                    }
+                  }
+                },
+                {
+                  "name": "percent",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "never",
+                    "value": "never"
+                  }
+                }
+              ]
+            }
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                ]
+              },
+              "name": "T"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceOverrides": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "instructions",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "writeBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "resourceFee",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourcePadding": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "instructions",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "writeBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "resourceFee",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourcePercent": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "amount",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "never",
+                    "value": "never"
+                  }
+                },
+                {
+                  "name": "percent",
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
     "RPCConfig": [
       {
         "declarationKind": "export",
@@ -195296,6 +199074,17 @@
             "value": {
               "properties": [
                 {
+                  "name": "resources",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "TransactionResources",
+                    "value": {
+                      "typeName": "TransactionResources"
+                    }
+                  }
+                },
+                {
                   "name": "fee",
                   "tsType": {
                     "kind": "union",
@@ -195496,6 +199285,38 @@
           }
         },
         "kind": "typeAlias"
+      }
+    ],
+    "TransactionResources": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "override",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceOverrides",
+                "value": {
+                  "typeName": "ResourceOverrides"
+                }
+              }
+            },
+            {
+              "name": "padding",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourcePadding",
+                "value": {
+                  "typeName": "ResourcePadding"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
       }
     ],
     "TransactionSource": [
@@ -235936,6 +239757,276 @@
         "kind": "typeAlias"
       }
     ],
+    "ResourceAdjustment": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "ResourceAmount",
+                "value": {
+                  "typeName": "ResourceAmount",
+                  "typeParams": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "T",
+                      "value": {
+                        "typeName": "T"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "ResourcePercent",
+                "value": {
+                  "typeName": "ResourcePercent"
+                }
+              }
+            ]
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                ]
+              },
+              "name": "T"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceAmount": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "amount",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "T",
+                    "value": {
+                      "typeName": "T"
+                    }
+                  }
+                },
+                {
+                  "name": "percent",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "never",
+                    "value": "never"
+                  }
+                }
+              ]
+            }
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                ]
+              },
+              "name": "T"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceOverrides": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "instructions",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "writeBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "resourceFee",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourcePadding": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "instructions",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "writeBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "resourceFee",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourcePercent": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "amount",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "never",
+                    "value": "never"
+                  }
+                },
+                {
+                  "name": "percent",
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
     "RPCConfig": [
       {
         "declarationKind": "export",
@@ -237444,6 +241535,17 @@
             "value": {
               "properties": [
                 {
+                  "name": "resources",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "TransactionResources",
+                    "value": {
+                      "typeName": "TransactionResources"
+                    }
+                  }
+                },
+                {
                   "name": "fee",
                   "tsType": {
                     "kind": "union",
@@ -237644,6 +241746,38 @@
           }
         },
         "kind": "typeAlias"
+      }
+    ],
+    "TransactionResources": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "override",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceOverrides",
+                "value": {
+                  "typeName": "ResourceOverrides"
+                }
+              }
+            },
+            {
+              "name": "padding",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourcePadding",
+                "value": {
+                  "typeName": "ResourcePadding"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
       }
     ],
     "TransactionSource": [
@@ -247630,6 +251764,276 @@
         "kind": "typeAlias"
       }
     ],
+    "ResourceAdjustment": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "ResourceAmount",
+                "value": {
+                  "typeName": "ResourceAmount",
+                  "typeParams": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "T",
+                      "value": {
+                        "typeName": "T"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "ResourcePercent",
+                "value": {
+                  "typeName": "ResourcePercent"
+                }
+              }
+            ]
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                ]
+              },
+              "name": "T"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceAmount": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "amount",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "T",
+                    "value": {
+                      "typeName": "T"
+                    }
+                  }
+                },
+                {
+                  "name": "percent",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "never",
+                    "value": "never"
+                  }
+                }
+              ]
+            }
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                ]
+              },
+              "name": "T"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceOverrides": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "instructions",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "writeBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "resourceFee",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourcePadding": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "instructions",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "writeBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "resourceFee",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourcePercent": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "amount",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "never",
+                    "value": "never"
+                  }
+                },
+                {
+                  "name": "percent",
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
     "RPCConfig": [
       {
         "declarationKind": "export",
@@ -249167,6 +253571,17 @@
             "value": {
               "properties": [
                 {
+                  "name": "resources",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "TransactionResources",
+                    "value": {
+                      "typeName": "TransactionResources"
+                    }
+                  }
+                },
+                {
                   "name": "fee",
                   "tsType": {
                     "kind": "union",
@@ -249367,6 +253782,38 @@
           }
         },
         "kind": "typeAlias"
+      }
+    ],
+    "TransactionResources": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "override",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceOverrides",
+                "value": {
+                  "typeName": "ResourceOverrides"
+                }
+              }
+            },
+            {
+              "name": "padding",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourcePadding",
+                "value": {
+                  "typeName": "ResourcePadding"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
       }
     ],
     "TransactionSource": [
@@ -258877,6 +263324,276 @@
         "kind": "typeAlias"
       }
     ],
+    "ResourceAdjustment": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "ResourceAmount",
+                "value": {
+                  "typeName": "ResourceAmount",
+                  "typeParams": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "T",
+                      "value": {
+                        "typeName": "T"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "ResourcePercent",
+                "value": {
+                  "typeName": "ResourcePercent"
+                }
+              }
+            ]
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                ]
+              },
+              "name": "T"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceAmount": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "amount",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "T",
+                    "value": {
+                      "typeName": "T"
+                    }
+                  }
+                },
+                {
+                  "name": "percent",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "never",
+                    "value": "never"
+                  }
+                }
+              ]
+            }
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  },
+                  {
+                    "kind": "keyword",
+                    "repr": "string",
+                    "value": "string"
+                  }
+                ]
+              },
+              "name": "T"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ResourceOverrides": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "instructions",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "writeBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "resourceFee",
+              "optional": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourcePadding": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "instructions",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "diskReadBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "writeBytes",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "resourceFee",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceAdjustment",
+                "value": {
+                  "typeName": "ResourceAdjustment",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ResourcePercent": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "amount",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "never",
+                    "value": "never"
+                  }
+                },
+                {
+                  "name": "percent",
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
     "RPCConfig": [
       {
         "declarationKind": "export",
@@ -260385,6 +265102,17 @@
             "value": {
               "properties": [
                 {
+                  "name": "resources",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "TransactionResources",
+                    "value": {
+                      "typeName": "TransactionResources"
+                    }
+                  }
+                },
+                {
                   "name": "fee",
                   "tsType": {
                     "kind": "union",
@@ -260585,6 +265313,38 @@
           }
         },
         "kind": "typeAlias"
+      }
+    ],
+    "TransactionResources": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "override",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourceOverrides",
+                "value": {
+                  "typeName": "ResourceOverrides"
+                }
+              }
+            },
+            {
+              "name": "padding",
+              "optional": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ResourcePadding",
+                "value": {
+                  "typeName": "ResourcePadding"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
       }
     ],
     "TransactionSource": [

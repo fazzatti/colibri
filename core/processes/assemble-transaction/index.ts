@@ -11,6 +11,8 @@ import type {
   AssembleTransactionOutput,
 } from "@/processes/assemble-transaction/types.ts";
 import * as ERROR from "@/processes/assemble-transaction/error.ts";
+import * as RESOURCE_ERROR from "@/resources/error.ts";
+import { applyResourceConfig } from "@/resources/policy.ts";
 
 import { assert } from "@/common/assert/assert.ts";
 import { isSmartContractTransaction } from "@/common/type-guards/is-smart-contract-transaction.ts";
@@ -109,7 +111,10 @@ export const assembleTransaction = async (
 
     return builtTransaction;
   } catch (e) {
-    if (e instanceof ERROR.AssembleTransactionError) {
+    if (
+      e instanceof ERROR.AssembleTransactionError ||
+      e instanceof RESOURCE_ERROR.ResourceError
+    ) {
       throw e;
     }
     throw new ERROR.UNEXPECTED_ERROR(input, e as Error);
@@ -128,6 +133,15 @@ const buildSorobanData = (
   }
 
   const { resourceFee } = input;
+  if (input.resources !== undefined) {
+    if (resourceFee !== undefined) {
+      throw new RESOURCE_ERROR.INVALID_CONFIGURATION(
+        "resources with legacy resourceFee",
+        resourceFee,
+      );
+    }
+    return applyResourceConfig(simulatedSorobanData, input.resources);
+  }
   if (resourceFee === undefined) {
     return simulatedSorobanData;
   }

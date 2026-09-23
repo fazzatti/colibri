@@ -285,8 +285,24 @@ per-operation base-fee behavior, or one explicit strategy:
 For a Soroban maximum, the configured value must leave at least the minimum
 network inclusion fee after the simulated resource fee is subtracted. Core
 performs that validation during assembly, when the actual resource value is
-known. If an application must override simulated Soroban data itself, that is a
-custom assembly concern rather than another `TransactionConfig` field.
+known. Optional `config.resources.override` replaces absolute instruction/byte
+budgets or the total resource fee; `config.resources.padding` adds fixed amounts
+or percentages after final simulation. Manual configuration intentionally
+changes only the selected fields: CPU/byte adjustments leave the resource fee
+unchanged, and callers choose any fee increase their workload needs. Use
+`getNetworkResourceSettings` and the pure `calculateResourcePadding` utility
+explicitly to fund added resource declarations and extra refundable headroom.
+The returned concrete padding can be inspected and applied once to the same
+simulation baseline. See the
+[resource guide](https://github.com/fazzatti/colibri/blob/main/docs/core/resources.md)
+for units, examples, limits and failure metadata. These APIs are also available
+from `@colibri/core/soroban-transaction`.
+
+String/base and exact-inclusion fee strategies preserve their inclusion bid and
+add the adjusted resource fee. A max instead fixes the total and uses the
+remainder for inclusion, failing if that remainder is below 100 stroops for a
+Soroban invocation. Separately choosing fee-bump sponsorship supplies an
+independent outer inclusion bid while preserving the inner resource data.
 
 ### Treat signers as scoped capabilities
 
