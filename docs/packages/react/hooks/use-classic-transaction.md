@@ -3,19 +3,22 @@
 Submit Classic operations through Colibri’s existing Classic pipeline.
 
 Import from `@colibri/react/transactions/classic`. Use under both
-`ColibriProvider` and `QueryClientProvider`; see [setup](../setup.md).
+[`ColibriProvider`](../setup.md) and [`QueryClientProvider`](../setup.md); see
+[setup](../setup.md).
 
 ## Parameters and result
 
 - `options?`: mutation callbacks/controls and an optional stable `pipeline`.
-- Call the returned mutation with Core’s `ClassicTransactionInput`.
+- Call the returned mutation with Core’s
+  [`ClassicTransactionInput`](../../../core/pipelines/classic-transaction.md).
 
 **Returns:** A mutation result containing the corresponding Core pipeline
 output.
 
 ## Example
 
-The parent prepares the operations and transaction configuration, including
+The parent prepares the operations and
+[transaction configuration](../../../core/transaction-config.md), including
 eligible signers. The click is the explicit submission boundary.
 
 <!-- deno-check @colibri/react -->

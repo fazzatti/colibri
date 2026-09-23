@@ -99,8 +99,8 @@ extension.reference; // string
 
 The decoder is application-provided and opt-in. A decoder failure is wrapped in
 an occurrence-specific Colibri error such as
-`TRANSFER_EXTENSION_DECODER_FAILED`; the event itself is still valid SEP-41
-data.
+[`TRANSFER_EXTENSION_DECODER_FAILED`](../../reference/errors/core-event.md); the
+event itself is still valid SEP-41 data.
 
 ## Creating Filters
 

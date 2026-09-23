@@ -2,6 +2,9 @@
 
 [Contract overview](../contract.md)
 
+Upload and deployment each use [TransactionConfig](../transaction-config.md) for
+the source, fees and [signers](../signer/README.md).
+
 ## Complete Testnet deployment
 
 Supply a compiled `hello_world.wasm` for a contract without constructor
@@ -15,6 +18,7 @@ source/build walkthroughs; no built-in fixture is shipped with Core.
 
 ```ts
 import {
+  calculateContractId,
   Contract,
   initializeWithFriendbot,
   LocalSigner,
@@ -38,13 +42,36 @@ const config = {
 };
 await contract.loadSpecFromWasm();
 await contract.uploadWasm(config); // First confirmed ledger transaction.
-await contract.deploy({ config }); // Second transaction creates the instance.
-console.log("Deployed contract", contract.getContractId());
+const salt = crypto.getRandomValues(new Uint8Array(32));
+const expectedId = calculateContractId(
+  networkConfig.networkPassphrase,
+  config.source,
+  salt,
+);
+await contract.deploy({ config, salt }); // Second transaction creates the instance.
+console.log("Expected", expectedId, "deployed", contract.getContractId());
 ```
 
 Each call gets the next source sequence through the pipeline. Do not run these
 dependent transactions concurrently. If your contract requires constructor
 arguments, supply its spec-defined names as shown below.
+
+## Deterministic deployment addresses
+
+[`calculateContractId`](https://jsr.io/@colibri/core/doc/~/calculateContractId)
+predicts an address locally from the network passphrase, deployer address and
+32-byte salt. The example above passes the same salt to `deploy`. Use the
+client's configured [network](../network.md) and
+[`config.source`](../transaction-config.md#properties) for that calculation. A
+different network, source or salt produces a different address; the Wasm hash
+and constructor arguments are not inputs to this address calculation.
+
+Persist your selected salt if another process needs to predict the same address.
+`Uint8Array` is convenient; other accepted binary representations follow the
+[deployment API](https://jsr.io/@colibri/core/doc/~/Contract.prototype.deploy).
+Omitting `salt` generates a fresh random one. Predicting an ID neither deploys
+nor reserves it, and repeating a successful deployment with the same inputs does
+not update the existing instance.
 
 ## Deployment Helpers
 

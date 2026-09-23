@@ -28,9 +28,11 @@ console.log(svg.length, png.length, src.slice(0, 30));
 All generation/rendering methods are synchronous. PNG bytes use `Uint8Array`;
 there is no Canvas, DOM, or Node Buffer requirement for generating an image.
 
-Only checksummed `G...` and `C...` addresses are supported. Secret keys, raw
-contract-ID bytes, malformed addresses and muxed addresses fail with
-`IdenticonCode.INVALID_PUBLIC_KEY` rather than being silently converted.
+Only checksummed [G-addresses](../../core/strkeys.md) and
+[C-addresses](contract-addresses.md) are supported. Secret keys, raw contract-ID
+bytes, malformed addresses and muxed addresses fail with
+[`IdenticonCode.INVALID_PUBLIC_KEY`](errors-and-compatibility.md) rather than
+being silently converted.
 
 ## Explicit presentation
 

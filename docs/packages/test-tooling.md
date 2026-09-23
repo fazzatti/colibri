@@ -1,8 +1,9 @@
 # Test Tooling
 
 `@colibri/test-tooling` provides `StellarTestLedger`, a Docker-backed Stellar
-Quickstart harness. It starts, reuses, inspects, stops, and removes ledger
-containers for local integration workflows.
+Quickstart harness. It [starts](test-tooling/quick-start.md),
+[reuses and stops](test-tooling/lifecycle.md) ledger containers for local
+integration workflows.
 
 ```sh
 deno add jsr:@colibri/test-tooling
@@ -28,3 +29,7 @@ observation, per-file journals, JSON/HTML artifacts and transaction profiling.
 Use `/recorder/deno` with Deno BDD or `/recorder/node` with Node's native test
 runner. Both share the same recorder settings and artifact/report formats;
 neither requires Docker.
+
+For a custom runner or an existing in-memory report, use
+[programmatic rendering and summaries](test-tooling/recorder.md#render-and-summarize-reports-programmatically)
+through the portable `/recorder/report` entrypoint.

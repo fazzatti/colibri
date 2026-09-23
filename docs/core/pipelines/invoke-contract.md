@@ -61,7 +61,8 @@ console.log(result.hash);
 console.log(result.returnValue);
 ```
 
-To cap the complete transaction fee, set `config.fee` to a maximum:
+To cap the complete transaction fee, set
+[`config.fee`](../transaction-config.md#fee-strategies) to a maximum:
 
 ```ts
 const config = {
@@ -82,4 +83,5 @@ fee modes.
 - state-changing contract methods
 - CAP-71 delegated custom-account authorization
 - flows where you want to attach plugins such as fee bump or channel accounts
-- lower-level orchestration beneath `Contract.invoke(...)`
+- lower-level orchestration beneath
+  [`Contract.invoke(...)`](../contract/invocation.md#invoke)

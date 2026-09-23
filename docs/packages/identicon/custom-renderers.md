@@ -15,8 +15,8 @@ const { matrix, color, hue } = generateIdenticon(
 
 `matrix[row][column]` is a boolean; `true` means a filled foreground cell.
 `color` holds integer `r`, `g`, and `b` channels. `hue` is between 0 and 1. The
-result is deeply frozen. The class also exposes readonly `matrix` and `color`
-getters.
+result is deeply frozen. The [Identicon class](rendering.md) also exposes
+readonly `matrix` and `color` getters.
 
 The result and class retain their existing `publicKey` property for API
 compatibility. It returns the supplied G-address or C-address; the name does not

@@ -21,9 +21,10 @@ console.log(signer.publicKey());
 
 `LocalSigner.fromKeypair(keypair, hideSecret = false)` is a convenience for
 applications that already hold a native Stellar SDK signing Keypair. Pass the
-returned signer to `TransactionConfig.signers`; raw keypairs are not accepted
-by the transaction configuration. Existing signer interfaces and pipelines are
-unchanged.
+returned signer to
+[`TransactionConfig.signers`](../transaction-config.md#signers); raw keypairs
+are not accepted by the [transaction configuration](../transaction-config.md).
+Existing signer interfaces and pipelines are unchanged.
 
 The factory borrows the Keypair without extracting or copying its secret. The
 adapter's default target is only its own public G-address. Add other targets
@@ -35,9 +36,10 @@ original Keypair. The caller retains responsibility for the original key's
 lifecycle. In contrast, signers created by `fromSecret()` and `generateRandom()`
 own their keys and retain best-effort zeroization on destruction.
 
-As with `fromSecret()`, `hideSecret` defaults to `false`. Passing `true` prevents
-access through the adapter's `secretKey()` method; it does not hide or modify the
-original Keypair. The adapter's JSON representation contains only its public key.
+As with `fromSecret()`, `hideSecret` defaults to `false`. Passing `true`
+prevents access through the adapter's `secretKey()` method; it does not hide or
+modify the original Keypair. The adapter's JSON representation contains only its
+public key.
 
 This complete example runs offline after installing Core and Stellar SDK:
 
@@ -55,11 +57,13 @@ console.log(signer.verifySignature(payload, signature));
 signer.destroy(); // The adapter is unusable; the caller's Keypair remains usable.
 ```
 
-A public-only Keypair fails at construction with `SIG_LOC_007`.
-`SIG_LOC_008` wraps an unexpected adaptation failure without retaining the
-supplied keypair in error metadata. `LocalSignerErrors` exports the error
-constructors for `instanceof` checks. An adapter used after destruction produces
-the existing LocalSigner lifecycle errors.
+A public-only Keypair fails at construction with
+[`SIG_LOC_007`](../../reference/errors/core-signer-local.md).
+[`SIG_LOC_008`](../../reference/errors/core-signer-local.md) wraps an unexpected
+adaptation failure without retaining the supplied keypair in error metadata.
+`LocalSignerErrors` exports the error constructors for `instanceof` checks. An
+adapter used after destruction produces the existing LocalSigner lifecycle
+errors.
 
 ### Generate Random
 
@@ -112,6 +116,16 @@ import { LocalSigner } from "@colibri/core";
 const signer = LocalSigner.fromSecret("S...");
 signer.addTarget("CABC..." as ContractId);
 ```
+
+[`getTargets()`](https://jsr.io/@colibri/core/doc/~/LocalSigner.prototype.getTargets)
+lists the configured targets;
+[`removeTarget(target)`](https://jsr.io/@colibri/core/doc/~/LocalSigner.prototype.removeTarget)
+removes an added target from subsequent `signsFor` selection. A `LocalSigner`
+cannot remove its own public key; that raises `CANNOT_REMOVE_MASTER_TARGET` in
+[the LocalSigner errors](../../reference/errors/core-signer-local.md). The other
+target-based [signer implementations](README.md) expose the same management
+operations. Changing this local routing list does not add or revoke an on-chain
+signer.
 
 ## Fee Bump Example
 

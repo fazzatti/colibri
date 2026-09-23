@@ -3,8 +3,9 @@
 Invoke a generated method with wallet-derived transaction authority, preserving
 explicit configuration overrides and the client's existing pipeline.
 
-Import from `@colibri/react/contracts/invoke`. Use under `ColibriQueryProvider`
-or both granular providers; see [setup](../setup.md).
+Import from `@colibri/react/contracts/invoke`. Use under
+[`ColibriQueryProvider`](../setup.md) or both granular providers; see
+[setup](../setup.md).
 
 ## Parameters and result
 
@@ -13,7 +14,8 @@ or both granular providers; see [setup](../setup.md).
 - `method`: the generated camelCase helper property.
 - `options?`: mutation callbacks and controls.
 - Call `mutate` or `mutateAsync` with the generated invocation arguments. Its
-  `config` is optional and accepts partial `TransactionConfig` overrides.
+  `config` is optional and accepts partial
+  [`TransactionConfig`](../../../core/transaction-config.md) overrides.
 
 **Returns:** A mutation result with inferred invocation arguments and output,
 including the generated decoded value and transaction metadata.

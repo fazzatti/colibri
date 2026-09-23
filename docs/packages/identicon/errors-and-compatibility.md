@@ -2,8 +2,10 @@
 
 All validation and PNG encoding failures use `IdenticonError`, a Colibri error
 with a distinct code per validation. Handle it with `instanceof IdenticonError`
-and inspect its `code`, such as `INVALID_SIZE` or `INVALID_BACKGROUND`. Failed
-encoder calls preserve their original cause in `meta?.cause`.
+and inspect its `code`, such as
+[`INVALID_SIZE`](../../reference/errors/identicon.md) or
+[`INVALID_BACKGROUND`](../../reference/errors/identicon.md). Failed encoder
+calls preserve their original cause in `meta?.cause`.
 
 Defaults follow the longstanding Lobstr reference implementation. This
 intentionally uses the equivalent of raw public-key bytes `[1, 15)`, not the

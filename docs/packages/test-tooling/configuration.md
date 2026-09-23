@@ -18,7 +18,7 @@ URL after startup, and stops and removes its container in `finally`.
 
 ## Docker Configuration
 
-`StellarTestLedger` resolves Docker in this order:
+[`StellarTestLedger`](../test-tooling.md) resolves Docker in this order:
 
 1. Explicit `dockerOptions`
 2. Explicit `dockerSocketPath`
@@ -132,10 +132,10 @@ The package standardizes its runtime failures with quickstart-specific error
 subclasses exported from the package root:
 
 - `INVALID_CONFIGURATION`
-- `DOCKER_CONFIGURATION_ERROR`
-- `CONTAINER_ERROR`
-- `IMAGE_ERROR`
-- `READINESS_ERROR`
+- [`DOCKER_CONFIGURATION_ERROR`](../../reference/errors/test-tooling-quickstart.md)
+- [`CONTAINER_ERROR`](../../reference/errors/test-tooling-quickstart.md)
+- [`IMAGE_ERROR`](../../reference/errors/test-tooling-quickstart.md)
+- [`READINESS_ERROR`](../../reference/errors/test-tooling-quickstart.md)
 
 These errors include stable codes, a source of
 `@colibri/test-tooling/quickstart`, and metadata with the original cause and

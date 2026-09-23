@@ -1,16 +1,19 @@
 # useBalance
 
-Read an exact XLM, Classic issued-asset or SEP-41 token balance.
+Read an exact XLM, Classic issued-asset or
+[SEP-41](../../../core/asset/sep-41-token-contract.md) token balance.
 
-Import from `@colibri/react/assets`. Use under both `ColibriProvider` and
-`QueryClientProvider`; see [setup](../setup.md).
+Import from `@colibri/react/assets`. Use under both
+[`ColibriProvider`](../setup.md) and [`QueryClientProvider`](../setup.md); see
+[setup](../setup.md).
 
 ## Parameters and result
 
 - `asset`: `{ kind: "xlm" }`, `{ kind: "classic", code, issuer }`, or
   `{ kind: "sep41", contractId }`.
-- `address`: G-address for Classic assets; G- or C-address for SEP-41;
-  `undefined` disables automatic fetching.
+- `address`: G-address for Classic assets; G- or C-address for
+  [SEP-41](../../../core/asset/sep-41-token-contract.md); `undefined` disables
+  automatic fetching.
 - `query?`: query controls.
 
 **Returns:** A query result containing
@@ -46,16 +49,19 @@ export function TokenBalance({ asset, address }: {
 
 ## Behavior
 
-Classic amounts use seven decimals; SEP-41 decimals come from the contract.
-SEP-41 includes SAC contracts as well as custom tokens. Classic paths read
-ledger entries; SEP-41 paths call the token client. Missing accounts/trustlines
-remain errors. Keep `raw` as bigint and format with exact arithmetic.
+Classic amounts use seven decimals;
+[SEP-41](../../../core/asset/sep-41-token-contract.md) decimals come from the
+contract. [SEP-41](../../../core/asset/sep-41-token-contract.md) includes SAC
+contracts as well as custom tokens. Classic paths read ledger entries;
+[SEP-41](../../../core/asset/sep-41-token-contract.md) paths call the token
+client. Missing accounts/trustlines remain errors. Keep `raw` as bigint and
+format with exact arithmetic.
 
-SEP-41 decimal precision is shared with `useTokenMetadata` in the same
-QueryClient for five minutes; the balance keeps its normal query freshness.
-After a known token upgrade, invalidate the scoped `token-decimals` query and
-refresh affected results; see
-[token precision caching](../queries.md#token-precision-caching).
+[SEP-41](../../../core/asset/sep-41-token-contract.md) decimal precision is
+shared with [`useTokenMetadata`](use-token-metadata.md) in the same QueryClient
+for five minutes; the balance keeps its normal query freshness. After a known
+token upgrade, invalidate the scoped `token-decimals` query and refresh affected
+results; see [token precision caching](../queries.md#token-precision-caching).
 
 ## See also
 

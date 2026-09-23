@@ -2,8 +2,9 @@
 
 `LedgerEntries` reads typed Stellar ledger entries through RPC. It is a
 current-state reader, not a historical transaction index. Use convenience
-methods for known entry kinds, branded key builders for generic reads, or
-executable resolution for contract code.
+[convenience methods](ledger-entries/reading.md#convenience-reads) for known
+entry kinds, [branded key builders](ledger-entries/keys.md) for generic reads,
+or [executable resolution](ledger-entries/contracts.md) for contract code.
 
 ## Guides
 

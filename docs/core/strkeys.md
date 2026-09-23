@@ -5,10 +5,10 @@ branded TypeScript types and two distinct levels of validation.
 
 ## Encoding and decoding
 
-Both `@colibri/core` and the lightweight `@colibri/core/strkey` entrypoint
-expose the same `StrKey` object. Its encode/decode helpers preserve the Stellar
-SDK's accepted arguments. Encoders return the corresponding Colibri prefix type;
-decoders return the SDK's byte representation.
+Both [`@colibri/core`](overview.md) and the lightweight `@colibri/core/strkey`
+entrypoint expose the same `StrKey` object. Its encode/decode helpers preserve
+the Stellar SDK's accepted arguments. Encoders return the corresponding Colibri
+prefix type; decoders return the SDK's byte representation.
 
 <!-- deno-check -->
 

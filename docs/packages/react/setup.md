@@ -55,7 +55,8 @@ export function App({ address }: AccountProps) {
 
 The supplied address must be an existing, funded Testnet account. An absent
 account or trustline is an error, not a fabricated zero balance. Raw amounts are
-`bigint`; Classic balances have seven decimals. SEP-41 precision comes from the
+`bigint`; Classic balances have seven decimals.
+[SEP-41](../../core/asset/sep-41-token-contract.md) precision comes from the
 contract. Format amounts with exact integer arithmetic before displaying them.
 
 ## Configuration lifetime
@@ -76,8 +77,10 @@ lifetime ends.
 
 Feature hooks use their own public subpaths. Query and mutation hooks need both
 providers. Connection, signer observation, session observation, RPC clients and
-event subscriptions need only `ColibriProvider`. `useContract` and
-`useIdenticon` need neither provider; they still follow React's rules of hooks.
+event subscriptions need only `ColibriProvider`.
+[`useContract`](hooks/use-contract.md) and
+[`useIdenticon`](hooks/use-identicon.md) need neither provider; they still
+follow React's rules of hooks.
 
 See [common workflows](convenience.md), [all hooks](hooks/README.md),
 [wallets and sessions](wallets-and-sessions.md), and

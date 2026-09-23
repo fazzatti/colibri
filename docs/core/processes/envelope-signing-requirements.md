@@ -22,7 +22,7 @@ const result = await envelopeSigningRequirements({
 
 ## Output
 
-Returns `SignatureRequirement[]`:
+Returns [`SignatureRequirement[]`](../authorization.md):
 
 ```typescript
 type SignatureRequirement = {

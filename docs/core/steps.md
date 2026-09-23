@@ -31,27 +31,28 @@ console.log(steps.BUILD_TRANSACTION_STEP_ID);
 Factories return fresh step instances, which keeps pipelines and tests isolated
 from each other.
 
-Step declarations use Convee 2's argument tuples. For a wrapper around a process,
-the input generic is `Parameters<typeof process>`, not its first element
-`Parameters<typeof process>[0]`. This preserves union-typed inputs and the exact
-function signature. It does **not** add an array to the call: a process that takes
-one input object still runs as `executeStep(input)`, not `executeStep([input])`.
+Step declarations use Convee 2's argument tuples. For a wrapper around a
+process, the input generic is `Parameters<typeof process>`, not its first
+element `Parameters<typeof process>[0]`. This preserves union-typed inputs and
+the exact function signature. It does **not** add an array to the call: a
+process that takes one input object still runs as `executeStep(input)`, not
+`executeStep([input])`.
 
 ## Available Steps
 
-| Factory                                      | Id                                          |
-| -------------------------------------------- | ------------------------------------------- |
-| `createBuildTransactionStep()`               | `BUILD_TRANSACTION_STEP_ID`                 |
-| `createSimulateTransactionStep()`            | `SIMULATE_TRANSACTION_STEP_ID`              |
-| `createSignAuthEntriesStep()`                | `SIGN_AUTH_ENTRIES_STEP_ID`                 |
-| `createAssembleForEnforcementStep()`         | `ASSEMBLE_FOR_ENFORCEMENT_STEP_ID`          |
-| `createEnforceSimulationStep()`              | `ENFORCE_SIMULATION_STEP_ID`                |
-| `createAssembleTransactionStep()`            | `ASSEMBLE_TRANSACTION_STEP_ID`              |
-| `createEnvelopeSigningRequirementsStep()`    | `ENVELOPE_SIGNING_REQUIREMENTS_STEP_ID`     |
-| `createSignEnvelopeStep()`                   | `SIGN_ENVELOPE_STEP_ID`                     |
-| `createSendTransactionStep()`                | `SEND_TRANSACTION_STEP_ID`                  |
-| `createParseClassicTransactionOutcomeStep()` | `PARSE_CLASSIC_TRANSACTION_OUTCOME_STEP_ID` |
-| `createWrapFeeBumpStep()`                    | `WRAP_FEE_BUMP_STEP_ID`                     |
+| Factory                                      | Id                                          | Underlying process                                                               |
+| -------------------------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------- |
+| `createBuildTransactionStep()`               | `BUILD_TRANSACTION_STEP_ID`                 | [BuildTransaction](processes/build-transaction.md)                               |
+| `createSimulateTransactionStep()`            | `SIMULATE_TRANSACTION_STEP_ID`              | [SimulateTransaction](processes/simulate-transaction.md)                         |
+| `createSignAuthEntriesStep()`                | `SIGN_AUTH_ENTRIES_STEP_ID`                 | [SignAuthEntries](processes/sign-auth-entries.md)                                |
+| `createAssembleForEnforcementStep()`         | `ASSEMBLE_FOR_ENFORCEMENT_STEP_ID`          | [AssembleForEnforcement](processes/assemble-for-enforcement.md)                  |
+| `createEnforceSimulationStep()`              | `ENFORCE_SIMULATION_STEP_ID`                | [EnforceSimulation](processes/enforce-simulation.md)                             |
+| `createAssembleTransactionStep()`            | `ASSEMBLE_TRANSACTION_STEP_ID`              | [AssembleTransaction](processes/assemble-transaction.md)                         |
+| `createEnvelopeSigningRequirementsStep()`    | `ENVELOPE_SIGNING_REQUIREMENTS_STEP_ID`     | [EnvelopeSigningRequirements](processes/envelope-signing-requirements.md)        |
+| `createSignEnvelopeStep()`                   | `SIGN_ENVELOPE_STEP_ID`                     | [SignEnvelope](processes/sign-envelope.md)                                       |
+| `createSendTransactionStep()`                | `SEND_TRANSACTION_STEP_ID`                  | [SendTransaction](processes/send-transaction.md)                                 |
+| `createParseClassicTransactionOutcomeStep()` | `PARSE_CLASSIC_TRANSACTION_OUTCOME_STEP_ID` | [ParseClassicTransactionOutcome](processes/parse-classic-transaction-outcome.md) |
+| `createWrapFeeBumpStep()`                    | `WRAP_FEE_BUMP_STEP_ID`                     | [WrapFeeBump](processes/wrap-fee-bump.md)                                        |
 
 ## When to Use Steps
 

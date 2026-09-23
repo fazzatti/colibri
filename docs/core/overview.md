@@ -38,6 +38,8 @@ automatically execute the surrounding validation, signing, or submission flow.
   separate from either transaction authorization path.
 - [Transaction config](transaction-config.md) — sources, fee modes, signers,
   timebounds, and simulation-related parameters.
+- [Transaction resources](resources.md) — final simulation overrides, padding,
+  network settings and explicit fee calculation.
 - [Assets](asset/README.md) — native account actions, canonical identifiers, and
   SAC/SEP-41 contract clients.
 - [SDEX](sdex.md) — known-offer lifecycle and exact, unit-labelled price

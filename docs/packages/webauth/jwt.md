@@ -45,5 +45,6 @@ Shared failures use `WebAuthCode`; protocol validation and lifecycle failures
 use `Sep10Code` or `Sep45Code`.
 
 The [complete WebAuth code reference](../../reference/errors/webauth.md) covers
-all three families. Discovery can also expose Core's SEP-1 failures. An unknown
-error branch is still useful for application-provided signing callbacks.
+all three families. Discovery can also expose Core's [SEP-1](../../core/sep1.md)
+failures. An unknown error branch is still useful for application-provided
+signing callbacks.

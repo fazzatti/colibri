@@ -22,19 +22,19 @@ const result = await wrapFeeBump({
 
 ## Input
 
-| Property            | Type            | Required | Description               |
-| ------------------- | --------------- | -------- | ------------------------- |
-| `transaction`       | `Transaction`   | Yes      | Inner transaction to wrap |
-| `config`            | `FeeBumpConfig` | Yes      | Fee bump configuration    |
-| `networkPassphrase` | `string`        | Yes      | Network passphrase        |
+| Property            | Type                                                                | Required | Description               |
+| ------------------- | ------------------------------------------------------------------- | -------- | ------------------------- |
+| `transaction`       | `Transaction`                                                       | Yes      | Inner transaction to wrap |
+| `config`            | [`FeeBumpConfig`](../../packages/plugins/fee-bump.md#configuration) | Yes      | Fee bump configuration    |
+| `networkPassphrase` | `string`                                                            | Yes      | Network passphrase        |
 
 ### FeeBumpConfig
 
-| Property  | Type                                             | Description                                                        |
-| --------- | ------------------------------------------------ | ------------------------------------------------------------------ |
-| `source`  | `TransactionSource`                              | Fee bump source as a G-address or M-address                        |
-| `fee`     | `BaseFee`                                        | Outer inclusion bid per operation, excluding Soroban resource fees |
-| `signers` | `(EnvelopeSigner \| PreAuthTransactionSigner)[]` | Signers that authorize or pre-authorize the outer envelope         |
+| Property  | Type                                                          | Description                                                        |
+| --------- | ------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `source`  | [`TransactionSource`](../transaction-config.md#muxed-sources) | Fee bump source as a G-address or M-address                        |
+| `fee`     | [`BaseFee`](../transaction-config.md#fee-strategies)          | Outer inclusion bid per operation, excluding Soroban resource fees |
+| `signers` | `(EnvelopeSigner \| PreAuthTransactionSigner)[]`              | Signers that authorize or pre-authorize the outer envelope         |
 
 ## Output
 
@@ -45,8 +45,8 @@ Returns a `FeeBumpTransaction` wrapping the inner transaction.
 ### Validations
 
 1. **Validates required arguments** — Ensures `transaction`,
-   `networkPassphrase`, `config`, `config.source`, and `config.fee` are all
-   present
+   `networkPassphrase`, `config`, `config.source`, and
+   [`config.fee`](../transaction-config.md#fee-strategies) are all present
 2. **Verifies not already a fee bump** — The input transaction cannot already be
    a fee bump transaction (no double-wrapping)
 3. **Verifies is a valid transaction** — Ensures the input is a proper

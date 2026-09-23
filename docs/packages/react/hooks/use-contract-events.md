@@ -2,8 +2,8 @@
 
 Observe an application-owned, shared contract-event stream.
 
-Import from `@colibri/react/events`. Requires `ColibriProvider`; see
-[setup](../setup.md). No QueryClient is needed for this hook.
+Import from `@colibri/react/events`. Requires [`ColibriProvider`](../setup.md);
+see [setup](../setup.md). No QueryClient is needed for this hook.
 
 ## Parameters and result
 

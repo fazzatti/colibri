@@ -131,8 +131,8 @@ correctness.
 
 ## Use the `Contract` conveniences
 
-When the Wasm is already attached to a `Contract`, the same operations are
-available without passing the bytes repeatedly:
+When the Wasm is already attached to a [`Contract`](../contract.md), the same
+operations are available without passing the bytes repeatedly:
 
 ```ts
 import { Contract, ContractStandards, NetworkConfig } from "@colibri/core";
@@ -158,9 +158,9 @@ const standards = contract.inspectStandards([
 ```
 
 These operations require local Wasm. A client configured from a contract ID,
-Wasm hash, or external executable reference can call `loadSpecFromNetwork()`
-first; that method resolves and stores the current network Wasm as well as its
-specification.
+Wasm hash, or external executable reference can call
+[`loadSpecFromNetwork()`](deployment.md#loadspecfromnetwork) first; that method
+resolves and stores the current network Wasm as well as its specification.
 
 ## Bundled interface providers
 
@@ -206,10 +206,11 @@ does not add interfaces for standards that define only behavior, metadata,
 transport, or discovery rules.
 
 When one standard depends on another, inspect both providers explicitly. For
-example, SEP-56 requires the vault itself to implement SEP-41, so a complete
-structural assessment supplies both `SEP56.latest` and `SEP41.latest`. Colibri
-does not silently merge dependent interfaces because each SEP has an independent
-claim and version boundary.
+example, SEP-56 requires the vault itself to implement
+[SEP-41](../asset/sep-41-token-contract.md), so a complete structural assessment
+supplies both `SEP56.latest` and `SEP41.latest`. Colibri does not silently merge
+dependent interfaces because each SEP has an independent claim and version
+boundary.
 
 ## Failure behavior
 

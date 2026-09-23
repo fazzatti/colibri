@@ -1,8 +1,8 @@
 # Create a custom streamer
 
-Use `RPCStreamer<T>` for application-specific results. The engine owns
-lifecycle, live-range checks, and routing. Your ingestor owns fetching,
-pagination, filtering, callback delivery, and cursor progress.
+Use [`RPCStreamer<T>`](../rpc-streamer.md) for application-specific results. The
+engine owns lifecycle, live-range checks, and routing. Your ingestor owns
+fetching, pagination, filtering, callback delivery, and cursor progress.
 
 This complete live-only example extracts a ledger summary. Install packages from
 the [overview](../rpc-streamer.md) and run `deno run --allow-net summaries.ts`.
@@ -59,16 +59,17 @@ await streamer.startLive(console.log, {
 });
 ```
 
-`getLedgers` is the SDK's public method. `Ledger.fromEntry()` accepts its native
-decoded entries as well as raw encoded entries. Prefer the built-in factory when
-no projection is needed.
+`getLedgers` is the SDK's public method.
+[`Ledger.fromEntry()`](../../core/ledger-parser.md) accepts its native decoded
+entries as well as raw encoded entries. Prefer the built-in factory when no
+projection is needed.
 
 This summary reads only ledger identity, so it needs no network context. For
 transaction envelopes or operations, use
-`Ledger.fromEntry(entry, networkConfig)` or pass the RPC's network passphrase.
-The built-in ledger, transaction, and operation factories handle this using
-configuration or `rpc.getNetwork()`; custom ingestors must supply that context
-themselves.
+[`Ledger.fromEntry(entry, networkConfig)`](../../core/ledger-parser.md) or pass
+the RPC's network passphrase. The built-in ledger, transaction, and operation
+factories handle this using configuration or `rpc.getNetwork()`; custom
+ingestors must supply that context themselves.
 
 ## Ingestor contracts
 
@@ -91,4 +92,5 @@ await `onCheckpoint` at `ledger % (checkpointInterval ?? 100) === 0` instead.
 Use `context.signal` to interrupt custom pacing waits and check `isRunning()`
 between callbacks. Cancellation of in-flight SDK requests is not implied.
 Live-only configuration is supported; attempting archive mode without its
-ingestor fails with `MISSING_ARCHIVE_INGESTOR`.
+ingestor fails with
+[`MISSING_ARCHIVE_INGESTOR`](../../reference/errors/rpc-streamer.md).

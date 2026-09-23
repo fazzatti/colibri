@@ -4,7 +4,8 @@
 
 [SEP-33](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0033.md)
 defines account identicons for G-addresses. Contract-address support is a
-Colibri extension, not a standardized SEP-33 contract variant.[^contracts]
+Colibri extension, not a standardized [SEP-33](../identicon.md) contract
+variant.[^contracts]
 
 This complete script uses a checksummed C-address from SEP-23's test vectors. It
 generates an image locally and does not require a deployed contract:

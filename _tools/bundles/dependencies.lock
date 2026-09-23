@@ -3002,7 +3002,7 @@
           "npm:@stellar/stellar-sdk@^17.0.1"
         ]
       },
-      "jsr:@colibri/core@1.4.0": {},
+      "jsr:@colibri/core@1.4.1": {},
       "jsr:@colibri/identicon@1.2.0": {
         "dependencies": [
           "jsr:@colibri/core@^1.1.0",

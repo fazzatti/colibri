@@ -30,10 +30,11 @@ export function Avatar({ address }: { address?: string }) {
 ## Behavior
 
 No RPC request or PNG encoder is needed. Invalid addresses/options throw the
-renderer’s validation errors. G-address rendering follows Colibri’s SEP-33
-compatibility policy; C-address rendering is a Colibri extension. Icons can
-collide and do not prove identity. `AccountIdenticon` is the optional unstyled
-component alternative; see [Identicons](../../identicon.md).
+renderer’s validation errors. G-address rendering follows Colibri’s
+[SEP-33](../../identicon.md) compatibility policy; C-address rendering is a
+Colibri extension. Icons can collide and do not prove identity.
+`AccountIdenticon` is the optional unstyled component alternative; see
+[Identicons](../../identicon.md).
 
 ## See also
 

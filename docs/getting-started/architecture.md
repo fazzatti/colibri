@@ -7,8 +7,11 @@ extensions** so each layer stays composable.
 
 ### Processes
 
-Processes are plain functions such as `buildTransaction`, `simulateTransaction`,
-`signEnvelope`, and `sendTransaction`.
+Processes are plain functions such as
+[`buildTransaction`](../core/processes/build-transaction.md),
+[`simulateTransaction`](../core/processes/simulate-transaction.md),
+[`signEnvelope`](../core/processes/sign-envelope.md), and
+[`sendTransaction`](../core/processes/send-transaction.md).
 
 - one job each
 - typed input/output
@@ -22,7 +25,8 @@ Use them directly when you want isolated behavior or your own orchestration.
 Steps are thin [`convee`](https://jsr.io/@fifo/convee) wrappers around
 processes.
 
-- expose stable ids such as `steps.SEND_TRANSACTION_STEP_ID`
+- expose stable ids such as
+  [`steps.SEND_TRANSACTION_STEP_ID`](../core/steps.md#available-steps)
 - define plugin targets
 - keep orchestration concerns out of the process layer
 
@@ -50,9 +54,9 @@ activate only when delegated credentials require CAP-71 enforcement.
 
 Colibri ships factory functions for the common flows:
 
-- `createInvokeContractPipeline(...)`
-- `createReadFromContractPipeline(...)`
-- `createClassicTransactionPipeline(...)`
+- [`createInvokeContractPipeline(...)`](../core/pipelines/invoke-contract.md)
+- [`createReadFromContractPipeline(...)`](../core/pipelines/read-from-contract.md)
+- [`createClassicTransactionPipeline(...)`](../core/pipelines/classic-transaction.md)
 
 Each one also exports a stable `*_PIPELINE_ID` constant.
 
@@ -95,10 +99,14 @@ sac.contract.invokePipe.use(plugin);
 
 Outside the orchestration layer, Colibri also exposes reusable domain logic:
 
-- `address` for normalization and muxed-account handling
-- `auth` for authorization and threshold rules
-- `network` for validated network configuration
-- `signer` for shared signer contracts and implementations
+- [`address`](../core/address.md) for normalization and muxed-account handling
+- [`auth`](../core/authorization.md) for authorization and threshold rules
+- [`network`](../core/network.md) for validated network configuration
+- [`signer`](../core/signer/README.md) for shared signer contracts and
+  implementations
+
+Write flows share [TransactionConfig](../core/transaction-config.md); high-level
+clients pass it to their owned pipelines.
 
 ## Type Safety
 
@@ -119,7 +127,8 @@ if (StrKey.isEd25519PublicKey(input)) {
 
 Core-owned failures use typed errors with stable codes and sources. Network,
 application callback, and plugin errors may still propagate as unknown values;
-RPC Streamer has its own error base. Keep an unknown-error branch:
+[RPC Streamer](../packages/rpc-streamer.md) has its own error base. Keep an
+unknown-error branch:
 
 ```ts
 import { ColibriError } from "@colibri/core";

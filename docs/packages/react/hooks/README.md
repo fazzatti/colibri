@@ -4,9 +4,9 @@ Each public React hook has its own reference below: purpose, parameters, result,
 short TSX example and important lifecycle behavior. Start with
 [setup and providers](../setup.md) if this is your first Colibri component.
 
-`ColibriQueryProvider` supplies both providers required by query and mutation
-hooks. See [common workflows](../convenience.md) for one complete provider and
-wallet setup.
+[`ColibriQueryProvider`](../setup.md) supplies both providers required by query
+and mutation hooks. See [common workflows](../convenience.md) for one complete
+provider and wallet setup.
 
 Examples are complete components with application inputs supplied as props. They
 assume the providers stated on each page are mounted above the component. Keep
@@ -57,9 +57,10 @@ shared controls, invalidation and server rendering.
 ## Assets
 
 - [useBalance](use-balance.md): Read an exact XLM, Classic issued-asset or
-  SEP-41 token balance.
-- [useTokenMetadata](use-token-metadata.md): Read a deployed SEP-41 contract’s
-  name, symbol and decimal precision.
+  [SEP-41](../../../core/asset/sep-41-token-contract.md) token balance.
+- [useTokenMetadata](use-token-metadata.md): Read a deployed
+  [SEP-41](../../../core/asset/sep-41-token-contract.md) contract’s name, symbol
+  and decimal precision.
 
 ## Contract instances
 
@@ -69,7 +70,8 @@ shared controls, invalidation and server rendering.
 ## Contract reads
 
 - [useContractRead](use-contract-read.md): Query a generated client’s typed
-  method helper through its existing read pipeline.
+  method helper through its existing
+  [read pipeline](../../../core/pipelines/read-from-contract.md).
 - [useContractReadSpec](use-contract-read-spec.md): Simulate a spec-described
   method without constructing a full Contract client.
 
@@ -110,7 +112,8 @@ shared controls, invalidation and server rendering.
 
 - [useSigners](use-signers.md): Read the connected wallet’s explicit, guarded
   signing capabilities.
-- [useSignMessage](use-sign-message.md): Request a SEP-53 signature from the
+- [useSignMessage](use-sign-message.md): Request a
+  [SEP-53](../../../core/signer/message-signing.md) signature from the
   connection’s optional message signer.
 
 ## WebAuth and sessions
@@ -123,8 +126,8 @@ shared controls, invalidation and server rendering.
 
 ## SEP-1 discovery
 
-- [useStellarToml](use-stellar-toml.md): Fetch and validate a domain’s SEP-1
-  stellar.toml discovery document.
+- [useStellarToml](use-stellar-toml.md): Fetch and validate a domain’s
+  [SEP-1](../../../core/sep1.md) stellar.toml discovery document.
 
 ## Identicons
 

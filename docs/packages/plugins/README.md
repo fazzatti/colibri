@@ -15,15 +15,21 @@ Plugins are useful when you want to add behavior such as:
 
 ## Available Plugins
 
-| Plugin                                  | Description                                                   |
-| --------------------------------------- | ------------------------------------------------------------- |
-| [Fee Bump](fee-bump.md)                 | Wrap outgoing transactions in a fee-bump envelope             |
-| [SEP-29](sep29.md) | Reject missing required memos using current RPC account-data entries |
-| [Channel Accounts](channel-accounts.md) | Reuse sponsored channel accounts across classic/invoke writes |
+| Plugin                                  | Description                                                          |
+| --------------------------------------- | -------------------------------------------------------------------- |
+| [Fee Bump](fee-bump.md)                 | Wrap outgoing transactions in a fee-bump envelope                    |
+| [SEP-29](sep29.md)                      | Reject missing required memos using current RPC account-data entries |
+| [Channel Accounts](channel-accounts.md) | Reuse sponsored channel accounts across classic/invoke writes        |
 
-`@colibri/core` also ships core plugins that do not require separate package
-installation. See [Core Plugins](../../core/plugins/README.md) for built-in
-extension points such as the contract error matcher.
+[`@colibri/core`](../../core/overview.md) also ships core plugins that do not
+require separate package installation. See
+[Core Plugins](../../core/plugins/README.md) for built-in extension points such
+as the contract error matcher.
+
+The example combines a
+[classic pipeline](../../core/pipelines/classic-transaction.md),
+[TransactionConfig](../../core/transaction-config.md) for the inner transaction,
+and the [fee-bump configuration](fee-bump.md#configuration) for its sponsor.
 
 ## Using A Plugin
 
@@ -49,7 +55,7 @@ invokeWithSponsor.use(
 ## Creating Custom Plugins
 
 Custom plugins are built with `convee` and target stable step ids from
-`@colibri/core`:
+[`@colibri/core`](../../core/overview.md):
 
 ```ts
 import { plugin } from "convee";

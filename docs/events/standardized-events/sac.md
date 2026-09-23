@@ -15,7 +15,8 @@ for muxed account support.
 
 ## Key Difference from SEP-41
 
-SAC events include the **SEP-11 asset string** as a topic:
+SAC events include the **[SEP-11](../../core/asset/sep-11.md) asset string** as
+a topic:
 
 ```
 Topics: ["transfer", from, to, "USDC:GABC..."]

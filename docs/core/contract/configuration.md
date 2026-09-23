@@ -2,6 +2,10 @@
 
 [Contract overview](../contract.md)
 
+Pass a [NetworkConfig](../network.md) when constructing the client. Each write
+supplies its own [TransactionConfig](../transaction-config.md); client
+construction and transaction configuration have separate lifetimes.
+
 ## Creating A Contract Instance
 
 ```ts
@@ -23,8 +27,8 @@ Other construction shapes are also supported:
 - `wasm` when you have local contract bytes
 - `wasmHash` when the wasm is already uploaded
 - `externalRef` for a CAP-85 owner/tag mapping that selects the current wasm
-- `plugins` when you intentionally want to attach plugins to the owned read or
-  invoke pipelines during construction
+- [`plugins`](plugins.md) when you intentionally want to attach plugins to the
+  owned read or invoke pipelines during construction
 
 These executable sources are mutually exclusive. Use an external reference when
 the contract should follow a mapping controlled by another contract:
@@ -43,7 +47,8 @@ const contract = new Contract({
 
 The owner and tag identify a protocol-defined persistent ledger entry. Colibri
 does not prescribe how the owner contract manages that entry; applications can
-invoke their own manager contract through the normal `Contract` API.
+invoke their own manager contract through the normal
+[`Contract`](../contract.md) API.
 
 ## Related Types
 
@@ -74,10 +79,12 @@ successful network load. `observedAtLedger` is the code-read RPC ledger;
 `instance` and `reference` retain their separate observations. These are not an
 atomic snapshot of the network, nor a guarantee that an upgradeable reference
 still points to the same code. Refresh is explicit, never automatic before
-signing. `getContractCodeLedgerEntry()` is a read and does not refresh client
-state. After a successful external-reference load, `getWasmHash()` exposes the
-resolved immutable hash; `getExternalRef()` still describes the configured
-deployment target.
+signing. [`getContractCodeLedgerEntry()`](../ledger-entries/contracts.md) is a
+read and does not refresh client state. After a successful external-reference
+load, `getWasmHash()` exposes the resolved immutable hash; `getExternalRef()`
+still describes the configured deployment target.
 
-- `ContractId` is the branded string type used for Soroban contract ids
-- `TransactionConfig` is the shared write-transaction config shape
+- [`ContractId`](../strkeys.md) is the branded string type used for Soroban
+  contract ids
+- [`TransactionConfig`](../transaction-config.md) is the shared
+  write-transaction config shape

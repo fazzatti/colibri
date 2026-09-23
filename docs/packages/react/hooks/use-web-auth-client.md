@@ -2,8 +2,9 @@
 
 Discover a unified SEP-10/SEP-45 WebAuth client for a service domain.
 
-Import from `@colibri/react/webauth`. Use under both `ColibriProvider` and
-`QueryClientProvider`; see [setup](../setup.md).
+Import from `@colibri/react/webauth`. Use under both
+[`ColibriProvider`](../setup.md) and [`QueryClientProvider`](../setup.md); see
+[setup](../setup.md).
 
 ## Parameters and result
 
@@ -13,7 +14,8 @@ Import from `@colibri/react/webauth`. Use under both `ColibriProvider` and
 - `query?`: query controls.
 - `scope?`: cache discriminator; defaults to `"default"`.
 
-**Returns:** A query result containing `WebAuthClient`.
+**Returns:** A query result containing
+[`WebAuthClient`](../../webauth/discovery.md).
 
 ## Example
 
@@ -34,10 +36,10 @@ export function AuthService({ domain }: { domain?: string }) {
 
 ## Behavior
 
-Discovery uses SEP-1 and the provider network. It does not authenticate the
-user. Use a distinct scope for custom fetchers or discovery policies. Once
-discovered, create one application-owned session and authenticate explicitly;
-see [wallets and sessions](../wallets-and-sessions.md#webauth).
+Discovery uses [SEP-1](../../../core/sep1.md) and the provider network. It does
+not authenticate the user. Use a distinct scope for custom fetchers or discovery
+policies. Once discovered, create one application-owned session and authenticate
+explicitly; see [wallets and sessions](../wallets-and-sessions.md#webauth).
 
 ## See also
 

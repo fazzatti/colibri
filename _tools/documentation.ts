@@ -1,5 +1,6 @@
 /** Repository-only GitBook reference generation and validation. */
 import ts from "npm:typescript@5.9.3";
+import { marked, type Token } from "npm:marked@17.0.1";
 import { dirname, relative, resolve } from "node:path";
 import { readPackageInventory } from "./package-inventory.ts";
 
@@ -8,6 +9,39 @@ const inventory = await readPackageInventory(root);
 const packages = inventory.map((pkg) => pkg.root).sort();
 const write = Deno.args.includes("--write");
 const failures: string[] = [];
+
+// Navigation examples and commented-out links are not reader-facing routes.
+function proseOnly(content: string): string {
+  let fence: { character: string; length: number } | undefined;
+  return content.replace(/<!--[\s\S]*?-->/g, "").split("\n").map((line) => {
+    const marker = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+    if (marker) {
+      if (!fence) {
+        fence = { character: marker[1][0], length: marker[1].length };
+      } else if (
+        marker[1][0] === fence.character &&
+        marker[1].length >= fence.length && !marker[2].trim()
+      ) {
+        fence = undefined;
+      }
+      return "";
+    }
+    return fence ? "" : line;
+  }).join("\n");
+}
+
+function linkTargets(
+  tokens: Token[],
+  kind: "link" | "image" = "link",
+): string[] {
+  const targets: string[] = [];
+  // Resolve reference definitions in the whole document. Code, comments and
+  // unused definitions are not links; titles and escaped destinations are.
+  marked.walkTokens(tokens, (token) => {
+    if (token.type === kind) targets.push(token.href);
+  });
+  return targets;
+}
 
 async function files(directory: string): Promise<string[]> {
   const result: string[] = [];
@@ -251,9 +285,18 @@ const docs = (await files(resolve(root, "docs"))).filter((p) =>
   p.endsWith(".md")
 );
 const summary = await Deno.readTextFile(resolve(root, "docs/SUMMARY.md"));
+const summaryTokens = marked.lexer(summary);
+const summaryTargets = new Set(
+  linkTargets(summaryTokens).map((target) =>
+    decodeURIComponent(target.split("#")[0])
+  ),
+);
+const markdown = new Map<string, Token[]>();
 const anchors = new Map<string, Set<string>>();
 for (const file of docs) {
-  const text = (await Deno.readTextFile(file)).replace(/```[\s\S]*?```/g, "");
+  const content = await Deno.readTextFile(file);
+  markdown.set(file, marked.lexer(content));
+  const text = proseOnly(content);
   const ids = new Set<string>();
   for (const heading of text.matchAll(/^#{1,6}\s+(.+)$/gm)) {
     const base = heading[1].toLowerCase().replace(/[^\p{L}\p{N}_\s-]/gu, "")
@@ -302,17 +345,22 @@ for (const file of exampleDocuments) {
     }
   }
 }
+const contentLinks = new Map<string, Set<string>>();
 for (const file of docs) {
   if (file.endsWith("AGENTS.md")) continue;
-  const content = await Deno.readTextFile(file);
-  const prose = content.replace(/```[\s\S]*?```/g, "");
-  for (const match of prose.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)) {
-    const target = match[1].replace(/^<|>$/g, "");
+  const tokens = markdown.get(file)!;
+  const links = linkTargets(tokens);
+  const linkedPages = new Set<string>();
+  contentLinks.set(file, linkedPages);
+  for (const target of [...links, ...linkTargets(tokens, "image")]) {
     if (/^(?:https?:|mailto:)/.test(target)) continue;
     const [targetFile, fragment] = target.split("#");
     const path = targetFile
       ? resolve(dirname(file), decodeURIComponent(targetFile))
       : file;
+    if (links.includes(target) && path !== file && docs.includes(path)) {
+      linkedPages.add(path);
+    }
     if (!path.startsWith(`${root}/docs/`)) {
       failures.push(
         `Link leaves GitBook: ${relative(root, file)} -> ${target}`,
@@ -332,8 +380,47 @@ for (const file of docs) {
     }
   }
   const path = relative(resolve(root, "docs"), file);
-  if (path !== "SUMMARY.md" && !summary.includes(`](${path})`)) {
+  if (path !== "SUMMARY.md" && !summaryTargets.has(path)) {
     failures.push(`Page absent from SUMMARY.md: ${path}`);
+  }
+}
+
+// SUMMARY is the sidebar, not a substitute for links in the pages themselves.
+const docsRoot = resolve(root, "docs");
+function checkChildLinks(tokens: Token[], parent?: string): void {
+  for (const token of tokens) {
+    if (token.type !== "list") continue;
+    for (const item of token.items) {
+      const target = linkTargets(
+        item.tokens.filter((t: Token) => t.type !== "list"),
+      )[0];
+      const path = target && !/^(?:https?:|mailto:)/.test(target)
+        ? resolve(docsRoot, decodeURIComponent(target.split("#")[0]))
+        : undefined;
+      if (parent && path && !contentLinks.get(parent)?.has(path)) {
+        failures.push(
+          `Missing child guide link: ${relative(docsRoot, parent)} -> ${
+            relative(docsRoot, path)
+          }`,
+        );
+      }
+      checkChildLinks(item.tokens, path ?? parent);
+    }
+  }
+}
+checkChildLinks(summaryTokens);
+const reached = new Set<string>();
+for (const [file, targets] of contentLinks) {
+  if (file !== summaryPath) {
+    for (const target of targets) reached.add(target);
+  }
+}
+for (const file of docs) {
+  if (
+    file !== summaryPath && file !== resolve(docsRoot, "README.md") &&
+    !reached.has(file)
+  ) {
+    failures.push(`Page linked only from sidebar: ${relative(docsRoot, file)}`);
   }
 }
 

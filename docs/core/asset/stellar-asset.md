@@ -1,26 +1,26 @@
 # Stellar assets
 
 `StellarAsset` binds a native Stellar SDK `Asset` to a network and an existing
-Colibri classic transaction pipeline. It exposes asset identity, exact amounts,
-balances, holder authorization, payments, trustline limits, minting, burning,
-clawback, and claimable-balance creation. Use
-[StellarAssetContract](stellar-asset-contract.md) when you need the Soroban
+Colibri [classic transaction pipeline](../pipelines/classic-transaction.md). It
+exposes asset identity, exact amounts, balances, holder authorization, payments,
+trustline limits, minting, burning, clawback, and claimable-balance creation.
+Use [StellarAssetContract](stellar-asset-contract.md) when you need the Soroban
 contract interface for the same asset.
 
 API: [StellarAsset on JSR](https://jsr.io/@colibri/core/doc/~/StellarAsset).
 
 The implementation lives under `core/asset/native/`. Here, native means
 protocol-level asset operations for both XLM and issued assets, not XLM alone.
-Import `StellarAsset` from `@colibri/core`; the source directory is not a
-package subpath export.
+Import `StellarAsset` from [`@colibri/core`](../overview.md); the source
+directory is not a package subpath export.
 
 ## Identity and amounts
 
-Bind an existing SDK `Asset`, a code/issuer pair, or a SEP-11 canonical
-identity. Construction performs no RPC calls. `code`, `issuer`, `symbol()`,
-`decimals()`, `isNative()` and `toString()` are available immediately. The
-symbol is the on-chain asset code, not an off-chain display name or a verified
-issuer identity.
+Bind an existing SDK `Asset`, a code/issuer pair, or a [SEP-11](sep-11.md)
+canonical identity. Construction performs no RPC calls. `code`, `issuer`,
+`symbol()`, `decimals()`, `isNative()` and `toString()` are available
+immediately. The symbol is the on-chain asset code, not an off-chain display
+name or a verified issuer identity.
 
 <!-- deno-check -->
 
@@ -49,7 +49,8 @@ console.log(usd.formatAmount(units)); // "12.3456789"
 console.log(fromDecimals("0.0000001", 7)); // Existing generic converter, with explicit precision.
 ```
 
-The asset methods reuse `fromDecimals` and `toDecimals`, adding the native asset
+The asset methods reuse [`fromDecimals`](../helpers.md#decimal-amounts) and
+[`toDecimals`](../helpers.md#decimal-amounts), adding the native asset
 nonnegative int64 bounds. It rejects exponent notation, negative values,
 overflow and fractions requiring rounding. Extra trailing decimal zeros are
 harmless and accepted. Formatting produces exact decimal text. These helpers are
@@ -58,7 +59,7 @@ has the same precision.
 
 ## Create a trustline and receive an issued asset
 
-Install `@colibri/core` and `@stellar/stellar-sdk` using the
+Install [`@colibri/core`](../overview.md) and `@stellar/stellar-sdk` using the
 [installation guide](../../getting-started/installation.md). Save the following
 as `asset.ts` and run `deno run -A asset.ts`. It creates disposable Testnet
 accounts and uses Friendbot; do not substitute production accounts or Mainnet
@@ -147,12 +148,14 @@ fees use stroops and the existing [fee configuration](../transaction-config.md).
 Reads take G addresses: an M address identifies the same underlying account, not
 a distinct holding. For XLM, `balance` returns the native account's total
 balance. It is **not spendable balance** after reserves, liabilities and fees.
-For issued assets, a missing trustline raises `STAS_016`; an existing empty
+For issued assets, a missing trustline raises
+[`STAS_016`](../../reference/errors/core-asset-native.md); an existing empty
 trustline returns `0n`. An issuer has no finite balance of its own asset and
-raises `STAS_015`, rather than returning zero or pretending to hold a trustline.
-`authorized` preserves these missing/issuer-state errors. For an existing XLM
-account it is true; for an issued asset it reports the trustline's full
-authorization flag, not merely authorization to maintain liabilities.
+raises [`STAS_015`](../../reference/errors/core-asset-native.md), rather than
+returning zero or pretending to hold a trustline. `authorized` preserves these
+missing/issuer-state errors. For an existing XLM account it is true; for an
+issued asset it reports the trustline's full authorization flag, not merely
+authorization to maintain liabilities.
 
 Every write submits an explicit operation. No transfer creates a trustline or
 authorizes a holder. Trustline removal fails if its balance or liabilities
@@ -197,10 +200,10 @@ Revocation reads the current trustline before building its flags. This read and
 the later transaction are not atomic; concurrent issuer changes can make the
 snapshot stale. Use `setTrustLineFlags` when the intended flags are already
 known and should not be derived from a read. Missing revocation trustlines fail
-with `STAS_022`. No operation enables `AUTH_REQUIRED` or `AUTH_REVOCABLE`;
-issuer policy must already allow the requested change. For complete
-deauthorization that may remove market positions, deliberately clear both
-authorization flags with `setTrustLineFlags`.
+with [`STAS_022`](../../reference/errors/core-asset-native.md). No operation
+enables `AUTH_REQUIRED` or `AUTH_REVOCABLE`; issuer policy must already allow
+the requested change. For complete deauthorization that may remove market
+positions, deliberately clear both authorization flags with `setTrustLineFlags`.
 
 ### Create a claimable balance
 
@@ -262,7 +265,8 @@ account needs reserve for the entry unless reserve sponsorship is explicit.
 Fee-bump sponsorship pays transaction fees, not that reserve. See
 [claimable-balance predicates](../claimable-balance-predicates.md) for time
 windows and an explicit claim operation. Invalid construction arguments raise
-`STAS_023`; pipeline and on-chain failures retain their existing typed errors.
+[`STAS_023`](../../reference/errors/core-asset-native.md); pipeline and on-chain
+failures retain their existing typed errors.
 
 ## Sources, plugins, and native interoperability
 
@@ -279,11 +283,13 @@ always binds the issuer as destination and defaults its operation source to
 ordinary SDK payments.
 
 Constructor-time plugins follow the same pipeline-specific pattern as
-`Contract`. Install `@colibri/plugin-channel-accounts` and
-`@colibri/plugin-fee-bump` in addition to Core for this example. The three
-signers have distinct roles: the owner authorizes the asset transfer, the
-channel supplies the transaction sequence, and the fee payer signs the outer
-fee-bump envelope. The example funds them through Testnet Friendbot.
+[`Contract`](../contract.md). Install
+[`@colibri/plugin-channel-accounts`](../../packages/plugins/channel-accounts.md)
+and [`@colibri/plugin-fee-bump`](../../packages/plugins/fee-bump.md) in addition
+to Core for this example. The three signers have distinct roles: the owner
+authorizes the asset transfer, the channel supplies the transaction sequence,
+and the fee payer signs the outer fee-bump envelope. The example funds them
+through Testnet Friendbot.
 
 <!-- deno-check -->
 
@@ -348,21 +354,23 @@ const result = await xlm.transfer({
 console.log(result.hash);
 ```
 
-Memos remain native Stellar SDK `Memo` values in `TransactionConfig`. Channel
-allocation preserves the operation's owner and the memo; a fee bump preserves
-them in the inner transaction. The optional SEP-29 plugin rejects a payment with
-no memo when the recipient requires one; it does not invent or set the memo.
-None of these plugins is installed implicitly. You may also attach them later
-using `xlm.transactionPipe.use(plugin)`. Keep calling the original pipe binding;
-do not replace it with the return value of `.use(...)`. Read-only methods do not
+Memos remain native Stellar SDK `Memo` values in
+[`TransactionConfig`](../transaction-config.md). Channel allocation preserves
+the operation's owner and the memo; a fee bump preserves them in the inner
+transaction. The optional SEP-29 plugin rejects a payment with no memo when the
+recipient requires one; it does not invent or set the memo. None of these
+plugins is installed implicitly. You may also attach them later using
+`xlm.transactionPipe.use(plugin)`. Keep calling the original pipe binding; do
+not replace it with the return value of `.use(...)`. Read-only methods do not
 run transaction plugins.
 
 ## Explicit access to the Stellar Asset Contract
 
-`usd.toContract()` returns a separate existing `StellarAssetContract` instance
-with the deterministically derived contract ID and the same network/RPC. It does
-not deploy the SAC, run simulation, or copy native transaction plugins. Store
-that instance when attaching its Soroban pipeline plugins.
+`usd.toContract()` returns a separate existing
+[`StellarAssetContract`](stellar-asset-contract.md) instance with the
+deterministically derived contract ID and the same network/RPC. It does not
+deploy the SAC, run simulation, or copy native transaction plugins. Store that
+instance when attaching its Soroban pipeline plugins.
 
 ```typescript
 // Fragment: usd, networkConfig and issuer are the bindings from the examples above.
@@ -395,8 +403,9 @@ source. G and M sources follow the underlying Stellar operation rules. Trustline
 retrieval uses a G account ID because muxed IDs do not identify separate
 trustline entries.
 
-`transactionPipe` is the existing callable `ClassicTransactionPipeline`, not a
-new transaction route. Attach compatible plugins using
+`transactionPipe` is the existing callable
+[`ClassicTransactionPipeline`](../pipelines/classic-transaction.md), not a new
+transaction route. Attach compatible plugins using
 `asset.transactionPipe.use(...)`. For sponsored or multi-operation workflows,
 call that pipe directly with native SDK operations, including `asset.asset`
 wherever the SDK accepts an `Asset`.
@@ -416,10 +425,10 @@ trustlines when your application needs that cleanup; it is not automatic.
 
 Writes return the same
 [confirmed runtime outcomes](../processes/parse-classic-transaction-outcome.md)
-as the classic transaction pipeline: hash, ledger, charged fee, native RPC
-response, and ordered operation results. SDK argument-construction failures use
-occurrence-specific `STAS_*` errors. Native RPC transport failures use separate
-issuer-read and trustline-read `STAS_*` errors retaining the original cause.
-Existing typed pipeline and ledger-reader errors retain their own namespaces.
-Confirmation does not imply that another account's issuer policy can never
-change afterward.
+as the [classic transaction pipeline](../pipelines/classic-transaction.md):
+hash, ledger, charged fee, native RPC response, and ordered operation results.
+SDK argument-construction failures use occurrence-specific `STAS_*` errors.
+Native RPC transport failures use separate issuer-read and trustline-read
+`STAS_*` errors retaining the original cause. Existing typed pipeline and
+ledger-reader errors retain their own namespaces. Confirmation does not imply
+that another account's issuer policy can never change afterward.

@@ -5,8 +5,10 @@
 authorization-entry signer. It represents one top-level custom account and owns
 the complete recursive `nestedDelegates` topology required by that account.
 
-Only the top-level `DelegatedSigner` is added to the transaction configuration.
-When `SignAuthEntries` supplies a recording-simulation entry, the signer:
+Only the top-level `DelegatedSigner` is added to the
+[transaction configuration](../transaction-config.md). When
+[`SignAuthEntries`](../processes/sign-auth-entries.md) supplies a
+recording-simulation entry, the signer:
 
 1. converts it to delegated credentials with Stellar SDK primitives;
 2. applies its optional top-level signature;
@@ -43,11 +45,11 @@ that policy during simulation.
 
 Each node accepts:
 
-| Property          | Type                             | Required | Description                                 |
-| ----------------- | -------------------------------- | -------- | ------------------------------------------- |
-| `address`         | `Ed25519PublicKey \| ContractId` | Yes      | Credential address represented by the node  |
-| `signer`          | `AuthEntrySigner`                | No       | Produces this node's own signature value    |
-| `nestedDelegates` | `DelegatedSigner[]`              | No       | Recursive delegates authorized by this node |
+| Property          | Type                                               | Required | Description                                 |
+| ----------------- | -------------------------------------------------- | -------- | ------------------------------------------- |
+| `address`         | `Ed25519PublicKey \| ContractId`                   | Yes      | Credential address represented by the node  |
+| `signer`          | [`AuthEntrySigner`](README.md#signer-capabilities) | No       | Produces this node's own signature value    |
+| `nestedDelegates` | `DelegatedSigner[]`                                | No       | Recursive delegates authorized by this node |
 
 Omit `signer` when a custom account authorizes entirely through its delegates
 and uses a void signature at that node.
@@ -82,9 +84,10 @@ nested node is also a `DelegatedSigner`, the same constructor invariants apply
 recursively throughout the topology before signing begins.
 
 Colibri does not interpret the account contract's delegation policy. During
-`enforceSimulation`, the Stellar host enforces delegated-credential structure
-and the account contract decides whether the supplied topology and signatures
-are authorized. Any failure is surfaced before submission.
+[`enforceSimulation`](../processes/enforce-simulation.md), the Stellar host
+enforces delegated-credential structure and the account contract decides whether
+the supplied topology and signatures are authorized. Any failure is surfaced
+before submission.
 
 ## Next Steps
 

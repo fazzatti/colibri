@@ -19,13 +19,13 @@ const transaction = await assembleForEnforcement({
 
 ## Input
 
-| Property              | Type                 | Required | Description                                                     |
-| --------------------- | -------------------- | -------- | --------------------------------------------------------------- |
-| `transaction`         | `Transaction`        | Yes      | Original base transaction                                       |
-| `authorizedOperation` | `xdr.Operation`      | Yes      | Operation containing signed auth entries                        |
-| `sorobanData`         | `SorobanDataBuilder` | No       | Recording-simulation footprint, limits, and resource fee        |
-| `transactionFee`      | `TransactionFee`     | No       | Explicit fee strategy propagated from `TransactionConfig`       |
-| `resourceFee`         | `string`             | No       | Overrides the resource fee embedded in the recording simulation |
+| Property              | Type                                                        | Required | Description                                                                           |
+| --------------------- | ----------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------- |
+| `transaction`         | `Transaction`                                               | Yes      | Original base transaction                                                             |
+| `authorizedOperation` | `xdr.Operation`                                             | Yes      | Operation containing signed auth entries                                              |
+| `sorobanData`         | `SorobanDataBuilder`                                        | No       | Recording-simulation footprint, limits, and resource fee                              |
+| `transactionFee`      | [`TransactionFee`](../transaction-config.md#fee-strategies) | No       | Explicit fee strategy propagated from [`TransactionConfig`](../transaction-config.md) |
+| `resourceFee`         | `string`                                                    | No       | Overrides the resource fee embedded in the recording simulation                       |
 
 ## Behavior
 

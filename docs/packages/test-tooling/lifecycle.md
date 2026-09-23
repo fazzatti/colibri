@@ -28,7 +28,8 @@ Use it carefully:
 - Quickstart's on-disk layout can change between image releases
 - first-time initialization of an empty persistent directory can be more
   operationally sensitive than ephemeral mode
-- pinned image tags are safer than moving tags when reusing persistent data
+- [pinned image tags](networks-services.md#image-variants) are safer than moving
+  tags when reusing persistent data
 
 ## Reusing An Existing Container
 
@@ -60,8 +61,8 @@ When `useRunningLedger` is enabled:
 - `new StellarTestLedger(options)` creates a quickstart ledger manager
 - `ledger.start(omitPull?)` starts or reuses the Docker container and waits
   until the requested services are ready
-- `ledger.getNetworkDetails()` returns the plain service payload for the running
-  ledger
+- [`ledger.getNetworkDetails()`](networks-services.md) returns the plain service
+  payload for the running ledger
 - `ledger.getNetworkConfiguration()` is an alias of `getNetworkDetails()`
 - `ledger.getContainer()` returns the Dockerode container instance
 - `ledger.getContainerIpAddress()` returns the container IP reported by Docker

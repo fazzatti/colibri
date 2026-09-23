@@ -112,8 +112,9 @@ export async function validatePayment(
 ```
 
 Alternatively pass `{ transaction, networkConfig }` using Colibri's
-`NetworkConfig`. Supply either the network configuration or the RPC client, not
-both. The plugin itself needs neither: it uses the submission step's client.
+[`NetworkConfig`](../../core/network.md). Supply either the network
+configuration or the RPC client, not both. The plugin itself needs neither: it
+uses the submission step's client.
 
 ## Rules and limits
 
@@ -128,12 +129,12 @@ needed when a memo exists or there are no relevant destinations. This says
 nothing about whether the memo is correct or the transaction will succeed.
 
 The checker never changes the envelope or signatures. For a fee bump it checks
-the inner transaction. It composes with the fee-bump plugin in either order;
-custom destination/memo-changing plugins should run **before** this guard. Calls
-inspect current ledger state, not modifications within the pending transaction.
-The requirement could change after the read. Custom plugin error handlers remain
-application-owned; do not deliberately suppress these failures if you intend to
-enforce the policy.
+the inner transaction. It composes with the [fee-bump plugin](fee-bump.md) in
+either order; custom destination/memo-changing plugins should run **before**
+this guard. Calls inspect current ledger state, not modifications within the
+pending transaction. The requirement could change after the read. Custom plugin
+error handlers remain application-owned; do not deliberately suppress these
+failures if you intend to enforce the policy.
 
 ## Errors and receiving-account setup
 

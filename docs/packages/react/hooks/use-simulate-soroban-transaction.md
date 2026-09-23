@@ -3,7 +3,8 @@
 Simulate a prepared native Soroban transaction without signing or submitting it.
 
 Import from `@colibri/react/transactions/simulate`. Use under both
-`ColibriProvider` and `QueryClientProvider`; see [setup](../setup.md).
+[`ColibriProvider`](../setup.md) and [`QueryClientProvider`](../setup.md); see
+[setup](../setup.md).
 
 ## Parameters and result
 
@@ -11,7 +12,7 @@ Import from `@colibri/react/transactions/simulate`. Use under both
 - Call the returned mutation with `SimulateTransactionInput["transaction"]`.
 
 **Returns:** A mutation result containing the full Core
-`SimulateTransactionOutput`.
+[`SimulateTransactionOutput`](../../../core/processes/simulate-transaction.md).
 
 ## Example
 

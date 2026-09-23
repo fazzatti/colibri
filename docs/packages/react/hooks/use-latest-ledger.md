@@ -2,13 +2,14 @@
 
 Query the latest ledger observed by the configured RPC server.
 
-Import from `@colibri/react/rpc`. Use under both `ColibriProvider` and
-`QueryClientProvider`; see [setup](../setup.md).
+Import from `@colibri/react/rpc`. Use under both
+[`ColibriProvider`](../setup.md) and [`QueryClientProvider`](../setup.md); see
+[setup](../setup.md).
 
 ## Parameters and result
 
-- `query?`: TanStack `QueryControls`, such as `enabled`, `staleTime` and
-  `refetchInterval`.
+- `query?`: TanStack [`QueryControls`](../queries.md), such as `enabled`,
+  `staleTime` and `refetchInterval`.
 
 **Returns:** A query result containing the SDK `GetLatestLedgerResponse`.
 

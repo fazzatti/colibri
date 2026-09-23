@@ -2,15 +2,16 @@
 
 Access a stable Core ledger reader for direct, known-key reads.
 
-Import from `@colibri/react/accounts`. Requires `ColibriProvider`; see
-[setup](../setup.md). No QueryClient is needed for this hook.
+Import from `@colibri/react/accounts`. Requires
+[`ColibriProvider`](../setup.md); see [setup](../setup.md). No QueryClient is
+needed for this hook.
 
 ## Parameters and result
 
 No parameters.
 
-**Returns:** A memoized `LedgerEntries` instance bound to the provider RPC
-client.
+**Returns:** A memoized [`LedgerEntries`](../../../core/ledger-entries.md)
+instance bound to the provider RPC client.
 
 ## Example
 

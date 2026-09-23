@@ -49,20 +49,25 @@ type KeypairSigner = EnvelopeSigner & AuthEntrySigner & {
 };
 ```
 
-`LocalSigner` implements `KeypairSigner`, while `DelegatedSigner` implements
-only `AuthEntrySigner`. `HashXSigner` and `Ed25519SignedPayloadSigner` implement
-`EnvelopeSigner`. `PreAuthorizedTransactionSigner` verifies a transaction hash
-without adding a decorated signature.
+[`LocalSigner`](local-signer.md) implements `KeypairSigner`, while
+[`DelegatedSigner`](delegated-signer.md) implements only `AuthEntrySigner`.
+[`HashXSigner`](hash-x-signer.md) and
+[`Ed25519SignedPayloadSigner`](signed-payload-signer.md) implement
+`EnvelopeSigner`.
+[`PreAuthorizedTransactionSigner`](pre-authorized-transaction-signer.md)
+verifies a transaction hash without adding a decorated signature.
 
 A native Stellar SDK signing `Keypair` can be adapted explicitly with
-`LocalSigner.fromKeypair(keypair)`. The result implements the same signer
-capabilities described above; `Signer` and `TransactionConfig` remain unchanged.
-See [the Keypair factory](local-signer.md#from-a-stellar-sdk-keypair) for targets
+[`LocalSigner.fromKeypair(keypair)`](local-signer.md#from-a-stellar-sdk-keypair).
+The result implements the same signer capabilities described above; `Signer` and
+[`TransactionConfig`](../transaction-config.md) remain unchanged. See
+[the Keypair factory](local-signer.md#from-a-stellar-sdk-keypair) for targets
 and ownership.
 
 ## Using Signers
 
-Pass every signer through the same `TransactionConfig.signers` list:
+Pass every signer through the same
+[`TransactionConfig.signers`](../transaction-config.md#signers) list:
 
 ```ts
 import { createInvokeContractPipeline, NetworkConfig } from "@colibri/core";
@@ -82,10 +87,11 @@ const result = await invokeContract({
 ```
 
 The pipeline carries `Signer[]` unchanged until a process needs a capability.
-`signAuthEntries(...)` narrows with `isAuthEntrySigner(...)`, while
-`signEnvelope(...)` narrows with `isEnvelopeSigner(...)` and
-`isPreAuthTransactionSigner(...)`. A signer implementing multiple capabilities
-passes every applicable guard.
+[`signAuthEntries(...)`](../processes/sign-auth-entries.md) narrows with
+`isAuthEntrySigner(...)`, while
+[`signEnvelope(...)`](../processes/sign-envelope.md) narrows with
+`isEnvelopeSigner(...)` and `isPreAuthTransactionSigner(...)`. A signer
+implementing multiple capabilities passes every applicable guard.
 
 Every transaction authorizer exposes an exact `signerKey()`. Colibri uses that
 identity to match transaction `extraSigners` and deduplicate a signer selected
@@ -93,10 +99,13 @@ through both an account requirement and an exact key requirement.
 
 For each required account, selection is intentional:
 
-- no matching target produces `SIGNER_NOT_FOUND`;
+- no matching target produces
+  [`SIGNER_NOT_FOUND`](../../reference/errors/core-processes-sign-envelope.md);
 - one matching signer key is selected;
-- multiple instances of one key produce `DUPLICATE_SIGNER_KEY`;
-- multiple distinct keys produce `AMBIGUOUS_ACCOUNT_SIGNERS`.
+- multiple instances of one key produce
+  [`DUPLICATE_SIGNER_KEY`](../../reference/errors/core-processes-sign-envelope.md);
+- multiple distinct keys produce
+  [`AMBIGUOUS_ACCOUNT_SIGNERS`](../../reference/errors/core-processes-sign-envelope.md).
 
 Colibri does not select by array order or apply implicit signer precedence.
 Weighted multi-signature policy remains an application-level concern.
@@ -147,8 +156,9 @@ class CustomAuthEntrySigner implements AuthEntrySigner {
 The method receives and returns the entire authorization entry. This keeps
 custom account policy inside the signer implementation. Colibri does not attempt
 to interpret custom signature values. Delegated credentials are validated by the
-account contract during `enforceSimulation`; other custom authorization remains
-subject to the network's normal execution checks.
+account contract during
+[`enforceSimulation`](../processes/enforce-simulation.md); other custom
+authorization remains subject to the network's normal execution checks.
 
 ## Available Signers
 
@@ -159,6 +169,12 @@ subject to the network's normal execution checks.
 | [Ed25519SignedPayloadSigner](signed-payload-signer.md)                 | Ed25519 signature over a disclosed payload                |
 | [PreAuthorizedTransactionSigner](pre-authorized-transaction-signer.md) | Exact transaction-hash authorizer                         |
 | [DelegatedSigner](delegated-signer.md)                                 | Recursive CAP-71 authorization-entry signer               |
+
+## Message signing
+
+[SEP-53 message signing](message-signing.md) is an optional capability separate
+from transaction-envelope and authorization-entry signing. See that guide for
+message encoding, wallet interoperability and verification.
 
 ## Next Steps
 

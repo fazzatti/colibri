@@ -8,9 +8,12 @@ reproducibility, not contract safety or an audit.
 deno add jsr:@colibri/build-verification jsr:@colibri/core
 ```
 
-Use strict SEP-58 mode for metadata committed by the target, or explicitly
-choose an out-of-band recipe. The default runner requires a reachable Docker
-daemon.
+Use [strict SEP-58 mode](build-verification/targets.md) for metadata committed
+by the target, or explicitly choose an
+[out-of-band recipe](build-verification/sources.md#out-of-band-recipes). The
+[default runner](build-verification/architecture.md) requires a reachable Docker
+daemon and applies the documented
+[isolation policies](build-verification/policies.md).
 
 ## Guides
 

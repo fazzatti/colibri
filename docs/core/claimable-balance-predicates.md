@@ -13,8 +13,9 @@ API:
 The following is a construction fragment. `sender` and `recipient` are existing
 Stellar G account IDs. Pass the operation to an existing
 [classic transaction pipeline](pipelines/classic-transaction.md), configured
-with a funded sender, its signer, fee, and timeout. No transaction is submitted
-by the predicate helpers themselves.
+with a funded sender and [TransactionConfig](transaction-config.md) for its
+signer, fee, and timeout. No transaction is submitted by the predicate helpers
+themselves.
 
 ```typescript
 import { ClaimableBalancePredicates } from "@colibri/core";

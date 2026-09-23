@@ -1,10 +1,12 @@
 # Handle errors
 
 Most Core, WebAuth, build-verification, identicon, and plugin failures use
-`ColibriError` or a subclass. **RPC Streamer and Test Tooling have their own
-`Error` subclasses** (`RPCStreamerError` and `QuickstartError`). RPC libraries
-and application callbacks can also throw other values; do not assume every
-caught error has a Colibri shape.
+`ColibriError` or a subclass. **[RPC Streamer](../packages/rpc-streamer.md) and
+Test Tooling have their own `Error` subclasses**
+([`RPCStreamerError`](../packages/rpc-streamer/recovery.md#error-shapes) and
+[`QuickstartError`](../packages/test-tooling/configuration.md#error-handling)).
+RPC libraries and application callbacks can also throw other values; do not
+assume every caught error has a Colibri shape.
 
 ## The shared error shape
 
@@ -52,11 +54,13 @@ path.
 
 Every library-owned stable code has its own concrete class. This also applies to
 React (`ReactErrors`), WebAuth (`WebAuthErrors`), Identicon (`IdenticonErrors`),
-contract bindings (`BindingErrors`), RPC Streamer (`RPCStreamerErrors`), and
-Soroban values (`SorobanErrors`). The registry maps codes to exported
-constructors; family-level catches continue to work. Core's unclassified
-fallback is `UnexpectedError` (`GEN_000`). RPC Streamer retains its established
-`details` object and native `cause` shape.
+contract bindings (`BindingErrors`), [RPC Streamer](../packages/rpc-streamer.md)
+(`RPCStreamerErrors`), and Soroban values (`SorobanErrors`). The registry maps
+codes to exported constructors; family-level catches continue to work. Core's
+unclassified fallback is `UnexpectedError`
+([`GEN_000`](../reference/errors/core.md)).
+[RPC Streamer](../packages/rpc-streamer.md) retains its established `details`
+object and native `cause` shape.
 
 Legacy public family constructors are retained for source compatibility and
 extension, but library implementation sites must use dedicated subclasses.
@@ -79,8 +83,9 @@ coded-error construction in library implementations.
   evidence before changing the recipe.
 
 `ColibriError.fromUnknown()` preserves existing Colibri errors and wraps other
-values. Its default fallback code is `GEN_000`; applications may supply their
-own source/code. Do not collapse a known occurrence into that fallback.
+values. Its default fallback code is [`GEN_000`](../reference/errors/core.md);
+applications may supply their own source/code. Do not collapse a known
+occurrence into that fallback.
 
 ## Complete references
 
