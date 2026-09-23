@@ -5,7 +5,7 @@ signers and transaction pipelines. Read account and token data, retain full
 contract clients, invoke contracts, submit Classic transactions, and observe
 wallets, sessions and events through React.
 
-**0.2 preview** · Core **1.2+** within 1.x · React **19.1+** within 19.x ·
+**0.4 preview** · Core **1.4+** within 1.x · React **19.1+** within 19.x ·
 TanStack Query **5.87+** within 5.x.
 
 ## Contents
@@ -277,6 +277,11 @@ no Ed25519 signing capability.
 `{ name: string, symbol: string, decimals: number }` from a SEP-41 token or SAC.
 
 ## Contracts
+
+Contract invocation config accepts Core's `resources.override` and
+`resources.padding`. The contract entrypoints also export those configuration
+types. Calculate padding explicitly with Core's external calculator; see the
+[resource guide](../docs/core/resources.md) for units, fee funding and examples.
 
 ### Full clients — `@colibri/react/contracts`
 

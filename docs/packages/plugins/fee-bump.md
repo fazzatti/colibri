@@ -104,6 +104,26 @@ outer total as `base fee × (inner operation count + 1) + resource fee`. Inspect
 the resulting envelope when budgeting; the string is not the final total. An
 inner maximum does not cap the sponsor's outer fee.
 
+### Resource controls and inner fee limits
+
+Attaching the plugin explicitly opts into the sponsor's separately configured
+inclusion bid. The inner transaction's `{ max }` strategy still governs its
+assembly, including any resource overrides or padding. The plugin then wraps
+that completed transaction without changing its resource declarations, resource
+fee or signatures. It does not reprice or pad resources.
+
+For example, a Soroban inner transaction with 35,000 stroops of adjusted
+resource fee and `config.fee: { max: "35100" }` has a 100-stroop inclusion bid.
+Choosing `feeBumpConfig.fee: "200"` produces an outer bid of
+`35,000 + 200 × 2 = 35,400` stroops. Exceeding the inner maximum is the intended
+result of the sponsor's fee choice. The inner resource fee remains 35,000. Equal
+per-operation inclusion bids are also supported when only sponsorship is needed.
+An insufficient inner maximum still fails during assembly before the plugin
+runs.
+
+See [transaction resources](../../core/resources.md) for choosing manual
+resource control or explicitly calculated padding before fee-bump wrapping.
+
 See [the channel/payment example](channel-accounts/example.md) for a complete
 funded Testnet flow using this plugin.
 

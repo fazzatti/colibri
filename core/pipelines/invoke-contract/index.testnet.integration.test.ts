@@ -7,6 +7,7 @@ import {
 import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
 import { disableSanitizeConfig } from "colibri-internal/tests/disable-sanitize-config.ts";
 import { Asset, nativeToScVal, Operation, xdr } from "stellar-sdk";
+import { Api, Server } from "stellar-sdk/rpc";
 import { NetworkConfig } from "@/network/index.ts";
 import { createInvokeContractPipeline } from "@/pipelines/invoke-contract/index.ts";
 import { initializeWithFriendbot } from "@/tools/friendbot/initialize-with-friendbot.ts";
@@ -150,6 +151,56 @@ describe(
 
           assertConfirmedSorobanFee(result, { max: 10000000n });
         });
+      });
+
+      it("confirms resource padding in the submitted native envelope", async () => {
+        const rpc = new Server(networkConfig.rpcUrl!);
+        const simulate = rpc.simulateTransaction.bind(rpc);
+        let simulatedData: xdr.SorobanTransactionData | undefined;
+        rpc.simulateTransaction = async (...args) => {
+          const response = await simulate(...args);
+          if (Api.isSimulationSuccess(response)) {
+            simulatedData = response.transactionData.build();
+          }
+          return response;
+        };
+        const invoke = createInvokeContractPipeline({ networkConfig, rpc });
+        const result = await invoke({
+          operations: [Operation.invokeContractFunction({
+            function: "decimals",
+            contract: xlmContractId,
+            args: [],
+          })],
+          config: {
+            ...txConfig,
+            resources: {
+              padding: {
+                instructions: { percent: 10 },
+                writeBytes: { amount: 10 },
+                resourceFee: { amount: "100000" },
+              },
+            },
+          },
+        });
+        assertExists(simulatedData);
+        const envelope = result.response.envelopeXdr;
+        assert(envelope.type === "envelopeTypeTx");
+        assert(envelope.v1.tx.ext.type === "sorobanData");
+        const submitted = envelope.v1.tx.ext.sorobanData;
+        assertEquals(
+          submitted.resources.instructions,
+          simulatedData.resources.instructions +
+            Math.ceil(simulatedData.resources.instructions / 10),
+        );
+        assertEquals(
+          submitted.resources.writeBytes,
+          simulatedData.resources.writeBytes + 10,
+        );
+        assertEquals(
+          submitted.resourceFee,
+          simulatedData.resourceFee + 100000n,
+        );
+        assertConfirmedSorobanFee(result, { inclusion: 100n });
       });
     });
 

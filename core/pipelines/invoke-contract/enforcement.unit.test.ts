@@ -17,6 +17,7 @@ import {
   assembleForEnforcementToEnforceSimulation,
   enforceSimulationToAssemble,
   INVOKE_CONTRACT_INPUT_STEP_ID,
+  signAuthEntriesToAssemble,
   signAuthEntriesToAssembleForEnforcement,
 } from "@/pipelines/invoke-contract/connectors.ts";
 import type { InvokeContractInput } from "@/pipelines/invoke-contract/types.ts";
@@ -29,6 +30,12 @@ import {
 import { NetworkConfig } from "@/network/index.ts";
 import { operationHasDelegatedAuthorization } from "@/common/helpers/xdr/operation-has-delegated-authorization.ts";
 import { EXPECTED_INVOKE_HOST_FUNCTION_OPERATION } from "@/pipelines/invoke-contract/error.ts";
+import { assembleTransaction } from "@/processes/assemble-transaction/index.ts";
+import { assembleForEnforcement } from "@/processes/assemble-for-enforcement/index.ts";
+import {
+  getTransactionInclusionFee,
+  getTransactionResourceFee,
+} from "@/common/helpers/transaction-fee.ts";
 
 const { describe, it } = recordColibriTests(import.meta.url);
 
@@ -109,6 +116,62 @@ const seedStepOutput = async <Output>(
 };
 
 describe("invoke-contract enforcement connectors", () => {
+  it("applies padding once to final enforcing data and never to preliminary assembly", async () => {
+    const context = createRunContext();
+    const recording = {
+      ...simulation("recording"),
+      transactionData: new SorobanDataBuilder().setResources(100, 0, 100)
+        .setResourceFee(100),
+    };
+    const final = {
+      ...simulation("enforcing"),
+      transactionData: new SorobanDataBuilder().setResources(130, 0, 200)
+        .setResourceFee(200),
+    };
+    const input: InvokeContractInput = {
+      ...invokeInput,
+      config: {
+        ...invokeInput.config,
+        resources: {
+          padding: {
+            instructions: { percent: 10 },
+            writeBytes: { amount: 10 },
+            resourceFee: { amount: "10" },
+          },
+        },
+      },
+    };
+    await seedStepOutput(context, BUILD_TRANSACTION_STEP_ID, transaction);
+    await seedStepOutput(context, SIMULATE_TRANSACTION_STEP_ID, recording);
+    await seedStepOutput(context, SIGN_AUTH_ENTRIES_STEP_ID, [entry]);
+    await seedStepOutput(context, INVOKE_CONTRACT_INPUT_STEP_ID, input);
+    const preliminary = await signAuthEntriesToAssembleForEnforcement().runWith(
+      { context: { parent: context } },
+      entry,
+    );
+    assertEquals("resources" in preliminary, false);
+    const intermediate = await assembleForEnforcement(preliminary);
+    assertEquals(intermediate.fee, "500");
+    assertEquals(getTransactionResourceFee(intermediate), 100n);
+    assertEquals(getTransactionInclusionFee(intermediate), 400n);
+    const ordinary = await signAuthEntriesToAssemble().runWith({
+      context: { parent: context },
+    }, entry);
+    assertEquals(ordinary.resources, input.config.resources);
+    const assembly = await enforceSimulationToAssemble().runWith({
+      context: { parent: context },
+    }, final);
+    const assembled = await assembleTransaction(assembly);
+    assertEquals(assembled.fee, "500");
+    assertEquals(getTransactionInclusionFee(assembled), 290n);
+    assertEquals(assembled.tx.ext.type, "sorobanData");
+    if (assembled.tx.ext.type !== "sorobanData") return;
+    assertEquals(assembled.tx.ext.sorobanData.resources.instructions, 143);
+    assertEquals(assembled.tx.ext.sorobanData.resources.writeBytes, 210);
+    assertEquals(assembled.tx.ext.sorobanData.resourceFee, 210n);
+    assertEquals(final.transactionData.build().resources.instructions, 130);
+    assertEquals(recording.transactionData.build().resources.instructions, 100);
+  });
   it("builds enforcement assembly input from signed entries", async () => {
     const context = createRunContext();
     const recording = simulation("recording");

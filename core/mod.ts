@@ -62,6 +62,7 @@ export const ERRORS_LDE: typeof LedgerEntryErrors = LedgerEntryErrors;
 
 export * from "@/network/index.ts";
 export * from "@/network/types.ts";
+export * from "@/resources/index.ts";
 
 export * from "@/processes/index.ts";
 /** Reusable pipeline step factories. */

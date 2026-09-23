@@ -1,4 +1,5 @@
 import type { Server } from "stellar-sdk/rpc";
+import * as ERROR from "@/resources/error.ts";
 import type {
   ClassicTransactionInput,
 } from "@/pipelines/classic-transaction/types.ts";
@@ -14,7 +15,16 @@ export const CLASSIC_TRANSACTION_INPUT_STEP_ID =
   "classic-transaction-input" as const;
 
 export const inputToBuild = (rpc: Server, networkPassphrase: string) => {
-  return createInputToBuild<ClassicTransactionInput>(rpc, networkPassphrase);
+  const build = createInputToBuild<ClassicTransactionInput>(
+    rpc,
+    networkPassphrase,
+  );
+  return (input: ClassicTransactionInput) => {
+    if (input.config.resources !== undefined) {
+      throw new ERROR.UNSUPPORTED_TRANSACTION();
+    }
+    return build(input);
+  };
 };
 
 export const envSignReqToSignEnvelope = () =>

@@ -11,7 +11,9 @@ import {
   type xdr,
 } from "stellar-sdk";
 import { wrapFeeBump } from "@/processes/wrap-fee-bump/index.ts";
+import { assembleTransaction as assembleSorobanTransaction } from "@/processes/assemble-transaction/index.ts";
 import * as ERROR from "@/processes/wrap-fee-bump/error.ts";
+import type { TransactionResources } from "@/common/types/transaction-config/resources.ts";
 import { NetworkConfig } from "@/network/index.ts";
 import { isFeeBumpTransaction } from "@/common/type-guards/is-fee-bump-transaction.ts";
 import type {
@@ -40,6 +42,72 @@ describe("WrapFeeBump", () => {
   const bob = "GDMZZQ62ZEO4B7YMBHPJ3LHCLIYOG7JE4XCHEGHV4MINCN6O3WFA4MVQ";
 
   describe("Features", () => {
+    it("preserves resource overrides and padding while intentionally exceeding the inner maximum", async () => {
+      const policies: TransactionResources[] = [
+        { override: { resourceFee: "35000" } },
+        { padding: { resourceFee: { amount: "5000" } } },
+      ];
+      for (const resources of policies) {
+        const transaction = await assembleSorobanTransaction({
+          transaction: assembleTransaction(alice, [
+            Operation.invokeContractFunction({
+              contract:
+                "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+              function: "transfer",
+              args: [],
+            }),
+          ]),
+          sorobanData: new SorobanDataBuilder().setResources(1000, 1024, 1024)
+            .setResourceFee(30000),
+          resources,
+          transactionFee: { max: "35100" },
+        });
+        const innerXdr = transaction.toXDR();
+        const result = wrapFeeBump({
+          transaction,
+          networkPassphrase,
+          config: { source: bob, fee: "200", signers: [] },
+        });
+
+        assertEquals(transaction.fee, "35100");
+        assertEquals(result.fee, "35400");
+        assertEquals(result.innerTransaction.toXDR(), innerXdr);
+        assertEquals(transaction.toXDR(), innerXdr);
+        assertEquals(result.innerTransaction.tx.ext.type, "sorobanData");
+        if (result.innerTransaction.tx.ext.type !== "sorobanData") return;
+        assertEquals(
+          result.innerTransaction.tx.ext.sorobanData.resourceFee,
+          35000n,
+        );
+      }
+    });
+
+    it("compares fee-bump bids to inclusion after resource padding", async () => {
+      const transaction = await assembleSorobanTransaction({
+        transaction: assembleTransaction(alice, [
+          Operation.invokeContractFunction({
+            contract:
+              "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+            function: "transfer",
+            args: [],
+          }),
+        ]),
+        sorobanData: new SorobanDataBuilder().setResourceFee(30000),
+        transactionFee: { base: "200" },
+        resources: { padding: { resourceFee: { amount: "5000" } } },
+      });
+
+      assertEquals(transaction.fee, "35200");
+      const wrap = (fee: BaseFee) =>
+        wrapFeeBump({
+          transaction,
+          networkPassphrase,
+          config: { source: bob, fee, signers: [] },
+        });
+      assertThrows(() => wrap("199"), ERROR.FEE_TOO_LOW);
+      assertEquals(wrap("200").fee, "35400");
+    });
+
     it("matches native fee-bump construction for per-operation bids and Soroban resources", () => {
       for (const operationCount of [1, 2, 3]) {
         const transaction = assembleTransaction(

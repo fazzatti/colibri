@@ -12,6 +12,7 @@ type TransactionConfig = {
   memo?: Memo;
   signers: Signer[];
   extraSigners?: ExtraSignerKey[];
+  resources?: TransactionResources;
 };
 
 type TransactionSource = Ed25519PublicKey | MuxedAddress;
@@ -28,14 +29,15 @@ type MaxFee = `${number}`;
 
 ## Properties
 
-| Property       | Type                        | Description                                              |
-| -------------- | --------------------------- | -------------------------------------------------------- |
-| `fee`          | `BaseFee \| TransactionFee` | String base fee or one explicit fee strategy             |
-| `source`       | `TransactionSource`         | Transaction source as a G-address or M-address           |
-| `timeout`      | `number`                    | Transaction timeout in seconds                           |
-| `memo` | Native SDK `Memo` | Optional transaction memo, forwarded unchanged |
-| `signers`      | `Signer[]`                  | Signers used by the selected transaction flow            |
-| `extraSigners` | `ExtraSignerKey[]`          | Exact `G...`, `X...`, or `P...` signer-key preconditions |
+| Property       | Type                        | Description                                                            |
+| -------------- | --------------------------- | ---------------------------------------------------------------------- |
+| `fee`          | `BaseFee \| TransactionFee` | String base fee or one explicit fee strategy                           |
+| `source`       | `TransactionSource`         | Transaction source as a G-address or M-address                         |
+| `timeout`      | `number`                    | Transaction timeout in seconds                                         |
+| `memo`         | Native SDK `Memo`           | Optional transaction memo, forwarded unchanged                         |
+| `signers`      | `Signer[]`                  | Signers used by the selected transaction flow                          |
+| `extraSigners` | `ExtraSignerKey[]`          | Exact `G...`, `X...`, or `P...` signer-key preconditions               |
+| `resources`    | `TransactionResources`      | Optional Soroban resource overrides and padding after final simulation |
 
 ### Memos
 
@@ -43,8 +45,8 @@ Use the Stellar SDK's `Memo.text(...)`, `Memo.id(...)`, `Memo.hash(...)`, or
 `Memo.return(...)` directly in `config.memo`. Omission keeps the existing
 no-memo behavior; `Memo.none()` explicitly selects it. Colibri preserves the
 native memo through building and assembly, subject to the network's transaction
-rules. No recipient-specific policy is enabled automatically. Install the
-opt-in [SEP-29 plugin](../packages/plugins/sep29.md) to check memo presence for
+rules. No recipient-specific policy is enabled automatically. Install the opt-in
+[SEP-29 plugin](../packages/plugins/sep29.md) to check memo presence for
 receiving accounts that advertise the requirement.
 
 ### Fee Strategies
@@ -73,14 +75,29 @@ deserialized data.
 
 For a Soroban `max` strategy, final assembly reads the resource fee from the
 latest simulation result and uses the remaining capacity as the inclusion fee.
-The maximum must cover the resource fee plus at least 100 stroops. Colibri does
-not expose resource fees in `TransactionConfig` because they are produced by
-simulation. Advanced callers and plugins can override the simulation-derived
-value through the `resourceFee` input of the assembly processes.
+The maximum must cover the adjusted resource fee plus at least 100 stroops. Use
+`resources.override` for absolute declarations or `resources.padding` for
+fixed/percentage additions. The external calculator can explicitly price the
+resource growth. See [transaction resources](resources.md) for units,
+validation, fee semantics and complete examples. The lower-level `resourceFee`
+assembly argument remains supported, but cannot accompany the new `resources`
+argument.
+
+String/base and exact-inclusion strategies preserve their inclusion bid when
+resources change, so the envelope total grows with the resource fee. With `max`,
+resource growth instead reduces the remaining inclusion bid and fails with
+`ASM_013` if fewer than 100 stroops remain. Manual CPU/byte adjustments leave
+the resource fee unchanged unless the caller also adjusts it. This is
+intentional direct control; use the calculator when you want resource growth
+priced. See the
+[combined examples](resources.md#combining-resources-with-the-transaction-fee).
 
 The fee encoded in the submitted envelope is a bid. Stellar can charge less than
 that bid when surge pricing does not require the entire amount. A maximum
 therefore guarantees an upper bound, not the exact amount ultimately charged.
+This bound applies to the transaction being built. Choosing a
+[fee-bump wrapper](../packages/plugins/fee-bump.md) supplies a separate outer
+inclusion bid, which can intentionally exceed the inner transaction's `max`.
 
 ### Muxed Sources
 
@@ -114,8 +131,8 @@ signing process narrows each value with `isEnvelopeSigner(...)`,
 `isPreAuthTransactionSigner(...)`, or `isAuthEntrySigner(...)` before invoking
 the capability.
 
-Native Stellar SDK keypairs can be adapted with `LocalSigner.fromKeypair()`.
-The configuration still contains `Signer[]`; raw Keypair objects are not accepted.
+Native Stellar SDK keypairs can be adapted with `LocalSigner.fromKeypair()`. The
+configuration still contains `Signer[]`; raw Keypair objects are not accepted.
 This complete, offline example constructs a configuration using the convenience:
 
 <!-- deno-check -->
@@ -139,8 +156,8 @@ signer.destroy();
 The signer targets only its own G-address by default. Configure other targets
 explicitly, with the required on-chain authority and contract authorization
 encoding. The adapter borrows the keypair without extracting its secret;
-`destroy()` invalidates the signer but leaves the original Keypair usable.
-See [LocalSigner](signer/local-signer.md#from-a-stellar-sdk-keypair) for ownership,
+`destroy()` invalidates the signer but leaves the original Keypair usable. See
+[LocalSigner](signer/local-signer.md#from-a-stellar-sdk-keypair) for ownership,
 secret visibility and failure behavior.
 
 `extraSigners` writes Stellar's exact signer-key precondition into the

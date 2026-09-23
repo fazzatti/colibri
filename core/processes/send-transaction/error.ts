@@ -4,7 +4,20 @@ import { ProcessError } from "@/processes/error.ts";
 import { softTryToXDR } from "@/common/helpers/xdr/soft-try-to-xdr.ts";
 import { parseErrorResult } from "@/common/helpers/xdr/parse-error-result.ts";
 import { parseEvents } from "@/common/helpers/xdr/parse-events.ts";
+import {
+  parseTransactionFailure,
+  type TransactionFailureDetails,
+} from "@/common/helpers/xdr/transaction-failure.ts";
 import type { SendTransactionInput } from "@/processes/send-transaction/types.ts";
+
+// Decoding optional diagnostics must never replace the submission failure.
+function parseOptional<T>(parse: () => T): T | null {
+  try {
+    return parse();
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Stable error codes emitted by the send-transaction process.
@@ -204,6 +217,10 @@ export class ERROR_STATUS extends SendTransactionError {
     data: {
       input: SendTransactionInput;
       errorResult: string[] | null;
+      /** Original immediate result, retained alongside the legacy parsed strings. */
+      resultXDR?: string;
+      /** Best-effort codes, resource counters and available fees. */
+      failure?: TransactionFailureDetails;
       diagnosticEvents: ReturnType<typeof parseEvents>;
     };
     cause: null;
@@ -237,13 +254,25 @@ export class ERROR_STATUS extends SendTransactionError {
       },
     });
 
-    const parsedErrorResult = parseErrorResult(errorResult);
-    const parsedDiagnosticEvents = parseEvents(diagnosticEvents);
+    const parsedErrorResult = parseOptional(() =>
+      parseErrorResult(errorResult)
+    );
+    const parsedDiagnosticEvents = parseOptional(() =>
+      parseEvents(diagnosticEvents)
+    );
 
     this.meta = {
       data: {
         input,
         errorResult: parsedErrorResult,
+        ...(errorResult
+          ? { resultXDR: softTryToXDR(() => errorResult.toXdr("base64")) }
+          : {}),
+        failure: parseTransactionFailure({
+          transaction: input.transaction,
+          result: errorResult,
+          diagnosticEvents,
+        }),
         diagnosticEvents: parsedDiagnosticEvents,
       },
       cause: null,
@@ -321,6 +350,8 @@ export class TRANSACTION_FAILED extends SendTransactionError {
 
       resultXDR: string;
       resultMetaXDR: string;
+      /** Best-effort codes, resource counters and available fees. */
+      failure?: TransactionFailureDetails;
     };
     cause: null;
   };
@@ -349,12 +380,20 @@ export class TRANSACTION_FAILED extends SendTransactionError {
       },
     });
 
-    const parsedDiagnosticEvents = parseEvents(response.diagnosticEventsXdr);
+    const parsedDiagnosticEvents = parseOptional(() =>
+      parseEvents(response.diagnosticEventsXdr)
+    );
 
     this.meta = {
       data: {
         input,
         diagnosticEvents: parsedDiagnosticEvents,
+        failure: parseTransactionFailure({
+          transaction: input.transaction,
+          result: response.resultXdr,
+          resultMeta: response.resultMetaXdr,
+          diagnosticEvents: response.diagnosticEventsXdr,
+        }),
         transactionXDR: softTryToXDR(() =>
           response.envelopeXdr.toXdr("base64")
         ),
