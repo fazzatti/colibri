@@ -1,5 +1,5 @@
 import type { Server } from "stellar-sdk/rpc";
-import * as RESOURCE_ERROR from "@/resources/error.ts";
+import * as ERROR from "@/resources/error.ts";
 import type {
   ClassicTransactionInput,
 } from "@/pipelines/classic-transaction/types.ts";
@@ -21,7 +21,7 @@ export const inputToBuild = (rpc: Server, networkPassphrase: string) => {
   );
   return (input: ClassicTransactionInput) => {
     if (input.config.resources !== undefined) {
-      throw new RESOURCE_ERROR.UNSUPPORTED_TRANSACTION();
+      throw new ERROR.UNSUPPORTED_TRANSACTION();
     }
     return build(input);
   };
