@@ -8,6 +8,9 @@ The constructor orders the assets canonically and derives the pool ID. It does
 not create accounts, establish trustlines, submit a transaction, or choose price
 tolerances. Each of those actions remains explicit.
 
+Pool writes use [TransactionConfig](transaction-config.md) through the
+[classic transaction pipeline](pipelines/classic-transaction.md).
+
 ## Bind, establish a trustline, deposit, and withdraw
 
 This Testnet example creates a demonstration asset and account before using the
@@ -141,11 +144,11 @@ strings or `{ n, d }` fractions. Reversed bounds fail rather than being silently
 corrected. No tolerance is added; equal endpoints are deliberate exact-price
 constraints and can fail when current reserves do not satisfy them.
 
-`StellarPrice.fromDecimal` returns an exact native-compatible `{ n, d }` ratio
-or rejects a value that cannot fit the protocol's signed-32-bit components. It
-does not approximate a financial limit. The ordinary SDK price inputs remain
-available on the native path. No convenience method selects slippage or rounds
-minimum received amounts for the caller.
+[`StellarPrice.fromDecimal`](sdex.md) returns an exact native-compatible
+`{ n, d }` ratio or rejects a value that cannot fit the protocol's signed-32-bit
+components. It does not approximate a financial limit. The ordinary SDK price
+inputs remain available on the native path. No convenience method selects
+slippage or rounds minimum received amounts for the caller.
 
 Minimum/maximum deposit prices bound the ratio of amounts actually deposited,
 not an external market quotation. For a nonempty pool, the reserves determine
@@ -194,7 +197,8 @@ For the protocol's behavior and failure codes, see the official
 [liquidity-pool operations](https://developers.stellar.org/docs/learn/fundamentals/transactions/list-of-operations#liquidity-pool-deposit).
 
 Constructor `plugins: { transactionPipe: [plugin] }` installs the same plugins
-on `pool.transactionPipe` before the first write, as with `StellarAsset`. Memos
-belong in each write's `config.memo`; channel and fee-bump plugins retain native
-operation sources. See the
+on `pool.transactionPipe` before the first write, as with
+[`StellarAsset`](asset/stellar-asset.md). Memos belong in each write's
+`config.memo`; channel and fee-bump plugins retain native operation sources. See
+the
 [complete asset plugin example](asset/stellar-asset.md#sources-plugins-and-native-interoperability).

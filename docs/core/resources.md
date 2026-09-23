@@ -1,9 +1,10 @@
 # Transaction resources
 
-Use `TransactionConfig.resources` to replace or pad the resource declarations
-returned by the final Soroban simulation. Omission preserves existing behavior.
-These controls do not change what the simulator measures or impose a simulation
-execution cap. Classic transaction pipelines reject them.
+Use `resources` in [TransactionConfig](transaction-config.md) to replace or pad
+the resource declarations returned by the final Soroban simulation. Omission
+preserves existing behavior. These controls do not change what the simulator
+measures or impose a simulation execution cap. Classic transaction pipelines
+reject them.
 
 ## Choose overrides or padding
 
@@ -33,11 +34,12 @@ exact arithmetic. Fee amounts use strings; resource counts use safe integers.
 Negative values, unknown fields, ambiguous modes and representation overflow
 fail locally. A resource cannot appear in both `override` and `padding`.
 
-An override below the simulation recommendation raises `RES_002` before envelope
-signing. For example, a 12-million instruction override cannot replace a
-13-million recommendation. This is local validation after simulation, not an RPC
-simulation failure. The recommendation includes RPC margins and is not a claim
-about the precise minimum execution cost.
+An override below the simulation recommendation raises
+[`RES_002`](../reference/errors/core-resources.md) before envelope signing. For
+example, a 12-million instruction override cannot replace a 13-million
+recommendation. This is local validation after simulation, not an RPC simulation
+failure. The recommendation includes RPC margins and is not a claim about the
+precise minimum execution cost.
 
 Padding is applied once, after the final simulation. With delegated
 authorization, the intermediate transaction remains unpadded; the enforcing
@@ -60,9 +62,10 @@ leaves the declared resource fee unchanged; setting `resourceFee` alone leaves
 CPU and byte limits unchanged. Percentage padding calculates an addition to that
 field's simulation value, without pricing changes to other fields.
 
-This complete configuration example requires only `@colibri/core`. Pass the
-chosen object as an invocation's `config.resources`. The application chooses an
-instruction override that covers its final simulation recommendation:
+This complete configuration example requires only
+[`@colibri/core`](overview.md). Pass the chosen object as an invocation's
+`config.resources`. The application chooses an instruction override that covers
+its final simulation recommendation:
 
 <!-- deno-check -->
 
@@ -78,15 +81,19 @@ export const manualResources: TransactionResources = {
 
 Manual configuration performs no settings reads or automatic repricing. The
 caller supplies any required fee increase and chooses budgets within the
-network's limits. Use `calculateResourcePadding` below when you want the utility
-to price CPU/byte growth and produce the resource-fee addition. It also checks
-the explicitly supplied network ceilings. Both approaches use the same final
-assembly and transaction-fee validation.
+network's limits. Use
+[`calculateResourcePadding`](#read-settings-and-calculate-padding-explicitly)
+when you want the utility to
+[price CPU/byte growth](#read-settings-and-calculate-padding-explicitly) and
+produce the resource-fee addition. It also checks the explicitly supplied
+network ceilings. Both approaches use the same final assembly and
+transaction-fee validation.
 
 ### Combining resources with the transaction fee
 
 The final envelope bid is **adjusted resource fee + inclusion bid**. Resource
-overrides and padding are resolved before the existing `config.fee` strategy:
+overrides and padding are resolved before the existing
+[`config.fee`](transaction-config.md#fee-strategies) strategy:
 
 - A string or `{ base }` preserves the per-operation inclusion bid. Soroban
   invocations have one operation, so their total rises with the resource fee.
@@ -99,17 +106,19 @@ overrides and padding are resolved before the existing `config.fee` strategy:
 For example, a final simulation resource fee of 30,000 stroops plus
 `padding.resourceFee: { amount: "5000" }` produces:
 
-| `config.fee`                 | Adjusted resource fee | Inclusion bid | Total envelope bid |
-| ---------------------------- | --------------------: | ------------: | -----------------: |
-| `"100"` or `{ base: "100" }` |                35,000 |           100 |             35,100 |
-| `{ inclusion: "300" }`       |                35,000 |           300 |             35,300 |
-| `{ max: "50000" }`           |                35,000 |        15,000 |             50,000 |
+| [`config.fee`](transaction-config.md#fee-strategies) | Adjusted resource fee | Inclusion bid | Total envelope bid |
+| ---------------------------------------------------- | --------------------: | ------------: | -----------------: |
+| `"100"` or `{ base: "100" }`                         |                35,000 |           100 |             35,100 |
+| `{ inclusion: "300" }`                               |                35,000 |           300 |             35,300 |
+| `{ max: "50000" }`                                   |                35,000 |        15,000 |             50,000 |
 
 With these resources, `{ max: "35100" }` leaves exactly the minimum 100 stroops
-for inclusion; `{ max: "35099" }` fails with `ASM_013` before envelope signing.
-Fixed padding, percentage padding, overrides and calculator-generated padding
-all follow these rules. Omitting `resources` preserves existing fee behavior.
-The network's eventual charge can be lower than the submitted bid.
+for inclusion; `{ max: "35099" }` fails with
+[`ASM_013`](../reference/errors/core-processes-assemble-transaction.md) before
+envelope signing. Fixed padding, percentage padding, overrides and
+calculator-generated padding all follow these rules. Omitting `resources`
+preserves existing fee behavior. The network's eventual charge can be lower than
+the submitted bid.
 
 A [fee-bump envelope](../packages/plugins/fee-bump.md) is a separate,
 intentional fee decision. Its configured outer bid can exceed the inner
@@ -122,8 +131,9 @@ resource fee.
 ledger-cost-extension entries. It returns scalar limits, instruction/read/write
 tariffs, network identity, protocol version and observation ledger. The
 ledger-cost extension requires Protocol 23 or later. Missing or invalid settings
-raise `RES_006`. Protocol/network identity and settings come from separate RPC
-calls and are not an atomic snapshot.
+raise [`RES_006`](../reference/errors/core-resources.md). Protocol/network
+identity and settings come from separate RPC calls and are not an atomic
+snapshot.
 
 `calculateResourcePadding({ simulation, settings, padding })` is a pure utility.
 It performs no RPC calls, mutates no transaction and is never invoked implicitly
@@ -156,8 +166,8 @@ It also supports a percentage, explicitly measured against the simulation's
 recommendation. For example, `refundableFee: { percent: 10 }` requests extra
 refundable headroom equal to 10% of that total, after funding the other resource
 increases. The calculator's request does not accept `resourceFee`; its job is to
-calculate that amount. Manual transaction configuration accepts `resourceFee`
-directly.
+calculate that amount. Manual [transaction configuration](transaction-config.md)
+accepts `resourceFee` directly.
 
 The calculation subtracts rounded original resource costs from rounded adjusted
 costs. It does not simply round a price for the added bytes. Unchanged
@@ -171,10 +181,10 @@ matches it.
 ## Assemble using the same simulation
 
 This complete function prepares an application-built transaction for a method
-without additional authorization entries. Install `@colibri/core` and Stellar
-SDK 17.x. Pass a Testnet/local RPC and unsigned transaction from your
-application; network reads require Deno's `--allow-net`. It returns an unsigned
-transaction for your existing envelope-signing/submission flow, without
+without additional authorization entries. Install [`@colibri/core`](overview.md)
+and Stellar SDK 17.x. Pass a Testnet/local RPC and unsigned transaction from
+your application; network reads require Deno's `--allow-net`. It returns an
+unsigned transaction for your existing envelope-signing/submission flow, without
 submitting anything. For delegated or non-source authorization, use its final
 enforcing simulation and signed auth entries instead; see
 [delegated authorization](signer/delegated-signer.md).
@@ -230,10 +240,12 @@ directly, since Core does not re-export its factory.
 
 ## Diagnose failures
 
-`STX_007` and `STX_010` retain their existing classes, codes, legacy metadata
-and raw evidence. `meta.data.failure` adds outer/inner transaction codes,
-indexed operation codes, declared resource budgets, available Core execution
-counters, and available declared/charged fees. `STX_007` also retains
+[`STX_007`](../reference/errors/core-processes-send-transaction.md) and
+[`STX_010`](../reference/errors/core-processes-send-transaction.md) retain their
+existing classes, codes, legacy metadata and raw evidence. `meta.data.failure`
+adds outer/inner transaction codes, indexed operation codes, declared resource
+budgets, available Core execution counters, and available declared/charged fees.
+[`STX_007`](../reference/errors/core-processes-send-transaction.md) also retains
 `resultXDR`.
 
 Counters and fee components are optional. Diagnostic counters may stop at the

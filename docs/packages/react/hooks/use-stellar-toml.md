@@ -1,9 +1,11 @@
 # useStellarToml
 
-Fetch and validate a domain’s SEP-1 stellar.toml discovery document.
+Fetch and validate a domain’s [SEP-1](../../../core/sep1.md) stellar.toml
+discovery document.
 
-Import from `@colibri/react/sep1`. Use under both `ColibriProvider` and
-`QueryClientProvider`; see [setup](../setup.md).
+Import from `@colibri/react/sep1`. Use under both
+[`ColibriProvider`](../setup.md) and [`QueryClientProvider`](../setup.md); see
+[setup](../setup.md).
 
 ## Parameters and result
 
@@ -13,7 +15,8 @@ Import from `@colibri/react/sep1`. Use under both `ColibriProvider` and
 - `query?`: query controls.
 - `scope?`: cache discriminator; defaults to `"default"`.
 
-**Returns:** A query result containing Core’s `StellarToml` facade.
+**Returns:** A query result containing Core’s
+[`StellarToml`](../../../core/sep1.md) facade.
 
 ## Example
 

@@ -56,15 +56,16 @@ if (payment.type === "payment") {
 }
 ```
 
-`config.fee` can remain a string base fee or select an explicit strategy. For
-example, `{ inclusion: "205" }` sets the total inclusion-fee bid to exactly 205
-stroops even for a multi-operation transaction, while `{ max: "205" }` caps the
-complete classic transaction fee. See
-[Transaction Config](../transaction-config.md).
+[`config.fee`](../transaction-config.md#fee-strategies) can remain a string base
+fee or select an explicit strategy. For example, `{ inclusion: "205" }` sets the
+total inclusion-fee bid to exactly 205 stroops even for a multi-operation
+transaction, while `{ max: "205" }` caps the complete classic transaction fee.
+See [Transaction Config](../transaction-config.md).
 
 ## Output
 
-The pipeline preserves the normalized `SendTransactionOutput` fields and adds:
+The pipeline preserves the normalized
+[`SendTransactionOutput`](../processes/send-transaction.md) fields and adds:
 
 - `feeCharged`, the actual total fee reported by Stellar;
 - `operations`, a zero-based ordered array of runtime-discriminated successful

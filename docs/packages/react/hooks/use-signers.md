@@ -2,15 +2,16 @@
 
 Read the connected wallet’s explicit, guarded signing capabilities.
 
-Import from `@colibri/react/signers`. Requires `ColibriProvider`; see
-[setup](../setup.md). No QueryClient is needed for this hook.
+Import from `@colibri/react/signers`. Requires [`ColibriProvider`](../setup.md);
+see [setup](../setup.md). No QueryClient is needed for this hook.
 
 ## Parameters and result
 
 No parameters.
 
-**Returns:** A readonly array of Core `Signer` capabilities; empty when
-disconnected.
+**Returns:** A readonly array of Core
+[`Signer`](../../../core/signer/README.md#signer-capabilities) capabilities;
+empty when disconnected.
 
 ## Example
 
@@ -31,7 +32,8 @@ Identity is checked before and after an external signing prompt. A disconnect,
 account change or network change invalidates retained capabilities. An available
 signer still must authorize the requested account/operation. An address,
 especially a C-address, does not imply an envelope-signing capability. Pass
-eligible signers explicitly into transaction configuration; see
+eligible signers explicitly into
+[transaction configuration](../../../core/transaction-config.md); see
 [wallets and sessions](../wallets-and-sessions.md).
 
 ## See also

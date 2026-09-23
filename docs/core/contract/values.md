@@ -55,10 +55,11 @@ U32 value. It does not convert a validated I32 into a U32 implicitly.
 
 `SorobanType.Symbol.from("ADMIN!")`, `SorobanType.U32.from(-1)` and fractional
 U32 values throw `SorobanValueError`. Codes distinguish invalid values
-(`SV_001`), incompatible wrapped types (`SV_002`) and invalid schemas
-(`SV_003`). Type and reason are in `meta.data`; codec failures retain their
-cause. Validation checks representation and ABI compatibility, not authorization
-or business rules.
+([`SV_001`](../../reference/errors/core-soroban-types.md)), incompatible wrapped
+types ([`SV_002`](../../reference/errors/core-soroban-types.md)) and invalid
+schemas ([`SV_003`](../../reference/errors/core-soroban-types.md)). Type and
+reason are in `meta.data`; codec failures retain their cause. Validation checks
+representation and ABI compatibility, not authorization or business rules.
 
 A codec provides `.from()`, `.encode()`, `.decode()`, `.fromScVal()` and
 `.fromXdr()`. Wrapped values expose `.value`, `.toScVal()` and `.toXdr()`.
@@ -214,10 +215,12 @@ stored under a key. `SorobanCodec` is the reusable encoding/decoding class.
 
 ## Existing contract behavior
 
-`Contract.read()`, `invoke()` and `deploy()` accept helpers alongside raw
-values. Generated clients retain existing pipelines, signing, plugin ordering,
-submission and transaction metadata. Event filters and ledger keys also accept
-validated values. Method outputs stay plain; wrap them explicitly when needed.
+[`Contract.read()`](invocation.md#read), `invoke()` and `deploy()` accept
+helpers alongside raw values.
+[Generated clients](../../packages/contract-bindings/generated-client.md) retain
+existing pipelines, signing, plugin ordering, submission and transaction
+metadata. Event filters and ledger keys also accept validated values. Method
+outputs stay plain; wrap them explicitly when needed.
 
 The SDK's native `Spec` constructor is unchanged. Use
 `encodeSorobanArguments(spec, method, args)` when building a native operation

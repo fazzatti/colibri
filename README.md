@@ -41,25 +41,25 @@ Stellar JavaScript SDK. It keeps Stellar SDK operations, transactions, XDR
 values, and RPC clients as the protocol boundary, and adds reusable structure
 for the application workflows around them.
 
-The central package, `@colibri/core`, separates transaction work into plain
-processes, stable pipeline steps, typed connectors, and complete callable
-pipelines. The other packages cover testing, authentication standards,
-continuous RPC ingestion, contract build verification, transaction plugins, and
-address identicons.
+The central package, [`@colibri/core`](docs/core/overview.md), separates
+transaction work into plain processes, stable pipeline steps, typed connectors,
+and complete callable pipelines. The other packages cover testing,
+authentication standards, continuous RPC ingestion, contract build verification,
+transaction plugins, and address identicons.
 
 ## Packages
 
-| Package                                                                    | Primary responsibility                                                   | Main surfaces                                                                                                                    |
-| -------------------------------------------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| [`@colibri/core`](./core/README.md)                                        | Stellar and Soroban application primitives and transaction orchestration | Network configuration, accounts, signers, classic and Soroban pipelines, contracts, assets, ledger entries, events, typed errors |
-| [`@colibri/test-tooling`](./test-tooling/README.md)                        | Integration testing against a real local Stellar network                 | `StellarTestLedger`, named Quickstart containers, service configuration, readiness, logs, reuse, and cleanup                     |
-| [`@colibri/webauth`](./webauth/README.md)                                  | SEP-10 and SEP-45 Web Authentication                                     | `stellar.toml` discovery, explicit or account-based protocol routing, challenge validation, signing, and JWT retrieval           |
-| [`@colibri/rpc-streamer`](./rpc-streamer/README.md)                        | Checkpointed event, ledger, transaction, and operation ingestion         | Live RPC polling, archive RPC backfill, native operation records, recovery, checkpoints, and custom ingestors                    |
-| [`@colibri/build-verification`](./build-verification/README.md)            | Reproducible Stellar contract build verification                         | SEP-58 and out-of-band targets, source and image resolution, bounded Docker builds, Wasm comparison, evidence, and CLI output    |
-| [`@colibri/plugin-fee-bump`](./plugins/fee-bump/README.md)                 | Fee sponsorship for transaction pipelines                                | Fee-bump envelope construction and fee-source authorization at the `send-transaction` step                                       |
-| [`@colibri/plugin-channel-accounts`](./plugins/channel-accounts/README.md) | Reusable transaction source accounts for concurrent workloads            | Sponsored channel-account lifecycle, allocation, signer injection, and release around supported pipelines                        |
-| [`@colibri/plugin-sep29`](./plugins/sep29/README.md)                       | Opt-in recipient memo requirements                                       | Standalone RPC checks and a non-mutating submission guard for native and fee-bump transactions                                   |
-| [`@colibri/identicon`](./identicon/README.md)                              | SEP-33 account visuals with a same-algorithm C-address extension         | Local pattern generation and SVG, PNG, or data-URL rendering                                                                     |
+| Package                                                                    | Primary responsibility                                                   | Main surfaces                                                                                                                                 |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`@colibri/core`](./core/README.md)                                        | Stellar and Soroban application primitives and transaction orchestration | Network configuration, accounts, signers, classic and Soroban pipelines, contracts, assets, ledger entries, events, typed errors              |
+| [`@colibri/test-tooling`](./test-tooling/README.md)                        | Integration testing against a real local Stellar network                 | [`StellarTestLedger`](docs/packages/test-tooling.md), named Quickstart containers, service configuration, readiness, logs, reuse, and cleanup |
+| [`@colibri/webauth`](./webauth/README.md)                                  | SEP-10 and SEP-45 Web Authentication                                     | `stellar.toml` discovery, explicit or account-based protocol routing, challenge validation, signing, and JWT retrieval                        |
+| [`@colibri/rpc-streamer`](./rpc-streamer/README.md)                        | Checkpointed event, ledger, transaction, and operation ingestion         | Live RPC polling, archive RPC backfill, native operation records, recovery, checkpoints, and custom ingestors                                 |
+| [`@colibri/build-verification`](./build-verification/README.md)            | Reproducible Stellar contract build verification                         | SEP-58 and out-of-band targets, source and image resolution, bounded Docker builds, Wasm comparison, evidence, and CLI output                 |
+| [`@colibri/plugin-fee-bump`](./plugins/fee-bump/README.md)                 | Fee sponsorship for transaction pipelines                                | Fee-bump envelope construction and fee-source authorization at the `send-transaction` step                                                    |
+| [`@colibri/plugin-channel-accounts`](./plugins/channel-accounts/README.md) | Reusable transaction source accounts for concurrent workloads            | Sponsored channel-account lifecycle, allocation, signer injection, and release around supported pipelines                                     |
+| [`@colibri/plugin-sep29`](./plugins/sep29/README.md)                       | Opt-in recipient memo requirements                                       | Standalone RPC checks and a non-mutating submission guard for native and fee-bump transactions                                                |
+| [`@colibri/identicon`](./identicon/README.md)                              | SEP-33 account visuals with a same-algorithm C-address extension         | Local pattern generation and SVG, PNG, or data-URL rendering                                                                                  |
 
 Packages are versioned and published separately. Applications only need to
 install the packages used by their runtime or development workflow.
@@ -85,8 +85,8 @@ Or add it to a Node.js project through JSR:
 npx jsr add @colibri/core
 ```
 
-Replace `@colibri/core` with another package name from the table above when only
-that package is required.
+Replace [`@colibri/core`](docs/core/overview.md) with another package name from
+the table above when only that package is required.
 
 ## Core architecture
 
@@ -183,59 +183,66 @@ relevant process narrows the signer before invoking it.
 
 Core includes implementations for:
 
-| Signer                           | Capability                                                                                      |
-| -------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `LocalSigner`                    | Ed25519 envelope signatures, Soroban authorization entries, and optional SEP-53 message signing |
-| `HashXSigner`                    | Hash-X envelope authorization using a preimage                                                  |
-| `Ed25519SignedPayloadSigner`     | Ed25519 signed-payload envelope authorization                                                   |
-| `PreAuthorizedTransactionSigner` | Validation of an exact pre-authorized transaction hash without adding a decorated signature     |
-| `DelegatedSigner`                | Recursive delegated Soroban authorization entries                                               |
+| Signer                                                                                    | Capability                                                                                      |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| [`LocalSigner`](docs/core/signer/local-signer.md)                                         | Ed25519 envelope signatures, Soroban authorization entries, and optional SEP-53 message signing |
+| [`HashXSigner`](docs/core/signer/hash-x-signer.md)                                        | Hash-X envelope authorization using a preimage                                                  |
+| [`Ed25519SignedPayloadSigner`](docs/core/signer/signed-payload-signer.md)                 | Ed25519 signed-payload envelope authorization                                                   |
+| [`PreAuthorizedTransactionSigner`](docs/core/signer/pre-authorized-transaction-signer.md) | Validation of an exact pre-authorized transaction hash without adding a decorated signature     |
+| [`DelegatedSigner`](docs/core/signer/delegated-signer.md)                                 | Recursive delegated Soroban authorization entries                                               |
 
 Applications can implement the same interfaces for wallets, remote signing
 services, hardware devices, or contract-specific authorization. The pipeline
 matches signers to requirements through `signsFor(...)`; it does not assume that
 every signer owns an accessible secret key.
 
-`MessageSigner` is an independent optional capability, narrowed with
-`isMessageSigner`. SEP-53 message signatures use the Stellar SDK's
-domain-separated format; they do not authorize a transaction or supply an
-application's replay-protection policy.
+[`MessageSigner`](docs/core/signer/message-signing.md) is an independent
+optional capability, narrowed with
+[`isMessageSigner`](docs/core/signer/message-signing.md). SEP-53 message
+signatures use the Stellar SDK's domain-separated format; they do not authorize
+a transaction or supply an application's replay-protection policy.
 
 ## Contracts, assets, and ledger data
 
 Core exposes domain-specific actions alongside lower-level protocol reads:
 
-- `StellarAsset` owns a classic transaction pipeline for explicit trustline,
-  transfer, issuance/redemption, authorization and clawback actions on a native
-  SDK `Asset`. It reads balances and holder state, exposes identity/precision
-  and exact amount conversion, and binds the SAC explicitly with `toContract()`.
-  Transfers never silently add trustlines or switch to Soroban.
-- `SDEX` manages known sell, buy, and passive offers. `sell` and `buy` variants
-  express minimum receive or maximum spend per unit, while `StellarPrice`
-  converts exact decimal limits or quantity ratios without silently rounding
-  them. Equivalent unit names are available for updates and passive offers.
-- `NativeLiquidityPool` binds a protocol-native pool, reads its reserves, and
-  exposes explicit pool-share trustline, deposit, and withdrawal operations.
-  Asset-labelled amounts and price bounds avoid requiring callers to remember
-  A/B order. Position reads combine pool reserves and the holder's share
-  trustline in one RPC observation.
-- `ClaimableBalancePredicates` groups static time and boolean helpers that
-  return native SDK predicates, including time windows and balanced all/any
-  lists; claiming or refunding still needs an explicit transaction.
+- [`StellarAsset`](docs/core/asset/stellar-asset.md) owns a classic transaction
+  pipeline for explicit trustline, transfer, issuance/redemption, authorization
+  and clawback actions on a native SDK `Asset`. It reads balances and holder
+  state, exposes identity/precision and exact amount conversion, and binds the
+  SAC explicitly with `toContract()`. Transfers never silently add trustlines or
+  switch to Soroban.
+- [`SDEX`](docs/core/sdex.md) manages known sell, buy, and passive offers.
+  `sell` and `buy` variants express minimum receive or maximum spend per unit,
+  while [`StellarPrice`](docs/core/sdex.md) converts exact decimal limits or
+  quantity ratios without silently rounding them. Equivalent unit names are
+  available for updates and passive offers.
+- [`NativeLiquidityPool`](docs/core/liquidity-pool.md) binds a protocol-native
+  pool, reads its reserves, and exposes explicit pool-share trustline, deposit,
+  and withdrawal operations. Asset-labelled amounts and price bounds avoid
+  requiring callers to remember A/B order. Position reads combine pool reserves
+  and the holder's share trustline in one RPC observation.
+- [`ClaimableBalancePredicates`](docs/core/claimable-balance-predicates.md)
+  groups static time and boolean helpers that return native SDK predicates,
+  including time windows and balanced all/any lists; claiming or refunding still
+  needs an explicit transaction.
 
-- `Contract` loads contract specifications, binds deployed contracts, deploys
-  Wasm or external executable references, and routes reads and invocations
-  through the standard pipelines. It can also extract SEP-46 metadata, parse
-  SEP-47 claims, and compare SEP-48 specifications with versioned standard
-  interface providers without treating a declaration as proof of a match.
-- `SEP41TokenContract` provides the exact portable SEP-41 interface for custom
-  token contracts, including muxed transfer destinations, while retaining its
-  underlying `Contract` for implementation-specific methods.
-- `StellarAssetContract` provides typed operations for Stellar Asset Contract
-  administration, balances, allowances, authorization, minting, burning, and
-  transfers.
-- `LedgerEntries` reads typed current-state entries, including accounts,
-  contract instances, contract code, data, and configuration.
+- [`Contract`](docs/core/contract.md) loads contract specifications, binds
+  deployed contracts, deploys Wasm or external executable references, and routes
+  reads and invocations through the standard pipelines. It can also extract
+  SEP-46 metadata, parse SEP-47 claims, and compare SEP-48 specifications with
+  versioned standard interface providers without treating a declaration as proof
+  of a match.
+- [`SEP41TokenContract`](docs/core/asset/sep-41-token-contract.md) provides the
+  exact portable SEP-41 interface for custom token contracts, including muxed
+  transfer destinations, while retaining its underlying
+  [`Contract`](docs/core/contract.md) for implementation-specific methods.
+- [`StellarAssetContract`](docs/core/asset/stellar-asset-contract.md) provides
+  typed operations for Stellar Asset Contract administration, balances,
+  allowances, authorization, minting, burning, and transfers.
+- [`LedgerEntries`](docs/core/ledger-entries.md) reads typed current-state
+  entries, including accounts, contract instances, contract code, data, and
+  configuration.
 - ledger parsing and event schemas turn closed-ledger XDR and contract events
   into typed application data.
 
@@ -254,15 +261,18 @@ the [SDEX guide](./docs/core/sdex.md),
 [asset guide](./docs/core/asset/stellar-asset.md).
 
 SDEX, native liquidity pools, and their exact rational price helpers are grouped
-under `core/markets/`. They remain named exports of `@colibri/core` and accept
-native SDK assets and operation inputs. `StellarAsset` supplies asset-level
-balance and authorization queries, explicit `mint`/`burn` payments, issuer
-authorization control, and creation of claimable balances with native claimants.
+under `core/markets/`. They remain named exports of
+[`@colibri/core`](docs/core/overview.md) and accept native SDK assets and
+operation inputs. [`StellarAsset`](docs/core/asset/stellar-asset.md) supplies
+asset-level balance and authorization queries, explicit `mint`/`burn` payments,
+issuer authorization control, and creation of claimable balances with native
+claimants.
 
 ## Testing with Quickstart
 
-`@colibri/test-tooling` manages Docker-backed Stellar Quickstart instances for
-tests that require ledger behavior. `StellarTestLedger` controls the container
+[`@colibri/test-tooling`](docs/packages/test-tooling.md) manages Docker-backed
+Stellar Quickstart instances for tests that require ledger behavior.
+[`StellarTestLedger`](docs/packages/test-tooling.md) controls the container
 name, image, network, enabled services, ports, readiness, logs, reuse policy,
 and cleanup, then exposes network values that can be used by Core.
 
@@ -278,7 +288,8 @@ Pure conversion, validation, and requirement logic should remain in unit tests.
 
 ## Authentication and Stellar standards
 
-`@colibri/webauth` implements two distinct Web Authentication flows:
+[`@colibri/webauth`](docs/packages/webauth.md) implements two distinct Web
+Authentication flows:
 
 - SEP-10 for classic or muxed accounts, including challenge structure, account
   and memo binding, domains, time bounds, and server-signature validation;
@@ -316,11 +327,12 @@ boundary.
 
 ## Transaction operations and scaling
 
-`@colibri/plugin-sep29` adds opt-in memo-presence checks for payments, path
-payments, and account merges using RPC account-data reads. It respects muxed
-destinations and checks fee-bump inner transactions without changing either the
-memo or the envelope. Pass a native SDK `Memo` through `TransactionConfig.memo`.
-See [SEP-29](./docs/packages/plugins/sep29.md).
+[`@colibri/plugin-sep29`](docs/packages/plugins/sep29.md) adds opt-in
+memo-presence checks for payments, path payments, and account merges using RPC
+account-data reads. It respects muxed destinations and checks fee-bump inner
+transactions without changing either the memo or the envelope. Pass a native SDK
+`Memo` through [`TransactionConfig.memo`](docs/core/transaction-config.md). See
+[SEP-29](./docs/packages/plugins/sep29.md).
 
 Core's `wrapSponsorship` composes native reserve-sponsorship blocks for account
 creation, trustlines, and other reserve-bearing entries. It preserves the
@@ -330,13 +342,13 @@ transaction fees. See [Reserve sponsorship](./docs/core/sponsorship.md).
 
 The transaction plugins attach policy at stable pipeline boundaries:
 
-- `@colibri/plugin-fee-bump` targets the `send-transaction` step. It wraps the
-  completed inner transaction in a fee-bump envelope and authorizes the fee
-  source separately.
-- `@colibri/plugin-channel-accounts` targets complete classic and contract
-  invocation pipelines. It allocates a reusable source account before the
-  transaction is built, injects its signer, and releases the account after
-  success or failure.
+- [`@colibri/plugin-fee-bump`](docs/packages/plugins/fee-bump.md) targets the
+  `send-transaction` step. It wraps the completed inner transaction in a
+  fee-bump envelope and authorizes the fee source separately.
+- [`@colibri/plugin-channel-accounts`](docs/packages/plugins/channel-accounts.md)
+  targets complete classic and contract invocation pipelines. It allocates a
+  reusable source account before the transaction is built, injects its signer,
+  and releases the account after success or failure.
 
 Fee sponsorship and source-account allocation solve different problems and can
 be composed. Channel accounts isolate sequences across concurrent submissions;
@@ -344,11 +356,12 @@ fee bumps let another account pay the network fee.
 
 ## Contract build verification
 
-`@colibri/build-verification` verifies that declared source and build inputs
-reproduce the exact Wasm deployed on Stellar or supplied directly. It supports
-contract IDs, Wasm hashes, external executable references, and direct Wasm, then
-resolves the source and OCI image, runs the build in a bounded Docker container,
-selects the declared artifact, and compares the bytes.
+[`@colibri/build-verification`](docs/packages/build-verification.md) verifies
+that declared source and build inputs reproduce the exact Wasm deployed on
+Stellar or supplied directly. It supports contract IDs, Wasm hashes, external
+executable references, and direct Wasm, then resolves the source and OCI image,
+runs the build in a bounded Docker container, selects the declared artifact, and
+compares the bytes.
 
 The library API and CLI return structured results, logs, and evidence. A
 successful comparison establishes build reproducibility and byte equality; it is
@@ -432,6 +445,11 @@ deno task check:crap
 ```
 
 ### Documentation
+
+Follow the [documentation conventions](AGENTS.md#documentation-conventions):
+link documented concepts where they are mentioned, connect parent pages to their
+child guides, and keep shared explanations in one canonical place. Links belong
+beside code examples so the examples remain runnable.
 
 GitBook content is under [`docs/`](./docs/README.md), with navigation in
 [`docs/SUMMARY.md`](./docs/SUMMARY.md).

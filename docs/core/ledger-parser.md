@@ -38,14 +38,16 @@ if (entry) {
 
 ## Network context and correct transaction matching
 
-The second argument accepts either Colibri's `NetworkConfig` or the exact
-network passphrase string. Both paths use the same native SDK transaction hash.
-The parser does not guess Mainnet/Testnet and does not request network data.
+The second argument accepts either Colibri's [`NetworkConfig`](network.md) or
+the exact network passphrase string. Both paths use the same native SDK
+transaction hash. The parser does not guess Mainnet/Testnet and does not request
+network data.
 
 When you only have an RPC client, discover its network with
 `const { passphrase } = await server.getNetwork()` and pass that value to
-`Ledger.fromEntry(entry, passphrase)`. The RPC Streamer's built-in ledger,
-transaction and operation variants handle this automatically.
+`Ledger.fromEntry(entry, passphrase)`. The
+[RPC Streamer](../packages/rpc-streamer.md)'s built-in ledger, transaction and
+operation variants handle this automatically.
 
 Envelope order in a transaction set differs from execution-result order. Colibri
 matches them by network-specific hash and retains execution-result order. A

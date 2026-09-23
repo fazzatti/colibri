@@ -1,13 +1,16 @@
 # useTokenMetadata
 
-Read a deployed SEP-41 contract’s name, symbol and decimal precision.
+Read a deployed [SEP-41](../../../core/asset/sep-41-token-contract.md)
+contract’s name, symbol and decimal precision.
 
-Import from `@colibri/react/assets`. Use under both `ColibriProvider` and
-`QueryClientProvider`; see [setup](../setup.md).
+Import from `@colibri/react/assets`. Use under both
+[`ColibriProvider`](../setup.md) and [`QueryClientProvider`](../setup.md); see
+[setup](../setup.md).
 
 ## Parameters and result
 
-- `contractId`: a required C-address implementing SEP-41, including SAC
+- `contractId`: a required C-address implementing
+  [SEP-41](../../../core/asset/sep-41-token-contract.md), including SAC
   contracts.
 - `query?`: query controls.
 
@@ -34,13 +37,15 @@ export function TokenLabel({ contractId }: { contractId: ContractId }) {
 
 ## Behavior
 
-This queries the SEP-41 interface through Core, not a Classic code/issuer
-registry. The contract must exist on the configured network and implement those
-methods. The ID is required; mount the component only after it is available.
+This queries the [SEP-41](../../../core/asset/sep-41-token-contract.md)
+interface through Core, not a Classic code/issuer registry. The contract must
+exist on the configured network and implement those methods. The ID is required;
+mount the component only after it is available.
 
-Decimal precision is shared with `useBalance` in the same QueryClient for five
-minutes. A metadata refetch can reuse those cached decimals. After a known token
-upgrade, invalidate `token-decimals` and refresh affected results; see
+Decimal precision is shared with [`useBalance`](use-balance.md) in the same
+QueryClient for five minutes. A metadata refetch can reuse those cached
+decimals. After a known token upgrade, invalidate `token-decimals` and refresh
+affected results; see
 [token precision caching](../queries.md#token-precision-caching).
 
 ## See also

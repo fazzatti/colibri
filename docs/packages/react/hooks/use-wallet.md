@@ -2,9 +2,9 @@
 
 Observe wallet state, guarded signers and explicit connection actions together.
 
-Import from `@colibri/react/wallet`. Requires `ColibriProvider`, supplied by
-`ColibriQueryProvider` or mounted separately; see [setup](../setup.md). This
-hook does not require a QueryClient.
+Import from `@colibri/react/wallet`. Requires [`ColibriProvider`](../setup.md),
+supplied by [`ColibriQueryProvider`](../setup.md) or mounted separately; see
+[setup](../setup.md). This hook does not require a QueryClient.
 
 ## Parameters and result
 

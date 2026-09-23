@@ -2,13 +2,14 @@
 
 Observe a shared, memory-only WebAuth session.
 
-Import from `@colibri/react/webauth`. Requires `ColibriProvider`; see
-[setup](../setup.md). No QueryClient is needed for this hook.
+Import from `@colibri/react/webauth`. Requires [`ColibriProvider`](../setup.md);
+see [setup](../setup.md). No QueryClient is needed for this hook.
 
 ## Parameters and result
 
-- `session`: the application-owned `WebAuthSession` created for this provider
-  config and service client.
+- `session`: the application-owned
+  [`WebAuthSession`](../wallets-and-sessions.md#webauth) created for this
+  provider config and service client.
 
 **Returns:** `SessionState`: `status` (`anonymous`, `authenticating` or
 `authenticated`) and an optional `token`.

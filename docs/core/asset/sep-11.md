@@ -1,7 +1,8 @@
 # SEP-11
 
 [SEP-11](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0011.md)
-defines a standardized way to represent Stellar assets as strings.
+defines a standardized way to represent [Stellar assets](stellar-asset.md) as
+strings.
 
 ## Format
 

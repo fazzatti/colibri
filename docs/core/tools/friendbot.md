@@ -1,6 +1,7 @@
 # Friendbot
 
-Fund accounts on TestNet or FutureNet using Friendbot.
+Fund accounts on [TestNet or FutureNet](../network.md#built-in-configurations)
+using Friendbot.
 
 ## `initializeWithFriendbot`
 
@@ -35,7 +36,8 @@ async function initializeWithFriendbot(
 
 ## Example
 
-Creating and funding a new test account:
+Create a [LocalSigner](../signer/local-signer.md), fund its address, then bind a
+[NativeAccount](../account.md) to that signer:
 
 ```typescript
 import {

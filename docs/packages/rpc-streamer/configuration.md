@@ -3,7 +3,8 @@
 Factories and `new RPCStreamer<T>()` accept exactly one live connection:
 
 - `{ rpcUrl, allowHttp? }` for granular configuration;
-- `{ networkConfig }` to reuse a Colibri `NetworkConfig` containing `rpcUrl`;
+- `{ networkConfig }` to reuse a Colibri
+  [`NetworkConfig`](../../core/network.md) containing `rpcUrl`;
 - `{ rpc }` to reuse a native Stellar SDK `Server` unchanged.
 
 The alternatives are exclusive in TypeScript and at runtime. `allowHttp` belongs
@@ -29,9 +30,9 @@ URL construction, `allowHttp` defaults to `false`; `archiveAllowHttp` falls back
 to the live URL/network's HTTP setting. Enable HTTP only for an intentionally
 local/trusted service.
 
-The event factory additionally accepts `filters: EventFilter[]`. Custom
-streamers accept `ingestLive` and `ingestArchive`; see
-[the custom guide](custom.md).
+The event factory additionally accepts
+[`filters: EventFilter[]`](../../events/event-filter.md). Custom streamers
+accept `ingestLive` and `ingestArchive`; see [the custom guide](custom.md).
 
 | `options` property       | Default | Actual use                                             |
 | ------------------------ | ------- | ------------------------------------------------------ |
@@ -64,8 +65,10 @@ Read [progress and recovery](recovery.md) before persisting or skipping data.
 lifecycle state. The property setters and URL-based method behave differently:
 
 - Assigning `streamer.rpc = client` or `streamer.archiveRpc = client` rejects an
-  assignment when that client is already configured, with `RPC_ALREADY_SET` or
-  `ARCHIVE_RPC_ALREADY_SET`, respectively.
+  assignment when that client is already configured, with
+  [`RPC_ALREADY_SET`](../../reference/errors/rpc-streamer.md) or
+  [`ARCHIVE_RPC_ALREADY_SET`](../../reference/errors/rpc-streamer.md),
+  respectively.
 - Calling `streamer.setArchiveRpc(url, allowHttp?)` creates an archive client
   and **replaces any existing archive client**, including one configured through
   the constructor's `archiveRpcUrl`. It does not use the guarded property

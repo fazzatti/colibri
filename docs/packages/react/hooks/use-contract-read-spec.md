@@ -2,8 +2,9 @@
 
 Simulate a spec-described method without constructing a full Contract client.
 
-Import from `@colibri/react/contracts/read`. Use under both `ColibriProvider`
-and `QueryClientProvider`; see [setup](../setup.md).
+Import from `@colibri/react/contracts/read`. Use under both
+[`ColibriProvider`](../setup.md) and [`QueryClientProvider`](../setup.md); see
+[setup](../setup.md).
 
 ## Parameters and result
 

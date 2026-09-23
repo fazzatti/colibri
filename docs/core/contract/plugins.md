@@ -4,7 +4,7 @@
 
 ## Known Contract Errors
 
-`Contract` can install the core
+[`Contract`](../contract.md) can install the core
 [Contract Error Matcher](../plugins/contract-error-matcher.md) plugin on both
 pipelines it owns. Use `loadContractErrorsFromWasm(...)` when the contract spec
 or WASM contains error enum cases and you want Colibri to derive the mapping for
@@ -42,8 +42,10 @@ Otherwise it loads the spec from local WASM or resolves the currently selected
 network WASM through RPC. It throws if the built-in matcher plugin is already
 attached to either owned pipeline, so plugin ordering stays explicit.
 
-For advanced flows, attach `createContractErrorMatcherPlugin(...)` directly to a
-pipeline or pass plugins intentionally through `contractConfig.plugins`:
+For advanced flows, attach
+[`createContractErrorMatcherPlugin(...)`](../plugins/contract-error-matcher.md)
+directly to a pipeline or pass plugins intentionally through
+`contractConfig.plugins`:
 
 ```ts
 import { createContractErrorMatcherPlugin } from "@colibri/core";
@@ -68,9 +70,13 @@ const contract = new Contract({
 });
 ```
 
+Plugin attachment preserves the write call’s
+[TransactionConfig](../transaction-config.md). See
+[pipeline composition](../pipelines/README.md#plugins) for the shared lifecycle.
+
 ## Owned Pipelines
 
-`Contract` exposes the pipelines it owns:
+[`Contract`](../contract.md) exposes the pipelines it owns:
 
 - `contract.invokePipe`
 - `contract.readPipe`

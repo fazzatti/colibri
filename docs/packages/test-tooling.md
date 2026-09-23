@@ -1,8 +1,9 @@
 # Test Tooling
 
 `@colibri/test-tooling` provides `StellarTestLedger`, a Docker-backed Stellar
-Quickstart harness. It starts, reuses, inspects, stops, and removes ledger
-containers for local integration workflows.
+Quickstart harness. It [starts](test-tooling/quick-start.md),
+[reuses and stops](test-tooling/lifecycle.md) ledger containers for local
+integration workflows.
 
 ```sh
 deno add jsr:@colibri/test-tooling

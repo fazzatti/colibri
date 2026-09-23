@@ -379,6 +379,27 @@ GitBook maintenance requirements:
 
 - `docs/SUMMARY.md` must expose every content page. Preserve existing overview
   URLs when splitting long pages into scoped guides.
+- Link concepts at the point of use. Whenever prose, a property/type table, a
+  list, or an example explanation mentions a Colibri concept, API, tool, or
+  configuration with its own page or section, link the mention to that canonical
+  definition. A sidebar entry, earlier link elsewhere on the page, or final "See
+  also" list does not replace these contextual links.
+- Parent/overview pages must link every child guide in their body and explain
+  when to use it. Every content page needs an incoming link from another content
+  page, beyond SUMMARY. Use section anchors for a specific parameter or
+  behavior; preserve existing headings/URLs when reorganizing content.
+- Keep one canonical explanation of each shared concept. Other guides summarize
+  only what their workflow needs and link to the definition instead of copying
+  its parameter tables, policy, or full examples. Link related workflows in both
+  directions when that helps readers continue their task.
+- Keep code blocks runnable: put links in the adjacent explanation or parameter
+  table, never Markdown syntax inside code. Distinguish Colibri APIs from native
+  SDK names and application-defined variables; do not mechanically link
+  ambiguous words to unrelated concepts. Review link labels and destinations for
+  meaning.
+- GitBook uses relative links within `docs/`; package READMEs and JSDoc must use
+  destinations available to their published readers, such as the public guide or
+  exact API reference. Repository-only relative paths are not published APIs.
 - Teach one coherent developer task per guide: prerequisites, installation,
   visible SDK calls, configuration/units, results, failures and cleanup. Label
   incomplete fragments and their application-supplied inputs explicitly.
@@ -391,9 +412,10 @@ GitBook maintenance requirements:
 - All declared error contexts are documented under `docs/reference/errors/`. Run
   `deno task docs:errors` after error-code changes; do not hand-edit those
   generated tables or the marked error-navigation block in SUMMARY.
-- Run `deno task check:docs` for relative links, navigation, error-reference
-  freshness, package/version references, snippet syntax and complete examples.
-  This runs in the existing CI quality job without changing coverage thresholds.
+- Run `deno task check:docs` for relative links/anchors, parent-child
+  navigation, sidebar-only pages, error-reference freshness, package/version
+  references, snippet syntax and complete examples. This runs in the existing CI
+  quality job without changing coverage thresholds.
 - Keep package READMEs consumer-facing; do not publish private project material
   or repository-only fixture instructions as package usage documentation.
 - Documentation-only changes must not silently fix runtime behavior or bump

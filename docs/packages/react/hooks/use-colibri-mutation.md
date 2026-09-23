@@ -3,15 +3,15 @@
 Run an application-owned SDK action with Colibri's mutation lifecycle,
 serialization and no automatic retries.
 
-Import from `@colibri/react/query/mutation`. Use under `ColibriQueryProvider` or
-both granular providers; see [setup](../setup.md). The pure `/query` entrypoint
-does not export this hook.
+Import from `@colibri/react/query/mutation`. Use under
+[`ColibriQueryProvider`](../setup.md) or both granular providers; see
+[setup](../setup.md). The pure `/query` entrypoint does not export this hook.
 
 ## Parameters and result
 
 - `execute`: `(args: A) => Promise<T>`, the application's existing action.
-- `options?`: `MutationControls<T, A>`, including success/error callbacks. The
-  executor, retry policy and mutation scope cannot be overridden.
+- `options?`: [`MutationControls<T, A>`](../queries.md), including success/error
+  callbacks. The executor, retry policy and mutation scope cannot be overridden.
 
 **Returns:** A TanStack mutation result with inferred input and data types,
 `mutate`, `mutateAsync`, pending/error state and callbacks.

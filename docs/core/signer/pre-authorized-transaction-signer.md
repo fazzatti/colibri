@@ -49,9 +49,10 @@ const fromKey = PreAuthorizedTransactionSigner.fromHash("T...");
 ```
 
 If the transaction changes, Colibri raises
-`SEN_ERRORS.PRE_AUTH_TRANSACTION_MISMATCH` (`SEN_012`). Signatures already added
-to the envelope do not change the transaction hash, so a pre-authorized signer
-can be checked after other envelope signers.
+`SEN_ERRORS.PRE_AUTH_TRANSACTION_MISMATCH`
+([`SEN_012`](../../reference/errors/core-processes-sign-envelope.md)).
+Signatures already added to the envelope do not change the transaction hash, so
+a pre-authorized signer can be checked after other envelope signers.
 
 When the matching transaction is applied, Stellar automatically removes the
 `T...` signer from the account even if an operation fails. If the transaction is

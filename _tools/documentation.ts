@@ -9,6 +9,34 @@ const packages = inventory.map((pkg) => pkg.root).sort();
 const write = Deno.args.includes("--write");
 const failures: string[] = [];
 
+// Navigation examples and commented-out links are not reader-facing routes.
+function proseOnly(content: string): string {
+  let fence: { character: string; length: number } | undefined;
+  return content.replace(/<!--[\s\S]*?-->/g, "").split("\n").map((line) => {
+    const marker = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+    if (marker) {
+      if (!fence) {
+        fence = { character: marker[1][0], length: marker[1].length };
+      } else if (
+        marker[1][0] === fence.character &&
+        marker[1].length >= fence.length && !marker[2].trim()
+      ) {
+        fence = undefined;
+      }
+      return "";
+    }
+    return fence ? "" : line;
+  }).join("\n");
+}
+
+function linkTargets(prose: string): string[] {
+  // Consume inline code separately, but allow it in link labels (including
+  // array types such as [`Signer[]`](signer/README.md)).
+  return [...prose.matchAll(
+    /`+[^`\n]*`+|\[(?:\\.|[^\[\]\\]|\[[^\]]*\])*\]\((<[^>]+>|[^)\s]+)\)/g,
+  )].flatMap((match) => match[1] ? [match[1].replace(/^<|>$/g, "")] : []);
+}
+
 async function files(directory: string): Promise<string[]> {
   const result: string[] = [];
   for await (const entry of Deno.readDir(directory)) {
@@ -253,7 +281,7 @@ const docs = (await files(resolve(root, "docs"))).filter((p) =>
 const summary = await Deno.readTextFile(resolve(root, "docs/SUMMARY.md"));
 const anchors = new Map<string, Set<string>>();
 for (const file of docs) {
-  const text = (await Deno.readTextFile(file)).replace(/```[\s\S]*?```/g, "");
+  const text = proseOnly(await Deno.readTextFile(file));
   const ids = new Set<string>();
   for (const heading of text.matchAll(/^#{1,6}\s+(.+)$/gm)) {
     const base = heading[1].toLowerCase().replace(/[^\p{L}\p{N}_\s-]/gu, "")
@@ -302,17 +330,20 @@ for (const file of exampleDocuments) {
     }
   }
 }
+const contentLinks = new Map<string, Set<string>>();
 for (const file of docs) {
   if (file.endsWith("AGENTS.md")) continue;
   const content = await Deno.readTextFile(file);
-  const prose = content.replace(/```[\s\S]*?```/g, "");
-  for (const match of prose.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)) {
-    const target = match[1].replace(/^<|>$/g, "");
+  const prose = proseOnly(content);
+  const linkedPages = new Set<string>();
+  contentLinks.set(file, linkedPages);
+  for (const target of linkTargets(prose)) {
     if (/^(?:https?:|mailto:)/.test(target)) continue;
     const [targetFile, fragment] = target.split("#");
     const path = targetFile
       ? resolve(dirname(file), decodeURIComponent(targetFile))
       : file;
+    if (path !== file && docs.includes(path)) linkedPages.add(path);
     if (!path.startsWith(`${root}/docs/`)) {
       failures.push(
         `Link leaves GitBook: ${relative(root, file)} -> ${target}`,
@@ -334,6 +365,42 @@ for (const file of docs) {
   const path = relative(resolve(root, "docs"), file);
   if (path !== "SUMMARY.md" && !summary.includes(`](${path})`)) {
     failures.push(`Page absent from SUMMARY.md: ${path}`);
+  }
+}
+
+// SUMMARY is the sidebar, not a substitute for links in the pages themselves.
+const docsRoot = resolve(root, "docs");
+const parents: { depth: number; path: string }[] = [];
+for (const line of proseOnly(summary).split("\n")) {
+  if (/^#/.test(line)) parents.length = 0;
+  const item = line.match(/^(\s*)[-*]\s+\[/);
+  const target = linkTargets(line)[0];
+  if (!item || !target || /^(?:https?:|mailto:)/.test(target)) continue;
+  const depth = item[1].length;
+  const path = resolve(docsRoot, decodeURIComponent(target.split("#")[0]));
+  while (parents.length && parents.at(-1)!.depth >= depth) parents.pop();
+  const parent = parents.at(-1);
+  if (parent && !contentLinks.get(parent.path)?.has(path)) {
+    failures.push(
+      `Missing child guide link: ${relative(docsRoot, parent.path)} -> ${
+        relative(docsRoot, path)
+      }`,
+    );
+  }
+  parents.push({ depth, path });
+}
+const reached = new Set<string>();
+for (const [file, targets] of contentLinks) {
+  if (file !== summaryPath) {
+    for (const target of targets) reached.add(target);
+  }
+}
+for (const file of docs) {
+  if (
+    file !== summaryPath && file !== resolve(docsRoot, "README.md") &&
+    !reached.has(file)
+  ) {
+    failures.push(`Page linked only from sidebar: ${relative(docsRoot, file)}`);
   }
 }
 

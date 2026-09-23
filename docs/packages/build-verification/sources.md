@@ -15,7 +15,8 @@ Callers may provide:
 
 The default extractor supports `.tar`, `.tar.gz`, `.tgz`, and `.zip`. It rejects
 traversal, links, special files, duplicate or conflicting entries, ambiguous
-roots, corrupt ZIP data, and configured resource-limit violations.
+roots, corrupt ZIP data, and configured
+[resource-limit](policies.md#resource-limits) violations.
 
 ## Exact input shapes
 
@@ -65,8 +66,9 @@ Supplying another source does not bypass the target's committed source hash.
 
 Prefer immutable commits and exact release assets. A branch/tag name is resolved
 for a run, but may point elsewhere on a later run; inspect `requestedRevision`
-and `resolvedRevision` in evidence. Tokens belong in `githubToken` or the CLI's
-token-environment option, not source URLs or committed recipes.
+and `resolvedRevision` in evidence. Tokens belong in `githubToken` or the
+[CLI’s token-environment option](cli.md#flag-reference), not source URLs or
+committed recipes.
 
 ## Out-of-band recipes
 

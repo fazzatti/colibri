@@ -60,9 +60,10 @@ const filter = new EventFilter({
 console.log(filter.toRawEventFilter());
 ```
 
-Add a validated contract ID when you only want one asset. Template
-`toTopicFilter({ to: recipient })` can constrain named indexed fields. Data
-values such as transfer amount are not indexed topics: filter them in your
+Use a [standard event template](standardized-events/README.md) and add a
+[validated contract ID](../core/strkeys.md) when you only want one asset.
+Template `toTopicFilter({ to: recipient })` can constrain named indexed fields.
+Data values such as transfer amount are not indexed topics: filter them in your
 handler after decoding.
 
 See [event templates](templates.md), [SAC events](standardized-events/sac.md),

@@ -75,10 +75,15 @@ async function withFixture(check: (fixture: Fixture) => Promise<void>) {
       "docs/getting-started/installation.md",
       "# Installation\n\njsr:@colibri/core@^1.0.0\n",
     );
-    await write("docs/core/error.md", "# Error handling\n");
+    await write(
+      "docs/core/error.md",
+      "# Error handling\n\n[API](../reference/README.md)\n",
+    );
     await write(
       "docs/reference/README.md",
-      "# API\n\n[API](https://jsr.io/@colibri/core/doc)\n",
+      "# API\n\n[API](https://jsr.io/@colibri/core/doc)\n" +
+        "[Installation](../getting-started/installation.md)\n" +
+        "[Errors](../core/error.md)\n[Codes](errors/README.md)\n",
     );
     await write(
       "docs/SUMMARY.md",
@@ -179,6 +184,88 @@ describe("GitBook documentation validation", () => {
       assertStringIncludes(
         result.output,
         "Page absent from SUMMARY.md: new-guide.md",
+      );
+    });
+  });
+
+  it("requires parent pages to link their child guides, even if another page links them", async () => {
+    await withFixture(async ({ write, run }) => {
+      await write(
+        "docs/README.md",
+        "# Start\n\n[Resources](resources.md)\n[Configuration](config.md)\n",
+      );
+      await write("docs/config.md", "# Configuration\n");
+      await write("docs/resources.md", "# Resources\n\n## Padding\n");
+      await write(
+        "docs/SUMMARY.md",
+        "# Contents\n\n- [Start](README.md)\n" +
+          "- [Installation](getting-started/installation.md)\n" +
+          "- [Errors](core/error.md)\n- [API](reference/README.md)\n" +
+          "* [Configuration](config.md)\n  - [Resources](resources.md)\n" +
+          "<!-- error-contexts:start -->\n<!-- error-contexts:end -->\n",
+      );
+      const missing = await run("--write");
+      assertEquals(missing.code, 1);
+      assertStringIncludes(
+        missing.output,
+        "Missing child guide link: config.md -> resources.md",
+      );
+      await write(
+        "docs/config.md",
+        "# Configuration\n\n[`Resource[]`](resources.md#padding)\n",
+      );
+      const linked = await run();
+      assertEquals(linked.code, 0, linked.output);
+    });
+  });
+
+  it("rejects sidebar-only pages and does not count self, code or comment links", async () => {
+    await withFixture(async ({ write, run }) => {
+      // Installation remains in SUMMARY, but loses its only content inbound link.
+      await write(
+        "docs/reference/README.md",
+        "# API\n\n[API](https://jsr.io/@colibri/core/doc)\n" +
+          "[Codes](errors/README.md)\n" +
+          "`[Install](../getting-started/installation.md)`\n" +
+          "<!-- [Install](../getting-started/installation.md) -->\n" +
+          "~~~md\n[Install](../getting-started/installation.md)\n~~~\n" +
+          "````md\n```md\n[Install](../getting-started/installation.md)\n```\n````\n",
+      );
+      await write(
+        "docs/getting-started/installation.md",
+        "# Installation\n\njsr:@colibri/core@^1.0.0\n[Self](installation.md)\n",
+      );
+      const missing = await run();
+      assertEquals(missing.code, 1);
+      assertStringIncludes(
+        missing.output,
+        "Page linked only from sidebar: getting-started/installation.md",
+      );
+      await write(
+        "docs/README.md",
+        "# Start\n\n[Install](getting-started/installation.md)\n",
+      );
+      const linked = await run();
+      assertEquals(linked.code, 0, linked.output);
+    });
+  });
+
+  it("validates destinations and anchors in linked array-type labels", async () => {
+    await withFixture(async ({ write, run }) => {
+      await write(
+        "docs/README.md",
+        "# Start\n\n[`Signer[]`](missing.md)\n" +
+          "[`Signer[]`](core/error.md#missing)\n",
+      );
+      const result = await run();
+      assertEquals(result.code, 1);
+      assertStringIncludes(
+        result.output,
+        "Broken link: docs/README.md -> missing.md",
+      );
+      assertStringIncludes(
+        result.output,
+        "Broken heading link: docs/README.md -> core/error.md#missing",
       );
     });
   });

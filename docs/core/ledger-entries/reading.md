@@ -37,8 +37,8 @@ IDs and keys. A syntactically valid address does not guarantee a matching entry.
 
 ## Creating A Reader
 
-You can bind `LedgerEntries` to either a `NetworkConfig` or an existing RPC
-instance:
+You can bind [`LedgerEntries`](../ledger-entries.md) to either a
+[`NetworkConfig`](../network.md) or an existing RPC instance:
 
 ```ts
 import { LedgerEntries, NetworkConfig } from "@colibri/core";
@@ -62,7 +62,8 @@ const ledger = new LedgerEntries({ rpc });
 
 ## Convenience Reads
 
-`LedgerEntries` exposes direct helpers for the common well-known entry types:
+[`LedgerEntries`](../ledger-entries.md) exposes direct helpers for the common
+well-known entry types:
 
 - `account(...)`
 - `trustline(...)`

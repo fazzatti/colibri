@@ -6,11 +6,13 @@
 (named inputs/outputs and mapped types), `index.ts` (the client and exports),
 `colibri.ts` (Core conveniences), and a formatted `README.md` for an existing
 project. Configure imports in that project: both presets import only
-`@colibri/core`; Core supplies the Stellar SDK dependency and spec codec.
+[`@colibri/core`](../../core/overview.md); Core supplies the Stellar SDK
+dependency and spec codec.
 
 The generated `types.ts` is organized into labeled sections: methods and their
 inputs/outputs/maps, contract-declared types when present, events, and client
-configuration. Error maps use Core's `ContractErrorMap` type.
+configuration. Error maps use Core's
+[`ContractErrorMap`](../../core/contract/plugins.md#known-contract-errors) type.
 
 `--output package --target jsr` places the generated source files in
 `generated/`, with a `mod.ts` entrypoint and a `deno.json`. Run
@@ -52,11 +54,14 @@ unless `--no-colibri` is set.
 
 ## Import Colibri conveniences
 
-Generated `colibri.ts` re-exports `NetworkConfig`, `LocalSigner`, `SorobanType`,
-`ColibriError`, and common signer, transaction and contract types. These are the
-original Core implementations. They are also available from the client
-entrypoint unless an ABI declaration uses the same name; ABI names take
-precedence. When enabled, the dedicated module always exposes the conveniences.
+Generated `colibri.ts` re-exports [`NetworkConfig`](../../core/network.md),
+[`LocalSigner`](../../core/signer/local-signer.md),
+[`SorobanType`](../../core/contract/values.md),
+[`ColibriError`](../../core/error.md), and common signer, transaction and
+contract types. These are the original Core implementations. They are also
+available from the client entrypoint unless an ABI declaration uses the same
+name; ABI names take precedence. When enabled, the dedicated module always
+exposes the conveniences.
 
 This fragment assumes file output for a class named `Token`:
 
@@ -82,13 +87,14 @@ const config: TransactionConfig = {
 ```
 
 To use an existing native Stellar SDK Keypair, call
-`LocalSigner.fromKeypair(keypair)` and put the returned signer in
-`config.signers`. It targets only its own G-address by default. Other accounts
-or custom contract authorization require explicit targets and the appropriate
-authority/encoding. The factory borrows the keypair; destroying the adapter
-leaves the original key unchanged. Public-only keypairs are rejected.
-Transaction configuration still accepts Colibri signers, and existing callers
-need no changes.
+[`LocalSigner.fromKeypair(keypair)`](../../core/signer/local-signer.md#from-a-stellar-sdk-keypair)
+and put the returned signer in `config.signers`. It targets only its own
+G-address by default. Other accounts or custom contract authorization require
+explicit targets and the appropriate authority/encoding. The factory borrows the
+keypair; destroying the adapter leaves the original key unchanged. Public-only
+keypairs are rejected.
+[Transaction configuration](../../core/transaction-config.md) still accepts
+Colibri signers, and existing callers need no changes.
 
 New package scaffolds expose the same module at `@example/token/colibri`.
 Regeneration preserves existing manifests, so add that subpath manually if
@@ -99,7 +105,7 @@ direct Stellar SDK dependency only when they import and use that SDK themselves.
 ### Omit convenience exports
 
 Use `--no-colibri` when your application already imports Core directly or owns a
-shared Colibri entrypoint for several generated clients:
+shared Colibri entrypoint for several [generated clients](generated-client.md):
 
 ```sh
 deno run --allow-read --allow-write jsr:@colibri/contract-bindings/cli \
@@ -115,7 +121,8 @@ both output modes and both registry presets:
   re-exports. Contract types, constants, events and client behavior are
   unchanged.
 - New package manifests omit the `/colibri` subpath.
-- The generated README imports helpers directly from `@colibri/core`.
+- The generated README imports helpers directly from
+  [`@colibri/core`](../../core/overview.md).
 
 Core remains a runtime dependency. For example, the imports for the generated
 client fragment above become:

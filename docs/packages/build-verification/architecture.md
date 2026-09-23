@@ -19,14 +19,14 @@ evidence, and bounded structured logs pass through every stage.
 
 ## Choose the smallest public layer
 
-| Layer                                   | Use it for                                             |
-| --------------------------------------- | ------------------------------------------------------ |
-| `verifyContractBuild`                   | One verification with explicit options                 |
-| `ContractBuildVerifier`                 | Reusable configuration and an owned `verificationPipe` |
-| `createBuildVerificationPipeline`       | Explicit dependency composition and plugins            |
-| Process functions                       | One atomic action with typed inputs/outputs            |
-| Step factories and IDs                  | Convee composition around those processes              |
-| Providers, runner, extractor, collector | Replace a specific I/O boundary                        |
+| Layer                                               | Use it for                                             |
+| --------------------------------------------------- | ------------------------------------------------------ |
+| `verifyContractBuild`                               | One verification with explicit options                 |
+| [`ContractBuildVerifier`](../build-verification.md) | Reusable configuration and an owned `verificationPipe` |
+| `createBuildVerificationPipeline`                   | Explicit dependency composition and plugins            |
+| Process functions                                   | One atomic action with typed inputs/outputs            |
+| Step factories and IDs                              | Convee composition around those processes              |
+| Providers, runner, extractor, collector             | Replace a specific I/O boundary                        |
 
 The stable step IDs, in order, are:
 

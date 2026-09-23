@@ -59,10 +59,11 @@ const colibri = ContractAuth.fromSigner(authEntrySigner);
 const signatureless = ContractAuth.none();
 ```
 
-`ContractAuth.fromSigner(...)` accepts Core's `AuthEntrySigner` capability and
-adapts its complete returned entry to the SEP-45 handler boundary. Colibri does
-not otherwise constrain its contract-specific contents; enforcing simulation and
-the server remain authoritative.
+`ContractAuth.fromSigner(...)` accepts Core's
+[`AuthEntrySigner`](../../core/signer/README.md#signer-capabilities) capability
+and adapts its complete returned entry to the SEP-45 handler boundary. Colibri
+does not otherwise constrain its contract-specific contents; enforcing
+simulation and the server remain authoritative.
 
 The explicit lifecycle uses immutable states:
 

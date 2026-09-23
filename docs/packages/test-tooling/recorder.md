@@ -422,9 +422,10 @@ shared CLI have separate entrypoints.
 
 ### Artifact and asynchronous boundaries
 
-Malformed manifest JSON is rejected as `TTO_REC_002`, preserving its parse
-failure as the cause. The offline report treats malformed numeric measurements
-as unavailable for sorting, filtering and statistics; raw evidence is retained.
-`observer.capture()` and `observer.create()` observe settlement of custom
-thenables as well as native promises, including rejections and deferred client
-attachment.
+Malformed manifest JSON is rejected as
+[`TTO_REC_002`](../../reference/errors/test-tooling-recorder.md), preserving its
+parse failure as the cause. The offline report treats malformed numeric
+measurements as unavailable for sorting, filtering and statistics; raw evidence
+is retained. `observer.capture()` and `observer.create()` observe settlement of
+custom thenables as well as native promises, including rejections and deferred
+client attachment.

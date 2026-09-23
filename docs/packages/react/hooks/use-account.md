@@ -3,15 +3,17 @@
 Read a Classic account’s ledger entry, including balance, thresholds and
 signers.
 
-Import from `@colibri/react/accounts`. Use under both `ColibriProvider` and
-`QueryClientProvider`; see [setup](../setup.md).
+Import from `@colibri/react/accounts`. Use under both
+[`ColibriProvider`](../setup.md) and [`QueryClientProvider`](../setup.md); see
+[setup](../setup.md).
 
 ## Parameters and result
 
 - `accountId`: existing G-address, or `undefined` to disable automatic fetching.
 - `query?`: query controls.
 
-**Returns:** A query result containing Core `AccountLedgerEntry`.
+**Returns:** A query result containing Core
+[`AccountLedgerEntry`](../../../core/ledger-entries/reading.md#the-returned-shape).
 
 ## Example
 

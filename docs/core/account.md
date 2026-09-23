@@ -33,8 +33,9 @@ const muxed = account.muxedAddress("12345");
 
 #### withMasterSigner(signer)
 
-Attach a `KeypairSigner` to the account. `LocalSigner` implements this complete
-Ed25519 signer capability:
+Attach a [`KeypairSigner`](signer/README.md#signer-capabilities) to the account.
+[`LocalSigner`](signer/local-signer.md) implements this complete Ed25519 signer
+capability:
 
 ```typescript
 import { LocalSigner } from "@colibri/core";
@@ -55,7 +56,8 @@ const signer = signableAccount.signer();
 
 #### fromMasterSigner(signer)
 
-Create an account directly from a `KeypairSigner`:
+Create an account directly from a
+[`KeypairSigner`](signer/README.md#signer-capabilities):
 
 ```typescript
 import { LocalSigner, NativeAccount } from "@colibri/core";

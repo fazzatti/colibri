@@ -1,9 +1,14 @@
 # Compatibility and releases
 
-Core, WebAuth, RPC Streamer, Identicon, Test Tooling, and the channel-account,
-fee-bump, and SEP-29 plugins start their stable release lines at **1.0.0**.
-Build Verification remains on **0.x** while its API continues to mature.
-Packages have independent versions; matching version numbers are not a
+[Core](../core/overview.md), [WebAuth](../packages/webauth.md),
+[RPC Streamer](../packages/rpc-streamer.md),
+[Identicon](../packages/identicon.md),
+[Test Tooling](../packages/test-tooling.md), and the
+[channel-account](../packages/plugins/channel-accounts.md),
+[fee-bump](../packages/plugins/fee-bump.md), and
+[SEP-29](../packages/plugins/sep29.md) plugins start their stable release lines
+at **1.0.0**. Build Verification remains on **0.x** while its API continues to
+mature. Packages have independent versions; matching version numbers are not a
 requirement for using them together.
 
 ## What is stable in 1.x
@@ -66,18 +71,20 @@ documents npm alias/deduplication limitations and recommends pnpm where
 duplicate installations are a concern. See
 [JSR npm compatibility](https://jsr.io/docs/npm-compatibility).
 
-Contract Bindings starts at 0.1 as a preview. Its portable root API supports
-Deno/Node tooling; its `/cli` entrypoint is Deno-only. Generated JSR and npm
-clients use Core 1.1 or later in the current major.
+[Contract Bindings](../packages/contract-bindings.md) starts at 0.1 as a
+preview. Its portable root API supports Deno/Node tooling; its `/cli` entrypoint
+is Deno-only. Generated JSR and npm clients use Core 1.1 or later in the current
+major.
 
-React starts at **0.1** as a headless preview. It requires Core 1.2+, React
-19.1+ within 19.x and TanStack Query 5.87+ within 5.x. Apps own their React,
-QueryClient and wallet integrations; keep one resolved React instance. The
-consumer matrix covers SSR, hydration, connection updates, shared bigint query
-data and SVG rendering. The local Stellar integration suite also executes
-contract read/invoke, Classic payment, Soroban simulation/submission and events.
-Freighter is tested through its injected API boundary, without claiming live
-extension coverage for every supported wallet/version.
+[React](../packages/react.md) starts at **0.1** as a headless preview. The
+current release requires Core 1.4+, React 19.1+ within 19.x and TanStack Query
+5.87+ within 5.x. Apps own their React, QueryClient and wallet integrations;
+keep one resolved React instance. The consumer matrix covers SSR, hydration,
+connection updates, shared bigint query data and SVG rendering. The local
+Stellar integration suite also executes contract read/invoke, Classic payment,
+Soroban simulation/submission and events. Freighter is tested through its
+injected API boundary, without claiming live extension coverage for every
+supported wallet/version.
 
 ## Supported and tested integrations
 

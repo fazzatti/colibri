@@ -1,14 +1,16 @@
 # Authenticate with a connected wallet
 
 This example uses an application-configured connector and discovered
-`WebAuthClient`. Set both to the same network and choose a service advertising
-SEP-10. See [wallet setup](wallets-and-sessions.md) for Freighter and Stellar
-Wallets Kit connectors; the authentication flow uses their shared Core envelope
-capability and does not import either vendor SDK.
+[`WebAuthClient`](../webauth/discovery.md). Set both to the same network and
+choose a service advertising [SEP-10](../webauth/sep10.md). See
+[wallet setup](wallets-and-sessions.md) for Freighter and Stellar Wallets Kit
+connectors; the authentication flow uses their shared Core envelope capability
+and does not import either vendor SDK.
 
 The mount function below owns the query cache and session. The account and
-signer come from `useWallet()`, so they stay bound to the active connection.
-Connection and signing happen only after separate button clicks.
+signer come from [`useWallet()`](hooks/use-wallet.md), so they stay bound to the
+active connection. Connection and signing happen only after separate button
+clicks.
 
 <!-- deno-check @colibri/react -->
 
@@ -92,19 +94,20 @@ export function mountAuthentication(
 }
 ```
 
-`useWebAuth` first verifies the server's challenge, then awaits the wallet. It
-exchanges only a validated signed envelope. A rejected prompt, changed body,
-missing/invalid signature or expired challenge fails the mutation without a
-retry. The authentication server checks account signer weights. Contract
-accounts use [SEP-45](../webauth/sep45.md) and an explicit authorization
-handler.
+[`useWebAuth`](hooks/use-web-auth.md) first verifies the server's challenge,
+then awaits the wallet. It exchanges only a validated signed envelope. A
+rejected prompt, changed body, missing/invalid signature or expired challenge
+fails the mutation without a retry. The authentication server checks account
+signer weights. Contract accounts use [SEP-45](../webauth/sep45.md) and an
+explicit authorization handler.
 
 Logout, disconnect, account/network change and session disposal invalidate
-pending SEP-10 approval. A late response cannot establish a session or start a
-token exchange. Cancellation does not dismiss the wallet UI or recall a POST
-already sent. Read current validity from `useSession`, not a previous successful
-mutation. Tokens stay in the session, outside mutation results and browser
-storage; do not persist/dehydrate authentication mutation variables or log JWTs.
+pending [SEP-10](../webauth/sep10.md) approval. A late response cannot establish
+a session or start a token exchange. Cancellation does not dismiss the wallet UI
+or recall a POST already sent. Read current validity from
+[`useSession`](hooks/use-session.md), not a previous successful mutation. Tokens
+stay in the session, outside mutation results and browser storage; do not
+persist/dehydrate authentication mutation variables or log JWTs.
 
 - [SEP-10 verification and signer details](../webauth/sep10.md)
 - [useWebAuth](hooks/use-web-auth.md)

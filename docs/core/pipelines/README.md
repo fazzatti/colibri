@@ -6,9 +6,9 @@ connectors into reusable transaction workflows. They are built on
 
 Colibri exposes factory functions instead of wrapper objects:
 
-- `createInvokeContractPipeline(...)`
-- `createReadFromContractPipeline(...)`
-- `createClassicTransactionPipeline(...)`
+- [`createInvokeContractPipeline(...)`](invoke-contract.md)
+- [`createReadFromContractPipeline(...)`](read-from-contract.md)
+- [`createClassicTransactionPipeline(...)`](classic-transaction.md)
 
 Each pipeline also exports a stable `*_PIPELINE_ID` constant.
 
@@ -23,13 +23,18 @@ const result = await invokeContract({ operations, config });
 The callable also exposes methods such as `use(...)` for composition. Calling
 `.run(...)` is unnecessary in application code.
 
+Write pipelines share [TransactionConfig](../transaction-config.md). The
+[read pipeline](read-from-contract.md) has its own simulation-only input and
+does not submit a transaction.
+
 ## Common Structure
 
 Each built-in pipeline typically includes:
 
 - input connectors that normalize the public input shape
-- step wrappers around raw processes such as `buildTransaction` and
-  `sendTransaction`
+- step wrappers around raw processes such as
+  [`buildTransaction`](../processes/build-transaction.md) and
+  [`sendTransaction`](../processes/send-transaction.md)
 - shared connectors from `core/pipelines/shared/connectors`
 - pipeline-specific connectors beside the owning pipeline
 
@@ -79,7 +84,8 @@ particularly these upstream rules:
 - Use `onFinally` for resource cleanup after execution settles. Finalizers run
   even when input, output, or error hooks fail, and async cleanup is awaited. A
   finalizer must tolerate an input hook that never acquired its resource. The
-  channel-accounts plugin uses this lifecycle to return pooled channels.
+  [channel-accounts plugin](../../packages/plugins/channel-accounts.md) uses
+  this lifecycle to return pooled channels.
 - Context views belong to individual invocations. Share state through a parent
   run context, and keep output capture enabled when using Colibri connectors
   that read preceding step outputs.

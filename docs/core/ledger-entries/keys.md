@@ -43,5 +43,6 @@ const ttlKey = buildTtlLedgerKey({ key: contractKey });
 const keyHash = hashLedgerKey(contractKey);
 ```
 
-However, direct TTL reads are not exposed through `LedgerEntries` because the
-shared RPC ledger-entry read path does not support them cleanly today.
+However, direct TTL reads are not exposed through
+[`LedgerEntries`](../ledger-entries.md) because the shared RPC ledger-entry read
+path does not support them cleanly today.

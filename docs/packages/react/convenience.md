@@ -95,8 +95,9 @@ additionally guards account, module and network before and after prompts.
 
 A combined signer targets its own G-account. For separate signer/account
 authority, contract-account policies or a wallet supporting only one form, use
-`createWalletEnvelopeSigner`, `createWalletAuthEntrySigner`, or an explicit Core
-signer. Neither route submits a transaction by itself.
+[`createWalletEnvelopeSigner`](wallets-and-sessions.md),
+[`createWalletAuthEntrySigner`](wallets-and-sessions.md#explicit-authorization-entry-signing),
+or an explicit Core signer. Neither route submits a transaction by itself.
 
 ## Invoke with wallet defaults
 
@@ -124,10 +125,10 @@ to. A contract-wallet identity requires an explicit G-account transaction
 source. Stale wallet-derived signers reject after a connection change. There are
 no automatic mutation retries or signing prompts during rendering.
 
-The granular `useContractInvoke` remains available for fully explicit
-orchestration. For Classic or custom Soroban pipelines, use the transaction
-hooks and pass `useWallet().signers`; the original pipeline remains responsible
-for execution.
+The granular [`useContractInvoke`](hooks/use-contract-invoke.md) remains
+available for fully explicit orchestration. For Classic or custom Soroban
+pipelines, use the transaction hooks and pass `useWallet().signers`; the
+original pipeline remains responsible for execution.
 
 ## Handle concrete failures
 

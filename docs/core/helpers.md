@@ -1,8 +1,8 @@
 # Shared helpers and binary values
 
 Core exports reusable helpers as well as high-level clients. Import them from
-`@colibri/core`; source-directory paths and the repository's `@/` alias are not
-consumer import paths.
+[`@colibri/core`](overview.md); source-directory paths and the repository's `@/`
+alias are not consumer import paths.
 
 ## Decimal amounts
 
@@ -60,9 +60,10 @@ cryptographic authorization verification.
 - Assertions and type guards narrow inputs and fail with the supplied error.
 - String/boolean parsing and bounded-array helpers validate common input forms.
 - Transaction helpers classify/convert envelopes and inspect RPC results.
-- `parseFailedSimulationResponse` and
-  `getContractErrorFromFailedSimulationResponse` expose diagnostic information
-  without running a new simulation.
+- [`parseFailedSimulationResponse`](processes/simulate-transaction.md#contract-error-diagnostics)
+  and
+  [`getContractErrorFromFailedSimulationResponse`](processes/simulate-transaction.md#contract-error-diagnostics)
+  expose diagnostic information without running a new simulation.
 - Memoization/deferred helpers support reusable clients and asynchronous flows.
 
 Use the [Core API index](https://jsr.io/@colibri/core/doc) for exact individual

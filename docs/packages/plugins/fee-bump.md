@@ -3,14 +3,19 @@
 `@colibri/plugin-fee-bump` lets a separate account cover the network fees for a
 transaction by wrapping the outgoing envelope in a fee-bump transaction.
 
-It targets the `SendTransaction` step, so it can be attached to any pipeline
-that includes `steps.SEND_TRANSACTION_STEP_ID`.
+It targets the [`SendTransaction`](../../core/processes/send-transaction.md)
+step, so it can be attached to any pipeline that includes
+[`steps.SEND_TRANSACTION_STEP_ID`](../../core/steps.md#available-steps).
 
 ## Installation
 
 ```bash
 deno add jsr:@colibri/plugin-fee-bump
 ```
+
+Keep the inner [TransactionConfig](../../core/transaction-config.md) separate
+from the outer [fee-bump configuration](#configuration). The wrapper has its own
+[signers](../../core/signer/README.md#signer-capabilities) and fee source.
 
 ## Quick Start
 
@@ -88,11 +93,13 @@ custom fee-bump signers.
 
 ## How It Works
 
-1. The pipeline reaches the `SendTransaction` step
+1. The pipeline reaches the
+   [`SendTransaction`](../../core/processes/send-transaction.md) step
 2. The plugin intercepts the step input
 3. It wraps the outgoing transaction in a fee-bump envelope
 4. It signs that outer envelope with the configured sponsor signers
-5. The wrapped transaction continues to `sendTransaction`
+5. The wrapped transaction continues to
+   [`sendTransaction`](../../core/processes/send-transaction.md)
 
 The inner transaction signatures are preserved. The outer source can use an
 Ed25519, Hash-X, signed-payload, or exact pre-authorized transaction signer.
@@ -108,9 +115,11 @@ inner maximum does not cap the sponsor's outer fee.
 
 Attaching the plugin explicitly opts into the sponsor's separately configured
 inclusion bid. The inner transaction's `{ max }` strategy still governs its
-assembly, including any resource overrides or padding. The plugin then wraps
-that completed transaction without changing its resource declarations, resource
-fee or signatures. It does not reprice or pad resources.
+assembly, including any
+[resource overrides](../../core/resources.md#choose-overrides-or-padding) or
+padding. The plugin then wraps that completed transaction without changing its
+resource declarations, resource fee or signatures. It does not reprice or pad
+resources.
 
 For example, a Soroban inner transaction with 35,000 stroops of adjusted
 resource fee and `config.fee: { max: "35100" }` has a 100-stroop inclusion bid.

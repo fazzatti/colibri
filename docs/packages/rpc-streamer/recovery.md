@@ -32,10 +32,12 @@ the fetched ledger reaches its callback also leaves that ledger for replay.
 ## Durable progress
 
 Built-in streamers await `onCheckpoint` before advancing beyond the completed
-ledger. A rejected checkpoint stops with `RPC_023` (`CHECKPOINT_FAILED`) and
-preserves the cause; `onError` cannot turn that persistence failure into a skip.
-No final checkpoint is forced at shutdown. A checkpoint acknowledges your
-callback's completion, not a distributed transaction or exactly-once guarantee.
+ledger. A rejected checkpoint stops with
+[`RPC_023`](../../reference/errors/rpc-streamer.md)
+([`CHECKPOINT_FAILED`](../../reference/errors/rpc-streamer.md)) and preserves
+the cause; `onError` cannot turn that persistence failure into a skip. No final
+checkpoint is forced at shutdown. A checkpoint acknowledges your callback's
+completion, not a distributed transaction or exactly-once guarantee.
 
 `nextLedger` is the in-memory continuation position of the last run. After a
 clean bounded run it is `stopLedger + 1`; after interruption it is the partial
@@ -91,9 +93,9 @@ Do not automatically skip a failed write.
 ## Error shapes
 
 Framework validation uses `RPCStreamerError` with `code`, `details`, `cause`,
-and `toJSON()`. It extends JavaScript `Error`, **not** `ColibriError`. RPC
-failures, parsing failures, and callback exceptions can also propagate
-unwrapped; keep an unknown-error branch.
+and `toJSON()`. It extends JavaScript `Error`, **not**
+[`ColibriError`](../../core/error.md). RPC failures, parsing failures, and
+callback exceptions can also propagate unwrapped; keep an unknown-error branch.
 
 See [every declared RPC code](../../reference/errors/rpc-streamer.md). Some are
 reserved declarations, not active retry or failure-budget features.

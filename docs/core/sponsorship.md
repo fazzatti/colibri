@@ -9,12 +9,16 @@ This is **reserve sponsorship**, not transaction-fee sponsorship. Use the
 [fee-bump plugin](../packages/plugins/fee-bump.md) when another account should
 pay a transaction's fee. Both mechanisms can be used in the same transaction.
 
+The example submits the composed operations through the
+[classic transaction pipeline](pipelines/classic-transaction.md) using
+[TransactionConfig](transaction-config.md).
+
 ## Create a sponsored account and trustline
 
-Install `@colibri/core` and `@stellar/stellar-sdk` as described in
-[Installation](../getting-started/installation.md). This complete Deno example
-uses Testnet and Friendbot. It generates disposable keys; do not use it to
-manage production accounts.
+Install [`@colibri/core`](overview.md) and `@stellar/stellar-sdk` as described
+in [Installation](../getting-started/installation.md). This complete Deno
+example uses Testnet and Friendbot. It generates disposable keys; do not use it
+to manage production accounts.
 
 <!-- deno-check -->
 

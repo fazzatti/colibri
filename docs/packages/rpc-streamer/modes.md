@@ -1,8 +1,9 @@
 # Live, archive, and automatic modes
 
-All modes use inclusive `startLedger` and `stopLedger` boundaries. A missing
-stop means keep streaming in live/automatic mode. Archive-only mode requires
-both.
+All modes use inclusive
+[`startLedger` and `stopLedger`](configuration.md#per-run-options) boundaries. A
+missing stop means keep streaming in live/automatic mode. Archive-only mode
+requires both.
 
 | Method                           | Data source                    | When to use it                         |
 | -------------------------------- | ------------------------------ | -------------------------------------- |
@@ -24,7 +25,8 @@ invalid user-supplied start.
 Automatic mode refreshes health as it advances. If the current ledger is too
 old, it reads through the archive up to the live boundary (or your stop), then
 uses the live ingestor. Both an archive RPC and archive ingestor must exist.
-Built-in factories supply the ingestors; you supply a suitable endpoint.
+[Built-in factories](../rpc-streamer.md) supply the [ingestors](custom.md); you
+supply a suitable endpoint.
 
 ## Historical backfill
 

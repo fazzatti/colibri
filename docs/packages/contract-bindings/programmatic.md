@@ -45,10 +45,11 @@ Core directly. Remove `includeColibri: false` to include them.
 | `"contract"` | `contractId`, `networkConfig` | Native Stellar SDK `rpc` client |
 | `"hash"`     | `wasmHash`, `networkConfig`   | Native Stellar SDK `rpc` client |
 
-It returns `{ spec, provenance }`. Pass a Colibri `NetworkConfig` for network
-sources; a supplied RPC client is reused. Existing specs and Wasm bytes need no
-network lookup. To render a spec you already have, call `generateBindings`
-directly instead of loading a source again.
+It returns `{ spec, provenance }`. Pass a Colibri
+[`NetworkConfig`](../../core/network.md) for network sources; a supplied RPC
+client is reused. Existing specs and Wasm bytes need no network lookup. To
+render a spec you already have, call `generateBindings` directly instead of
+loading a source again.
 
 ### Rendering and writing
 
@@ -71,9 +72,10 @@ explicitly opts into provenance; omit it for the default smaller output.
 ### Public exports and custom prompts
 
 The root exports `generateBindings`, `loadBindingSource`, `Spec`,
-`BindingError`, `Code`, `BINDING_ERRORS`, and the `BindingSource`,
-`BindingProvenance`, `LoadedBindingSource`, `GenerateBindingsOptions` and
-`GeneratedBindings` types. `Spec` is the same constructor provided by Core.
+[`BindingError`](troubleshooting.md), `Code`, `BINDING_ERRORS`, and the
+`BindingSource`, `BindingProvenance`, `LoadedBindingSource`,
+`GenerateBindingsOptions` and `GeneratedBindings` types. `Spec` is the same
+constructor provided by Core.
 
 The Deno-only `/cli` subpath exports `runCli`, `parseCliArgs`,
 `resolveCliOptions`, `writeBindings`, `CLI_HELP`, and the `CliFlags`, `CliIO`,

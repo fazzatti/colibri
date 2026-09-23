@@ -2,8 +2,9 @@
 
 Invoke a generated method using the client’s existing invocation pipeline.
 
-Import from `@colibri/react/contracts/invoke`. Use under both `ColibriProvider`
-and `QueryClientProvider`; see [setup](../setup.md).
+Import from `@colibri/react/contracts/invoke`. Use under both
+[`ColibriProvider`](../setup.md) and [`QueryClientProvider`](../setup.md); see
+[setup](../setup.md).
 
 ## Parameters and result
 
@@ -13,7 +14,9 @@ and `QueryClientProvider`; see [setup](../setup.md).
   with the helper’s single invocation object.
 
 **Returns:** A mutation result with inferred invocation arguments and output,
-including the generated decoded `value` and Core transaction metadata.
+including the
+[generated decoded `value`](../../contract-bindings/generated-client.md) and
+Core transaction metadata.
 
 ## Example
 

@@ -15,9 +15,10 @@ every code. The CLI exits unsuccessfully on failure. See the
 [CLI API](https://jsr.io/@colibri/contract-bindings/doc/cli).
 
 If invoke succeeds but decoding its result fails, the generated client throws
-Core `ColibriError` code `CONTR_021`, retaining the successful transaction
-result in `meta.data.result` and the original codec failure in `meta.cause`.
-Inspect that result and the embedded ABI before deciding the next action;
-resubmitting would create another transaction.
+Core [`ColibriError`](../../core/error.md) code
+[`CONTR_021`](../../reference/errors/core-contract.md), retaining the successful
+transaction result in `meta.data.result` and the original codec failure in
+`meta.cause`. Inspect that result and the embedded ABI before deciding the next
+action; resubmitting would create another transaction.
 
 [Package overview](../contract-bindings.md)

@@ -135,6 +135,10 @@ const isAuthorized = await sac.authorized({ id: userAddress });
 const admin = await sac.admin();
 ```
 
+Write methods below accept [TransactionConfig](../transaction-config.md). Its
+[resource controls](../resources.md) apply to Soroban invocations;
+[trustline changes](stellar-asset.md) use classic transactions.
+
 ## Common Write Methods
 
 ### Transfer
@@ -192,7 +196,7 @@ await sac.setAdmin({
 ## Advanced Usage With Plugins
 
 SAC remains a composed high-level client. When you need pipeline-level control,
-attach plugins to the owned invoke pipeline:
+attach plugins to the owned [invoke pipeline](../pipelines/invoke-contract.md):
 
 ```ts
 import { createChannelAccountsPlugin } from "@colibri/plugin-channel-accounts";
@@ -211,7 +215,8 @@ processes can retain their original context and code.
 - `isNativeXLM()` checks whether this SAC represents the native XLM asset
 - `decimals()` still reads from the contract instead of hardcoding the value,
   which keeps the client consistent with on-chain behavior
-- the underlying `Contract` is exposed as `sac.contract` for advanced usage
+- the underlying [`Contract`](../contract.md) is exposed as `sac.contract` for
+  advanced usage
 
 ## Next Steps
 

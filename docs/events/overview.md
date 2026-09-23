@@ -12,7 +12,7 @@ Colibri provides tools for filtering and parsing Soroban contract events.
 Soroban events consist of:
 
 - **Contract ID** — Which contract emitted the event
-- **Type** — `Contract` or `System`
+- **Type** — [`Contract`](../core/contract.md) or `System`
 - **Topics** — Indexed values for filtering (max 4)
 - **Data** — The event payload
 

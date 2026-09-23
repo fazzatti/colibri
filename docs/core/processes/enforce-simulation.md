@@ -17,11 +17,11 @@ const simulation = await enforceSimulation({
 
 ## Input
 
-| Property              | Type                        | Required | Description                              |
-| --------------------- | --------------------------- | -------- | ---------------------------------------- |
-| `transaction`         | `Transaction`               | Yes      | Transaction prepared for enforcement     |
-| `recordingSimulation` | `SimulateTransactionOutput` | Yes      | Original recording response              |
-| `rpc`                 | `Server`                    | Yes      | RPC server used for enforcing simulation |
+| Property              | Type                                                   | Required | Description                              |
+| --------------------- | ------------------------------------------------------ | -------- | ---------------------------------------- |
+| `transaction`         | `Transaction`                                          | Yes      | Transaction prepared for enforcement     |
+| `recordingSimulation` | [`SimulateTransactionOutput`](simulate-transaction.md) | Yes      | Original recording response              |
+| `rpc`                 | `Server`                                               | Yes      | RPC server used for enforcing simulation |
 
 ## Behavior
 

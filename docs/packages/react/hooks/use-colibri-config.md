@@ -2,15 +2,16 @@
 
 Read the application configuration supplied by the nearest provider.
 
-Import from `@colibri/react`. Requires `ColibriProvider`; see
-[setup](../setup.md). No QueryClient is needed for this hook.
+Import from [`@colibri/react`](../../react.md). Requires
+[`ColibriProvider`](../setup.md); see [setup](../setup.md). No QueryClient is
+needed for this hook.
 
 ## Parameters and result
 
 No parameters.
 
-**Returns:** `ColibriConfig`, including the network snapshot, connectors, scope
-and connection methods.
+**Returns:** [`ColibriConfig`](../setup.md), including the network snapshot,
+connectors, scope and connection methods.
 
 ## Example
 
@@ -32,9 +33,10 @@ export function AvailableWallets() {
 ## Behavior
 
 Create the config once per application, or once per server request. A missing
-provider throws `ReactMissingProviderError` (a `ColibriReactError`) with
-`REACT_001`. The config owns connection state; use
-[useConnection](use-connection.md) to subscribe to it.
+provider throws `ReactMissingProviderError` (a
+[`ColibriReactError`](../convenience.md#handle-concrete-failures)) with
+[`REACT_001`](../../../reference/errors/react.md). The config owns connection
+state; use [useConnection](use-connection.md) to subscribe to it.
 
 ## See also
 

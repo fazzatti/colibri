@@ -30,14 +30,14 @@ const channels = await ChannelAccounts.open({
 
 `ChannelAccounts.open(...)` accepts:
 
-| Property             | Description                                                |
-| -------------------- | ---------------------------------------------------------- |
-| `numberOfChannels`   | Number of channels to create                               |
-| `sponsor`            | Sponsor account used to create and fund the channels       |
-| `networkConfig`      | Colibri network configuration                              |
-| `config`             | Transaction config used to submit the setup transaction    |
-| `rpc`                | Optional explicit RPC client                               |
-| `setSponsorAsSigner` | Also add the sponsor as a sponsored signer on each channel |
+| Property             | Description                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------- |
+| `numberOfChannels`   | Number of channels to create                                                                |
+| `sponsor`            | Sponsor account used to create and fund the channels                                        |
+| `networkConfig`      | Colibri network configuration                                                               |
+| `config`             | [Transaction config](../../core/transaction-config.md) used to submit the setup transaction |
+| `rpc`                | Optional explicit RPC client                                                                |
+| `setSponsorAsSigner` | Also add the sponsor as a sponsored signer on each channel                                  |
 
 When `setSponsorAsSigner` is enabled, the sponsor is added as a signer with
 weight `1` inside the sponsorship block.
@@ -86,8 +86,8 @@ executeClassicTransaction.use(plugin);
 
 By default the plugin can be attached to:
 
-- `createClassicTransactionPipeline(...)`
-- `createInvokeContractPipeline(...)`
+- [`createClassicTransactionPipeline(...)`](../../core/pipelines/classic-transaction.md)
+- [`createInvokeContractPipeline(...)`](../../core/pipelines/invoke-contract.md)
 
 You can also scope it explicitly:
 
@@ -111,7 +111,9 @@ executeClassicTransaction.use(plugin);
 
 ## Advanced Usage With High-Level Clients
 
-`Contract` and `StellarAssetContract` expose the owned invoke pipeline:
+[`Contract`](../../core/contract.md) and
+[`StellarAssetContract`](../../core/asset/stellar-asset-contract.md) expose the
+owned [invoke pipeline](../../core/pipelines/invoke-contract.md):
 
 ```ts
 import { createChannelAccountsPlugin } from "@colibri/plugin-channel-accounts";

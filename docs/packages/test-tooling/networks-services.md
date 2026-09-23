@@ -51,13 +51,14 @@ const ledger = new StellarTestLedger({
 
 Supported network modes:
 
-- `NetworkEnv.LOCAL`: fastest and best for deterministic tests
-- `NetworkEnv.TESTNET`: supported, but startup can take longer because
-  Quickstart must sync external network state
-- `NetworkEnv.FUTURENET`: supported, but startup can also take longer for the
-  same reason
+- [`NetworkEnv.LOCAL`](../../core/network.md): fastest and best for
+  deterministic tests
+- [`NetworkEnv.TESTNET`](../../core/network.md): supported, but startup can take
+  longer because Quickstart must sync external network state
+- [`NetworkEnv.FUTURENET`](../../core/network.md): supported, but startup can
+  also take longer for the same reason
 
-`limits` only applies to `NetworkEnv.LOCAL`.
+`limits` only applies to [`NetworkEnv.LOCAL`](../../core/network.md).
 
 ## Service Variants
 

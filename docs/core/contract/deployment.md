@@ -2,6 +2,9 @@
 
 [Contract overview](../contract.md)
 
+Upload and deployment each use [TransactionConfig](../transaction-config.md) for
+the source, fees and [signers](../signer/README.md).
+
 ## Complete Testnet deployment
 
 Supply a compiled `hello_world.wasm` for a contract without constructor

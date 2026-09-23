@@ -1,8 +1,10 @@
 # Stream contract events
 
-An event stream calls your handler for each matching `Event`. Install
-`@colibri/rpc-streamer` and `@colibri/core`, then save this as `events.ts` and
-run `deno run --allow-net events.ts`.
+An event stream calls your handler for each matching
+[`Event`](../../events/overview.md). Install
+[`@colibri/rpc-streamer`](../rpc-streamer.md) and
+[`@colibri/core`](../../core/overview.md), then save this as `events.ts` and run
+`deno run --allow-net events.ts`.
 
 <!-- deno-check -->
 

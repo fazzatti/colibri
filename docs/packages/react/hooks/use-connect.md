@@ -2,8 +2,9 @@
 
 Connect an explicitly selected wallet connector.
 
-Import from `@colibri/react`. Requires `ColibriProvider`; see
-[setup](../setup.md). No QueryClient is needed for this hook.
+Import from [`@colibri/react`](../../react.md). Requires
+[`ColibriProvider`](../setup.md); see [setup](../setup.md). No QueryClient is
+needed for this hook.
 
 ## Parameters and result
 
@@ -46,8 +47,9 @@ export function ConnectWallet({ connectorId }: { connectorId: string }) {
 ## Behavior
 
 Call from a user action. An unknown connector or a wallet/provider network
-mismatch rejects the Promise. `useConnection` exposes the pending state and
-failure. A later connect or disconnect invalidates an in-flight result.
+mismatch rejects the Promise. [`useConnection`](use-connection.md) exposes the
+pending state and failure. A later connect or disconnect invalidates an
+in-flight result.
 
 ## See also
 

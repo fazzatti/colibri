@@ -19,12 +19,12 @@ fails.
 
 `fromDomain()` fetches the home domain's `stellar.toml` before a challenge is
 requested. `fromToml(toml, options)` accepts an already parsed Core
-`StellarToml`. Direct construction uses
+[`StellarToml`](../../core/sep1.md). Direct construction uses
 `new WebAuthClient({ homeDomain, signingKey, network,
 sep10?, sep45? })`, where
-SEP-10 supplies `{ endpoint }` and SEP-45 supplies `{ endpoint, contractId }`.
-Direct configuration means the application is responsible for the
-trustworthiness of that discovery data.
+[SEP-10](sep10.md) supplies `{ endpoint }` and [SEP-45](sep45.md) supplies
+`{ endpoint, contractId }`. Direct configuration means the application is
+responsible for the trustworthiness of that discovery data.
 
 Construction accepts `timeout` (30,000 ms by default), `fetch`,
 `submissionFormat` (`json` by default or `form`), and `allowHttp` for deliberate
@@ -33,24 +33,25 @@ its response body, not the server challenge's validity period. The challenge's
 own time/ledger constraints remain authoritative.
 
 A connection that fails while reading the body raises
-`WEBAUTH_RESPONSE_BODY_FAILED`; a body that outlives the deadline raises
-`WEBAUTH_TIMEOUT`.
+[`WEBAUTH_RESPONSE_BODY_FAILED`](../../reference/errors/webauth.md); a body that
+outlives the deadline raises
+[`WEBAUTH_TIMEOUT`](../../reference/errors/webauth.md).
 
 ## Choose a path
 
 `WebAuthClient` exposes three entry points:
 
 - `client.authenticate(...)` routes by account type.
-- `client.sep10` selects SEP-10 explicitly.
-- `client.sep45` selects SEP-45 explicitly.
+- `client.sep10` selects [SEP-10](sep10.md) explicitly.
+- `client.sep45` selects [SEP-45](sep45.md) explicitly.
 
 Automatic routing is deterministic and has no protocol fallback:
 
-| Account | Protocol | Required option | Invalid options                         |
-| ------- | -------- | --------------- | --------------------------------------- |
-| `G...`  | SEP-10   | `signer`        | SEP-45 authorization options            |
-| `M...`  | SEP-10   | `signer`        | `memo` and SEP-45 authorization options |
-| `C...`  | SEP-45   | `authorize`     | `signer` and `memo`                     |
+| Account | Protocol           | Required option | Invalid options                                     |
+| ------- | ------------------ | --------------- | --------------------------------------------------- |
+| `G...`  | [SEP-10](sep10.md) | `signer`        | [SEP-45](sep45.md) authorization options            |
+| `M...`  | [SEP-10](sep10.md) | `signer`        | `memo` and [SEP-45](sep45.md) authorization options |
+| `C...`  | [SEP-45](sep45.md) | `authorize`     | `signer` and `memo`                                 |
 
 Inspect discovery and routing with:
 
