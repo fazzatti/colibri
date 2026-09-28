@@ -247,6 +247,9 @@ jobs:
           deno-version: 2.7.11
 
       - name: Run build-verification ${{ matrix.shard }} tests
+        env:
+          # Public GitHub API reads otherwise share the runner's anonymous quota.
+          COLIBRI_TEST_GITHUB_TOKEN: ${{ matrix.shard == 'external' && github.token || '' }}
         run: |
           if [ "${{ inputs.record_evidence }}" = "true" ]; then
             runner=(deno task test:record)

@@ -14,7 +14,7 @@ itself; review [reporting boundaries](reporting.md) before sharing.
 Run the package directly from JSR:
 
 ```bash
-deno run -A jsr:@colibri/build-verification@0.4.5/cli \
+deno run -A jsr:@colibri/build-verification@0.5.0/cli \
   --contract-id C... \
   --network mainnet \
   --evidence verification.json \

@@ -10,6 +10,7 @@ import {
   HttpVerificationSourceProvider,
 } from "@/providers/source/index.ts";
 import { ContractBuildVerifier } from "@/verifier/index.ts";
+import * as SOURCE_ERROR from "@/providers/source/error.ts";
 
 const { describe, it } = recordColibriTests(import.meta.url);
 
@@ -29,10 +30,24 @@ const target = new URL(
   import.meta.url,
 );
 const policy = createDefaultVerificationPolicy().source;
+const githubToken = Deno.env.get("COLIBRI_TEST_GITHUB_TOKEN");
+
+const reportSourceDownloadFailure = (error: unknown): never => {
+  if (error instanceof SOURCE_ERROR.SourceDownloadFailedError) {
+    // Log only the already-redacted URL and status, never headers or credentials.
+    console.error("Public source download failed", {
+      code: error.code,
+      url: error.meta?.data.url,
+      status: error.meta?.data.status,
+    });
+  }
+  throw error;
+};
 
 describe("real public source providers", disableSanitizeConfig, () => {
   it("resolves an immutable GitHub commit archive and rebuilds it end to end", async () => {
     const result = await new ContractBuildVerifier({
+      githubToken,
       allowBuildNetwork: true,
       limits: { timeoutMs: 5 * 60 * 1000 },
     }).verify({
@@ -55,7 +70,7 @@ describe("real public source providers", disableSanitizeConfig, () => {
         ],
         sourceSha256: GITHUB_ARCHIVE_HASH,
       },
-    });
+    }).catch(reportSourceDownloadFailure);
 
     assertEquals(result.status, "verified");
     assertEquals(result.evidence.source?.kind, "githubArchive");
@@ -67,7 +82,10 @@ describe("real public source providers", disableSanitizeConfig, () => {
   });
 
   it("resolves an immutable GitHub release asset with exact bytes and redacted locator evidence", async () => {
-    const result = await new GitHubVerificationSourceProvider({ policy })
+    const result = await new GitHubVerificationSourceProvider({
+      policy,
+      token: githubToken,
+    })
       .resolve({
         source: {
           type: "githubReleaseAsset",
@@ -78,7 +96,7 @@ describe("real public source providers", disableSanitizeConfig, () => {
         },
         strict: false,
         limits: DEFAULT_BUILD_VERIFICATION_LIMITS,
-      });
+      }).catch(reportSourceDownloadFailure);
     if (result.content !== "archive") throw new Error("expected archive");
 
     assertEquals(result.sha256, RELEASE_ASSET_HASH);
@@ -102,7 +120,7 @@ describe("real public source providers", disableSanitizeConfig, () => {
         strict: false,
         limits: DEFAULT_BUILD_VERIFICATION_LIMITS,
       },
-    );
+    ).catch(reportSourceDownloadFailure);
     if (result.content !== "archive") throw new Error("expected archive");
 
     assertEquals(result.sha256, NORMAL_URL_HASH);

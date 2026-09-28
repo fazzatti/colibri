@@ -2989,49 +2989,49 @@
       "npm:yaml@2.8.2"
     ],
     "links": {
-      "jsr:@colibri/build-verification@0.4.5": {
+      "jsr:@colibri/build-verification@0.5.0": {
         "dependencies": [
-          "jsr:@colibri/core@1",
+          "jsr:@colibri/core@2",
           "npm:dockerode@3.3.3"
         ]
       },
-      "jsr:@colibri/contract-bindings@0.3.0": {
+      "jsr:@colibri/contract-bindings@0.4.0": {
         "dependencies": [
           "jsr:@cliffy/prompt@1.0.0-rc.8",
-          "jsr:@colibri/core@^1.1.0",
+          "jsr:@colibri/core@2",
           "npm:@stellar/stellar-sdk@^17.0.1"
         ]
       },
-      "jsr:@colibri/core@1.4.1": {},
-      "jsr:@colibri/identicon@1.2.0": {
+      "jsr:@colibri/core@2.0.0": {},
+      "jsr:@colibri/identicon@2.0.0": {
         "dependencies": [
-          "jsr:@colibri/core@^1.1.0",
+          "jsr:@colibri/core@2",
           "jsr:@std/encoding@^1.0.10",
           "npm:@stellar/stellar-sdk@^17.0.1",
           "npm:fast-png@8.0.0"
         ]
       },
-      "jsr:@colibri/plugin-channel-accounts@1.0.1": {
+      "jsr:@colibri/plugin-channel-accounts@2.0.0": {
         "dependencies": [
-          "jsr:@colibri/core@1"
+          "jsr:@colibri/core@2"
         ]
       },
-      "jsr:@colibri/plugin-fee-bump@1.0.1": {
+      "jsr:@colibri/plugin-fee-bump@2.0.0": {
         "dependencies": [
-          "jsr:@colibri/core@1"
+          "jsr:@colibri/core@2"
         ]
       },
-      "jsr:@colibri/plugin-sep29@1.0.1": {
+      "jsr:@colibri/plugin-sep29@2.0.0": {
         "dependencies": [
-          "jsr:@colibri/core@1"
+          "jsr:@colibri/core@2"
         ]
       },
-      "jsr:@colibri/react@0.4.0": {
+      "jsr:@colibri/react@0.5.0": {
         "dependencies": [
-          "jsr:@colibri/core@^1.4.0",
-          "jsr:@colibri/identicon@^1.1.0",
-          "jsr:@colibri/rpc-streamer@1",
-          "jsr:@colibri/webauth@^1.2.0",
+          "jsr:@colibri/core@2",
+          "jsr:@colibri/identicon@2",
+          "jsr:@colibri/rpc-streamer@2",
+          "jsr:@colibri/webauth@2",
           "npm:@creit.tech/stellar-wallets-kit@^2.6.0",
           "npm:@noble/hashes@^2.2.0",
           "npm:@stellar/freighter-api@^6.0.1",
@@ -3040,9 +3040,9 @@
           "npm:react@^19.1.1"
         ]
       },
-      "jsr:@colibri/rpc-streamer@1.1.0": {
+      "jsr:@colibri/rpc-streamer@2.0.0": {
         "dependencies": [
-          "jsr:@colibri/core@1"
+          "jsr:@colibri/core@2"
         ]
       },
       "jsr:@colibri/test-tooling@1.1.0": {
@@ -3051,9 +3051,9 @@
           "npm:dockerode@3.3.3"
         ]
       },
-      "jsr:@colibri/webauth@1.2.0": {
+      "jsr:@colibri/webauth@2.0.0": {
         "dependencies": [
-          "jsr:@colibri/core@1"
+          "jsr:@colibri/core@2"
         ]
       }
     }

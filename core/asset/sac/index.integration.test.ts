@@ -141,21 +141,6 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
       assertEquals(colibriSAC.isNativeXLM(), false);
     });
 
-    it("Instantiates SAC from contract id only", () => {
-      const contractOnlySAC = suiteObserver.attach(
-        StellarAssetContract.fromContractId({
-          contractId,
-          networkConfig,
-        }),
-        { name: "contractOnlySAC" },
-      );
-
-      assertExists(contractOnlySAC);
-      assertEquals(contractOnlySAC.contractId, contractId);
-      assertEquals(contractOnlySAC.code, undefined);
-      assertEquals(contractOnlySAC.isNativeXLM(), false);
-    });
-
     it("Instantiates SAC for native XLM using static method", () => {
       const nativeSAC = suiteObserver.attach(
         StellarAssetContract.NativeXLM(networkConfig),
@@ -220,6 +205,22 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
       assertEquals(isAuthorized, true);
     });
 
+    it("Resolves the deployed SAC identity from contract id", async () => {
+      const contractOnlySAC = suiteObserver.attach(
+        await StellarAssetContract.fromContractId({
+          contractId,
+          networkConfig,
+        }),
+        { name: "contractOnlySAC" },
+      );
+
+      assertExists(contractOnlySAC);
+      assertEquals(contractOnlySAC.contractId, contractId);
+      assertEquals(contractOnlySAC.code, code);
+      assertEquals(contractOnlySAC.issuer, issuer.address());
+      assertEquals(contractOnlySAC.isNativeXLM(), false);
+    });
+
     it("Reads from descriptive contract functions", async () => {
       const name = await colibriSAC.name();
       assertEquals(name, toStellarAssetCanonicalString(code, issuer.address()));
@@ -266,6 +267,13 @@ describe("[Testnet] Stellar Asset Contract", disableSanitizeConfig, () => {
       await wait();
       currentAdmin = await colibriSAC.admin();
       assertEquals(currentAdmin, newAdminAccount.publicKey());
+      const resolved = await StellarAssetContract.fromContractId({
+        contractId,
+        networkConfig,
+      });
+      assertEquals(resolved.code, code);
+      assertEquals(resolved.issuer, issuer.address());
+      assertEquals(await resolved.admin(), newAdminAccount.publicKey());
 
       await colibriSAC.setAdmin({
         newAdmin: issuer.address(),

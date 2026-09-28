@@ -52,6 +52,21 @@ behavior.
 These settings do not change the public `NetworkConfig.MainNet()` default, which
 remains `https://mainnet.sorobanrpc.com`.
 
+## Build Verification public sources
+
+The external Build Verification shard fetches pinned GitHub commit archives and
+release assets in `build-verification/src/public-sources.integration.test.ts`.
+CI passes its existing read-only job token as `COLIBRI_TEST_GITHUB_TOKEN` to
+that shard, and the tests supply it explicitly through the verifier's
+`githubToken` and GitHub provider's `token` options. Local runs can set the same
+environment variable to avoid sharing GitHub's anonymous API quota.
+
+The provider sends authorization only to `api.github.com` and drops it on
+cross-host redirects. The token stays on the host and is not passed into the
+build container. Download failures print the error code, redacted URL and HTTP
+status, then rethrow the original error. All immutable revision, hash and build
+assertions remain required.
+
 ## Whole-suite execution evidence
 
 `deno task test`, `test:unit`, `test:integration`, and `test:file` run ordinary

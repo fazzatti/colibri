@@ -880,10 +880,10 @@
           "kind": "const",
           "tsType": {
             "kind": "literal",
-            "repr": "0.4.5",
+            "repr": "0.5.0",
             "value": {
               "kind": "string",
-              "string": "0.4.5"
+              "string": "0.5.0"
             }
           }
         },
@@ -22836,10 +22836,10 @@
           "kind": "const",
           "tsType": {
             "kind": "literal",
-            "repr": "0.4.5",
+            "repr": "0.5.0",
             "value": {
               "kind": "string",
-              "string": "0.4.5"
+              "string": "0.5.0"
             }
           }
         },
@@ -92211,6 +92211,7 @@
             {
               "functionDef": {
                 "hasBody": true,
+                "isAsync": true,
                 "params": [
                   {
                     "kind": "identifier",
@@ -92227,9 +92228,18 @@
                 ],
                 "returnType": {
                   "kind": "typeRef",
-                  "repr": "StellarAssetContract",
+                  "repr": "Promise",
                   "value": {
-                    "typeName": "StellarAssetContract"
+                    "typeName": "Promise",
+                    "typeParams": [
+                      {
+                        "kind": "typeRef",
+                        "repr": "StellarAssetContract",
+                        "value": {
+                          "typeName": "StellarAssetContract"
+                        }
+                      }
+                    ]
                   }
                 }
               },
@@ -93741,7 +93751,6 @@
           "properties": [
             {
               "name": "code",
-              "optional": true,
               "readonly": true,
               "tsType": {
                 "kind": "keyword",
@@ -93750,9 +93759,7 @@
               }
             },
             {
-              "accessibility": "private",
               "name": "issuer",
-              "optional": true,
               "readonly": true,
               "tsType": {
                 "kind": "union",
@@ -93819,60 +93826,20 @@
         "declarationKind": "export",
         "def": {
           "tsType": {
-            "kind": "union",
+            "kind": "intersection",
             "value": [
               {
-                "kind": "parenthesized",
+                "kind": "typeRef",
+                "repr": "StellarAssetContractBaseArgs",
                 "value": {
-                  "kind": "intersection",
-                  "value": [
-                    {
-                      "kind": "typeRef",
-                      "repr": "StellarAssetContractBaseArgs",
-                      "value": {
-                        "typeName": "StellarAssetContractBaseArgs"
-                      }
-                    },
-                    {
-                      "kind": "typeRef",
-                      "repr": "StellarAssetIdentity",
-                      "value": {
-                        "typeName": "StellarAssetIdentity"
-                      }
-                    }
-                  ]
+                  "typeName": "StellarAssetContractBaseArgs"
                 }
               },
               {
-                "kind": "parenthesized",
+                "kind": "typeRef",
+                "repr": "StellarAssetIdentity",
                 "value": {
-                  "kind": "intersection",
-                  "value": [
-                    {
-                      "kind": "typeRef",
-                      "repr": "StellarAssetContractBaseArgs",
-                      "value": {
-                        "typeName": "StellarAssetContractBaseArgs"
-                      }
-                    },
-                    {
-                      "kind": "typeLiteral",
-                      "value": {
-                        "properties": [
-                          {
-                            "name": "contractId",
-                            "tsType": {
-                              "kind": "typeRef",
-                              "repr": "ContractId",
-                              "value": {
-                                "typeName": "ContractId"
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    }
-                  ]
+                  "typeName": "StellarAssetIdentity"
                 }
               }
             ]
@@ -110580,6 +110547,28 @@
                   }
                 },
                 "name": "MISSING_RETURN_VALUE"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "SAC_005",
+                  "value": {
+                    "kind": "string",
+                    "string": "SAC_005"
+                  }
+                },
+                "name": "NOT_STELLAR_ASSET_CONTRACT"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "SAC_006",
+                  "value": {
+                    "kind": "string",
+                    "string": "SAC_006"
+                  }
+                },
+                "name": "INVALID_ASSET_METADATA"
               }
             ]
           },
@@ -110614,6 +110603,14 @@
                   {
                     "computed": true,
                     "name": "[\"SAC_004\" as Code.MISSING_RETURN_VALUE]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"SAC_005\" as Code.NOT_STELLAR_ASSET_CONTRACT]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"SAC_006\" as Code.INVALID_ASSET_METADATA]"
                   }
                 ]
               }
@@ -110653,6 +110650,52 @@
                       "value": {
                         "typeName": "Error"
                       }
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "SACError",
+            "superTypeParams": [
+              {
+                "kind": "typeRef",
+                "repr": "Code",
+                "value": {
+                  "typeName": "Code"
+                }
+              }
+            ]
+          },
+          "kind": "class"
+        }
+      ],
+      "INVALID_ASSET_METADATA": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "contractId",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "canonical",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "unknown",
+                      "value": "unknown"
                     }
                   }
                 ]
@@ -110763,6 +110806,52 @@
                   {
                     "kind": "identifier",
                     "name": "functionName",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "SACError",
+            "superTypeParams": [
+              {
+                "kind": "typeRef",
+                "repr": "Code",
+                "value": {
+                  "typeName": "Code"
+                }
+              }
+            ]
+          },
+          "kind": "class"
+        }
+      ],
+      "NOT_STELLAR_ASSET_CONTRACT": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "contractId",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "executable",
                     "optional": false,
                     "tsType": {
                       "kind": "keyword",
@@ -196671,6 +196760,7 @@
             {
               "functionDef": {
                 "hasBody": true,
+                "isAsync": true,
                 "params": [
                   {
                     "kind": "identifier",
@@ -196687,9 +196777,18 @@
                 ],
                 "returnType": {
                   "kind": "typeRef",
-                  "repr": "StellarAssetContract",
+                  "repr": "Promise",
                   "value": {
-                    "typeName": "StellarAssetContract"
+                    "typeName": "Promise",
+                    "typeParams": [
+                      {
+                        "kind": "typeRef",
+                        "repr": "StellarAssetContract",
+                        "value": {
+                          "typeName": "StellarAssetContract"
+                        }
+                      }
+                    ]
                   }
                 }
               },
@@ -198201,7 +198300,6 @@
           "properties": [
             {
               "name": "code",
-              "optional": true,
               "readonly": true,
               "tsType": {
                 "kind": "keyword",
@@ -198210,9 +198308,7 @@
               }
             },
             {
-              "accessibility": "private",
               "name": "issuer",
-              "optional": true,
               "readonly": true,
               "tsType": {
                 "kind": "union",
@@ -198279,60 +198375,20 @@
         "declarationKind": "export",
         "def": {
           "tsType": {
-            "kind": "union",
+            "kind": "intersection",
             "value": [
               {
-                "kind": "parenthesized",
+                "kind": "typeRef",
+                "repr": "StellarAssetContractBaseArgs",
                 "value": {
-                  "kind": "intersection",
-                  "value": [
-                    {
-                      "kind": "typeRef",
-                      "repr": "StellarAssetContractBaseArgs",
-                      "value": {
-                        "typeName": "StellarAssetContractBaseArgs"
-                      }
-                    },
-                    {
-                      "kind": "typeRef",
-                      "repr": "StellarAssetIdentity",
-                      "value": {
-                        "typeName": "StellarAssetIdentity"
-                      }
-                    }
-                  ]
+                  "typeName": "StellarAssetContractBaseArgs"
                 }
               },
               {
-                "kind": "parenthesized",
+                "kind": "typeRef",
+                "repr": "StellarAssetIdentity",
                 "value": {
-                  "kind": "intersection",
-                  "value": [
-                    {
-                      "kind": "typeRef",
-                      "repr": "StellarAssetContractBaseArgs",
-                      "value": {
-                        "typeName": "StellarAssetContractBaseArgs"
-                      }
-                    },
-                    {
-                      "kind": "typeLiteral",
-                      "value": {
-                        "properties": [
-                          {
-                            "name": "contractId",
-                            "tsType": {
-                              "kind": "typeRef",
-                              "repr": "ContractId",
-                              "value": {
-                                "typeName": "ContractId"
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    }
-                  ]
+                  "typeName": "StellarAssetIdentity"
                 }
               }
             ]
@@ -201033,6 +201089,28 @@
                   }
                 },
                 "name": "MISSING_RETURN_VALUE"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "SAC_005",
+                  "value": {
+                    "kind": "string",
+                    "string": "SAC_005"
+                  }
+                },
+                "name": "NOT_STELLAR_ASSET_CONTRACT"
+              },
+              {
+                "init": {
+                  "kind": "literal",
+                  "repr": "SAC_006",
+                  "value": {
+                    "kind": "string",
+                    "string": "SAC_006"
+                  }
+                },
+                "name": "INVALID_ASSET_METADATA"
               }
             ]
           },
@@ -201067,6 +201145,14 @@
                   {
                     "computed": true,
                     "name": "[\"SAC_004\" as Code.MISSING_RETURN_VALUE]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"SAC_005\" as Code.NOT_STELLAR_ASSET_CONTRACT]"
+                  },
+                  {
+                    "computed": true,
+                    "name": "[\"SAC_006\" as Code.INVALID_ASSET_METADATA]"
                   }
                 ]
               }
@@ -201106,6 +201192,52 @@
                       "value": {
                         "typeName": "Error"
                       }
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "SACError",
+            "superTypeParams": [
+              {
+                "kind": "typeRef",
+                "repr": "Code",
+                "value": {
+                  "typeName": "Code"
+                }
+              }
+            ]
+          },
+          "kind": "class"
+        }
+      ],
+      "INVALID_ASSET_METADATA": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "contractId",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "canonical",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "unknown",
+                      "value": "unknown"
                     }
                   }
                 ]
@@ -201216,6 +201348,52 @@
                   {
                     "kind": "identifier",
                     "name": "functionName",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "SACError",
+            "superTypeParams": [
+              {
+                "kind": "typeRef",
+                "repr": "Code",
+                "value": {
+                  "typeName": "Code"
+                }
+              }
+            ]
+          },
+          "kind": "class"
+        }
+      ],
+      "NOT_STELLAR_ASSET_CONTRACT": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "contractId",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "executable",
                     "optional": false,
                     "tsType": {
                       "kind": "keyword",

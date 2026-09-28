@@ -40,16 +40,16 @@ This will add imports similar to:
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^1.4.1",
-    "@colibri/react": "jsr:@colibri/react@^0.4.0",
-    "@colibri/webauth": "jsr:@colibri/webauth@^1.2.0",
-    "@colibri/build-verification": "jsr:@colibri/build-verification@^0.4.5",
-    "@colibri/identicon": "jsr:@colibri/identicon@^1.2.0",
-    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^1.1.0",
+    "@colibri/core": "jsr:@colibri/core@^2.0.0",
+    "@colibri/react": "jsr:@colibri/react@^0.5.0",
+    "@colibri/webauth": "jsr:@colibri/webauth@^2.0.0",
+    "@colibri/build-verification": "jsr:@colibri/build-verification@^0.5.0",
+    "@colibri/identicon": "jsr:@colibri/identicon@^2.0.0",
+    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^2.0.0",
     "@colibri/test-tooling": "jsr:@colibri/test-tooling@^1.1.0",
-    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^1.0.1",
-    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^1.0.1",
-    "@colibri/plugin-sep29": "jsr:@colibri/plugin-sep29@^1.0.1"
+    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^2.0.0",
+    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^2.0.0",
+    "@colibri/plugin-sep29": "jsr:@colibri/plugin-sep29@^2.0.0"
   }
 }
 ```
@@ -161,7 +161,7 @@ deno add npm:@stellar/stellar-sdk@^17.0.1
 ### Contract binding generation
 
 ```sh
-deno add jsr:@colibri/contract-bindings@^0.3.0
+deno add jsr:@colibri/contract-bindings@^0.4.0
 ```
 
 See [the generator guide](../packages/contract-bindings.md) for interactive and
