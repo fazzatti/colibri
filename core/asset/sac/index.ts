@@ -13,6 +13,13 @@ import type { Api } from "stellar-sdk/rpc";
 import type { LedgerKeyLike } from "@/common/types/index.ts";
 
 import { StrKey } from "@/strkeys/index.ts";
+import { LedgerEntries } from "@/ledger-entries/index.ts";
+import { isScValRecord } from "@/common/helpers/xdr/scval.ts";
+import type { ScValMap, ScValRecord } from "@/common/helpers/xdr/types.ts";
+import {
+  isStellarAssetCanonicalString,
+  parseStellarAssetCanonicalString,
+} from "@/asset/sep11/index.ts";
 import { assert } from "@/common/assert/assert.ts";
 import {
   type BaseInvocation,
@@ -56,32 +63,20 @@ const createAssetFromIdentity = (
 const resolveAssetIdentity = (
   args: StellarAssetContractConstructorArgs,
 ): {
-  code?: string;
-  issuer?: Ed25519PublicKey | "native";
+  code: string;
+  issuer: Ed25519PublicKey | "native";
   contractId: ContractId;
 } => {
-  if ("contractId" in args) {
-    return { contractId: args.contractId };
+  if (!("asset" in args)) {
+    assert(args.code, new ERROR.MISSING_ARG("code"));
+    assert(args.issuer, new ERROR.MISSING_ARG("issuer"));
   }
-
-  if ("asset" in args) {
-    const issuer = args.asset.issuer
-      ? args.asset.issuer as Ed25519PublicKey
-      : "native";
-    const asset = issuer === "native" ? Asset.native() : args.asset;
-    return {
-      code: issuer === "native" ? "XLM" : asset.code,
-      issuer,
-      contractId: asset.contractId(
-        args.networkConfig.networkPassphrase,
-      ) as ContractId,
-    };
-  }
-
-  const asset = createAssetFromIdentity(args.code, args.issuer);
+  const asset = "asset" in args
+    ? args.asset
+    : createAssetFromIdentity(args.code, args.issuer);
   return {
-    code: args.code,
-    issuer: args.issuer,
+    code: asset.code,
+    issuer: asset.issuer ? asset.issuer as Ed25519PublicKey : "native",
     contractId: asset.contractId(
       args.networkConfig.networkPassphrase,
     ) as ContractId,
@@ -98,8 +93,8 @@ const resolveAssetIdentity = (
  *
  * SACs bridge classic Stellar assets with Soroban smart contracts while maintaining
  * compatibility with the existing Stellar asset system. A `StellarAssetContract`
- * instance is always bound to a contract id. Asset identity metadata is optional
- * and only needed when creating or deploying a SAC from a classic asset.
+ * instance is always bound to a contract id and has a resolved asset code and
+ * issuer. Use the asynchronous `fromContractId` factory when only the id is known.
  *
  * @see {@link https://github.com/stellar/stellar-protocol/blob/master/core/cap-0046-06.md | CAP-0046-06}
  * @see {@link https://github.com/stellar/stellar-protocol/blob/master/core/cap-0073.md | CAP-0073}
@@ -133,16 +128,15 @@ const resolveAssetIdentity = (
  */
 export class StellarAssetContract {
   /**
-   * The asset code when the client was created from a classic asset identity.
-   *
-   * This value is omitted when the client is created directly from `contractId`.
+   * The resolved Classic asset code, or "XLM" for the native asset.
    */
-  readonly code?: string;
+  readonly code: string;
 
   /**
-   * The asset issuer when the client was created from a classic asset identity.
+   * The original Classic issuer, or "native" for XLM (which has no issuer).
+   * This identity is independent of the mutable value returned by `admin()`.
    */
-  private readonly issuer?: Ed25519PublicKey | "native";
+  readonly issuer: Ed25519PublicKey | "native";
 
   /**
    * The underlying Contract instance used for Soroban interactions.
@@ -161,9 +155,9 @@ export class StellarAssetContract {
   /**
    * Creates a new StellarAssetContract instance.
    *
-   * This constructor accepts either a known `contractId` or a classic asset
-   * identity (`code` + `issuer`, or a `stellar-sdk` `Asset`) from which the
-   * SAC id can be deterministically derived.
+   * Requires a complete Classic asset identity (`code` + `issuer`, or a
+   * `stellar-sdk` `Asset`) and derives the SAC id locally. This does not
+   * verify deployment. For a contract id alone, await `fromContractId` instead.
    *
    * @param args - Constructor arguments
    * @returns A SAC client bound to the resolved contract id
@@ -171,7 +165,7 @@ export class StellarAssetContract {
    * @example
    * ```typescript
    * const sac = new StellarAssetContract({
-   *   contractId: "CBI...",
+   *   asset: Asset.native(),
    *   networkConfig: NetworkConfig.TestNet(),
    * });
    * ```
@@ -246,23 +240,65 @@ export class StellarAssetContract {
   }
 
   /**
-   * Creates a SAC client from an existing contract id.
+   * Resolves an existing SAC's immutable asset identity through one RPC read.
+   *
+   * Requires the built-in Stellar Asset executable, reads its canonical
+   * METADATA.name, and verifies the derived id against the supplied network.
+   * Returns only after code and issuer are available. It neither simulates a
+   * transaction nor reads admin. The supplied RPC is retained by the client.
+   * Missing/archived entries and RPC failures propagate from LedgerEntries.
+   *
+   * @throws {ERROR.NOT_STELLAR_ASSET_CONTRACT} If the executable is not an SAC.
+   * @throws {ERROR.INVALID_ASSET_METADATA} If canonical identity is unavailable.
+   * @throws {ERROR.UNMATCHED_CONTRACT_ID} If the identity/network does not match.
    *
    * @param args - The contract id and runtime configuration
-   * @returns A SAC client bound to the provided contract id
+   * @returns A promise for a SAC client with complete, validated asset identity
    *
    * @example
    * ```typescript
-   * const sac = StellarAssetContract.fromContractId({
+   * const sac = await StellarAssetContract.fromContractId({
    *   networkConfig: NetworkConfig.TestNet(),
    *   contractId: "CBI...",
    * });
    * ```
    */
-  static fromContractId(
+  static async fromContractId(
     args: StellarAssetContractFromContractIdArgs,
-  ): StellarAssetContract {
-    return new StellarAssetContract(args);
+  ): Promise<StellarAssetContract> {
+    const { contractId, ...runtime } = args;
+    const reader = new LedgerEntries(
+      runtime.rpc
+        ? { rpc: runtime.rpc }
+        : { networkConfig: runtime.networkConfig },
+    );
+    const entry = await reader.contractInstance({ contractId });
+    assert(
+      entry.executable.type === "stellarAsset",
+      new ERROR.NOT_STELLAR_ASSET_CONTRACT(contractId, entry.executable.type),
+    );
+
+    // LedgerEntries decodes instance storage as a Map when enum keys coexist
+    // with METADATA, or as a record when every key is a string/symbol.
+    const storage = entry.storage as ScValMap | ScValRecord;
+    const metadata =
+      (storage instanceof Map ? storage.get("METADATA") : storage.METADATA) ??
+        null;
+    const canonical = isScValRecord(metadata) ? metadata.name : undefined;
+    assert(
+      isStellarAssetCanonicalString(canonical),
+      new ERROR.INVALID_ASSET_METADATA(contractId, canonical),
+    );
+    const { code, issuer } = parseStellarAssetCanonicalString(canonical);
+    const asset = canonical === "native"
+      ? Asset.native()
+      : new Asset(code, issuer);
+    const derivedId = asset.contractId(runtime.networkConfig.networkPassphrase);
+    assert(
+      derivedId === contractId,
+      new ERROR.UNMATCHED_CONTRACT_ID(contractId, derivedId),
+    );
+    return new StellarAssetContract({ ...runtime, asset });
   }
 
   /**
@@ -314,13 +350,6 @@ export class StellarAssetContract {
 
   /** @internal */
   private async deploy(config: TransactionConfig): Promise<void> {
-    if (!this.code) {
-      throw new ERROR.MISSING_ARG("code");
-    }
-    if (!this.issuer) {
-      throw new ERROR.MISSING_ARG("issuer");
-    }
-
     const asset = createAssetFromIdentity(this.code, this.issuer);
 
     try {

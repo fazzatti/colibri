@@ -41,15 +41,13 @@ type StellarAssetIdentity =
 /**
  * Constructor arguments for a `StellarAssetContract`.
  *
- * A SAC client can be created either from the classic asset identity
- * (`code` + `issuer`, or a `stellar-sdk` `Asset`) or from a known contract id.
+ * Requires the complete Classic asset identity. For a contract id alone,
+ * await `StellarAssetContract.fromContractId` to resolve identity first.
  */
 /** @internal */
 export type StellarAssetContractConstructorArgs =
-  | (StellarAssetContractBaseArgs & StellarAssetIdentity)
-  | (StellarAssetContractBaseArgs & {
-    contractId: ContractId;
-  });
+  & StellarAssetContractBaseArgs
+  & StellarAssetIdentity;
 
 /**
  * Arguments for creating a SAC client from a classic asset identity.

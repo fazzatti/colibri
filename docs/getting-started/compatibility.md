@@ -11,7 +11,7 @@ at **1.0.0**. Build Verification remains on **0.x** while its API continues to
 mature. Packages have independent versions; matching version numbers are not a
 requirement for using them together.
 
-## What is stable in 1.x
+## Stable API contract
 
 The compatibility contract covers documented public exports, accepted inputs,
 return types, error codes and documented programmatic error fields. It also
@@ -53,6 +53,31 @@ requires an interoperability review; its version number alone does not determine
 Colibri's bump. Colibri does not hide an incompatible SDK change behind a new
 wrapper solely to avoid a major release.
 
+## Core 2.0 SAC identity migration
+
+[StellarAssetContract](../core/asset/stellar-asset-contract.md) now guarantees a
+complete public readonly `code` and `issuer` for every client. The issuer is the
+original Classic asset issuer, independent of the mutable SAC administrator; XLM
+uses `"native"` as its issuer marker.
+
+- Await
+  [fromContractId](../core/asset/stellar-asset-contract.md#from-a-known-contract-id),
+  which now resolves and validates the instance through one RPC read.
+- Replace contract-id-only constructor calls with that asynchronous factory.
+- Keep
+  [fromAsset and full-identity construction](../core/asset/stellar-asset-contract.md#from-a-classic-asset)
+  synchronous. These paths derive identity locally and do not check deployment.
+- Handle resolution failures at construction time, including unavailable
+  instances, non-SAC executables, malformed metadata and wrong-network ids. See
+  the [SAC error reference](../reference/errors/core-asset-sac.md).
+
+This is a major Core release because the return type and constructor inputs
+change. The accompanying packages adopt Core 2.0: stable packages move to 2.0
+and preview packages increment their minor version. Existing Core 1.x
+applications should keep their previous compatible package versions. The exact
+migration examples are in the
+[SAC guide](../core/asset/stellar-asset-contract.md#migrating-from-core-1x).
+
 ## Dependency floors
 
 A plugin using `@colibri/core@^1.0.0` can keep that dependency and its own
@@ -77,7 +102,7 @@ is Deno-only. Generated JSR and npm clients use Core 1.1 or later in the current
 major.
 
 [React](../packages/react.md) starts at **0.1** as a headless preview. The
-current release requires Core 1.4+, React 19.1+ within 19.x and TanStack Query
+current release requires Core 2.0+, React 19.1+ within 19.x and TanStack Query
 5.87+ within 5.x. Apps own their React, QueryClient and wallet integrations;
 keep one resolved React instance. The consumer matrix covers SSR, hydration,
 connection updates, shared bigint query data and SVG rendering. The local

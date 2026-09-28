@@ -66,6 +66,8 @@ export enum Code {
   FAILED_TO_DEPLOY_CONTRACT = "SAC_002",
   UNMATCHED_CONTRACT_ID = "SAC_003",
   MISSING_RETURN_VALUE = "SAC_004",
+  NOT_STELLAR_ASSET_CONTRACT = "SAC_005",
+  INVALID_ASSET_METADATA = "SAC_006",
 }
 
 // Currently unused, reserving
@@ -119,7 +121,7 @@ export class FAILED_TO_DEPLOY_CONTRACT extends SACError<Code> {
 }
 
 /**
- * Raised when a deployment response resolves to an unexpected contract id.
+ * Raised when deployment or resolved asset identity yields an unexpected id.
  */
 export class UNMATCHED_CONTRACT_ID extends SACError<Code> {
   /**
@@ -133,7 +135,7 @@ export class UNMATCHED_CONTRACT_ID extends SACError<Code> {
       code: Code.UNMATCHED_CONTRACT_ID,
       message: `Unmatched contract ID`,
       details:
-        `The contract ID retrieved from the 'deploy' transaction '${found}' does not match the expected contract ID '${expected}'.`,
+        `The resolved contract ID '${found}' does not match the expected contract ID '${expected}'.`,
       data: { expected, found },
     });
   }
@@ -161,6 +163,34 @@ export class MISSING_RETURN_VALUE extends SACError<Code> {
   }
 }
 
+/** Raised when a contract id identifies a custom contract rather than an SAC. */
+export class NOT_STELLAR_ASSET_CONTRACT extends SACError<Code> {
+  /** Preserve the requested id and observed executable type. */
+  constructor(contractId: string, executable: string) {
+    super({
+      code: Code.NOT_STELLAR_ASSET_CONTRACT,
+      message: "Contract is not a Stellar Asset Contract",
+      details:
+        "Asset identity can only be resolved from the built-in Stellar Asset executable.",
+      data: { contractId, executable },
+    });
+  }
+}
+
+/** Raised when an SAC instance has no valid canonical asset name. */
+export class INVALID_ASSET_METADATA extends SACError<Code> {
+  /** Preserve the requested id and malformed or missing canonical name. */
+  constructor(contractId: string, canonical: unknown) {
+    super({
+      code: Code.INVALID_ASSET_METADATA,
+      message: "Invalid SAC asset metadata",
+      details:
+        "Expected METADATA.name to be native or a valid CODE:ISSUER identity.",
+      data: { contractId, canonical },
+    });
+  }
+}
+
 /**
  * Error code to constructor map for SAC errors.
  */
@@ -184,4 +214,6 @@ export const ERROR_CONTR = {
   ["SAC_003" as Code.UNMATCHED_CONTRACT_ID]: UNMATCHED_CONTRACT_ID,
   ["SAC_002" as Code.FAILED_TO_DEPLOY_CONTRACT]: FAILED_TO_DEPLOY_CONTRACT,
   ["SAC_004" as Code.MISSING_RETURN_VALUE]: MISSING_RETURN_VALUE,
+  ["SAC_005" as Code.NOT_STELLAR_ASSET_CONTRACT]: NOT_STELLAR_ASSET_CONTRACT,
+  ["SAC_006" as Code.INVALID_ASSET_METADATA]: INVALID_ASSET_METADATA,
 };

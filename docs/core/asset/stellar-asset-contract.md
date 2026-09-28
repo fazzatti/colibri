@@ -10,10 +10,16 @@ are defined in
 
 ## Overview
 
-A SAC client is always bound to a contract id. You can create that client from:
+Every SAC client has a contract id, a public readonly `code`, and a public
+readonly `issuer`. The issuer is the original Classic asset issuer; native XLM
+uses `code: "XLM"` and the `issuer: "native"` marker because it has no issuer.
+The mutable value returned by [admin()](#common-read-methods) is separate.
 
-- a known `contractId`
-- a classic asset identity (`code` + `issuer`)
+You can create that client from:
+
+- a known `contractId`, resolved asynchronously through RPC
+- a [Classic asset identity](stellar-asset.md) (`code` + `issuer`),
+  synchronously
 - a `stellar-sdk` `Asset`
 - the native XLM asset
 
@@ -35,12 +41,36 @@ console.log(sac.contractId);
 
 ### From A Known Contract Id
 
+Await `fromContractId` to resolve the underlying
+[Classic asset](stellar-asset.md) through the RPC in
+[NetworkConfig](../network.md), or supply your own
+[native RPC client](../../getting-started/compatibility.md#supported-and-tested-integrations). It makes one
+[contract-instance ledger read](../ledger-entries/contracts.md), requires the
+built-in Stellar Asset executable, reads the canonical `METADATA.name`, and
+verifies that the [SEP-11 asset identity](sep-11.md) derives the supplied
+contract id on that network. It does not simulate, submit, deploy or restore.
+
+<!-- deno-check -->
+
 ```ts
-const sac = StellarAssetContract.fromContractId({
+import { NetworkConfig, StellarAssetContract } from "@colibri/core";
+
+const sac = await StellarAssetContract.fromContractId({
   networkConfig: NetworkConfig.TestNet(),
-  contractId: "CBI...",
+  contractId: "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA",
 });
+
+console.log(sac.code); // USDC
+console.log(sac.issuer); // GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5
 ```
+
+Identity is complete when the promise resolves. Missing/archived entries and RPC
+failures reject with the underlying error; custom Wasm/external-reference
+contracts, malformed metadata and mismatched identities are rejected with
+[SAC errors](../../reference/errors/core-asset-sac.md). Use
+[SEP41TokenContract](sep-41-token-contract.md) for arbitrary SEP-41 contracts.
+The factory does not accept caller-supplied identity overrides; use
+[fromAsset](#from-a-classic-asset) when the identity is already known.
 
 ### Native XLM
 
@@ -52,14 +82,29 @@ const sac = StellarAssetContract.NativeXLM({
 
 ### Constructor Form
 
-You can also instantiate directly:
+The constructor requires a complete [Classic asset](stellar-asset.md) identity
+and derives its contract id locally. Like [fromAsset](#from-a-classic-asset) and
+[NativeXLM](#native-xlm), this is synchronous and does not verify that the SAC
+has been deployed. Use [fromContractId](#from-a-known-contract-id) when only its
+address is known:
 
 ```ts
 const sac = new StellarAssetContract({
   networkConfig: NetworkConfig.TestNet(),
-  contractId: "CBI...",
+  code: "USDC",
+  issuer: "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
 });
 ```
+
+### Migrating From Core 1.x
+
+[Core 2.0](../../getting-started/compatibility.md#core-20-sac-identity-migration)
+changes `fromContractId` to return a promise. Add `await` before using the
+client or attaching plugins. Replace
+`new StellarAssetContract({ contractId, ... })` with
+`await StellarAssetContract.fromContractId({ contractId, ... })`. Factories
+supplied with complete asset identity stay synchronous. Read `code` and `issuer`
+directly after construction; neither field is optional.
 
 ## Deploying A SAC
 
@@ -95,7 +140,7 @@ successful outcome as long as it matches the deterministic expected id.
 `StellarAssetContract` accepts optional runtime behavior under `options`.
 
 ```ts
-const sac = StellarAssetContract.fromContractId({
+const sac = await StellarAssetContract.fromContractId({
   networkConfig,
   contractId,
   options: {

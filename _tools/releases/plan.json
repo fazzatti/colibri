@@ -1,10 +1,86 @@
 {
   "schema": 1,
-  "base": "59a7ccaef865cedcfbd77469fef0c561d7d9fbad",
+  "base": "489d38ac1032f81ee00b08d54f4e8d62681483fc",
   "packages": {
     "@colibri/core": {
-      "bump": "patch",
-      "reason": "Correct the published README event-extraction example to decode LedgerCloseMeta before parsing and link its complete guide. Documentation only; no runtime, declaration or dependency-minimum changes."
+      "bump": "major",
+      "reason": "Guarantee complete SAC asset identity: fromContractId now resolves through RPC asynchronously, contract-id-only constructor input is removed, and issuer/code are public required fields.",
+      "apiReview": "Intentional Core 2.0 migration: await fromContractId or construct from a complete asset identity. Preserve synchronous fromAsset/NativeXLM, existing error codes and metadata; add typed non-SAC/invalid-metadata errors. No incomplete client is returned."
+    },
+    "@colibri/build-verification": {
+      "bump": "minor",
+      "reason": "Adopt the Core 2.0 dependency boundary for this release; runtime behavior is otherwise unchanged. JSR import requirements do not support a union of Core 1.x and 2.x.",
+      "apiReview": "Reviewed direct Core usage: no dependency on contract-id-only SAC construction or synchronous fromContractId. This release requires Core 2.0; consumers staying on Core 1.x retain the previous package release. Stable packages take a major and preview packages a minor for the raised Core major requirement.",
+      "dependencies": {
+        "@colibri/core": "^2.0.0"
+      }
+    },
+    "@colibri/contract-bindings": {
+      "bump": "minor",
+      "reason": "Adopt the Core 2.0 dependency boundary for this release; runtime behavior is otherwise unchanged. JSR import requirements do not support a union of Core 1.x and 2.x.",
+      "apiReview": "Reviewed direct Core usage: no dependency on contract-id-only SAC construction or synchronous fromContractId. This release requires Core 2.0; consumers staying on Core 1.x retain the previous package release. Stable packages take a major and preview packages a minor for the raised Core major requirement.",
+      "dependencies": {
+        "@colibri/core": "^2.0.0"
+      }
+    },
+    "@colibri/identicon": {
+      "bump": "major",
+      "reason": "Adopt the Core 2.0 dependency boundary for this release; runtime behavior is otherwise unchanged. JSR import requirements do not support a union of Core 1.x and 2.x.",
+      "apiReview": "Reviewed direct Core usage: no dependency on contract-id-only SAC construction or synchronous fromContractId. This release requires Core 2.0; consumers staying on Core 1.x retain the previous package release. Stable packages take a major and preview packages a minor for the raised Core major requirement.",
+      "dependencies": {
+        "@colibri/core": "^2.0.0"
+      }
+    },
+    "@colibri/rpc-streamer": {
+      "bump": "major",
+      "reason": "Adopt the Core 2.0 dependency boundary for this release; runtime behavior is otherwise unchanged. JSR import requirements do not support a union of Core 1.x and 2.x.",
+      "apiReview": "Reviewed direct Core usage: no dependency on contract-id-only SAC construction or synchronous fromContractId. This release requires Core 2.0; consumers staying on Core 1.x retain the previous package release. Stable packages take a major and preview packages a minor for the raised Core major requirement.",
+      "dependencies": {
+        "@colibri/core": "^2.0.0"
+      }
+    },
+    "@colibri/webauth": {
+      "bump": "major",
+      "reason": "Adopt the Core 2.0 dependency boundary for this release; runtime behavior is otherwise unchanged. JSR import requirements do not support a union of Core 1.x and 2.x.",
+      "apiReview": "Reviewed direct Core usage: no dependency on contract-id-only SAC construction or synchronous fromContractId. This release requires Core 2.0; consumers staying on Core 1.x retain the previous package release. Stable packages take a major and preview packages a minor for the raised Core major requirement.",
+      "dependencies": {
+        "@colibri/core": "^2.0.0"
+      }
+    },
+    "@colibri/plugin-channel-accounts": {
+      "bump": "major",
+      "reason": "Adopt the Core 2.0 dependency boundary for this release; runtime behavior is otherwise unchanged. JSR import requirements do not support a union of Core 1.x and 2.x. Await SAC resolution in the README example.",
+      "apiReview": "Reviewed direct Core usage: no dependency on contract-id-only SAC construction or synchronous fromContractId. This release requires Core 2.0; consumers staying on Core 1.x retain the previous package release. Stable packages take a major and preview packages a minor for the raised Core major requirement.",
+      "dependencies": {
+        "@colibri/core": "^2.0.0"
+      }
+    },
+    "@colibri/plugin-fee-bump": {
+      "bump": "major",
+      "reason": "Adopt the Core 2.0 dependency boundary for this release; runtime behavior is otherwise unchanged. JSR import requirements do not support a union of Core 1.x and 2.x.",
+      "apiReview": "Reviewed direct Core usage: no dependency on contract-id-only SAC construction or synchronous fromContractId. This release requires Core 2.0; consumers staying on Core 1.x retain the previous package release. Stable packages take a major and preview packages a minor for the raised Core major requirement.",
+      "dependencies": {
+        "@colibri/core": "^2.0.0"
+      }
+    },
+    "@colibri/plugin-sep29": {
+      "bump": "major",
+      "reason": "Adopt the Core 2.0 dependency boundary for this release; runtime behavior is otherwise unchanged. JSR import requirements do not support a union of Core 1.x and 2.x.",
+      "apiReview": "Reviewed direct Core usage: no dependency on contract-id-only SAC construction or synchronous fromContractId. This release requires Core 2.0; consumers staying on Core 1.x retain the previous package release. Stable packages take a major and preview packages a minor for the raised Core major requirement.",
+      "dependencies": {
+        "@colibri/core": "^2.0.0"
+      }
+    },
+    "@colibri/react": {
+      "bump": "minor",
+      "reason": "Adopt the Core 2.0 dependency boundary for this release; runtime behavior is otherwise unchanged. JSR import requirements do not support a union of Core 1.x and 2.x.",
+      "apiReview": "Reviewed direct Core usage: no dependency on contract-id-only SAC construction or synchronous fromContractId. This release requires Core 2.0; consumers staying on Core 1.x retain the previous package release. Stable packages take a major and preview packages a minor for the raised Core major requirement.",
+      "dependencies": {
+        "@colibri/core": "^2.0.0",
+        "@colibri/webauth": "^2.0.0",
+        "@colibri/rpc-streamer": "^2.0.0",
+        "@colibri/identicon": "^2.0.0"
+      }
     }
   }
 }
