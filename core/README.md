@@ -31,7 +31,7 @@ and lifecycle details.
 
 Colibri Core is published on [JSR](https://jsr.io/@colibri/core) and ships
 entirely as TypeScript modules. The supported Deno minimum is `2.7.11`; Node.js
-consumers use `22.12.0` or supported 22.x/24.x LTS releases. Core 1.x supports
+consumers use `22.12.0` or supported 22.x/24.x LTS releases. Core 2.x supports
 Stellar SDK `>=17.0.1 <18` and Convee `2.1.0`. The
 [compatibility policy](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility)
 covers public types, custom signers, class extensions, callable pipelines,

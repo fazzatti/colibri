@@ -1,9 +1,10 @@
 # @colibri/identicon
 
-Version 1.x follows Colibri's
+Version 2.x requires [Core 2.x](https://fifo-docs.gitbook.io/colibri/core/overview)
+and follows Colibri's
 [compatibility and independent release policy](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility).
-Compatible Core 1.x updates do not require this package to release again unless
-its API or required dependency floor changes.
+Compatible updates within that Core major do not require this package to release
+again unless its API or required dependency floor changes.
 
 Deterministic Stellar account and contract identicons, written in TypeScript.
 Generate the familiar SEP-33 symmetric 7×7 pattern as SVG, PNG, or a data URL,
@@ -32,8 +33,8 @@ This produces exactly the same markup and validation errors as
 encoding dependencies. `identiconSvg` is also exported from the package root for
 convenience. Use the `/svg` subpath when excluding all PNG module initialization
 matters. The existing class retains its SVG, synchronous PNG and data URL
-methods. The new API requires Identicon 1.1 and Core 1.1; its errors share
-Core's `ColibriError` constructor across root and granular imports.
+methods. The SVG-only API was introduced in Identicon 1.1 with Core 1.1; its
+errors share Core's `ColibriError` constructor across root and granular imports.
 
 ## Installation
 
