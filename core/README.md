@@ -998,10 +998,15 @@ functions remain accessible through `token.contract.readRaw()` or
 ### StellarAssetContract
 
 `StellarAssetContract` is the domain-specific client for CAP-0046-06 Stellar
-Asset Contracts. Preferred entry points are the static factories:
+Asset Contracts. Every client exposes a complete readonly `code` and `issuer`
+(the latter is `"native"` for XLM). `fromContractId` resolves and verifies
+identity through one RPC ledger read before returning; `fromAsset` stays
+synchronous and does not require deployment. See the
+[SAC guide and Core 2 migration](https://fifo-docs.gitbook.io/colibri/core/asset/stellar-asset-contract).
+Preferred entry points are the static factories:
 
 ```ts
-const existing = StellarAssetContract.fromContractId({
+const existing = await StellarAssetContract.fromContractId({
   networkConfig,
   contractId,
 });
@@ -1035,7 +1040,7 @@ await existing.trust({
 across high-level tools:
 
 ```ts
-const sac = StellarAssetContract.fromContractId({
+const sac = await StellarAssetContract.fromContractId({
   networkConfig,
   contractId,
   options: {

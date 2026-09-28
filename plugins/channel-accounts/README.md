@@ -140,7 +140,7 @@ For advanced usage with higher-level clients, attach the plugin to the owned
 invoke pipe:
 
 ```ts
-const sac = StellarAssetContract.fromContractId({
+const sac = await StellarAssetContract.fromContractId({
   networkConfig,
   contractId,
 });
