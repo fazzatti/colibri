@@ -198,8 +198,8 @@ import {
   getNetworkResourceSettings,
   simulateTransaction,
 } from "@colibri/core";
-import type { Transaction } from "npm:@stellar/stellar-sdk@^17.0.1";
-import type { Server } from "npm:@stellar/stellar-sdk@^17.0.1/rpc";
+import type { Transaction } from "npm:@stellar/stellar-sdk@^17.2.1";
+import type { Server } from "npm:@stellar/stellar-sdk@^17.2.1/rpc";
 
 export async function prepareWithPadding(
   transaction: Transaction,

@@ -26,6 +26,8 @@ export const ClawbackEventSchema: EventSchema<
   SchemaField<"amount", "i128", readonly ["map"]>
 > = {
   name: "clawback",
+  topicMatch: "prefix",
+  wireTypes: true,
   topics: [{ name: "from", type: "address" }],
   value: { name: "amount", type: "i128", alternateTypes: ["map"] },
 };

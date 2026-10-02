@@ -14,7 +14,7 @@ export async function resolveSdk(selection: string): Promise<string> {
   const data = JSON.parse(new TextDecoder().decode(result.stdout));
   const versions: string[] = typeof data === "string" ? [data] : data;
   const sdk = versions.sort((a, b) => compare(parse(a), parse(b))).at(-1)!;
-  if (!accepts(sdk, ">=17.0.1 <18")) {
+  if (!accepts(sdk, ">=17.2.1 <18")) {
     throw new Error(`CONSUMER_SDK_UNSUPPORTED: ${sdk}`);
   }
   console.log(`Selected native Stellar SDK ${sdk} from ${selection}`);

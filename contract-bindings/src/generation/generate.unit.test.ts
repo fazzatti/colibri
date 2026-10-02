@@ -341,7 +341,7 @@ describe("bindings rendering", () => {
         assertEquals(manifest.type, "module");
         assertEquals(
           manifest.dependencies["@colibri/core"],
-          "npm:@jsr/colibri__core@^1.1.0",
+          "npm:@jsr/colibri__core@^3.0.0",
         );
         assert(plan.scaffold[".npmrc"].includes("https://npm.jsr.io"));
       }

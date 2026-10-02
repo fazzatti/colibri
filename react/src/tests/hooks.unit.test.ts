@@ -1,3 +1,4 @@
+import { ERRORS_SEP1 } from "@colibri/core";
 import { WebAuthClient, WebAuthToken } from "@colibri/webauth";
 import { LocalSigner } from "@colibri/core";
 import { Demo } from "colibri-internal/tests/generated-bindings/demo/index.ts";
@@ -274,6 +275,30 @@ describe("React feature hooks", () => {
       );
       assertEquals(account.calls.length, 2);
       assertEquals(view.document.querySelectorAll("img").length, 2);
+    } finally {
+      await view.close();
+      env.client.clear();
+      env.config.destroy();
+    }
+  });
+  it("surfaces invalid TOML hosts without invoking the discovery transport", async () => {
+    const env = environment();
+    let query!: ReturnType<typeof useStellarToml>;
+    let requests = 0;
+    const Component = () => {
+      query = useStellarToml("example.com/path", {
+        fetchFn: () => {
+          requests++;
+          return Promise.resolve(new Response(""));
+        },
+      });
+      return createElement("span", null, query.status);
+    };
+    const view = await mountReact(env.wrap(Component));
+    try {
+      await until(() => query.isError);
+      assertEquals(query.error instanceof ERRORS_SEP1.INVALID_DOMAIN, true);
+      assertEquals(requests, 0);
     } finally {
       await view.close();
       env.client.clear();

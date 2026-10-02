@@ -202,3 +202,17 @@ on `pool.transactionPipe` before the first write, as with
 `config.memo`; channel and fee-bump plugins retain native operation sources. See
 the
 [complete asset plugin example](asset/stellar-asset.md#sources-plugins-and-native-interoperability).
+
+## SDK 17.2.1 asset ordering
+
+[SDK 17.2.1](../getting-started/compatibility.md#core-30-and-sdk-1721-migration)
+corrects issuer-byte ordering when two issued assets have the same code. Rebuild
+locally cached pool IDs and A/B ordering from the original assets after
+upgrading; price ratios must follow the corrected A/B order. Existing on-chain
+pools, trustlines and balances are unchanged, and callers' input arrays are not
+sorted in place.
+
+[StellarAsset](asset/stellar-asset.md) and pool copies preserve the original XDR
+asset arm, including a short code stored in `credit_alphanum12`. Human-readable
+[SEP-11](asset/sep-11.md) strings cannot retain that arm distinction; preserve
+XDR when exact binary identity matters.

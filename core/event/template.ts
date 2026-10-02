@@ -2,6 +2,7 @@ import { Address, xdr } from "stellar-sdk";
 import type { Api } from "stellar-sdk/rpc";
 import { Event } from "@/event/event.ts";
 import * as ERROR from "@/event/error.ts";
+import { validateRpcTopicFilter } from "@/event/event-filter/validation.ts";
 import type {
   AllFieldNames,
   EventSchema,
@@ -60,6 +61,21 @@ const validateSchemaField = (
   validateFieldType(value, field.type) ||
   (field.alternateTypes?.some((type) => validateFieldType(value, type)) ??
     false);
+
+const validateWireField = (
+  value: xdr.ScVal,
+  field: { type: SchemaFieldType; alternateTypes?: readonly SchemaFieldType[] },
+): boolean => {
+  const matches = (type: SchemaFieldType): boolean => {
+    if (value.type !== `scv${type[0].toUpperCase()}${type.slice(1)}`) {
+      return false;
+    }
+    return type !== "address" || (value.type === "scvAddress" &&
+      (value.address.type === "scAddressTypeAccount" ||
+        value.address.type === "scAddressTypeContract"));
+  };
+  return matches(field.type) || (field.alternateTypes?.some(matches) ?? false);
+};
 
 const STRING_FIELD_TYPES = new Set<SchemaFieldType>([
   "address",
@@ -150,24 +166,40 @@ export abstract class EventTemplate<S extends EventSchema> extends Event {
     const topics = event.topics;
 
     // Check topic count: name + topic fields
-    if (topics.length !== schema.topics.length + 1) {
+    const required = schema.topics.length + 1;
+    if (
+      schema.topicMatch === "prefix"
+        ? topics.length < required
+        : topics.length !== required
+    ) {
       return false;
     }
 
     // Check event name
-    if (topics[0] !== schema.name) {
+    if (
+      topics[0] !== schema.name ||
+      (schema.wireTypes && event.scvalTopics[0].type !== "scvSymbol")
+    ) {
       return false;
     }
 
     // Check topic field types
     for (let i = 0; i < schema.topics.length; i++) {
-      if (!validateSchemaField(topics[i + 1], schema.topics[i])) {
+      if (
+        !(schema.wireTypes
+          ? validateWireField(event.scvalTopics[i + 1], schema.topics[i])
+          : validateSchemaField(topics[i + 1], schema.topics[i]))
+      ) {
         return false;
       }
     }
 
     // Check value type
-    if (!validateSchemaField(event.value, schema.value)) {
+    if (
+      !(schema.wireTypes
+        ? validateWireField(event.scvalValue, schema.value)
+        : validateSchemaField(event.value, schema.value))
+    ) {
       return false;
     }
 
@@ -307,6 +339,10 @@ export abstract class EventTemplate<S extends EventSchema> extends Event {
       }
     }
 
-    return filter as TopicFilter;
+    const result = schema.topicMatch === "prefix"
+      ? [...filter, "**" as const]
+      : filter;
+    validateRpcTopicFilter(result);
+    return result as TopicFilter;
   }
 }

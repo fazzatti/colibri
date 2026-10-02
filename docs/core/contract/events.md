@@ -1,7 +1,7 @@
 # Load event declarations from a contract spec
 
-Core 1.1 can extract SEP-48 event declarations from an SDK Spec or Wasm bytes.
-The registry creates reusable `ContractEventDefinition` objects for decoding and
+Core can extract SEP-48 event declarations from an SDK Spec or Wasm bytes. The
+registry creates reusable `ContractEventDefinition` objects for decoding and
 filtering, and powers the
 [bindings generator](../../packages/contract-bindings.md).
 
@@ -52,11 +52,42 @@ registry lookup API.
 - `events.parse(event)` accepts a unique match, returns undefined for no match,
   and throws a typed ambiguity error for multiple matches.
 
-Payloads support single-value, vector, and map formats. Strict validation
-rejects extra or missing fields, wrong topics, invalid nested shapes, and
-incompatible native values before the SDK decoder runs. Values follow the SDK's
-native codec representations. Types the SDK cannot decode produce a typed
-decoding failure.
+Payloads support single-value, vector, and map formats. Wrong topics, missing
+required fields, invalid nested shapes and incompatible wire types fail with
+[typed event errors](../../reference/errors/core-contract-events.md). Values
+follow the SDK's native codec representations.
+
+## Sparse map data and ambiguity
+
+Map data uses Symbol field names. Missing void-compatible fields, including
+`Option<T>`, normalize to `null`; unknown fields are ignored while raw
+`scvalValue` remains available. Duplicate/unordered map keys and wrong key arms
+are rejected. Nested structs use the same
+[named-record evolution](values.md#named-record-evolution) rules. Single-value
+and vector payload arity remains exact.
+
+The optional registry settings `dataFields: "strict"` and
+`structFields: "strict"` require exact map and nested-struct field sets,
+respectively. Sparse records are accepted by default, including handlers from
+[generated bindings](../../packages/contract-bindings/errors-and-events.md).
+
+SEP-57 `Transfer` and `MuxedTransfer` share a topic prefix. With tolerant map
+evolution, both can match an amount-only event, and even extra fields need not
+make the match unique. `events.parse()` reports `AMBIGUOUS_EVENT`; select
+`events.get("Transfer")` or `events.get("MuxedTransfer")` when the application
+knows the declaration. Strict map diagnostics can distinguish dense field sets,
+but cannot recover information omitted on the wire. The SEP-57 muxed field is
+`Option<u64>`; it does not accept SEP-41's historical String/Bytes memo forms.
+
+## Topic counts and remote queries
+
+Occurrences may contain more than four topics. ABI decoding checks the complete
+declared topic count; the ABI permits at most two fixed prefix Symbols, with
+additional indexed fields. RPC [topic filters](../../events/event-filter.md)
+permit at most four constraints plus a trailing `**`. A declaration requiring
+more constraints throws `INVALID_FILTER` when asked for an automatic filter.
+Choose a broader prefix query explicitly and decode the complete occurrence
+locally; Colibri does not silently drop query constraints.
 
 Indexed filters apply the same field validation as decoding. Soroban
 [`MuxedAddress`](../address.md) fields accept regular account (G), contract (C),

@@ -41,12 +41,12 @@ function setupInstructions(packaged: boolean, npm: boolean): string {
   if (npm) {
     return packaged ? fence("sh", "npm install\nnpm run build") : fence(
       "sh",
-      "npm config set @jsr:registry https://npm.jsr.io --location project\nnpm install '@colibri/core@npm:@jsr/colibri__core@^1.1.0'",
+      "npm config set @jsr:registry https://npm.jsr.io --location project\nnpm install '@colibri/core@npm:@jsr/colibri__core@^3.0.0'",
     );
   }
   return packaged ? fence("sh", "deno task check") : fence(
     "sh",
-    "deno add jsr:@colibri/core@^1.1.0",
+    "deno add jsr:@colibri/core@^3.0.0",
   );
 }
 function eventGuide(spec: Spec): string {

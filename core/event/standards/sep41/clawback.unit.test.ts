@@ -68,7 +68,7 @@ describe("SEP-41 ClawbackEvent", () => {
       assertEquals(ClawbackEvent.is(event), false);
     });
 
-    it("should return false for wrong number of topics", () => {
+    it("accepts additional topics after the required prefix", () => {
       const from = Keypair.random().publicKey();
       const extra = Keypair.random().publicKey();
       const event = createMockEvent(
@@ -80,7 +80,7 @@ describe("SEP-41 ClawbackEvent", () => {
         nativeToScVal(1000000n, { type: "i128" }),
       );
 
-      assertEquals(ClawbackEvent.is(event), false);
+      assertEquals(ClawbackEvent.is(event), true);
     });
 
     it("should return false for wrong topic type", () => {
@@ -189,7 +189,8 @@ describe("SEP-41 ClawbackEvent", () => {
     it("should create filter for any clawback event", () => {
       const filter = ClawbackEvent.toTopicFilter({});
 
-      assertEquals(filter.length, 2);
+      assertEquals(filter.length, 3);
+      assertEquals(filter.at(-1), "**");
       assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals(filter[1], "*");
     });
@@ -198,7 +199,8 @@ describe("SEP-41 ClawbackEvent", () => {
       const from = Keypair.random().publicKey();
       const filter = ClawbackEvent.toTopicFilter({ from });
 
-      assertEquals(filter.length, 2);
+      assertEquals(filter.length, 3);
+      assertEquals(filter.at(-1), "**");
       assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals((filter[1] as xdr.ScVal).type, "scvAddress");
     });

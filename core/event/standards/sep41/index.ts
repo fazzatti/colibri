@@ -29,7 +29,7 @@ export type * from "@/event/standards/sep41/types.ts";
  */
 export const SEP41Events = {
   /** SEP-41 specification version implemented */
-  VERSION: "0.5.1",
+  VERSION: "0.5.2",
   // Events
   MintEvent,
   TransferEvent,

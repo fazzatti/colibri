@@ -70,7 +70,7 @@ describe("SEP-41 BurnEvent", () => {
       assertEquals(BurnEvent.is(event), false);
     });
 
-    it("should return false for wrong number of topics", () => {
+    it("accepts additional topics after the required prefix", () => {
       const from = Keypair.random().publicKey();
       const extra = Keypair.random().publicKey();
       const event = createMockEvent(
@@ -82,7 +82,7 @@ describe("SEP-41 BurnEvent", () => {
         nativeToScVal(1000000n, { type: "i128" }),
       );
 
-      assertEquals(BurnEvent.is(event), false);
+      assertEquals(BurnEvent.is(event), true);
     });
 
     it("should return false for wrong topic type", () => {
@@ -191,7 +191,8 @@ describe("SEP-41 BurnEvent", () => {
     it("should create filter for any burn event", () => {
       const filter = BurnEvent.toTopicFilter({});
 
-      assertEquals(filter.length, 2);
+      assertEquals(filter.length, 3);
+      assertEquals(filter.at(-1), "**");
       assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals(filter[1], "*");
     });
@@ -200,7 +201,8 @@ describe("SEP-41 BurnEvent", () => {
       const from = Keypair.random().publicKey();
       const filter = BurnEvent.toTopicFilter({ from });
 
-      assertEquals(filter.length, 2);
+      assertEquals(filter.length, 3);
+      assertEquals(filter.at(-1), "**");
       assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals((filter[1] as xdr.ScVal).type, "scvAddress");
     });

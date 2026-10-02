@@ -8,6 +8,7 @@ import type { RpcEventFilterLike, ScValLike } from "@/common/types/index.ts";
 import type { ContractId } from "@/strkeys/types.ts";
 import { assert } from "@/common/assert/assert.ts";
 import * as ERROR from "@/event/event-filter/error.ts";
+import { validateRpcTopicFilter } from "@/event/event-filter/validation.ts";
 import { isDefined } from "@/common/type-guards/is-defined.ts";
 
 /**
@@ -30,7 +31,8 @@ export class EventFilter {
   }
 
   /** @internal */
-  private encodeTopics(topicFilter: TopicFilter): BoundedArray<string, 0, 4> {
+  private encodeTopics(topicFilter: TopicFilter): BoundedArray<string, 0, 5> {
+    validateRpcTopicFilter(topicFilter);
     return topicFilter.map((segment) => {
       if (segment === "*") {
         return "*";
@@ -39,7 +41,7 @@ export class EventFilter {
       } else {
         return segment.toXdr("base64");
       }
-    }) as BoundedArray<string, 0, 4>;
+    }) as BoundedArray<string, 0, 5>;
   }
 
   /**
@@ -97,6 +99,7 @@ export class EventFilter {
     if (!this._topics || this._topics.length === 0) return true; // No topic filters, match all
 
     for (const topicFilter of this._topics) {
+      validateRpcTopicFilter(topicFilter);
       if (eventTopicsMatchFilterTopic(topicFilter, topics)) return true;
     }
 

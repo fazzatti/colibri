@@ -56,7 +56,7 @@ for (const [path, content] of Object.entries({...plan.files, ...plan.scaffold}))
 const manifest = JSON.parse(await readFile("${folder}/package.json", "utf8"));
 assert.equal("./colibri" in manifest.exports, ${includeColibri});
 assert.deepEqual(Object.keys(manifest.dependencies), ["@colibri/core"]);
-assert.equal(manifest.dependencies["@colibri/core"], "npm:@jsr/colibri__core@^1.1.0");
+assert.equal(manifest.dependencies["@colibri/core"], "npm:@jsr/colibri__core@^3.0.0");
 // Test the candidate Core build while preserving the generated dependency shape.
 manifest.dependencies["@colibri/core"] = ${
     JSON.stringify(`file:${coreArchive}`)

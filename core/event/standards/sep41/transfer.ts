@@ -31,6 +31,8 @@ export const TransferEventSchema: EventSchema<
   SchemaField<"amount", "i128", readonly ["map"]>
 > = {
   name: "transfer",
+  topicMatch: "prefix",
+  wireTypes: true,
   topics: [
     { name: "from", type: "address" },
     { name: "to", type: "address" },

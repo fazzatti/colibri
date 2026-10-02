@@ -47,10 +47,10 @@ describe("parallel compatibility workflow", () => {
       })),
       { phase: "browser-runner", deno: "2.9.6", node: "24" },
     ];
-    for (const version of ["17.0.1", "17.1.0"]) {
+    for (const version of ["17.2.1", "17.3.0"]) {
       const checks = compatibilityChecks([
-        { selection: "17.0.1", version: "17.0.1" },
-        { selection: "^17.0.1", version },
+        { selection: "17.2.1", version: "17.2.1" },
+        { selection: "^17.2.1", version },
       ], "/tmp/compatibility");
       assertEquals(
         new Set(assignments.map((row) => row.phase)),

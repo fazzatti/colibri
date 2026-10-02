@@ -36,5 +36,5 @@ export async function checkDenoConsumer(sdk: string): Promise<void> {
 }
 
 if (import.meta.main) {
-  await checkDenoConsumer(Deno.env.get("STELLAR_SDK_VERSION") ?? "17.0.1");
+  await checkDenoConsumer(Deno.env.get("STELLAR_SDK_VERSION") ?? "17.2.1");
 }

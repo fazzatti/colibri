@@ -1,86 +1,91 @@
 {
   "schema": 1,
-  "base": "489d38ac1032f81ee00b08d54f4e8d62681483fc",
+  "base": "c4ab357045767ed0feeec2c8334a11537487dba6",
   "packages": {
-    "@colibri/core": {
-      "bump": "major",
-      "reason": "Guarantee complete SAC asset identity: fromContractId now resolves through RPC asynchronously, contract-id-only constructor input is removed, and issuer/code are public required fields.",
-      "apiReview": "Intentional Core 2.0 migration: await fromContractId or construct from a complete asset identity. Preserve synchronous fromAsset/NativeXLM, existing error codes and metadata; add typed non-SAC/invalid-metadata errors. No incomplete client is returned."
-    },
-    "@colibri/build-verification": {
-      "bump": "minor",
-      "reason": "Adopt the Core 2.0 dependency boundary for this release; runtime behavior is otherwise unchanged. JSR import requirements do not support a union of Core 1.x and 2.x.",
-      "apiReview": "Reviewed direct Core usage: no dependency on contract-id-only SAC construction or synchronous fromContractId. This release requires Core 2.0; consumers staying on Core 1.x retain the previous package release. Stable packages take a major and preview packages a minor for the raised Core major requirement.",
-      "dependencies": {
-        "@colibri/core": "^2.0.0"
-      }
-    },
     "@colibri/contract-bindings": {
       "bump": "minor",
-      "reason": "Adopt the Core 2.0 dependency boundary for this release; runtime behavior is otherwise unchanged. JSR import requirements do not support a union of Core 1.x and 2.x.",
-      "apiReview": "Reviewed direct Core usage: no dependency on contract-id-only SAC construction or synchronous fromContractId. This release requires Core 2.0; consumers staying on Core 1.x retain the previous package release. Stable packages take a major and preview packages a minor for the raised Core major requirement.",
+      "reason": "Generated clients and event handlers consume corrected Core codecs and optional named input fields. Adopt Core 3 and SDK 17.2.1 without changing ABI signatures or output field presence.",
+      "apiReview": "Approved minimum SDK 17.2.1 migration. Stable packages requiring Core 3 take a major; preview packages take a minor. Preserve existing method signatures, error codes, native Result objects, normalized output fields and historical RPC event IDs. Older SEP providers retain their function requirements; new version unions and opt-in profiles are reviewed.",
       "dependencies": {
-        "@colibri/core": "^2.0.0"
+        "@colibri/core": "^3.0.0"
       }
     },
     "@colibri/identicon": {
       "bump": "major",
-      "reason": "Adopt the Core 2.0 dependency boundary for this release; runtime behavior is otherwise unchanged. JSR import requirements do not support a union of Core 1.x and 2.x.",
-      "apiReview": "Reviewed direct Core usage: no dependency on contract-id-only SAC construction or synchronous fromContractId. This release requires Core 2.0; consumers staying on Core 1.x retain the previous package release. Stable packages take a major and preview packages a minor for the raised Core major requirement.",
+      "reason": "Raise the direct Stellar SDK floor to 17.2.1 and adopt Core 3 for shared StrKey and typed errors. Image algorithms and rendering signatures remain unchanged.",
+      "apiReview": "Approved minimum SDK 17.2.1 migration. Stable packages requiring Core 3 take a major; preview packages take a minor. Preserve existing method signatures, error codes, native Result objects, normalized output fields and historical RPC event IDs. Older SEP providers retain their function requirements; new version unions and opt-in profiles are reviewed.",
       "dependencies": {
-        "@colibri/core": "^2.0.0"
+        "@colibri/core": "^3.0.0"
+      }
+    },
+    "@colibri/core": {
+      "bump": "major",
+      "reason": "Raise the supported native Stellar SDK floor to 17.2.1; correct struct/map/event decoding, add SEP-41/57 catalogs and profiles, separate SEP-35 operation IDs, validate TOML hosts and expose opt-in lossless map entries.",
+      "apiReview": "Approved minimum SDK 17.2.1 migration. Stable packages requiring Core 3 take a major; preview packages take a minor. Preserve existing method signatures, error codes, native Result objects, normalized output fields and historical RPC event IDs. Older SEP providers retain their function requirements; new version unions and opt-in profiles are reviewed."
+    },
+    "@colibri/build-verification": {
+      "bump": "minor",
+      "reason": "Enforce complete SEP-58 ASCII/field grammar and adopt Core 3 for the SDK 17.2.1 dependency boundary; retain build and transport policies.",
+      "apiReview": "Approved minimum SDK 17.2.1 migration. Stable packages requiring Core 3 take a major; preview packages take a minor. Preserve existing method signatures, error codes, native Result objects, normalized output fields and historical RPC event IDs. Older SEP providers retain their function requirements; new version unions and opt-in profiles are reviewed.",
+      "dependencies": {
+        "@colibri/core": "^3.0.0"
       }
     },
     "@colibri/rpc-streamer": {
       "bump": "major",
-      "reason": "Adopt the Core 2.0 dependency boundary for this release; runtime behavior is otherwise unchanged. JSR import requirements do not support a union of Core 1.x and 2.x.",
-      "apiReview": "Reviewed direct Core usage: no dependency on contract-id-only SAC construction or synchronous fromContractId. This release requires Core 2.0; consumers staying on Core 1.x retain the previous package release. Stable packages take a major and preview packages a minor for the raised Core major requirement.",
+      "reason": "Adopt Core 3 event/filter and ledger types with the SDK 17.2.1 floor. Stored IDs, cursors, stream lifecycle and callback signatures remain unchanged.",
+      "apiReview": "Approved minimum SDK 17.2.1 migration. Stable packages requiring Core 3 take a major; preview packages take a minor. Preserve existing method signatures, error codes, native Result objects, normalized output fields and historical RPC event IDs. Older SEP providers retain their function requirements; new version unions and opt-in profiles are reviewed.",
       "dependencies": {
-        "@colibri/core": "^2.0.0"
+        "@colibri/core": "^3.0.0"
       }
     },
     "@colibri/webauth": {
       "bump": "major",
-      "reason": "Adopt the Core 2.0 dependency boundary for this release; runtime behavior is otherwise unchanged. JSR import requirements do not support a union of Core 1.x and 2.x.",
-      "apiReview": "Reviewed direct Core usage: no dependency on contract-id-only SAC construction or synchronous fromContractId. This release requires Core 2.0; consumers staying on Core 1.x retain the previous package release. Stable packages take a major and preview packages a minor for the raised Core major requirement.",
+      "reason": "Adopt Core 3 and SDK 17.2.1 for native transaction/signing interoperability and corrected TOML discovery. No authentication policy or signing authority changes.",
+      "apiReview": "Approved minimum SDK 17.2.1 migration. Stable packages requiring Core 3 take a major; preview packages take a minor. Preserve existing method signatures, error codes, native Result objects, normalized output fields and historical RPC event IDs. Older SEP providers retain their function requirements; new version unions and opt-in profiles are reviewed.",
       "dependencies": {
-        "@colibri/core": "^2.0.0"
-      }
-    },
-    "@colibri/plugin-channel-accounts": {
-      "bump": "major",
-      "reason": "Adopt the Core 2.0 dependency boundary for this release; runtime behavior is otherwise unchanged. JSR import requirements do not support a union of Core 1.x and 2.x. Await SAC resolution in the README example.",
-      "apiReview": "Reviewed direct Core usage: no dependency on contract-id-only SAC construction or synchronous fromContractId. This release requires Core 2.0; consumers staying on Core 1.x retain the previous package release. Stable packages take a major and preview packages a minor for the raised Core major requirement.",
-      "dependencies": {
-        "@colibri/core": "^2.0.0"
-      }
-    },
-    "@colibri/plugin-fee-bump": {
-      "bump": "major",
-      "reason": "Adopt the Core 2.0 dependency boundary for this release; runtime behavior is otherwise unchanged. JSR import requirements do not support a union of Core 1.x and 2.x.",
-      "apiReview": "Reviewed direct Core usage: no dependency on contract-id-only SAC construction or synchronous fromContractId. This release requires Core 2.0; consumers staying on Core 1.x retain the previous package release. Stable packages take a major and preview packages a minor for the raised Core major requirement.",
-      "dependencies": {
-        "@colibri/core": "^2.0.0"
-      }
-    },
-    "@colibri/plugin-sep29": {
-      "bump": "major",
-      "reason": "Adopt the Core 2.0 dependency boundary for this release; runtime behavior is otherwise unchanged. JSR import requirements do not support a union of Core 1.x and 2.x.",
-      "apiReview": "Reviewed direct Core usage: no dependency on contract-id-only SAC construction or synchronous fromContractId. This release requires Core 2.0; consumers staying on Core 1.x retain the previous package release. Stable packages take a major and preview packages a minor for the raised Core major requirement.",
-      "dependencies": {
-        "@colibri/core": "^2.0.0"
+        "@colibri/core": "^3.0.0"
       }
     },
     "@colibri/react": {
       "bump": "minor",
-      "reason": "Adopt the Core 2.0 dependency boundary for this release; runtime behavior is otherwise unchanged. JSR import requirements do not support a union of Core 1.x and 2.x.",
-      "apiReview": "Reviewed direct Core usage: no dependency on contract-id-only SAC construction or synchronous fromContractId. This release requires Core 2.0; consumers staying on Core 1.x retain the previous package release. Stable packages take a major and preview packages a minor for the raised Core major requirement.",
+      "reason": "Adopt Core 3, WebAuth 3, RPC Streamer 3 and Identicon 3 with SDK 17.2.1 native interoperability; shared contract/event/discovery fixes reach hooks without added network or signing behavior.",
+      "apiReview": "Approved minimum SDK 17.2.1 migration. Stable packages requiring Core 3 take a major; preview packages take a minor. Preserve existing method signatures, error codes, native Result objects, normalized output fields and historical RPC event IDs. Older SEP providers retain their function requirements; new version unions and opt-in profiles are reviewed.",
       "dependencies": {
-        "@colibri/core": "^2.0.0",
-        "@colibri/webauth": "^2.0.0",
-        "@colibri/rpc-streamer": "^2.0.0",
-        "@colibri/identicon": "^2.0.0"
+        "@colibri/core": "^3.0.0",
+        "@colibri/webauth": "^3.0.0",
+        "@colibri/rpc-streamer": "^3.0.0",
+        "@colibri/identicon": "^3.0.0"
       }
+    },
+    "@colibri/plugin-channel-accounts": {
+      "bump": "major",
+      "reason": "Adopt Core 3 and SDK 17.2.1 native account/transaction interoperability; preserve plugin identifiers, pipeline hooks and release lifecycle.",
+      "apiReview": "Approved minimum SDK 17.2.1 migration. Stable packages requiring Core 3 take a major; preview packages take a minor. Preserve existing method signatures, error codes, native Result objects, normalized output fields and historical RPC event IDs. Older SEP providers retain their function requirements; new version unions and opt-in profiles are reviewed.",
+      "dependencies": {
+        "@colibri/core": "^3.0.0"
+      }
+    },
+    "@colibri/plugin-fee-bump": {
+      "bump": "major",
+      "reason": "Adopt Core 3 and SDK 17.2.1 native transaction interoperability; preserve plugin identifier, fee semantics and callable pipeline binding.",
+      "apiReview": "Approved minimum SDK 17.2.1 migration. Stable packages requiring Core 3 take a major; preview packages take a minor. Preserve existing method signatures, error codes, native Result objects, normalized output fields and historical RPC event IDs. Older SEP providers retain their function requirements; new version unions and opt-in profiles are reviewed.",
+      "dependencies": {
+        "@colibri/core": "^3.0.0"
+      }
+    },
+    "@colibri/plugin-sep29": {
+      "bump": "major",
+      "reason": "Adopt Core 3 and SDK 17.2.1 asset/operation interoperability and typed errors; preserve memo requirement policy and opt-in installation.",
+      "apiReview": "Approved minimum SDK 17.2.1 migration. Stable packages requiring Core 3 take a major; preview packages take a minor. Preserve existing method signatures, error codes, native Result objects, normalized output fields and historical RPC event IDs. Older SEP providers retain their function requirements; new version unions and opt-in profiles are reviewed.",
+      "dependencies": {
+        "@colibri/core": "^3.0.0"
+      }
+    },
+    "@colibri/test-tooling": {
+      "bump": "major",
+      "reason": "Raise the native Stellar SDK floor to 17.2.1 for recorder transaction, event and ledger-change decoding. Quickstart remains independent of Core and recorder artifacts retain their schema.",
+      "apiReview": "The recorder imports Stellar SDK runtime values directly. Removing support for SDK versions below 17.2.1 requires a major under the stable-package policy; no artificial Core dependency or recorder schema change."
     }
   }
 }

@@ -16,6 +16,16 @@ import { StellarToml } from "@colibri/core";
 const toml = await StellarToml.fromDomain("anchor.example.com");
 ```
 
+Pass a host with an optional port, not a full URL. DNS names (including IDNA),
+canonical IPv4, bracketed IPv6 and exact `localhost` are accepted; a trailing
+slash is normalized. Malformed labels, credentials, paths, query/fragment text,
+invalid ports, percent escapes and abbreviated/octal IP forms raise
+[`INVALID_DOMAIN`](../reference/errors/core-sep1.md) before `fetchFn` runs.
+HTTPS remains the default; `allowHttp` is an explicit transport choice. Host
+syntax validation does not certify the remote service. The same validation
+applies through [WebAuth discovery](../packages/webauth.md) and
+[`useStellarToml`](../packages/react/hooks/use-stellar-toml.md).
+
 #### Options
 
 ```typescript

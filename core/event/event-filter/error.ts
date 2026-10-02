@@ -62,8 +62,23 @@ export abstract class EventFilterError extends ColibriError<Code, Meta> {
 
 /** Stable error codes emitted by event-filter helpers. */
 export enum Code {
+  INVALID_TOPIC_FILTER = "EVF_003",
   EVENT_HAS_NO_TOPICS = "EVF_001",
   FAILED_TO_CHECK_FILTER_SEGMENT = "EVF_002",
+}
+
+/** Raised when a topic query cannot be represented by Stellar RPC. */
+export class INVALID_TOPIC_FILTER extends EventFilterError {
+  /** Creates an error retaining the invalid topic count. */
+  constructor(length: number) {
+    super({
+      code: Code.INVALID_TOPIC_FILTER,
+      message: "Invalid RPC topic filter",
+      details:
+        "Use zero to four constrained segments, optionally followed by a single trailing **. Decode additional constraints locally.",
+      data: { length },
+    });
+  }
 }
 
 /** Raised when topic matching is requested for an event with no topics. */
@@ -107,6 +122,7 @@ export class FAILED_TO_CHECK_FILTER_SEGMENT extends EventFilterError {
 
 /** Event-filter error constructors indexed by stable code. */
 export const ERROR_EVF = {
+  ["EVF_003" as Code.INVALID_TOPIC_FILTER]: INVALID_TOPIC_FILTER,
   ["EVF_001" as Code.EVENT_HAS_NO_TOPICS]: EVENT_HAS_NO_TOPICS,
   ["EVF_002" as Code.FAILED_TO_CHECK_FILTER_SEGMENT]:
     FAILED_TO_CHECK_FILTER_SEGMENT,

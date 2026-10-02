@@ -171,11 +171,11 @@ integration must test an explicit historical version.
 | Standard                                                                                | Bundled latest | Provider shape                                                        |
 | --------------------------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------- |
 | [SEP-40](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0040.md) | `0.1.0`        | Price Feed                                                            |
-| [SEP-41](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0041.md) | `0.5.1`        | Token; versions `0.1.0` through `0.5.1` remain selectable             |
+| [SEP-41](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0041.md) | `0.5.2`        | Token; versions `0.1.0` through `0.5.2` remain selectable             |
 | [SEP-44](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0044.md) | `0.2.1`        | Token Memo Extension; `0.1.0`, `0.2.0`, and `0.2.1` remain selectable |
 | [SEP-50](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0050.md) | `0.1.0`        | Non-Fungible Token                                                    |
 | [SEP-56](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0056.md) | `0.1.2`        | Tokenized Vault; `0.1.0`, `0.1.1`, and `0.1.2` remain selectable      |
-| [SEP-57](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0057.md) | `0.3.0`        | RWA Token, architecture components, and appendix reference interfaces |
+| [SEP-57](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0057.md) | `0.4.0`        | RWA Token, architecture components, and appendix reference interfaces |
 
 SEP-57 uses multiple contracts rather than one deployable ABI.
 `ContractStandards.SEP57.latest` selects its primary RWA Token interface. The
@@ -194,6 +194,24 @@ providers.identityRegistryStorage.latest;
 providers.identityClaims.latest;
 providers.claimIssuer.latest;
 ```
+
+Existing `interfaces` providers remain the full reference checks. Opt into
+`ContractStandards.SEP57.profiles.minimum.identityVerifier.latest` for only
+`verify_identity` and `recovery_target`, or
+`ContractStandards.SEP57.profiles.minimum.compliance.latest` for `transferred`,
+`created` and `destroyed` plus their required types. The corresponding
+`profiles.reference` providers are aliases of `interfaces`; existing management
+function requirements are preserved. Both 0.3.0 and 0.4.0 remain selectable.
+Extra functions do not prevent a structural match.
+
+SEP-41 0.5.2 retains 0.5.1's function signatures. SEP-57's three-argument `burn`
+and SEP-41's two-argument `burn` remain separate requirements pending upstream
+clarification. Do not weaken or merge them to report simultaneous conformance.
+The same catalogs work with standalone matching, `Contract` conveniences and
+[SEP-41 client inspection](../asset/sep-41-token-contract.md); none certifies
+runtime behavior or authorization. See
+[ABI event ambiguity](events.md#sparse-map-data-and-ambiguity) for the separate
+SEP-57 transfer decoding boundary.
 
 The claim topics and issuers, identity registry storage, identity claims, and
 claim issuer providers model that appendix profile. They are useful when an

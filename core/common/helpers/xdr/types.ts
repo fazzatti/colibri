@@ -1,4 +1,13 @@
 import type { NativeToScValOpts, xdr } from "stellar-sdk";
+import type { ScValLike } from "@/common/types/external.ts";
+
+/** A map entry retaining its original ScVal key and value without conversion. */
+export interface ScValEntry {
+  /** Original key, including its XDR discriminant. */
+  readonly key: ScValLike;
+  /** Original value; nested collections remain encoded ScVals. */
+  readonly value: ScValLike;
+}
 
 /** @internal */
 export type AuthEntryParams = {

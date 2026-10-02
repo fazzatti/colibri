@@ -134,3 +134,17 @@ unit tests, stub that worker's `process.cwd()`; for a real CLI subprocess, set
 `Deno.Command`'s `cwd` explicitly. This prevents child processes inheriting
 another test's temporary directory just before it is deleted. Browser fixtures
 also write screenshots into their own `Deno.makeTempDir()` directory.
+
+## Protocol 28 wire compatibility
+
+`deno task build:protocol-28-fixture` builds the isolated
+`_internal/contracts/protocol-28-compatibility` crate and records six actual
+Rust-emitted event values in `protocol-28-events.json`, the compiled Wasm and
+generated client. Use Rust 1.96.0, Stellar CLI 26.1.0 and the fixture's locked
+Soroban SDK 28.0.0 dependencies. The isolated workspace preserves older contract
+fixtures and their SDK pins. `deno task check:protocol-28-fixture` rebuilds and
+compares all artifacts without replacing them.
+
+The JSON records provenance, Wasm SHA-256, event order and XDR hex. Core tests
+use these independent bytes to verify sparse/dense data, normalized Option
+fields, generated factories and shared-prefix Transfer/MuxedTransfer ambiguity.

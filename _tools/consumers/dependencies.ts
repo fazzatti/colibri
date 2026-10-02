@@ -15,7 +15,7 @@ import {
   root,
 } from "./environment.ts";
 
-const sdk = Deno.env.get("STELLAR_SDK_VERSION") ?? "17.0.1";
+const sdk = Deno.env.get("STELLAR_SDK_VERSION") ?? "17.2.1";
 const inventory = await readPackageInventory(root);
 const core = inventory.find((pkg) => pkg.name === "@colibri/core")!;
 

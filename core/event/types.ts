@@ -105,7 +105,11 @@ export interface EventSchema<
 > {
   /** The event name (first topic, must be a symbol) */
   readonly name: Name;
-  /** Topic fields after the event name (max 3) */
+  /** Exact topics by default; prefix permits additional topics after this schema. */
+  readonly topicMatch?: "exact" | "prefix";
+  /** Validate raw ScVal discriminants instead of only parsed JavaScript types. */
+  readonly wireTypes?: boolean;
+  /** Topic fields after the event name; RPC filter limits are separate */
   readonly topics: Topics;
   /** The event value/data field */
   readonly value: Value;

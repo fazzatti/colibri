@@ -11,7 +11,7 @@ describe("frozen production dependency fixture", () => {
       prefix: "colibri-frozen-fixture-",
     });
     try {
-      await prepareSource(source, "17.0.1");
+      await prepareSource(source, "17.2.1");
       const fixture = await Deno.readTextFile(
         new URL("./dependencies.lock", import.meta.url),
       );

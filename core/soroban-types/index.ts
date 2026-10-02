@@ -102,3 +102,5 @@ export {
   SorobanValueError,
   SorobanValueErrorCode,
 } from "@/soroban-types/error.ts";
+
+export type { SorobanSpecOptions } from "@/soroban-types/codecs/spec-options.ts";

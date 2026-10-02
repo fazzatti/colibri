@@ -235,7 +235,8 @@ describe("SEP-41 ApproveEvent", () => {
     it("should create filter for any approve event", () => {
       const filter = ApproveEvent.toTopicFilter({});
 
-      assertEquals(filter.length, 3);
+      assertEquals(filter.length, 4);
+      assertEquals(filter.at(-1), "**");
       assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals(filter[1], "*");
       assertEquals(filter[2], "*");
@@ -245,7 +246,8 @@ describe("SEP-41 ApproveEvent", () => {
       const from = Keypair.random().publicKey();
       const filter = ApproveEvent.toTopicFilter({ from });
 
-      assertEquals(filter.length, 3);
+      assertEquals(filter.length, 4);
+      assertEquals(filter.at(-1), "**");
       assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals((filter[1] as xdr.ScVal).type, "scvAddress");
       assertEquals(filter[2], "*");
@@ -255,7 +257,8 @@ describe("SEP-41 ApproveEvent", () => {
       const spender = Keypair.random().publicKey();
       const filter = ApproveEvent.toTopicFilter({ spender });
 
-      assertEquals(filter.length, 3);
+      assertEquals(filter.length, 4);
+      assertEquals(filter.at(-1), "**");
       assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals(filter[1], "*");
       assertEquals((filter[2] as xdr.ScVal).type, "scvAddress");
@@ -266,7 +269,8 @@ describe("SEP-41 ApproveEvent", () => {
       const spender = Keypair.random().publicKey();
       const filter = ApproveEvent.toTopicFilter({ from, spender });
 
-      assertEquals(filter.length, 3);
+      assertEquals(filter.length, 4);
+      assertEquals(filter.at(-1), "**");
       assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals((filter[1] as xdr.ScVal).type, "scvAddress");
       assertEquals((filter[2] as xdr.ScVal).type, "scvAddress");

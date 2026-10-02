@@ -4,7 +4,7 @@
  */
 import { parse as parseToml } from "@std/toml";
 import { StrKey } from "@/strkeys/index.ts";
-import { regex } from "@/common/regex/index.ts";
+import { stellarTomlUrl } from "@/sep1/domain.ts";
 import type { ContractId, Ed25519PublicKey } from "@/strkeys/types.ts";
 import type {
   Sep10Config,
@@ -209,17 +209,7 @@ export class StellarToml {
       validate = true,
     } = options;
 
-    // Validate domain format
-    const cleanDomain = domain.replace(/\/+$/, ""); // Remove trailing slashes
-    if (!regex.domain.test(cleanDomain) && !cleanDomain.includes("localhost")) {
-      // Allow localhost for testing
-      if (cleanDomain.includes("://")) {
-        throw new ERROR.INVALID_DOMAIN(domain);
-      }
-    }
-
-    const protocol = allowHttp ? "http" : "https";
-    const url = `${protocol}://${cleanDomain}/.well-known/stellar.toml`;
+    const { domain: cleanDomain, url } = stellarTomlUrl(domain, allowHttp);
 
     // Create abort controller for timeout
     const controller = new AbortController();

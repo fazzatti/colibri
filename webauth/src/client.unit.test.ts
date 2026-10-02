@@ -5,7 +5,7 @@ import {
   assertThrows,
 } from "@std/assert";
 import { recordColibriTests } from "colibri-internal/tests/recorder/suite.ts";
-import { NetworkConfig, StellarToml } from "@colibri/core";
+import { ERRORS_SEP1, NetworkConfig, StellarToml } from "@colibri/core";
 import {
   buildSep10Challenge,
   createWebAuthFixture,
@@ -244,6 +244,22 @@ describe("WebAuthClient", () => {
       defaultHttpPolicyRequests[0].url,
       `https://${fixture.homeDomain}/.well-known/stellar.toml`,
     );
+  });
+
+  it("rejects malformed discovery hosts before WebAuth transport", async () => {
+    let requests = 0;
+    await assertRejects(
+      () =>
+        WebAuthClient.fromDomain("anchor.example@other.example", {
+          network: NetworkConfig.TestNet(),
+          fetch: () => {
+            requests++;
+            return Promise.resolve(new Response(""));
+          },
+        }),
+      ERRORS_SEP1.INVALID_DOMAIN,
+    );
+    assertEquals(requests, 0);
   });
 
   it("WebAuthClient automatic SEP-10 path has no protocol fallback", async () => {

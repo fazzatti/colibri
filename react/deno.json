@@ -1,6 +1,6 @@
 {
   "name": "@colibri/react",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "license": "MIT",
   "exports": {
     ".": "./mod.ts",
@@ -31,10 +31,10 @@
   },
   "imports": {
     "@/": "./src/",
-    "@colibri/core": "jsr:@colibri/core@^2.0.0",
-    "@colibri/webauth": "jsr:@colibri/webauth@^2.0.0",
-    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^2.0.0",
-    "@colibri/identicon": "jsr:@colibri/identicon@^2.0.0",
+    "@colibri/core": "jsr:@colibri/core@^3.0.0",
+    "@colibri/webauth": "jsr:@colibri/webauth@^3.0.0",
+    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^3.0.0",
+    "@colibri/identicon": "jsr:@colibri/identicon@^3.0.0",
     "react": "npm:react@^19.1.1",
     "@types/react": "npm:@types/react@^19.1.13",
     "@tanstack/react-query": "npm:@tanstack/react-query@^5.87.4",

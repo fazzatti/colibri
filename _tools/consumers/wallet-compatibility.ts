@@ -28,7 +28,7 @@ const directory = await Deno.makeTempDir({
   prefix: "colibri-wallet-compatibility-",
 });
 try {
-  await prepareSource(directory, "17.0.1");
+  await prepareSource(directory, "17.2.1");
   const path = resolve(directory, "imports.json");
   const original = JSON.parse(await Deno.readTextFile(path));
   const checked = new Set<string>();

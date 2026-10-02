@@ -1,5 +1,9 @@
 # @colibri/core
 
+This release requires Stellar SDK `>=17.2.1 <18`. See the
+[Core 3 and SDK migration guide](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility#core-30-and-sdk-1721-migration)
+for affected package versions, corrected codecs and preserved cursor behavior.
+
 [📚 Start with the complete Core documentation](https://fifo-docs.gitbook.io/colibri/core/overview)
 | [💡 Explore runnable examples](https://github.com/fazzatti/colibri-examples)
 
@@ -31,8 +35,8 @@ and lifecycle details.
 
 Colibri Core is published on [JSR](https://jsr.io/@colibri/core) and ships
 entirely as TypeScript modules. The supported Deno minimum is `2.7.11`; Node.js
-consumers use `22.12.0` or supported 22.x/24.x LTS releases. Core 2.x supports
-Stellar SDK `>=17.0.1 <18` and Convee `2.1.0`. The
+consumers use `22.12.0` or supported 22.x/24.x LTS releases. Core 3.x supports
+Stellar SDK `>=17.2.1 <18` and Convee `2.1.0`. The
 [compatibility policy](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility)
 covers public types, custom signers, class extensions, callable pipelines,
 plugin targets, error codes, and documented transaction behavior.
@@ -205,7 +209,7 @@ import {
   LocalSigner,
   NetworkConfig,
 } from "@colibri/core";
-import { Asset, Operation } from "npm:@stellar/stellar-sdk@^17.0.1";
+import { Asset, Operation } from "npm:@stellar/stellar-sdk@^17.2.1";
 
 const network = NetworkConfig.TestNet();
 const sender = LocalSigner.generateRandom();
@@ -384,8 +388,8 @@ assembled XDR is accepted by Stellar.
   [Discovery and canonical assets](#discovery-and-canonical-assets).
 - **Events** – Tools for parsing, filtering, and working with Soroban contract
   events from ledger metadata. See [Events](#events).
-- **TOID** – Utilities for working with SEP-0035 operation IDs for precise
-  operation indexing. See [TOID](#toid).
+- **TOID** – Separate standard SEP-35 operation IDs and historical RPC IDs. See
+  [TOID](#toid).
 - **Network configuration** – Type-safe network profiles with runtime validation
   and type narrowing. See [Network configuration](#network-configuration).
 - **Common modules** – Shared configuration types, validators, StrKey utilities,
@@ -1170,9 +1174,11 @@ application-provided runtime decoder.
 
 ## TOID
 
-The TOID helpers work with SEP-0035 operation IDs. Colibri uses the `TOID` type
-name for these 64-bit identifiers, but SEP-0035 itself names the scheme
-"Operation IDs".
+Use `createSep35OperationId` and `parseSep35OperationId` for standard SEP-35
+packing. The existing `createTOID` and `parseTOID` helpers preserve the
+historical RPC-compatible operation-index-minus-one convention used by Colibri
+event IDs. Do not rewrite stored event IDs or cursors. See the
+[identifier migration guide](https://fifo-docs.gitbook.io/colibri/core/toid).
 
 A TOID identifies one historical operation. It is related to, but distinct from,
 Colibri's `EventId`, which appends an event index to the operation ID.
@@ -1222,7 +1228,7 @@ TOIDs pack three values into a 64-bit integer:
 | ----------------------------- | ---- | ------------------------------------------------ |
 | Ledger sequence               | 32   | The ledger number                                |
 | Transaction application order | 20   | Position of the transaction in the closed ledger |
-| Operation index               | 12   | Operation index within transaction               |
+| Operation index minus one     | 12   | Historical RPC convention                        |
 
 This structure gives historical operations deterministic order after the ledger
 has closed. A transaction's application order is not knowable before inclusion
@@ -1341,6 +1347,10 @@ Colibri Core ships shared utilities so every layer speaks the same language:
   `getAuthEntrySignatures(...)`, and `operationHasDelegatedAuthorization(...)`
   inspect legacy, address-v2, and delegated authorization entries without
   duplicating XDR-union traversal.
+- **[Lossless map entries](https://fifo-docs.gitbook.io/colibri/core/helpers#lossless-map-entries)**
+  – [`parseScValEntries`](https://jsr.io/@colibri/core/doc/~/parseScValEntries)
+  preserves ordered raw ScVal keys and values, including String/Symbol keys with
+  identical text. Existing parsed values keep their current behavior.
 - **Address (`core/address`)** – Address-specific utilities such as
   muxed-account normalization.
 - **Auth (`core/auth`)** – Authorization and requirement derivation helpers,
