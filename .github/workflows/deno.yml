@@ -206,13 +206,22 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      # Raw V8 coverage can contain hundreds of thousands of files. Give the
+      # artifact action one archive instead of an unbounded JSON file glob.
+      - name: Pack ${{ matrix.package }} coverage profiles
+        run: |
+          profile_dir="coverage/${{ matrix.package }}"
+          test -n "$(find "$profile_dir" -maxdepth 1 -type f -name '*.json' -print -quit)"
+          tar -C "$profile_dir" -czf "$RUNNER_TEMP/coverage-profiles.tar.gz" .
+
       - name: Upload ${{ matrix.package }} coverage profile
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.package }}
-          path: coverage/${{ matrix.package }}/*.json
+          path: ${{ runner.temp }}/coverage-profiles.tar.gz
           if-no-files-found: error
           retention-days: 1
+          compression-level: 0
 
   build_verification_tests:
     name: test / build-verification / ${{ matrix.shard }}
@@ -269,13 +278,20 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      - name: Pack build-verification ${{ matrix.shard }} coverage profiles
+        run: |
+          profile_dir="coverage/build-verification-${{ matrix.shard }}"
+          test -n "$(find "$profile_dir" -maxdepth 1 -type f -name '*.json' -print -quit)"
+          tar -C "$profile_dir" -czf "$RUNNER_TEMP/coverage-profiles.tar.gz" .
+
       - name: Upload build-verification ${{ matrix.shard }} coverage profile
         uses: actions/upload-artifact@v4
         with:
           name: coverage-build-verification-${{ matrix.shard }}
-          path: coverage/build-verification-${{ matrix.shard }}/*.json
+          path: ${{ runner.temp }}/coverage-profiles.tar.gz
           if-no-files-found: error
           retention-days: 1
+          compression-level: 0
 
   complexity:
     name: quality / complexity
@@ -318,6 +334,16 @@ jobs:
         with:
           pattern: coverage-*
           path: coverage
+
+      - name: Extract package coverage profiles
+        run: |
+          for profile_dir in coverage/coverage-*; do
+            archive="$profile_dir/coverage-profiles.tar.gz"
+            test -f "$archive"
+            tar -xzf "$archive" -C "$profile_dir"
+            rm "$archive"
+            test -n "$(find "$profile_dir" -maxdepth 1 -type f -name '*.json' -print -quit)"
+          done
 
       - name: Prime instrumented source cache
         run: >-
