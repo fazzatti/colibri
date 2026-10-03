@@ -55,6 +55,56 @@ Auth-entry helpers extract the represented address, credentials, and signatures;
 entries on an invoke-host-function operation. These are structural tools, not
 cryptographic authorization verification.
 
+## Lossless map entries
+
+Use [`parseScValEntries`](https://jsr.io/@colibri/core/doc/~/parseScValEntries)
+when a map's original key types matter. The existing
+[`parseScVal`](https://jsr.io/@colibri/core/doc/~/parseScVal) converts keys to
+JavaScript values, so a String key and a Symbol key with the same text can
+collapse into one object property. The opt-in helper keeps both entries.
+
+<!-- deno-check -->
+
+```ts
+import { parseScVal, parseScValEntries } from "@colibri/core";
+import { xdr } from "npm:@stellar/stellar-sdk";
+
+const raw = xdr.ScVal.scvMap([
+  new xdr.ScMapEntry({
+    key: xdr.ScVal.scvString("x"),
+    val: xdr.ScVal.scvU32(1),
+  }),
+  new xdr.ScMapEntry({
+    key: xdr.ScVal.scvSymbol("x"),
+    val: xdr.ScVal.scvU32(2),
+  }),
+]);
+
+console.log(parseScVal(raw)); // { x: 2 } — existing behavior
+const entries = parseScValEntries(raw);
+console.log(entries.map(({ key }) => key.type)); // ["scvString", "scvSymbol"]
+console.log(entries.map(({ value }) => parseScVal(value))); // [1, 2]
+```
+
+[`parseScValEntries`](https://jsr.io/@colibri/core/doc/~/parseScValEntries)
+returns a fresh array of
+[`ScValEntry`](https://jsr.io/@colibri/core/doc/~/ScValEntry) objects whose
+`key` and `value` refer to the original native ScVals. It preserves entry order
+and duplicates without sorting or validating canonical map order. Nested maps
+and vectors remain raw values. An empty or null map produces `[]`; retain the
+original input if that container distinction matters.
+
+Only map inputs are accepted. Other ScVal variants throw the existing
+[`HLP_XDR_09`](../reference/errors/core-common-helpers-xdr.md) typed error, with
+`meta.data.value.valueType` identifying the received discriminant and
+`meta.data.value.xdrTypeName` set to `"scvMap"`.
+
+For [events](../events/overview.md), pass the existing raw `event.scvalValue` to
+[`parseScValEntries`](https://jsr.io/@colibri/core/doc/~/parseScValEntries) when
+its discriminant is `scvMap`. The existing parsed event value and
+[`parseScVal`](https://jsr.io/@colibri/core/doc/~/parseScVal) behavior are
+unchanged.
+
 ## Other reusable surfaces
 
 - Assertions and type guards narrow inputs and fail with the supplied error.

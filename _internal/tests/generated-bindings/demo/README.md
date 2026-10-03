@@ -16,7 +16,7 @@ function a property with typed `.read()` and `.invoke()` calls.
 ## Setup
 
 ```sh
-deno add jsr:@colibri/core@^1.1.0
+deno add jsr:@colibri/core@^3.0.0
 ```
 
 The JSR preset uses Colibri Core 1.1; Core supplies the Stellar SDK dependency. The generated source

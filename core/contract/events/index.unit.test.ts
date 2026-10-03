@@ -350,7 +350,7 @@ describe("spec-aware contract events", () => {
           }),
         ),
       ERROR.INVALID_SPEC,
-      "too many topics",
+      "at most two fixed prefix symbols",
     );
     assertThrows(
       () =>

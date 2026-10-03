@@ -15,7 +15,7 @@ to the URL alternative. A supplied native client already owns its configuration.
 ```ts
 import { NetworkConfig } from "@colibri/core";
 import { createLedgerStreamer } from "@colibri/rpc-streamer";
-import { Server } from "npm:@stellar/stellar-sdk@^17.0.1/rpc";
+import { Server } from "npm:@stellar/stellar-sdk@^17.2.1/rpc";
 
 const networkConfig = NetworkConfig.TestNet();
 const fromNetwork = createLedgerStreamer({ networkConfig });

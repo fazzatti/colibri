@@ -195,6 +195,34 @@ function createMockEventResponse(
 // ============================================================================
 
 describe("Template EventTemplate", () => {
+  it("accepts declared alternate parsed types while retaining exact topic matching", () => {
+    const schema = {
+      name: "flexible",
+      topics: [],
+      value: { name: "data", type: "u32", alternateTypes: ["string"] },
+    } as const satisfies EventSchema;
+    class FlexibleEvent extends EventTemplate<typeof schema> {
+      static override schema = schema;
+    }
+    for (const value of [xdr.ScVal.scvU32(7), xdr.ScVal.scvString("seven")]) {
+      const event = createMockEvent([xdr.ScVal.scvSymbol("flexible")], value);
+      assertEquals(FlexibleEvent.is(event), true);
+    }
+    assertEquals(
+      FlexibleEvent.is(createMockEvent(
+        [xdr.ScVal.scvSymbol("flexible")],
+        xdr.ScVal.scvBool(true),
+      )),
+      false,
+    );
+    assertEquals(
+      FlexibleEvent.is(createMockEvent(
+        [xdr.ScVal.scvSymbol("flexible"), xdr.ScVal.scvSymbol("extra")],
+        xdr.ScVal.scvString("seven"),
+      )),
+      false,
+    );
+  });
   describe("is()", () => {
     it("should return true for matching event", () => {
       const userAddress = Keypair.random().publicKey();

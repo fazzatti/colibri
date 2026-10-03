@@ -1,5 +1,8 @@
 import type { xdr } from "stellar-sdk";
+import { recordFieldValues } from "@/soroban-types/codecs/record.ts";
+import { requireOrderedMap } from "@/soroban-types/codecs/ordering.ts";
 import type { Spec } from "@/contract/spec.ts";
+import { SorobanValueError } from "@/soroban-types/error.ts";
 import * as ERROR from "@/contract/events/error.ts";
 
 const PRIMITIVES: Readonly<Record<string, string>> = {
@@ -36,7 +39,14 @@ export function validateEventValue(
   if (validatePrimitive(value, type)) return;
   const recurse = (child: xdr.ScVal, childType: xdr.ScSpecTypeDef) =>
     validateEventValue(spec, child, childType, depth + 1);
-  validateContainer(value, type, recurse, spec);
+  try {
+    validateContainer(value, type, recurse, spec);
+  } catch (cause) {
+    if (cause instanceof SorobanValueError) {
+      throw new ERROR.INVALID_SPEC(cause.message);
+    }
+    throw cause;
+  }
 }
 
 function validatePrimitive(value: xdr.ScVal, type: xdr.ScSpecTypeDef): boolean {
@@ -87,7 +97,9 @@ function validateContainer(
     return;
   }
   if (kind === "scSpecTypeMap") {
-    for (const entry of requireMap(value)) {
+    const entries = requireMap(value);
+    requireOrderedMap(entries);
+    for (const entry of entries) {
       recurse(entry.key, type.value.keyType);
       recurse(entry.val, type.value.valueType);
     }
@@ -141,18 +153,11 @@ const validateUserType = (
           recurse,
         );
       } else {
-        const entries = requireMap(value);
-        if (entries.length !== fields.length) {
-          throw new ERROR.INVALID_SPEC("struct field count mismatch");
-        }
-        fields.forEach((field, index) => {
-          const key = entries[index].key;
-          if (
-            key.type !== "scvSymbol" ||
-            key.value.toString() !== field.name.toString()
-          ) throw new ERROR.INVALID_SPEC("struct key mismatch");
-          recurse(entries[index].val, field.type);
-        });
+        const values = recordFieldValues(
+          value,
+          fields.map((field) => field.name.toString()),
+        );
+        fields.forEach((field, index) => recurse(values[index], field.type));
       }
       return;
     }

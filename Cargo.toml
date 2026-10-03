@@ -3,6 +3,8 @@ resolver = "2"
 members = [
   "_internal/contracts/*"
 ]
+# Keep the released SDK 28 regression fixture independent of older RC fixtures.
+exclude = ["_internal/contracts/protocol-28-compatibility"]
 
 [workspace.dependencies]
 soroban-sdk = "22.0.8"

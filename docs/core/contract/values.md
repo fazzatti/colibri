@@ -22,7 +22,7 @@ const restored: SorobanType.U32 = codec.decode(validated.toScVal());
 console.log(validated.value, restored);
 ```
 
-Install `jsr:@colibri/core@^1.1.0`. Save a complete example below as `values.ts`
+Install `jsr:@colibri/core@^3.0.0`. Save a complete example below as `values.ts`
 and run `deno run values.ts`; these examples need no RPC or signer. Import
 `SorobanType` from the Core root, or use
 `import * as SorobanType from "@colibri/core/values"` for lightweight consumers.
@@ -123,10 +123,12 @@ console.log(decoded, absent.value, pair.value);
 ```
 
 Map encoding sorts keys using Soroban's comparison rules and rejects duplicate
-keys. Decoding rejects unordered maps. Vector and tuple positions are preserved.
-Enum declarations do not need ascending numeric codes; their exact codes and
-payload positions are preserved. Map ordering also applies when keys are enums
-or other composed values.
+encoded keys, including equivalent raw and validated keys. This also applies to
+ordinary ABI method arguments; caller Maps and entry arrays are never reordered.
+Decoding rejects unordered maps. Vector and tuple positions are preserved. Enum
+declarations do not need ascending numeric codes; their exact codes and payload
+positions are preserved. Map ordering also applies when keys are enums or other
+composed values.
 
 Option and Result are compositions, with no separate ScVal tags. None encodes
 void and Some encodes its inner value; Some(void) cannot be distinguished on the
@@ -178,6 +180,30 @@ payload-free case or a tuple for its fields, including `[]` for a tuple case
 with zero fields. Both retain the variant name in XDR. Numeric enums retain
 explicit u32 codes; unknown codes and invalid payloads are rejected. Containers
 and custom declarations may nest, including recursive optional fields.
+
+## Named record evolution
+
+Named structs decode by Symbol field name, independent of the declaration's
+field order. Missing `Option<T>`, `Void` and `Val` fields are decoded from void
+and normalized to `null`; missing required fields still fail. Unknown fields are
+ignored in the default `evolution` mode, while duplicate keys, unordered maps,
+non-Symbol record keys and wrong declared wire types fail. Tuple structs and
+enum payloads retain exact positional arity.
+
+For diagnostics, pass `{ structFields: "strict" }` as the optional third
+argument to
+[`createSorobanType`](https://jsr.io/@colibri/core/doc/values/~/createSorobanType)
+or
+[`sorobanTypeFromSpec`](https://jsr.io/@colibri/core/doc/values/~/sorobanTypeFromSpec).
+Strict mode requires exactly the declared fields, including explicit void for
+absent optional values. It is not the default for ordinary contract reads.
+
+Named input types may omit void-compatible fields. Encoding remains dense and
+emits every declared field; extra input properties are rejected. Decoded outputs
+still include every declared property. The same rules apply recursively inside
+containers and generated factories. Preserve raw XDR if you need unknown fields;
+[`parseScValEntries`](../helpers.md) retains raw map entries and their order
+without turning a generic map into an ABI record.
 
 ## Use generated factories
 

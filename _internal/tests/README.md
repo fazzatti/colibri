@@ -4,12 +4,28 @@ This directory is not part of any published Colibri package.
 
 ## Runtime prerequisite
 
-Use **Deno 2.7.11**, matching `.github/workflows/deno.yml`, for repository
-tests. The React DOM harness rejects Deno 2.6: its CommonJS global/timer
-behavior can stall `act()` until a session expires and produce a misleading
-authentication failure. Check `deno --version` before rerunning.
-Release/declaration tooling has its own Deno 2.9.6 requirement documented under
-`_tools/releases/`.
+Use **Deno 2.9.6**, matching `.github/workflows/deno.yml`, for repository tests
+and coverage aggregation. Deno 2.7.11 remains in the supported consumer
+compatibility matrix, but its coverage instrumentation reports unreachable
+whitespace before `finally` and injected decorator helpers as application gaps.
+The React DOM harness rejects Deno 2.6: its CommonJS global/timer behavior can
+stall `act()` until a session expires and produce a misleading authentication
+failure. Check `deno --version` before rerunning. Release/declaration tooling
+has its own Deno 2.9.6 requirement documented under `_tools/releases/`.
+
+After a complete unit/integration run, generate the aggregate LCOV and run
+`deno task check:coverage` to require 100% line, branch and function coverage.
+The gate rejects missing or inconsistent counters; `deno task check:crap` also
+checks attribution against the production function inventory. CI enforces both,
+and Codecov requires 100% project and patch coverage with zero tolerance.
+Unit-only profiles intentionally omit paths exercised by integration tests.
+
+```sh
+deno task test
+deno coverage --lcov --output=coverage.lcov coverage
+deno task check:coverage
+deno task check:crap
+```
 
 ## Quickstart diagnostics
 
@@ -134,3 +150,17 @@ unit tests, stub that worker's `process.cwd()`; for a real CLI subprocess, set
 `Deno.Command`'s `cwd` explicitly. This prevents child processes inheriting
 another test's temporary directory just before it is deleted. Browser fixtures
 also write screenshots into their own `Deno.makeTempDir()` directory.
+
+## Protocol 28 wire compatibility
+
+`deno task build:protocol-28-fixture` builds the isolated
+`_internal/contracts/protocol-28-compatibility` crate and records six actual
+Rust-emitted event values in `protocol-28-events.json`, the compiled Wasm and
+generated client. Use Rust 1.96.0, Stellar CLI 26.1.0 and the fixture's locked
+Soroban SDK 28.0.0 dependencies. The isolated workspace preserves older contract
+fixtures and their SDK pins. `deno task check:protocol-28-fixture` rebuilds and
+compares all artifacts without replacing them.
+
+The JSON records provenance, Wasm SHA-256, event order and XDR hex. Core tests
+use these independent bytes to verify sparse/dense data, normalized Option
+fields, generated factories and shared-prefix Transfer/MuxedTransfer ambiguity.

@@ -18,12 +18,12 @@ if (Deno.version.deno !== "2.9.6") {
 const manifest = JSON.parse(
   await Deno.readTextFile(resolve(artifacts, "manifest.json")),
 );
-if (manifest.sdk !== "17.0.1") {
-  throw new Error("Bundle baselines require SDK 17.0.1 artifacts.");
+if (manifest.sdk !== "17.2.1") {
+  throw new Error("Bundle baselines require SDK 17.2.1 artifacts.");
 }
 await Deno.mkdir(destination, { recursive: true });
 const source = resolve(destination, "source");
-await prepareSource(source, "17.0.1");
+await prepareSource(source, "17.2.1");
 await Deno.copyFile(
   resolve(root, "_tools/bundles/dependencies.lock"),
   resolve(source, "deno.lock"),
@@ -42,7 +42,7 @@ await command(Deno.execPath(), [
   "deno.json",
   ...Object.keys(entries).map((name) => `${name}.ts`),
 ], source);
-await checkResolvedSdk(source, "17.0.1");
+await checkResolvedSdk(source, "17.2.1");
 const deno: Record<string, ReturnType<typeof measure>> = {};
 for (const name of Object.keys(entries)) {
   const output = resolve(denoOutput, `${name}.js`);
@@ -102,7 +102,7 @@ await writeJson(resolve(consumer, "package.json"), {
         pkg: { name: string; archive: string },
       ) => [pkg.name, `file:${resolve(artifacts, pkg.archive)}`]),
     ),
-    "@stellar/stellar-sdk": "17.0.1",
+    "@stellar/stellar-sdk": "17.2.1",
     rollup: "4.50.1",
     pako: "2.1.0",
     "@rollup/plugin-node-resolve": "16.0.1",

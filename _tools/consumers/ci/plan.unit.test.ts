@@ -3,14 +3,14 @@ import { describe, it } from "@std/testing/bdd";
 import { compatibilityChecks, sdkTargets, verifyRuntime } from "./plan.ts";
 
 const sameSdk = [
-  { selection: "17.0.1", version: "17.0.1" },
-  { selection: "^17.0.1", version: "17.0.1" },
+  { selection: "17.2.1", version: "17.2.1" },
+  { selection: "^17.2.1", version: "17.2.1" },
 ];
 
 describe("consolidated compatibility plan", () => {
   it("deduplicates identical resolutions without losing runtime or compiler combinations", () => {
     const checks = compatibilityChecks(sameSdk, "/tmp/compatibility");
-    assertEquals(sdkTargets(sameSdk), ["17.0.1"]);
+    assertEquals(sdkTargets(sameSdk), ["17.2.1"]);
     assertEquals(checks.length, 16);
     assertEquals(new Set(checks.map((check) => check.id)).size, checks.length);
     assertEquals(
@@ -50,11 +50,11 @@ describe("consolidated compatibility plan", () => {
   });
   it("keeps the complete second matrix when the compatible SDK resolves newer", () => {
     const checks = compatibilityChecks([sameSdk[0], {
-      selection: "^17.0.1",
-      version: "17.1.0",
+      selection: "^17.2.1",
+      version: "17.3.0",
     }], "/tmp/compatibility");
     assertEquals(checks.length, 29);
-    for (const sdk of ["17.0.1", "17.1.0"]) {
+    for (const sdk of ["17.2.1", "17.3.0"]) {
       assertEquals(
         checks.filter((check) =>
           check.phase.startsWith("node-") &&
@@ -83,10 +83,10 @@ describe("consolidated compatibility plan", () => {
         1,
       );
     }
-    const budget = checks.find((check) => check.id === "bundles-17.0.1")!;
+    const budget = checks.find((check) => check.id === "bundles-17.2.1")!;
     assertEquals(budget.args.slice(-2), [
       "/tmp/compatibility/bundles",
-      "/tmp/compatibility/sdk-17.0.1",
+      "/tmp/compatibility/sdk-17.2.1",
     ]);
     assertEquals(
       checks.filter((check) => check.phase === "browser-runner").length,
@@ -99,9 +99,9 @@ describe("consolidated compatibility plan", () => {
         [],
         [sameSdk[0]],
         [sameSdk[0], sameSdk[0]],
-        [sameSdk[0], { selection: "^17.0.1", version: "18.0.0" }],
-        [sameSdk[0], { selection: "^17.0.1", version: "17.0.0" }],
-        [{ selection: "17.0.1", version: "17.1.0" }, sameSdk[1]],
+        [sameSdk[0], { selection: "^17.2.1", version: "18.0.0" }],
+        [sameSdk[0], { selection: "^17.2.1", version: "17.0.0" }],
+        [{ selection: "17.2.1", version: "17.3.0" }, sameSdk[1]],
       ]
     ) {
       assertThrows(

@@ -237,6 +237,6 @@ export async function prepareArtifacts(
 if (import.meta.main) {
   await prepareArtifacts(
     resolve(Deno.args[0] ?? "_artifacts/consumers"),
-    Deno.env.get("STELLAR_SDK_VERSION") ?? "17.0.1",
+    Deno.env.get("STELLAR_SDK_VERSION") ?? "17.2.1",
   );
 }

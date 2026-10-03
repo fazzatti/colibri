@@ -1,7 +1,7 @@
-import {
-  canonicalMap,
-  requireOrderedMap,
-} from "@/soroban-types/codecs/ordering.ts";
+import { canonicalMap } from "@/soroban-types/codecs/ordering.ts";
+import { recordFieldValues } from "@/soroban-types/codecs/record.ts";
+import type { SorobanSpecOptions } from "@/soroban-types/codecs/spec-options.ts";
+import { scValToNative } from "stellar-sdk/base";
 import { contractValType } from "@/soroban-types/codecs/generic.ts";
 import * as xdr from "stellar-sdk/xdr";
 import type { Spec } from "@/contract/spec.ts";
@@ -70,7 +70,14 @@ const SCALARS: Readonly<
 /** @internal A copied spec inventory sufficient to encode custom types without RPC or pipelines. */
 export class SpecTypes {
   readonly #entries: readonly CustomEntry[];
-  constructor(spec: Pick<NativeSpec, "entries">) {
+  #depth = 0;
+  readonly #options: SorobanSpecOptions;
+  constructor(
+    spec: Pick<NativeSpec, "entries">,
+    options: SorobanSpecOptions = {},
+    private readonly nativeValues = false,
+  ) {
+    this.#options = { ...options };
     this.#entries = spec.entries.map((entry) =>
       xdr.ScSpecEntry.fromXdr(entry.toXdr())
     ).filter((entry): entry is CustomEntry =>
@@ -92,6 +99,15 @@ export class SpecTypes {
   }
 
   type(type: xdr.ScSpecTypeDef): SorobanCodec<unknown, unknown> {
+    if (type.type === "scSpecTypeVal" && this.nativeValues) {
+      const codec = contractValType();
+      return new SorobanCodec(
+        "val",
+        "val",
+        (value) => codec.encodeUnknown(value),
+        (value) => scValToNative(codec.decode(value)),
+      );
+    }
     const scalar = SCALARS[type.type];
     if (scalar) return scalar();
     switch (type.type) {
@@ -132,9 +148,19 @@ export class SpecTypes {
     return new SorobanCodec(
       name,
       JSON.stringify(this.identity(name, new Set())),
-      (value) => this.encodeCustom(entry, value),
-      (value) => this.decodeCustom(entry, value),
+      (value) => this.withDepth(() => this.encodeCustom(entry, value)),
+      (value) => this.withDepth(() => this.decodeCustom(entry, value)),
     );
+  }
+
+  private withDepth<T>(run: () => T): T {
+    requireValue(this.#depth < 64, "custom", "value nesting exceeds 64");
+    this.#depth++;
+    try {
+      return run();
+    } finally {
+      this.#depth--;
+    }
   }
 
   // Only ABI shape participates; documentation and unrelated functions do not.
@@ -270,7 +296,9 @@ export class SpecTypes {
         new xdr.ScMapEntry({
           key: symbolType().encodeUnknown(field.name.toString()),
           val: this.type(field.type).encodeUnknown(
-            record[field.name.toString()],
+            Object.hasOwn(record, field.name.toString())
+              ? record[field.name.toString()]
+              : undefined,
           ),
         })
       )),
@@ -283,30 +311,15 @@ export class SpecTypes {
   ): unknown {
     const tuple = this.tupleFields(entry);
     if (tuple) return tupleType(tuple).decode(value);
-    requireTag(value, "scvMap");
-    requireValue(
-      value.map !== null,
-      entry.name.toString(),
-      "expected a field map",
+    const values = recordFieldValues(
+      value,
+      entry.fields.map((field) => field.name.toString()),
+      this.#options.structFields,
     );
-    requireOrderedMap(value.map);
-    const fields = new Map(
-      value.map.map((pair) => [symbolType().decode(pair.key), pair.val]),
-    );
-    requireValue(
-      fields.size === value.map.length,
-      entry.name.toString(),
-      "duplicate fields",
-    );
-    this.requireFields(entry, [...fields.keys()]);
-    return Object.fromEntries(
-      entry.fields.map((
-        field,
-      ) => [
-        field.name.toString(),
-        this.type(field.type).decode(fields.get(field.name.toString())!),
-      ]),
-    );
+    return Object.fromEntries(entry.fields.map((field, index) => [
+      field.name.toString(),
+      this.type(field.type).decode(values[index]),
+    ]));
   }
 
   private record(value: unknown, name: string): Record<string, unknown> {
@@ -324,8 +337,7 @@ export class SpecTypes {
     const expected = entry.fields.map((field) => field.name.toString());
     requireValue(
       new Set(expected).size === expected.length &&
-        expected.length === names.length &&
-        expected.every((name) => names.includes(name)),
+        names.every((name) => expected.includes(name)),
       entry.name.toString(),
       "fields do not match the spec",
     );
@@ -376,18 +388,31 @@ export class SpecTypes {
   }
 }
 
-/** Creates a validated codec from a custom declaration and its dependent types. */
+/**
+ * Creates a validated codec from a custom declaration and its dependent types.
+ * Named fields use evolution decoding by default; `options.structFields` can
+ * request an exact field set. Encoding always writes the complete declared record.
+ */
 export function createSorobanType<Input, Output = Input>(
   spec: Pick<NativeSpec, "entries">,
   name: string,
+  options: SorobanSpecOptions = {},
 ): SorobanCodec<Input, Output> {
-  return new SpecTypes(spec).custom(name) as SorobanCodec<Input, Output>;
+  return new SpecTypes(spec, options).custom(name) as SorobanCodec<
+    Input,
+    Output
+  >;
 }
 
-/** Creates a codec for any supported contract-spec type, including composition. */
+/**
+ * Creates a codec for any supported contract-spec type, including composition.
+ * `options.structFields` controls named records recursively without changing
+ * positional tuple/union rules or dense encoding.
+ */
 export function sorobanTypeFromSpec<Input = unknown, Output = Input>(
   spec: Pick<NativeSpec, "entries">,
   type: NativeSpecType,
+  options: SorobanSpecOptions = {},
 ): SorobanCodec<Input, Output> {
-  return new SpecTypes(spec).type(type) as SorobanCodec<Input, Output>;
+  return new SpecTypes(spec, options).type(type) as SorobanCodec<Input, Output>;
 }

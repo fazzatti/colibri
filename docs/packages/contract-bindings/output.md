@@ -35,7 +35,7 @@ writing and rejects symbolic links in the destination. It will not replace an
 unmarked handwritten file even with `--force`.
 
 For file output, install Core in the host project
-(`deno add jsr:@colibri/core@^1.1.0` or `npx jsr add @colibri/core@^1.1.0`). For
+(`deno add jsr:@colibri/core@^3.0.0` or `npx jsr add @colibri/core@^3.0.0`). For
 packages, run the following inside the generated directory:
 
 ```sh

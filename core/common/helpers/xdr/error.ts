@@ -155,7 +155,7 @@ export class INVALID_XDR_PARSE extends XdrHelperError {
 }
 
 /**
- * Thrown when ensureXdrType fails to parse XDR input.
+ * Thrown when input cannot be parsed as the requested XDR type.
  */
 export class FAILED_TO_PARSE_XDR extends XdrHelperError {
   constructor(valueType: string, xdrTypeName: string, cause?: Error) {

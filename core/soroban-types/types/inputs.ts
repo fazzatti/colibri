@@ -49,6 +49,11 @@ export type Custom<T> = Value<T>;
 /** Positional input fields derived from their Soroban declarations. */
 export type Fields<T> = { -readonly [K in keyof T]: Value<T[K]> };
 
+/** Named inputs may omit fields whose declared input accepts void/undefined. */
+export type StructFields<T> =
+  & { -readonly [K in keyof T as null extends T[K] ? never : K]: Value<T[K]> }
+  & { -readonly [K in keyof T as null extends T[K] ? K : never]?: Value<T[K]> };
+
 /** Input derivation shared by all composed schema declarations. */
 export type FromSchema<S, T> = S extends { kind: "scalar"; input: infer I } ? I
   : S extends { kind: "vec"; element: infer E } ? Vec<Value<E>, E>
@@ -65,7 +70,8 @@ export type FromSchema<S, T> = S extends { kind: "scalar"; input: infer I } ? I
 
 /** Derives custom payload inputs without repeating the generated declaration. */
 export type CustomInput<S extends CustomSchema> = S extends
-  { kind: "struct" | "tuple"; fields: infer F } ? Fields<F>
+  { kind: "struct"; fields: infer F } ? StructFields<F>
+  : S extends { kind: "tuple"; fields: infer F } ? Fields<F>
   : S extends { kind: "enum"; encoding: "u32" } ? CustomValue<S>
   : S extends { kind: "enum"; encoding: "tagged"; variants: infer V } ? {
       [Tag in keyof V]: V[Tag] extends null ? { tag: Tag }

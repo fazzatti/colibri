@@ -191,9 +191,9 @@ describe("EventFilter Errors", () => {
       assertInstanceOf(error, EventFilterError);
     });
 
-    it("should have exactly 2 error codes in registry", () => {
+    it("should have exactly 3 error codes in registry", () => {
       const keys = Object.keys(ERROR_EVF);
-      assertEquals(keys.length, 2);
+      assertEquals(keys.length, 3);
     });
   });
 

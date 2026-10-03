@@ -160,7 +160,7 @@ convenience:
 
 ```ts
 import { LocalSigner, type TransactionConfig } from "@colibri/core";
-import { Keypair } from "npm:@stellar/stellar-sdk@^17.0.1";
+import { Keypair } from "npm:@stellar/stellar-sdk@^17.2.1";
 
 const keypair = Keypair.random();
 const signer = LocalSigner.fromKeypair(keypair, true);

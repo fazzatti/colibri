@@ -105,6 +105,22 @@ Allowing a network or a custom image does not disable the other policies. If
 your recipe is rejected, inspect its policy decision instead of silently
 changing the recipe until some build passes. See [policies](policies.md).
 
+## SEP-58 field grammar
+
+Strict [target metadata](targets.md) validates known SEP-58 values as ASCII
+before [retrieval or execution policy](policies.md). `bldarg` is one nonempty
+argument without line breaks. `bldopt` is a complete long flag matching
+`--[A-Za-z][A-Za-z0-9_-]*(=.+)?`; empty assigned values and short flags fail.
+`source_uri`, when present, is an absolute scheme URI with a nonempty remainder
+and no whitespace. Syntax validation is scheme-neutral; the retrieval policy
+still decides which transports it supports.
+
+Argument and repeated-option order, metadata pairs and the existing required
+image/source-hash checks are preserved. Malformed fields use the existing
+[`InvalidSep58MetadataError`](../../reference/errors/build-verification-error-core.md);
+duplicate scalar metadata retains its separate typed error. Out-of-band build
+policy does not make invalid embedded SEP-58 metadata valid.
+
 ## Authenticated URL downloads
 
 [`ContractBuildVerifier`](../build-verification.md) accepts `urlHeaders` for

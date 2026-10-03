@@ -85,6 +85,9 @@ jobs:
       - name: Test custom lint rules
         run: deno task test:lint-rules
 
+      - name: Test exact coverage gate
+        run: deno task test:coverage
+
       - name: Check package version invariants
         run: deno task check:package-versions
 
@@ -172,7 +175,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: 2.7.11
+          deno-version: 2.9.6
 
       - name: Run ${{ matrix.package }} tests
         env:
@@ -206,13 +209,22 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      # Raw V8 coverage can contain hundreds of thousands of files. Give the
+      # artifact action one archive instead of an unbounded JSON file glob.
+      - name: Pack ${{ matrix.package }} coverage profiles
+        run: |
+          profile_dir="coverage/${{ matrix.package }}"
+          test -n "$(find "$profile_dir" -maxdepth 1 -type f -name '*.json' -print -quit)"
+          tar -C "$profile_dir" -czf "$RUNNER_TEMP/coverage-profiles.tar.gz" .
+
       - name: Upload ${{ matrix.package }} coverage profile
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.package }}
-          path: coverage/${{ matrix.package }}/*.json
+          path: ${{ runner.temp }}/coverage-profiles.tar.gz
           if-no-files-found: error
           retention-days: 1
+          compression-level: 0
 
   build_verification_tests:
     name: test / build-verification / ${{ matrix.shard }}
@@ -244,7 +256,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: 2.7.11
+          deno-version: 2.9.6
 
       - name: Run build-verification ${{ matrix.shard }} tests
         env:
@@ -269,13 +281,20 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      - name: Pack build-verification ${{ matrix.shard }} coverage profiles
+        run: |
+          profile_dir="coverage/build-verification-${{ matrix.shard }}"
+          test -n "$(find "$profile_dir" -maxdepth 1 -type f -name '*.json' -print -quit)"
+          tar -C "$profile_dir" -czf "$RUNNER_TEMP/coverage-profiles.tar.gz" .
+
       - name: Upload build-verification ${{ matrix.shard }} coverage profile
         uses: actions/upload-artifact@v4
         with:
           name: coverage-build-verification-${{ matrix.shard }}
-          path: coverage/build-verification-${{ matrix.shard }}/*.json
+          path: ${{ runner.temp }}/coverage-profiles.tar.gz
           if-no-files-found: error
           retention-days: 1
+          compression-level: 0
 
   complexity:
     name: quality / complexity
@@ -288,7 +307,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: 2.7.11
+          deno-version: 2.9.6
 
       - name: Generate unit coverage
         run: deno task test:unit
@@ -311,13 +330,23 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: 2.7.11
+          deno-version: 2.9.6
 
       - name: Download package coverage profiles
         uses: actions/download-artifact@v4
         with:
           pattern: coverage-*
           path: coverage
+
+      - name: Extract package coverage profiles
+        run: |
+          for profile_dir in coverage/coverage-*; do
+            archive="$profile_dir/coverage-profiles.tar.gz"
+            test -f "$archive"
+            tar -xzf "$archive" -C "$profile_dir"
+            rm "$archive"
+            test -n "$(find "$profile_dir" -maxdepth 1 -type f -name '*.json' -print -quit)"
+          done
 
       - name: Prime instrumented source cache
         run: >-
@@ -338,6 +367,11 @@ jobs:
           name: codecov-aggregate
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Require 100% aggregate line, branch and function coverage
+        run: |
+          deno task check:coverage
+          deno task check:crap
 
   evidence:
     name: test evidence

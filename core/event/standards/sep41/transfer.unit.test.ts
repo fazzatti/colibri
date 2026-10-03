@@ -365,7 +365,8 @@ describe("SEP-41 TransferEvent", () => {
     it("should create filter for any transfer event", () => {
       const filter = TransferEvent.toTopicFilter({});
 
-      assertEquals(filter.length, 3);
+      assertEquals(filter.length, 4);
+      assertEquals(filter.at(-1), "**");
       assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals(filter[1], "*");
       assertEquals(filter[2], "*");
@@ -375,7 +376,8 @@ describe("SEP-41 TransferEvent", () => {
       const from = Keypair.random().publicKey();
       const filter = TransferEvent.toTopicFilter({ from });
 
-      assertEquals(filter.length, 3);
+      assertEquals(filter.length, 4);
+      assertEquals(filter.at(-1), "**");
       assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals((filter[1] as xdr.ScVal).type, "scvAddress");
       assertEquals(filter[2], "*");
@@ -385,7 +387,8 @@ describe("SEP-41 TransferEvent", () => {
       const to = Keypair.random().publicKey();
       const filter = TransferEvent.toTopicFilter({ to });
 
-      assertEquals(filter.length, 3);
+      assertEquals(filter.length, 4);
+      assertEquals(filter.at(-1), "**");
       assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals(filter[1], "*");
       assertEquals((filter[2] as xdr.ScVal).type, "scvAddress");
@@ -396,7 +399,8 @@ describe("SEP-41 TransferEvent", () => {
       const to = Keypair.random().publicKey();
       const filter = TransferEvent.toTopicFilter({ from, to });
 
-      assertEquals(filter.length, 3);
+      assertEquals(filter.length, 4);
+      assertEquals(filter.at(-1), "**");
       assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals((filter[1] as xdr.ScVal).type, "scvAddress");
       assertEquals((filter[2] as xdr.ScVal).type, "scvAddress");

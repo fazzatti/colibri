@@ -18,7 +18,7 @@ check and final `test` gate require the entire group to pass.
 | `check:consumers:dependencies`               | Candidate dependent packages with minimum available compatible Core release trees, and compatible historical dependents with candidate Core |
 | `check:consumers:published`                  | Actual newly published JSR modules and JSR-generated npm distributions                                                                      |
 
-`STELLAR_SDK_VERSION` selects exact `17.0.1` or a freshly resolved compatible
+`STELLAR_SDK_VERSION` selects exact `17.2.1` or a freshly resolved compatible
 17.x range. Preparation records the resolved SDK in `manifest.json`; installed
 lanes reuse it. `TYPESCRIPT_VERSION` selects 5.9.3 or 6.0.3 for npm consumers.
 Browser engines are pinned through Playwright 1.61.0 and their actual versions
@@ -36,13 +36,13 @@ browser job after browser installation and checks.
 
 ## CI organization
 
-`check:consumers:ci plan <directory>` resolves `17.0.1` and `^17.0.1` once and
+`check:consumers:ci plan <directory>` resolves `17.2.1` and `^17.2.1` once and
 records both selections in `plan.json`. Identical resolved versions share a
 single set of artifacts and scenarios. When the compatible range resolves a
 newer version, both versions receive the complete matrix automatically: six
 Node/TypeScript combinations, two Deno runtimes, all three browsers,
 preparation, and released-Core checks. Production bundle baselines remain pinned
-to 17.0.1.
+to 17.2.1.
 
 Each named phase runs with the runtime installed in its own job. The runner
 verifies the actual Deno/Node version before executing it. Examples:

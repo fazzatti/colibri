@@ -74,7 +74,7 @@ import {
   NetworkConfig,
   StellarAsset,
 } from "@colibri/core";
-import { Asset } from "npm:@stellar/stellar-sdk@^17.0.1";
+import { Asset } from "npm:@stellar/stellar-sdk@^17.2.1";
 
 const networkConfig = NetworkConfig.TestNet();
 const issuer = LocalSigner.generateRandom();
@@ -221,7 +221,7 @@ import {
   NetworkConfig,
   StellarAsset,
 } from "@colibri/core";
-import { Claimant } from "npm:@stellar/stellar-sdk@^17.0.1";
+import { Claimant } from "npm:@stellar/stellar-sdk@^17.2.1";
 
 const networkConfig = NetworkConfig.TestNet();
 const sender = LocalSigner.generateRandom();

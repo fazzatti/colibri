@@ -1,3 +1,4 @@
+import { ERRORS_SEP1 } from "@colibri/core";
 import { WebAuthClient, WebAuthToken } from "@colibri/webauth";
 import { LocalSigner } from "@colibri/core";
 import { Demo } from "colibri-internal/tests/generated-bindings/demo/index.ts";
@@ -99,6 +100,47 @@ function environment() {
   };
 }
 describe("React feature hooks", () => {
+  it("loads token precision from a cold metadata cache and reuses it on refetch", async () => {
+    const env = environment();
+    let metadata!: ReturnType<typeof useTokenMetadata>;
+    using _name = stub(
+      SEP41TokenContract.prototype,
+      "name",
+      () => Promise.resolve("Token"),
+    );
+    using _symbol = stub(
+      SEP41TokenContract.prototype,
+      "symbol",
+      () => Promise.resolve("TOK"),
+    );
+    using decimals = stub(
+      SEP41TokenContract.prototype,
+      "decimals",
+      () => Promise.resolve(9),
+    );
+    const Component = () => {
+      metadata = useTokenMetadata(contractId);
+      return createElement("span", null, metadata.data?.symbol);
+    };
+    const view = await mountReact(env.wrap(Component));
+    try {
+      await until(() => metadata.isSuccess);
+      assertEquals(metadata.data, {
+        name: "Token",
+        symbol: "TOK",
+        decimals: 9,
+      });
+      assertEquals(decimals.calls.length, 1);
+      await act(async () => {
+        await metadata.refetch();
+      });
+      assertEquals(decimals.calls.length, 1);
+    } finally {
+      await view.close();
+      env.client.clear();
+      env.config.destroy();
+    }
+  });
   it("renders deterministic SSR and validates provider boundaries", async () => {
     const config = createColibriConfig({
       network,
@@ -274,6 +316,30 @@ describe("React feature hooks", () => {
       );
       assertEquals(account.calls.length, 2);
       assertEquals(view.document.querySelectorAll("img").length, 2);
+    } finally {
+      await view.close();
+      env.client.clear();
+      env.config.destroy();
+    }
+  });
+  it("surfaces invalid TOML hosts without invoking the discovery transport", async () => {
+    const env = environment();
+    let query!: ReturnType<typeof useStellarToml>;
+    let requests = 0;
+    const Component = () => {
+      query = useStellarToml("example.com/path", {
+        fetchFn: () => {
+          requests++;
+          return Promise.resolve(new Response(""));
+        },
+      });
+      return createElement("span", null, query.status);
+    };
+    const view = await mountReact(env.wrap(Component));
+    try {
+      await until(() => query.isError);
+      assertEquals(query.error instanceof ERRORS_SEP1.INVALID_DOMAIN, true);
+      assertEquals(requests, 0);
     } finally {
       await view.close();
       env.client.clear();

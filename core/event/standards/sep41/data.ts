@@ -1,4 +1,5 @@
 import type { xdr } from "stellar-sdk";
+import { requireSymbolRecord } from "@/soroban-types/codecs/record.ts";
 import { isScValRecord } from "@/common/helpers/xdr/scval.ts";
 import type { ScValParsed, ScValRecord } from "@/common/helpers/xdr/types.ts";
 import type { Event } from "@/event/event.ts";
@@ -8,55 +9,39 @@ import type {
   SEP41EventMuxedId,
 } from "@/event/standards/sep41/types.ts";
 
-const UINT32_MAX = 0xffff_ffff;
-
-const isUint32 = (value: ScValParsed): value is number =>
-  typeof value === "number" &&
-  Number.isInteger(value) &&
-  value >= 0 &&
-  value <= UINT32_MAX;
-
-const isMuxedId = (
-  value: ScValParsed | undefined,
-): value is SEP41EventMuxedId | null | undefined =>
-  value === undefined ||
-  value === null ||
-  typeof value === "bigint" ||
-  typeof value === "string" ||
-  value instanceof Uint8Array;
-
-const isSymbolKeyedMap = (event: Event): boolean => {
-  const raw = event.scvalValue as xdr.ScVal;
-  if (raw.type !== "scvMap") return false;
-  return (raw.map ?? []).every((entry) => entry.key.type === "scvSymbol");
+const fields = (event: Event): Map<string, xdr.ScVal> | undefined => {
+  try {
+    return requireSymbolRecord(event.scvalValue);
+  } catch {
+    return undefined;
+  }
 };
+const isMuxedId = (value: xdr.ScVal | undefined): boolean =>
+  value === undefined || value.type === "scvVoid" || value.type === "scvU64" ||
+  value.type === "scvString" ||
+  (value.type === "scvBytes" && value.bytes.toBytes().length === 32);
 
 /** @internal */
 export const isSEP41AmountEventData = (
   event: Event,
   options: { muxedId: boolean },
 ): boolean => {
-  const value = event.value;
-  if (typeof value === "bigint") return true;
-  if (!isScValRecord(value) || !isSymbolKeyedMap(event)) return false;
-  if (typeof value.amount !== "bigint") return false;
-
-  return !options.muxedId || isMuxedId(value.to_muxed_id);
+  if (event.scvalValue.type === "scvI128") return true;
+  const record = fields(event);
+  return record?.get("amount")?.type === "scvI128" &&
+    (!options.muxedId || isMuxedId(record.get("to_muxed_id")));
 };
 
 /** @internal */
 export const isSEP41ApproveEventData = (event: Event): boolean => {
-  const value = event.value;
-  if (Array.isArray(value)) {
-    return value.length === 2 &&
-      typeof value[0] === "bigint" &&
-      isUint32(value[1]);
+  const raw = event.scvalValue;
+  if (raw.type === "scvVec") {
+    return raw.vec?.length === 2 && raw.vec[0].type === "scvI128" &&
+      raw.vec[1].type === "scvU32";
   }
-
-  return isScValRecord(value) &&
-    isSymbolKeyedMap(event) &&
-    typeof value.amount === "bigint" &&
-    isUint32(value.live_until_ledger);
+  const record = fields(event);
+  return record?.get("amount")?.type === "scvI128" &&
+    record.get("live_until_ledger")?.type === "scvU32";
 };
 
 /** @internal */

@@ -46,9 +46,11 @@ afterAll(() => Deno.writeTextFile(${
 const failure = register => { try { register({}); } catch(error) { return error.message; } };
 if (failure(it) !== failure(bdd.it)) throw new Error("registration semantics changed");
 it("untimed callback", () => {});
+const disabled = new TestRecorder({profiling:{timings:false}});
+disabled.recordTests(import.meta.url).it("explicitly disabled timings", () => {});
 afterAll(() => Deno.writeTextFile(${
           JSON.stringify(report)
-        }, JSON.stringify(recorder.report())));
+        }, JSON.stringify({...recorder.report(), records:[...recorder.report().records,...disabled.report().records]})));
 `,
       );
       const child = await new Deno.Command(Deno.execPath(), {
@@ -70,6 +72,11 @@ afterAll(() => Deno.writeTextFile(${
       );
       assertEquals(test.status, "passed");
       assertEquals(test.durationMs, undefined);
+      const disabled = evidence.records.find((record: { name: string }) =>
+        record.name === "explicitly disabled timings"
+      );
+      assertEquals(disabled.status, "passed");
+      assertEquals(disabled.durationMs, undefined);
     } finally {
       await Deno.remove(directory, { recursive: true });
     }

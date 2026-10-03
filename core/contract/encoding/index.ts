@@ -2,9 +2,9 @@
  * Contract function arguments and results at the Soroban encoding boundary.
  *
  * Use a loaded contract spec to encode named method arguments or decode a result.
- * Ordinary supported arguments retain native SDK encoding. Wrapped or extended
- * values use the Soroban codecs, preserving plain decoded results and native
- * Result objects. This module performs no signing, submission or RPC requests.
+ * Named structs, typed maps, wrapped and extended values use validated Soroban
+ * codecs. Other supported arguments retain native SDK encoding. Decoding preserves
+ * plain results and native Result objects. This module performs no signing, submission or RPC requests.
  *
  * @example
  * ```ts
@@ -59,7 +59,7 @@ export function containsSorobanValue(
   return Object.values(value).some((item) => containsSorobanValue(item, seen));
 }
 
-/** @internal Identifies only the spec cases absent from the native SDK's value codec. */
+/** @internal Identifies types requiring validated Colibri encoding or name-based decoding. */
 export function needsExtendedCodec(
   spec: NativeSpec,
   type: xdr.ScSpecTypeDef,
@@ -74,8 +74,7 @@ export function needsExtendedCodec(
     case "scSpecTypeVec":
       return needsExtendedCodec(spec, type.value.elementType, seen);
     case "scSpecTypeMap":
-      return needsExtendedCodec(spec, type.value.keyType, seen) ||
-        needsExtendedCodec(spec, type.value.valueType, seen);
+      return true;
     case "scSpecTypeTuple":
       return type.value.valueTypes.some((item) =>
         needsExtendedCodec(spec, item, seen)
@@ -101,9 +100,12 @@ function customNeedsExtendedCodec(
     case "scSpecEntryUdtErrorEnumV0":
       return true;
     case "scSpecEntryUdtStructV0":
-      return entry.value.fields.some((field) =>
-        needsExtendedCodec(spec, field.type, seen)
-      );
+      return !entry.value.fields.some((field) =>
+        /^\d+$/.test(field.name.toString())
+      ) ||
+        entry.value.fields.some((field) =>
+          needsExtendedCodec(spec, field.type, seen)
+        );
     case "scSpecEntryUdtUnionV0":
       return entry.value.cases.some((item) =>
         item.type === "scSpecUdtUnionCaseTupleV0" &&
@@ -153,10 +155,12 @@ export function decodeSorobanResult(
       value.type === "scvError" ||
       !needsExtendedCodec(spec, output.value.okType)
     ) return spec.funcResToNative(method, value);
-    return new Ok(new SpecTypes(spec).type(output.value.okType).decode(value));
+    return new Ok(
+      new SpecTypes(spec, {}, true).type(output.value.okType).decode(value),
+    );
   }
   return needsExtendedCodec(spec, output)
-    ? new SpecTypes(spec).type(output).decode(value)
+    ? new SpecTypes(spec, {}, true).type(output).decode(value)
     : spec.funcResToNative(method, value);
 }
 

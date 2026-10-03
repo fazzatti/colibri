@@ -690,11 +690,11 @@ describe("known contract standards", () => {
       "SEP57",
     ]);
     assertEquals(ContractStandards.SEP40.latest.version, "0.1.0");
-    assertEquals(ContractStandards.SEP41.latest.version, "0.5.1");
+    assertEquals(ContractStandards.SEP41.latest.version, "0.5.2");
     assertEquals(ContractStandards.SEP44.latest.version, "0.2.1");
     assertEquals(ContractStandards.SEP50.latest.version, "0.1.0");
     assertEquals(ContractStandards.SEP56.latest.version, "0.1.2");
-    assertEquals(ContractStandards.SEP57.latest.version, "0.3.0");
+    assertEquals(ContractStandards.SEP57.latest.version, "0.4.0");
     assertEquals(Object.keys(ContractStandards.SEP57.interfaces), [
       "rwaToken",
       "identityVerifier",
@@ -715,6 +715,7 @@ describe("known contract standards", () => {
       "0.4.1",
       "0.5.0",
       "0.5.1",
+      "0.5.2",
     ]);
     assertEquals(Object.keys(ContractStandards.SEP44.versions), [
       "0.1.0",

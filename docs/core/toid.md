@@ -1,204 +1,119 @@
 # TOID
 
-The TOID module provides utilities for working with SEP-0035 operation IDs.
-Colibri uses the `TOID` type name for these encoded operation IDs, but SEP-0035
-itself names the scheme "Operation IDs".
+Colibri exposes separate encodings for standard SEP-35 operation identifiers and
+its historical RPC event/cursor convention. Choose the API that matches the
+system storing or consuming the identifier. Both are decimal strings and should
+be compared with `BigInt`, not JavaScript numbers.
 
 ## What Is A TOID?
 
-A TOID is a 64-bit signed integer, serialized by Colibri as a 19-character
-zero-padded decimal string. It identifies one historical Stellar operation by
-encoding three values:
+The historical `TOID` packs ledger sequence, transaction application order and
+**operation index minus one**. `createTOID` and `parseTOID` retain this
+behavior. A
+[`Sep35OperationId`](https://jsr.io/@colibri/core/doc/~/Sep35OperationId)
+instead packs the one-based operation index directly, as SEP-35 specifies.
 
-- **Ledger sequence** (32 bits) — the ledger that contains the transaction.
-- **Transaction application order** (20 bits) — the position assigned to the
-  transaction within that closed ledger.
-- **Operation index** (12 bits) — the position of the operation within its
-  transaction.
-
-This makes TOIDs useful for deterministic historical ordering after a ledger has
-closed. They cannot be known before the transaction is included in a closed
-ledger because the transaction application order is assigned by the network.
+Both require a closed ledger's transaction order. They cannot predict an
+operation's final position before inclusion.
 
 ## TOIDs And Event IDs
 
-TOIDs and Colibri event IDs are related, but they are not the same value.
-
-- A `TOID` identifies an operation.
-- An [`EventId`](../events/overview.md) identifies one event emitted by an
-  operation.
-- Colibri event IDs are formatted as
-  `19-character TOID + "-" + 10-character event index`.
-
-For example, `0000530239482499072` is a TOID. The event ID
-`0000530239482499072-0000000000` points to the first event associated with that
-operation.
+[Event IDs](../events/overview.md) combine the historical 19-character TOID with
+a hyphen and a 10-character event index. Existing event IDs, cursor ordering and
+[stream recovery](../packages/rpc-streamer/recovery.md) remain unchanged.
 
 ## Functions
 
 ### `createTOID`
 
-Create a TOID from operation-location components:
+Creates the historical RPC-compatible identifier from one-based components:
 
-```typescript
+<!-- deno-check -->
+
+```ts
 import { createTOID } from "@colibri/core";
-
-const toid = createTOID(
-  123456, // ledgerSequence
-  1, // transactionOrder, 1-based
-  1, // operationIndex, 1-based
-);
-
-console.log(toid); // "0000530239482499072"
+console.log(createTOID(123456, 1, 1)); // "0000530239482499072"
 ```
-
-#### Signature
-
-```typescript
-function createTOID(
-  ledgerSequence: number,
-  transactionOrder: number,
-  operationIndex: number,
-): TOID;
-```
-
-#### Parameters
-
-| Parameter          | Type     | Range             | Description                                      |
-| ------------------ | -------- | ----------------- | ------------------------------------------------ |
-| `ledgerSequence`   | `number` | 0 - 2,147,483,647 | Ledger sequence number                           |
-| `transactionOrder` | `number` | 1 - 1,048,575     | Transaction application order in the ledger      |
-| `operationIndex`   | `number` | 1 - 4,095         | Operation position inside the parent transaction |
-
-#### Return Value
-
-Returns a branded `TOID` string padded to 19 decimal characters.
 
 ### `parseTOID`
 
-Parse a TOID back into its operation-location components:
+Reverses the historical operation-index offset:
 
-```typescript
+<!-- deno-check -->
+
+```ts
 import { parseTOID } from "@colibri/core";
-
-const parts = parseTOID("0000530239482499072");
-
-console.log(parts);
-// {
-//   ledgerSequence: 123456,
-//   transactionOrder: 1,
-//   operationIndex: 1
-// }
-```
-
-#### Signature
-
-```typescript
-function parseTOID(toid: string): {
-  ledgerSequence: number;
-  transactionOrder: number;
-  operationIndex: number;
-};
+console.log(parseTOID("0000530239482499072"));
+// { ledgerSequence: 123456, transactionOrder: 1, operationIndex: 1 }
 ```
 
 ### `isTOID`
 
-Check whether a string can be treated as a TOID:
-
-```typescript
-import { isTOID, parseTOID } from "@colibri/core";
-
-if (isTOID(input)) {
-  // input is now typed as TOID
-  const parts = parseTOID(input);
-}
-```
+Checks decimal syntax and the shared nonnegative signed-64-bit range. It does
+not certify that the packed fields identify a real operation. Whitespace, signs,
+hexadecimal notation and fractional text are rejected. `parseSep35OperationId`
+also rejects reserved zero transaction/operation fields.
 
 ## TOID Type
 
-```typescript
-type TOID = string & { __brand: "TOID" };
-```
-
-TOIDs are branded strings to prevent accidental misuse with arbitrary strings.
+`TOID` and `Sep35OperationId` are different branded string types. Avoid casting
+between them: equal operation locations produce different numeric strings. See
+the [API reference](https://jsr.io/@colibri/core/doc/~/createSep35OperationId).
 
 ## Use Cases
 
-### Operation Ordering
-
-TOIDs can be compared as integers to order historical operations:
-
-```typescript
-operations.sort((a, b) => {
-  const left = BigInt(a.toid);
-  const right = BigInt(b.toid);
-  return left < right ? -1 : left > right ? 1 : 0;
-});
-```
-
-### Cursor-Based Pagination
-
-Use TOIDs as operation cursors when paginating through historical data:
-
-```typescript
-const cursor = createTOID(60000000, 1, 1);
-
-const operations = await getOperations({ cursor });
-```
-
-### Ledger Operation Ranges
-
-Build the lowest and highest possible operation IDs for a ledger:
-
-```typescript
-const ledger = 60044284;
-const firstToid = createTOID(ledger, 1, 1);
-const lastToid = createTOID(ledger, 1048575, 4095);
-```
+Use the standard API for a system expecting SEP-35 identifiers, and the
+historical API for existing Colibri event/cursor data. Keep a format label in
+application schemas that store both. A migration of operation identifiers must
+explicitly decode the source format, repack the same components and update all
+related keys atomically; it must never rewrite RPC event cursors by inference.
 
 ## SEP-0035 Structure
 
-SEP-0035 defines operation IDs as 64-bit signed integers:
+SEP-35 stores `(ledger << 32) | (transactionOrder << 12) | operationIndex` with
+the one-based operation index unchanged. Colibri returns a 19-digit padded
+string while accepting unpadded decimal input when parsing.
 
-```text
-Bit Layout (64 bits total):
-┌────────────────────────────┬──────────────────┬─────────────┐
-│   Ledger Sequence (32)     │  TX Order (20)   │ Op Index(12)│
-└────────────────────────────┴──────────────────┴─────────────┘
-Bits:           63-32              31-12            11-0
+<!-- deno-check -->
+
+```ts
+import { createSep35OperationId, parseSep35OperationId } from "@colibri/core";
+const id = createSep35OperationId(1, 1, 1);
+console.log(id); // "0000000004294971393"
+console.log(parseSep35OperationId(id));
+// { ledgerSequence: 1, transactionOrder: 1, operationIndex: 1 }
 ```
 
 ### Limits
 
-- Maximum ledger sequence: 2,147,483,647.
-- Maximum transaction application order: 1,048,575.
-- Maximum operation index: 4,095.
+| Component         | Accepted creation range |
+| ----------------- | ----------------------- |
+| Ledger sequence   | Integer 0–2,147,483,647 |
+| Transaction order | Integer 1–1,048,575     |
+| Operation index   | Integer 1–4,095         |
 
-See
-[SEP-0035](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0035.md)
+At the maximum components the standard ID is `9223372036854775807`. Invalid
+components and malformed identifiers use the existing
+[TOID typed errors](../reference/errors/core-toid.md). See
+[SEP-35](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0035.md)
 for the canonical specification.
 
 ## Working With Colibri Event IDs
 
-Use the event ID helpers when you need the event-level identifier:
+Keep existing event construction on the historical path:
 
-```typescript
+<!-- deno-check -->
+
+```ts
 import { createEventId, createTOID, parseEventId } from "@colibri/core";
-
-const toid = createTOID(123456, 1, 1);
-const eventId = createEventId(toid, 1);
-
-console.log(eventId); // "0000530239482499072-0000000000"
-console.log(parseEventId(eventId));
-// {
-//   ledgerSequence: 123456,
-//   transactionOrder: 1,
-//   operationIndex: 1,
-//   eventIndex: 0
-// }
+const id = createEventId(createTOID(123456, 1, 1), 1);
+console.log(id); // "0000530239482499072-0000000000"
+console.log(parseEventId(id));
 ```
 
 ## Next Steps
 
-- [Events](../events/overview.md) — Parse and work with Soroban contract events.
-- [RPC Streamer](../packages/rpc-streamer.md) — Stream ledger and event data.
+- [Events](../events/overview.md) — Parse contract occurrences with retained
+  IDs.
+- [RPC Streamer](../packages/rpc-streamer.md) — Stream and resume with RPC
+  cursors.

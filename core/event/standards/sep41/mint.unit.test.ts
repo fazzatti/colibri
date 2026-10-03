@@ -91,7 +91,7 @@ describe("SEP-41 MintEvent", () => {
       assertEquals(MintEvent.is(event), false);
     });
 
-    it("should return false for wrong number of topics", () => {
+    it("accepts additional topics after the required prefix", () => {
       const to = Keypair.random().publicKey();
       const event = createMockEvent(
         [
@@ -102,7 +102,7 @@ describe("SEP-41 MintEvent", () => {
         nativeToScVal(1000000n, { type: "i128" }),
       );
 
-      assertEquals(MintEvent.is(event), false);
+      assertEquals(MintEvent.is(event), true);
     });
 
     it("should return false for wrong event name with correct topic count", () => {
@@ -259,7 +259,8 @@ describe("SEP-41 MintEvent", () => {
     it("should create filter for any mint event", () => {
       const filter = MintEvent.toTopicFilter({});
 
-      assertEquals(filter.length, 2);
+      assertEquals(filter.length, 3);
+      assertEquals(filter.at(-1), "**");
       assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals(filter[1], "*");
     });
@@ -268,7 +269,8 @@ describe("SEP-41 MintEvent", () => {
       const to = Keypair.random().publicKey();
       const filter = MintEvent.toTopicFilter({ to });
 
-      assertEquals(filter.length, 2);
+      assertEquals(filter.length, 3);
+      assertEquals(filter.at(-1), "**");
       assertEquals((filter[0] as xdr.ScVal).type, "scvSymbol");
       assertEquals((filter[1] as xdr.ScVal).type, "scvAddress");
     });

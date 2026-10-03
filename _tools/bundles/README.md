@@ -17,7 +17,7 @@ deno task check:bundles /tmp/colibri-bundles /tmp/colibri-consumers
 deno task test:bundle-tooling
 ```
 
-The first command defaults to Stellar SDK 17.0.1. The bundle check requires that
+The first command defaults to Stellar SDK 17.2.1. The bundle check requires that
 version explicitly, rather than silently comparing a different SDK release.
 Production Deno inputs use `dependencies.lock` and `--frozen-lockfile`; the
 resolved SDK graph is checked for one matching instance. The reviewed fixture

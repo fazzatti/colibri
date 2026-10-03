@@ -304,7 +304,8 @@ const claimIssuer: ContractInterfaceDefinition = interfaceDefinition(
   ],
 );
 
-const version = "0.3.0";
+/** SEP-57 document versions represented by the bundled catalogs. */
+export type Sep57Version = "0.3.0" | "0.4.0";
 /** Named primary, component, and appendix-reference SEP-57 interfaces. */
 export type Sep57InterfaceName =
   | "rwaToken"
@@ -314,63 +315,78 @@ export type Sep57InterfaceName =
   | "identityRegistryStorage"
   | "identityClaims"
   | "claimIssuer";
-
-/** SEP-57 provider catalogs indexed by interface name. */
+/** Full reference providers, retaining the existing component requirements. */
 export type Sep57Interfaces = Readonly<
-  Record<Sep57InterfaceName, ContractStandardCatalog<"0.3.0">>
+  Record<Sep57InterfaceName, ContractStandardCatalog<Sep57Version>>
 >;
-
-/** Primary, component, and appendix-reference providers bundled for SEP-57. */
-export type Sep57Catalog = ContractStandardCatalog<"0.3.0"> & {
+/** Minimum required component providers, without optional management functions. */
+export type Sep57MinimumInterfaces = Readonly<
+  Record<
+    "identityVerifier" | "compliance",
+    ContractStandardCatalog<Sep57Version>
+  >
+>;
+/** Primary and explicitly selected component/reference catalogs. */
+export type Sep57Catalog = ContractStandardCatalog<Sep57Version> & {
+  /** Existing full reference catalogs; an alias of profiles.reference. */
   readonly interfaces: Sep57Interfaces;
+  /** Explicit minimum requirements versus reference implementation features. */
+  readonly profiles: {
+    readonly minimum: Sep57MinimumInterfaces;
+    readonly reference: Sep57Interfaces;
+  };
 };
 
+const catalog = (
+  definition: ContractInterfaceDefinition,
+): ContractStandardCatalog<Sep57Version> => {
+  const versions = {
+    "0.3.0": standardProvider(57, "0.3.0", definition),
+    "0.4.0": standardProvider(57, "0.4.0", definition),
+  };
+  return { versions, latest: versions["0.4.0"] };
+};
 const interfaces: Sep57Interfaces = {
-  rwaToken: {
-    versions: { [version]: standardProvider(57, version, rwaToken) },
-    latest: standardProvider(57, version, rwaToken),
-  },
-  identityVerifier: {
-    versions: { [version]: standardProvider(57, version, identityVerifier) },
-    latest: standardProvider(57, version, identityVerifier),
-  },
-  compliance: {
-    versions: { [version]: standardProvider(57, version, compliance) },
-    latest: standardProvider(57, version, compliance),
-  },
-  claimTopicsAndIssuers: {
-    versions: {
-      [version]: standardProvider(57, version, claimTopicsAndIssuers),
-    },
-    latest: standardProvider(57, version, claimTopicsAndIssuers),
-  },
-  identityRegistryStorage: {
-    versions: {
-      [version]: standardProvider(57, version, identityRegistryStorage),
-    },
-    latest: standardProvider(57, version, identityRegistryStorage),
-  },
-  identityClaims: {
-    versions: { [version]: standardProvider(57, version, identityClaims) },
-    latest: standardProvider(57, version, identityClaims),
-  },
-  claimIssuer: {
-    versions: { [version]: standardProvider(57, version, claimIssuer) },
-    latest: standardProvider(57, version, claimIssuer),
-  },
-} as const;
+  rwaToken: catalog(rwaToken),
+  identityVerifier: catalog(identityVerifier),
+  compliance: catalog(compliance),
+  claimTopicsAndIssuers: catalog(claimTopicsAndIssuers),
+  identityRegistryStorage: catalog(identityRegistryStorage),
+  identityClaims: catalog(identityClaims),
+  claimIssuer: catalog(claimIssuer),
+};
+const minimum: Sep57MinimumInterfaces = {
+  identityVerifier: catalog(
+    interfaceDefinition(
+      "identity-verifier-minimum",
+      "Minimum Identity Verifier",
+      identityVerifier.functions.filter((fn) =>
+        ["verify_identity", "recovery_target"].includes(fn.name)
+      ),
+    ),
+  ),
+  compliance: catalog(
+    interfaceDefinition(
+      "compliance-minimum",
+      "Minimum Compliance",
+      compliance.functions.filter((fn) =>
+        ["transferred", "created", "destroyed"].includes(fn.name)
+      ),
+      [accountSnapshot, transferKind],
+    ),
+  ),
+};
 
 /**
- * SEP-57 interface providers.
- *
- * `latest` and `versions` identify the primary RWA-token interface. The
- * `interfaces` collection also exposes the separately deployed identity and
- * compliance interfaces. Its claim-based identity entries model the optional
- * reference implementation in the SEP-57 appendix; they are not required for
- * every SEP-57 deployment.
+ * SEP-57 structural interface providers, independent of behavioral conformance.
+ * Existing interfaces retain full reference requirements. Select profiles.minimum
+ * for only the mandatory identity/compliance hooks. Appendix claim providers are
+ * optional. The SEP-57 three-argument burn and SEP-41 two-argument burn remain
+ * distinct; matching one provider does not establish a match against the other.
  */
 export const SEP57: Sep57Catalog = {
   versions: interfaces.rwaToken.versions,
   latest: interfaces.rwaToken.latest,
   interfaces,
-} as const;
+  profiles: { minimum, reference: interfaces },
+};

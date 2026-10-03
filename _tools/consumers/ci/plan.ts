@@ -2,7 +2,7 @@
 import { resolve } from "node:path";
 import { accepts } from "../../releases/model.ts";
 
-export const sdkSelections = ["17.0.1", "^17.0.1"] as const;
+export const sdkSelections = ["17.2.1", "^17.2.1"] as const;
 export const nodeVersions = ["22.12.0", "22", "24"] as const;
 export const denoVersions = ["2.7.11", "2.9.6"] as const;
 export const typescriptVersions = ["5.9.3", "6.0.3"] as const;
@@ -29,8 +29,8 @@ export function sdkTargets(resolutions: readonly SdkResolution[]): string[] {
       !/^17\.\d+\.\d+$/.test(item.version) ||
       !accepts(item.version, item.selection)
     ) ||
-    resolutions.find((item) => item.selection === "17.0.1")?.version !==
-      "17.0.1"
+    resolutions.find((item) => item.selection === "17.2.1")?.version !==
+      "17.2.1"
   ) throw new Error("Invalid SDK resolution plan");
   return [...new Set(resolutions.map((item) => item.version))];
 }
@@ -133,9 +133,9 @@ export function compatibilityChecks(
     args: [
       "check:bundles",
       resolve(directory, "bundles"),
-      resolve(directory, "sdk-17.0.1"),
+      resolve(directory, "sdk-17.2.1"),
     ],
-    sdk: "17.0.1",
+    sdk: "17.2.1",
     node: "24",
   });
   add({
