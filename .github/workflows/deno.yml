@@ -85,6 +85,9 @@ jobs:
       - name: Test custom lint rules
         run: deno task test:lint-rules
 
+      - name: Test exact coverage gate
+        run: deno task test:coverage
+
       - name: Check package version invariants
         run: deno task check:package-versions
 
@@ -172,7 +175,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: 2.7.11
+          deno-version: 2.9.6
 
       - name: Run ${{ matrix.package }} tests
         env:
@@ -253,7 +256,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: 2.7.11
+          deno-version: 2.9.6
 
       - name: Run build-verification ${{ matrix.shard }} tests
         env:
@@ -304,7 +307,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: 2.7.11
+          deno-version: 2.9.6
 
       - name: Generate unit coverage
         run: deno task test:unit
@@ -327,7 +330,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: 2.7.11
+          deno-version: 2.9.6
 
       - name: Download package coverage profiles
         uses: actions/download-artifact@v4
@@ -364,6 +367,11 @@ jobs:
           name: codecov-aggregate
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Require 100% aggregate line, branch and function coverage
+        run: |
+          deno task check:coverage
+          deno task check:crap
 
   evidence:
     name: test evidence

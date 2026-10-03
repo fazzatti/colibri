@@ -15,6 +15,7 @@ describe("recorder command", () => {
   it("rejects invalid configuration and preserves a successful memory-only test exit", async () => {
     const directory = await Deno.makeTempDir();
     const output: string[] = [];
+    const childExits: Array<number | null> = [];
     const spawn = childProcess.spawn;
     // Exercise the real native runner, but retain its deliberately empty test
     // output here. Production CLI output remains inherited and visible.
@@ -26,6 +27,7 @@ describe("recorder command", () => {
         child.stdin.end();
         child.stdout.on("data", (chunk) => output.push(String(chunk)));
         child.stderr.on("data", (chunk) => output.push(String(chunk)));
+        child.on("close", (code) => childExits.push(code));
         return child;
       }) as typeof childProcess.spawn,
     );
@@ -66,12 +68,9 @@ describe("recorder command", () => {
       );
       assertEquals(await runTests(config, ["-A", "--quiet", test]), 1);
       assertEquals(fail.calls.length, 1);
-      await Deno.writeTextFile(
-        test,
-        `const dir=Deno.env.get("COLIBRI_RECORDER_DIRECTORY"); await Deno.mkdir(dir+"/report.json"); Deno.exit(7);`,
-      );
-      assertEquals(await runTests(config, ["-A", "--quiet", test]), 7);
-      assertEquals(fail.calls.length, 2);
+      assertStringIncludes(String(fail.calls[0].args[1]), "report.json");
+      assertStringIncludes(String(fail.calls[0].args[1]), "EISDIR");
+      assertEquals(childExits, [0, 0]);
     } catch (cause) {
       throw new Error("Recorder child output:\n" + output.join(""), { cause });
     } finally {
@@ -85,6 +84,7 @@ describe("recorder command", () => {
     // instead, so another worker cannot inherit a directory we later remove.
     using _cwd = stub(process, "cwd", () => directory);
     let outcome: number | null | Error = 0;
+    let obstructReport = false;
     using log = stub(console, "log");
     using fail = stub(console, "error");
     // Model native process boundaries that ordinary successful subprocesses
@@ -94,6 +94,11 @@ describe("recorder command", () => {
       "spawn",
       ((_command, args, options) => {
         assertEquals(options?.stdio, "inherit");
+        if (obstructReport) {
+          Deno.mkdirSync(
+            join(options!.env!.COLIBRI_RECORDER_DIRECTORY!, "report.json"),
+          );
+        }
         const child = new EventEmitter();
         queueMicrotask(() => {
           if (outcome instanceof Error) child.emit("error", outcome);
@@ -136,7 +141,15 @@ describe("recorder command", () => {
       assertEquals(await runTests(config, []), 1);
       assertEquals(fail.calls.length, 1);
       assertEquals(fail.calls[0].args[1], outcome);
-      assertEquals(spawn.calls.length, 5);
+      // Preserve the native runner's exact nonzero exit even when aggregation
+      // also fails. Model this at the process boundary: Deno versions differ
+      // in how their test isolate translates an explicit Deno.exit(7).
+      outcome = 7;
+      obstructReport = true;
+      assertEquals(await runTests(config, []), 7);
+      assertEquals(fail.calls.length, 2);
+      assertStringIncludes(String(fail.calls[1].args[1]), "EISDIR");
+      assertEquals(spawn.calls.length, 6);
     } finally {
       await Deno.remove(directory, { recursive: true });
     }

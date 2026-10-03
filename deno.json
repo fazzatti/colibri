@@ -70,6 +70,8 @@
     "check:slow-types": "deno publish --dry-run --allow-dirty",
     "check:package-versions": "deno test --allow-read --clean build-verification/src/core/evidence/package-version.unit.test.ts",
     "check:crap": "deno run --allow-read --allow-env _tools/check-crap.ts",
+    "check:coverage": "deno run --allow-read _tools/check-coverage.ts",
+    "test:coverage": "deno test --allow-read --allow-write --allow-run --clean _tools/check-coverage.unit.test.ts",
     "build:bindings-example": "deno run -A _tools/generate-bindings-example.ts",
     "check:bindings-example": "deno run -A _tools/generate-bindings-example.ts --check",
     "build:bindings-fixture": "deno run -A _tools/build-bindings-fixture.ts",

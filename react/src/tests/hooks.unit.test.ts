@@ -100,6 +100,47 @@ function environment() {
   };
 }
 describe("React feature hooks", () => {
+  it("loads token precision from a cold metadata cache and reuses it on refetch", async () => {
+    const env = environment();
+    let metadata!: ReturnType<typeof useTokenMetadata>;
+    using _name = stub(
+      SEP41TokenContract.prototype,
+      "name",
+      () => Promise.resolve("Token"),
+    );
+    using _symbol = stub(
+      SEP41TokenContract.prototype,
+      "symbol",
+      () => Promise.resolve("TOK"),
+    );
+    using decimals = stub(
+      SEP41TokenContract.prototype,
+      "decimals",
+      () => Promise.resolve(9),
+    );
+    const Component = () => {
+      metadata = useTokenMetadata(contractId);
+      return createElement("span", null, metadata.data?.symbol);
+    };
+    const view = await mountReact(env.wrap(Component));
+    try {
+      await until(() => metadata.isSuccess);
+      assertEquals(metadata.data, {
+        name: "Token",
+        symbol: "TOK",
+        decimals: 9,
+      });
+      assertEquals(decimals.calls.length, 1);
+      await act(async () => {
+        await metadata.refetch();
+      });
+      assertEquals(decimals.calls.length, 1);
+    } finally {
+      await view.close();
+      env.client.clear();
+      env.config.destroy();
+    }
+  });
   it("renders deterministic SSR and validates provider boundaries", async () => {
     const config = createColibriConfig({
       network,

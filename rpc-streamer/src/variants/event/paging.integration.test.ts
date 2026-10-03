@@ -227,7 +227,7 @@ describe(
             waitLedgerIntervalMs: 60_000,
           },
         });
-        let timer: number | undefined;
+        let timer: ReturnType<typeof setTimeout> | undefined;
         let count = 0;
         const started = Date.now();
         try {
@@ -404,7 +404,7 @@ describe(
         archiveRpcUrl: rpcUrl,
         options: { archivalIntervalMs: 60_000 },
       });
-      let timer: number | undefined;
+      let timer: ReturnType<typeof setTimeout> | undefined;
       try {
         await streamer.startArchive(() => {}, {
           startLedger,

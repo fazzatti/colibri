@@ -4,12 +4,28 @@ This directory is not part of any published Colibri package.
 
 ## Runtime prerequisite
 
-Use **Deno 2.7.11**, matching `.github/workflows/deno.yml`, for repository
-tests. The React DOM harness rejects Deno 2.6: its CommonJS global/timer
-behavior can stall `act()` until a session expires and produce a misleading
-authentication failure. Check `deno --version` before rerunning.
-Release/declaration tooling has its own Deno 2.9.6 requirement documented under
-`_tools/releases/`.
+Use **Deno 2.9.6**, matching `.github/workflows/deno.yml`, for repository tests
+and coverage aggregation. Deno 2.7.11 remains in the supported consumer
+compatibility matrix, but its coverage instrumentation reports unreachable
+whitespace before `finally` and injected decorator helpers as application gaps.
+The React DOM harness rejects Deno 2.6: its CommonJS global/timer behavior can
+stall `act()` until a session expires and produce a misleading authentication
+failure. Check `deno --version` before rerunning. Release/declaration tooling
+has its own Deno 2.9.6 requirement documented under `_tools/releases/`.
+
+After a complete unit/integration run, generate the aggregate LCOV and run
+`deno task check:coverage` to require 100% line, branch and function coverage.
+The gate rejects missing or inconsistent counters; `deno task check:crap` also
+checks attribution against the production function inventory. CI enforces both,
+and Codecov requires 100% project and patch coverage with zero tolerance.
+Unit-only profiles intentionally omit paths exercised by integration tests.
+
+```sh
+deno task test
+deno coverage --lcov --output=coverage.lcov coverage
+deno task check:coverage
+deno task check:crap
+```
 
 ## Quickstart diagnostics
 
