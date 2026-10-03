@@ -1,5 +1,9 @@
 # @colibri/contract-bindings
 
+This release requires Stellar SDK `>=17.2.1 <18`. See the
+[Core 3 and SDK migration guide](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility#core-30-and-sdk-1721-migration)
+for affected package versions, corrected codecs and preserved cursor behavior.
+
 Generate typed Colibri contract clients from Soroban Wasm files, deployed
 contract IDs, or Wasm hashes. Each client includes typed calls, contract types,
 an embedded spec, errors, and declared events. Output source files for an

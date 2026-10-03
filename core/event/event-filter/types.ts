@@ -35,7 +35,7 @@ export type EventFilterConstructorArgs = {
 
 /**
  * A single topic filter consisting of segment matchers.
- * Corresponds to the event topics (1-4 items).
+ * Constrains up to four event topics, optionally followed by a trailing `**`.
  *
  * A segment matcher can be:
  * - A specific value (xdr.ScVal) to match exactly.
@@ -52,7 +52,8 @@ export type TopicFilter =
   | [Segment, Segment, Segment]
   | [Segment, Segment, DoubleWildcard]
   | [Segment, Segment, Segment, Segment]
-  | [Segment, Segment, Segment, DoubleWildcard];
+  | [Segment, Segment, Segment, DoubleWildcard]
+  | [Segment, Segment, Segment, Segment, DoubleWildcard];
 
 /**
  * A single topic segment matcher.

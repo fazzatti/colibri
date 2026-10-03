@@ -18,6 +18,8 @@ export {
   type Sep57Catalog,
   type Sep57InterfaceName,
   type Sep57Interfaces,
+  type Sep57MinimumInterfaces,
+  type Sep57Version,
 } from "@/contract/interface/standards/sep57.ts";
 
 import { SEP40 } from "@/contract/interface/standards/sep40.ts";

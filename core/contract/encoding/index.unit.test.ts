@@ -30,6 +30,7 @@ import { buildContractDataLedgerKey } from "@/ledger-entries/keys.ts";
 import {
   func,
   option,
+  struct,
   udt,
   union,
   valueSpec,
@@ -70,6 +71,72 @@ function capturePipe(
 }
 
 describe("Soroban value boundaries", () => {
+  it("selects native tuple and numeric enum codecs and validates direct error enums", () => {
+    const enumEntry = xdr.ScSpecEntry.scSpecEntryUdtEnumV0(
+      new xdr.ScSpecUdtEnumV0({
+        name: "Status",
+        lib: "",
+        doc: "",
+        cases: [
+          new xdr.ScSpecUdtEnumCaseV0({ name: "Ready", value: 7, doc: "" }),
+        ],
+      }),
+    );
+    const spec = new Spec([
+      ...valueSpec().entries,
+      enumEntry,
+      struct("FailurePair", {
+        "0": udt("AccessError"),
+        "1": xdr.ScSpecTypeDef.scSpecTypeU32(),
+      }),
+      ...["Pair", "FailurePair", "AccessError", "Status"].map((name) =>
+        func(`echo_${name}`, { value: udt(name) }, [udt(name)])
+      ),
+    ]);
+    for (
+      const [method, value, wire] of [
+        [
+          "Pair",
+          ["ADMIN", 7],
+          xdr.ScVal.scvVec([xdr.ScVal.scvSymbol("ADMIN"), xdr.ScVal.scvU32(7)]),
+        ],
+        [
+          "FailurePair",
+          [1, 7],
+          xdr.ScVal.scvVec([xdr.ScVal.scvU32(1), xdr.ScVal.scvU32(7)]),
+        ],
+        ["AccessError", 1, xdr.ScVal.scvU32(1)],
+        ["Status", 7, xdr.ScVal.scvU32(7)],
+      ] as const
+    ) {
+      assertEquals(encodeSorobanArguments(spec, `echo_${method}`, { value }), [
+        wire,
+      ]);
+      assertEquals(decodeSorobanResult(spec, `echo_${method}`, wire), value);
+    }
+    assertThrows(
+      () => encodeSorobanArguments(spec, "echo_AccessError", { value: 999 }),
+      SorobanValueError,
+    );
+    assertThrows(
+      () =>
+        decodeSorobanResult(spec, "echo_AccessError", xdr.ScVal.scvU32(999)),
+      SorobanValueError,
+    );
+  });
+  it("terminates recursive union dispatch and round-trips a finite nested value", () => {
+    const spec = new Spec([
+      union("Chain", { End: null, Next: [udt("Chain")] }),
+      func("chain", { value: udt("Chain") }, [udt("Chain")]),
+    ]);
+    const value = { tag: "Next", values: [{ tag: "End" }] };
+    const wire = xdr.ScVal.scvVec([
+      xdr.ScVal.scvSymbol("Next"),
+      xdr.ScVal.scvVec([xdr.ScVal.scvSymbol("End")]),
+    ]);
+    assertEquals(encodeSorobanArguments(spec, "chain", { value }), [wire]);
+    assertEquals(decodeSorobanResult(spec, "chain", wire), value);
+  });
   it("encodes validated and ordinary arguments together in ABI order", () => {
     const spec = new Spec([func("mixed", {
       role: xdr.ScSpecTypeDef.scSpecTypeSymbol(),

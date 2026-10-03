@@ -1,7 +1,12 @@
 # Channel Accounts Plugin
 
-Version 2.x requires [Core 2.x](https://fifo-docs.gitbook.io/colibri/core/overview)
-and follows Colibri's
+This release requires Stellar SDK `>=17.2.1 <18`. See the
+[Core 3 and SDK migration guide](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility#core-30-and-sdk-1721-migration)
+for affected package versions, corrected codecs and preserved cursor behavior.
+
+Version 2.x requires
+[Core 2.x](https://fifo-docs.gitbook.io/colibri/core/overview) and follows
+Colibri's
 [compatibility and independent release policy](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility).
 Compatible updates within that Core major do not require this package to release
 again unless its API or required dependency floor changes.

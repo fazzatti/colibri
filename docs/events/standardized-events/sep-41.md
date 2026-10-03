@@ -2,7 +2,7 @@
 
 [SEP-41](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0041.md)
 defines the standard token interface and event vocabulary for Soroban token
-contracts. Colibri implements the current v0.5.1 event shapes while retaining
+contracts. Colibri implements the current v0.5.2 event shapes while retaining
 compatibility with the earlier scalar and vector representations.
 
 ## Specification
@@ -21,14 +21,21 @@ standardized when a contract exposes those capabilities.
 
 ## Key Difference from SAC
 
-SEP-41 events do **not** include the asset string as a topic:
+The required SEP-41 topic prefix does not contain an asset string:
 
 ```
 Topics: ["transfer", from, to]
 Data: amount (i128) or a symbol-keyed map
 ```
 
-You identify the token by its contract ID, not by an asset topic.
+Use the emitting contract ID to identify the token. Additional topic segments
+are accepted; this can overlap [SAC](sac.md) event shapes. A structural match
+alone cannot classify the emitting contract as a custom token or SAC.
+
+The event name must be an XDR Symbol and required addresses must use the Address
+arm for an account or contract. Amounts must be i128 and approval expiry must be
+u32. A numerically equal u64 amount or a String containing an address is
+rejected. This applies to every matching and parsing entrypoint.
 
 ## Event Types
 
@@ -60,7 +67,7 @@ if (SEP41Events.TransferEvent.is(event)) {
 
 ## Compatible Data Representations
 
-Every parser accepts the earlier event representation and the v0.5.1
+Every parser accepts the earlier event representation and the v0.5.2
 symbol-keyed map representation:
 
 | Event                 | Earlier representation        | Map fields                                       |
@@ -70,9 +77,13 @@ symbol-keyed map representation:
 | `approve`             | `[amount, live_until_ledger]` | `amount`, `live_until_ledger`, and extensions    |
 
 Unknown symbol-keyed fields are accepted and preserved under `extensions`.
-Colibri continues to validate every standardized field. A map with a missing or
-incorrectly typed `amount`, `live_until_ledger`, or `to_muxed_id` is not treated
-as a matching SEP-41 event.
+Colibri continues to validate every standardized field. `to_muxed_id` may be
+absent or void, u64, or a historical String/32-byte Bytes memo. Other integer
+arms and byte lengths are rejected;
+[ABI-declared SEP-57 events](../../core/contract/events.md#sparse-map-data-and-ambiguity)
+retain their narrower `Option<u64>` rule. A map with a missing or incorrectly
+typed `amount`, `live_until_ledger`, or `to_muxed_id` is not treated as a
+matching SEP-41 event.
 
 ```ts
 const transfer = SEP41Events.TransferEvent.fromEvent(event);
@@ -103,6 +114,13 @@ an occurrence-specific Colibri error such as
 event itself is still valid SEP-41 data.
 
 ## Creating Filters
+
+SEP-41 filters end with `**` to match the same required prefix as local
+decoding. [Generic templates](../templates.md) keep exact topic matching by
+default; their optional `topicMatch: "prefix"` and `wireTypes: true` settings
+are explicit. Events can exceed four topics. The
+[RPC filter limit](../event-filter.md) is four constraints followed optionally
+by `**`.
 
 ```typescript
 // All SEP-41 transfers from a specific contract

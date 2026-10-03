@@ -67,9 +67,9 @@ const amountTopics = (name: "burn" | "clawback"): xdr.ScVal[] => [
   new Address(from).toScVal(),
 ];
 
-describe("SEP-41 SEP-41 v0.5.1 event compatibility", () => {
+describe("SEP-41 v0.5.2 event compatibility", () => {
   it("reports the implemented SEP revision", () => {
-    assertEquals(SEP41Events.VERSION, "0.5.1");
+    assertEquals(SEP41Events.VERSION, "0.5.2");
   });
 
   it("accepts and reads the approve vector and map representations", () => {
@@ -193,7 +193,7 @@ describe("SEP-41 SEP-41 v0.5.1 event compatibility", () => {
       xdr.ScVal.scvVoid(),
       nativeToScVal(42n, { type: "u64" }),
       xdr.ScVal.scvString("42"),
-      xdr.ScVal.scvBytes(Uint8Array.of(4, 2)),
+      xdr.ScVal.scvBytes(new Uint8Array(32).fill(42)),
     ];
 
     for (const muxedId of muxedIds) {

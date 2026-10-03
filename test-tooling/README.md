@@ -1,5 +1,9 @@
 # @colibri/test-tooling
 
+This release requires Stellar SDK `>=17.2.1 <18`. See the
+[Core 3 and SDK migration guide](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility#core-30-and-sdk-1721-migration)
+for affected package versions, corrected codecs and preserved cursor behavior.
+
 Version 1.x follows Colibri's
 [compatibility and independent release policy](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility).
 The Quickstart harness runs on Deno with Docker. The independent execution

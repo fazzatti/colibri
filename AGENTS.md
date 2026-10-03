@@ -59,6 +59,7 @@ deno task check:jsr
 deno task check:slow-types
 deno task check:package-versions
 deno task check:crap
+deno task check:coverage
 deno task test:architecture
 deno task test
 deno task test:unit
@@ -79,6 +80,10 @@ What they mean:
   at runtime match their package `deno.json` metadata.
 - `deno task check:crap`: enforce the maximum CRAP score of 15 against the
   aggregate `coverage.lcov` report. Missing function coverage fails the check.
+- `deno task check:coverage`: require exactly 100% line, branch and function
+  coverage in every aggregate LCOV source record, including generated clients.
+  Incomplete reports and inconsistent counters fail. Run after full aggregate
+  coverage; unit-only coverage intentionally lacks integration-only paths.
 - `deno task test:architecture`: enforce dependency direction, cycle,
   publication-boundary, and module-export invariants with ArchUnitTS.
 - `deno task test`: run the full suite, including unit and integration tests.
@@ -166,11 +171,17 @@ GitHub Actions behavior matters when changing structure or versions:
 - Package jobs upload raw Deno coverage profiles. A final required coverage job
   recreates the instrumented source cache, merges the profiles into one
   workspace LCOV report, and uploads it to Codecov.
-- Implementation coverage remains a 100% target and CRAP is gated at 15.
-  `.codecov.yml` separately defines the current PR status policy: 80% project
-  and patch targets with 10% and 5% threshold allowances. Upload success is not
-  proof of 100% coverage. Changing that policy requires an explicit decision;
-  never silently lower implementation targets or claim an exact 100% CI gate.
+- Use Deno 2.9.6 consistently for test coverage, aggregation and CRAP. Deno
+  2.7.11 reports unreachable whitespace before `finally` as missed branches and
+  attributes unmapped decorator scaffolding to application functions. The
+  supported Deno 2.7.11 consumer checks remain in the compatibility matrix;
+  coverage-runtime selection does not change the supported runtime floor.
+- Coverage is a 100% readiness requirement, enforced by the aggregate line,
+  branch and function gate and by Codecov's 100% project/patch targets with no
+  threshold allowance. CRAP remains gated at 15. Upload success alone is not
+  proof of coverage. Do not add exclusions, weaken metrics or modify production
+  behavior to improve a percentage. Any exception needs an exceptionally
+  compelling technical reason explicitly accepted by the user.
 - The publish workflow runs only on pushes to `main`.
 - Both CI and publishing reject package-version constants that do not match the
   corresponding package `deno.json` metadata.
@@ -498,9 +509,9 @@ Stellar SDK interoperability.
 - Run native SDK/custom signer/plugin checks against supported minimum/current
   integrations. Browser bundling is not browser execution, and dnt test
   artifacts are not JSR's published distribution.
-- Keep the 100% implementation coverage target, existing Codecov policy, CRAP
-  15, architecture, and full package integration checks. Do not count consumer
-  fixtures as coverage padding.
+- Keep the 100% aggregate and Codecov coverage gates, CRAP 15, architecture, and
+  full package integration checks. Do not count consumer fixtures as coverage
+  padding.
 - Current-major compatibility is required. Older-major backports or adapters
   need a separate user decision; do not introduce a standing LTS policy.
 

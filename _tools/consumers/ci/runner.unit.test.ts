@@ -12,8 +12,8 @@ import {
 } from "colibri-tools/consumers/ci/runner.ts";
 
 const resolutions = [
-  { selection: "17.0.1", version: "17.0.1" },
-  { selection: "^17.0.1", version: "17.0.1" },
+  { selection: "17.2.1", version: "17.2.1" },
+  { selection: "^17.2.1", version: "17.2.1" },
 ];
 const check = (id: string): Check => ({
   id,
@@ -141,8 +141,8 @@ describe("compatibility result reporting", () => {
     const root = await Deno.makeTempDir();
     try {
       const plan = [resolutions[0], {
-        selection: "^17.0.1",
-        version: "17.1.0",
+        selection: "^17.2.1",
+        version: "17.3.0",
       }];
       const checks = compatibilityChecks(plan, `${root}/producer`);
       const merged = `${root}/aggregate`;

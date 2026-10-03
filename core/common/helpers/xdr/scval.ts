@@ -1,14 +1,49 @@
 import { Address, scValToBigInt, type xdr } from "stellar-sdk";
 import type {
+  ScValEntry,
   ScValMap,
   ScValParsed,
   ScValRecord,
   ScValTypeName,
 } from "@/common/helpers/xdr/types.ts";
-import {
-  UNKNOWN_SCVAL_TYPE,
-  UNSUPPORTED_SCVAL_TYPE,
-} from "@/common/helpers/xdr/error.ts";
+import * as ERROR from "@/common/helpers/xdr/error.ts";
+import type { ScValLike } from "@/common/types/external.ts";
+
+/**
+ * Extracts a map's entries without converting its ScVal keys or values.
+ *
+ * Preserves entry order, duplicate keys, key discriminants and nested values.
+ * Returns a new array of entry objects referring to the original ScVals. Does
+ * not sort, validate canonical map ordering or decode nested values.
+ *
+ * @param scv - A native SDK ScVal with the `scvMap` discriminant.
+ * @returns Original keys and values in wire order; null and empty maps both
+ * return an empty array. Retain the input to distinguish those containers.
+ * @throws {ERROR.FAILED_TO_PARSE_XDR} With code `HLP_XDR_09` for non-map input.
+ *
+ * @example
+ * ```ts
+ * import { parseScValEntries } from "@colibri/core";
+ * import { xdr } from "npm:@stellar/stellar-sdk";
+ *
+ * const raw = xdr.ScVal.scvMap([
+ *   new xdr.ScMapEntry({
+ *     key: xdr.ScVal.scvString("x"), val: xdr.ScVal.scvU32(1),
+ *   }),
+ *   new xdr.ScMapEntry({
+ *     key: xdr.ScVal.scvSymbol("x"), val: xdr.ScVal.scvU32(2),
+ *   }),
+ * ]);
+ * const entries = parseScValEntries(raw);
+ * console.log(entries.map(({ key }) => key.type)); // ["scvString", "scvSymbol"]
+ * ```
+ */
+export function parseScValEntries(scv: ScValLike): ScValEntry[] {
+  if (scv.type !== "scvMap") {
+    throw new ERROR.FAILED_TO_PARSE_XDR(scv.type, "scvMap");
+  }
+  return (scv.map ?? []).map(({ key, val }) => ({ key, value: val }));
+}
 
 /**
  * Parse an xdr.ScVal into a TypeScript-friendly value.
@@ -105,7 +140,7 @@ const parseStructuredScVal = (scv: xdr.ScVal): ScValParsed => {
     case "scvLedgerKeyNonce":
       return { ledgerKeyType: "nonce" } as ScValRecord;
     default:
-      throw new UNSUPPORTED_SCVAL_TYPE((scv as { type: string }).type);
+      throw new ERROR.UNSUPPORTED_SCVAL_TYPE((scv as { type: string }).type);
   }
 };
 
@@ -148,7 +183,7 @@ function parseScValMap(entries: xdr.ScMapEntry[]): ScValRecord | ScValMap {
 export function getScValTypeName(scv: xdr.ScVal): ScValTypeName {
   const typeName = SCVAL_TYPE_NAMES.get(scv.type);
   if (typeName !== undefined) return typeName;
-  throw new UNKNOWN_SCVAL_TYPE((scv as { type: string }).type);
+  throw new ERROR.UNKNOWN_SCVAL_TYPE((scv as { type: string }).type);
 }
 
 const SCVAL_TYPE_NAMES = new Map<string, ScValTypeName>([

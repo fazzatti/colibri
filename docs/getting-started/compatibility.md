@@ -53,6 +53,51 @@ requires an interoperability review; its version number alone does not determine
 Colibri's bump. Colibri does not hide an incompatible SDK change behind a new
 wrapper solely to avoid a major release.
 
+## Core 3.0 and SDK 17.2.1 migration
+
+This release requires Stellar JavaScript SDK **17.2.1 or later within 17.x**.
+Use one compatible resolved SDK throughout the application. Core, WebAuth, RPC
+Streamer, Identicon and the three plugins move to **3.0.0** because their native
+SDK or Core interoperability boundary changes. Test Tooling moves from 1.1.0 to
+**2.0.0** because its recorder directly decodes SDK transactions, events and
+ledger changes; Quickstart still has no Core dependency. Preview packages move
+to Build Verification **0.6.0**, Contract Bindings **0.5.0** and React
+**0.6.0**. Each dependency floor is recorded in the package manifest.
+
+Review these observable corrections when upgrading:
+
+- [Named structs](../core/contract/values.md#named-record-evolution) decode by
+  field name, normalize omitted optional fields and ignore unknown fields by
+  default. Required fields and wire types remain validated. Inputs encode dense
+  records, and [typed maps](../core/contract/values.md#compose-types-and-values)
+  sort without mutating inputs and reject duplicate encoded keys.
+- [ABI events](../core/contract/events.md#sparse-map-data-and-ambiguity) accept
+  sparse optional data fields. Choose an explicit declaration when multiple
+  event shapes match. [SEP-41 events](../events/standardized-events/sep-41.md)
+  validate wire types and match topic prefixes; generic templates retain exact
+  topic matching by default. [RPC filters](../events/event-filter.md) support
+  four constraints followed by `**`, independently of event topic count.
+- [Interface catalogs](../core/contract/metadata-and-interfaces.md) expose
+  SEP-41 0.5.2 and SEP-57 0.4.0, preserving historical providers. SEP-57 minimum
+  profiles are opt-in and do not weaken existing reference checks.
+- Use [SEP-35 operation IDs](../core/toid.md#sep-0035-structure) for new
+  standard operation identifiers. Existing Colibri event IDs and RPC cursors
+  keep their historical encoding; do not rewrite stored cursors.
+- Recompute
+  [liquidity-pool IDs](../core/liquidity-pool.md#sdk-1721-asset-ordering) cached
+  from same-code, different-issuer assets under older SDKs. This is local
+  derivation; no on-chain pool or balance changes.
+- [TOML discovery](../core/sep1.md#fromdomaindomain-options) rejects malformed
+  hosts before transport.
+  [SEP-58 metadata](../packages/build-verification/sources.md#sep-58-field-grammar)
+  now validates complete ASCII field grammar before retrieval/build policy.
+
+The [lossless map helper](../core/helpers.md) is opt-in. Existing `parseScVal`
+results, event output properties, method signatures and stored identifiers
+retain their documented shapes. Regenerate
+[bindings](../packages/contract-bindings.md) to pick up the current dependency
+floor and optional named input fields.
+
 ## Core 2.0 SAC identity migration
 
 [StellarAssetContract](../core/asset/stellar-asset-contract.md) now guarantees a
@@ -98,11 +143,10 @@ duplicate installations are a concern. See
 
 [Contract Bindings](../packages/contract-bindings.md) starts at 0.1 as a
 preview. Its portable root API supports Deno/Node tooling; its `/cli` entrypoint
-is Deno-only. Generated JSR and npm clients use Core 1.1 or later in the current
-major.
+is Deno-only. Generated JSR and npm clients use Core 3.0 or later within 3.x.
 
 [React](../packages/react.md) starts at **0.1** as a headless preview. The
-current release requires Core 2.0+, React 19.1+ within 19.x and TanStack Query
+current release requires Core 3.0+, React 19.1+ within 19.x and TanStack Query
 5.87+ within 5.x. Apps own their React, QueryClient and wallet integrations;
 keep one resolved React instance. The consumer matrix covers SSR, hydration,
 connection updates, shared bigint query data and SVG rendering. The local
@@ -115,7 +159,7 @@ supported wallet/version.
 
 | Surface                           | Compatibility boundary and CI checks                                                            |
 | --------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Stellar JavaScript SDK            | `>=17.0.1 <18`; exact 17.0.1 and freshly resolved compatible 17.x                               |
+| Stellar JavaScript SDK            | `>=17.2.1 <18`; exact 17.2.1 and freshly resolved compatible 17.x                               |
 | Convee                            | Exact 2.1.0; public composition and plugin lifecycle fixtures                                   |
 | Deno                              | Minimum 2.7.11 and 2.9.6; each runtime's bundled TypeScript compiler                            |
 | Node.js                           | Minimum 22.12.0, current patched 22.x, and 24.x LTS                                             |

@@ -30,6 +30,8 @@ export const ApproveEventSchema: EventSchema<
   SchemaField<"data", "vec", readonly ["map"]>
 > = {
   name: "approve",
+  topicMatch: "prefix",
+  wireTypes: true,
   topics: [
     { name: "from", type: "address" },
     { name: "spender", type: "address" },

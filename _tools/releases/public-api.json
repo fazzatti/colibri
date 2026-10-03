@@ -880,10 +880,10 @@
           "kind": "const",
           "tsType": {
             "kind": "literal",
-            "repr": "0.5.0",
+            "repr": "0.6.0",
             "value": {
               "kind": "string",
-              "string": "0.5.0"
+              "string": "0.6.0"
             }
           }
         },
@@ -22836,10 +22836,10 @@
           "kind": "const",
           "tsType": {
             "kind": "literal",
-            "repr": "0.5.0",
+            "repr": "0.6.0",
             "value": {
               "kind": "string",
-              "string": "0.5.0"
+              "string": "0.6.0"
             }
           }
         },
@@ -49926,6 +49926,56 @@
                       "typeName": "ContractId"
                     }
                   }
+                },
+                {
+                  "name": "dataFields",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "literal",
+                        "repr": "evolution",
+                        "value": {
+                          "kind": "string",
+                          "string": "evolution"
+                        }
+                      },
+                      {
+                        "kind": "literal",
+                        "repr": "strict",
+                        "value": {
+                          "kind": "string",
+                          "string": "strict"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "structFields",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "literal",
+                        "repr": "evolution",
+                        "value": {
+                          "kind": "string",
+                          "string": "evolution"
+                        }
+                      },
+                      {
+                        "kind": "literal",
+                        "repr": "strict",
+                        "value": {
+                          "kind": "string",
+                          "string": "strict"
+                        }
+                      }
+                    ]
+                  }
                 }
               ]
             }
@@ -53421,6 +53471,54 @@
         "kind": "typeAlias"
       }
     ],
+    "createSep35OperationId": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "ledgerSequence",
+              "optional": false,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "kind": "identifier",
+              "name": "transactionOrder",
+              "optional": false,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "kind": "identifier",
+              "name": "operationIndex",
+              "optional": false,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "Sep35OperationId",
+            "value": {
+              "typeName": "Sep35OperationId"
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
     "createSorobanFactory": [
       {
         "declarationKind": "export",
@@ -53560,6 +53658,22 @@
                 "repr": "string",
                 "value": "string"
               }
+            },
+            {
+              "kind": "assign",
+              "left": {
+                "kind": "identifier",
+                "name": "options",
+                "optional": false,
+                "tsType": {
+                  "kind": "typeRef",
+                  "repr": "SorobanSpecOptions",
+                  "value": {
+                    "typeName": "SorobanSpecOptions"
+                  }
+                }
+              },
+              "right": "[UNSUPPORTED]"
             }
           ],
           "returnType": {
@@ -56668,10 +56782,10 @@
                       },
                       {
                         "kind": "literal",
-                        "repr": "4",
+                        "repr": "5",
                         "value": {
                           "kind": "number",
-                          "number": 4
+                          "number": 5
                         }
                       }
                     ]
@@ -57159,6 +57273,42 @@
                 "value": {
                   "typeName": "Name"
                 }
+              }
+            },
+            {
+              "name": "topicMatch",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "literal",
+                    "repr": "exact",
+                    "value": {
+                      "kind": "string",
+                      "string": "exact"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "prefix",
+                    "value": {
+                      "kind": "string",
+                      "string": "prefix"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "wireTypes",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "boolean",
+                "value": "boolean"
               }
             },
             {
@@ -73297,6 +73447,39 @@
         "kind": "function"
       }
     ],
+    "parseScValEntries": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "scv",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ScValLike",
+                "value": {
+                  "typeName": "ScValLike"
+                }
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "array",
+            "value": {
+              "kind": "typeRef",
+              "repr": "ScValEntry",
+              "value": {
+                "typeName": "ScValEntry"
+              }
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
     "parseScVals": [
       {
         "declarationKind": "export",
@@ -73327,6 +73510,58 @@
               "value": {
                 "typeName": "ScValParsed"
               }
+            }
+          }
+        },
+        "kind": "function"
+      }
+    ],
+    "parseSep35OperationId": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "id",
+              "optional": false,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "typeLiteral",
+            "value": {
+              "properties": [
+                {
+                  "name": "ledgerSequence",
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  }
+                },
+                {
+                  "name": "transactionOrder",
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  }
+                },
+                {
+                  "name": "operationIndex",
+                  "tsType": {
+                    "kind": "keyword",
+                    "repr": "number",
+                    "value": "number"
+                  }
+                }
+              ]
             }
           }
         },
@@ -76201,6 +76436,38 @@
         "kind": "typeAlias"
       }
     ],
+    "ScValEntry": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "key",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ScValLike",
+                "value": {
+                  "typeName": "ScValLike"
+                }
+              }
+            },
+            {
+              "name": "value",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ScValLike",
+                "value": {
+                  "typeName": "ScValLike"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
     "ScValLike": [
       {
         "declarationKind": "export",
@@ -77871,6 +78138,42 @@
           ]
         },
         "kind": "interface"
+      }
+    ],
+    "Sep35OperationId": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "intersection",
+            "value": [
+              {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              },
+              {
+                "kind": "typeLiteral",
+                "value": {
+                  "properties": [
+                    {
+                      "name": "__brand",
+                      "tsType": {
+                        "kind": "literal",
+                        "repr": "Sep35OperationId",
+                        "value": {
+                          "kind": "string",
+                          "string": "Sep35OperationId"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
       }
     ],
     "SEP40": [
@@ -79623,6 +79926,14 @@
                   "kind": "string",
                   "string": "0.5.1"
                 }
+              },
+              {
+                "kind": "literal",
+                "repr": "0.5.2",
+                "value": {
+                  "kind": "string",
+                  "string": "0.5.2"
+                }
               }
             ]
           }
@@ -79857,11 +80168,10 @@
                   "typeName": "ContractStandardCatalog",
                   "typeParams": [
                     {
-                      "kind": "literal",
-                      "repr": "0.3.0",
+                      "kind": "typeRef",
+                      "repr": "Sep57Version",
                       "value": {
-                        "kind": "string",
-                        "string": "0.3.0"
+                        "typeName": "Sep57Version"
                       }
                     }
                   ]
@@ -79879,6 +80189,39 @@
                         "repr": "Sep57Interfaces",
                         "value": {
                           "typeName": "Sep57Interfaces"
+                        }
+                      }
+                    },
+                    {
+                      "name": "profiles",
+                      "readonly": true,
+                      "tsType": {
+                        "kind": "typeLiteral",
+                        "value": {
+                          "properties": [
+                            {
+                              "name": "minimum",
+                              "readonly": true,
+                              "tsType": {
+                                "kind": "typeRef",
+                                "repr": "Sep57MinimumInterfaces",
+                                "value": {
+                                  "typeName": "Sep57MinimumInterfaces"
+                                }
+                              }
+                            },
+                            {
+                              "name": "reference",
+                              "readonly": true,
+                              "tsType": {
+                                "kind": "typeRef",
+                                "repr": "Sep57Interfaces",
+                                "value": {
+                                  "typeName": "Sep57Interfaces"
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
@@ -79990,11 +80333,10 @@
                           "typeName": "ContractStandardCatalog",
                           "typeParams": [
                             {
-                              "kind": "literal",
-                              "repr": "0.3.0",
+                              "kind": "typeRef",
+                              "repr": "Sep57Version",
                               "value": {
-                                "kind": "string",
-                                "string": "0.3.0"
+                                "typeName": "Sep57Version"
                               }
                             }
                           ]
@@ -80005,6 +80347,98 @@
                 }
               ]
             }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "Sep57MinimumInterfaces": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "Readonly",
+            "value": {
+              "typeName": "Readonly",
+              "typeParams": [
+                {
+                  "kind": "typeRef",
+                  "repr": "Record",
+                  "value": {
+                    "typeName": "Record",
+                    "typeParams": [
+                      {
+                        "kind": "union",
+                        "value": [
+                          {
+                            "kind": "literal",
+                            "repr": "identityVerifier",
+                            "value": {
+                              "kind": "string",
+                              "string": "identityVerifier"
+                            }
+                          },
+                          {
+                            "kind": "literal",
+                            "repr": "compliance",
+                            "value": {
+                              "kind": "string",
+                              "string": "compliance"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "typeRef",
+                        "repr": "ContractStandardCatalog",
+                        "value": {
+                          "typeName": "ContractStandardCatalog",
+                          "typeParams": [
+                            {
+                              "kind": "typeRef",
+                              "repr": "Sep57Version",
+                              "value": {
+                                "typeName": "Sep57Version"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "Sep57Version": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "literal",
+                "repr": "0.3.0",
+                "value": {
+                  "kind": "string",
+                  "string": "0.3.0"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "0.4.0",
+                "value": {
+                  "kind": "string",
+                  "string": "0.4.0"
+                }
+              }
+            ]
           }
         },
         "kind": "typeAlias"
@@ -85654,6 +86088,42 @@
         "kind": "typeAlias"
       }
     ],
+    "SorobanSpecOptions": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "structFields",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "literal",
+                    "repr": "evolution",
+                    "value": {
+                      "kind": "string",
+                      "string": "evolution"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "strict",
+                    "value": {
+                      "kind": "string",
+                      "string": "strict"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
     "SorobanString": [
       {
         "declarationKind": "export",
@@ -87569,6 +88039,210 @@
                             "declarationKind": "export",
                             "def": {
                               "tsType": {
+                                "kind": "intersection",
+                                "value": [
+                                  {
+                                    "kind": "mapped",
+                                    "value": {
+                                      "nameType": {
+                                        "kind": "conditional",
+                                        "value": {
+                                          "checkType": {
+                                            "kind": "keyword",
+                                            "repr": "null",
+                                            "value": "null"
+                                          },
+                                          "extendsType": {
+                                            "kind": "indexedAccess",
+                                            "value": {
+                                              "indexType": {
+                                                "kind": "typeRef",
+                                                "repr": "K",
+                                                "value": {
+                                                  "typeName": "K"
+                                                }
+                                              },
+                                              "objType": {
+                                                "kind": "typeRef",
+                                                "repr": "T",
+                                                "value": {
+                                                  "typeName": "T"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "falseType": {
+                                            "kind": "typeRef",
+                                            "repr": "K",
+                                            "value": {
+                                              "typeName": "K"
+                                            }
+                                          },
+                                          "trueType": {
+                                            "kind": "keyword",
+                                            "repr": "never",
+                                            "value": "never"
+                                          }
+                                        }
+                                      },
+                                      "readonly": "-",
+                                      "tsType": {
+                                        "kind": "typeRef",
+                                        "repr": "Value",
+                                        "value": {
+                                          "typeName": "Value",
+                                          "typeParams": [
+                                            {
+                                              "kind": "indexedAccess",
+                                              "value": {
+                                                "indexType": {
+                                                  "kind": "typeRef",
+                                                  "repr": "K",
+                                                  "value": {
+                                                    "typeName": "K"
+                                                  }
+                                                },
+                                                "objType": {
+                                                  "kind": "typeRef",
+                                                  "repr": "T",
+                                                  "value": {
+                                                    "typeName": "T"
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      "typeParam": {
+                                        "constraint": {
+                                          "kind": "typeOperator",
+                                          "value": {
+                                            "operator": "keyof",
+                                            "tsType": {
+                                              "kind": "typeRef",
+                                              "repr": "T",
+                                              "value": {
+                                                "typeName": "T"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "name": "K"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "kind": "mapped",
+                                    "value": {
+                                      "nameType": {
+                                        "kind": "conditional",
+                                        "value": {
+                                          "checkType": {
+                                            "kind": "keyword",
+                                            "repr": "null",
+                                            "value": "null"
+                                          },
+                                          "extendsType": {
+                                            "kind": "indexedAccess",
+                                            "value": {
+                                              "indexType": {
+                                                "kind": "typeRef",
+                                                "repr": "K",
+                                                "value": {
+                                                  "typeName": "K"
+                                                }
+                                              },
+                                              "objType": {
+                                                "kind": "typeRef",
+                                                "repr": "T",
+                                                "value": {
+                                                  "typeName": "T"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "falseType": {
+                                            "kind": "keyword",
+                                            "repr": "never",
+                                            "value": "never"
+                                          },
+                                          "trueType": {
+                                            "kind": "typeRef",
+                                            "repr": "K",
+                                            "value": {
+                                              "typeName": "K"
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "optional": true,
+                                      "readonly": "-",
+                                      "tsType": {
+                                        "kind": "typeRef",
+                                        "repr": "Value",
+                                        "value": {
+                                          "typeName": "Value",
+                                          "typeParams": [
+                                            {
+                                              "kind": "indexedAccess",
+                                              "value": {
+                                                "indexType": {
+                                                  "kind": "typeRef",
+                                                  "repr": "K",
+                                                  "value": {
+                                                    "typeName": "K"
+                                                  }
+                                                },
+                                                "objType": {
+                                                  "kind": "typeRef",
+                                                  "repr": "T",
+                                                  "value": {
+                                                    "typeName": "T"
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      "typeParam": {
+                                        "constraint": {
+                                          "kind": "typeOperator",
+                                          "value": {
+                                            "operator": "keyof",
+                                            "tsType": {
+                                              "kind": "typeRef",
+                                              "repr": "T",
+                                              "value": {
+                                                "typeName": "T"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "name": "K"
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              "typeParams": [
+                                {
+                                  "name": "T"
+                                }
+                              ]
+                            },
+                            "kind": "typeAlias"
+                          }
+                        ],
+                        "name": "StructFields"
+                      },
+                      {
+                        "declarations": [
+                          {
+                            "declarationKind": "export",
+                            "def": {
+                              "tsType": {
                                 "kind": "conditional",
                                 "value": {
                                   "checkType": {
@@ -88149,25 +88823,12 @@
                                         {
                                           "name": "kind",
                                           "tsType": {
-                                            "kind": "union",
-                                            "value": [
-                                              {
-                                                "kind": "literal",
-                                                "repr": "struct",
-                                                "value": {
-                                                  "kind": "string",
-                                                  "string": "struct"
-                                                }
-                                              },
-                                              {
-                                                "kind": "literal",
-                                                "repr": "tuple",
-                                                "value": {
-                                                  "kind": "string",
-                                                  "string": "tuple"
-                                                }
-                                              }
-                                            ]
+                                            "kind": "literal",
+                                            "repr": "struct",
+                                            "value": {
+                                              "kind": "string",
+                                              "string": "struct"
+                                            }
                                           }
                                         },
                                         {
@@ -88202,21 +88863,21 @@
                                               "name": "kind",
                                               "tsType": {
                                                 "kind": "literal",
-                                                "repr": "enum",
+                                                "repr": "tuple",
                                                 "value": {
                                                   "kind": "string",
-                                                  "string": "enum"
+                                                  "string": "tuple"
                                                 }
                                               }
                                             },
                                             {
-                                              "name": "encoding",
+                                              "name": "fields",
                                               "tsType": {
-                                                "kind": "literal",
-                                                "repr": "u32",
+                                                "kind": "infer",
                                                 "value": {
-                                                  "kind": "string",
-                                                  "string": "u32"
+                                                  "typeParam": {
+                                                    "name": "F"
+                                                  }
                                                 }
                                               }
                                             }
@@ -88252,21 +88913,10 @@
                                                   "name": "encoding",
                                                   "tsType": {
                                                     "kind": "literal",
-                                                    "repr": "tagged",
+                                                    "repr": "u32",
                                                     "value": {
                                                       "kind": "string",
-                                                      "string": "tagged"
-                                                    }
-                                                  }
-                                                },
-                                                {
-                                                  "name": "variants",
-                                                  "tsType": {
-                                                    "kind": "infer",
-                                                    "value": {
-                                                      "typeParam": {
-                                                        "name": "V"
-                                                      }
+                                                      "string": "u32"
                                                     }
                                                   }
                                                 }
@@ -88274,156 +88924,224 @@
                                             }
                                           },
                                           "falseType": {
-                                            "kind": "keyword",
-                                            "repr": "never",
-                                            "value": "never"
-                                          },
-                                          "trueType": {
-                                            "kind": "indexedAccess",
+                                            "kind": "conditional",
                                             "value": {
-                                              "indexType": {
-                                                "kind": "typeOperator",
+                                              "checkType": {
+                                                "kind": "typeRef",
+                                                "repr": "S",
                                                 "value": {
-                                                  "operator": "keyof",
-                                                  "tsType": {
-                                                    "kind": "typeRef",
-                                                    "repr": "V",
-                                                    "value": {
-                                                      "typeName": "V"
-                                                    }
-                                                  }
+                                                  "typeName": "S"
                                                 }
                                               },
-                                              "objType": {
-                                                "kind": "mapped",
+                                              "extendsType": {
+                                                "kind": "typeLiteral",
                                                 "value": {
-                                                  "tsType": {
-                                                    "kind": "conditional",
-                                                    "value": {
-                                                      "checkType": {
-                                                        "kind": "indexedAccess",
+                                                  "properties": [
+                                                    {
+                                                      "name": "kind",
+                                                      "tsType": {
+                                                        "kind": "literal",
+                                                        "repr": "enum",
                                                         "value": {
-                                                          "indexType": {
-                                                            "kind": "typeRef",
-                                                            "repr": "Tag",
-                                                            "value": {
-                                                              "typeName": "Tag"
-                                                            }
-                                                          },
-                                                          "objType": {
-                                                            "kind": "typeRef",
-                                                            "repr": "V",
-                                                            "value": {
-                                                              "typeName": "V"
-                                                            }
+                                                          "kind": "string",
+                                                          "string": "enum"
+                                                        }
+                                                      }
+                                                    },
+                                                    {
+                                                      "name": "encoding",
+                                                      "tsType": {
+                                                        "kind": "literal",
+                                                        "repr": "tagged",
+                                                        "value": {
+                                                          "kind": "string",
+                                                          "string": "tagged"
+                                                        }
+                                                      }
+                                                    },
+                                                    {
+                                                      "name": "variants",
+                                                      "tsType": {
+                                                        "kind": "infer",
+                                                        "value": {
+                                                          "typeParam": {
+                                                            "name": "V"
                                                           }
                                                         }
-                                                      },
-                                                      "extendsType": {
-                                                        "kind": "keyword",
-                                                        "repr": "null",
-                                                        "value": "null"
-                                                      },
-                                                      "falseType": {
-                                                        "kind": "typeLiteral",
+                                                      }
+                                                    }
+                                                  ]
+                                                }
+                                              },
+                                              "falseType": {
+                                                "kind": "keyword",
+                                                "repr": "never",
+                                                "value": "never"
+                                              },
+                                              "trueType": {
+                                                "kind": "indexedAccess",
+                                                "value": {
+                                                  "indexType": {
+                                                    "kind": "typeOperator",
+                                                    "value": {
+                                                      "operator": "keyof",
+                                                      "tsType": {
+                                                        "kind": "typeRef",
+                                                        "repr": "V",
                                                         "value": {
-                                                          "properties": [
-                                                            {
-                                                              "name": "tag",
-                                                              "tsType": {
-                                                                "kind": "typeRef",
-                                                                "repr": "Tag",
-                                                                "value": {
-                                                                  "typeName": "Tag"
-                                                                }
-                                                              }
-                                                            },
-                                                            {
-                                                              "name": "values",
-                                                              "tsType": {
-                                                                "kind": "typeRef",
-                                                                "repr": "Fields",
-                                                                "value": {
-                                                                  "typeName": "Fields",
-                                                                  "typeParams": [
-                                                                    {
-                                                                      "kind": "indexedAccess",
-                                                                      "value": {
-                                                                        "indexType": {
-                                                                          "kind": "typeRef",
-                                                                          "repr": "Tag",
-                                                                          "value": {
-                                                                            "typeName": "Tag"
-                                                                          }
-                                                                        },
-                                                                        "objType": {
-                                                                          "kind": "typeRef",
-                                                                          "repr": "V",
-                                                                          "value": {
-                                                                            "typeName": "V"
-                                                                          }
-                                                                        }
-                                                                      }
-                                                                    }
-                                                                  ]
-                                                                }
-                                                              }
-                                                            }
-                                                          ]
-                                                        }
-                                                      },
-                                                      "trueType": {
-                                                        "kind": "typeLiteral",
-                                                        "value": {
-                                                          "properties": [
-                                                            {
-                                                              "name": "tag",
-                                                              "tsType": {
-                                                                "kind": "typeRef",
-                                                                "repr": "Tag",
-                                                                "value": {
-                                                                  "typeName": "Tag"
-                                                                }
-                                                              }
-                                                            }
-                                                          ]
+                                                          "typeName": "V"
                                                         }
                                                       }
                                                     }
                                                   },
-                                                  "typeParam": {
-                                                    "constraint": {
-                                                      "kind": "typeOperator",
-                                                      "value": {
-                                                        "operator": "keyof",
-                                                        "tsType": {
-                                                          "kind": "typeRef",
-                                                          "repr": "V",
-                                                          "value": {
-                                                            "typeName": "V"
+                                                  "objType": {
+                                                    "kind": "mapped",
+                                                    "value": {
+                                                      "tsType": {
+                                                        "kind": "conditional",
+                                                        "value": {
+                                                          "checkType": {
+                                                            "kind": "indexedAccess",
+                                                            "value": {
+                                                              "indexType": {
+                                                                "kind": "typeRef",
+                                                                "repr": "Tag",
+                                                                "value": {
+                                                                  "typeName": "Tag"
+                                                                }
+                                                              },
+                                                              "objType": {
+                                                                "kind": "typeRef",
+                                                                "repr": "V",
+                                                                "value": {
+                                                                  "typeName": "V"
+                                                                }
+                                                              }
+                                                            }
+                                                          },
+                                                          "extendsType": {
+                                                            "kind": "keyword",
+                                                            "repr": "null",
+                                                            "value": "null"
+                                                          },
+                                                          "falseType": {
+                                                            "kind": "typeLiteral",
+                                                            "value": {
+                                                              "properties": [
+                                                                {
+                                                                  "name": "tag",
+                                                                  "tsType": {
+                                                                    "kind": "typeRef",
+                                                                    "repr": "Tag",
+                                                                    "value": {
+                                                                      "typeName": "Tag"
+                                                                    }
+                                                                  }
+                                                                },
+                                                                {
+                                                                  "name": "values",
+                                                                  "tsType": {
+                                                                    "kind": "typeRef",
+                                                                    "repr": "Fields",
+                                                                    "value": {
+                                                                      "typeName": "Fields",
+                                                                      "typeParams": [
+                                                                        {
+                                                                          "kind": "indexedAccess",
+                                                                          "value": {
+                                                                            "indexType": {
+                                                                              "kind": "typeRef",
+                                                                              "repr": "Tag",
+                                                                              "value": {
+                                                                                "typeName": "Tag"
+                                                                              }
+                                                                            },
+                                                                            "objType": {
+                                                                              "kind": "typeRef",
+                                                                              "repr": "V",
+                                                                              "value": {
+                                                                                "typeName": "V"
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  }
+                                                                }
+                                                              ]
+                                                            }
+                                                          },
+                                                          "trueType": {
+                                                            "kind": "typeLiteral",
+                                                            "value": {
+                                                              "properties": [
+                                                                {
+                                                                  "name": "tag",
+                                                                  "tsType": {
+                                                                    "kind": "typeRef",
+                                                                    "repr": "Tag",
+                                                                    "value": {
+                                                                      "typeName": "Tag"
+                                                                    }
+                                                                  }
+                                                                }
+                                                              ]
+                                                            }
                                                           }
                                                         }
+                                                      },
+                                                      "typeParam": {
+                                                        "constraint": {
+                                                          "kind": "typeOperator",
+                                                          "value": {
+                                                            "operator": "keyof",
+                                                            "tsType": {
+                                                              "kind": "typeRef",
+                                                              "repr": "V",
+                                                              "value": {
+                                                                "typeName": "V"
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "name": "Tag"
                                                       }
-                                                    },
-                                                    "name": "Tag"
+                                                    }
                                                   }
                                                 }
                                               }
+                                            }
+                                          },
+                                          "trueType": {
+                                            "kind": "typeRef",
+                                            "repr": "CustomValue",
+                                            "value": {
+                                              "typeName": "CustomValue",
+                                              "typeParams": [
+                                                {
+                                                  "kind": "typeRef",
+                                                  "repr": "S",
+                                                  "value": {
+                                                    "typeName": "S"
+                                                  }
+                                                }
+                                              ]
                                             }
                                           }
                                         }
                                       },
                                       "trueType": {
                                         "kind": "typeRef",
-                                        "repr": "CustomValue",
+                                        "repr": "Fields",
                                         "value": {
-                                          "typeName": "CustomValue",
+                                          "typeName": "Fields",
                                           "typeParams": [
                                             {
                                               "kind": "typeRef",
-                                              "repr": "S",
+                                              "repr": "F",
                                               "value": {
-                                                "typeName": "S"
+                                                "typeName": "F"
                                               }
                                             }
                                           ]
@@ -88433,9 +89151,9 @@
                                   },
                                   "trueType": {
                                     "kind": "typeRef",
-                                    "repr": "Fields",
+                                    "repr": "StructFields",
                                     "value": {
-                                      "typeName": "Fields",
+                                      "typeName": "StructFields",
                                       "typeParams": [
                                         {
                                           "kind": "typeRef",
@@ -88525,6 +89243,22 @@
                   "typeName": "NativeSpecType"
                 }
               }
+            },
+            {
+              "kind": "assign",
+              "left": {
+                "kind": "identifier",
+                "name": "options",
+                "optional": false,
+                "tsType": {
+                  "kind": "typeRef",
+                  "repr": "SorobanSpecOptions",
+                  "value": {
+                    "typeName": "SorobanSpecOptions"
+                  }
+                }
+              },
+              "right": "[UNSUPPORTED]"
             }
           ],
           "returnType": {
@@ -98658,6 +99392,46 @@
               {
                 "kind": "tuple",
                 "value": [
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "DoubleWildcard",
+                    "value": {
+                      "typeName": "DoubleWildcard"
+                    }
+                  }
+                ]
+              },
+              {
+                "kind": "tuple",
+                "value": [
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
                   {
                     "kind": "typeRef",
                     "repr": "Segment",
@@ -113947,6 +114721,17 @@
               {
                 "init": {
                   "kind": "literal",
+                  "repr": "EVF_003",
+                  "value": {
+                    "kind": "string",
+                    "string": "EVF_003"
+                  }
+                },
+                "name": "INVALID_TOPIC_FILTER"
+              },
+              {
+                "init": {
+                  "kind": "literal",
                   "repr": "EVF_001",
                   "value": {
                     "kind": "string",
@@ -113980,6 +114765,10 @@
               "kind": "typeLiteral",
               "value": {
                 "properties": [
+                  {
+                    "computed": true,
+                    "name": "[\"EVF_003\" as Code.INVALID_TOPIC_FILTER]"
+                  },
                   {
                     "computed": true,
                     "name": "[\"EVF_001\" as Code.EVENT_HAS_NO_TOPICS]"
@@ -114214,6 +115003,33 @@
                       "value": {
                         "typeName": "Error"
                       }
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "EventFilterError"
+          },
+          "kind": "class"
+        }
+      ],
+      "INVALID_TOPIC_FILTER": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "length",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
                     }
                   }
                 ]
@@ -135759,6 +136575,22 @@
                 "repr": "string",
                 "value": "string"
               }
+            },
+            {
+              "kind": "assign",
+              "left": {
+                "kind": "identifier",
+                "name": "options",
+                "optional": false,
+                "tsType": {
+                  "kind": "typeRef",
+                  "repr": "SorobanSpecOptions",
+                  "value": {
+                    "typeName": "SorobanSpecOptions"
+                  }
+                }
+              },
+              "right": "[UNSUPPORTED]"
             }
           ],
           "returnType": {
@@ -136063,25 +136895,12 @@
                     {
                       "name": "kind",
                       "tsType": {
-                        "kind": "union",
-                        "value": [
-                          {
-                            "kind": "literal",
-                            "repr": "struct",
-                            "value": {
-                              "kind": "string",
-                              "string": "struct"
-                            }
-                          },
-                          {
-                            "kind": "literal",
-                            "repr": "tuple",
-                            "value": {
-                              "kind": "string",
-                              "string": "tuple"
-                            }
-                          }
-                        ]
+                        "kind": "literal",
+                        "repr": "struct",
+                        "value": {
+                          "kind": "string",
+                          "string": "struct"
+                        }
                       }
                     },
                     {
@@ -136116,21 +136935,21 @@
                           "name": "kind",
                           "tsType": {
                             "kind": "literal",
-                            "repr": "enum",
+                            "repr": "tuple",
                             "value": {
                               "kind": "string",
-                              "string": "enum"
+                              "string": "tuple"
                             }
                           }
                         },
                         {
-                          "name": "encoding",
+                          "name": "fields",
                           "tsType": {
-                            "kind": "literal",
-                            "repr": "u32",
+                            "kind": "infer",
                             "value": {
-                              "kind": "string",
-                              "string": "u32"
+                              "typeParam": {
+                                "name": "F"
+                              }
                             }
                           }
                         }
@@ -136166,21 +136985,10 @@
                               "name": "encoding",
                               "tsType": {
                                 "kind": "literal",
-                                "repr": "tagged",
+                                "repr": "u32",
                                 "value": {
                                   "kind": "string",
-                                  "string": "tagged"
-                                }
-                              }
-                            },
-                            {
-                              "name": "variants",
-                              "tsType": {
-                                "kind": "infer",
-                                "value": {
-                                  "typeParam": {
-                                    "name": "V"
-                                  }
+                                  "string": "u32"
                                 }
                               }
                             }
@@ -136188,156 +136996,224 @@
                         }
                       },
                       "falseType": {
-                        "kind": "keyword",
-                        "repr": "never",
-                        "value": "never"
-                      },
-                      "trueType": {
-                        "kind": "indexedAccess",
+                        "kind": "conditional",
                         "value": {
-                          "indexType": {
-                            "kind": "typeOperator",
+                          "checkType": {
+                            "kind": "typeRef",
+                            "repr": "S",
                             "value": {
-                              "operator": "keyof",
-                              "tsType": {
-                                "kind": "typeRef",
-                                "repr": "V",
-                                "value": {
-                                  "typeName": "V"
-                                }
-                              }
+                              "typeName": "S"
                             }
                           },
-                          "objType": {
-                            "kind": "mapped",
+                          "extendsType": {
+                            "kind": "typeLiteral",
                             "value": {
-                              "tsType": {
-                                "kind": "conditional",
-                                "value": {
-                                  "checkType": {
-                                    "kind": "indexedAccess",
+                              "properties": [
+                                {
+                                  "name": "kind",
+                                  "tsType": {
+                                    "kind": "literal",
+                                    "repr": "enum",
                                     "value": {
-                                      "indexType": {
-                                        "kind": "typeRef",
-                                        "repr": "Tag",
-                                        "value": {
-                                          "typeName": "Tag"
-                                        }
-                                      },
-                                      "objType": {
-                                        "kind": "typeRef",
-                                        "repr": "V",
-                                        "value": {
-                                          "typeName": "V"
-                                        }
+                                      "kind": "string",
+                                      "string": "enum"
+                                    }
+                                  }
+                                },
+                                {
+                                  "name": "encoding",
+                                  "tsType": {
+                                    "kind": "literal",
+                                    "repr": "tagged",
+                                    "value": {
+                                      "kind": "string",
+                                      "string": "tagged"
+                                    }
+                                  }
+                                },
+                                {
+                                  "name": "variants",
+                                  "tsType": {
+                                    "kind": "infer",
+                                    "value": {
+                                      "typeParam": {
+                                        "name": "V"
                                       }
                                     }
-                                  },
-                                  "extendsType": {
-                                    "kind": "keyword",
-                                    "repr": "null",
-                                    "value": "null"
-                                  },
-                                  "falseType": {
-                                    "kind": "typeLiteral",
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          "falseType": {
+                            "kind": "keyword",
+                            "repr": "never",
+                            "value": "never"
+                          },
+                          "trueType": {
+                            "kind": "indexedAccess",
+                            "value": {
+                              "indexType": {
+                                "kind": "typeOperator",
+                                "value": {
+                                  "operator": "keyof",
+                                  "tsType": {
+                                    "kind": "typeRef",
+                                    "repr": "V",
                                     "value": {
-                                      "properties": [
-                                        {
-                                          "name": "tag",
-                                          "tsType": {
-                                            "kind": "typeRef",
-                                            "repr": "Tag",
-                                            "value": {
-                                              "typeName": "Tag"
-                                            }
-                                          }
-                                        },
-                                        {
-                                          "name": "values",
-                                          "tsType": {
-                                            "kind": "typeRef",
-                                            "repr": "Fields",
-                                            "value": {
-                                              "typeName": "Fields",
-                                              "typeParams": [
-                                                {
-                                                  "kind": "indexedAccess",
-                                                  "value": {
-                                                    "indexType": {
-                                                      "kind": "typeRef",
-                                                      "repr": "Tag",
-                                                      "value": {
-                                                        "typeName": "Tag"
-                                                      }
-                                                    },
-                                                    "objType": {
-                                                      "kind": "typeRef",
-                                                      "repr": "V",
-                                                      "value": {
-                                                        "typeName": "V"
-                                                      }
-                                                    }
-                                                  }
-                                                }
-                                              ]
-                                            }
-                                          }
-                                        }
-                                      ]
-                                    }
-                                  },
-                                  "trueType": {
-                                    "kind": "typeLiteral",
-                                    "value": {
-                                      "properties": [
-                                        {
-                                          "name": "tag",
-                                          "tsType": {
-                                            "kind": "typeRef",
-                                            "repr": "Tag",
-                                            "value": {
-                                              "typeName": "Tag"
-                                            }
-                                          }
-                                        }
-                                      ]
+                                      "typeName": "V"
                                     }
                                   }
                                 }
                               },
-                              "typeParam": {
-                                "constraint": {
-                                  "kind": "typeOperator",
-                                  "value": {
-                                    "operator": "keyof",
-                                    "tsType": {
-                                      "kind": "typeRef",
-                                      "repr": "V",
-                                      "value": {
-                                        "typeName": "V"
+                              "objType": {
+                                "kind": "mapped",
+                                "value": {
+                                  "tsType": {
+                                    "kind": "conditional",
+                                    "value": {
+                                      "checkType": {
+                                        "kind": "indexedAccess",
+                                        "value": {
+                                          "indexType": {
+                                            "kind": "typeRef",
+                                            "repr": "Tag",
+                                            "value": {
+                                              "typeName": "Tag"
+                                            }
+                                          },
+                                          "objType": {
+                                            "kind": "typeRef",
+                                            "repr": "V",
+                                            "value": {
+                                              "typeName": "V"
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "extendsType": {
+                                        "kind": "keyword",
+                                        "repr": "null",
+                                        "value": "null"
+                                      },
+                                      "falseType": {
+                                        "kind": "typeLiteral",
+                                        "value": {
+                                          "properties": [
+                                            {
+                                              "name": "tag",
+                                              "tsType": {
+                                                "kind": "typeRef",
+                                                "repr": "Tag",
+                                                "value": {
+                                                  "typeName": "Tag"
+                                                }
+                                              }
+                                            },
+                                            {
+                                              "name": "values",
+                                              "tsType": {
+                                                "kind": "typeRef",
+                                                "repr": "Fields",
+                                                "value": {
+                                                  "typeName": "Fields",
+                                                  "typeParams": [
+                                                    {
+                                                      "kind": "indexedAccess",
+                                                      "value": {
+                                                        "indexType": {
+                                                          "kind": "typeRef",
+                                                          "repr": "Tag",
+                                                          "value": {
+                                                            "typeName": "Tag"
+                                                          }
+                                                        },
+                                                        "objType": {
+                                                          "kind": "typeRef",
+                                                          "repr": "V",
+                                                          "value": {
+                                                            "typeName": "V"
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  ]
+                                                }
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      "trueType": {
+                                        "kind": "typeLiteral",
+                                        "value": {
+                                          "properties": [
+                                            {
+                                              "name": "tag",
+                                              "tsType": {
+                                                "kind": "typeRef",
+                                                "repr": "Tag",
+                                                "value": {
+                                                  "typeName": "Tag"
+                                                }
+                                              }
+                                            }
+                                          ]
+                                        }
                                       }
                                     }
+                                  },
+                                  "typeParam": {
+                                    "constraint": {
+                                      "kind": "typeOperator",
+                                      "value": {
+                                        "operator": "keyof",
+                                        "tsType": {
+                                          "kind": "typeRef",
+                                          "repr": "V",
+                                          "value": {
+                                            "typeName": "V"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "name": "Tag"
                                   }
-                                },
-                                "name": "Tag"
+                                }
                               }
                             }
                           }
+                        }
+                      },
+                      "trueType": {
+                        "kind": "typeRef",
+                        "repr": "CustomValue",
+                        "value": {
+                          "typeName": "CustomValue",
+                          "typeParams": [
+                            {
+                              "kind": "typeRef",
+                              "repr": "S",
+                              "value": {
+                                "typeName": "S"
+                              }
+                            }
+                          ]
                         }
                       }
                     }
                   },
                   "trueType": {
                     "kind": "typeRef",
-                    "repr": "CustomValue",
+                    "repr": "Fields",
                     "value": {
-                      "typeName": "CustomValue",
+                      "typeName": "Fields",
                       "typeParams": [
                         {
                           "kind": "typeRef",
-                          "repr": "S",
+                          "repr": "F",
                           "value": {
-                            "typeName": "S"
+                            "typeName": "F"
                           }
                         }
                       ]
@@ -136347,9 +137223,9 @@
               },
               "trueType": {
                 "kind": "typeRef",
-                "repr": "Fields",
+                "repr": "StructFields",
                 "value": {
-                  "typeName": "Fields",
+                  "typeName": "StructFields",
                   "typeParams": [
                     {
                       "kind": "typeRef",
@@ -138555,10 +139431,27 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 2026,
+                      "byteIndex": 2039,
                       "col": 0,
                       "filename": "core/soroban-types/types/inputs.ts",
                       "line": 52
+                    }
+                  },
+                  "kind": "reference"
+                }
+              ],
+              "name": "StructFields"
+            },
+            {
+              "declarations": [
+                {
+                  "declarationKind": "export",
+                  "def": {
+                    "target": {
+                      "byteIndex": 2298,
+                      "col": 0,
+                      "filename": "core/soroban-types/types/inputs.ts",
+                      "line": 57
                     }
                   },
                   "kind": "reference"
@@ -138572,10 +139465,10 @@
                   "declarationKind": "export",
                   "def": {
                     "target": {
-                      "byteIndex": 2713,
+                      "byteIndex": 2985,
                       "col": 0,
                       "filename": "core/soroban-types/types/inputs.ts",
-                      "line": 66
+                      "line": 71
                     }
                   },
                   "kind": "reference"
@@ -145113,6 +146006,42 @@
         "kind": "typeAlias"
       }
     ],
+    "SorobanSpecOptions": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "structFields",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "literal",
+                    "repr": "evolution",
+                    "value": {
+                      "kind": "string",
+                      "string": "evolution"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "strict",
+                    "value": {
+                      "kind": "string",
+                      "string": "strict"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
     "SorobanString": [
       {
         "declarationKind": "export",
@@ -146857,10 +147786,27 @@
                             "declarationKind": "export",
                             "def": {
                               "target": {
-                                "byteIndex": 2026,
+                                "byteIndex": 2039,
                                 "col": 0,
                                 "filename": "core/soroban-types/types/inputs.ts",
                                 "line": 52
+                              }
+                            },
+                            "kind": "reference"
+                          }
+                        ],
+                        "name": "StructFields"
+                      },
+                      {
+                        "declarations": [
+                          {
+                            "declarationKind": "export",
+                            "def": {
+                              "target": {
+                                "byteIndex": 2298,
+                                "col": 0,
+                                "filename": "core/soroban-types/types/inputs.ts",
+                                "line": 57
                               }
                             },
                             "kind": "reference"
@@ -146874,10 +147820,10 @@
                             "declarationKind": "export",
                             "def": {
                               "target": {
-                                "byteIndex": 2713,
+                                "byteIndex": 2985,
                                 "col": 0,
                                 "filename": "core/soroban-types/types/inputs.ts",
-                                "line": 66
+                                "line": 71
                               }
                             },
                             "kind": "reference"
@@ -146943,6 +147889,22 @@
                   "typeName": "NativeSpecType"
                 }
               }
+            },
+            {
+              "kind": "assign",
+              "left": {
+                "kind": "identifier",
+                "name": "options",
+                "optional": false,
+                "tsType": {
+                  "kind": "typeRef",
+                  "repr": "SorobanSpecOptions",
+                  "value": {
+                    "typeName": "SorobanSpecOptions"
+                  }
+                }
+              },
+              "right": "[UNSUPPORTED]"
             }
           ],
           "returnType": {
@@ -149224,6 +150186,207 @@
           }
         },
         "kind": "variable"
+      }
+    ],
+    "StructInputFields": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "intersection",
+            "value": [
+              {
+                "kind": "mapped",
+                "value": {
+                  "nameType": {
+                    "kind": "conditional",
+                    "value": {
+                      "checkType": {
+                        "kind": "keyword",
+                        "repr": "null",
+                        "value": "null"
+                      },
+                      "extendsType": {
+                        "kind": "indexedAccess",
+                        "value": {
+                          "indexType": {
+                            "kind": "typeRef",
+                            "repr": "K",
+                            "value": {
+                              "typeName": "K"
+                            }
+                          },
+                          "objType": {
+                            "kind": "typeRef",
+                            "repr": "T",
+                            "value": {
+                              "typeName": "T"
+                            }
+                          }
+                        }
+                      },
+                      "falseType": {
+                        "kind": "typeRef",
+                        "repr": "K",
+                        "value": {
+                          "typeName": "K"
+                        }
+                      },
+                      "trueType": {
+                        "kind": "keyword",
+                        "repr": "never",
+                        "value": "never"
+                      }
+                    }
+                  },
+                  "readonly": "-",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Value",
+                    "value": {
+                      "typeName": "Value",
+                      "typeParams": [
+                        {
+                          "kind": "indexedAccess",
+                          "value": {
+                            "indexType": {
+                              "kind": "typeRef",
+                              "repr": "K",
+                              "value": {
+                                "typeName": "K"
+                              }
+                            },
+                            "objType": {
+                              "kind": "typeRef",
+                              "repr": "T",
+                              "value": {
+                                "typeName": "T"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "typeParam": {
+                    "constraint": {
+                      "kind": "typeOperator",
+                      "value": {
+                        "operator": "keyof",
+                        "tsType": {
+                          "kind": "typeRef",
+                          "repr": "T",
+                          "value": {
+                            "typeName": "T"
+                          }
+                        }
+                      }
+                    },
+                    "name": "K"
+                  }
+                }
+              },
+              {
+                "kind": "mapped",
+                "value": {
+                  "nameType": {
+                    "kind": "conditional",
+                    "value": {
+                      "checkType": {
+                        "kind": "keyword",
+                        "repr": "null",
+                        "value": "null"
+                      },
+                      "extendsType": {
+                        "kind": "indexedAccess",
+                        "value": {
+                          "indexType": {
+                            "kind": "typeRef",
+                            "repr": "K",
+                            "value": {
+                              "typeName": "K"
+                            }
+                          },
+                          "objType": {
+                            "kind": "typeRef",
+                            "repr": "T",
+                            "value": {
+                              "typeName": "T"
+                            }
+                          }
+                        }
+                      },
+                      "falseType": {
+                        "kind": "keyword",
+                        "repr": "never",
+                        "value": "never"
+                      },
+                      "trueType": {
+                        "kind": "typeRef",
+                        "repr": "K",
+                        "value": {
+                          "typeName": "K"
+                        }
+                      }
+                    }
+                  },
+                  "optional": true,
+                  "readonly": "-",
+                  "tsType": {
+                    "kind": "typeRef",
+                    "repr": "Value",
+                    "value": {
+                      "typeName": "Value",
+                      "typeParams": [
+                        {
+                          "kind": "indexedAccess",
+                          "value": {
+                            "indexType": {
+                              "kind": "typeRef",
+                              "repr": "K",
+                              "value": {
+                                "typeName": "K"
+                              }
+                            },
+                            "objType": {
+                              "kind": "typeRef",
+                              "repr": "T",
+                              "value": {
+                                "typeName": "T"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "typeParam": {
+                    "constraint": {
+                      "kind": "typeOperator",
+                      "value": {
+                        "operator": "keyof",
+                        "tsType": {
+                          "kind": "typeRef",
+                          "repr": "T",
+                          "value": {
+                            "typeName": "T"
+                          }
+                        }
+                      }
+                    },
+                    "name": "K"
+                  }
+                }
+              }
+            ]
+          },
+          "typeParams": [
+            {
+              "name": "T"
+            }
+          ]
+        },
+        "kind": "typeAlias"
       }
     ],
     "Symbol": [
@@ -164833,6 +165996,56 @@
                       "typeName": "ContractId"
                     }
                   }
+                },
+                {
+                  "name": "dataFields",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "literal",
+                        "repr": "evolution",
+                        "value": {
+                          "kind": "string",
+                          "string": "evolution"
+                        }
+                      },
+                      {
+                        "kind": "literal",
+                        "repr": "strict",
+                        "value": {
+                          "kind": "string",
+                          "string": "strict"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "structFields",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "literal",
+                        "repr": "evolution",
+                        "value": {
+                          "kind": "string",
+                          "string": "evolution"
+                        }
+                      },
+                      {
+                        "kind": "literal",
+                        "repr": "strict",
+                        "value": {
+                          "kind": "string",
+                          "string": "strict"
+                        }
+                      }
+                    ]
+                  }
                 }
               ]
             }
@@ -167544,10 +168757,10 @@
                       },
                       {
                         "kind": "literal",
-                        "repr": "4",
+                        "repr": "5",
                         "value": {
                           "kind": "number",
-                          "number": 4
+                          "number": 5
                         }
                       }
                     ]
@@ -171363,6 +172576,14 @@
                   "kind": "string",
                   "string": "0.5.1"
                 }
+              },
+              {
+                "kind": "literal",
+                "repr": "0.5.2",
+                "value": {
+                  "kind": "string",
+                  "string": "0.5.2"
+                }
               }
             ]
           }
@@ -171550,11 +172771,10 @@
                   "typeName": "ContractStandardCatalog",
                   "typeParams": [
                     {
-                      "kind": "literal",
-                      "repr": "0.3.0",
+                      "kind": "typeRef",
+                      "repr": "Sep57Version",
                       "value": {
-                        "kind": "string",
-                        "string": "0.3.0"
+                        "typeName": "Sep57Version"
                       }
                     }
                   ]
@@ -171572,6 +172792,39 @@
                         "repr": "Sep57Interfaces",
                         "value": {
                           "typeName": "Sep57Interfaces"
+                        }
+                      }
+                    },
+                    {
+                      "name": "profiles",
+                      "readonly": true,
+                      "tsType": {
+                        "kind": "typeLiteral",
+                        "value": {
+                          "properties": [
+                            {
+                              "name": "minimum",
+                              "readonly": true,
+                              "tsType": {
+                                "kind": "typeRef",
+                                "repr": "Sep57MinimumInterfaces",
+                                "value": {
+                                  "typeName": "Sep57MinimumInterfaces"
+                                }
+                              }
+                            },
+                            {
+                              "name": "reference",
+                              "readonly": true,
+                              "tsType": {
+                                "kind": "typeRef",
+                                "repr": "Sep57Interfaces",
+                                "value": {
+                                  "typeName": "Sep57Interfaces"
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
@@ -171683,11 +172936,10 @@
                           "typeName": "ContractStandardCatalog",
                           "typeParams": [
                             {
-                              "kind": "literal",
-                              "repr": "0.3.0",
+                              "kind": "typeRef",
+                              "repr": "Sep57Version",
                               "value": {
-                                "kind": "string",
-                                "string": "0.3.0"
+                                "typeName": "Sep57Version"
                               }
                             }
                           ]
@@ -171698,6 +172950,98 @@
                 }
               ]
             }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "Sep57MinimumInterfaces": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "Readonly",
+            "value": {
+              "typeName": "Readonly",
+              "typeParams": [
+                {
+                  "kind": "typeRef",
+                  "repr": "Record",
+                  "value": {
+                    "typeName": "Record",
+                    "typeParams": [
+                      {
+                        "kind": "union",
+                        "value": [
+                          {
+                            "kind": "literal",
+                            "repr": "identityVerifier",
+                            "value": {
+                              "kind": "string",
+                              "string": "identityVerifier"
+                            }
+                          },
+                          {
+                            "kind": "literal",
+                            "repr": "compliance",
+                            "value": {
+                              "kind": "string",
+                              "string": "compliance"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "typeRef",
+                        "repr": "ContractStandardCatalog",
+                        "value": {
+                          "typeName": "ContractStandardCatalog",
+                          "typeParams": [
+                            {
+                              "kind": "typeRef",
+                              "repr": "Sep57Version",
+                              "value": {
+                                "typeName": "Sep57Version"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "Sep57Version": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "literal",
+                "repr": "0.3.0",
+                "value": {
+                  "kind": "string",
+                  "string": "0.3.0"
+                }
+              },
+              {
+                "kind": "literal",
+                "repr": "0.4.0",
+                "value": {
+                  "kind": "string",
+                  "string": "0.4.0"
+                }
+              }
+            ]
           }
         },
         "kind": "typeAlias"
@@ -173135,6 +174479,46 @@
               {
                 "kind": "tuple",
                 "value": [
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "DoubleWildcard",
+                    "value": {
+                      "typeName": "DoubleWildcard"
+                    }
+                  }
+                ]
+              },
+              {
+                "kind": "tuple",
+                "value": [
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
                   {
                     "kind": "typeRef",
                     "repr": "Segment",
@@ -183502,6 +184886,56 @@
                       "typeName": "ContractId"
                     }
                   }
+                },
+                {
+                  "name": "dataFields",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "literal",
+                        "repr": "evolution",
+                        "value": {
+                          "kind": "string",
+                          "string": "evolution"
+                        }
+                      },
+                      {
+                        "kind": "literal",
+                        "repr": "strict",
+                        "value": {
+                          "kind": "string",
+                          "string": "strict"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "structFields",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "literal",
+                        "repr": "evolution",
+                        "value": {
+                          "kind": "string",
+                          "string": "evolution"
+                        }
+                      },
+                      {
+                        "kind": "literal",
+                        "repr": "strict",
+                        "value": {
+                          "kind": "string",
+                          "string": "strict"
+                        }
+                      }
+                    ]
+                  }
                 }
               ]
             }
@@ -186934,10 +188368,10 @@
                       },
                       {
                         "kind": "literal",
-                        "repr": "4",
+                        "repr": "5",
                         "value": {
                           "kind": "number",
-                          "number": 4
+                          "number": 5
                         }
                       }
                     ]
@@ -199076,6 +200510,46 @@
                     }
                   }
                 ]
+              },
+              {
+                "kind": "tuple",
+                "value": [
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "DoubleWildcard",
+                    "value": {
+                      "typeName": "DoubleWildcard"
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -203943,6 +205417,56 @@
                       "typeName": "ContractId"
                     }
                   }
+                },
+                {
+                  "name": "dataFields",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "literal",
+                        "repr": "evolution",
+                        "value": {
+                          "kind": "string",
+                          "string": "evolution"
+                        }
+                      },
+                      {
+                        "kind": "literal",
+                        "repr": "strict",
+                        "value": {
+                          "kind": "string",
+                          "string": "strict"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "structFields",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "literal",
+                        "repr": "evolution",
+                        "value": {
+                          "kind": "string",
+                          "string": "evolution"
+                        }
+                      },
+                      {
+                        "kind": "literal",
+                        "repr": "strict",
+                        "value": {
+                          "kind": "string",
+                          "string": "strict"
+                        }
+                      }
+                    ]
+                  }
                 }
               ]
             }
@@ -204602,10 +206126,10 @@
                       },
                       {
                         "kind": "literal",
-                        "repr": "4",
+                        "repr": "5",
                         "value": {
                           "kind": "number",
-                          "number": 4
+                          "number": 5
                         }
                       }
                     ]
@@ -205093,6 +206617,42 @@
                 "value": {
                   "typeName": "Name"
                 }
+              }
+            },
+            {
+              "name": "topicMatch",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "literal",
+                    "repr": "exact",
+                    "value": {
+                      "kind": "string",
+                      "string": "exact"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "prefix",
+                    "value": {
+                      "kind": "string",
+                      "string": "prefix"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "wireTypes",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "boolean",
+                "value": "boolean"
               }
             },
             {
@@ -208036,6 +209596,46 @@
                     }
                   }
                 ]
+              },
+              {
+                "kind": "tuple",
+                "value": [
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "DoubleWildcard",
+                    "value": {
+                      "typeName": "DoubleWildcard"
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -208435,6 +210035,17 @@
               {
                 "init": {
                   "kind": "literal",
+                  "repr": "EVF_003",
+                  "value": {
+                    "kind": "string",
+                    "string": "EVF_003"
+                  }
+                },
+                "name": "INVALID_TOPIC_FILTER"
+              },
+              {
+                "init": {
+                  "kind": "literal",
                   "repr": "EVF_001",
                   "value": {
                     "kind": "string",
@@ -208468,6 +210079,10 @@
               "kind": "typeLiteral",
               "value": {
                 "properties": [
+                  {
+                    "computed": true,
+                    "name": "[\"EVF_003\" as Code.INVALID_TOPIC_FILTER]"
+                  },
                   {
                     "computed": true,
                     "name": "[\"EVF_001\" as Code.EVENT_HAS_NO_TOPICS]"
@@ -208702,6 +210317,33 @@
                       "value": {
                         "typeName": "Error"
                       }
+                    }
+                  }
+                ]
+              }
+            ],
+            "extends": "EventFilterError"
+          },
+          "kind": "class"
+        }
+      ],
+      "INVALID_TOPIC_FILTER": [
+        {
+          "declarationKind": "export",
+          "def": {
+            "constructors": [
+              {
+                "hasBody": true,
+                "name": "constructor",
+                "params": [
+                  {
+                    "kind": "identifier",
+                    "name": "length",
+                    "optional": false,
+                    "tsType": {
+                      "kind": "keyword",
+                      "repr": "number",
+                      "value": "number"
                     }
                   }
                 ]
@@ -234385,6 +236027,56 @@
                       "typeName": "ContractId"
                     }
                   }
+                },
+                {
+                  "name": "dataFields",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "literal",
+                        "repr": "evolution",
+                        "value": {
+                          "kind": "string",
+                          "string": "evolution"
+                        }
+                      },
+                      {
+                        "kind": "literal",
+                        "repr": "strict",
+                        "value": {
+                          "kind": "string",
+                          "string": "strict"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "structFields",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "literal",
+                        "repr": "evolution",
+                        "value": {
+                          "kind": "string",
+                          "string": "evolution"
+                        }
+                      },
+                      {
+                        "kind": "literal",
+                        "repr": "strict",
+                        "value": {
+                          "kind": "string",
+                          "string": "strict"
+                        }
+                      }
+                    ]
+                  }
                 }
               ]
             }
@@ -236877,10 +238569,10 @@
                       },
                       {
                         "kind": "literal",
-                        "repr": "4",
+                        "repr": "5",
                         "value": {
                           "kind": "number",
-                          "number": 4
+                          "number": 5
                         }
                       }
                     ]
@@ -241697,6 +243389,46 @@
                     }
                   }
                 ]
+              },
+              {
+                "kind": "tuple",
+                "value": [
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "DoubleWildcard",
+                    "value": {
+                      "typeName": "DoubleWildcard"
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -245467,6 +247199,56 @@
                       "typeName": "ContractId"
                     }
                   }
+                },
+                {
+                  "name": "dataFields",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "literal",
+                        "repr": "evolution",
+                        "value": {
+                          "kind": "string",
+                          "string": "evolution"
+                        }
+                      },
+                      {
+                        "kind": "literal",
+                        "repr": "strict",
+                        "value": {
+                          "kind": "string",
+                          "string": "strict"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "structFields",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "literal",
+                        "repr": "evolution",
+                        "value": {
+                          "kind": "string",
+                          "string": "evolution"
+                        }
+                      },
+                      {
+                        "kind": "literal",
+                        "repr": "strict",
+                        "value": {
+                          "kind": "string",
+                          "string": "strict"
+                        }
+                      }
+                    ]
+                  }
                 }
               ]
             }
@@ -248331,10 +250113,10 @@
                       },
                       {
                         "kind": "literal",
-                        "repr": "4",
+                        "repr": "5",
                         "value": {
                           "kind": "number",
-                          "number": 4
+                          "number": 5
                         }
                       }
                     ]
@@ -253733,6 +255515,46 @@
                     }
                   }
                 ]
+              },
+              {
+                "kind": "tuple",
+                "value": [
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "DoubleWildcard",
+                    "value": {
+                      "typeName": "DoubleWildcard"
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -257479,6 +259301,56 @@
                       "typeName": "ContractId"
                     }
                   }
+                },
+                {
+                  "name": "dataFields",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "literal",
+                        "repr": "evolution",
+                        "value": {
+                          "kind": "string",
+                          "string": "evolution"
+                        }
+                      },
+                      {
+                        "kind": "literal",
+                        "repr": "strict",
+                        "value": {
+                          "kind": "string",
+                          "string": "strict"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "structFields",
+                  "optional": true,
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "literal",
+                        "repr": "evolution",
+                        "value": {
+                          "kind": "string",
+                          "string": "evolution"
+                        }
+                      },
+                      {
+                        "kind": "literal",
+                        "repr": "strict",
+                        "value": {
+                          "kind": "string",
+                          "string": "strict"
+                        }
+                      }
+                    ]
+                  }
                 }
               ]
             }
@@ -259971,10 +261843,10 @@
                       },
                       {
                         "kind": "literal",
-                        "repr": "4",
+                        "repr": "5",
                         "value": {
                           "kind": "number",
-                          "number": 4
+                          "number": 5
                         }
                       }
                     ]
@@ -265264,6 +267136,46 @@
                     }
                   }
                 ]
+              },
+              {
+                "kind": "tuple",
+                "value": [
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "Segment",
+                    "value": {
+                      "typeName": "Segment"
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "DoubleWildcard",
+                    "value": {
+                      "typeName": "DoubleWildcard"
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -268331,10 +270243,10 @@
                       },
                       {
                         "kind": "literal",
-                        "repr": "4",
+                        "repr": "5",
                         "value": {
                           "kind": "number",
-                          "number": 4
+                          "number": 5
                         }
                       }
                     ]

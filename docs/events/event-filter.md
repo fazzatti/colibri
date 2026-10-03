@@ -34,9 +34,13 @@ the SDK's event RPC, or pass the `EventFilter` directly to
 | `contractIds` | Up to five contract IDs; omitted/empty means any                 |
 | `topics`      | Up to five alternative topic patterns; omitted/empty means any   |
 
-A topic pattern contains at most four segments. Concrete segments are ScVals:
-`scvSymbol("transfer")` and `scvString("transfer")` are different XDR values, so
-use the type the contract actually emits.
+A topic pattern contains at most four constraints and may append `"**"` as a
+fifth segment. `"**"` is valid only at the end. Invalid patterns raise
+[`INVALID_TOPIC_FILTER`](../reference/errors/core-event-event-filter.md) during
+encoding or local matching. This RPC query limit does not limit event topic
+counts. Concrete segments are ScVals: `scvSymbol("transfer")` and
+`scvString("transfer")` are different XDR values, so use the type the contract
+actually emits.
 
 - `"*"` matches one segment.
 - `"**"` matches the remaining segments; place it last.

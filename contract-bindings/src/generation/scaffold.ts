@@ -42,7 +42,7 @@ export function packageScaffold(
           prepack: "npm run build",
         },
         dependencies: {
-          "@colibri/core": "npm:@jsr/colibri__core@^1.1.0",
+          "@colibri/core": "npm:@jsr/colibri__core@^3.0.0",
         },
         devDependencies: { typescript: "~5.9.3", "@types/node": "^22.0.0" },
         engines: { node: ">=22.12.0" },
@@ -77,7 +77,7 @@ export function packageScaffold(
         }),
       },
       imports: {
-        "@colibri/core": "jsr:@colibri/core@^1.1.0",
+        "@colibri/core": "jsr:@colibri/core@^3.0.0",
       },
       tasks: { check: "deno check mod.ts", fmt: "deno fmt" },
       publish: {

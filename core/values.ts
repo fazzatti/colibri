@@ -25,6 +25,7 @@ export type {
   Map as MapInput,
   Option as OptionInput,
   Result as ResultInput,
+  StructFields as StructInputFields,
   Tuple as TupleInput,
   Value as InputOf,
   Vec as VecInput,

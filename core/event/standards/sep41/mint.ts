@@ -28,6 +28,8 @@ export const MintEventSchema: EventSchema<
   SchemaField<"amount", "i128", readonly ["map"]>
 > = {
   name: "mint",
+  topicMatch: "prefix",
+  wireTypes: true,
   topics: [{ name: "to", type: "address" }],
   value: { name: "amount", type: "i128", alternateTypes: ["map"] },
 };

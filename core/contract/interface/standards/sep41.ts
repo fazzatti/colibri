@@ -84,7 +84,8 @@ export type Sep41Version =
   | "0.4.0"
   | "0.4.1"
   | "0.5.0"
-  | "0.5.1";
+  | "0.5.1"
+  | "0.5.2";
 
 const versions: ContractStandardCatalog<Sep41Version>["versions"] = {
   "0.1.0": standardProvider(41, "0.1.0", v010Interface),
@@ -94,10 +95,11 @@ const versions: ContractStandardCatalog<Sep41Version>["versions"] = {
   "0.4.1": standardProvider(41, "0.4.1", muxedInterface),
   "0.5.0": standardProvider(41, "0.5.0", muxedInterface),
   "0.5.1": standardProvider(41, "0.5.1", muxedInterface),
+  "0.5.2": standardProvider(41, "0.5.2", muxedInterface),
 } as const;
 
 /** SEP-41 Soroban Token Interface providers. */
 export const SEP41: ContractStandardCatalog<Sep41Version> = {
   versions,
-  latest: versions["0.5.1"],
+  latest: versions["0.5.2"],
 } as const;

@@ -5,7 +5,7 @@ import { checkDenoConsumer } from "./deno.ts";
 
 const temporary = await Deno.makeTempDir({ prefix: "colibri-consumers-" });
 try {
-  const sdk = Deno.env.get("STELLAR_SDK_VERSION") ?? "17.0.1";
+  const sdk = Deno.env.get("STELLAR_SDK_VERSION") ?? "17.2.1";
   await checkDenoConsumer(sdk);
   await prepareArtifacts(temporary, sdk);
   await runArtifacts(temporary, Deno.args.includes("--browsers"));

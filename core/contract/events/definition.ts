@@ -5,13 +5,17 @@ import { EventType } from "@/event/types.ts";
 import { EventFilter } from "@/event/event-filter/index.ts";
 import type { TopicFilter } from "@/event/event-filter/types.ts";
 import type { ContractEventOptions } from "@/contract/events/types.ts";
-import { requireMap, validateEventValue } from "@/contract/events/codec.ts";
+import { validateEventValue } from "@/contract/events/codec.ts";
 import * as ERROR from "@/contract/events/error.ts";
+import { recordFieldValues } from "@/soroban-types/codecs/record.ts";
 import {
   containsSorobanValue,
   needsExtendedCodec,
 } from "@/contract/encoding/index.ts";
-import { sorobanTypeFromSpec } from "@/soroban-types/codecs/custom.ts";
+import {
+  sorobanTypeFromSpec,
+  SpecTypes,
+} from "@/soroban-types/codecs/custom.ts";
 
 /** A decoded occurrence retaining all Colibri event metadata and raw XDR. */
 export class ContractEvent<Data extends object = Record<string, unknown>>
@@ -48,12 +52,14 @@ export class ContractEventDefinition<
     this.options = { ...options };
     this.name = declaration.name.toString();
     this.occurrence = occurrence;
+    if (declaration.prefixTopics.length > 2) {
+      throw new ERROR.INVALID_SPEC(
+        "event ABI permits at most two fixed prefix symbols",
+      );
+    }
     const names = declaration.params.map((param) => param.name.toString());
     if (new Set(names).size !== names.length) {
       throw new ERROR.INVALID_SPEC(`duplicate parameters in ${this.name}`);
-    }
-    if (declaration.prefixTopics.length + this.topicParams().length > 4) {
-      throw new ERROR.INVALID_SPEC(`too many topics in ${this.name}`);
     }
     if (
       declaration.dataFormat.name === "scSpecEventDataFormatSingleValue" &&
@@ -117,6 +123,14 @@ export class ContractEventDefinition<
   toTopicFilter(values: Partial<Topics> = {}): TopicFilter {
     try {
       const params = this.topicParams();
+      if (this.declaration.prefixTopics.length + params.length > 4) {
+        throw new ERROR.INVALID_FILTER(
+          this.name,
+          new ERROR.INVALID_SPEC(
+            "RPC filters support at most four constrained topics; filter a prefix explicitly and decode locally",
+          ),
+        );
+      }
       if (
         Object.keys(values).some((key) =>
           !params.some((param) => param.name.toString() === key)
@@ -190,7 +204,9 @@ export class ContractEventDefinition<
   /** Validates a field before native decoding. */
   private decode(value: xdr.ScVal, type: xdr.ScSpecTypeDef): unknown {
     if (needsExtendedCodec(this.spec, type)) {
-      return sorobanTypeFromSpec(this.spec, type).decode(value);
+      return new SpecTypes(this.spec, {
+        structFields: this.options.structFields,
+      }, true).type(type).decode(value);
     }
     validateEventValue(this.spec, value, type);
     return this.spec.scValToNative(value, type);
@@ -211,20 +227,11 @@ export class ContractEventDefinition<
         break;
       }
       case "scSpecEventDataFormatMap": {
-        const map = requireMap(value);
-        if (
-          map.length !== params.length ||
-          new Set(map.map((entry) => entry.key.toXdr("base64"))).size !==
-            map.length
-        ) throw new ERROR.DECODE_FAILED(this.name);
-        values = params.map((param) => {
-          const entry = map.find((entry) =>
-            entry.key.type === "scvSymbol" &&
-            entry.key.value.toString() === param.name.toString()
-          );
-          if (!entry) throw new ERROR.DECODE_FAILED(this.name);
-          return entry.val;
-        });
+        values = recordFieldValues(
+          value,
+          params.map((param) => param.name.toString()),
+          this.options.dataFields,
+        );
         break;
       }
       default:

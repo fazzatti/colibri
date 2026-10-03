@@ -7,7 +7,8 @@ import * as ERROR from "@/event/event-id/error.ts";
  * Unique Colibri identifier for one event emitted by an operation.
  *
  * This is not a SEP-0035 operation ID by itself. It combines the operation's
- * 19-character zero-padded TOID with a 10-character zero-padded event index.
+ * 19-character zero-padded historical RPC TOID (operation index minus one) with
+ * a 10-character zero-padded event index. Standard SEP-35 helpers are separate.
  *
  * Format: 19-character TOID + hyphen + 10-character event index.
  * Example: 0000000000000123456-0000000001

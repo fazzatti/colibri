@@ -40,16 +40,16 @@ This will add imports similar to:
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^2.0.0",
-    "@colibri/react": "jsr:@colibri/react@^0.5.0",
-    "@colibri/webauth": "jsr:@colibri/webauth@^2.0.0",
-    "@colibri/build-verification": "jsr:@colibri/build-verification@^0.5.0",
-    "@colibri/identicon": "jsr:@colibri/identicon@^2.0.0",
-    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^2.0.0",
-    "@colibri/test-tooling": "jsr:@colibri/test-tooling@^1.1.0",
-    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^2.0.0",
-    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^2.0.0",
-    "@colibri/plugin-sep29": "jsr:@colibri/plugin-sep29@^2.0.0"
+    "@colibri/core": "jsr:@colibri/core@^3.0.0",
+    "@colibri/react": "jsr:@colibri/react@^0.6.0",
+    "@colibri/webauth": "jsr:@colibri/webauth@^3.0.0",
+    "@colibri/build-verification": "jsr:@colibri/build-verification@^0.6.0",
+    "@colibri/identicon": "jsr:@colibri/identicon@^3.0.0",
+    "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^3.0.0",
+    "@colibri/test-tooling": "jsr:@colibri/test-tooling@^2.0.0",
+    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^3.0.0",
+    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^3.0.0",
+    "@colibri/plugin-sep29": "jsr:@colibri/plugin-sep29@^3.0.0"
   }
 }
 ```
@@ -83,9 +83,9 @@ package manager if you import it directly. Replace the examples'
 environment. Do not copy Deno's `Deno.env`, filesystem, or Docker examples into
 a browser.
 
-Use the SDK major supported by your Colibri release (17 for this release), not
-an independently upgraded major. Colibri's SDK-facing objects should come from
-compatible SDK versions throughout your application.
+Use Stellar SDK 17.2.1 or later within 17.x for this release. Colibri's
+SDK-facing objects should come from compatible SDK versions throughout your
+application.
 
 ## Package Overview
 
@@ -136,9 +136,9 @@ Plugins extend pipeline step behavior for specific use cases:
 ## Stellar SDK Dependency
 
 Colibri stays close to `@stellar/stellar-sdk`, and many advanced flows still use
-SDK values directly. The current Colibri releases target Stellar SDK 17 and use
-its canonical class-based XDR API. Binary SDK values are `Uint8Array` instances;
-Node `Buffer` is not required for normal Colibri usage.
+SDK values directly. The current Colibri releases require Stellar SDK 17.2.1
+within 17.x and use its canonical class-based XDR API. Binary SDK values are
+`Uint8Array` instances; Node `Buffer` is not required for normal Colibri usage.
 
 ```ts
 import { Operation, xdr } from "npm:@stellar/stellar-sdk";
@@ -148,7 +148,7 @@ If you need low-level XDR manipulation or raw operation construction, add the
 SDK explicitly:
 
 ```bash
-deno add npm:@stellar/stellar-sdk@^17.0.1
+deno add npm:@stellar/stellar-sdk@^17.2.1
 ```
 
 ## Next Steps
@@ -161,7 +161,7 @@ deno add npm:@stellar/stellar-sdk@^17.0.1
 ### Contract binding generation
 
 ```sh
-deno add jsr:@colibri/contract-bindings@^0.4.0
+deno add jsr:@colibri/contract-bindings@^0.5.0
 ```
 
 See [the generator guide](../packages/contract-bindings.md) for interactive and

@@ -127,6 +127,14 @@ describe("SorobanType schema declarations", () => {
   });
   it("supports recursive custom schemas and composed input metadata", () => {
     const node = SorobanType.Custom.fromSpec<Node>(valueSpec, "Node");
+    const sparse: SorobanType.Input.Custom<Node> = { value: 1 };
+    assertEquals(node.from(sparse).value, { next: null, value: 1 });
+    function requiredInput() {
+      // @ts-expect-error Required fields remain required when optional fields are omitted.
+      const missing: SorobanType.Input.Custom<Node> = {};
+      void missing;
+    }
+    void requiredInput;
     const wrapped = node.from({
       next: { next: null, value: SorobanType.U32.from(2) },
       value: 1,

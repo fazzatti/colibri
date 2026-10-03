@@ -1,16 +1,15 @@
-# PR status policy, distinct from Colibri's internal 100% implementation target.
-# These existing target/threshold values are intentionally unchanged. Upload
-# success alone is not an exact 100% line/function/branch coverage gate.
+# Require full project and patch coverage. The aggregate CI gate independently
+# verifies every LCOV line, branch and function counter before readiness.
 coverage:
   status:
     project:
       default:
-        target: 80%
-        threshold: 10%
+        target: 100%
+        threshold: 0%
     patch:
       default:
-        target: 80%
-        threshold: 5%
+        target: 100%
+        threshold: 0%
 
 comment:
   layout: " diff, flags, files"

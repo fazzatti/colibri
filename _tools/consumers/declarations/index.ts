@@ -179,7 +179,7 @@ if (import.meta.main) {
   const { prepareSource } = await import("../environment.ts");
   const destination = resolve(Deno.args[0]);
   const source = resolve(destination, "source");
-  const inventory = await prepareSource(source, "17.0.1");
+  const inventory = await prepareSource(source, "17.2.1");
   const output = await emitDeclarations(source, inventory);
   for (const [name, text] of output) {
     const path = resolve(

@@ -1,5 +1,9 @@
 # @colibri/react
 
+This release requires Stellar SDK `>=17.2.1 <18`. See the
+[Core 3 and SDK migration guide](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility#core-30-and-sdk-1721-migration)
+for affected package versions, corrected codecs and preserved cursor behavior.
+
 React hooks and components for Stellar applications, built on Colibri's clients,
 signers and transaction pipelines. Read account and token data, retain full
 contract clients, invoke contracts, submit Classic transactions, and observe

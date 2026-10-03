@@ -19,7 +19,7 @@ themselves.
 
 ```typescript
 import { ClaimableBalancePredicates } from "@colibri/core";
-import { Asset, Claimant, Operation } from "npm:@stellar/stellar-sdk@^17.0.1";
+import { Asset, Claimant, Operation } from "npm:@stellar/stellar-sdk@^17.2.1";
 
 const deadline = new Date("2030-01-01T00:00:00Z");
 const beforeDeadline = ClaimableBalancePredicates.before(deadline);

@@ -57,6 +57,14 @@ boolean, symbol, string, u32, i32, and bytes. The schema's supported data types
 are broader than filter synthesis; do not assume every parsed type can be
 encoded into a filter by that helper.
 
+Generic schemas retain exact topic arity and their existing parsed-value checks.
+Set `topicMatch: "prefix"` to accept trailing topics and emit a terminal `**`
+[filter](event-filter.md). Set `wireTypes: true` to require the schema's raw
+ScVal discriminants, including a Symbol name and ordinary Address fields.
+[SEP-41 templates](standardized-events/sep-41.md) enable both settings. Existing
+custom schemas and [SAC templates](standardized-events/sac.md) retain their
+defaults.
+
 ## Delivery is not authorization
 
 Check the contract ID and successful-call context required by your application.
