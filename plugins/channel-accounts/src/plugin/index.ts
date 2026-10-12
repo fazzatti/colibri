@@ -10,6 +10,7 @@ import {
 } from "@/shared/types.ts";
 import { injectChannelAccount } from "@/plugin/helpers.ts";
 import { ChannelAccountsPool } from "@/plugin/pool.ts";
+import { ChannelAccountsAdmission } from "@/plugin/admission.ts";
 
 type ChannelAccountsPublicPlugin = ChannelAccountsPluginControls & {
   readonly id: string;
@@ -19,7 +20,7 @@ type ChannelAccountsPublicPlugin = ChannelAccountsPluginControls & {
   input<TInput extends ChannelAccountsPipelineInput>(
     input: TInput,
   ): Promise<TInput>;
-  finally(): void;
+  finally(): void | Promise<void>;
 };
 
 const targetsPipeline = (
@@ -32,23 +33,27 @@ const targetsPipeline = (
     )
     : stepId === target;
 
-const releaseChannelIfAllocated = (
-  pool: ChannelAccountsPool,
-  runId: string,
-) => {
-  if (!pool.hasAllocation(runId)) return;
-  pool.release(runId);
-};
-
 /**
  * Creates a channel-accounts plugin that swaps one pooled channel into each
  * classic or Soroban invoke pipeline run.
  * Releases the channel during finalization, including when another plugin's
  * input, output, or error hook fails. Runs that never acquired a channel need
- * no cleanup.
+ * no cleanup. Convee schedules admission across all pipelines sharing this
+ * plugin. An optional concurrency cap is independent of the dynamically
+ * registered channel count; maxPending bounds admitted plus queued runs.
+ * Omitted limits preserve open admission, with one active run per account.
  *
- * @param args - Plugin creation arguments
- * @returns A runtime plugin with channel registration controls
+ * @param args - Initial channels, optional pipeline target and positive integer
+ * admission limits. Signers and clients remain in the calling runtime.
+ * @returns A plugin for existing pipelines, with dynamic registration controls.
+ * Its input hook copies the input/config containers and preserves nested values;
+ * its finally hook releases the account and admission slot, asynchronously when
+ * a slot was requested.
+ * @throws Convee ConcurrencyError with CNC_CONFIG during construction for invalid
+ * limits, or CNC_CAPACITY from the input hook when maxPending is full. Like other
+ * input-hook failures, admission errors reject the pipeline call directly;
+ * body-error recovery hooks do not run. Original pipeline and plugin failures
+ * retain their normal behavior.
  *
  * @example
  * ```typescript
@@ -62,6 +67,7 @@ export const createChannelAccountsPlugin = (
 ): ChannelAccountsPublicPlugin => {
   const { channels, target } = args;
   const pool = new ChannelAccountsPool(channels);
+  const admission = new ChannelAccountsAdmission(pool, args);
   const controls: ChannelAccountsPluginControls = {
     registerChannels(channels: readonly ChannelAccount[]) {
       pool.registerChannels(channels);
@@ -79,11 +85,11 @@ export const createChannelAccountsPlugin = (
       this: PluginThis,
       input: ChannelAccountsPipelineInput,
     ): Promise<ChannelAccountsPipelineInput> {
-      const channel = await pool.allocate(this.context().runId);
+      const channel = await admission.acquire(this.context().runId);
       return injectChannelAccount(input, channel);
     })
     .onFinally(function (this: PluginThis) {
-      releaseChannelIfAllocated(pool, this.context().runId);
+      return admission.release(this.context().runId);
     });
 
   return new Proxy(channelAccountsPlugin, {

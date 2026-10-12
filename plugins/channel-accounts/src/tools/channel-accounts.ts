@@ -14,12 +14,11 @@ import {
 import {
   chunkChannels,
   createChannelAccount,
-  createChannelProxySigner,
   createClassicPipelineArgs,
   resolveRpc,
-  sponsorCanSignChannel,
 } from "@/tools/helpers.ts";
 import * as ERROR from "@/shared/error.ts";
+import { resolveCloseSigners } from "@/tools/close-signers.ts";
 
 /**
  * Opens and closes sponsored Stellar channel accounts for later pipeline reuse.
@@ -137,9 +136,15 @@ export class ChannelAccounts {
 
   /**
    * Closes channel accounts by merging their balances back into the sponsor.
+   * Signer discovery is bounded by args.concurrency (default 15); merge batches
+   * remain sequential. Wait for all pipeline runs before merging the accounts.
    *
-   * @param args - Channel close arguments
-   * @returns Resolves when all requested channels have been merged
+   * @param args - Accounts, sponsor, network, transaction config, optional RPC and lookup limit.
+   * @returns Resolves after every merge batch; an empty account list performs no RPC work.
+   * @throws MISSING_ARG for required inputs or INVALID_CONCURRENCY for a limit
+   * that is not a positive safe integer. Existing Colibri errors propagate;
+   * other failures are wrapped as UNEXPECTED_ERROR with their original cause.
+   * Failure stops later merge batches; already scheduled read-only lookups settle.
    *
    * @example
    * ```typescript
@@ -158,6 +163,7 @@ export class ChannelAccounts {
       networkConfig,
       config,
       rpc,
+      concurrency = MAX_CHANNELS_PER_TRANSACTION,
     } = args;
 
     assertRequiredArgs(
@@ -170,6 +176,9 @@ export class ChannelAccounts {
       (argName: string) => new ERROR.MISSING_ARG(argName),
     );
 
+    if (!Number.isSafeInteger(concurrency) || concurrency < 1) {
+      throw new ERROR.INVALID_CONCURRENCY(concurrency);
+    }
     if (channels.length === 0) return;
 
     try {
@@ -185,12 +194,12 @@ export class ChannelAccounts {
           MAX_CHANNELS_PER_TRANSACTION,
         )
       ) {
-        const closeSigners = await Promise.all(
-          channelBatch.map(async (channel) =>
-            await sponsorCanSignChannel(closeRpc, sponsor, channel)
-              ? createChannelProxySigner(sponsorSigner, channel)
-              : channel.signer()
-          ),
+        const closeSigners = await resolveCloseSigners(
+          closeRpc,
+          sponsor,
+          sponsorSigner,
+          channelBatch,
+          concurrency,
         );
 
         await pipeline.run({

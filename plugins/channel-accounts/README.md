@@ -4,8 +4,8 @@ This release requires Stellar SDK `>=17.2.1 <18`. See the
 [Core 3 and SDK migration guide](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility#core-30-and-sdk-1721-migration)
 for affected package versions, corrected codecs and preserved cursor behavior.
 
-Version 2.x requires
-[Core 2.x](https://fifo-docs.gitbook.io/colibri/core/overview) and follows
+Version 3.x requires
+[Core 3.x](https://fifo-docs.gitbook.io/colibri/core/overview) and follows
 Colibri's
 [compatibility and independent release policy](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility).
 Compatible updates within that Core major do not require this package to release
@@ -110,11 +110,11 @@ The plugin allocates one channel per pipeline run, swaps it into
 `input.config.source`, appends the channel signer, and releases the channel when
 the run finishes or fails.
 
-Release uses Convee 2.1's `onFinally` hook, after the pipeline's input, body,
-error handling, and output hooks settle. This also releases the channel when
-another plugin's hook rejects, regardless of that plugin's registration order.
-If the run fails before allocation, finalization has nothing to release. When
-the pool is exhausted, waiting runs resume as channels are released.
+Release uses Convee's `onFinally` hook, after the pipeline's input, body, error
+handling, and output hooks settle. This also releases the channel when another
+plugin's hook rejects, regardless of that plugin's registration order. If the
+run fails before allocation, finalization has nothing to release. When the pool
+is exhausted, waiting runs resume as channels are released.
 
 By default the plugin can be attached to:
 
@@ -153,6 +153,51 @@ const sac = await StellarAssetContract.fromContractId({
 
 sac.contract.invokePipe.use(plugin);
 ```
+
+## Concurrency and queueing
+
+The existing plugin uses Convee async concurrency in the calling runtime. Keep
+using the same pipeline and live signers; configure limits on the plugin:
+
+```ts
+const channelAccountsPlugin = createChannelAccountsPlugin({
+  channels,
+  concurrency: 4,
+  maxPending: 100,
+});
+const send = createClassicTransactionPipeline({ networkConfig });
+send.use(channelAccountsPlugin);
+const receipts = await Promise.all(inputs.map((input) => send(input)));
+```
+
+Here `inputs` contains your ordinary pipeline inputs. `concurrency` caps
+admitted runs across every pipeline sharing the plugin, including runs waiting
+for an account. `maxPending` caps admitted plus queued runs. Both accept
+positive safe integers and have no configured limit when omitted. Available
+channels still bound actual transaction concurrency; duplicate account addresses
+count once.
+
+`registerChannels` remains available, including after construction with an empty
+pool. Adding channels unblocks account waiters without changing an explicit
+concurrency limit. One permit and account stay held until the plugin's finally
+hook. A hung run keeps its slot; there is no automatic timeout, cancellation,
+transaction retry or shutdown method. Share one plugin when sharing accounts.
+
+Invalid limits throw Convee `ConcurrencyError` (`CNC_CONFIG`) at construction.
+Overflow rejects the pipeline call with `CNC_CAPACITY` before acquiring a
+channel. Catch that rejection at the call site: native input-hook failures
+bypass body error hooks, while finalization still runs. Existing transaction and
+plugin errors keep their native behavior.
+
+`ChannelAccounts.close({ ...args, concurrency: 4 })` separately bounds signer
+lookups per closing batch, defaulting to 15. Batches still submit sequentially;
+the first lookup failure rejects immediately while other read-only lookups
+settle. Wait for pipeline runs before merging their accounts.
+
+See the
+[concurrency guide](https://fifo-docs.gitbook.io/colibri/packages/plugins/channel-accounts#concurrency-and-queueing)
+and
+[complete example](https://fifo-docs.gitbook.io/colibri/packages/plugins/channel-accounts/example).
 
 ## Notes
 

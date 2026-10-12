@@ -8,6 +8,7 @@ export enum Code {
   MISSING_ARG = "PLG_CHA_001",
   INVALID_NUMBER_OF_CHANNELS = "PLG_CHA_002",
   CHANNEL_NOT_ALLOCATED = "PLG_CHA_003",
+  INVALID_CONCURRENCY = "PLG_CHA_004",
 }
 
 const SOURCE = "@colibri/plugin-channel-accounts";
@@ -115,6 +116,25 @@ export class CHANNEL_NOT_ALLOCATED extends ChannelAccountsError {
   }
 }
 
+/** Raised before RPC work when the requested async capacity is invalid. */
+export class INVALID_CONCURRENCY extends ChannelAccountsError {
+  /**
+   * Describes a rejected signer-discovery capacity without starting work.
+   * @param concurrency - Supplied capacity; positive safe integers are accepted.
+   */
+  constructor(concurrency: number) {
+    super({
+      domain: "plugins",
+      source: SOURCE,
+      code: Code.INVALID_CONCURRENCY,
+      message: "Channel concurrency must be a positive safe integer.",
+      details:
+        "Set concurrency to the maximum simultaneous signer lookups per batch.",
+      meta: { data: { concurrency } },
+    });
+  }
+}
+
 /**
  * Error code to constructor map exported for error introspection and testing.
  */
@@ -123,4 +143,5 @@ export const ERROR_PLG_CHA = {
   [Code.MISSING_ARG]: MISSING_ARG,
   [Code.INVALID_NUMBER_OF_CHANNELS]: INVALID_NUMBER_OF_CHANNELS,
   [Code.CHANNEL_NOT_ALLOCATED]: CHANNEL_NOT_ALLOCATED,
+  [Code.INVALID_CONCURRENCY]: INVALID_CONCURRENCY,
 };

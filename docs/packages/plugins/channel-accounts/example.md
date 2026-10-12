@@ -54,7 +54,9 @@ const channels = await ChannelAccounts.open({
 
 try {
   const sendPayment = createClassicTransactionPipeline({ networkConfig });
-  sendPayment.use(createChannelAccountsPlugin({ channels }));
+  sendPayment.use(
+    createChannelAccountsPlugin({ channels, concurrency: 1, maxPending: 100 }),
+  );
   sendPayment.use(createFeeBumpPlugin({
     networkConfig,
     feeBumpConfig: {
@@ -82,3 +84,9 @@ try {
 The roles are explicit: channel for sequence, sponsor as operation source in
 this example, and sponsor as outer fee payer. These can be different accounts in
 your application. See [pooling and lifecycle](../channel-accounts.md).
+
+The [concurrency settings](../channel-accounts.md#concurrency-and-queueing)
+belong on the existing plugin. This example permits one admitted run and up to
+100 total pending runs. The same pipeline and live signers remain usable through
+ordinary calls or `Promise.all`; wait for all calls before merging their
+channels.

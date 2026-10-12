@@ -880,10 +880,10 @@
           "kind": "const",
           "tsType": {
             "kind": "literal",
-            "repr": "0.6.0",
+            "repr": "0.6.1",
             "value": {
               "kind": "string",
-              "string": "0.6.0"
+              "string": "0.6.1"
             }
           }
         },
@@ -22836,10 +22836,10 @@
           "kind": "const",
           "tsType": {
             "kind": "literal",
-            "repr": "0.6.0",
+            "repr": "0.6.1",
             "value": {
               "kind": "string",
-              "string": "0.6.0"
+              "string": "0.6.1"
             }
           }
         },
@@ -216266,6 +216266,17 @@
                 }
               },
               "name": "CHANNEL_NOT_ALLOCATED"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "PLG_CHA_004",
+                "value": {
+                  "kind": "string",
+                  "string": "PLG_CHA_004"
+                }
+              },
+              "name": "INVALID_CONCURRENCY"
             }
           ]
         },
@@ -216330,6 +216341,10 @@
                 {
                   "computed": true,
                   "name": "[Code.CHANNEL_NOT_ALLOCATED]"
+                },
+                {
+                  "computed": true,
+                  "name": "[Code.INVALID_CONCURRENCY]"
                 }
               ]
             }
