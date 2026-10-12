@@ -9,27 +9,27 @@
     },
     "@colibri/core": {
       "bump": "patch",
-      "reason": "Adopt the compatible Convee 2.4.0 runtime shared with channel execution.",
+      "reason": "Adopt the compatible Convee 2.4.1 runtime shared with channel execution.",
       "apiReview": "Existing pipeline, step and plugin contracts are unchanged; preserved native SDK and extension consumers validate the dependency refresh."
     },
     "@colibri/plugin-fee-bump": {
       "bump": "patch",
-      "reason": "Refresh the shared Convee dependency to 2.4.0 without changing fee-bump behavior.",
+      "reason": "Refresh the shared Convee dependency to 2.4.1 without changing fee-bump behavior.",
       "apiReview": "Existing plugin inputs, outputs and attachment targets remain unchanged."
     },
     "@colibri/plugin-sep29": {
       "bump": "patch",
-      "reason": "Refresh the shared Convee dependency to 2.4.0 without changing memo checks.",
+      "reason": "Refresh the shared Convee dependency to 2.4.1 without changing memo checks.",
       "apiReview": "Existing opt-in plugin and callable check contracts remain unchanged."
     },
     "@colibri/test-tooling": {
       "bump": "patch",
-      "reason": "Refresh the Convee dependency used by optional execution recording to 2.4.0.",
+      "reason": "Refresh the Convee dependency used by optional execution recording to 2.4.1.",
       "apiReview": "Recording remains observational and opt-in; existing adapter and recorder consumer contracts remain unchanged."
     },
     "@colibri/build-verification": {
       "bump": "patch",
-      "reason": "Refresh the shared Convee dependency to 2.4.0 without changing verification policy.",
+      "reason": "Refresh the shared Convee dependency to 2.4.1 without changing verification policy.",
       "apiReview": "Existing verification and runtime-specific entrypoint contracts remain unchanged."
     }
   }

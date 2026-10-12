@@ -1,7 +1,7 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@fifo/convee@2.4.0": "2.4.0",
+    "jsr:@fifo/convee@2.4.1": "2.4.1",
     "jsr:@std/collections@^1.1.3": "1.3.0",
     "jsr:@std/encoding@^1.0.10": "1.0.11",
     "jsr:@std/toml@^1.0.11": "1.0.11",
@@ -16,8 +16,8 @@
     "npm:react@^19.1.1": "19.3.0"
   },
   "jsr": {
-    "@fifo/convee@2.4.0": {
-      "integrity": "948badb397a117437d1d700f085332f0ceb270535621bd5719906062440de810"
+    "@fifo/convee@2.4.1": {
+      "integrity": "c166366d8c78f93ac0ccfc1ca270c11691a1b928bd3cfcd89dfd5fe753f45cad"
     },
     "@std/collections@1.3.0": {
       "integrity": "eb36b43d784477ea0b476483ac034a14bdd182aff921c812ecf662a1fcef9498"
@@ -2967,7 +2967,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@cliffy/prompt@1.0.0-rc.8",
-      "jsr:@fifo/convee@2.4.0",
+      "jsr:@fifo/convee@2.4.1",
       "jsr:@std/assert@1",
       "jsr:@std/encoding@^1.0.10",
       "jsr:@std/expect@1",
