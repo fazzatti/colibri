@@ -38,6 +38,22 @@ const input: ClassicTransactionInput = {
     timeout: 30,
   },
 };
+// These deliberately invalid consumers are checked against both source and
+// installed declarations, but never executed as runtime requests.
+export async function invalidLocalInputs(): Promise<void> {
+  // @ts-expect-error The original pipeline input remains required.
+  await execute({});
+  // @ts-expect-error The wrapper preserves a single-input pipeline contract.
+  await execute(input, input);
+  // @ts-expect-error runWith has the same input contract as the callable facade.
+  await execute.runWith({}, 1);
+  const value = await execute(input);
+  // @ts-expect-error The result method remains callable, not a string property.
+  const text: string = value.result;
+  // @ts-expect-error Result inference must not widen to any.
+  value.missing;
+  void text;
+}
 const results = await Promise.all([
   execute(input),
   execute(input),
