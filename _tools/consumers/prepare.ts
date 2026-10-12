@@ -41,10 +41,10 @@ export async function prepareArtifacts(
         `CONSUMER_CONVEE_METADATA: HTTP ${conveeMetadata.status}`,
       );
     }
-    const conveeExports = (await conveeMetadata.json()).exports as Record<
-      string,
-      string
-    >;
+    const conveeEntry = (await conveeMetadata.json()).exports["."].replace(
+      /^\.\//,
+      "",
+    );
     await Deno.mkdir(destination, { recursive: true });
     const pending = inventory.filter((pkg) =>
       pkg.name === "@colibri/test-tooling" || !dockerPackages.has(pkg.name)
@@ -85,23 +85,16 @@ export async function prepareArtifacts(
         pkg.name.slice("@colibri/".length),
       );
       const packageImports = await runtimeImports(resolve(source, pkg.root));
+      const usesConvee = packageImports.has("convee");
       const mappings = {
-        ...Object.fromEntries(
-          Object.entries(conveeExports)
-            .filter(([name]) =>
-              packageImports.has(`convee${name === "." ? "" : name.slice(1)}`)
-            )
-            .map(([name, entry]) => [
-              `https://jsr.io/@fifo/convee/${conveeVersion}/${
-                entry.replace(/^\.\//, "")
-              }`,
-              {
-                name: "@jsr/fifo__convee",
-                version: conveeVersion,
-                ...(name === "." ? {} : { subPath: name.slice(2) }),
-              },
-            ]),
-        ),
+        ...(usesConvee
+          ? {
+            [`https://jsr.io/@fifo/convee/${conveeVersion}/${conveeEntry}`]: {
+              name: "@jsr/fifo__convee",
+              version: conveeVersion,
+            },
+          }
+          : {}),
         ...Object.fromEntries(
           inventory.filter((dependency) => dependency.name !== pkg.name)
             .flatMap((dependency) =>

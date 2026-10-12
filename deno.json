@@ -40,10 +40,7 @@
     "crap4ts-tool": "npm:@alperlabs/crap4ts@0.2.1",
     "resvg-test": "npm:@resvg/resvg-js@2.6.2",
     "jsr:@colibri/contract-bindings": "./contract-bindings",
-    "colibri-internal/previous-core": "jsr:@colibri/core@1.1.1",
-    "convee/workers": "jsr:@fifo/convee@2.4.0/workers",
-    "@colibri/plugin-channel-accounts": "./plugins/channel-accounts/mod.ts",
-    "@colibri/core": "./core/mod.ts"
+    "colibri-internal/previous-core": "jsr:@colibri/core@1.1.1"
   },
   "tasks": {
     "release:init": "deno run -A _tools/releases/cli.ts init",

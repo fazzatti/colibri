@@ -1,15 +1,12 @@
 # @colibri/plugin-channel-accounts
 
-`@colibri/plugin-channel-accounts` provides account management and two execution
-paths:
+`@colibri/plugin-channel-accounts` provides:
 
-- `ChannelAccounts` utilities for opening and closing sponsored channel accounts
-- `createChannelAccountsPlugin(...)` for reusing those channels in write
-  pipelines
-- `createChannelAccountsConcurrent(...)` for
-  [bounded local execution](#bounded-local-execution)
-- `createChannelAccountsWorker(...)` and `createChannelAccountsParallel(...)`
-  for [persistent workers](#persistent-worker-execution)
+- [`ChannelAccounts`](#opening-channels) for opening and closing sponsored
+  accounts.
+- [`createChannelAccountsPlugin(...)`](#using-the-plugin) for reusing channels
+  in existing write pipelines, with optional
+  [concurrency limits](#concurrency-and-queueing).
 
 ## Installation
 
@@ -174,119 +171,62 @@ See
 [all channel errors](../../reference/errors/plugins-channel-accounts-shared.md)
 and the [complete sponsorship example](channel-accounts/example.md).
 
-## Bounded local execution
+## Concurrency and queueing
 
-Use `createChannelAccountsConcurrent` with a fixed set of
-[channel accounts](#opening-channels) and an existing
+[`createChannelAccountsPlugin`](#using-the-plugin) uses Convee's local async
+scheduler. Attach it to your existing
 [classic](../../core/pipelines/classic-transaction.md) or
-[invoke](../../core/pipelines/invoke-contract.md) pipeline. This schedules one
-ordinary request per call, with shared capacity equal to the number of distinct
-account addresses. Duplicate addresses count once. It is local async
-concurrency; it does not create threads or clone
-[signers](../../core/signer/README.md).
+[invoke](../../core/pipelines/invoke-contract.md) pipeline. The pipeline, its
+other [plugins](../../core/plugins/README.md), live
+[signers](../../core/signer/README.md) and RPC clients stay in the same runtime.
 
 ```ts
-const pipeline = createClassicTransactionPipeline({ networkConfig });
-const execute = createChannelAccountsConcurrent({ channels, run: pipeline });
-const result = await execute({ operations, config });
+const channelPlugin = createChannelAccountsPlugin({
+  channels,
+  concurrency: 4,
+  maxPending: 100,
+});
+const send = createClassicTransactionPipeline({ networkConfig });
+send.use(channelPlugin);
+const receipts = await Promise.all(inputs.map((input) => send(input)));
 ```
 
-This fragment uses application-owned accounts and
-[transaction configuration](../../core/transaction-config.md); the
-[complete sponsorship example](channel-accounts/example.md) shows their setup.
-Attach [fee sponsorship](fee-bump.md) and other inner plugins to `pipeline`.
-Attach caller hooks with `execute.use(plugin)`, or pass `plugins` at
-construction. Use one channel owner per pipeline: do not also attach a separate
-channel pool to the wrapped pipeline.
+This fragment uses application-owned [channels](#opening-channels),
+[network configuration](../../core/network.md), and `inputs` containing ordinary
+[pipeline inputs](../../core/pipelines/classic-transaction.md). The
+[complete sponsorship example](channel-accounts/example.md) shows the full
+setup. High-level clients keep their
+[existing attachment points](#advanced-usage-with-high-level-clients).
 
-| Option          | Behavior                                                                                                 |
-| --------------- | -------------------------------------------------------------------------------------------------------- |
-| `channels`      | Nonempty fixed account set, retained by reference.                                                       |
-| `run`           | Existing pipeline or function accepting a [pipeline input](../../core/pipelines/classic-transaction.md). |
-| `maxPending`    | Active plus queued calls across this definition; default 1024.                                           |
-| `timeoutMs`     | Optional positive cooperative deadline in milliseconds; none by default.                                 |
-| `id`, `plugins` | Native Convee caller identity and lifecycle hooks.                                                       |
+| Option        | Behavior                                                                                                                                                       |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `channels`    | Initial [channel pool](#pool-lifecycle); may be empty. Duplicate addresses count once.                                                                         |
+| `target`      | Optional [supported pipeline ID](#using-the-plugin); both write pipelines by default.                                                                          |
+| `concurrency` | Positive safe integer limiting admitted runs across all pipelines sharing this plugin. Includes runs waiting for an account. No configured limit when omitted. |
+| `maxPending`  | Positive safe integer limiting admitted plus queued runs. No configured limit when omitted. Overflow rejects before account acquisition.                       |
 
-The callable also supports `run`, `runWith`, `use` and `remove`. Per-call
-`runWith({ signal, timeoutMs })` can cancel queued work. Active operations
-retain their slot and account until actual execution and all native pipeline
-finalizers finish, even if they ignore cancellation. A hung operation can
-therefore delay completion indefinitely. No transaction is retried. A single
-pipeline failure retains its original local error, and the input's signer/client
-references and result identity remain intact. This path needs no shutdown
-method.
+Actual transactions are also limited by the number of available
+[channel accounts](#pool-lifecycle). Four admission slots and two accounts allow
+at most two transactions at a time. Registering additional accounts unblocks
+account waiters; it does not change an explicitly configured admission limit.
+Without a configured cap, new accounts immediately increase usable capacity.
+Waiting requests proceed in arrival order as capacity and accounts become free.
+Limits are shared by pipelines using the **same plugin instance**; independently
+created plugins do not coordinate account ownership.
 
-The original [plugin](#using-the-plugin) remains available for dynamic channel
-registration and [high-level clients](#advanced-usage-with-high-level-clients).
-Neither approach coordinates account ownership with another independently
-created pool or process; each account must have one application-level owner.
+The permit and account remain held until the plugin's
+[finalization hook](#pool-lifecycle), including after input, output and error
+hook failures. Results and existing errors retain their native behavior, and
+nested input values keep their identities. The input/config containers are
+copied for [source injection](#preserve-the-operation-source). There is no
+execution owner to close, automatic retry or cancellation deadline. A hung run
+keeps its permit and account; wait for every run before
+[closing channels](#closing-channels).
 
-## Persistent worker execution
-
-Use `createChannelAccountsWorker` in an application module and default-export
-the result. Its initializer receives the assigned public address and returns
-`{ channel, run }`. The SDK validates that the loaded account matches,
-initializes once on first use, and never changes that worker's account. Create
-[signers](../../core/signer/README.md), RPC clients and the
-[pipeline](../../core/pipelines/classic-transaction.md) inside the initializer.
-The [complete worker example](channel-accounts/example.md#run-with-workers)
-shows both worker and caller in one import-safe module.
-
-`createChannelAccountsParallel({ channels: publicAddresses, worker })` returns
-an owner with a normal callable `step`. Arguments and results are inferred from
-`run`. The account list is fixed and must contain unique valid public addresses;
-there is exactly one worker per address. Requests take the next available
-healthy account independently, not in fixed pairs or round-robin queues.
-
-| Option/control                        | Behavior                                                                                              |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `maxPending`                          | Active plus waiting requests; default 1024. Full admission rejects before taking an account.          |
-| `startupTimeoutMs`                    | Worker module/transport startup deadline; default 10000 ms.                                           |
-| `timeoutMs`                           | Dispatch-to-reply deadline, including worker hooks; default 30000 ms. Queue time is excluded.         |
-| `id`, `plugins`                       | Caller step identity/hooks. `step.use(plugin)` also attaches caller hooks.                            |
-| `createWorker`                        | Optional native Convee runtime/build transport adapter.                                               |
-| `ready()`                             | Optional module/transport preload; account/signing initialization still waits for the first request.  |
-| `getChannels()`                       | Defensive account-state snapshots, retained after shutdown.                                           |
-| `close()`, `dispose()`, `await using` | Reject waiting/new work, drain active requests and release transports. Shutdown is terminal.          |
-| `terminate()`                         | Hard-stop transports and quarantine outstanding account work. Worker finalizers cannot be guaranteed. |
-
-Caller hooks run outside the remote account execution. A plugin attached to the
-worker-local pipeline runs remotely and finishes before the account is released.
-The SDK owns the address envelope; bind build-tool declarations without adding
-hooks to that envelope. See
-[runtime integration](channel-accounts/example.md#runtime-integration).
-
-Pass structured-cloneable request data and plain results: primitives, byte
-arrays and deliberate data records. Do not pass functions, live clients, signers
-or native SDK instances expecting their prototypes to survive. Native
-`SharedArrayBuffer` sharing is explicit and needs application synchronization.
-Caller context is not copied; each worker job gets fresh context with its
-assigned address. Returning data does not merge worker state back into the
-caller.
-
-### Failures and account recovery
-
-`getChannels()` distinguishes:
-
-- `available`: no request currently owns the account;
-- `busy`: a request holds its lease;
-- `unavailable`: the worker failed to start or its transport group is
-  unavailable;
-- `quarantined`: task failure, crash, timeout, reply-clone failure or forced
-  termination makes the outcome uncertain.
-
-A quarantined account receives no more work from that owner. Inspect the
-[typed failure](../../reference/errors/plugins-channel-accounts-shared.md),
-reconcile its transaction/sequence state with the ledger, then explicitly create
-a new owner for recovered accounts. Unavailable accounts need their startup or
-loader issue corrected before a fresh owner is created. Healthy accounts can
-continue independently. If none remain, waiting/new requests fail immediately.
-Caller error recovery can return a fallback value, but cannot remove quarantine.
-
-There are no automatic transaction retries, worker replacements, idle shutdowns
-or reopen-after-close. Use explicit lifetime ownership. These controls stop
-worker execution; [ChannelAccounts.close](#closing-channels) is the separate
-on-chain account-merge operation. Never merge accounts while requests are
-active. Worker isolation can help execution separation; it does not provide
-cross-process account locks or inherently accelerate RPC I/O. Interactive
-signers usually belong on the [local path](#bounded-local-execution).
+Invalid limits throw Convee's typed `ConcurrencyError` with `CNC_CONFIG` during
+construction. When `maxPending` is reached, `CNC_CAPACITY` rejects the pipeline
+call before any account or transaction work. Catch it at the call site, like
+other input-hook failures: native body-error recovery hooks do not run for input
+failures. Finalization still runs, and subsequent calls can proceed after
+capacity is released. These dependency-owned errors accompany the
+[Colibri channel errors](../../reference/errors/plugins-channel-accounts-shared.md).

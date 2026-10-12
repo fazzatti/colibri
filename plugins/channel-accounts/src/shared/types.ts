@@ -58,6 +58,24 @@ export type CreateChannelAccountsPluginArgs = {
    * both classic and Soroban invoke pipelines.
    */
   target?: ChannelAccountsPluginTarget;
+
+  /**
+   * Maximum admitted runs across every pipeline using this plugin. A run holds
+   * its slot while waiting for a channel and until this plugin's finally hook.
+   * Must be a positive safe integer. Omitted means no configured admission cap;
+   * available channels still bound actual transaction concurrency. Registering
+   * more channels does not change an explicitly configured limit.
+   */
+  concurrency?: number;
+
+  /**
+   * Maximum total admitted and queued runs, including runs waiting for channels.
+   * Must be a positive safe integer. Omitted preserves open queueing. Overflow
+   * rejects the pipeline call with Convee CNC_CAPACITY before
+   * acquiring a channel or executing the transaction. Input-hook failures bypass
+   * body-error recovery hooks; finalization still runs. Nothing is retried.
+   */
+  maxPending?: number;
 };
 
 /**
@@ -114,7 +132,7 @@ export type CloseChannelsArgs = {
    * Maximum simultaneous signer lookups within each closing transaction batch.
    * Defaults to 15, preserving the existing batch parallelism. Must be a positive
    * safe integer. Transaction batches still submit sequentially; this does not
-   * change account leases or move signers/RPC clients into workers.
+   * change account leases or signer/RPC client identities.
    */
   concurrency?: number;
 };

@@ -4,8 +4,8 @@
   "packages": {
     "@colibri/plugin-channel-accounts": {
       "bump": "minor",
-      "reason": "Add bounded local channel execution, persistent channel-owned workers and an optional close signer-lookup concurrency limit.",
-      "apiReview": "Existing plugin registration, source injection, lease finalization and open/close defaults remain compatible. New factories preserve inferred inputs/results; worker requests cross an explicit plain-data boundary with no automatic replay."
+      "reason": "Add optional Convee concurrency and pending limits to the existing channel plugin, plus bounded close signer lookups.",
+      "apiReview": "Preserve existing plugin attachment, dynamically registered accounts, live signer/client references, default admission and native hook failure semantics. No replacement executor or channel-worker API is added."
     },
     "@colibri/core": {
       "bump": "patch",

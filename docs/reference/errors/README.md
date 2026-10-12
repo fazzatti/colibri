@@ -140,7 +140,7 @@ catalog.
 
 ## @colibri/plugin-channel-accounts
 
-- [plugins/channel-accounts/shared](plugins-channel-accounts-shared.md) — 13
+- [plugins/channel-accounts/shared](plugins-channel-accounts-shared.md) — 5
   codes.
 
 ## @colibri/plugin-fee-bump

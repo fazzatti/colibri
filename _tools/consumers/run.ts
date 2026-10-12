@@ -46,7 +46,7 @@ export async function runArtifacts(
       "react-dom@^19.1.1",
       "@types/react@^19.1.13",
       "@types/react-dom@^19.1.9",
-      ...(browsers ? [`playwright@${playwrightVersion}`, "vite@8.3.4"] : []),
+      ...(browsers ? [`playwright@${playwrightVersion}`] : []),
     ], consumer);
     await command("node", ["--version"], consumer);
     await command("npx", ["--no-install", "tsc", "--version"], consumer);
@@ -110,7 +110,6 @@ export async function runArtifacts(
           "browser.mjs",
           "browser-fixture.mjs",
           "react-browser.mjs",
-          "channel-browser.mjs",
         ]
       ) {
         await Deno.copyFile(
@@ -119,7 +118,6 @@ export async function runArtifacts(
         );
       }
       await command("node", ["browser.mjs"], consumer);
-      await command("node", ["channel-browser.mjs"], consumer);
     }
     if (!browsers) {
       await checkNodeRecorder(consumer);

@@ -10,7 +10,7 @@ import {
 } from "@colibri/core";
 import { pipe, step } from "convee";
 import { Operation } from "stellar-sdk";
-import { createChannelAccountsConcurrent } from "@/concurrency/index.ts";
+import { createChannelAccountsPlugin } from "@/plugin/index.ts";
 
 const { describe, it } = recordColibriTests(import.meta.url);
 
@@ -31,9 +31,9 @@ describe("Local channel pipeline execution", () => {
       })),
       steps.createBuildTransactionStep(),
     ], { id: CLASSIC_TRANSACTION_PIPELINE_ID });
-    const execute = createChannelAccountsConcurrent({ channels, run: build });
+    build.use(createChannelAccountsPlugin({ channels }));
     const results = await Promise.all(Array.from({ length: 6 }, () =>
-      execute({
+      build({
         operations: [
           Operation.setOptions({
             source: actor.publicKey(),

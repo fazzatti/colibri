@@ -137,7 +137,7 @@ export class ChannelAccounts {
   /**
    * Closes channel accounts by merging their balances back into the sponsor.
    * Signer discovery is bounded by args.concurrency (default 15); merge batches
-   * remain sequential. Stop all pipeline/worker use before merging the accounts.
+   * remain sequential. Wait for all pipeline runs before merging the accounts.
    *
    * @param args - Accounts, sponsor, network, transaction config, optional RPC and lookup limit.
    * @returns Resolves after every merge batch; an empty account list performs no RPC work.

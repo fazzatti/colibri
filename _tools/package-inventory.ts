@@ -81,15 +81,11 @@ if (import.meta.main) {
   console.log(
     `Checking ${entrypoints.length} declared package entrypoints (${mode}).`,
   );
-  // Documentation must see all public roots together: exported aliases can refer
-  // to public types owned by another workspace package. Checking only one root
-  // makes Deno misclassify those existing public declarations as private.
-  const groups = mode === "doc"
-    ? [entrypoints]
-    : entrypoints.map((entry) => [entry]);
-  for (const group of groups) {
+  for (const entrypoint of entrypoints) {
     const result = await new Deno.Command(Deno.execPath(), {
-      args: mode === "doc" ? ["doc", "--lint", ...group] : ["check", ...group],
+      args: mode === "doc"
+        ? ["doc", "--lint", entrypoint]
+        : ["check", entrypoint],
       cwd: root,
     }).output();
     await Deno.stdout.write(result.stdout);

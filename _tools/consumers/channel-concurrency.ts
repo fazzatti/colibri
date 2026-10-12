@@ -1,34 +1,44 @@
-import { createChannelAccountsConcurrent } from "@colibri/plugin-channel-accounts";
+import { pipe, step } from "convee";
+import { createChannelAccountsPlugin } from "@colibri/plugin-channel-accounts";
 import {
+  CLASSIC_TRANSACTION_PIPELINE_ID,
   type ClassicTransactionInput,
   LocalSigner,
   NativeAccount,
 } from "@colibri/core";
 
 const channel = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
+const secondChannel = NativeAccount.fromMasterSigner(
+  LocalSigner.generateRandom(),
+);
+const channels = [channel, channel, secondChannel];
 const actor = NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
 let active = 0;
 let peak = 0;
 const original = { result: () => "live result" };
-const execute = createChannelAccountsConcurrent({
-  channels: [channel, channel],
-  run: async (input: ClassicTransactionInput) => {
-    if (
-      input.config.source !== channel.address() ||
-      input.config.signers[0] !== actor.signer() ||
-      input.config.signers[1] !== channel.signer()
-    ) {
-      throw new Error(
-        "CHANNEL_LOCAL_IDENTITY: source/signers changed unexpectedly",
-      );
-    }
-    active++;
-    peak = Math.max(peak, active);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    active--;
-    return original;
-  },
-});
+const execute = pipe([step(async (input: ClassicTransactionInput) => {
+  if (
+    !channels.some((account) => account.address() === input.config.source) ||
+    input.config.signers[0] !== actor.signer() ||
+    input.config.signers[1] !==
+      channels.find((account) => account.address() === input.config.source)
+        ?.signer()
+  ) {
+    throw new Error(
+      "CHANNEL_LOCAL_IDENTITY: source/signers changed unexpectedly",
+    );
+  }
+  active++;
+  peak = Math.max(peak, active);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  active--;
+  return original;
+})], { id: CLASSIC_TRANSACTION_PIPELINE_ID });
+execute.use(createChannelAccountsPlugin({
+  channels,
+  concurrency: 1,
+  maxPending: 3,
+}));
 const input: ClassicTransactionInput = {
   operations: [],
   config: {
@@ -43,7 +53,7 @@ const input: ClassicTransactionInput = {
 export async function invalidLocalInputs(): Promise<void> {
   // @ts-expect-error The original pipeline input remains required.
   await execute({});
-  // @ts-expect-error The wrapper preserves a single-input pipeline contract.
+  // @ts-expect-error The pipeline preserves a single-input pipeline contract.
   await execute(input, input);
   // @ts-expect-error runWith has the same input contract as the callable facade.
   await execute.runWith({}, 1);
