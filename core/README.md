@@ -36,7 +36,8 @@ and lifecycle details.
 Colibri Core is published on [JSR](https://jsr.io/@colibri/core) and ships
 entirely as TypeScript modules. The supported Deno minimum is `2.7.11`; Node.js
 consumers use `22.12.0` or supported 22.x/24.x LTS releases. Core 3.x supports
-Stellar SDK `>=17.2.1 <18` and Convee `2.1.0`. The
+Stellar SDK `>=17.2.1 <18` and
+[Convee `2.4.1`](https://jsr.io/@fifo/convee/2.4.1). The
 [compatibility policy](https://fifo-docs.gitbook.io/colibri/getting-started/compatibility)
 covers public types, custom signers, class extensions, callable pipelines,
 plugin targets, error codes, and documented transaction behavior.
@@ -463,8 +464,9 @@ value for plugin composition.
   `core/pipelines/shared/connectors`, while pipeline-specific ones stay next to
   the owning pipeline.
 
-Pipelines are built with `pipe(...)` and `step(...)` from `convee` 2.1, and
-plugins target step ids such as `steps.SEND_TRANSACTION_STEP_ID`.
+Pipelines are built with `pipe(...)` and `step(...)` from
+[`convee` 2.4.1](https://jsr.io/@fifo/convee/2.4.1), and plugins target step ids
+such as `steps.SEND_TRANSACTION_STEP_ID`.
 
 ### Soroban invocation
 

@@ -40,16 +40,16 @@ This will add imports similar to:
 ```json
 {
   "imports": {
-    "@colibri/core": "jsr:@colibri/core@^3.0.0",
+    "@colibri/core": "jsr:@colibri/core@^3.0.1",
     "@colibri/react": "jsr:@colibri/react@^0.6.0",
     "@colibri/webauth": "jsr:@colibri/webauth@^3.0.0",
-    "@colibri/build-verification": "jsr:@colibri/build-verification@^0.6.0",
+    "@colibri/build-verification": "jsr:@colibri/build-verification@^0.6.1",
     "@colibri/identicon": "jsr:@colibri/identicon@^3.0.0",
     "@colibri/rpc-streamer": "jsr:@colibri/rpc-streamer@^3.0.0",
-    "@colibri/test-tooling": "jsr:@colibri/test-tooling@^2.0.0",
-    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^3.0.0",
-    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^3.0.0",
-    "@colibri/plugin-sep29": "jsr:@colibri/plugin-sep29@^3.0.0"
+    "@colibri/test-tooling": "jsr:@colibri/test-tooling@^2.0.1",
+    "@colibri/plugin-fee-bump": "jsr:@colibri/plugin-fee-bump@^3.0.1",
+    "@colibri/plugin-channel-accounts": "jsr:@colibri/plugin-channel-accounts@^3.1.0",
+    "@colibri/plugin-sep29": "jsr:@colibri/plugin-sep29@^3.0.1"
   }
 }
 ```

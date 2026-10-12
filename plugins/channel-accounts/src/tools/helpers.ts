@@ -7,10 +7,7 @@ import {
 } from "@colibri/core";
 import type { xdr } from "stellar-sdk";
 import { Server } from "stellar-sdk/rpc";
-import type {
-  ChannelAccount,
-  OpenChannelsArgs,
-} from "@/shared/types.ts";
+import type { ChannelAccount, OpenChannelsArgs } from "@/shared/types.ts";
 
 export const createClassicPipelineArgs = <
   Args extends {
@@ -33,9 +30,9 @@ export const resolveRpc = <
   args: Args,
 ) =>
   args.rpc ??
-  new Server(args.networkConfig.rpcUrl!, {
-    allowHttp: args.networkConfig.allowHttp ?? false,
-  });
+    new Server(args.networkConfig.rpcUrl!, {
+      allowHttp: args.networkConfig.allowHttp ?? false,
+    });
 
 export const createChannelAccount = (): ChannelAccount =>
   NativeAccount.fromMasterSigner(LocalSigner.generateRandom());
@@ -79,7 +76,8 @@ export const createChannelProxySigner = (
     signerKey: signer.signerKey.bind(signer),
     sign: signer.sign.bind(signer),
     signTransaction: (transaction) => {
-      const signableTransaction = transaction as SignableTransactionWithSignatures;
+      const signableTransaction =
+        transaction as SignableTransactionWithSignatures;
       const alreadySigned = signableTransaction.signatures.some((signature) =>
         signature.hint.toBytes().every((byte, index) =>
           byte === signerHint[index]
