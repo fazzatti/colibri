@@ -110,4 +110,11 @@ export type CloseChannelsArgs = {
   networkConfig: NetworkConfig;
   config: TransactionConfig;
   rpc?: Server;
+  /**
+   * Maximum simultaneous signer lookups within each closing transaction batch.
+   * Defaults to 15, preserving the existing batch parallelism. Must be a positive
+   * safe integer. Transaction batches still submit sequentially; this does not
+   * change account leases or move signers/RPC clients into workers.
+   */
+  concurrency?: number;
 };

@@ -165,7 +165,9 @@ export async function emitDeclarations(
       if (target.startsWith("node:")) return target;
       const npm = /^npm:\/*((?:@[^/]+\/)?[^/@]+)(?:@[^/]+)?(.*)$/.exec(target);
       if (npm) return npm[1] + npm[2];
-      if (name === "convee") return "@jsr/fifo__convee";
+      if (name === "convee" || name.startsWith("convee/")) {
+        return "@jsr/fifo__convee" + name.slice("convee".length);
+      }
       throw new Error(
         `DECLARATION_EXTERNAL_IMPORT: ${specifier} ${name} -> ${target}`,
       );

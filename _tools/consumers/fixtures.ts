@@ -12,6 +12,9 @@ export const consumerFiles = [
   "react-smoke.ts",
   "react-browser.ts",
   "wallets.ts",
+  "channel-concurrency.ts",
+  "channel-worker.ts",
+  "channel-workers.ts",
 ] as const;
 
 export async function copyConsumerFixtures(destination: string): Promise<void> {

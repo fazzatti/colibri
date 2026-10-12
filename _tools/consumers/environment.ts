@@ -117,6 +117,7 @@ export async function configureSource(
     "stellar-sdk/rpc": `npm:@stellar/stellar-sdk@${sdk}/rpc`,
     "stellar-sdk/contract": `npm:@stellar/stellar-sdk@${sdk}/contract`,
     convee: current.imports.convee,
+    "convee/workers": current.imports["convee/workers"],
   };
   for (const pkg of inventory) {
     for (const [name, path] of Object.entries(pkg.exports)) {
@@ -142,7 +143,9 @@ export async function configureSource(
         name.includes("colibri-internal") || name.includes("colibri-tools") ||
         name.startsWith("jsr:@colibri/")
       ) continue;
-      if (name in imports && name !== "convee") continue;
+      if (name in imports && name !== "convee" && !name.startsWith("convee/")) {
+        continue;
+      }
       // Local aliases are relative to the member; root-only relative aliases
       // are repository tooling and are deliberately not copied to consumers.
       if (value.startsWith(".") && !(name in (member.imports ?? {}))) continue;

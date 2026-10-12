@@ -880,10 +880,10 @@
           "kind": "const",
           "tsType": {
             "kind": "literal",
-            "repr": "0.6.0",
+            "repr": "0.6.1",
             "value": {
               "kind": "string",
-              "string": "0.6.0"
+              "string": "0.6.1"
             }
           }
         },
@@ -22836,10 +22836,10 @@
           "kind": "const",
           "tsType": {
             "kind": "literal",
-            "repr": "0.6.0",
+            "repr": "0.6.1",
             "value": {
               "kind": "string",
-              "string": "0.6.0"
+              "string": "0.6.1"
             }
           }
         },
@@ -216129,6 +216129,30 @@
         "kind": "variable"
       }
     ],
+    "ChannelAccount": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "typeRef",
+            "repr": "WithSigner",
+            "value": {
+              "typeName": "WithSigner",
+              "typeParams": [
+                {
+                  "kind": "typeRef",
+                  "repr": "NativeAccount",
+                  "value": {
+                    "typeName": "NativeAccount"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
     "ChannelAccounts": [
       {
         "declarationKind": "export",
@@ -216218,6 +216242,619 @@
         "kind": "class"
       }
     ],
+    "ChannelAccountsParallel": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "extends": [
+            {
+              "kind": "typeRef",
+              "repr": "AsyncDisposable",
+              "value": {
+                "typeName": "AsyncDisposable"
+              }
+            }
+          ],
+          "methods": [
+            {
+              "kind": "method",
+              "name": "ready",
+              "params": [],
+              "returnType": {
+                "kind": "typeRef",
+                "repr": "Promise",
+                "value": {
+                  "typeName": "Promise",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "void",
+                      "value": "void"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "getChannels",
+              "params": [],
+              "returnType": {
+                "kind": "array",
+                "value": {
+                  "kind": "typeRef",
+                  "repr": "ChannelAccountsWorkerState",
+                  "value": {
+                    "typeName": "ChannelAccountsWorkerState"
+                  }
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "close",
+              "params": [],
+              "returnType": {
+                "kind": "typeRef",
+                "repr": "Promise",
+                "value": {
+                  "typeName": "Promise",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "void",
+                      "value": "void"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "terminate",
+              "params": [],
+              "returnType": {
+                "kind": "typeRef",
+                "repr": "Promise",
+                "value": {
+                  "typeName": "Promise",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "void",
+                      "value": "void"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "dispose",
+              "params": [],
+              "returnType": {
+                "kind": "typeRef",
+                "repr": "Promise",
+                "value": {
+                  "typeName": "Promise",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "void",
+                      "value": "void"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "computed": true,
+              "kind": "method",
+              "name": "[Symbol.asyncDispose]",
+              "params": [],
+              "returnType": {
+                "kind": "typeRef",
+                "repr": "Promise",
+                "value": {
+                  "typeName": "Promise",
+                  "typeParams": [
+                    {
+                      "kind": "keyword",
+                      "repr": "void",
+                      "value": "void"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "properties": [
+            {
+              "name": "step",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Step",
+                "value": {
+                  "typeName": "Step",
+                  "typeParams": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "Input",
+                      "value": {
+                        "typeName": "Input"
+                      }
+                    },
+                    {
+                      "kind": "typeRef",
+                      "repr": "Awaited",
+                      "value": {
+                        "typeName": "Awaited",
+                        "typeParams": [
+                          {
+                            "kind": "typeRef",
+                            "repr": "Output",
+                            "value": {
+                              "typeName": "Output"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "array",
+                "value": {
+                  "kind": "keyword",
+                  "repr": "unknown",
+                  "value": "unknown"
+                }
+              },
+              "name": "Input"
+            },
+            {
+              "name": "Output"
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ChannelAccountsPipelineInput": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "union",
+            "value": [
+              {
+                "kind": "typeRef",
+                "repr": "ClassicTransactionInput",
+                "value": {
+                  "typeName": "ClassicTransactionInput"
+                }
+              },
+              {
+                "kind": "typeRef",
+                "repr": "InvokeContractInput",
+                "value": {
+                  "typeName": "InvokeContractInput"
+                }
+              }
+            ]
+          }
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ChannelAccountsWorker": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "module",
+              "readonly": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "__input",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Input",
+                "value": {
+                  "typeName": "Input"
+                }
+              }
+            },
+            {
+              "name": "__output",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Output",
+                "value": {
+                  "typeName": "Output"
+                }
+              }
+            }
+          ],
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "array",
+                "value": {
+                  "kind": "keyword",
+                  "repr": "unknown",
+                  "value": "unknown"
+                }
+              },
+              "name": "Input"
+            },
+            {
+              "name": "Output"
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ChannelAccountsWorkerFactory": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "tsType": {
+            "kind": "fnOrConstructor",
+            "value": {
+              "constructor": false,
+              "params": [
+                {
+                  "kind": "identifier",
+                  "name": "run",
+                  "optional": false,
+                  "tsType": {
+                    "kind": "fnOrConstructor",
+                    "value": {
+                      "constructor": false,
+                      "params": [
+                        {
+                          "kind": "identifier",
+                          "name": "request",
+                          "optional": false,
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "ChannelWorkerRequest",
+                            "value": {
+                              "typeName": "ChannelWorkerRequest",
+                              "typeParams": [
+                                {
+                                  "kind": "typeRef",
+                                  "repr": "Input",
+                                  "value": {
+                                    "typeName": "Input"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      ],
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Promise",
+                        "value": {
+                          "typeName": "Promise",
+                          "typeParams": [
+                            {
+                              "kind": "typeRef",
+                              "repr": "Output",
+                              "value": {
+                                "typeName": "Output"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "WorkerDefinition",
+                "value": {
+                  "typeName": "WorkerDefinition",
+                  "typeParams": [
+                    {
+                      "kind": "fnOrConstructor",
+                      "value": {
+                        "constructor": false,
+                        "params": [
+                          {
+                            "kind": "identifier",
+                            "name": "request",
+                            "optional": false,
+                            "tsType": {
+                              "kind": "typeRef",
+                              "repr": "ChannelWorkerRequest",
+                              "value": {
+                                "typeName": "ChannelWorkerRequest",
+                                "typeParams": [
+                                  {
+                                    "kind": "typeRef",
+                                    "repr": "Input",
+                                    "value": {
+                                      "typeName": "Input"
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        ],
+                        "tsType": {
+                          "kind": "typeRef",
+                          "repr": "Promise",
+                          "value": {
+                            "typeName": "Promise",
+                            "typeParams": [
+                              {
+                                "kind": "typeRef",
+                                "repr": "Output",
+                                "value": {
+                                  "typeName": "Output"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "array",
+                "value": {
+                  "kind": "keyword",
+                  "repr": "unknown",
+                  "value": "unknown"
+                }
+              },
+              "name": "Input"
+            },
+            {
+              "name": "Output"
+            }
+          ]
+        },
+        "kind": "typeAlias"
+      }
+    ],
+    "ChannelAccountsWorkerState": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "address",
+              "readonly": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "state",
+              "readonly": true,
+              "tsType": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "literal",
+                    "repr": "available",
+                    "value": {
+                      "kind": "string",
+                      "string": "available"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "busy",
+                    "value": {
+                      "kind": "string",
+                      "string": "busy"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "quarantined",
+                    "value": {
+                      "kind": "string",
+                      "string": "quarantined"
+                    }
+                  },
+                  {
+                    "kind": "literal",
+                    "repr": "unavailable",
+                    "value": {
+                      "kind": "string",
+                      "string": "unavailable"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "error",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Error",
+                "value": {
+                  "typeName": "Error"
+                }
+              }
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ChannelAccountsWorkerTask": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "channel",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ChannelAccount",
+                "value": {
+                  "typeName": "ChannelAccount"
+                }
+              }
+            },
+            {
+              "name": "run",
+              "readonly": true,
+              "tsType": {
+                "kind": "fnOrConstructor",
+                "value": {
+                  "constructor": false,
+                  "params": [
+                    {
+                      "arg": {
+                        "kind": "identifier",
+                        "name": "input",
+                        "optional": false
+                      },
+                      "kind": "rest",
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Input",
+                        "value": {
+                          "typeName": "Input"
+                        }
+                      }
+                    }
+                  ],
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "typeRef",
+                        "repr": "Output",
+                        "value": {
+                          "typeName": "Output"
+                        }
+                      },
+                      {
+                        "kind": "typeRef",
+                        "repr": "Promise",
+                        "value": {
+                          "typeName": "Promise",
+                          "typeParams": [
+                            {
+                              "kind": "typeRef",
+                              "repr": "Output",
+                              "value": {
+                                "typeName": "Output"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "array",
+                "value": {
+                  "kind": "keyword",
+                  "repr": "unknown",
+                  "value": "unknown"
+                }
+              },
+              "name": "Input"
+            },
+            {
+              "name": "Output"
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "ChannelWorkerRequest": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "address",
+              "readonly": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "input",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "Input",
+                "value": {
+                  "typeName": "Input"
+                }
+              }
+            }
+          ],
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "array",
+                "value": {
+                  "kind": "keyword",
+                  "repr": "unknown",
+                  "value": "unknown"
+                }
+              },
+              "name": "Input"
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
     "Code": [
       {
         "declarationKind": "export",
@@ -216266,10 +216903,610 @@
                 }
               },
               "name": "CHANNEL_NOT_ALLOCATED"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "PLG_CHA_004",
+                "value": {
+                  "kind": "string",
+                  "string": "PLG_CHA_004"
+                }
+              },
+              "name": "INVALID_CONCURRENCY"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "PLG_CHA_005",
+                "value": {
+                  "kind": "string",
+                  "string": "PLG_CHA_005"
+                }
+              },
+              "name": "INVALID_WORKER_CONFIGURATION"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "PLG_CHA_006",
+                "value": {
+                  "kind": "string",
+                  "string": "PLG_CHA_006"
+                }
+              },
+              "name": "CHANNEL_WORKERS_CLOSED"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "PLG_CHA_007",
+                "value": {
+                  "kind": "string",
+                  "string": "PLG_CHA_007"
+                }
+              },
+              "name": "CHANNEL_WORKER_CAPACITY"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "PLG_CHA_008",
+                "value": {
+                  "kind": "string",
+                  "string": "PLG_CHA_008"
+                }
+              },
+              "name": "CHANNELS_UNAVAILABLE"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "PLG_CHA_009",
+                "value": {
+                  "kind": "string",
+                  "string": "PLG_CHA_009"
+                }
+              },
+              "name": "CHANNEL_BINDING_MISMATCH"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "PLG_CHA_010",
+                "value": {
+                  "kind": "string",
+                  "string": "PLG_CHA_010"
+                }
+              },
+              "name": "INVALID_WORKER_PAYLOAD"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "PLG_CHA_011",
+                "value": {
+                  "kind": "string",
+                  "string": "PLG_CHA_011"
+                }
+              },
+              "name": "CHANNEL_WORKER_FAILED"
+            },
+            {
+              "init": {
+                "kind": "literal",
+                "repr": "PLG_CHA_012",
+                "value": {
+                  "kind": "string",
+                  "string": "PLG_CHA_012"
+                }
+              },
+              "name": "INVALID_CHANNEL_CONFIGURATION"
             }
           ]
         },
         "kind": "enum"
+      }
+    ],
+    "createChannelAccountsConcurrent": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "args",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "CreateChannelAccountsConcurrentArgs",
+                "value": {
+                  "typeName": "CreateChannelAccountsConcurrentArgs",
+                  "typeParams": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "Input",
+                      "value": {
+                        "typeName": "Input"
+                      }
+                    },
+                    {
+                      "kind": "typeRef",
+                      "repr": "Output",
+                      "value": {
+                        "typeName": "Output"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "ConcurrentStep",
+            "value": {
+              "typeName": "ConcurrentStep",
+              "typeParams": [
+                {
+                  "kind": "tuple",
+                  "value": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "Input",
+                      "value": {
+                        "typeName": "Input"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "kind": "typeRef",
+                  "repr": "Output",
+                  "value": {
+                    "typeName": "Output"
+                  }
+                }
+              ]
+            }
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "typeRef",
+                "repr": "ChannelAccountsPipelineInput",
+                "value": {
+                  "typeName": "ChannelAccountsPipelineInput"
+                }
+              },
+              "name": "Input"
+            },
+            {
+              "name": "Output"
+            }
+          ]
+        },
+        "kind": "function"
+      }
+    ],
+    "CreateChannelAccountsConcurrentArgs": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "channels",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeOperator",
+                "value": {
+                  "operator": "readonly",
+                  "tsType": {
+                    "kind": "array",
+                    "value": {
+                      "kind": "typeRef",
+                      "repr": "ChannelAccount",
+                      "value": {
+                        "typeName": "ChannelAccount"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "run",
+              "readonly": true,
+              "tsType": {
+                "kind": "fnOrConstructor",
+                "value": {
+                  "constructor": false,
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "input",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "typeRef",
+                        "repr": "Input",
+                        "value": {
+                          "typeName": "Input"
+                        }
+                      }
+                    }
+                  ],
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "typeRef",
+                        "repr": "Output",
+                        "value": {
+                          "typeName": "Output"
+                        }
+                      },
+                      {
+                        "kind": "typeRef",
+                        "repr": "Promise",
+                        "value": {
+                          "typeName": "Promise",
+                          "typeParams": [
+                            {
+                              "kind": "typeRef",
+                              "repr": "Output",
+                              "value": {
+                                "typeName": "Output"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "name": "maxPending",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "timeoutMs",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "id",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "plugins",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "array",
+                "value": {
+                  "kind": "typeRef",
+                  "repr": "StepPlugin",
+                  "value": {
+                    "typeName": "StepPlugin",
+                    "typeParams": [
+                      {
+                        "kind": "fnOrConstructor",
+                        "value": {
+                          "constructor": false,
+                          "params": [
+                            {
+                              "kind": "identifier",
+                              "name": "input",
+                              "optional": false,
+                              "tsType": {
+                                "kind": "typeRef",
+                                "repr": "Input",
+                                "value": {
+                                  "typeName": "Input"
+                                }
+                              }
+                            }
+                          ],
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Output",
+                            "value": {
+                              "typeName": "Output"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "typeRef",
+                "repr": "ChannelAccountsPipelineInput",
+                "value": {
+                  "typeName": "ChannelAccountsPipelineInput"
+                }
+              },
+              "name": "Input"
+            },
+            {
+              "name": "Output"
+            }
+          ]
+        },
+        "kind": "interface"
+      }
+    ],
+    "createChannelAccountsParallel": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "args",
+              "optional": false,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "CreateChannelAccountsParallelArgs",
+                "value": {
+                  "typeName": "CreateChannelAccountsParallelArgs",
+                  "typeParams": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "Input",
+                      "value": {
+                        "typeName": "Input"
+                      }
+                    },
+                    {
+                      "kind": "typeRef",
+                      "repr": "Output",
+                      "value": {
+                        "typeName": "Output"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "ChannelAccountsParallel",
+            "value": {
+              "typeName": "ChannelAccountsParallel",
+              "typeParams": [
+                {
+                  "kind": "typeRef",
+                  "repr": "Input",
+                  "value": {
+                    "typeName": "Input"
+                  }
+                },
+                {
+                  "kind": "typeRef",
+                  "repr": "Output",
+                  "value": {
+                    "typeName": "Output"
+                  }
+                }
+              ]
+            }
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "array",
+                "value": {
+                  "kind": "keyword",
+                  "repr": "unknown",
+                  "value": "unknown"
+                }
+              },
+              "name": "Input"
+            },
+            {
+              "name": "Output"
+            }
+          ]
+        },
+        "kind": "function"
+      }
+    ],
+    "CreateChannelAccountsParallelArgs": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "properties": [
+            {
+              "name": "channels",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeOperator",
+                "value": {
+                  "operator": "readonly",
+                  "tsType": {
+                    "kind": "array",
+                    "value": {
+                      "kind": "keyword",
+                      "repr": "string",
+                      "value": "string"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "worker",
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "ChannelAccountsWorker",
+                "value": {
+                  "typeName": "ChannelAccountsWorker",
+                  "typeParams": [
+                    {
+                      "kind": "typeRef",
+                      "repr": "Input",
+                      "value": {
+                        "typeName": "Input"
+                      }
+                    },
+                    {
+                      "kind": "typeRef",
+                      "repr": "Output",
+                      "value": {
+                        "typeName": "Output"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "maxPending",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "startupTimeoutMs",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "timeoutMs",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "number",
+                "value": "number"
+              }
+            },
+            {
+              "name": "createWorker",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "typeRef",
+                "repr": "CreateWorker",
+                "value": {
+                  "typeName": "CreateWorker"
+                }
+              }
+            },
+            {
+              "name": "id",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "keyword",
+                "repr": "string",
+                "value": "string"
+              }
+            },
+            {
+              "name": "plugins",
+              "optional": true,
+              "readonly": true,
+              "tsType": {
+                "kind": "array",
+                "value": {
+                  "kind": "typeRef",
+                  "repr": "StepPlugin",
+                  "value": {
+                    "typeName": "StepPlugin",
+                    "typeParams": [
+                      {
+                        "kind": "fnOrConstructor",
+                        "value": {
+                          "constructor": false,
+                          "params": [
+                            {
+                              "arg": {
+                                "kind": "identifier",
+                                "name": "input",
+                                "optional": false
+                              },
+                              "kind": "rest",
+                              "tsType": {
+                                "kind": "typeRef",
+                                "repr": "Input",
+                                "value": {
+                                  "typeName": "Input"
+                                }
+                              }
+                            }
+                          ],
+                          "tsType": {
+                            "kind": "typeRef",
+                            "repr": "Output",
+                            "value": {
+                              "typeName": "Output"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "array",
+                "value": {
+                  "kind": "keyword",
+                  "repr": "unknown",
+                  "value": "unknown"
+                }
+              },
+              "name": "Input"
+            },
+            {
+              "name": "Output"
+            }
+          ]
+        },
+        "kind": "interface"
       }
     ],
     "createChannelAccountsPlugin": [
@@ -216306,6 +217543,200 @@
         "kind": "function"
       }
     ],
+    "createChannelAccountsWorker": [
+      {
+        "declarationKind": "export",
+        "def": {
+          "hasBody": true,
+          "params": [
+            {
+              "kind": "identifier",
+              "name": "initialize",
+              "optional": false,
+              "tsType": {
+                "kind": "fnOrConstructor",
+                "value": {
+                  "constructor": false,
+                  "params": [
+                    {
+                      "kind": "identifier",
+                      "name": "address",
+                      "optional": false,
+                      "tsType": {
+                        "kind": "keyword",
+                        "repr": "string",
+                        "value": "string"
+                      }
+                    }
+                  ],
+                  "tsType": {
+                    "kind": "union",
+                    "value": [
+                      {
+                        "kind": "typeRef",
+                        "repr": "ChannelAccountsWorkerTask",
+                        "value": {
+                          "typeName": "ChannelAccountsWorkerTask",
+                          "typeParams": [
+                            {
+                              "kind": "typeRef",
+                              "repr": "Input",
+                              "value": {
+                                "typeName": "Input"
+                              }
+                            },
+                            {
+                              "kind": "typeRef",
+                              "repr": "Output",
+                              "value": {
+                                "typeName": "Output"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "kind": "typeRef",
+                        "repr": "Promise",
+                        "value": {
+                          "typeName": "Promise",
+                          "typeParams": [
+                            {
+                              "kind": "typeRef",
+                              "repr": "ChannelAccountsWorkerTask",
+                              "value": {
+                                "typeName": "ChannelAccountsWorkerTask",
+                                "typeParams": [
+                                  {
+                                    "kind": "typeRef",
+                                    "repr": "Input",
+                                    "value": {
+                                      "typeName": "Input"
+                                    }
+                                  },
+                                  {
+                                    "kind": "typeRef",
+                                    "repr": "Output",
+                                    "value": {
+                                      "typeName": "Output"
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "kind": "identifier",
+              "name": "binding",
+              "optional": false,
+              "tsType": {
+                "kind": "union",
+                "value": [
+                  {
+                    "kind": "typeLiteral",
+                    "value": {
+                      "properties": [
+                        {
+                          "name": "module",
+                          "readonly": true,
+                          "tsType": {
+                            "kind": "union",
+                            "value": [
+                              {
+                                "kind": "keyword",
+                                "repr": "string",
+                                "value": "string"
+                              },
+                              {
+                                "kind": "typeRef",
+                                "repr": "URL",
+                                "value": {
+                                  "typeName": "URL"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "typeRef",
+                    "repr": "ChannelAccountsWorkerFactory",
+                    "value": {
+                      "typeName": "ChannelAccountsWorkerFactory",
+                      "typeParams": [
+                        {
+                          "kind": "typeRef",
+                          "repr": "Input",
+                          "value": {
+                            "typeName": "Input"
+                          }
+                        },
+                        {
+                          "kind": "typeRef",
+                          "repr": "Output",
+                          "value": {
+                            "typeName": "Output"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "returnType": {
+            "kind": "typeRef",
+            "repr": "ChannelAccountsWorker",
+            "value": {
+              "typeName": "ChannelAccountsWorker",
+              "typeParams": [
+                {
+                  "kind": "typeRef",
+                  "repr": "Input",
+                  "value": {
+                    "typeName": "Input"
+                  }
+                },
+                {
+                  "kind": "typeRef",
+                  "repr": "Output",
+                  "value": {
+                    "typeName": "Output"
+                  }
+                }
+              ]
+            }
+          },
+          "typeParams": [
+            {
+              "constraint": {
+                "kind": "array",
+                "value": {
+                  "kind": "keyword",
+                  "repr": "unknown",
+                  "value": "unknown"
+                }
+              },
+              "name": "Input"
+            },
+            {
+              "name": "Output"
+            }
+          ]
+        },
+        "kind": "function"
+      }
+    ],
     "ERROR_PLG_CHA": [
       {
         "declarationKind": "export",
@@ -216330,6 +217761,42 @@
                 {
                   "computed": true,
                   "name": "[Code.CHANNEL_NOT_ALLOCATED]"
+                },
+                {
+                  "computed": true,
+                  "name": "[Code.INVALID_CONCURRENCY]"
+                },
+                {
+                  "computed": true,
+                  "name": "[Code.INVALID_WORKER_CONFIGURATION]"
+                },
+                {
+                  "computed": true,
+                  "name": "[Code.CHANNEL_WORKERS_CLOSED]"
+                },
+                {
+                  "computed": true,
+                  "name": "[Code.CHANNEL_WORKER_CAPACITY]"
+                },
+                {
+                  "computed": true,
+                  "name": "[Code.CHANNELS_UNAVAILABLE]"
+                },
+                {
+                  "computed": true,
+                  "name": "[Code.CHANNEL_BINDING_MISMATCH]"
+                },
+                {
+                  "computed": true,
+                  "name": "[Code.INVALID_WORKER_PAYLOAD]"
+                },
+                {
+                  "computed": true,
+                  "name": "[Code.CHANNEL_WORKER_FAILED]"
+                },
+                {
+                  "computed": true,
+                  "name": "[Code.INVALID_CHANNEL_CONFIGURATION]"
                 }
               ]
             }

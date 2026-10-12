@@ -14,12 +14,11 @@ import {
 import {
   chunkChannels,
   createChannelAccount,
-  createChannelProxySigner,
   createClassicPipelineArgs,
   resolveRpc,
-  sponsorCanSignChannel,
 } from "@/tools/helpers.ts";
 import * as ERROR from "@/shared/error.ts";
+import { resolveCloseSigners } from "@/tools/close-signers.ts";
 
 /**
  * Opens and closes sponsored Stellar channel accounts for later pipeline reuse.
@@ -158,6 +157,7 @@ export class ChannelAccounts {
       networkConfig,
       config,
       rpc,
+      concurrency = MAX_CHANNELS_PER_TRANSACTION,
     } = args;
 
     assertRequiredArgs(
@@ -170,6 +170,9 @@ export class ChannelAccounts {
       (argName: string) => new ERROR.MISSING_ARG(argName),
     );
 
+    if (!Number.isSafeInteger(concurrency) || concurrency < 1) {
+      throw new ERROR.INVALID_CONCURRENCY(concurrency);
+    }
     if (channels.length === 0) return;
 
     try {
@@ -185,12 +188,12 @@ export class ChannelAccounts {
           MAX_CHANNELS_PER_TRANSACTION,
         )
       ) {
-        const closeSigners = await Promise.all(
-          channelBatch.map(async (channel) =>
-            await sponsorCanSignChannel(closeRpc, sponsor, channel)
-              ? createChannelProxySigner(sponsorSigner, channel)
-              : channel.signer()
-          ),
+        const closeSigners = await resolveCloseSigners(
+          closeRpc,
+          sponsor,
+          sponsorSigner,
+          channelBatch,
+          concurrency,
         );
 
         await pipeline.run({

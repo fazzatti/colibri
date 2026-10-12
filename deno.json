@@ -29,7 +29,7 @@
     "colibri-tools/": "./_tools/",
     "stellar-sdk": "npm:@stellar/stellar-sdk@^17.2.1",
     "crypto": "node:crypto",
-    "convee": "jsr:@fifo/convee@2.1.0",
+    "convee": "jsr:@fifo/convee@2.4.0",
     "@std/toml": "jsr:@std/toml@^1.0.11",
     "yaml": "npm:yaml@2.8.2",
     "@std/assert": "jsr:@std/assert@^1.0.0",
@@ -40,7 +40,10 @@
     "crap4ts-tool": "npm:@alperlabs/crap4ts@0.2.1",
     "resvg-test": "npm:@resvg/resvg-js@2.6.2",
     "jsr:@colibri/contract-bindings": "./contract-bindings",
-    "colibri-internal/previous-core": "jsr:@colibri/core@1.1.1"
+    "colibri-internal/previous-core": "jsr:@colibri/core@1.1.1",
+    "convee/workers": "jsr:@fifo/convee@2.4.0/workers",
+    "@colibri/plugin-channel-accounts": "./plugins/channel-accounts/mod.ts",
+    "@colibri/core": "./core/mod.ts"
   },
   "tasks": {
     "release:init": "deno run -A _tools/releases/cli.ts init",
