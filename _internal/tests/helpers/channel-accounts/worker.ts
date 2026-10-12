@@ -73,17 +73,18 @@ export default createChannelAccountsWorker((address: string) => {
       if (input.phase) Atomics.store(new Int32Array(input.phase), 0, 1);
       if (input.hang) await new Promise(() => {});
       if (input.crash) {
-        queueMicrotask(() => {
-          throw new Error("intentional worker crash");
+        return new Promise(() => {
+          queueMicrotask(() => {
+            throw new Error("intentional worker crash");
+          });
         });
-        await new Promise(() => {});
       }
       await waitGate(input.gate);
       if (input.delayMs) {
         await new Promise((resolve) => setTimeout(resolve, input.delayMs));
       }
       if (input.fail) throw new Error("uncertain operation");
-      if (input.uncloneable) return { invalid: () => {} } as unknown as Receipt;
+      if (input.uncloneable) return { invalid: build } as unknown as Receipt;
       const tx = await build.runWith({
         context: { seed: { phase: input.phase, gate: input.finalizerGate } },
       }, {

@@ -61,9 +61,11 @@ await ChannelAccounts.close({
 Closing uses a channel-sourced `accountMerge` back into the sponsor. The
 optional `concurrency` setting bounds simultaneous signer lookups within each
 batch; it must be a positive safe integer and defaults to 15. Transactions still
-submit sequentially in batches of at most 15 channels. Lookup failure preserves
-the first original error and rejects immediately; remaining read-only lookups in
-that batch are observed as they settle, and no later transaction batch starts.
+submit sequentially in batches of at most 15 channels. The first lookup failure
+rejects immediately using the existing
+[typed error wrapping](../../reference/errors/plugins-channel-accounts-shared.md);
+remaining read-only lookups in that batch are observed as they settle, and no
+later transaction batch starts.
 
 ## Using The Plugin
 

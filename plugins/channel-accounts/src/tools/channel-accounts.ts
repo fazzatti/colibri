@@ -136,9 +136,15 @@ export class ChannelAccounts {
 
   /**
    * Closes channel accounts by merging their balances back into the sponsor.
+   * Signer discovery is bounded by args.concurrency (default 15); merge batches
+   * remain sequential. Stop all pipeline/worker use before merging the accounts.
    *
-   * @param args - Channel close arguments
-   * @returns Resolves when all requested channels have been merged
+   * @param args - Accounts, sponsor, network, transaction config, optional RPC and lookup limit.
+   * @returns Resolves after every merge batch; an empty account list performs no RPC work.
+   * @throws MISSING_ARG for required inputs or INVALID_CONCURRENCY for a limit
+   * that is not a positive safe integer. Existing Colibri errors propagate;
+   * other failures are wrapped as UNEXPECTED_ERROR with their original cause.
+   * Failure stops later merge batches; already scheduled read-only lookups settle.
    *
    * @example
    * ```typescript

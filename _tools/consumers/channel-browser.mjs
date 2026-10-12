@@ -1,5 +1,5 @@
 // Execute installed channel workers through Vite, in development and production.
-import { readFile, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { build, createServer, preview } from "vite";
 import { chromium, firefox, webkit } from "playwright";
@@ -7,15 +7,6 @@ import { conveeWorkers } from "@jsr/fifo__convee/workers/vite";
 import { runBrowserFixture } from "./browser-fixture.mjs";
 
 const root = fileURLToPath(new URL("./", import.meta.url));
-const workerPath = new URL("./channel-worker.ts", import.meta.url);
-const workerSource = await readFile(workerPath, "utf8");
-await writeFile(
-  workerPath,
-  workerSource.replace(
-    'from "@jsr/fifo__convee/workers"',
-    'from "@fifo/convee/workers"',
-  ),
-);
 await writeFile(
   new URL("./index.html", import.meta.url),
   '<!doctype html><script type="module" src="/channel-browser.ts"></script>',
@@ -25,7 +16,10 @@ await writeFile(
   `
 import definition from "./channel-worker.ts";
 import { checkChannelWorkers } from "./channel-workers.ts";
-await checkChannelWorkers(definition);
+await checkChannelWorkers(definition).catch((error: unknown) => {
+  console.error(JSON.stringify(error, ["name", "message", "code", "cause", "meta", "data", "diagnostic", "details", "stack"]));
+  throw error;
+});
 (globalThis as unknown as { colibriPassed: boolean }).colibriPassed = true;
 `,
 );
@@ -35,13 +29,6 @@ const config = {
   clearScreen: false,
   logLevel: "warn",
   plugins: [conveeWorkers()],
-  resolve: {
-    alias: {
-      "@fifo/convee/workers": fileURLToPath(
-        import.meta.resolve("@jsr/fifo__convee/workers"),
-      ),
-    },
-  },
   build: { outDir: "channel-dist", target: "esnext" },
   server: { host: "127.0.0.1", port: 0 },
   preview: { host: "127.0.0.1", port: 0 },
