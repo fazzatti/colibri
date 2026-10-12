@@ -2,7 +2,7 @@
 
 Pipelines combine [processes](../processes/README.md), step wrappers, and
 connectors into reusable transaction workflows. They are built on
-[`convee` 2.1](https://jsr.io/@fifo/convee/2.1.0).
+[`convee` 2.4.1](https://jsr.io/@fifo/convee/2.4.1).
 
 Colibri exposes factory functions instead of wrapper objects:
 
@@ -65,15 +65,18 @@ invokeWithSponsor.use(
 
 For available plugins, see [Plugins](../../packages/plugins/README.md).
 
-## Convee 2.1 compatibility
+<a id="convee-21-compatibility"></a>
 
-Use Convee 2.1 when composing custom pipes or plugins with this release.
+## Convee compatibility
+
+Use [Convee 2.4.1](https://jsr.io/@fifo/convee/2.4.1) when composing custom
+pipes or plugins with this release, matching Colibri's exact dependency version.
 Colibri's factory names, callable inputs, step IDs, transaction fees, and
 signing order remain unchanged. `use(...)` and `remove(...)` return the same
 callable instance.
 
 Custom integrations should review the
-[Convee 1.x migration guide](https://github.com/fazzatti/convee/tree/v2.1.0#migrating-from-1x),
+[Convee 1.x migration guide](https://github.com/fazzatti/convee/tree/v2.4.1#migrating-from-1x),
 particularly these upstream rules:
 
 - An array returned by a child is spread into the next child's arguments. To

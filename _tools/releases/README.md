@@ -121,7 +121,7 @@ Intentional breaking changes require a major and an explicit migration review.
   existing tags are skipped.
 
 Deno's 24-hour dependency-age policy stays active. The exact reviewed Convee
-2.1.0 integration is exempted so new releases can be tested immediately. The
+2.4.1 integration is exempted so new releases can be tested immediately. The
 post-publication consumer also exempts the explicitly selected Colibri versions
 it has just published. These exceptions do not widen dependency version ranges.
 No global runtime, registry, or user configuration is changed by these tools.
